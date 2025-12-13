@@ -1,4 +1,5 @@
 
+import { format, parseISO, startOfDay, subDays } from 'date-fns'
 import { YStack, H4, XStack, Card, Text, Button, SizableText, ScrollView, useTheme } from 'tamagui'
 import { BarChart } from 'react-native-gifted-charts'
 import { useExpenses } from '../../context/ExpenseContext'
@@ -16,19 +17,57 @@ export default function DashboardScreen() {
   const totalExpenses = state.expenses.reduce((sum, item) => sum + item.amount, 0)
   const recentExpenses = state.expenses.slice(0, 5)
 
-  // Prepare chart data (Last 7 items or grouped by last 7 days - keeping simple for now: last 5-7 individual expenses)
-  // Ideally should group by day.
-  const chartData = state.expenses
-    .slice(0, 7)
-    .reverse()
-    .map((item) => ({
-      value: item.amount,
-      label: new Date(item.date).getDate().toString(), // Show Day of month
-      frontColor: theme.blue10.val,
-    }))
+  // Group by Date -> Category
+  const chartData = React.useMemo(() => {
+    const grouped: Record<string, Record<string, number>> = {}
+    const last7Days: string[] = []
+    
+    // Generate last 7 days keys
+    for (let i = 6; i >= 0; i--) {
+        const d = subDays(new Date(), i)
+        last7Days.push(format(d, 'yyyy-MM-dd'))
+    }
 
-  // If no data, show placeholder
-  const hasData = chartData.length > 0
+    // Aggregate
+    state.expenses.forEach(e => {
+        const dateKey = e.date.split('T')[0]
+        if (!grouped[dateKey]) grouped[dateKey] = {}
+        if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
+        grouped[dateKey][e.category] += e.amount
+    })
+
+    // Format for Chart - only include days with actual expenses
+    return last7Days
+      .map(dateKey => {
+        const dayExpenses = grouped[dateKey] || {}
+        const stacks = Object.keys(dayExpenses).map(cat => {
+            const categoryConfig = CATEGORIES.find(c => c.value === cat)
+            return {
+                value: dayExpenses[cat],
+                color: categoryConfig?.color || '#888',
+                marginBottom: 2,
+            }
+        })
+        
+        return {
+            stacks: stacks,
+            label: format(parseISO(dateKey), 'dd/MM'),
+            onPress: () => router.push(`/day/${dateKey}` as any),
+            dateKey, // Keep for filtering
+        }
+    })
+    .filter(item => item.stacks.length > 0) // Only show days with data
+  }, [state.expenses, theme])
+
+  const hasData = chartData.some(d => d.stacks && d.stacks.length > 0)
+
+  React.useEffect(() => {
+    console.log('=== CHART DEBUG ===')
+    console.log('Total expenses:', state.expenses.length)
+    console.log('Chart data length:', chartData.length)
+    console.log('First 2 chart items:', JSON.stringify(chartData, null, 2))
+    console.log('Has data:', hasData)
+  }, [chartData, state.expenses.length, hasData])
 
   return (
     <ScrollView flex={1} style={{ backgroundColor: theme.background.val as string }} contentContainerStyle={{ padding: 20 } as any}>
@@ -76,23 +115,23 @@ export default function DashboardScreen() {
       </XStack>
 
       {/* Chart Section */}
-      <YStack space="$4" style={{ marginBottom: 20 }}>
-        <H4 fontSize="$5">Recent Activity</H4>
+      <YStack gap="$4" style={{ marginBottom: 20 }}>
+        <H4 fontSize="$5">Last 7 Days</H4>
         {hasData ? (
           <YStack style={{ alignItems: 'center', justifyContent: 'center' }}>
             <BarChart
-              data={chartData}
-              barWidth={22}
+              stackData={chartData}
+              barWidth={24}
               noOfSections={3}
               barBorderRadius={4}
-              frontColor={theme.blue10.val as string}
               yAxisThickness={0}
               xAxisThickness={0}
               height={200}
-              width={screenWidth - 80} // Adjust for padding
+              width={screenWidth - 60}
               isAnimated
-              xAxisLabelTextStyle={{ color: theme.color.val as string }}
+              xAxisLabelTextStyle={{ color: theme.color.val as string, fontSize: 10 }}
               yAxisTextStyle={{ color: theme.color.val as string }}
+              spacing={20}
             />
           </YStack>
         ) : (
@@ -123,7 +162,8 @@ export default function DashboardScreen() {
                 padding: 12,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                marginBottom: 12
               }}
             >
               <XStack style={{ gap: 12, alignItems: 'center' }}>
@@ -146,7 +186,7 @@ export default function DashboardScreen() {
                     {cat?.label}
                   </SizableText>
                   <Text style={{ color: (theme.gray10?.val as string) || 'gray', fontSize: 12 }}>
-                    {new Date(expense.date).toLocaleDateString()}
+                    {format(parseISO(expense.date), 'dd/MM/yyyy')}
                   </Text>
                 </YStack>
               </XStack>

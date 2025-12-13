@@ -16,7 +16,7 @@ export default function HistoryScreen() {
     const sorted = [...state.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     sorted.forEach((expense) => {
-      const dateKey = format(parseISO(expense.date), 'MMMM dd, yyyy')
+      const dateKey = format(parseISO(expense.date), 'dd/MM/yyyy')
       const existing = grouped.find((g) => g.title === dateKey)
       if (existing) {
         existing.data.push(expense)
