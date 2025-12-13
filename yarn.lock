@@ -6462,6 +6462,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/papaparse@npm:^5.5.1":
+  version: 5.5.1
+  resolution: "@types/papaparse@npm:5.5.1"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10/252fc555060508060582df5bf628cd277856cc2f53579e323022dae56011abe52a8c1ec79758d26cc98d036f806d7c185f8a1a84ba786173b6c18a64d3b22d4d
+  languageName: node
+  linkType: hard
+
 "@types/react-native@npm:^0.73.0":
   version: 0.73.0
   resolution: "@types/react-native@npm:0.73.0"
@@ -8633,6 +8642,7 @@ __metadata:
     "@tamagui/metro-plugin": "npm:^1.140.0"
     "@tamagui/toast": "npm:^1.140.0"
     "@tanstack/react-query": "npm:^5.90.12"
+    "@types/papaparse": "npm:^5.5.1"
     "@types/react": "npm:~19.1.17"
     "@types/react-native": "npm:^0.73.0"
     babel-preset-expo: "npm:~54.0.0"
@@ -8644,10 +8654,12 @@ __metadata:
     expo-linear-gradient: "npm:~15.0.8"
     expo-linking: "npm:~8.0.10"
     expo-router: "npm:~6.0.19"
+    expo-secure-store: "npm:^15.0.8"
     expo-splash-screen: "npm:~31.0.12"
     expo-status-bar: "npm:~3.0.9"
     expo-system-ui: "npm:~6.0.9"
     expo-web-browser: "npm:~15.0.10"
+    papaparse: "npm:^5.5.3"
     react: "npm:19.1.0"
     react-dom: "npm:19.1.0"
     react-native: "npm:0.81.5"
@@ -8845,6 +8857,15 @@ __metadata:
     react-server-dom-webpack:
       optional: true
   checksum: 10/1d98dd94a4c9cba4c7fbb46bc44bccc2ec0d7fca830bfbbaa04ddd1f83f2d7e0bc6caaba277425de0af10520d7a0e5a49e628cbe95ab97df7339c3fb83ead389
+  languageName: node
+  linkType: hard
+
+"expo-secure-store@npm:^15.0.8":
+  version: 15.0.8
+  resolution: "expo-secure-store@npm:15.0.8"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/822af991ed80b32cf0c37f6f37e8fac30c654492d4074e70fb123361fe6ce0297178b6c7e55108670c75485e5062a39cf089fd8aee415467c3e4a6749c69d65d
   languageName: node
   linkType: hard
 
@@ -12592,6 +12613,13 @@ __metadata:
   version: 1.0.0
   resolution: "package-json-from-dist@npm:1.0.0"
   checksum: 10/ac706ec856a5a03f5261e4e48fa974f24feb044d51f84f8332e2af0af04fbdbdd5bbbfb9cbbe354190409bc8307c83a9e38c6672c3c8855f709afb0006a009ea
+  languageName: node
+  linkType: hard
+
+"papaparse@npm:^5.5.3":
+  version: 5.5.3
+  resolution: "papaparse@npm:5.5.3"
+  checksum: 10/383e38f8ff910be48b684e7f47b84dbe5e67708669c13bb21f316a0591ef183ff670dfc7eb9f6d0a8b67e21a5b0e8934712cda96ff8fb678d6591e597d108bd1
   languageName: node
   linkType: hard
 

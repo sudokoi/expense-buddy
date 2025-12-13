@@ -10,8 +10,9 @@ interface ExpenseState {
 
 const ExpenseContext = createContext<{
   state: ExpenseState;
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
+  addExpense: (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
   deleteExpense: (id: string) => void;
+  replaceAllExpenses: (expenses: Expense[]) => void;
 } | undefined>(undefined);
 
 const EXPENSES_KEY = 'expenses';
@@ -62,13 +63,25 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     },
   });
 
-  const addExpense = (expense: Omit<Expense, 'id'>) => {
-    const newExpense = { ...expense, id: Date.now().toString() };
+  const addExpense = (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const newExpense: Expense = {
+      ...expense,
+      id: Date.now().toString(),
+      createdAt: now,
+      updatedAt: now,
+    };
     addMutation.mutate(newExpense);
   };
 
   const deleteExpense = (id: string) => {
     deleteMutation.mutate(id);
+  };
+
+  const replaceAllExpenses = (expenses: Expense[]) => {
+    // Directly update the query cache and AsyncStorage
+    queryClient.setQueryData([EXPENSES_KEY], expenses);
+    AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
   };
 
   const state: ExpenseState = {
@@ -77,7 +90,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ExpenseContext.Provider value={{ state, addExpense, deleteExpense }}>
+    <ExpenseContext.Provider value={{ state, addExpense, deleteExpense, replaceAllExpenses }}>
       {children}
     </ExpenseContext.Provider>
   );

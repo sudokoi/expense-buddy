@@ -6,4 +6,6 @@ export interface Expense {
   category: ExpenseCategory;
   date: string; // ISO string
   note: string;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
 }
