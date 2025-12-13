@@ -29,7 +29,6 @@ export async function performAutoSyncIfEnabled(
     // Check if GitHub sync is configured
     const config = await loadSyncConfig();
     if (!config) {
-      console.log("Auto-sync enabled but GitHub not configured");
       return { synced: false };
     }
 

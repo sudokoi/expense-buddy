@@ -3,7 +3,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { Expense } from "../types/expense";
 import { exportToCSV, importFromCSV } from "./csv-handler";
-import { uploadCSV, downloadCSV, validatePAT } from "./github-sync";
+import {
+  uploadCSV,
+  downloadCSV,
+  validatePAT,
+  listFiles,
+  deleteFile,
+} from "./github-sync";
+import {
+  groupExpensesByDay,
+  getFilenameForDay,
+  getDayKeyFromFilename,
+} from "./daily-file-manager";
+import { format } from "date-fns";
 
 const GITHUB_TOKEN_KEY = "github_pat";
 const GITHUB_REPO_KEY = "github_repo";
@@ -150,7 +162,8 @@ export async function testConnection(): Promise<SyncResult> {
 }
 
 /**
- * Sync expenses to GitHub (upload)
+ * Sync expenses to GitHub (upload) - splits into daily files
+ * Also deletes files for days that no longer have expenses
  */
 export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
   try {
@@ -163,21 +176,111 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
       };
     }
 
-    const csvContent = exportToCSV(expenses);
-    const result = await uploadCSV(
+    // Get list of existing files on GitHub
+    const existingFiles = await listFiles(
       config.token,
       config.repo,
-      config.branch,
-      csvContent
+      config.branch
     );
+    const existingExpenseFiles = existingFiles
+      .filter((file) => getDayKeyFromFilename(file.name) !== null)
+      .map((file) => ({
+        ...file,
+        dayKey: getDayKeyFromFilename(file.name)!,
+      }));
 
-    if (result.success) {
+    // Group expenses by day
+    const groupedByDay = groupExpensesByDay(expenses);
+    const localDayKeys = new Set(groupedByDay.keys());
+
+    let uploadedFiles = 0;
+    let failedFiles = 0;
+    let deletedFiles = 0;
+
+    // If no expenses, delete all existing files
+    if (expenses.length === 0 && existingExpenseFiles.length > 0) {
+      for (const file of existingExpenseFiles) {
+        const result = await deleteFile(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path,
+          file.sha
+        );
+
+        if (result.success) {
+          deletedFiles++;
+        } else {
+          failedFiles++;
+        }
+      }
+
+      return {
+        success: failedFiles === 0,
+        message: `Deleted all ${deletedFiles} expense file(s) from GitHub`,
+      };
+    }
+
+    // Upload each day's file
+    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+      const filename = getFilenameForDay(dayKey);
+      const csvContent = exportToCSV(dayExpenses);
+
+      const result = await uploadCSV(
+        config.token,
+        config.repo,
+        config.branch,
+        csvContent,
+        filename
+      );
+
+      if (result.success) {
+        uploadedFiles++;
+      } else {
+        failedFiles++;
+      }
+    }
+
+    // Delete files for days that no longer have expenses
+    for (const file of existingExpenseFiles) {
+      if (!localDayKeys.has(file.dayKey)) {
+        const result = await deleteFile(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path,
+          file.sha
+        );
+
+        if (result.success) {
+          deletedFiles++;
+        }
+      }
+    }
+
+    const totalOperations = uploadedFiles + deletedFiles;
+    const message: string[] = [];
+    if (uploadedFiles > 0) message.push(`${uploadedFiles} file(s) uploaded`);
+    if (deletedFiles > 0) message.push(`${deletedFiles} file(s) deleted`);
+
+    if (failedFiles === 0) {
       return {
         success: true,
-        message: `Synced ${expenses.length} expenses to GitHub`,
+        message: `Synced ${expenses.length} expenses: ${message.join(", ")}`,
+      };
+    } else if (uploadedFiles > 0 || deletedFiles > 0) {
+      return {
+        success: true,
+        message: `Partially synced: ${message.join(
+          ", "
+        )}, ${failedFiles} failed`,
       };
     } else {
-      return { success: false, message: "Upload failed", error: result.error };
+      return {
+        success: false,
+        message: "Upload failed",
+        error: "All files failed to upload",
+      };
     }
   } catch (error) {
     return { success: false, message: "Sync failed", error: String(error) };
@@ -185,13 +288,14 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 }
 
 /**
- * Sync expenses from GitHub (download)
+ * Sync expenses from GitHub (download) - downloads last N days of files
  */
-export async function syncDown(): Promise<{
+export async function syncDown(daysToDownload: number = 7): Promise<{
   success: boolean;
   message: string;
   expenses?: Expense[];
   error?: string;
+  hasMore?: boolean;
 }> {
   try {
     const config = await loadSyncConfig();
@@ -203,27 +307,149 @@ export async function syncDown(): Promise<{
       };
     }
 
-    const fileData = await downloadCSV(
-      config.token,
-      config.repo,
-      config.branch
-    );
-    if (!fileData) {
+    // List all files in the repository
+    const files = await listFiles(config.token, config.repo, config.branch);
+
+    // Filter for expense files (expenses-YYYY-MM-DD.csv)
+    const expenseFiles = files
+      .filter((file) => getDayKeyFromFilename(file.name) !== null)
+      .map((file) => ({
+        ...file,
+        dayKey: getDayKeyFromFilename(file.name)!,
+      }))
+      .sort((a, b) => b.dayKey.localeCompare(a.dayKey)); // Sort descending (newest first)
+
+    if (expenseFiles.length === 0) {
       return {
         success: false,
-        message: "No data found in repository",
-        error: "File not found",
+        message: "No expense files found in repository",
+        error: "No files found",
       };
     }
 
-    const expenses = importFromCSV(fileData.content);
+    // Take only the requested number of days
+    const filesToDownload = expenseFiles.slice(0, daysToDownload);
+    const hasMore = expenseFiles.length > daysToDownload;
+
+    // Download and merge selected files
+    const allExpenses: Expense[] = [];
+    let downloadedFiles = 0;
+
+    for (const file of filesToDownload) {
+      const fileData = await downloadCSV(
+        config.token,
+        config.repo,
+        config.branch,
+        file.path
+      );
+
+      if (fileData) {
+        const expenses = importFromCSV(fileData.content);
+        allExpenses.push(...expenses);
+        downloadedFiles++;
+      }
+    }
+
     return {
       success: true,
-      message: `Downloaded ${expenses.length} expenses from GitHub`,
-      expenses,
+      message: `Downloaded ${allExpenses.length} expenses from ${downloadedFiles} file(s)`,
+      expenses: allExpenses,
+      hasMore,
     };
   } catch (error) {
     return { success: false, message: "Download failed", error: String(error) };
+  }
+}
+
+/**
+ * Download additional days of expenses (for "Load More" functionality)
+ */
+export async function syncDownMore(
+  currentExpenses: Expense[],
+  additionalDays: number = 7
+): Promise<{
+  success: boolean;
+  message: string;
+  expenses?: Expense[];
+  error?: string;
+  hasMore?: boolean;
+}> {
+  try {
+    const config = await loadSyncConfig();
+    if (!config) {
+      return {
+        success: false,
+        message: "Sync not configured",
+        error: "No configuration",
+      };
+    }
+
+    // Get the oldest date from current expenses
+    const oldestDate = currentExpenses.reduce((oldest, expense) => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate < oldest ? expenseDate : oldest;
+    }, new Date());
+
+    // List all files in the repository
+    const files = await listFiles(config.token, config.repo, config.branch);
+
+    // Filter for expense files older than the oldest current expense
+    const expenseFiles = files
+      .filter((file) => getDayKeyFromFilename(file.name) !== null)
+      .map((file) => ({
+        ...file,
+        dayKey: getDayKeyFromFilename(file.name)!,
+      }))
+      .filter((file) => file.dayKey < format(oldestDate, "yyyy-MM-dd"))
+      .sort((a, b) => b.dayKey.localeCompare(a.dayKey)); // Sort descending (newest first)
+
+    if (expenseFiles.length === 0) {
+      return {
+        success: true,
+        message: "No more expenses to load",
+        expenses: currentExpenses,
+        hasMore: false,
+      };
+    }
+
+    // Take only the requested number of additional days
+    const filesToDownload = expenseFiles.slice(0, additionalDays);
+    const hasMore = expenseFiles.length > additionalDays;
+
+    // Download and merge selected files
+    const newExpenses: Expense[] = [];
+    let downloadedFiles = 0;
+
+    for (const file of filesToDownload) {
+      const fileData = await downloadCSV(
+        config.token,
+        config.repo,
+        config.branch,
+        file.path
+      );
+
+      if (fileData) {
+        const expenses = importFromCSV(fileData.content);
+        newExpenses.push(...expenses);
+        downloadedFiles++;
+      }
+    }
+
+    // Merge with current expenses
+    const allExpenses = [...currentExpenses, ...newExpenses];
+
+    return {
+      success: true,
+      message: `Loaded ${newExpenses.length} more expenses from ${downloadedFiles} file(s)`,
+      expenses: allExpenses,
+      hasMore,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Load more failed",
+      error: String(error),
+    };
   }
 }
 
@@ -325,6 +551,11 @@ export async function autoSync(
 
 /**
  * Merge expenses using timestamps to resolve conflicts
+ *
+ * IMPORTANT: Conflict resolution uses expense.updatedAt timestamps, NOT filenames.
+ * Filenames (expenses-YYYY-MM-DD.csv) are based on expense.date (when expense occurred),
+ * but conflict resolution uses expense.updatedAt (when expense was last modified).
+ *
  * Rules:
  * 1. For expenses in both: keep the one with the latest updatedAt
  * 2. For expenses only in remote:
@@ -372,9 +603,6 @@ function mergeExpensesWithTimestamps(
         // If last sync is newer than the item, it means we saw this item before
         // and it's gone now from local, so it was deleted - don't restore it
         if (lastSync > itemUpdated) {
-          console.log(
-            `Skipping remote item ${id} - was deleted locally after last sync`
-          );
           continue;
         }
       }
@@ -394,4 +622,60 @@ function mergeExpensesWithTimestamps(
     newFromRemote,
     updatedFromRemote,
   };
+}
+
+/**
+ * Migrate from old single-file format to new daily-file format
+ * This checks if the old expenses.csv exists and migrates it to daily files
+ */
+export async function migrateToDailyFiles(): Promise<{
+  migrated: boolean;
+  message: string;
+}> {
+  try {
+    const config = await loadSyncConfig();
+    if (!config) {
+      return { migrated: false, message: "No sync configuration" };
+    }
+
+    // Check if old expenses.csv exists
+    const oldFile = await downloadCSV(
+      config.token,
+      config.repo,
+      config.branch,
+      "expenses.csv"
+    );
+
+    if (!oldFile) {
+      // No old file, nothing to migrate
+      return { migrated: false, message: "No old file to migrate" };
+    }
+
+    // Parse old file
+    const expenses = importFromCSV(oldFile.content);
+
+    if (expenses.length === 0) {
+      return { migrated: false, message: "Old file is empty" };
+    }
+
+    // Upload as daily files
+    const result = await syncUp(expenses);
+
+    if (result.success) {
+      return {
+        migrated: true,
+        message: `Migrated ${expenses.length} expenses to daily files`,
+      };
+    } else {
+      return {
+        migrated: false,
+        message: `Migration failed: ${result.error}`,
+      };
+    }
+  } catch (error) {
+    return {
+      migrated: false,
+      message: `Migration error: ${String(error)}`,
+    };
+  }
 }

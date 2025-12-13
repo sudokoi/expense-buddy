@@ -19,16 +19,18 @@ import {
   Sheet,
 } from "tamagui";
 import { Check, ChevronDown } from "@tamagui/lucide-icons";
-import { Alert, SectionList } from "react-native";
+import { SectionList } from "react-native";
 import { useExpenses } from "../../context/ExpenseContext";
 import { CATEGORIES } from "../../constants/categories";
 import { Trash, Edit3 } from "@tamagui/lucide-icons";
 import { format, parseISO } from "date-fns";
 import { useNotifications } from "../../context/notification-context";
 import type { ExpenseCategory } from "../../types/expense";
+import { syncDownMore } from "../../services/sync-manager";
 
 export default function HistoryScreen() {
-  const { state, deleteExpense, editExpense } = useExpenses();
+  const { state, deleteExpense, editExpense, replaceAllExpenses } =
+    useExpenses();
   const { addNotification } = useNotifications();
   const theme = useTheme();
   const [editingExpense, setEditingExpense] = React.useState<{
@@ -37,6 +39,11 @@ export default function HistoryScreen() {
     category: ExpenseCategory;
     note: string;
   } | null>(null);
+  const [deletingExpenseId, setDeletingExpenseId] = React.useState<
+    string | null
+  >(null);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
   const groupedExpenses = React.useMemo(() => {
     const grouped: { title: string; data: typeof state.expenses }[] = [];
@@ -57,14 +64,15 @@ export default function HistoryScreen() {
   }, [state.expenses]);
 
   const handleDelete = (id: string) => {
-    Alert.alert("Delete Expense", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => deleteExpense(id),
-      },
-    ]);
+    setDeletingExpenseId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingExpenseId) {
+      deleteExpense(deletingExpenseId);
+      addNotification("Expense deleted", "success");
+      setDeletingExpenseId(null);
+    }
   };
 
   const getCategoryIcon = (catValue: string) => {
@@ -72,6 +80,27 @@ export default function HistoryScreen() {
     return cat
       ? { color: cat.color, label: cat.label }
       : { color: (theme.gray10?.val as string) || "gray", label: "Other" };
+  };
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const result = await syncDownMore(state.expenses, 7);
+
+      if (result.success && result.expenses) {
+        replaceAllExpenses(result.expenses);
+        setHasMore(result.hasMore || false);
+        addNotification(result.message, "success");
+      } else {
+        addNotification(result.error || result.message, "error");
+      }
+    } catch (error) {
+      addNotification("Failed to load more expenses", "error");
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   if (state.expenses.length === 0) {
@@ -112,6 +141,53 @@ export default function HistoryScreen() {
     >
       <H4 style={{ marginBottom: 16 }}>Expense History</H4>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deletingExpenseId}
+        onOpenChange={(open) => !open && setDeletingExpenseId(null)}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay
+            key="overlay"
+            animation="quick"
+            opacity={0.5}
+            enterStyle={{ opacity: 0 }}
+            exitStyle={{ opacity: 0 }}
+          />
+          <Dialog.Content
+            bordered
+            elevate
+            key="content"
+            animation={[
+              "quick",
+              {
+                opacity: {
+                  overshootClamping: true,
+                },
+              },
+            ]}
+            enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+            exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+            gap="$4"
+          >
+            <Dialog.Title>Delete Expense</Dialog.Title>
+            <Dialog.Description>
+              Are you sure you want to delete this expense? This action cannot
+              be undone.
+            </Dialog.Description>
+            <XStack gap="$3" style={{ justifyContent: "flex-end" }}>
+              <Dialog.Close asChild>
+                <Button>Cancel</Button>
+              </Dialog.Close>
+              <Button theme="red" onPress={confirmDelete}>
+                Delete
+              </Button>
+            </XStack>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
+
+      {/* Edit Expense Dialog */}
       <Dialog
         open={!!editingExpense}
         onOpenChange={(open) => !open && setEditingExpense(null)}
@@ -368,6 +444,19 @@ export default function HistoryScreen() {
         }}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          hasMore ? (
+            <YStack style={{ padding: 16, alignItems: "center" }}>
+              <Button
+                size="$4"
+                onPress={handleLoadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore ? "Loading..." : "Load More"}
+              </Button>
+            </YStack>
+          ) : null
+        }
       />
     </YStack>
   );

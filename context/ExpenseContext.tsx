@@ -38,7 +38,6 @@ const fetchExpenses = async (): Promise<Expense[]> => {
     const stored = await AsyncStorage.getItem(EXPENSES_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (e) {
-    console.error("Failed to load expenses", e);
     return [];
   }
 };
@@ -60,7 +59,6 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
     const performLaunchSync = async () => {
       const shouldSync = await shouldAutoSyncForTiming("on_launch");
       if (shouldSync && expenses.length >= 0) {
-        console.log("Performing auto-sync on launch...");
         const result = await performAutoSyncIfEnabled(expenses);
 
         if (result.synced && result.expenses) {
@@ -103,7 +101,6 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
       // Auto-sync after expense entry if enabled
       const shouldSync = await shouldAutoSyncForTiming("on_change");
       if (shouldSync) {
-        console.log("Performing auto-sync after expense entry...");
         const result = await performAutoSyncIfEnabled(updatedExpenses);
 
         if (result.synced && result.expenses) {
@@ -137,7 +134,6 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
       // Auto-sync after expense deletion if enabled
       const shouldSync = await shouldAutoSyncForTiming("on_change");
       if (shouldSync) {
-        console.log("Performing auto-sync after expense deletion...");
         const result = await performAutoSyncIfEnabled(updatedExpenses);
 
         if (result.synced && result.expenses) {
@@ -173,7 +169,6 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
       // Auto-sync after expense edit if enabled
       const shouldSync = await shouldAutoSyncForTiming("on_change");
       if (shouldSync) {
-        console.log("Performing auto-sync after expense edit...");
         const result = await performAutoSyncIfEnabled(updatedExpenses);
 
         if (result.synced && result.expenses) {

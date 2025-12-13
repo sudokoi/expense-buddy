@@ -33,7 +33,7 @@ import { useSyncStatus } from "../../context/sync-status-context";
 
 export default function SettingsScreen() {
   const theme = useTheme();
-  const { state } = useExpenses();
+  const { state, replaceAllExpenses } = useExpenses();
   const { addNotification } = useNotifications();
   const { startSync, endSync } = useSyncStatus();
 
@@ -85,9 +85,56 @@ export default function SettingsScreen() {
       return;
     }
 
+    // Check if this is first-time configuration (no previous config existed)
+    const previousConfig = await loadSyncConfig();
+    const isFirstTimeSetup = !previousConfig;
+
     const config: SyncConfig = { token, repo, branch };
     await saveSyncConfig(config);
     addNotification("Sync configuration saved", "success");
+
+    // Only prompt to download if this is first-time setup AND no local expenses
+    // This avoids prompting when user has deleted all data intentionally
+    if (isFirstTimeSetup && state.expenses.length === 0) {
+      // Prompt user to download existing data from GitHub
+      Alert.alert(
+        "Download Existing Data?",
+        "Would you like to download your expenses from GitHub now?",
+        [
+          { text: "Not Now", style: "cancel" },
+          {
+            text: "Download",
+            onPress: async () => {
+              setIsSyncing(true);
+              startSync();
+              const result = await syncDown();
+              setIsSyncing(false);
+              endSync(result.success);
+
+              if (result.success && result.expenses) {
+                replaceAllExpenses(result.expenses);
+                addNotification(
+                  `Downloaded ${result.expenses.length} expenses`,
+                  "success"
+                );
+
+                // Auto-enable sync for convenience
+                if (!autoSyncEnabled) {
+                  setAutoSyncEnabled(true);
+                  await saveAutoSyncSettings({
+                    enabled: true,
+                    timing: autoSyncTiming,
+                  });
+                  addNotification("Auto-sync enabled", "info");
+                }
+              } else {
+                addNotification(result.error || result.message, "error");
+              }
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleTestConnection = async () => {
@@ -137,8 +184,13 @@ export default function SettingsScreen() {
             endSync(result.success);
 
             if (result.success && result.expenses) {
+              // Update the app state with downloaded expenses
+              replaceAllExpenses(result.expenses);
+              const moreInfo = result.hasMore
+                ? " (Load more from History tab)"
+                : "";
               addNotification(
-                `Downloaded ${result.expenses.length} expenses`,
+                `Downloaded ${result.expenses.length} expenses${moreInfo}`,
                 "success"
               );
             } else {
