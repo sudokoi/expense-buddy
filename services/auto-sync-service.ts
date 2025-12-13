@@ -1,11 +1,11 @@
-import { Expense } from '../types/expense';
-import { 
-  autoSync, 
-  loadAutoSyncSettings, 
+import { Expense } from "../types/expense";
+import {
+  autoSync,
+  loadAutoSyncSettings,
   loadSyncConfig,
   AutoSyncSettings,
   SyncNotification,
-} from './sync-manager';
+} from "./sync-manager";
 
 /**
  * Main auto-sync orchestration function
@@ -13,9 +13,9 @@ import {
  */
 export async function performAutoSyncIfEnabled(
   localExpenses: Expense[]
-): Promise<{ 
-  synced: boolean; 
-  expenses?: Expense[]; 
+): Promise<{
+  synced: boolean;
+  expenses?: Expense[];
   notification?: SyncNotification;
   error?: string;
 }> {
@@ -29,13 +29,13 @@ export async function performAutoSyncIfEnabled(
     // Check if GitHub sync is configured
     const config = await loadSyncConfig();
     if (!config) {
-      console.log('Auto-sync enabled but GitHub not configured');
+      console.log("Auto-sync enabled but GitHub not configured");
       return { synced: false };
     }
 
     // Perform the sync
     const result = await autoSync(localExpenses);
-    
+
     if (result.success && result.expenses) {
       return {
         synced: true,
@@ -49,7 +49,7 @@ export async function performAutoSyncIfEnabled(
       };
     }
   } catch (error) {
-    console.error('Auto-sync failed:', error);
+    console.error("Auto-sync failed:", error);
     return {
       synced: false,
       error: String(error),
@@ -60,7 +60,9 @@ export async function performAutoSyncIfEnabled(
 /**
  * Check if auto-sync should run for the given timing
  */
-export async function shouldAutoSyncForTiming(timing: 'on_launch' | 'on_expense_entry'): Promise<boolean> {
+export async function shouldAutoSyncForTiming(
+  timing: "on_launch" | "on_change"
+): Promise<boolean> {
   const settings = await loadAutoSyncSettings();
   return settings.enabled && settings.timing === timing;
 }

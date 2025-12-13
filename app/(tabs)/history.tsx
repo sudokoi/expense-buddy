@@ -13,13 +13,19 @@ import {
   Spacer,
   Input,
   Dialog,
+  Label,
+  Select,
+  Adapt,
+  Sheet,
 } from "tamagui";
+import { Check, ChevronDown } from "@tamagui/lucide-icons";
 import { Alert, SectionList } from "react-native";
 import { useExpenses } from "../../context/ExpenseContext";
 import { CATEGORIES } from "../../constants/categories";
 import { Trash, Edit3 } from "@tamagui/lucide-icons";
 import { format, parseISO } from "date-fns";
 import { useNotifications } from "../../context/notification-context";
+import type { ExpenseCategory } from "../../types/expense";
 
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense } = useExpenses();
@@ -27,6 +33,8 @@ export default function HistoryScreen() {
   const theme = useTheme();
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string;
+    amount: string;
+    category: ExpenseCategory;
     note: string;
   } | null>(null);
 
@@ -132,40 +140,126 @@ export default function HistoryScreen() {
             exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
             gap="$4"
           >
-            <Dialog.Title>Edit Note</Dialog.Title>
-            <Dialog.Description>
-              Update the note for this expense
-            </Dialog.Description>
-            <Input
-              value={editingExpense?.note || ""}
-              onChangeText={(text) =>
-                setEditingExpense((prev) =>
-                  prev ? { ...prev, note: text } : null
-                )
-              }
-              placeholder="Enter note"
-            />
-            <XStack gap="$3" justifyContent="flex-end">
+            <Dialog.Title>Edit Expense</Dialog.Title>
+            <Dialog.Description>Update the expense details</Dialog.Description>
+
+            <YStack gap="$3">
+              <YStack gap="$2">
+                <Label htmlFor="amount">Amount (₹)</Label>
+                <Input
+                  id="amount"
+                  value={editingExpense?.amount || ""}
+                  onChangeText={(text) =>
+                    setEditingExpense((prev) =>
+                      prev ? { ...prev, amount: text } : null
+                    )
+                  }
+                  placeholder="Enter amount"
+                  keyboardType="numeric"
+                />
+              </YStack>
+
+              <YStack gap="$2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  id="category"
+                  value={editingExpense?.category || ""}
+                  onValueChange={(value) =>
+                    setEditingExpense((prev) =>
+                      prev
+                        ? { ...prev, category: value as ExpenseCategory }
+                        : null
+                    )
+                  }
+                >
+                  <Select.Trigger iconAfter={ChevronDown}>
+                    <Select.Value placeholder="Select category" />
+                  </Select.Trigger>
+
+                  <Adapt when="sm" platform="touch">
+                    <Sheet
+                      modal
+                      dismissOnSnapToBottom
+                      animationConfig={{
+                        type: "spring",
+                        damping: 20,
+                        mass: 1.2,
+                        stiffness: 250,
+                      }}
+                    >
+                      <Sheet.Frame>
+                        <Sheet.ScrollView>
+                          <Adapt.Contents />
+                        </Sheet.ScrollView>
+                      </Sheet.Frame>
+                      <Sheet.Overlay
+                        animation="lazy"
+                        enterStyle={{ opacity: 0 }}
+                        exitStyle={{ opacity: 0 }}
+                      />
+                    </Sheet>
+                  </Adapt>
+
+                  <Select.Content zIndex={200000}>
+                    <Select.Viewport>
+                      <Select.Group>
+                        {CATEGORIES.map((cat, idx) => (
+                          <Select.Item
+                            key={cat.value}
+                            index={idx}
+                            value={cat.value}
+                          >
+                            <Select.ItemText>{cat.label}</Select.ItemText>
+                            <Select.ItemIndicator marginLeft="auto">
+                              <Check size={16} />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Group>
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select>
+              </YStack>
+
+              <YStack gap="$2">
+                <Label htmlFor="note">Note</Label>
+                <Input
+                  id="note"
+                  value={editingExpense?.note || ""}
+                  onChangeText={(text) =>
+                    setEditingExpense((prev) =>
+                      prev ? { ...prev, note: text } : null
+                    )
+                  }
+                  placeholder="Enter note (optional)"
+                />
+              </YStack>
+            </YStack>
+            <XStack gap="$3" style={{ justifyContent: "flex-end" }}>
               <Dialog.Close asChild>
                 <Button>Cancel</Button>
               </Dialog.Close>
               <Button
-                theme="active"
                 onPress={() => {
                   if (editingExpense) {
                     const expense = state.expenses.find(
                       (e) => e.id === editingExpense.id
                     );
                     if (expense) {
+                      const amount = parseFloat(editingExpense.amount);
+                      if (isNaN(amount) || amount <= 0) {
+                        addNotification("Please enter a valid amount", "error");
+                        return;
+                      }
                       editExpense(editingExpense.id, {
-                        amount: expense.amount,
-                        category: expense.category,
+                        amount,
+                        category: editingExpense.category,
                         date: expense.date,
                         note: editingExpense.note,
                       });
                       addNotification("Expense updated", "success");
+                      setEditingExpense(null);
                     }
-                    setEditingExpense(null);
                   }
                 }}
               >
@@ -252,7 +346,12 @@ export default function HistoryScreen() {
                   icon={Edit3}
                   chromeless
                   onPress={() => {
-                    setEditingExpense({ id: item.id, note: item.note || "" });
+                    setEditingExpense({
+                      id: item.id,
+                      amount: item.amount.toString(),
+                      category: item.category,
+                      note: item.note || "",
+                    });
                   }}
                   aria-label="Edit"
                 />

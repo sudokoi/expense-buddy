@@ -1,9 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Expense } from '../types/expense';
-import { performAutoSyncIfEnabled, shouldAutoSyncForTiming } from '../services/auto-sync-service';
-import { SyncNotification } from '../services/sync-manager';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Expense } from "../types/expense";
+import {
+  performAutoSyncIfEnabled,
+  shouldAutoSyncForTiming,
+} from "../services/auto-sync-service";
+import { SyncNotification } from "../services/sync-manager";
 
 interface ExpenseState {
   expenses: Expense[];
@@ -11,30 +14,41 @@ interface ExpenseState {
   syncNotification: SyncNotification | null;
 }
 
-const ExpenseContext = createContext<{
-  state: ExpenseState;
-  addExpense: (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  editExpense: (id: string, updates: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  deleteExpense: (id: string) => void;
-  replaceAllExpenses: (expenses: Expense[]) => void;
-  clearSyncNotification: () => void;
-} | undefined>(undefined);
+const ExpenseContext = createContext<
+  | {
+      state: ExpenseState;
+      addExpense: (
+        expense: Omit<Expense, "id" | "createdAt" | "updatedAt">
+      ) => void;
+      editExpense: (
+        id: string,
+        updates: Omit<Expense, "id" | "createdAt" | "updatedAt">
+      ) => void;
+      deleteExpense: (id: string) => void;
+      replaceAllExpenses: (expenses: Expense[]) => void;
+      clearSyncNotification: () => void;
+    }
+  | undefined
+>(undefined);
 
-const EXPENSES_KEY = 'expenses';
+const EXPENSES_KEY = "expenses";
 
 const fetchExpenses = async (): Promise<Expense[]> => {
   try {
     const stored = await AsyncStorage.getItem(EXPENSES_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (e) {
-    console.error('Failed to load expenses', e);
+    console.error("Failed to load expenses", e);
     return [];
   }
 };
 
-export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const queryClient = useQueryClient();
-  const [syncNotification, setSyncNotification] = useState<SyncNotification | null>(null);
+  const [syncNotification, setSyncNotification] =
+    useState<SyncNotification | null>(null);
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: [EXPENSES_KEY],
@@ -44,15 +58,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Auto-sync on app launch
   useEffect(() => {
     const performLaunchSync = async () => {
-      const shouldSync = await shouldAutoSyncForTiming('on_launch');
+      const shouldSync = await shouldAutoSyncForTiming("on_launch");
       if (shouldSync && expenses.length >= 0) {
-        console.log('Performing auto-sync on launch...');
+        console.log("Performing auto-sync on launch...");
         const result = await performAutoSyncIfEnabled(expenses);
 
         if (result.synced && result.expenses) {
           // Update local data with synced data
           queryClient.setQueryData([EXPENSES_KEY], result.expenses);
-          await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(result.expenses));
+          await AsyncStorage.setItem(
+            EXPENSES_KEY,
+            JSON.stringify(result.expenses)
+          );
 
           // Show notification if there are updates
           if (result.notification) {
@@ -74,7 +91,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Note: We should ideally use the current query data to avoid read-modify-write race if possible,
       // but reading from storage ensures source of truth matches.
       // Optimistic update is faster for UI.
-      const previousExpenses = queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
+      const previousExpenses =
+        queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
       const updatedExpenses = [newExpense, ...previousExpenses];
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
       return updatedExpenses;
@@ -83,15 +101,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       queryClient.setQueryData([EXPENSES_KEY], updatedExpenses);
 
       // Auto-sync after expense entry if enabled
-      const shouldSync = await shouldAutoSyncForTiming('on_expense_entry');
+      const shouldSync = await shouldAutoSyncForTiming("on_change");
       if (shouldSync) {
-        console.log('Performing auto-sync after expense entry...');
+        console.log("Performing auto-sync after expense entry...");
         const result = await performAutoSyncIfEnabled(updatedExpenses);
 
         if (result.synced && result.expenses) {
           // Update with synced data
           queryClient.setQueryData([EXPENSES_KEY], result.expenses);
-          await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(result.expenses));
+          await AsyncStorage.setItem(
+            EXPENSES_KEY,
+            JSON.stringify(result.expenses)
+          );
 
           // Show notification if there are updates from remote
           if (result.notification) {
@@ -104,31 +125,77 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const previousExpenses = queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
+      const previousExpenses =
+        queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
       const updatedExpenses = previousExpenses.filter((e) => e.id !== id);
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
       return updatedExpenses;
     },
-    onSuccess: (updatedExpenses) => {
+    onSuccess: async (updatedExpenses) => {
       queryClient.setQueryData([EXPENSES_KEY], updatedExpenses);
+
+      // Auto-sync after expense deletion if enabled
+      const shouldSync = await shouldAutoSyncForTiming("on_change");
+      if (shouldSync) {
+        console.log("Performing auto-sync after expense deletion...");
+        const result = await performAutoSyncIfEnabled(updatedExpenses);
+
+        if (result.synced && result.expenses) {
+          // Update with synced data
+          queryClient.setQueryData([EXPENSES_KEY], result.expenses);
+          await AsyncStorage.setItem(
+            EXPENSES_KEY,
+            JSON.stringify(result.expenses)
+          );
+
+          // Show notification if there are updates from remote
+          if (result.notification) {
+            setSyncNotification(result.notification);
+          }
+        }
+      }
     },
   });
 
   const editMutation = useMutation({
     mutationFn: async (updatedExpense: Expense) => {
-      const previousExpenses = queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
+      const previousExpenses =
+        queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
       const updatedExpenses = previousExpenses.map((e) =>
         e.id === updatedExpense.id ? updatedExpense : e
       );
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
       return updatedExpenses;
     },
-    onSuccess: (updatedExpenses) => {
+    onSuccess: async (updatedExpenses) => {
       queryClient.setQueryData([EXPENSES_KEY], updatedExpenses);
+
+      // Auto-sync after expense edit if enabled
+      const shouldSync = await shouldAutoSyncForTiming("on_change");
+      if (shouldSync) {
+        console.log("Performing auto-sync after expense edit...");
+        const result = await performAutoSyncIfEnabled(updatedExpenses);
+
+        if (result.synced && result.expenses) {
+          // Update with synced data
+          queryClient.setQueryData([EXPENSES_KEY], result.expenses);
+          await AsyncStorage.setItem(
+            EXPENSES_KEY,
+            JSON.stringify(result.expenses)
+          );
+
+          // Show notification if there are updates from remote
+          if (result.notification) {
+            setSyncNotification(result.notification);
+          }
+        }
+      }
     },
   });
 
-  const addExpense = (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addExpense = (
+    expense: Omit<Expense, "id" | "createdAt" | "updatedAt">
+  ) => {
     const now = new Date().toISOString();
     const newExpense: Expense = {
       ...expense,
@@ -139,7 +206,10 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addMutation.mutate(newExpense);
   };
 
-  const editExpense = (id: string, updates: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const editExpense = (
+    id: string,
+    updates: Omit<Expense, "id" | "createdAt" | "updatedAt">
+  ) => {
     const existing = expenses.find((e) => e.id === id);
     if (!existing) return;
 
@@ -147,6 +217,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updatedExpense: Expense = {
       ...existing,
       ...updates,
+      id: existing.id, // Explicitly preserve the ID
+      createdAt: existing.createdAt, // Preserve creation timestamp
       updatedAt: now, // Always update timestamp
     };
     editMutation.mutate(updatedExpense);
@@ -173,7 +245,16 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ExpenseContext.Provider value={{ state, addExpense, editExpense, deleteExpense, replaceAllExpenses, clearSyncNotification }}>
+    <ExpenseContext.Provider
+      value={{
+        state,
+        addExpense,
+        editExpense,
+        deleteExpense,
+        replaceAllExpenses,
+        clearSyncNotification,
+      }}
+    >
       {children}
     </ExpenseContext.Provider>
   );
@@ -182,7 +263,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 export const useExpenses = () => {
   const context = useContext(ExpenseContext);
   if (!context) {
-    throw new Error('useExpenses must be used within an ExpenseProvider');
+    throw new Error("useExpenses must be used within an ExpenseProvider");
   }
   return context;
 };
