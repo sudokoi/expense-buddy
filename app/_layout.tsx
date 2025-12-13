@@ -50,6 +50,10 @@ export default function RootLayout() {
 
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NotificationProvider } from '../context/notification-context'
+import { SyncStatusProvider } from '../context/sync-status-context'
+import { NotificationStack } from '../components/NotificationStack'
+import { SyncIndicator } from '../components/SyncIndicator'
 
 const queryClient = new QueryClient()
 
@@ -57,7 +61,15 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <Provider>
       <QueryClientProvider client={queryClient}>
-        <ExpenseProvider>{children}</ExpenseProvider>
+        <NotificationProvider>
+          <SyncStatusProvider>
+            <ExpenseProvider>
+              {children}
+              <NotificationStack />
+              <SyncIndicator />
+            </ExpenseProvider>
+          </SyncStatusProvider>
+        </NotificationProvider>
       </QueryClientProvider>
     </Provider>
   )

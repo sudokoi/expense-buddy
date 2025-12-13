@@ -10,9 +10,11 @@ import {
   ScrollView,
   useTheme,
   Card,
+  Switch,
+  RadioGroup,
 } from 'tamagui'
 import { Alert } from 'react-native'
-import { Check, X, Settings as SettingsIcon } from '@tamagui/lucide-icons'
+import { Check, X } from '@tamagui/lucide-icons'
 import {
   saveSyncConfig,
   loadSyncConfig,
@@ -21,12 +23,19 @@ import {
   syncUp,
   syncDown,
   SyncConfig,
+  saveAutoSyncSettings,
+  loadAutoSyncSettings,
+  AutoSyncTiming,
 } from '../../services/sync-manager'
 import { useExpenses } from '../../context/ExpenseContext'
+import { useNotifications } from '../../context/notification-context'
+import { useSyncStatus } from '../../context/sync-status-context'
 
 export default function SettingsScreen() {
   const theme = useTheme()
   const { state } = useExpenses()
+  const { addNotification } = useNotifications()
+  const { startSync, endSync } = useSyncStatus()
 
   const [token, setToken] = useState('')
   const [repo, setRepo] = useState('')
@@ -35,8 +44,13 @@ export default function SettingsScreen() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
+  // Auto-sync settings
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false)
+  const [autoSyncTiming, setAutoSyncTiming] = useState<AutoSyncTiming>('on_launch')
+
   useEffect(() => {
     loadConfig()
+    loadAutoSync()
   }, [])
 
   const loadConfig = async () => {
@@ -48,15 +62,29 @@ export default function SettingsScreen() {
     }
   }
 
+  const loadAutoSync = async () => {
+    const settings = await loadAutoSyncSettings()
+    setAutoSyncEnabled(settings.enabled)
+    setAutoSyncTiming(settings.timing)
+  }
+
+  const handleSaveAutoSync = async () => {
+    await saveAutoSyncSettings({
+      enabled: autoSyncEnabled,
+      timing: autoSyncTiming,
+    })
+    addNotification('Auto-sync settings saved', 'success')
+  }
+
   const handleSaveConfig = async () => {
     if (!token || !repo || !branch) {
-      Alert.alert('Missing Information', 'Please fill in all fields')
+      addNotification('Please fill in all fields', 'error')
       return
     }
 
     const config: SyncConfig = { token, repo, branch }
     await saveSyncConfig(config)
-    Alert.alert('Success', 'Sync configuration saved')
+    addNotification('Sync configuration saved', 'success')
   }
 
   const handleTestConnection = async () => {
@@ -68,22 +96,24 @@ export default function SettingsScreen() {
     setIsTesting(false)
     if (result.success) {
       setConnectionStatus('success')
-      Alert.alert('Success', result.message)
+      addNotification(result.message, 'success')
     } else {
       setConnectionStatus('error')
-      Alert.alert('Error', result.error || result.message)
+      addNotification(result.error || result.message, 'error')
     }
   }
 
   const handleSyncUp = async () => {
     setIsSyncing(true)
+    startSync()
     const result = await syncUp(state.expenses)
     setIsSyncing(false)
+    endSync(result.success)
 
     if (result.success) {
-      Alert.alert('Success', result.message)
+      addNotification(result.message, 'success')
     } else {
-      Alert.alert('Error', result.error || result.message)
+      addNotification(result.error || result.message, 'error')
     }
   }
 
@@ -98,14 +128,15 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             setIsSyncing(true)
+            startSync()
             const result = await syncDown()
             setIsSyncing(false)
+            endSync(result.success)
 
             if (result.success && result.expenses) {
-              // TODO: Update context with downloaded expenses
-              Alert.alert('Success', result.message + '\nPlease reload the app to see changes.')
+              addNotification(`Downloaded ${result.expenses.length} expenses`, 'success')
             } else {
-              Alert.alert('Error', result.error || result.message)
+              addNotification(result.error || result.message, 'error')
             }
           },
         },
@@ -125,7 +156,7 @@ export default function SettingsScreen() {
           setRepo('')
           setBranch('main')
           setConnectionStatus('idle')
-          Alert.alert('Success', 'Configuration cleared')
+          addNotification('Configuration cleared', 'success')
         },
       },
     ])
@@ -237,6 +268,74 @@ export default function SettingsScreen() {
               disabled={isSyncing || !token || !repo}
             >
               Download from GitHub
+            </Button>
+          </YStack>
+        </Card>
+
+        {/* Auto-Sync Settings */}
+        <Card bordered style={{ padding: 16, marginTop: 16 }}>
+          <H4 style={{ marginBottom: 12, fontSize: 16 }}>Auto-Sync Settings</H4>
+
+          <YStack space="$3">
+            {/* Enable Auto-Sync Toggle */}
+            <XStack style={{ alignItems: 'center', justifyContent: 'space-between' } as any}>
+              <YStack flex={1}>
+                <Label>Enable Auto-Sync</Label>
+                <Text style={{ fontSize: 12, color: (theme.gray9?.val as string) || 'gray', marginTop: 4 }}>
+                  Automatically sync with GitHub when configured
+                </Text>
+              </YStack>
+              <Switch
+                size="$4"
+                checked={autoSyncEnabled}
+                onCheckedChange={setAutoSyncEnabled}
+              >
+                <Switch.Thumb animation="quick" />
+              </Switch>
+            </XStack>
+
+            {/* When to Sync */}
+            {autoSyncEnabled && (
+              <YStack gap="$2">
+                <Label>When to Sync</Label>
+                <RadioGroup
+                  value={autoSyncTiming}
+                  onValueChange={(value) => setAutoSyncTiming(value as AutoSyncTiming)}
+                >
+                  <XStack style={{ alignItems: 'center', gap: 8, marginVertical: 8 } as any}>
+                    <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
+                      <RadioGroup.Indicator />
+                    </RadioGroup.Item>
+                    <Label htmlFor="on_launch" flex={1}>
+                      On App Launch
+                      <Text style={{ fontSize: 12, color: (theme.gray9?.val as string) || 'gray', marginTop: 4 }}>
+                        Sync when the app starts
+                      </Text>
+                    </Label>
+                  </XStack>
+
+                  <XStack style={{ alignItems: 'center', gap: 8, marginVertical: 8 } as any}>
+                    <RadioGroup.Item value="on_expense_entry" id="on_expense_entry" size="$4">
+                      <RadioGroup.Indicator />
+                    </RadioGroup.Item>
+                    <Label htmlFor="on_expense_entry" flex={1}>
+                      On Every Expense Entry
+                      <Text style={{ fontSize: 12, color: (theme.gray9?.val as string) || 'gray', marginTop: 4 }}>
+                        Sync immediately after adding an expense
+                      </Text>
+                    </Label>
+                  </XStack>
+                </RadioGroup>
+              </YStack>
+            )}
+
+            {/* Save Auto-Sync Button */}
+            <Button
+              size="$4"
+              onPress={handleSaveAutoSync}
+              themeInverse
+            >
+              Save Auto-Sync Settings
             </Button>
           </YStack>
         </Card>

@@ -8,6 +8,8 @@ import { uploadCSV, downloadCSV, validatePAT } from './github-sync';
 const GITHUB_TOKEN_KEY = 'github_pat';
 const GITHUB_REPO_KEY = 'github_repo';
 const GITHUB_BRANCH_KEY = 'github_branch';
+const AUTO_SYNC_ENABLED_KEY = 'auto_sync_enabled';
+const AUTO_SYNC_TIMING_KEY = 'auto_sync_timing';
 
 export interface SyncConfig {
   token: string;
@@ -19,6 +21,20 @@ export interface SyncResult {
   success: boolean;
   message: string;
   error?: string;
+}
+
+export type AutoSyncTiming = 'on_launch' | 'on_expense_entry';
+
+export interface AutoSyncSettings {
+  enabled: boolean;
+  timing: AutoSyncTiming;
+}
+
+export interface SyncNotification {
+  newItemsCount: number;
+  updatedItemsCount: number;
+  totalCount: number;
+  message: string;
 }
 
 // Helper functions for secure storage with platform check
@@ -77,6 +93,27 @@ export async function clearSyncConfig(): Promise<void> {
   await secureDeleteItem(GITHUB_TOKEN_KEY);
   await secureDeleteItem(GITHUB_REPO_KEY);
   await secureDeleteItem(GITHUB_BRANCH_KEY);
+}
+
+/**
+ * Save auto-sync settings
+ */
+export async function saveAutoSyncSettings(settings: AutoSyncSettings): Promise<void> {
+  await secureSetItem(AUTO_SYNC_ENABLED_KEY, settings.enabled.toString());
+  await secureSetItem(AUTO_SYNC_TIMING_KEY, settings.timing);
+}
+
+/**
+ * Load auto-sync settings
+ */
+export async function loadAutoSyncSettings(): Promise<AutoSyncSettings> {
+  const enabled = await secureGetItem(AUTO_SYNC_ENABLED_KEY);
+  const timing = await secureGetItem(AUTO_SYNC_TIMING_KEY);
+
+  return {
+    enabled: enabled === 'true',
+    timing: (timing as AutoSyncTiming) || 'on_launch',
+  };
 }
 
 /**
@@ -165,24 +202,40 @@ async function saveLastSyncTime(): Promise<void> {
 /**
  * Bidirectional sync with timestamp-based conflict resolution
  */
-export async function autoSync(localExpenses: Expense[]): Promise<SyncResult & { expenses?: Expense[] }> {
+export async function autoSync(localExpenses: Expense[]): Promise<SyncResult & { expenses?: Expense[]; notification?: SyncNotification }> {
   try {
     const lastSyncTime = await getLastSyncTime();
     const downloadResult = await syncDown();
     
     if (downloadResult.success && downloadResult.expenses) {
       const remoteExpenses = downloadResult.expenses;
-      const merged = mergeExpensesWithTimestamps(localExpenses, remoteExpenses, lastSyncTime);
+      const mergeResult = mergeExpensesWithTimestamps(localExpenses, remoteExpenses, lastSyncTime);
 
       // Upload merged data
-      const uploadResult = await syncUp(merged);
+      const uploadResult = await syncUp(mergeResult.merged);
       
       if (uploadResult.success) {
         await saveLastSyncTime();
+        
+        // Create notification if there are new or updated items from remote
+        let notification: SyncNotification | undefined;
+        if (mergeResult.newFromRemote > 0 || mergeResult.updatedFromRemote > 0) {
+          const totalSynced = mergeResult.newFromRemote + mergeResult.updatedFromRemote;
+          notification = {
+            newItemsCount: mergeResult.newFromRemote,
+            updatedItemsCount: mergeResult.updatedFromRemote,
+            totalCount: totalSynced,
+            message: totalSynced === 1 
+              ? '1 expense synced from GitHub'
+              : `${totalSynced} expenses synced from GitHub`,
+          };
+        }
+        
         return {
           success: true,
-          message: `Synced: ${merged.length} expenses (${localExpenses.length} local, ${remoteExpenses.length} remote)`,
-          expenses: merged,
+          message: `Synced: ${mergeResult.merged.length} expenses (${localExpenses.length} local, ${remoteExpenses.length} remote)`,
+          expenses: mergeResult.merged,
+          notification,
         };
       } else {
         return { success: false, message: 'Upload after merge failed', error: uploadResult.error };
@@ -217,10 +270,12 @@ function mergeExpensesWithTimestamps(
   local: Expense[],
   remote: Expense[],
   lastSyncTime: string | null
-): Expense[] {
+): { merged: Expense[]; newFromRemote: number; updatedFromRemote: number } {
   const localMap = new Map(local.map(e => [e.id, e]));
   const remoteMap = new Map(remote.map(e => [e.id, e]));
   const merged: Expense[] = [];
+  let newFromRemote = 0;
+  let updatedFromRemote = 0;
 
   // Process all unique IDs
   const allIds = new Set([...localMap.keys(), ...remoteMap.keys()]);
@@ -233,7 +288,12 @@ function mergeExpensesWithTimestamps(
       // Conflict: exists in both - keep the newer one based on updatedAt
       const localTime = new Date(localItem.updatedAt).getTime();
       const remoteTime = new Date(remoteItem.updatedAt).getTime();
-      merged.push(remoteTime > localTime ? remoteItem : localItem);
+      if (remoteTime > localTime) {
+        merged.push(remoteItem);
+        updatedFromRemote++;
+      } else {
+        merged.push(localItem);
+      }
     } else if (localItem) {
       // Only in local - keep it
       merged.push(localItem);
@@ -252,9 +312,16 @@ function mergeExpensesWithTimestamps(
       }
       // It's a new remote item or we don't have sync history - add it
       merged.push(remoteItem);
+      newFromRemote++;
     }
   }
 
   // Sort by creation date (newest first)
-  return merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sortedMerged = merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  return {
+    merged: sortedMerged,
+    newFromRemote,
+    updatedFromRemote,
+  };
 }

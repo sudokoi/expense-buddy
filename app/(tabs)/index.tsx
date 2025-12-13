@@ -1,6 +1,7 @@
 
 import { format, parseISO, startOfDay, subDays } from 'date-fns'
 import { YStack, H4, XStack, Card, Text, Button, SizableText, ScrollView, useTheme } from 'tamagui'
+import { useToastController } from '@tamagui/toast'
 import { BarChart } from 'react-native-gifted-charts'
 import { useExpenses } from '../../context/ExpenseContext'
 import { useRouter, Href } from 'expo-router'
@@ -9,10 +10,11 @@ import { CATEGORIES } from '../../constants/categories'
 import React from 'react'
 
 export default function DashboardScreen() {
-  const { state } = useExpenses()
+  const { state, clearSyncNotification } = useExpenses()
   const theme = useTheme()
   const router = useRouter()
   const screenWidth = Dimensions.get('window').width
+  const toast = useToastController()
 
   const totalExpenses = state.expenses.reduce((sum, item) => sum + item.amount, 0)
   const recentExpenses = state.expenses.slice(0, 5)
@@ -21,19 +23,19 @@ export default function DashboardScreen() {
   const chartData = React.useMemo(() => {
     const grouped: Record<string, Record<string, number>> = {}
     const last7Days: string[] = []
-    
+
     // Generate last 7 days keys
     for (let i = 6; i >= 0; i--) {
-        const d = subDays(new Date(), i)
-        last7Days.push(format(d, 'yyyy-MM-dd'))
+      const d = subDays(new Date(), i)
+      last7Days.push(format(d, 'yyyy-MM-dd'))
     }
 
     // Aggregate
     state.expenses.forEach(e => {
-        const dateKey = e.date.split('T')[0]
-        if (!grouped[dateKey]) grouped[dateKey] = {}
-        if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
-        grouped[dateKey][e.category] += e.amount
+      const dateKey = e.date.split('T')[0]
+      if (!grouped[dateKey]) grouped[dateKey] = {}
+      if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
+      grouped[dateKey][e.category] += e.amount
     })
 
     // Format for Chart - only include days with actual expenses
@@ -41,22 +43,22 @@ export default function DashboardScreen() {
       .map(dateKey => {
         const dayExpenses = grouped[dateKey] || {}
         const stacks = Object.keys(dayExpenses).map(cat => {
-            const categoryConfig = CATEGORIES.find(c => c.value === cat)
-            return {
-                value: dayExpenses[cat],
-                color: categoryConfig?.color || '#888',
-                marginBottom: 2,
-            }
+          const categoryConfig = CATEGORIES.find(c => c.value === cat)
+          return {
+            value: dayExpenses[cat],
+            color: categoryConfig?.color || '#888',
+            marginBottom: 2,
+          }
         })
-        
+
         return {
-            stacks: stacks,
-            label: format(parseISO(dateKey), 'dd/MM'),
-            onPress: () => router.push(`/day/${dateKey}` as any),
-            dateKey, // Keep for filtering
+          stacks: stacks,
+          label: format(parseISO(dateKey), 'dd/MM'),
+          onPress: () => router.push(`/day/${dateKey}` as any),
+          dateKey, // Keep for filtering
         }
-    })
-    .filter(item => item.stacks.length > 0) // Only show days with data
+      })
+      .filter(item => item.stacks.length > 0) // Only show days with data
   }, [state.expenses, theme])
 
   const hasData = chartData.some(d => d.stacks && d.stacks.length > 0)
@@ -68,6 +70,18 @@ export default function DashboardScreen() {
     console.log('First 2 chart items:', JSON.stringify(chartData, null, 2))
     console.log('Has data:', hasData)
   }, [chartData, state.expenses.length, hasData])
+
+  // Show toast when sync notification is available
+  React.useEffect(() => {
+    if (state.syncNotification) {
+      toast.show(state.syncNotification.message, {
+        message: `${state.syncNotification.newItemsCount} new, ${state.syncNotification.updatedItemsCount} updated`,
+        duration: 4000,
+      })
+      // Clear notification after showing
+      setTimeout(() => clearSyncNotification(), 500)
+    }
+  }, [state.syncNotification])
 
   return (
     <ScrollView flex={1} style={{ backgroundColor: theme.background.val as string }} contentContainerStyle={{ padding: 20 } as any}>
@@ -149,7 +163,7 @@ export default function DashboardScreen() {
             See All
           </Button>
         </XStack>
-        
+
         {recentExpenses.length === 0 && <Text style={{ color: (theme.gray10?.val as string) || 'gray' }}>No recent transactions.</Text>}
 
         {recentExpenses.map((expense) => {
@@ -176,10 +190,10 @@ export default function DashboardScreen() {
                     justifyContent: 'center'
                   }}
                 >
-                   {cat?.icon && (
-                      // @ts-ignore
-                      <cat.icon color="white" size={16} />
-                   )}
+                  {cat?.icon && (
+                    // @ts-ignore
+                    <cat.icon color="white" size={16} />
+                  )}
                 </YStack>
                 <YStack>
                   <SizableText size="$4" fontWeight="bold">
