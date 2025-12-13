@@ -53,39 +53,24 @@ jobs:
             echo "Using commit SHA: $VERSION"
           fi
 
-      - name: 🚀 Build APK
-        run: eas build --platform android --profile internal --non-interactive --no-wait
-        id: build
-
-      - name: ⏳ Wait for build to complete
+      - name: 🚀 Build and Download APK
         run: |
-          echo "Waiting for EAS build to complete..."
-          # Get the build ID from the previous step
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          echo "Starting EAS build (this will wait for completion)..."
+          eas build --platform android --profile internal --non-interactive
 
-          # Wait for build to complete (check every 30 seconds, max 30 minutes)
-          for i in {1..60}; do
-            STATUS=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].status')
-            echo "Build status: $STATUS"
-            
-            if [ "$STATUS" == "finished" ]; then
-              echo "Build completed successfully!"
-              break
-            elif [ "$STATUS" == "errored" ] || [ "$STATUS" == "canceled" ]; then
-              echo "Build failed with status: $STATUS"
-              exit 1
-            fi
-            
-            sleep 30
-          done
+          echo "Build completed! Downloading APK..."
 
-      - name: 📥 Download APK
-        run: |
-          # Get the build artifact URL
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          # Get the build artifact URL from the latest build
+          BUILD_JSON=$(eas build:list --platform android --limit 1 --json)
+          BUILD_URL=$(echo "$BUILD_JSON" | jq -r '.[0].artifacts.buildUrl')
+
+          if [ -z "$BUILD_URL" ] || [ "$BUILD_URL" == "null" ]; then
+            echo "Error: Could not get build URL"
+            echo "Build info: $BUILD_JSON"
+            exit 1
+          fi
+
           echo "Downloading APK from: $BUILD_URL"
-
-          # Download the APK
           curl -L -o expense-buddy-${{ steps.version.outputs.version_name }}.apk "$BUILD_URL"
 
           # Verify the file was downloaded
