@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Expense } from '../types/expense';
 
 interface ExpenseState {
@@ -7,68 +8,72 @@ interface ExpenseState {
   isLoading: boolean;
 }
 
-type Action =
-  | { type: 'LOAD_EXPENSES'; payload: Expense[] }
-  | { type: 'ADD_EXPENSE'; payload: Expense }
-  | { type: 'DELETE_EXPENSE'; payload: string };
-
-const initialState: ExpenseState = {
-  expenses: [],
-  isLoading: true,
-};
-
 const ExpenseContext = createContext<{
   state: ExpenseState;
   addExpense: (expense: Omit<Expense, 'id'>) => void;
   deleteExpense: (id: string) => void;
 } | undefined>(undefined);
 
-function expenseReducer(state: ExpenseState, action: Action): ExpenseState {
-  switch (action.type) {
-    case 'LOAD_EXPENSES':
-      return { ...state, expenses: action.payload, isLoading: false };
-    case 'ADD_EXPENSE':
-      return { ...state, expenses: [action.payload, ...state.expenses] };
-    case 'DELETE_EXPENSE':
-      return { ...state, expenses: state.expenses.filter((e) => e.id !== action.payload) };
-    default:
-      return state;
+const EXPENSES_KEY = 'expenses';
+
+const fetchExpenses = async (): Promise<Expense[]> => {
+  try {
+    const stored = await AsyncStorage.getItem(EXPENSES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    console.error('Failed to load expenses', e);
+    return [];
   }
-}
+};
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(expenseReducer, initialState);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const stored = await AsyncStorage.getItem('expenses');
-        if (stored) {
-          dispatch({ type: 'LOAD_EXPENSES', payload: JSON.parse(stored) });
-        } else {
-          dispatch({ type: 'LOAD_EXPENSES', payload: [] });
-        }
-      } catch (e) {
-        console.error('Failed to load expenses', e);
-        dispatch({ type: 'LOAD_EXPENSES', payload: [] });
-      }
-    };
-    loadData();
-  }, []);
+  const { data: expenses = [], isLoading } = useQuery({
+    queryKey: [EXPENSES_KEY],
+    queryFn: fetchExpenses,
+  });
 
-  useEffect(() => {
-    if (!state.isLoading) {
-      AsyncStorage.setItem('expenses', JSON.stringify(state.expenses));
-    }
-  }, [state.expenses, state.isLoading]);
+  const addMutation = useMutation({
+    mutationFn: async (newExpense: Expense) => {
+      // Create new list properly
+      // Note: We should ideally use the current query data to avoid read-modify-write race if possible,
+      // but reading from storage ensures source of truth matches.
+      // Optimistic update is faster for UI.
+      const previousExpenses = queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
+      const updatedExpenses = [newExpense, ...previousExpenses];
+      await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
+      return updatedExpenses;
+    },
+    onSuccess: (updatedExpenses) => {
+      queryClient.setQueryData([EXPENSES_KEY], updatedExpenses);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const previousExpenses = queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
+      const updatedExpenses = previousExpenses.filter((e) => e.id !== id);
+      await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
+      return updatedExpenses;
+    },
+    onSuccess: (updatedExpenses) => {
+      queryClient.setQueryData([EXPENSES_KEY], updatedExpenses);
+    },
+  });
 
   const addExpense = (expense: Omit<Expense, 'id'>) => {
     const newExpense = { ...expense, id: Date.now().toString() };
-    dispatch({ type: 'ADD_EXPENSE', payload: newExpense });
+    addMutation.mutate(newExpense);
   };
 
   const deleteExpense = (id: string) => {
-    dispatch({ type: 'DELETE_EXPENSE', payload: id });
+    deleteMutation.mutate(id);
+  };
+
+  const state: ExpenseState = {
+    expenses,
+    isLoading,
   };
 
   return (

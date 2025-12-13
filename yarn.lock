@@ -6332,6 +6332,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.90.12":
+  version: 5.90.12
+  resolution: "@tanstack/query-core@npm:5.90.12"
+  checksum: 10/e7a23a83152c40c5eced669a0d0965b19467c03009b383b6bc18b5ee86db7a7357984a2c851ba60859cbeb6966bb9756314c153c14532c75fd24d0159cbe7e56
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.90.12":
+  version: 5.90.12
+  resolution: "@tanstack/react-query@npm:5.90.12"
+  dependencies:
+    "@tanstack/query-core": "npm:5.90.12"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10/8119fbaeec7f40fba68723f438b6440dcf4ac10e086f252f84ca3eef1ce5c416e02cfe26f8d43f6faf4ad0b0835741853824cdff7da8dd7aea5e515a7ce67c01
+  languageName: node
+  linkType: hard
+
 "@ts-morph/common@npm:~0.16.0":
   version: 0.16.0
   resolution: "@ts-morph/common@npm:0.16.0"
@@ -8614,6 +8632,7 @@ __metadata:
     "@tamagui/lucide-icons": "npm:^1.140.0"
     "@tamagui/metro-plugin": "npm:^1.140.0"
     "@tamagui/toast": "npm:^1.140.0"
+    "@tanstack/react-query": "npm:^5.90.12"
     "@types/react": "npm:~19.1.17"
     "@types/react-native": "npm:^0.73.0"
     babel-preset-expo: "npm:~54.0.0"

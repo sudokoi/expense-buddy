@@ -49,10 +49,16 @@ export default function RootLayout() {
 
 
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <Provider>
-      <ExpenseProvider>{children}</ExpenseProvider>
+      <QueryClientProvider client={queryClient}>
+        <ExpenseProvider>{children}</ExpenseProvider>
+      </QueryClientProvider>
     </Provider>
   )
 }
