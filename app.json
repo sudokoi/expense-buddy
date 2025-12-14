@@ -2,7 +2,7 @@
   "expo": {
     "name": "expense-buddy",
     "slug": "expense-buddy",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.tsuki42.expensebuddy"
+      "package": "com.sudokoi.expensebuddy"
     },
     "web": {
       "bundler": "metro",
@@ -53,6 +53,6 @@
         "projectId": "facbe508-0deb-4c1d-9625-b49b672a98f1"
       }
     },
-    "owner": "tsuki42"
+    "owner": "sudokoi"
   }
 }

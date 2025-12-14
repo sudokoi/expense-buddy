@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.1.1
+
+### Patch Changes
+
+- rename package name
+
 ## 1.1.0
 
 ### Minor Changes
@@ -8,7 +14,7 @@
   - Add in-app update checker that fetches latest release from GitHub
   - Show current version and download link when updates are available
 
-## v1.0.0
+## 1.0.0
 
 ### Initial Release
 
