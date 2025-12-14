@@ -12,7 +12,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status",
+    "release": "yarn changeset:version && echo '\n✅ Version bumped! Review changes, then:\n  git add .\n  git commit -m \"Version bump\"\n  git tag v$(node -p \"require('./package.json').version\")\n  git push origin main --tags'"
   },
   "jest": {
     "preset": "jest-expo"
@@ -55,6 +59,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "@expo/metro-config": "~54.0.11",
     "@expo/metro-runtime": "~6.1.2",
     "@tamagui/babel-plugin": "^1.140.0",

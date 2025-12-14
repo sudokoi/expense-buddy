@@ -236,9 +236,25 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'feat: add some amazing feature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+3. Make your changes and **create a changeset**:
+   ```bash
+   yarn changeset
+   ```
+4. Commit your changes with the changeset:
+   ```bash
+   git add .
+   git commit -m 'feat: add some amazing feature'
+   ```
+5. Push to the branch (`git push origin feature/AmazingFeature`)
+6. Open a Pull Request
+
+### Changelog Management
+
+This project uses [Changesets](https://github.com/changesets/changesets) for version management and changelog generation.
+
+- **Adding changes**: Run `yarn changeset` to document your changes
+- **Quick guide**: See [.github/CHANGELOG_GUIDE.md](.github/CHANGELOG_GUIDE.md)
+- **Release process**: See [.github/RELEASE.md](.github/RELEASE.md)
 
 ## 📝 License
 

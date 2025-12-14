@@ -19,6 +19,7 @@ jobs:
     outputs:
       build_url: ${{ steps.build.outputs.build_url }}
       version_name: ${{ steps.version.outputs.version_name }}
+      changelog: ${{ steps.changelog.outputs.CHANGELOG }}
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
@@ -37,6 +38,47 @@ jobs:
 
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: � Eextract changelog for this version
+        id: changelog
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            
+            # Check if CHANGELOG.md exists
+            if [ -f "CHANGELOG.md" ]; then
+              echo "Found CHANGELOG.md, extracting section for $VERSION"
+              
+              # Extract the section for this version using awk
+              CHANGELOG_CONTENT=$(awk -v version="$VERSION" '
+                /^## / {
+                  if (found) exit
+                  if ($0 ~ version) {
+                    found=1
+                    next
+                  }
+                }
+                found { print }
+              ' CHANGELOG.md)
+              
+              # Set output using heredoc to handle multiline content
+              if [ -n "$CHANGELOG_CONTENT" ]; then
+                echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+                echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+                echo "✅ Changelog extracted successfully"
+              else
+                echo "CHANGELOG=_No changelog entry found for $VERSION_" >> $GITHUB_OUTPUT
+                echo "⚠️ No changelog entry found for $VERSION"
+              fi
+            else
+              echo "CHANGELOG=_No CHANGELOG.md found. Run \`yarn changeset:version\` to generate changelog._" >> $GITHUB_OUTPUT
+              echo "⚠️ CHANGELOG.md not found"
+            fi
+          else
+            # Manual workflow dispatch - no changelog needed
+            echo "CHANGELOG=" >> $GITHUB_OUTPUT
+          fi
 
       - name: 🔧 Determine version name
         id: version
@@ -86,6 +128,10 @@ jobs:
           name: expense-buddy-${{ needs.build.outputs.version_name }}
           path: expense-buddy-${{ needs.build.outputs.version_name }}.apk
 
+      - name: 🏗 Checkout repo for changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/checkout@v4
+
       - name: 🎉 Create GitHub Release (for tag pushes)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
@@ -103,6 +149,8 @@ jobs:
 
             ---
 
-            ${{ github.event.head_commit.message }}
+            ## 📝 Changelog
+
+            ${{ needs.build.outputs.changelog }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
