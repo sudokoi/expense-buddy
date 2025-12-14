@@ -253,7 +253,7 @@ export default function DashboardScreen() {
                 </YStack>
                 <YStack>
                   <SizableText size="$4" fontWeight="bold">
-                    {cat?.label}
+                    {expense.note || cat?.label}
                   </SizableText>
                   <Text
                     style={{
@@ -261,7 +261,8 @@ export default function DashboardScreen() {
                       fontSize: 12,
                     }}
                   >
-                    {format(parseISO(expense.date), "dd/MM/yyyy")}
+                    {format(parseISO(expense.date), "dd/MM/yyyy")} •{" "}
+                    {cat?.label}
                   </Text>
                 </YStack>
               </XStack>

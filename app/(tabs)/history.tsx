@@ -398,7 +398,8 @@ export default function HistoryScreen() {
                       fontSize: 12,
                     }}
                   >
-                    {format(parseISO(item.date), "h:mm a")} • {item.category}
+                    {format(parseISO(item.date), "h:mm a")} •{" "}
+                    {categoryInfo.label}
                   </Text>
                 </YStack>
               </XStack>
