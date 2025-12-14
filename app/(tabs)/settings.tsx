@@ -13,8 +13,8 @@ import {
   Switch,
   RadioGroup,
 } from "tamagui";
-import { Alert } from "react-native";
-import { Check, X } from "@tamagui/lucide-icons";
+import { Alert, Linking } from "react-native";
+import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons";
 import {
   saveSyncConfig,
   loadSyncConfig,
@@ -30,6 +30,8 @@ import {
 import { useExpenses } from "../../context/ExpenseContext";
 import { useNotifications } from "../../context/notification-context";
 import { useSyncStatus } from "../../context/sync-status-context";
+import { checkForUpdates, UpdateInfo } from "../../services/update-checker";
+import { APP_CONFIG } from "../../constants/app-config";
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -50,6 +52,10 @@ export default function SettingsScreen() {
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
   const [autoSyncTiming, setAutoSyncTiming] =
     useState<AutoSyncTiming>("on_launch");
+
+  // Update check state
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   useEffect(() => {
     loadConfig();
@@ -218,6 +224,27 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleCheckForUpdates = async () => {
+    setIsCheckingUpdate(true);
+    const info = await checkForUpdates();
+    setUpdateInfo(info);
+    setIsCheckingUpdate(false);
+
+    if (info.error) {
+      addNotification(info.error, "error");
+    } else if (info.hasUpdate) {
+      addNotification(`Update available: v${info.latestVersion}`, "success");
+    } else {
+      addNotification("You're on the latest version", "success");
+    }
+  };
+
+  const handleOpenRelease = () => {
+    if (updateInfo?.releaseUrl) {
+      Linking.openURL(updateInfo.releaseUrl);
+    }
   };
 
   return (
@@ -445,6 +472,85 @@ export default function SettingsScreen() {
             {/* Save Auto-Sync Button */}
             <Button size="$4" onPress={handleSaveAutoSync} themeInverse>
               Save Auto-Sync Settings
+            </Button>
+          </YStack>
+        </Card>
+
+        {/* App Info & Updates */}
+        <Card bordered style={{ padding: 16, marginTop: 16 }}>
+          <H4 style={{ marginBottom: 12, fontSize: 16 }}>App Information</H4>
+
+          <YStack gap="$3">
+            {/* Current Version */}
+            <XStack
+              style={
+                { alignItems: "center", justifyContent: "space-between" } as any
+              }
+            >
+              <Text style={{ color: (theme.gray11?.val as string) || "gray" }}>
+                Current Version
+              </Text>
+              <Text style={{ fontWeight: "bold" }}>v{APP_CONFIG.version}</Text>
+            </XStack>
+
+            {/* Update Info */}
+            {updateInfo && !updateInfo.error && (
+              <XStack
+                style={
+                  {
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  } as any
+                }
+              >
+                <Text
+                  style={{ color: (theme.gray11?.val as string) || "gray" }}
+                >
+                  Latest Version
+                </Text>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: updateInfo.hasUpdate
+                      ? (theme.green10?.val as string) || "green"
+                      : (theme.gray11?.val as string) || "gray",
+                  }}
+                >
+                  v{updateInfo.latestVersion}
+                </Text>
+              </XStack>
+            )}
+
+            {/* Check for Updates Button */}
+            <Button
+              size="$4"
+              onPress={handleCheckForUpdates}
+              disabled={isCheckingUpdate}
+              icon={Download}
+            >
+              {isCheckingUpdate ? "Checking..." : "Check for Updates"}
+            </Button>
+
+            {/* Update Available - Open Release */}
+            {updateInfo?.hasUpdate && (
+              <Button
+                size="$4"
+                themeInverse
+                onPress={handleOpenRelease}
+                icon={ExternalLink}
+              >
+                Download v{updateInfo.latestVersion}
+              </Button>
+            )}
+
+            {/* GitHub Link */}
+            <Button
+              size="$3"
+              chromeless
+              onPress={() => Linking.openURL(APP_CONFIG.github.url)}
+              icon={ExternalLink}
+            >
+              View on GitHub
             </Button>
           </YStack>
         </Card>
