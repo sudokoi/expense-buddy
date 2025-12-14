@@ -24,13 +24,15 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 ### ☁️ GitHub Sync
 
 - **Secure Backup**: Sync expenses to your private GitHub repository
-- **Daily File Organization**: Expenses stored as `expenses-YYYY-MM-DD.csv` files
+- **Daily File Organization**: Expenses stored as `expenses-YYYY-MM-DD.csv` files (one file per day)
 - **Smart Sync**:
   - Auto-sync on app launch or after every change
   - Manual sync with upload/download controls
   - Incremental loading (last 7 days by default)
-- **Conflict Resolution**: Timestamp-based merging handles concurrent edits
+  - Automatic cleanup: deletes files for days with no expenses
+- **Conflict Resolution**: Timestamp-based merging handles concurrent edits (latest wins)
 - **Load More**: Download older expenses 7 days at a time
+- **Migration Support**: Automatically migrates from old single-file format to daily files
 
 ### 🎨 User Experience
 
@@ -250,11 +252,21 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Changelog Management
 
-This project uses [Changesets](https://github.com/changesets/changesets) for version management and changelog generation.
+This project uses [Changesets](https://github.com/changesets/changesets) for version management and automated changelog generation.
 
-- **Adding changes**: Run `yarn changeset` to document your changes
-- **Quick guide**: See [.github/CHANGELOG_GUIDE.md](.github/CHANGELOG_GUIDE.md)
-- **Release process**: See [.github/RELEASE.md](.github/RELEASE.md)
+**When contributing:**
+
+- Run `yarn changeset` to document your changes
+- Select change type: `patch` (bug fixes), `minor` (new features), or `major` (breaking changes)
+- Write a clear description of what changed
+- Commit the generated changeset file with your PR
+
+**Automated releases:**
+
+- Changesets are automatically processed on merge to main
+- Version bumps and CHANGELOG updates happen automatically
+- APK builds are triggered via GitHub Actions
+- See [.github/RELEASE.md](.github/RELEASE.md) for details
 
 ## 📝 License
 

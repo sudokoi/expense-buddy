@@ -47,5 +47,8 @@ node_modules
 ios
 android
 
+# credentials (keystores, signing keys)
+credentials
+
 # vscode settings
 .vscode
