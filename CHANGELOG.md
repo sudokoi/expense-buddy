@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 1.1.0
+
+### Minor Changes
+
+- - Display transaction notes as primary text with category in subtext
+  - Add in-app update checker that fetches latest release from GitHub
+  - Show current version and download link when updates are available
+
 ## v1.0.0
 
 ### Initial Release
