@@ -94,5 +94,15 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## 📱 Download APK
+
+            **Direct Download:** [expense-buddy-${{ needs.build.outputs.version_name }}.apk](${{ needs.build.outputs.build_url }})
+
+            Click the link above to download the APK directly to your Android device.
+
+            ---
+
+            ${{ github.event.head_commit.message }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
