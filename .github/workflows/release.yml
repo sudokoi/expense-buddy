@@ -11,6 +11,9 @@ on:
         required: false
         default: ""
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build APK with EAS
@@ -116,6 +119,10 @@ jobs:
     needs: build
     timeout-minutes: 10
     steps:
+      - name: 🏗 Checkout repo for changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/checkout@v4
+
       - name: 📥 Download APK
         run: |
           echo "Downloading APK from: ${{ needs.build.outputs.build_url }}"
@@ -128,10 +135,6 @@ jobs:
           name: expense-buddy-${{ needs.build.outputs.version_name }}
           path: expense-buddy-${{ needs.build.outputs.version_name }}.apk
 
-      - name: 🏗 Checkout repo for changelog
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/checkout@v4
-
       - name: 🎉 Create GitHub Release (for tag pushes)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
@@ -143,9 +146,7 @@ jobs:
           body: |
             ## 📱 Download APK
 
-            **Direct Download:** [expense-buddy-${{ needs.build.outputs.version_name }}.apk](${{ needs.build.outputs.build_url }})
-
-            Click the link above to download the APK directly to your Android device.
+            Download `expense-buddy-${{ needs.build.outputs.version_name }}.apk` from the **Assets** section below.
 
             ---
 
