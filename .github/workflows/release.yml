@@ -12,8 +12,13 @@ on:
         default: ""
 
 jobs:
-  build-and-release:
+  build:
+    name: Build APK with EAS
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      build_url: ${{ steps.build.outputs.build_url }}
+      version_name: ${{ steps.version.outputs.version_name }}
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
@@ -31,7 +36,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Install dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       - name: 🔧 Determine version name
         id: version
@@ -53,47 +58,39 @@ jobs:
             echo "Using commit SHA: $VERSION"
           fi
 
-      - name: 🚀 Build and Download APK
+      - name: 🚀 Trigger EAS Build
+        id: build
         run: |
-          echo "Starting EAS build (this will wait for completion)..."
-          eas build --platform android --profile internal --non-interactive
+          echo "Starting EAS cloud build (this will wait for completion)..."
+          eas build --platform android --profile internal --non-interactive --json > build-output.json
+          cat build-output.json
+          BUILD_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "Build URL: $BUILD_URL"
 
-          echo "Build completed! Downloading APK..."
-
-          # Get the build artifact URL from the latest build
-          BUILD_JSON=$(eas build:list --platform android --limit 1 --json)
-          BUILD_URL=$(echo "$BUILD_JSON" | jq -r '.[0].artifacts.buildUrl')
-
-          if [ -z "$BUILD_URL" ] || [ "$BUILD_URL" == "null" ]; then
-            echo "Error: Could not get build URL"
-            echo "Build info: $BUILD_JSON"
-            exit 1
-          fi
-
-          echo "Downloading APK from: $BUILD_URL"
-          curl -L -o expense-buddy-${{ steps.version.outputs.version_name }}.apk "$BUILD_URL"
-
-          # Verify the file was downloaded
-          if [ -f "expense-buddy-${{ steps.version.outputs.version_name }}.apk" ]; then
-            echo "APK downloaded successfully"
-            ls -lh expense-buddy-${{ steps.version.outputs.version_name }}.apk
-          else
-            echo "Failed to download APK"
-            exit 1
-          fi
+  download-and-release:
+    name: Download APK and Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Download APK
+        run: |
+          echo "Downloading APK from: ${{ needs.build.outputs.build_url }}"
+          curl -L -o expense-buddy-${{ needs.build.outputs.version_name }}.apk "${{ needs.build.outputs.build_url }}"
+          ls -lh expense-buddy-${{ needs.build.outputs.version_name }}.apk
 
       - name: 📤 Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: expense-buddy-${{ steps.version.outputs.version_name }}
-          path: expense-buddy-${{ steps.version.outputs.version_name }}.apk
-          retention-days: 90
+          name: expense-buddy-${{ needs.build.outputs.version_name }}
+          path: expense-buddy-${{ needs.build.outputs.version_name }}.apk
 
       - name: 🎉 Create GitHub Release (for tag pushes)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: expense-buddy-${{ steps.version.outputs.version_name }}.apk
+          files: expense-buddy-${{ needs.build.outputs.version_name }}.apk
           draft: false
           prerelease: false
           generate_release_notes: true

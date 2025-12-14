@@ -14,8 +14,9 @@ To create a release automatically:
    ```
 
 2. The workflow will:
-   - Build the APK using EAS
-   - Name it `expense-buddy-v1.0.0.apk`
+   - Trigger an EAS cloud build
+   - Wait for the build to complete (typically 10-20 minutes)
+   - Download the APK and name it `expense-buddy-v1.0.0.apk`
    - Create a GitHub Release with the APK attached
    - Upload the APK as a workflow artifact (retained for 90 days)
 
@@ -33,7 +34,9 @@ To manually trigger a build:
      - Or enter a custom suffix (e.g., `beta-1` → `expense-buddy-beta-1.apk`)
 
 3. The workflow will:
-   - Build the APK using EAS
+   - Trigger an EAS cloud build
+   - Wait for the build to complete (typically 10-20 minutes)
+   - Download the APK
    - Upload it as a workflow artifact (no GitHub Release created)
 
 ## Downloading the APK
@@ -68,7 +71,9 @@ The workflow uses the `internal` build profile from `eas.json`:
 
 ## Notes
 
-- Build time: Typically 10-20 minutes depending on EAS queue
+- Build time: Typically 10-20 minutes depending on EAS cloud queue
 - APK size: ~50-80 MB (varies based on dependencies)
 - Artifacts are retained for 90 days
 - Only tag pushes create GitHub Releases
+- Builds use EAS cloud infrastructure (no local Android SDK required)
+- Workflow timeout: 45 minutes (will fail if build takes longer)
