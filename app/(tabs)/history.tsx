@@ -2,15 +2,12 @@ import React from "react";
 import {
   YStack,
   Text,
-  ScrollView,
   XStack,
   H4,
   Button,
   Card,
-  Separator,
   useTheme,
   H6,
-  Spacer,
   Input,
   Dialog,
   Label,
@@ -73,13 +70,6 @@ export default function HistoryScreen() {
       addNotification("Expense deleted", "success");
       setDeletingExpenseId(null);
     }
-  };
-
-  const getCategoryIcon = (catValue: string) => {
-    const cat = CATEGORIES.find((c) => c.value === catValue);
-    return cat
-      ? { color: cat.color, label: cat.label }
-      : { color: (theme.gray10?.val as string) || "gray", label: "Other" };
   };
 
   const handleLoadMore = async () => {
@@ -362,7 +352,16 @@ export default function HistoryScreen() {
           </YStack>
         )}
         renderItem={({ item }) => {
-          const categoryInfo = getCategoryIcon(item.category);
+          const categoryInfo = CATEGORIES.find(
+            (cat) => item.category === cat.value
+          );
+
+          if (!categoryInfo) {
+            return null;
+          }
+
+          const Icon = categoryInfo.icon;
+
           return (
             <Card
               bordered
@@ -387,10 +386,7 @@ export default function HistoryScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text style={{ fontSize: 20 }}>
-                    {/* Placeholder for real icon if needed, or first letter */}
-                    {categoryInfo.label[0]}
-                  </Text>
+                  <Icon color="white" size={20} />
                 </YStack>
                 <YStack flex={1}>
                   <Text style={{ fontWeight: "bold", fontSize: 16 }}>

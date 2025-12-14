@@ -1,4 +1,4 @@
-import { format, parseISO, startOfDay, subDays } from "date-fns";
+import { format, parseISO, subDays } from "date-fns";
 import {
   YStack,
   H4,
@@ -13,7 +13,7 @@ import {
 import { useToastController } from "@tamagui/toast";
 import { BarChart } from "react-native-gifted-charts";
 import { useExpenses } from "../../context/ExpenseContext";
-import { useRouter, Href } from "expo-router";
+import { useRouter } from "expo-router";
 import { Dimensions } from "react-native";
 import { CATEGORIES } from "../../constants/categories";
 import React from "react";
@@ -203,7 +203,7 @@ export default function DashboardScreen() {
       </YStack>
 
       {/* Recent Transactions List (Mini) */}
-      <YStack space="$3">
+      <YStack gap="$3">
         <XStack
           style={{ justifyContent: "space-between", alignItems: "center" }}
         >
@@ -225,6 +225,7 @@ export default function DashboardScreen() {
 
         {recentExpenses.map((expense) => {
           const cat = CATEGORIES.find((c) => c.value === expense.category);
+          const Icon = cat?.icon;
           return (
             <Card
               key={expense.id}
@@ -248,10 +249,7 @@ export default function DashboardScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  {cat?.icon && (
-                    // @ts-ignore
-                    <cat.icon color="white" size={16} />
-                  )}
+                  {Icon && <Icon color="white" size={16} />}
                 </YStack>
                 <YStack>
                   <SizableText size="$4" fontWeight="bold">
