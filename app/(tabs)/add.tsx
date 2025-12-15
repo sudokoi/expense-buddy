@@ -1,41 +1,40 @@
-
-import React, { useState } from 'react'
+import { useState } from "react";
 import {
   YStack,
   XStack,
   Text,
   Input,
   Button,
-  ScrollView,
   TextArea,
   useTheme,
   Card,
   H4,
   Label,
-} from 'tamagui'
-import { useRouter, Href } from 'expo-router'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { useExpenses } from '../../context/ExpenseContext'
-import { CATEGORIES } from '../../constants/categories'
-import { ExpenseCategory } from '../../types/expense'
-import { Calendar, Check, DollarSign } from '@tamagui/lucide-icons'
-import { Alert, Platform } from 'react-native'
+} from "tamagui";
+import { useRouter, Href } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useExpenses } from "../../context/ExpenseContext";
+import { CATEGORIES } from "../../constants/categories";
+import { ExpenseCategory } from "../../types/expense";
+import { Calendar, Check } from "@tamagui/lucide-icons";
+import { Alert } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 export default function AddExpenseScreen() {
-  const router = useRouter()
-  const theme = useTheme()
-  const { addExpense } = useExpenses()
+  const router = useRouter();
+  const theme = useTheme();
+  const { addExpense } = useExpenses();
 
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<ExpenseCategory>('Food')
-  const [date, setDate] = useState(new Date())
-  const [note, setNote] = useState('')
-  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState<ExpenseCategory>("Food");
+  const [date, setDate] = useState(new Date());
+  const [note, setNote] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSave = () => {
     if (!amount || isNaN(Number(amount))) {
-      Alert.alert('Invalid Amount', 'Please enter a valid number')
-      return
+      Alert.alert("Invalid Amount", "Please enter a valid number");
+      return;
     }
 
     addExpense({
@@ -43,31 +42,38 @@ export default function AddExpenseScreen() {
       category,
       date: date.toISOString(),
       note,
-    })
+    });
 
     // Reset and go back or to history
-    setAmount('')
-    setNote('')
-    router.push('/(tabs)/history' as Href)
-  }
+    setAmount("");
+    setNote("");
+    router.push("/(tabs)/history" as Href);
+  };
 
-  const onChangeDate = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date
-    setShowDatePicker(Platform.OS === 'ios')
-    setDate(currentDate)
-  }
+  const onChangeDate = (_event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
+  };
 
   return (
-    <ScrollView flex={1} style={{ backgroundColor: theme.background.val as string }} contentContainerStyle={{ padding: 20 } as any}>
-      <YStack space="$4" style={{ maxWidth: 600, alignSelf: 'center', width: '100%' }}>
-        <H4 style={{ textAlign: 'center', marginBottom: 8 }}>
+    <KeyboardAwareScrollView
+      style={{ flex: 1, backgroundColor: theme.background.val as string }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+      bottomOffset={50}
+    >
+      <YStack
+        space="$4"
+        style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}
+      >
+        <H4 style={{ textAlign: "center", marginBottom: 8 }}>
           Add New Expense
         </H4>
 
         {/* Amount Input */}
         <YStack space="$2">
           <Label>Amount</Label>
-          <XStack style={{ alignItems: 'center' }}>
+          <XStack style={{ alignItems: "center" }}>
             <Input
               flex={1}
               size="$5"
@@ -77,7 +83,7 @@ export default function AddExpenseScreen() {
               onChangeText={setAmount}
               borderWidth={2}
               borderColor="$borderColor"
-              focusStyle={{ borderColor: '$blue10' }}
+              focusStyle={{ borderColor: "$blue10" }}
             />
           </XStack>
         </YStack>
@@ -85,9 +91,9 @@ export default function AddExpenseScreen() {
         {/* Category Selection */}
         <YStack space="$2">
           <Label>Category</Label>
-          <XStack style={{ flexWrap: 'wrap', gap: 12 }}>
+          <XStack style={{ flexWrap: "wrap", gap: 12 }}>
             {CATEGORIES.map((cat) => {
-              const isSelected = category === cat.value
+              const isSelected = category === cat.value;
               return (
                 <Card
                   key={cat.value}
@@ -97,26 +103,30 @@ export default function AddExpenseScreen() {
                   hoverStyle={{ scale: 1 }}
                   pressStyle={{ scale: 0.95 }}
                   style={{
-                    backgroundColor: isSelected ? cat.color : (theme.background.val as string),
-                    borderColor: isSelected ? cat.color : (theme.borderColor.val as string),
+                    backgroundColor: isSelected
+                      ? cat.color
+                      : (theme.background.val as string),
+                    borderColor: isSelected
+                      ? cat.color
+                      : (theme.borderColor.val as string),
                     padding: 12,
                     borderRadius: 16,
-                    width: '30%',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    width: "30%",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                   onPress={() => setCategory(cat.value)}
                 >
                   <Text
                     style={{
-                      fontWeight: isSelected ? 'bold' : 'normal',
-                      color: isSelected ? 'white' : (theme.color.val as string)
+                      fontWeight: isSelected ? "bold" : "normal",
+                      color: isSelected ? "white" : (theme.color.val as string),
                     }}
                   >
                     {cat.label}
                   </Text>
                 </Card>
-              )
+              );
             })}
           </XStack>
         </YStack>
@@ -145,7 +155,7 @@ export default function AddExpenseScreen() {
         </YStack>
 
         {/* Note Input */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Note (Optional)</Label>
           <TextArea
             placeholder="What was this for?"
@@ -167,9 +177,9 @@ export default function AddExpenseScreen() {
           Save Expense
         </Button>
         <Text fontSize={40} color="$color" fontWeight="bold">
-            ₹{amount || '0'}
-          </Text>
+          ₹{amount || "0"}
+        </Text>
       </YStack>
-    </ScrollView>
-  )
+    </KeyboardAwareScrollView>
+  );
 }
