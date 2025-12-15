@@ -14,9 +14,8 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:status": "changeset status",
-    "release": "yarn changeset:version && echo '\n✅ Version bumped! Review changes, then:\n  git add .\n  git commit -m \"Version bump\"\n  git tag v$(node -p \"require('./package.json').version\")\n  git push origin main --tags'"
+    "changeset:version": "changeset version && node scripts/sync-app-version.mjs",
+    "changeset:status": "changeset status"
   },
   "jest": {
     "preset": "jest-expo"
