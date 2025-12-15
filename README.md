@@ -4,6 +4,11 @@
   <img src="./assets/images/expense-buddy.png" alt="Expense Buddy Logo" width="200"/>
 </p>
 
+<p align="center">
+  <a href="https://github.com/sudokoi/expense-buddy/releases/latest"><img src="https://img.shields.io/github/v/release/sudokoi/expense-buddy?label=release" alt="Latest Release" /></a>
+  <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release.yml/badge.svg" alt="Build Status" /></a>
+</p>
+
 A modern, cross-platform expense tracking app built with React Native and Expo. Track your daily expenses, visualize spending patterns, and sync your data securely to GitHub.
 
 ## ✨ Features
