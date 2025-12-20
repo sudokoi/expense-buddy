@@ -674,6 +674,118 @@ function mergeExpensesWithTimestamps(
   };
 }
 
+export interface ConflictInfo {
+  localWins: number; // Local records that are newer
+  remoteWins: number; // Remote records that are newer
+  newFromRemote: number; // New records from remote
+  newFromLocal: number; // New records from local (not on remote)
+  deletedLocally: number; // Records deleted locally that exist on remote
+}
+
+/**
+ * Analyze what would happen if we merge local and remote expenses
+ * This helps show users what conflicts exist before merging
+ */
+export async function analyzeConflicts(localExpenses: Expense[]): Promise<{
+  success: boolean;
+  conflicts?: ConflictInfo;
+  remoteExpenses?: Expense[];
+  error?: string;
+}> {
+  try {
+    const config = await loadSyncConfig();
+    if (!config) {
+      return { success: false, error: "No sync configuration" };
+    }
+
+    const downloadResult = await syncDown();
+    if (!downloadResult.success || !downloadResult.expenses) {
+      return {
+        success: false,
+        error: downloadResult.error || "Download failed",
+      };
+    }
+
+    const remoteExpenses = downloadResult.expenses;
+    const lastSyncTime = await getLastSyncTime();
+
+    const localMap = new Map(localExpenses.map((e) => [e.id, e]));
+    const remoteMap = new Map(remoteExpenses.map((e) => [e.id, e]));
+
+    let localWins = 0;
+    let remoteWins = 0;
+    let newFromRemote = 0;
+    let newFromLocal = 0;
+    let deletedLocally = 0;
+
+    const allIds = new Set([...localMap.keys(), ...remoteMap.keys()]);
+
+    for (const id of allIds) {
+      const localItem = localMap.get(id);
+      const remoteItem = remoteMap.get(id);
+
+      if (localItem && remoteItem) {
+        const localTime = new Date(localItem.updatedAt).getTime();
+        const remoteTime = new Date(remoteItem.updatedAt).getTime();
+        if (remoteTime > localTime) {
+          remoteWins++;
+        } else if (localTime > remoteTime) {
+          localWins++;
+        }
+        // If equal timestamps, no conflict
+      } else if (localItem && !remoteItem) {
+        newFromLocal++;
+      } else if (remoteItem && !localItem) {
+        if (lastSyncTime) {
+          const lastSync = new Date(lastSyncTime).getTime();
+          const itemUpdated = new Date(remoteItem.updatedAt).getTime();
+          if (lastSync > itemUpdated) {
+            deletedLocally++;
+          } else {
+            newFromRemote++;
+          }
+        } else {
+          newFromRemote++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      conflicts: {
+        localWins,
+        remoteWins,
+        newFromRemote,
+        newFromLocal,
+        deletedLocally,
+      },
+      remoteExpenses,
+    };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Perform smart merge of local and remote expenses
+ * Returns the merged result without uploading
+ */
+export async function smartMerge(
+  localExpenses: Expense[],
+  remoteExpenses: Expense[]
+): Promise<{
+  merged: Expense[];
+  newFromRemote: number;
+  updatedFromRemote: number;
+}> {
+  const lastSyncTime = await getLastSyncTime();
+  return mergeExpensesWithTimestamps(
+    localExpenses,
+    remoteExpenses,
+    lastSyncTime
+  );
+}
+
 /**
  * Get the count of files that will be uploaded/deleted in the next sync
  * This compares current content hashes with stored hashes to determine changes

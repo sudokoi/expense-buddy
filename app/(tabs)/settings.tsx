@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   YStack,
   XStack,
@@ -26,8 +26,14 @@ import {
   saveAutoSyncSettings,
   loadAutoSyncSettings,
   AutoSyncTiming,
-  getPendingSyncCount,
+  analyzeConflicts,
+  smartMerge,
 } from "../../services/sync-manager";
+import { Expense } from "../../types/expense";
+import {
+  getPendingChangesCount,
+  clearPendingChanges,
+} from "../../services/change-tracker";
 import { useExpenses } from "../../context/ExpenseContext";
 import { useNotifications } from "../../context/notification-context";
 import { useSyncStatus } from "../../context/sync-status-context";
@@ -36,7 +42,8 @@ import { APP_CONFIG } from "../../constants/app-config";
 
 export default function SettingsScreen() {
   const theme = useTheme();
-  const { state, replaceAllExpenses } = useExpenses();
+  const { state, replaceAllExpenses, clearPendingChangesAfterSync } =
+    useExpenses();
   const { addNotification } = useNotifications();
   const { startSync, endSync } = useSyncStatus();
 
@@ -59,9 +66,11 @@ export default function SettingsScreen() {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   // Pending sync count state
-  const [pendingSyncCount, setPendingSyncCount] = useState<{
-    filesChanged: number;
-    filesToDelete: number;
+  const [pendingChangesCount, setPendingChangesCount] = useState<{
+    added: number;
+    edited: number;
+    deleted: number;
+    total: number;
   } | null>(null);
   const [isComputingSyncCount, setIsComputingSyncCount] = useState(false);
 
@@ -70,25 +79,22 @@ export default function SettingsScreen() {
     loadAutoSync();
   }, []);
 
-  // Compute pending sync count when expenses change
+  // Compute pending changes count when expenses change
   useEffect(() => {
-    const computeSyncCount = async () => {
+    const computeChangesCount = async () => {
       setIsComputingSyncCount(true);
       try {
-        const result = await getPendingSyncCount(state.expenses);
-        setPendingSyncCount({
-          filesChanged: result.filesChanged,
-          filesToDelete: result.filesToDelete,
-        });
+        const result = await getPendingChangesCount();
+        setPendingChangesCount(result);
       } catch (error) {
-        console.warn("Failed to compute sync count:", error);
-        setPendingSyncCount(null);
+        console.warn("Failed to compute changes count:", error);
+        setPendingChangesCount(null);
       } finally {
         setIsComputingSyncCount(false);
       }
     };
 
-    computeSyncCount();
+    computeChangesCount();
   }, [state.expenses]);
 
   const loadConfig = async () => {
@@ -197,50 +203,114 @@ export default function SettingsScreen() {
 
     if (result.success) {
       addNotification(result.message, "success");
-      // Refresh pending sync count after successful sync
-      const syncCount = await getPendingSyncCount(state.expenses);
-      setPendingSyncCount({
-        filesChanged: syncCount.filesChanged,
-        filesToDelete: syncCount.filesToDelete,
-      });
+      // Clear pending changes after successful sync
+      await clearPendingChangesAfterSync();
+      // Refresh pending changes count
+      const changesCount = await getPendingChangesCount();
+      setPendingChangesCount(changesCount);
     } else {
       addNotification(result.error || result.message, "error");
     }
   };
 
   const handleSyncDown = async () => {
-    Alert.alert(
-      "Confirm Download",
-      "This will replace your local data with data from GitHub. Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Download",
-          style: "destructive",
-          onPress: async () => {
-            setIsSyncing(true);
-            startSync();
-            const result = await syncDown();
-            setIsSyncing(false);
-            endSync(result.success);
+    setIsSyncing(true);
+    startSync();
 
-            if (result.success && result.expenses) {
-              // Update the app state with downloaded expenses
-              replaceAllExpenses(result.expenses);
-              const moreInfo = result.hasMore
-                ? " (Load more from History tab)"
-                : "";
-              addNotification(
-                `Downloaded ${result.expenses.length} expenses${moreInfo}`,
-                "success"
-              );
-            } else {
-              addNotification(result.error || result.message, "error");
-            }
+    // First, analyze what conflicts exist
+    const analysis = await analyzeConflicts(state.expenses);
+
+    setIsSyncing(false);
+    endSync(analysis.success);
+
+    if (!analysis.success) {
+      addNotification(analysis.error || "Failed to analyze conflicts", "error");
+      return;
+    }
+
+    const conflicts = analysis.conflicts!;
+    const remoteExpenses = analysis.remoteExpenses!;
+
+    // Check if there are any changes at all
+    const hasRemoteUpdates = conflicts.remoteWins > 0;
+    const hasNewFromRemote = conflicts.newFromRemote > 0;
+    const hasLocalOnly = conflicts.newFromLocal > 0;
+    const hasDeletedLocally = conflicts.deletedLocally > 0;
+
+    // Build a summary message
+    const summaryParts: string[] = [];
+    if (conflicts.newFromRemote > 0)
+      summaryParts.push(`${conflicts.newFromRemote} new from GitHub`);
+    if (conflicts.remoteWins > 0)
+      summaryParts.push(`${conflicts.remoteWins} updated from GitHub`);
+    if (conflicts.localWins > 0)
+      summaryParts.push(`${conflicts.localWins} local changes kept`);
+    if (conflicts.newFromLocal > 0)
+      summaryParts.push(`${conflicts.newFromLocal} local-only kept`);
+    if (conflicts.deletedLocally > 0)
+      summaryParts.push(`${conflicts.deletedLocally} deleted locally`);
+
+    const summary =
+      summaryParts.length > 0 ? summaryParts.join(", ") : "No changes";
+
+    // If no changes at all, inform the user
+    if (
+      !hasRemoteUpdates &&
+      !hasNewFromRemote &&
+      !hasLocalOnly &&
+      !hasDeletedLocally &&
+      conflicts.localWins === 0
+    ) {
+      addNotification("Already in sync - no changes needed", "success");
+      return;
+    }
+
+    // If remote has newer versions that will overwrite local edits, ask for confirmation
+    if (hasRemoteUpdates) {
+      Alert.alert(
+        "Merge Conflicts Detected",
+        `${conflicts.remoteWins} record(s) on GitHub are newer than your local version and will overwrite them.\n\nSummary: ${summary}\n\nProceed with merge?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Merge",
+            onPress: () => performSmartMerge(remoteExpenses, summary),
           },
-        },
-      ]
-    );
+        ]
+      );
+    } else {
+      // No conflicts - just merge automatically
+      await performSmartMerge(remoteExpenses, summary);
+    }
+  };
+
+  const performSmartMerge = async (
+    remoteExpenses: Expense[],
+    summary: string
+  ) => {
+    setIsSyncing(true);
+    startSync();
+
+    try {
+      const mergeResult = await smartMerge(state.expenses, remoteExpenses);
+
+      // Update local state with merged data
+      replaceAllExpenses(mergeResult.merged);
+
+      // Clear pending changes since we've merged
+      await clearPendingChanges();
+      const changesCount = await getPendingChangesCount();
+      setPendingChangesCount(changesCount);
+
+      setIsSyncing(false);
+      endSync(true);
+
+      addNotification(`Merged successfully: ${summary}`, "success");
+    } catch (error) {
+      setIsSyncing(false);
+      endSync(false);
+      addNotification(`Merge failed: ${String(error)}`, "error");
+    }
   };
 
   const handleClearConfig = async () => {
@@ -404,16 +474,11 @@ export default function SettingsScreen() {
                 ? "Syncing..."
                 : isComputingSyncCount
                 ? "Checking changes..."
-                : pendingSyncCount === null
+                : pendingChangesCount === null
                 ? `Upload to GitHub (${state.expenses.length} expenses)`
-                : pendingSyncCount.filesChanged +
-                    pendingSyncCount.filesToDelete ===
-                  0
+                : pendingChangesCount.total === 0
                 ? "No changes to sync"
-                : `Upload to GitHub (${
-                    pendingSyncCount.filesChanged +
-                    pendingSyncCount.filesToDelete
-                  } file(s) changed)`}
+                : `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`}
             </Button>
 
             <Button
@@ -421,7 +486,7 @@ export default function SettingsScreen() {
               onPress={handleSyncDown}
               disabled={isSyncing || !token || !repo}
             >
-              Download from GitHub
+              Sync from GitHub
             </Button>
           </YStack>
         </Card>

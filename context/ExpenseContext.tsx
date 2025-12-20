@@ -7,6 +7,12 @@ import {
   shouldAutoSyncForTiming,
 } from "../services/auto-sync-service";
 import { SyncNotification } from "../services/sync-manager";
+import {
+  trackAdd,
+  trackEdit,
+  trackDelete,
+  clearPendingChanges,
+} from "../services/change-tracker";
 
 interface ExpenseState {
   expenses: Expense[];
@@ -27,6 +33,7 @@ const ExpenseContext = createContext<
       deleteExpense: (id: string) => void;
       replaceAllExpenses: (expenses: Expense[]) => void;
       clearSyncNotification: () => void;
+      clearPendingChangesAfterSync: () => Promise<void>;
     }
   | undefined
 >(undefined);
@@ -69,6 +76,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
             JSON.stringify(result.expenses)
           );
 
+          // Clear pending changes after successful auto-sync
+          await clearPendingChanges();
+
           // Show notification if there are updates
           if (result.notification) {
             setSyncNotification(result.notification);
@@ -93,6 +103,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
         queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
       const updatedExpenses = [newExpense, ...previousExpenses];
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
+      // Track the addition for sync count
+      await trackAdd(newExpense.id);
       return updatedExpenses;
     },
     onSuccess: async (updatedExpenses) => {
@@ -111,6 +123,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
             JSON.stringify(result.expenses)
           );
 
+          // Clear pending changes after successful auto-sync
+          await clearPendingChanges();
+
           // Show notification if there are updates from remote
           if (result.notification) {
             setSyncNotification(result.notification);
@@ -126,6 +141,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
         queryClient.getQueryData<Expense[]>([EXPENSES_KEY]) || [];
       const updatedExpenses = previousExpenses.filter((e) => e.id !== id);
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
+      // Track the deletion for sync count
+      await trackDelete(id);
       return updatedExpenses;
     },
     onSuccess: async (updatedExpenses) => {
@@ -144,6 +161,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
             JSON.stringify(result.expenses)
           );
 
+          // Clear pending changes after successful auto-sync
+          await clearPendingChanges();
+
           // Show notification if there are updates from remote
           if (result.notification) {
             setSyncNotification(result.notification);
@@ -161,6 +181,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
         e.id === updatedExpense.id ? updatedExpense : e
       );
       await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updatedExpenses));
+      // Track the edit for sync count
+      await trackEdit(updatedExpense.id);
       return updatedExpenses;
     },
     onSuccess: async (updatedExpenses) => {
@@ -178,6 +200,9 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
             EXPENSES_KEY,
             JSON.stringify(result.expenses)
           );
+
+          // Clear pending changes after successful auto-sync
+          await clearPendingChanges();
 
           // Show notification if there are updates from remote
           if (result.notification) {
@@ -233,6 +258,10 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
     setSyncNotification(null);
   };
 
+  const clearPendingChangesAfterSync = async () => {
+    await clearPendingChanges();
+  };
+
   const state: ExpenseState = {
     expenses,
     isLoading,
@@ -248,6 +277,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
         deleteExpense,
         replaceAllExpenses,
         clearSyncNotification,
+        clearPendingChangesAfterSync,
       }}
     >
       {children}
