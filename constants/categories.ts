@@ -6,6 +6,7 @@ import {
   Film,
   Activity,
   Circle,
+  ShoppingCart,
 } from "@tamagui/lucide-icons";
 import { ComponentProps, JSX } from "react";
 
@@ -18,6 +19,12 @@ export const CATEGORIES: {
   color: string;
 }[] = [
   { label: "Food", value: "Food", icon: Utensils, color: "#f97316" }, // orange
+  {
+    label: "Groceries",
+    value: "Groceries",
+    icon: ShoppingCart,
+    color: "#10b981",
+  }, // emerald/teal green
   { label: "Transport", value: "Transport", icon: Car, color: "#3b82f6" }, // blue
   { label: "Utilities", value: "Utilities", icon: Home, color: "#eab308" }, // yellow
   {
