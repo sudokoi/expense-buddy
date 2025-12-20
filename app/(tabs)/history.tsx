@@ -15,9 +15,10 @@ import {
   Adapt,
   Sheet,
 } from "tamagui";
-import { Check, ChevronDown } from "@tamagui/lucide-icons";
-import { SectionList } from "react-native";
+import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons";
+import { SectionList, Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useExpenses } from "../../context/ExpenseContext";
 import { CATEGORIES } from "../../constants/categories";
 import { Trash, Edit3 } from "@tamagui/lucide-icons";
@@ -36,7 +37,9 @@ export default function HistoryScreen() {
     amount: string;
     category: ExpenseCategory;
     note: string;
+    date: string; // ISO date string
   } | null>(null);
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [deletingExpenseId, setDeletingExpenseId] = React.useState<
     string | null
   >(null);
@@ -181,7 +184,12 @@ export default function HistoryScreen() {
       {/* Edit Expense Dialog */}
       <Dialog
         open={!!editingExpense}
-        onOpenChange={(open) => !open && setEditingExpense(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingExpense(null);
+            setShowDatePicker(false);
+          }
+        }}
       >
         <Dialog.Portal>
           <Dialog.Overlay
@@ -212,6 +220,57 @@ export default function HistoryScreen() {
 
             <KeyboardAwareScrollView bottomOffset={20}>
               <YStack gap="$3">
+                <YStack gap="$2">
+                  <Label htmlFor="date">Date</Label>
+                  <Button
+                    onPress={() => setShowDatePicker(true)}
+                    icon={Calendar}
+                  >
+                    {editingExpense?.date
+                      ? format(parseISO(editingExpense.date), "dd/MM/yyyy")
+                      : "Select date"}
+                  </Button>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={
+                        editingExpense?.date
+                          ? parseISO(editingExpense.date)
+                          : new Date()
+                      }
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={(event, selectedDate) => {
+                        setShowDatePicker(Platform.OS === "ios");
+                        if (selectedDate && event.type !== "dismissed") {
+                          // Preserve the original time from the expense
+                          const originalDate = editingExpense?.date
+                            ? parseISO(editingExpense.date)
+                            : new Date();
+                          selectedDate.setHours(
+                            originalDate.getHours(),
+                            originalDate.getMinutes(),
+                            originalDate.getSeconds(),
+                            originalDate.getMilliseconds()
+                          );
+                          setEditingExpense((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  date: selectedDate.toISOString(),
+                                }
+                              : null
+                          );
+                        }
+                      }}
+                    />
+                  )}
+                  {showDatePicker && Platform.OS === "ios" && (
+                    <Button size="$3" onPress={() => setShowDatePicker(false)}>
+                      Done
+                    </Button>
+                  )}
+                </YStack>
+
                 <YStack gap="$2">
                   <Label htmlFor="amount">Amount (₹)</Label>
                   <Input
@@ -329,11 +388,12 @@ export default function HistoryScreen() {
                         editExpense(editingExpense.id, {
                           amount,
                           category: editingExpense.category,
-                          date: expense.date,
+                          date: editingExpense.date, // Use the edited date
                           note: editingExpense.note,
                         });
                         addNotification("Expense updated", "success");
                         setEditingExpense(null);
+                        setShowDatePicker(false);
                       }
                     }
                   }}
@@ -434,6 +494,7 @@ export default function HistoryScreen() {
                       amount: item.amount.toString(),
                       category: item.category,
                       note: item.note || "",
+                      date: item.date,
                     });
                   }}
                   aria-label="Edit"
