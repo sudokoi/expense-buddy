@@ -16,7 +16,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 ### 📊 Expense Management
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
-- **Smart Categories**: Pre-defined categories (Food, Transport, Utilities, Entertainment, Health, Other)
+- **Smart Categories**: Pre-defined categories (Food, Transport, Utilities, Entertainment, Health, Groceries, Other)
 - **Full CRUD**: Create, read, update, and delete expenses with ease
 - **History View**: Browse expenses organized by date with search and filter
 
@@ -35,6 +35,9 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
   - Manual sync with upload/download controls
   - Incremental loading (last 7 days by default)
   - Automatic cleanup: deletes files for days with no expenses
+- **Differential Sync**: Only uploads changed files using content hashing for efficiency
+- **Batched Commits**: All file changes (uploads and deletions) are combined into a single atomic commit
+- **Accurate Sync Count**: Upload button shows exact number of files that will be synced
 - **Conflict Resolution**: Timestamp-based merging handles concurrent edits (latest wins)
 - **Load More**: Download older expenses 7 days at a time
 - **Migration Support**: Automatically migrates from old single-file format to daily files
@@ -187,9 +190,11 @@ expense-buddy/
 │   └── sync-status-context.tsx
 ├── services/             # Business logic
 │   ├── sync-manager.ts   # Sync orchestration
-│   ├── github-sync.ts    # GitHub API client
+│   ├── github-sync.ts    # GitHub API client (includes batch commit via Git Data API)
 │   ├── csv-handler.ts    # CSV import/export
 │   ├── daily-file-manager.ts
+│   ├── hash-storage.ts   # Content hashing for differential sync
+│   ├── change-tracker.ts # Record-level change tracking
 │   └── auto-sync-service.ts
 ├── constants/            # App constants
 │   └── categories.ts

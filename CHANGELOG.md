@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.2.1
+
+### Patch Changes
+
+- Github sync now batches all file changes into a single commit instead of creating separate commits per file
+
 ## 1.2.0
 
 ### Minor Changes
