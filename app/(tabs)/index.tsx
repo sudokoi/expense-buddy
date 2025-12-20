@@ -32,6 +32,10 @@ export default function DashboardScreen() {
   const recentExpenses = state.expenses.slice(0, 5);
 
   // Group by Date -> Category
+  // Using expenses array, its length, and a computed total as dependencies
+  // to ensure the chart updates when any expense data changes
+  const expensesTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+
   const chartData = React.useMemo(() => {
     const grouped: Record<string, Record<string, number>> = {};
     const last7Days: string[] = [];
@@ -71,9 +75,14 @@ export default function DashboardScreen() {
         };
       })
       .filter((item) => item.stacks.length > 0); // Only show days with data
-  }, [state.expenses, theme]);
+  }, [state.expenses, state.expenses.length, expensesTotal, router]);
 
   const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0);
+
+  // Generate a unique key for the chart based on data to force re-render
+  const chartKey = React.useMemo(() => {
+    return `chart-${state.expenses.length}-${expensesTotal}`;
+  }, [state.expenses.length, expensesTotal]);
 
   // Show toast when sync notification is available
   React.useEffect(() => {
@@ -168,6 +177,7 @@ export default function DashboardScreen() {
         {hasData ? (
           <YStack style={{ alignItems: "center", justifyContent: "center" }}>
             <BarChart
+              key={chartKey}
               stackData={chartData}
               barWidth={24}
               noOfSections={3}
