@@ -4,11 +4,13 @@ import { Platform } from "react-native";
 import { Expense } from "../types/expense";
 import { exportToCSV, importFromCSV } from "./csv-handler";
 import {
-  uploadCSV,
   downloadCSV,
   validatePAT,
   listFiles,
-  deleteFile,
+  batchCommit,
+  generateCommitMessage,
+  BatchFileUpload,
+  BatchFileDelete,
 } from "./github-sync";
 import {
   groupExpensesByDay,
@@ -174,6 +176,7 @@ export async function testConnection(): Promise<SyncResult> {
 /**
  * Sync expenses to GitHub (upload) - splits into daily files
  * Uses differential sync to only upload changed files
+ * Uses batch commit to upload all changes in a single commit
  * Also deletes files for days that no longer have expenses
  */
 export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
@@ -189,7 +192,6 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 
     // Load stored hashes for differential sync
     const storedHashes = await loadFileHashes();
-    const updatedHashes: FileHashMap = {};
 
     // Get list of existing files on GitHub
     const existingFiles = await listFiles(
@@ -208,127 +210,127 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
     const groupedByDay = groupExpensesByDay(expenses);
     const localDayKeys = new Set(groupedByDay.keys());
 
-    let uploadedFiles = 0;
+    // =========================================================================
+    // Task 4.1: Collect all changes before committing
+    // =========================================================================
+
+    // Build list of files to upload (changed hashes)
+    const filesToUpload: BatchFileUpload[] = [];
+    const uploadedFileHashes: Map<string, string> = new Map();
     let skippedFiles = 0;
-    let failedFiles = 0;
-    let deletedFiles = 0;
 
-    // If no expenses, delete all existing files
-    if (expenses.length === 0 && existingExpenseFiles.length > 0) {
-      for (const file of existingExpenseFiles) {
-        const result = await deleteFile(
-          config.token,
-          config.repo,
-          config.branch,
-          file.path,
-          file.sha
-        );
-
-        if (result.success) {
-          deletedFiles++;
-        } else {
-          failedFiles++;
-        }
-      }
-
-      // Clear all stored hashes since we deleted everything
-      await saveFileHashes({});
-
-      return {
-        success: failedFiles === 0,
-        message: `Deleted all ${deletedFiles} expense file(s) from GitHub`,
-        filesUploaded: 0,
-        filesSkipped: 0,
-        filesDeleted: deletedFiles,
-      };
-    }
-
-    // Upload each day's file (with differential sync)
     for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
       const filename = getFilenameForDay(dayKey);
       const csvContent = exportToCSV(dayExpenses);
       const contentHash = computeContentHash(csvContent);
 
-      // Check if content has changed
+      // Check if content has changed (hash-based file exclusion)
       if (storedHashes[filename] === contentHash) {
         // Content unchanged, skip upload
         skippedFiles++;
-        updatedHashes[filename] = contentHash;
         continue;
       }
 
-      // Content changed or new file, upload it
-      const result = await uploadCSV(
-        config.token,
-        config.repo,
-        config.branch,
-        csvContent,
-        filename
-      );
+      // Content changed or new file, add to upload list
+      filesToUpload.push({
+        path: filename,
+        content: csvContent,
+      });
+      // Store hash for later update (only if commit succeeds)
+      uploadedFileHashes.set(filename, contentHash);
+    }
 
-      if (result.success) {
-        uploadedFiles++;
-        updatedHashes[filename] = contentHash;
-      } else {
-        failedFiles++;
-        // Keep old hash if upload failed
-        if (storedHashes[filename]) {
+    // Build list of files to delete (exist on remote but not locally)
+    const filesToDelete: BatchFileDelete[] = [];
+    for (const file of existingExpenseFiles) {
+      if (!localDayKeys.has(file.dayKey)) {
+        filesToDelete.push({
+          path: file.path,
+        });
+      }
+    }
+
+    // =========================================================================
+    // Task 4.2: Replace individual calls with single batchCommit call
+    // =========================================================================
+
+    // If no changes to make, return early with success
+    if (filesToUpload.length === 0 && filesToDelete.length === 0) {
+      return {
+        success: true,
+        message: `No changes to sync: ${skippedFiles} file(s) unchanged`,
+        filesUploaded: 0,
+        filesSkipped: skippedFiles,
+        filesDeleted: 0,
+      };
+    }
+
+    // Generate commit message
+    const commitMessage = generateCommitMessage(
+      filesToUpload.length,
+      filesToDelete.length
+    );
+
+    // Execute batch commit with all uploads and deletions
+    const batchResult = await batchCommit(
+      config.token,
+      config.repo,
+      config.branch,
+      {
+        uploads: filesToUpload,
+        deletions: filesToDelete,
+        message: commitMessage,
+      }
+    );
+
+    // =========================================================================
+    // Task 4.3: Update hash storage only after successful batch commit
+    // =========================================================================
+
+    if (batchResult.success) {
+      // On success: update hashes for uploaded files, remove hashes for deleted files
+      const updatedHashes: FileHashMap = {};
+
+      // Keep hashes for unchanged files
+      for (const [dayKey] of groupedByDay.entries()) {
+        const filename = getFilenameForDay(dayKey);
+        if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
+          // File was skipped (unchanged), keep its hash
           updatedHashes[filename] = storedHashes[filename];
         }
       }
-    }
 
-    // Delete files for days that no longer have expenses
-    for (const file of existingExpenseFiles) {
-      if (!localDayKeys.has(file.dayKey)) {
-        const result = await deleteFile(
-          config.token,
-          config.repo,
-          config.branch,
-          file.path,
-          file.sha
-        );
-
-        if (result.success) {
-          deletedFiles++;
-          // Remove from hashes (don't add to updatedHashes)
-        }
+      // Add hashes for newly uploaded files
+      for (const [filename, hash] of uploadedFileHashes.entries()) {
+        updatedHashes[filename] = hash;
       }
-    }
 
-    // Save updated hashes
-    await saveFileHashes(updatedHashes);
+      // Note: deleted files are simply not included in updatedHashes
 
-    const message: string[] = [];
-    if (uploadedFiles > 0) message.push(`${uploadedFiles} file(s) uploaded`);
-    if (skippedFiles > 0) message.push(`${skippedFiles} file(s) unchanged`);
-    if (deletedFiles > 0) message.push(`${deletedFiles} file(s) deleted`);
+      await saveFileHashes(updatedHashes);
 
-    if (failedFiles === 0) {
+      const message: string[] = [];
+      if (filesToUpload.length > 0)
+        message.push(`${filesToUpload.length} file(s) uploaded`);
+      if (skippedFiles > 0) message.push(`${skippedFiles} file(s) unchanged`);
+      if (filesToDelete.length > 0)
+        message.push(`${filesToDelete.length} file(s) deleted`);
+
       return {
         success: true,
         message: `Synced ${expenses.length} expenses: ${message.join(", ")}`,
-        filesUploaded: uploadedFiles,
+        filesUploaded: filesToUpload.length,
         filesSkipped: skippedFiles,
-        filesDeleted: deletedFiles,
-      };
-    } else if (uploadedFiles > 0 || deletedFiles > 0 || skippedFiles > 0) {
-      return {
-        success: true,
-        message: `Partially synced: ${message.join(
-          ", "
-        )}, ${failedFiles} failed`,
-        filesUploaded: uploadedFiles,
-        filesSkipped: skippedFiles,
-        filesDeleted: deletedFiles,
+        filesDeleted: filesToDelete.length,
       };
     } else {
+      // On failure: preserve existing hashes (don't update anything)
       return {
         success: false,
-        message: "Upload failed",
-        error: "All files failed to upload",
+        message: "Batch commit failed",
+        error: batchResult.error,
         filesUploaded: 0,
-        filesSkipped: 0,
+        filesSkipped: skippedFiles,
         filesDeleted: 0,
       };
     }
