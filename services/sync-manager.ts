@@ -15,6 +15,12 @@ import {
   getFilenameForDay,
   getDayKeyFromFilename,
 } from "./daily-file-manager";
+import {
+  computeContentHash,
+  loadFileHashes,
+  saveFileHashes,
+  FileHashMap,
+} from "./hash-storage";
 import { format } from "date-fns";
 
 const GITHUB_TOKEN_KEY = "github_pat";
@@ -33,6 +39,10 @@ export interface SyncResult {
   success: boolean;
   message: string;
   error?: string;
+  // Differential sync reporting fields
+  filesUploaded?: number;
+  filesSkipped?: number;
+  filesDeleted?: number;
 }
 
 export type AutoSyncTiming = "on_launch" | "on_change";
@@ -163,6 +173,7 @@ export async function testConnection(): Promise<SyncResult> {
 
 /**
  * Sync expenses to GitHub (upload) - splits into daily files
+ * Uses differential sync to only upload changed files
  * Also deletes files for days that no longer have expenses
  */
 export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
@@ -175,6 +186,10 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
         error: "No configuration",
       };
     }
+
+    // Load stored hashes for differential sync
+    const storedHashes = await loadFileHashes();
+    const updatedHashes: FileHashMap = {};
 
     // Get list of existing files on GitHub
     const existingFiles = await listFiles(
@@ -194,6 +209,7 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
     const localDayKeys = new Set(groupedByDay.keys());
 
     let uploadedFiles = 0;
+    let skippedFiles = 0;
     let failedFiles = 0;
     let deletedFiles = 0;
 
@@ -215,17 +231,33 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
         }
       }
 
+      // Clear all stored hashes since we deleted everything
+      await saveFileHashes({});
+
       return {
         success: failedFiles === 0,
         message: `Deleted all ${deletedFiles} expense file(s) from GitHub`,
+        filesUploaded: 0,
+        filesSkipped: 0,
+        filesDeleted: deletedFiles,
       };
     }
 
-    // Upload each day's file
+    // Upload each day's file (with differential sync)
     for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
       const filename = getFilenameForDay(dayKey);
       const csvContent = exportToCSV(dayExpenses);
+      const contentHash = computeContentHash(csvContent);
 
+      // Check if content has changed
+      if (storedHashes[filename] === contentHash) {
+        // Content unchanged, skip upload
+        skippedFiles++;
+        updatedHashes[filename] = contentHash;
+        continue;
+      }
+
+      // Content changed or new file, upload it
       const result = await uploadCSV(
         config.token,
         config.repo,
@@ -236,8 +268,13 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 
       if (result.success) {
         uploadedFiles++;
+        updatedHashes[filename] = contentHash;
       } else {
         failedFiles++;
+        // Keep old hash if upload failed
+        if (storedHashes[filename]) {
+          updatedHashes[filename] = storedHashes[filename];
+        }
       }
     }
 
@@ -254,32 +291,45 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 
         if (result.success) {
           deletedFiles++;
+          // Remove from hashes (don't add to updatedHashes)
         }
       }
     }
 
-    const totalOperations = uploadedFiles + deletedFiles;
+    // Save updated hashes
+    await saveFileHashes(updatedHashes);
+
     const message: string[] = [];
     if (uploadedFiles > 0) message.push(`${uploadedFiles} file(s) uploaded`);
+    if (skippedFiles > 0) message.push(`${skippedFiles} file(s) unchanged`);
     if (deletedFiles > 0) message.push(`${deletedFiles} file(s) deleted`);
 
     if (failedFiles === 0) {
       return {
         success: true,
         message: `Synced ${expenses.length} expenses: ${message.join(", ")}`,
+        filesUploaded: uploadedFiles,
+        filesSkipped: skippedFiles,
+        filesDeleted: deletedFiles,
       };
-    } else if (uploadedFiles > 0 || deletedFiles > 0) {
+    } else if (uploadedFiles > 0 || deletedFiles > 0 || skippedFiles > 0) {
       return {
         success: true,
         message: `Partially synced: ${message.join(
           ", "
         )}, ${failedFiles} failed`,
+        filesUploaded: uploadedFiles,
+        filesSkipped: skippedFiles,
+        filesDeleted: deletedFiles,
       };
     } else {
       return {
         success: false,
         message: "Upload failed",
         error: "All files failed to upload",
+        filesUploaded: 0,
+        filesSkipped: 0,
+        filesDeleted: 0,
       };
     }
   } catch (error) {
