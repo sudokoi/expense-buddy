@@ -675,6 +675,56 @@ function mergeExpensesWithTimestamps(
 }
 
 /**
+ * Get the count of files that will be uploaded/deleted in the next sync
+ * This compares current content hashes with stored hashes to determine changes
+ */
+export async function getPendingSyncCount(expenses: Expense[]): Promise<{
+  filesChanged: number;
+  filesUnchanged: number;
+  filesToDelete: number;
+}> {
+  try {
+    const storedHashes = await loadFileHashes();
+    const groupedByDay = groupExpensesByDay(expenses);
+
+    let filesChanged = 0;
+    let filesUnchanged = 0;
+
+    // Check each day's expenses against stored hashes
+    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+      const filename = getFilenameForDay(dayKey);
+      const csvContent = exportToCSV(dayExpenses);
+      const contentHash = computeContentHash(csvContent);
+
+      if (storedHashes[filename] === contentHash) {
+        filesUnchanged++;
+      } else {
+        filesChanged++;
+      }
+    }
+
+    // Count files to delete (exist in stored hashes but not in local data)
+    const localFilenames = new Set(
+      Array.from(groupedByDay.keys()).map(getFilenameForDay)
+    );
+    const filesToDelete = Object.keys(storedHashes).filter(
+      (filename) => !localFilenames.has(filename)
+    ).length;
+
+    return { filesChanged, filesUnchanged, filesToDelete };
+  } catch (error) {
+    console.warn("Failed to compute pending sync count:", error);
+    // Return all as changed if we can't compute (safe fallback)
+    const groupedByDay = groupExpensesByDay(expenses);
+    return {
+      filesChanged: groupedByDay.size,
+      filesUnchanged: 0,
+      filesToDelete: 0,
+    };
+  }
+}
+
+/**
  * Migrate from old single-file format to new daily-file format
  * This checks if the old expenses.csv exists and migrates it to daily files
  */

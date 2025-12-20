@@ -26,6 +26,7 @@ import {
   saveAutoSyncSettings,
   loadAutoSyncSettings,
   AutoSyncTiming,
+  getPendingSyncCount,
 } from "../../services/sync-manager";
 import { useExpenses } from "../../context/ExpenseContext";
 import { useNotifications } from "../../context/notification-context";
@@ -57,10 +58,38 @@ export default function SettingsScreen() {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
+  // Pending sync count state
+  const [pendingSyncCount, setPendingSyncCount] = useState<{
+    filesChanged: number;
+    filesToDelete: number;
+  } | null>(null);
+  const [isComputingSyncCount, setIsComputingSyncCount] = useState(false);
+
   useEffect(() => {
     loadConfig();
     loadAutoSync();
   }, []);
+
+  // Compute pending sync count when expenses change
+  useEffect(() => {
+    const computeSyncCount = async () => {
+      setIsComputingSyncCount(true);
+      try {
+        const result = await getPendingSyncCount(state.expenses);
+        setPendingSyncCount({
+          filesChanged: result.filesChanged,
+          filesToDelete: result.filesToDelete,
+        });
+      } catch (error) {
+        console.warn("Failed to compute sync count:", error);
+        setPendingSyncCount(null);
+      } finally {
+        setIsComputingSyncCount(false);
+      }
+    };
+
+    computeSyncCount();
+  }, [state.expenses]);
 
   const loadConfig = async () => {
     const config = await loadSyncConfig();
@@ -168,6 +197,12 @@ export default function SettingsScreen() {
 
     if (result.success) {
       addNotification(result.message, "success");
+      // Refresh pending sync count after successful sync
+      const syncCount = await getPendingSyncCount(state.expenses);
+      setPendingSyncCount({
+        filesChanged: syncCount.filesChanged,
+        filesToDelete: syncCount.filesToDelete,
+      });
     } else {
       addNotification(result.error || result.message, "error");
     }
@@ -367,7 +402,18 @@ export default function SettingsScreen() {
             >
               {isSyncing
                 ? "Syncing..."
-                : `Upload to GitHub (${state.expenses.length} expenses)`}
+                : isComputingSyncCount
+                ? "Checking changes..."
+                : pendingSyncCount === null
+                ? `Upload to GitHub (${state.expenses.length} expenses)`
+                : pendingSyncCount.filesChanged +
+                    pendingSyncCount.filesToDelete ===
+                  0
+                ? "No changes to sync"
+                : `Upload to GitHub (${
+                    pendingSyncCount.filesChanged +
+                    pendingSyncCount.filesToDelete
+                  } file(s) changed)`}
             </Button>
 
             <Button
