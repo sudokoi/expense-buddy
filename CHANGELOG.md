@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.2.0
+
+### Minor Changes
+
+- Added "Groceries" category with shopping cart icon to distinguish grocery shopping from dining expenses
+- Implemented differential sync - only uploads changed files to GitHub, reducing API calls and improving sync performance
+- Fixed dashboard graph not updating in real-time when expenses are added, edited, or deleted
+- Sync button now shows accurate count of changed files instead of total expenses
+- Added date picker to expense edit flow - you can now change the date when editing an expense
+
 ## 1.1.2
 
 ### Patch Changes
