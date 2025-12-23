@@ -1,5 +1,24 @@
 # expense-buddy
 
+## 1.3.1
+
+### Patch Changes
+
+- [`c8a66dd`](https://github.com/sudokoi/expense-buddy/commit/c8a66dd6677fc8af79114519b366111211becf8c) Thanks [@sudokoi](https://github.com/sudokoi)! - Add reusable UI components, fix theming issues, and remove type casts
+
+  ### Theming & Styling Improvements
+  - Add reusable UI components (`AmountText`, `CategoryCard`, `CategoryIcon`, `ExpenseCard`, `ScreenContainer`, `SectionHeader`) for consistent styling
+  - Replace inline styles with Tamagui token-based styling across all screens
+  - Add `getColorValue()` helper for type-safe theme color extraction
+  - Fix white background issue in add expense screen
+
+  ### Bug Fixes
+  - Fix back button behavior to close dialogs instead of navigating away
+  - Remove all `as any` type casts for better type safety
+
+  ### Dependencies
+  - Bump Tamagui dependencies to latest versions
+
 ## 1.3.0
 
 ### Minor Changes
