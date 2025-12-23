@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router"
 import { useTheme } from "tamagui"
 import { Atom, AudioWaveform, Settings } from "@tamagui/lucide-icons"
+import { getColorValue } from "../../tamagui.config"
 
 export default function TabLayout() {
   const theme = useTheme()
@@ -26,28 +27,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color }) => <Atom color={color as any} />,
+          tabBarIcon: ({ color }) => <Atom color={getColorValue(color)} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
           title: "Add Expense",
-          tabBarIcon: ({ color }) => <AudioWaveform color={color as any} />,
+          tabBarIcon: ({ color }) => <AudioWaveform color={getColorValue(color)} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: "History",
-          tabBarIcon: ({ color }) => <Atom color={color as any} />,
+          tabBarIcon: ({ color }) => <Atom color={getColorValue(color)} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <Settings color={color as any} />,
+          tabBarIcon: ({ color }) => <Settings color={getColorValue(color)} />,
         }}
       />
     </Tabs>

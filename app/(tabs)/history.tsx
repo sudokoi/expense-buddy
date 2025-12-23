@@ -31,6 +31,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { ExpenseCard, AmountText, CategoryIcon } from "../../components/ui"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -94,10 +95,10 @@ export default function HistoryScreen() {
   const [hasMore, setHasMore] = React.useState(true)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
 
-  // Theme colors for components that need raw values due to Tamagui type constraints
-  const gray8Color = theme.gray8?.val as string
-  const gray10Color = theme.gray10?.val as string
-  const gray11Color = theme.gray11?.val as string
+  // Theme colors - use getColorValue for Tamagui component compatibility
+  const gray8Color = getColorValue(theme.gray8)
+  const gray10Color = getColorValue(theme.gray10)
+  const gray11Color = getColorValue(theme.gray11)
   const backgroundColor = theme.background?.val as string
 
   // Handle back button to close dialogs instead of navigating
@@ -184,10 +185,10 @@ export default function HistoryScreen() {
   if (state.expenses.length === 0) {
     return (
       <YStack style={layoutStyles.emptyContainer}>
-        <Text style={layoutStyles.emptyText} color={gray10Color as any}>
+        <Text style={layoutStyles.emptyText} color={gray10Color}>
           No expenses yet.
         </Text>
-        <Text style={layoutStyles.emptySubtext} color={gray8Color as any}>
+        <Text style={layoutStyles.emptySubtext} color={gray8Color}>
           Add one from the + tab.
         </Text>
       </YStack>
@@ -341,7 +342,7 @@ export default function HistoryScreen() {
                     keyboardType="default"
                   />
                   {expressionPreview && (
-                    <Text fontSize="$3" color={gray10Color as any}>
+                    <Text fontSize="$3" color={gray10Color}>
                       = ₹{expressionPreview}
                     </Text>
                   )}
@@ -468,7 +469,7 @@ export default function HistoryScreen() {
         keyExtractor={(item) => item.id}
         renderSectionHeader={({ section: { title } }) => (
           <YStack style={[layoutStyles.sectionHeader, { backgroundColor }]}>
-            <H6 color={gray11Color as any}>{title}</H6>
+            <H6 color={gray11Color}>{title}</H6>
           </YStack>
         )}
         renderItem={({ item }) => {
@@ -490,7 +491,7 @@ export default function HistoryScreen() {
                   <Text fontWeight="bold" fontSize="$4">
                     {item.note || categoryInfo.label}
                   </Text>
-                  <Text color={gray10Color as any} fontSize="$2">
+                  <Text color={gray10Color} fontSize="$2">
                     {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
                   </Text>
                 </YStack>

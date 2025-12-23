@@ -14,6 +14,7 @@ import {
   ScreenContainer,
   SectionHeader,
 } from "../../components/ui"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -91,7 +92,7 @@ export default function DashboardScreen() {
         return {
           stacks: stacks,
           label: format(parseISO(dateKey), "dd/MM"),
-          onPress: () => router.push(`/day/${dateKey}` as any),
+          onPress: () => router.push(`/day/${dateKey}`),
           dateKey, // Keep for filtering
         }
       })
@@ -120,14 +121,14 @@ export default function DashboardScreen() {
 
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
-  // Theme colors for components that need raw values due to Tamagui type constraints
-  const gray10Color = theme.gray10?.val as string
-  const blue3Color = theme.blue3.val as string
-  const blue11Color = theme.blue11.val as string
-  const blue12Color = theme.blue12.val as string
-  const green3Color = theme.green3.val as string
-  const green11Color = theme.green11.val as string
-  const green12Color = theme.green12.val as string
+  // Theme colors - use getColorValue for Tamagui component compatibility
+  const gray10Color = getColorValue(theme.gray10)
+  const blue3Color = getColorValue(theme.blue3)
+  const blue11Color = getColorValue(theme.blue11)
+  const blue12Color = getColorValue(theme.blue12)
+  const green3Color = getColorValue(theme.green3)
+  const green11Color = getColorValue(theme.green11)
+  const green12Color = getColorValue(theme.green12)
 
   return (
     <ScreenContainer>
@@ -135,9 +136,9 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.headerRow}>
         <YStack>
           <H4>Dashboard</H4>
-          <Text color={gray10Color as any}>Welcome back!</Text>
+          <Text color={gray10Color}>Welcome back!</Text>
         </YStack>
-        <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add" as any)}>
+        <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add")}>
           + Add
         </Button>
       </XStack>
@@ -150,17 +151,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={blue3Color as any}
+          backgroundColor={blue3Color}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={blue11Color as any}
+            color={blue11Color}
           >
             Total Spent
           </Text>
-          <H4 style={layoutStyles.cardValue} color={blue12Color as any}>
+          <H4 style={layoutStyles.cardValue} color={blue12Color}>
             ₹{totalExpenses.toFixed(2)}
           </H4>
         </Card>
@@ -170,17 +171,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={green3Color as any}
+          backgroundColor={green3Color}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={green11Color as any}
+            color={green11Color}
           >
             Entries
           </Text>
-          <H4 style={layoutStyles.cardValue} color={green12Color as any}>
+          <H4 style={layoutStyles.cardValue} color={green12Color}>
             {state.expenses.length}
           </H4>
         </Card>
@@ -219,7 +220,7 @@ export default function DashboardScreen() {
             justifyContent="center"
             height={150}
           >
-            <Text color={gray10Color as any}>No data to display yet.</Text>
+            <Text color={gray10Color}>No data to display yet.</Text>
           </Card>
         )}
       </YStack>
@@ -228,17 +229,13 @@ export default function DashboardScreen() {
       <YStack gap="$3">
         <XStack style={layoutStyles.transactionsHeader}>
           <SectionHeader>Recent Transactions</SectionHeader>
-          <Button
-            chromeless
-            size="$2"
-            onPress={() => router.push("/(tabs)/history" as any)}
-          >
+          <Button chromeless size="$2" onPress={() => router.push("/(tabs)/history")}>
             See All
           </Button>
         </XStack>
 
         {recentExpenses.length === 0 && (
-          <Text color={gray10Color as any}>No recent transactions.</Text>
+          <Text color={gray10Color}>No recent transactions.</Text>
         )}
 
         {recentExpenses.map((expense) => {
@@ -254,7 +251,7 @@ export default function DashboardScreen() {
                   <SizableText size="$4" fontWeight="bold">
                     {expense.note || cat?.label}
                   </SizableText>
-                  <Text fontSize="$2" color={gray10Color as any}>
+                  <Text fontSize="$2" color={gray10Color}>
                     {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
                   </Text>
                 </YStack>

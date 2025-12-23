@@ -13,6 +13,7 @@ import {
   ScreenContainer,
   SectionHeader,
 } from "../../components/ui"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -33,8 +34,8 @@ export default function DayExpensesScreen() {
   const { state, deleteExpense } = useExpenses()
   const theme = useTheme()
 
-  // Theme colors for components that need raw values due to Tamagui type constraints
-  const gray10Color = theme.gray10?.val as string
+  // Theme colors - use getColorValue for Tamagui component compatibility
+  const gray10Color = getColorValue(theme.gray10)
   const backgroundColor = theme.background?.val as string
 
   // Filter expenses for this date
@@ -74,7 +75,7 @@ export default function DayExpensesScreen() {
         <SectionHeader>Transactions for {formattedDisplayDate}</SectionHeader>
 
         {dayExpenses.length === 0 ? (
-          <Text color={gray10Color as any} style={layoutStyles.emptyText}>
+          <Text color={gray10Color} style={layoutStyles.emptyText}>
             No expenses found for this date.
           </Text>
         ) : (
@@ -90,7 +91,7 @@ export default function DayExpensesScreen() {
                     <Text fontWeight="bold" fontSize="$4">
                       {expense.note || categoryInfo.label}
                     </Text>
-                    <Text color={gray10Color as any} fontSize="$2">
+                    <Text color={gray10Color} fontSize="$2">
                       {format(parseISO(expense.date), "h:mm a")} • {expense.category}
                     </Text>
                   </YStack>

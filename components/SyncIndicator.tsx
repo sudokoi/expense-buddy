@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react"
-import { getTokenValue } from "tamagui"
+import { useTheme } from "tamagui"
 import { Cloud, CheckCircle, XCircle } from "@tamagui/lucide-icons"
 import { Animated, Easing, View, StyleSheet } from "react-native"
 import { useSyncStatus } from "../context/sync-status-context"
+import { getColorValue } from "../tamagui.config"
 
 // Using StyleSheet for positioning that Tamagui's type system doesn't support
 const styles = StyleSheet.create({
@@ -24,8 +25,12 @@ const styles = StyleSheet.create({
 
 export const SyncIndicator: React.FC = () => {
   const { syncStatus } = useSyncStatus()
+  const theme = useTheme()
   const spinValue = useRef(new Animated.Value(0)).current
   const scaleValue = useRef(new Animated.Value(1)).current
+
+  // Theme colors
+  const blue10Color = getColorValue(theme.blue10)
 
   // Spinning animation for syncing state
   useEffect(() => {
@@ -69,15 +74,13 @@ export const SyncIndicator: React.FC = () => {
   })
 
   const getIcon = () => {
-    // Using getTokenValue with 'color' category and fallback
-    const iconColor = getTokenValue("$blue10" as any, "color") || "#3b82f6"
     switch (syncStatus) {
       case "syncing":
-        return <Cloud size={24} color={iconColor as any} />
+        return <Cloud size={24} color={blue10Color} />
       case "success":
-        return <CheckCircle size={24} color={"#22c55e" as any} />
+        return <CheckCircle size={24} color="#22c55e" />
       case "error":
-        return <XCircle size={24} color={"#ef4444" as any} />
+        return <XCircle size={24} color="#ef4444" />
       default:
         return null
     }

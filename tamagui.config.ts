@@ -1,5 +1,5 @@
 import { defaultConfig } from "@tamagui/config/v4"
-import { createTamagui } from "tamagui"
+import { createTamagui, Variable } from "tamagui"
 
 // Extend default config with custom semantic color tokens
 export const config = createTamagui({
@@ -30,4 +30,16 @@ export type Conf = typeof config
 declare module "tamagui" {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface TamaguiCustomConfig extends Conf {}
+}
+
+/**
+ * Extracts the raw color value from a Tamagui theme variable.
+ * Returns a type that's compatible with Tamagui's color props.
+ */
+export function getColorValue(
+  variable: Variable<string> | string | undefined
+): `#${string}` {
+  if (!variable) return "#000000"
+  if (typeof variable === "string") return variable as `#${string}`
+  return variable.val as `#${string}`
 }

@@ -1,5 +1,15 @@
 import { useState, useMemo } from "react"
-import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
+import {
+  YStack,
+  XStack,
+  Text,
+  Input,
+  Button,
+  TextArea,
+  H4,
+  Label,
+  useTheme,
+} from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
@@ -14,6 +24,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { CategoryCard } from "../../components/ui"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -41,6 +52,11 @@ const layoutStyles = {
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
+  const theme = useTheme()
+
+  // Theme colors - extract raw values for components that need them
+  const backgroundColor = theme.background.val
+  const gray10Color = getColorValue(theme.gray10)
 
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState<ExpenseCategory>("Food")
@@ -95,7 +111,7 @@ export default function AddExpenseScreen() {
 
   return (
     <KeyboardAwareScrollView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor }}
       contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
       bottomOffset={50}
     >
@@ -119,7 +135,7 @@ export default function AddExpenseScreen() {
             />
           </XStack>
           {expressionPreview && (
-            <Text fontSize="$3" color={"$gray10" as any}>
+            <Text fontSize="$3" color={gray10Color}>
               = ₹{expressionPreview}
             </Text>
           )}

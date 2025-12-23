@@ -38,6 +38,7 @@ import { useSyncStatus } from "../../context/sync-status-context"
 import { checkForUpdates, UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer, SectionHeader } from "../../components/ui"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -78,13 +79,13 @@ export default function SettingsScreen() {
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
 
-  // Theme colors for components that need raw values due to Tamagui type constraints
-  const gray9Color = theme.gray9?.val as string
-  const gray10Color = theme.gray10?.val as string
-  const gray11Color = theme.gray11?.val as string
-  const green10Color = theme.green10?.val as string
-  const red10Color = theme.red10?.val as string
-  const blue10Color = theme.blue10?.val as string
+  // Theme colors - use getColorValue for Tamagui component compatibility
+  const gray9Color = getColorValue(theme.gray9)
+  const gray10Color = getColorValue(theme.gray10)
+  const gray11Color = getColorValue(theme.gray11)
+  const green10Color = getColorValue(theme.green10)
+  const red10Color = getColorValue(theme.red10)
+  const blue10Color = getColorValue(theme.blue10)
 
   const [token, setToken] = useState("")
   const [repo, setRepo] = useState("")
@@ -391,7 +392,7 @@ export default function SettingsScreen() {
       <YStack gap="$4" style={layoutStyles.container}>
         <SectionHeader>GitHub Sync Settings</SectionHeader>
 
-        <Text color={gray10Color as any} style={layoutStyles.descriptionText as any}>
+        <Text color={gray10Color} style={layoutStyles.descriptionText}>
           Sync your expenses to a GitHub repository using a Personal Access Token.
         </Text>
 
@@ -407,7 +408,7 @@ export default function SettingsScreen() {
             borderWidth={2}
             borderColor="$borderColor"
           />
-          <Text fontSize="$2" color={gray9Color as any}>
+          <Text fontSize="$2" color={gray9Color}>
             Create a fine-grained PAT with Contents (read/write) permission
           </Text>
         </YStack>
@@ -509,11 +510,7 @@ export default function SettingsScreen() {
             <XStack style={layoutStyles.autoSyncRow}>
               <YStack flex={1}>
                 <Label>Enable Auto-Sync</Label>
-                <Text
-                  fontSize="$2"
-                  color={gray9Color as any}
-                  style={layoutStyles.helperText as any}
-                >
+                <Text fontSize="$2" color={gray9Color} style={layoutStyles.helperText}>
                   Automatically sync with GitHub when configured
                 </Text>
               </YStack>
@@ -542,8 +539,8 @@ export default function SettingsScreen() {
                       On App Launch
                       <Text
                         fontSize="$2"
-                        color={gray9Color as any}
-                        style={layoutStyles.helperText as any}
+                        color={gray9Color}
+                        style={layoutStyles.helperText}
                       >
                         Sync when the app starts
                       </Text>
@@ -558,8 +555,8 @@ export default function SettingsScreen() {
                       On Every Change
                       <Text
                         fontSize="$2"
-                        color={gray9Color as any}
-                        style={layoutStyles.helperText as any}
+                        color={gray9Color}
+                        style={layoutStyles.helperText}
                       >
                         Sync after adding, editing, or deleting expenses
                       </Text>
@@ -583,19 +580,17 @@ export default function SettingsScreen() {
           <YStack gap="$3">
             {/* Current Version */}
             <XStack style={layoutStyles.versionRow}>
-              <Text color={gray11Color as any}>Current Version</Text>
+              <Text color={gray11Color}>Current Version</Text>
               <Text fontWeight="bold">v{APP_CONFIG.version}</Text>
             </XStack>
 
             {/* Update Info */}
             {updateInfo && !updateInfo.error && (
               <XStack style={layoutStyles.versionRow}>
-                <Text color={gray11Color as any}>Latest Version</Text>
+                <Text color={gray11Color}>Latest Version</Text>
                 <Text
                   fontWeight="bold"
-                  color={
-                    updateInfo.hasUpdate ? (green10Color as any) : (gray11Color as any)
-                  }
+                  color={updateInfo.hasUpdate ? green10Color : gray11Color}
                 >
                   v{updateInfo.latestVersion}
                 </Text>
@@ -640,7 +635,7 @@ export default function SettingsScreen() {
         <Button
           size="$3"
           chromeless
-          color={red10Color as any}
+          color={red10Color}
           onPress={handleClearConfig}
           style={layoutStyles.clearButton}
         >

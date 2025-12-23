@@ -1,5 +1,6 @@
 import { Card, Text } from "tamagui"
 import { ReactNode } from "react"
+import { getColorValue } from "../../tamagui.config"
 
 interface CategoryCardProps {
   isSelected: boolean
@@ -26,8 +27,8 @@ export function CategoryCard({
       scale={0.97}
       hoverStyle={{ scale: 1 }}
       pressStyle={{ scale: 0.95 }}
-      backgroundColor={isSelected ? (categoryColor as any) : "$background"}
-      borderColor={isSelected ? (categoryColor as any) : "$borderColor"}
+      backgroundColor={isSelected ? getColorValue(categoryColor) : "$background"}
+      borderColor={isSelected ? getColorValue(categoryColor) : "$borderColor"}
       padding="$3"
       borderRadius="$4"
       width="30%"
@@ -37,7 +38,7 @@ export function CategoryCard({
     >
       <Text
         fontWeight={isSelected ? "bold" : "normal"}
-        color={isSelected ? "white" : "$color"}
+        color={isSelected ? "#ffffff" : "$color"}
       >
         {label}
       </Text>

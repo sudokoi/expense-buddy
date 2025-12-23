@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { Expense } from "../types/expense"
+import { Expense, ExpenseCategory } from "../types/expense"
 
 export interface CSVRow {
   id: string
@@ -49,7 +49,7 @@ export function importFromCSV(csvString: string): Expense[] {
   return result.data.map((row) => ({
     id: row.id,
     amount: parseFloat(row.amount),
-    category: row.category as any,
+    category: row.category as ExpenseCategory,
     date: row.date,
     note: row.note || "",
     // Use timestamps from CSV if available, otherwise default to now

@@ -5,8 +5,7 @@ import { useNotifications, NotificationType } from "../context/notification-cont
 import { View, StyleSheet } from "react-native"
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  // Using 'as any' to work around Tamagui's strict color type inference
-  const iconProps = { size: 20, color: "white" as any }
+  const iconProps = { size: 20, color: "#ffffff" as `#${string}` }
 
   switch (type) {
     case "success":
