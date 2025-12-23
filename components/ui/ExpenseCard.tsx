@@ -1,5 +1,6 @@
 import { Card, CardProps } from "tamagui"
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ExpenseCardProps extends CardProps {}
 
 /**

@@ -15,7 +15,7 @@ import {
   useTheme,
 } from "tamagui"
 import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
-import { SectionList, Platform, ViewStyle, TextStyle } from "react-native"
+import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
@@ -99,6 +99,24 @@ export default function HistoryScreen() {
   const gray10Color = theme.gray10?.val as string
   const gray11Color = theme.gray11?.val as string
   const backgroundColor = theme.background?.val as string
+
+  // Handle back button to close dialogs instead of navigating
+  React.useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (editingExpense) {
+        setEditingExpense(null)
+        setShowDatePicker(false)
+        return true // Prevent default back behavior
+      }
+      if (deletingExpenseId) {
+        setDeletingExpenseId(null)
+        return true // Prevent default back behavior
+      }
+      return false // Let default back behavior happen
+    })
+
+    return () => backHandler.remove()
+  }, [editingExpense, deletingExpenseId])
 
   // Compute preview when expression contains operators
   const expressionPreview = React.useMemo(() => {
