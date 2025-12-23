@@ -74,7 +74,6 @@ To manually trigger a build:
 1. Go to **Actions** → **Build and Release APK** → **Run workflow**
 
 2. Choose options:
-
    - **Branch**: Select the branch to build from
    - **Version suffix**:
      - Leave empty to use commit SHA (e.g., `expense-buddy-a1b2c3d.apk`)

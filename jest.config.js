@@ -5,4 +5,4 @@ module.exports = {
     "^.+\\.tsx?$": ["babel-jest", { presets: ["@babel/preset-typescript"] }],
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-};
+}

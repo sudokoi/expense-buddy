@@ -5,25 +5,23 @@
  */
 
 export interface ParseResult {
-  success: boolean;
-  value?: number;
-  error?: string;
+  success: boolean
+  value?: number
+  error?: string
 }
 
-type Token =
-  | { type: "number"; value: number }
-  | { type: "operator"; value: string };
+type Token = { type: "number"; value: number } | { type: "operator"; value: string }
 
 /**
  * Tokenizes an expression string into numbers and operators.
  */
 function tokenize(expression: string): Token[] | null {
-  const tokens: Token[] = [];
-  let i = 0;
-  const expr = expression.replace(/\s/g, "");
+  const tokens: Token[] = []
+  let i = 0
+  const expr = expression.replace(/\s/g, "")
 
   while (i < expr.length) {
-    const char = expr[i];
+    const char = expr[i]
 
     // Handle operators
     if (["+", "-", "*", "/"].includes(char)) {
@@ -33,67 +31,67 @@ function tokenize(expression: string): Token[] | null {
         (tokens.length === 0 || tokens[tokens.length - 1].type === "operator")
       ) {
         // This is a negative sign for a number
-        let numStr = "-";
-        i++;
+        let numStr = "-"
+        i++
         while (i < expr.length && (/\d/.test(expr[i]) || expr[i] === ".")) {
-          numStr += expr[i];
-          i++;
+          numStr += expr[i]
+          i++
         }
-        if (numStr === "-") return null; // Just a minus with nothing after
-        const num = parseFloat(numStr);
-        if (isNaN(num)) return null;
-        tokens.push({ type: "number", value: num });
+        if (numStr === "-") return null // Just a minus with nothing after
+        const num = parseFloat(numStr)
+        if (isNaN(num)) return null
+        tokens.push({ type: "number", value: num })
       } else {
-        tokens.push({ type: "operator", value: char });
-        i++;
+        tokens.push({ type: "operator", value: char })
+        i++
       }
     }
     // Handle numbers
     else if (/\d/.test(char) || char === ".") {
-      let numStr = "";
+      let numStr = ""
       while (i < expr.length && (/\d/.test(expr[i]) || expr[i] === ".")) {
-        numStr += expr[i];
-        i++;
+        numStr += expr[i]
+        i++
       }
-      const num = parseFloat(numStr);
-      if (isNaN(num)) return null;
-      tokens.push({ type: "number", value: num });
+      const num = parseFloat(numStr)
+      if (isNaN(num)) return null
+      tokens.push({ type: "number", value: num })
     }
     // Invalid character
     else {
-      return null;
+      return null
     }
   }
 
-  return tokens;
+  return tokens
 }
 
 /**
  * Validates token sequence for proper syntax.
  */
 function validateTokens(tokens: Token[]): boolean {
-  if (tokens.length === 0) return false;
+  if (tokens.length === 0) return false
 
   // Must start with a number
-  if (tokens[0].type !== "number") return false;
+  if (tokens[0].type !== "number") return false
 
   // Must end with a number
-  if (tokens[tokens.length - 1].type !== "number") return false;
+  if (tokens[tokens.length - 1].type !== "number") return false
 
   // Check for consecutive operators
   for (let i = 0; i < tokens.length - 1; i++) {
     if (tokens[i].type === "operator" && tokens[i + 1].type === "operator") {
-      return false;
+      return false
     }
   }
 
   // Check alternating pattern: number, operator, number, operator, ...
   for (let i = 0; i < tokens.length; i++) {
-    const expectedType = i % 2 === 0 ? "number" : "operator";
-    if (tokens[i].type !== expectedType) return false;
+    const expectedType = i % 2 === 0 ? "number" : "operator"
+    if (tokens[i].type !== expectedType) return false
   }
 
-  return true;
+  return true
 }
 
 /**
@@ -102,39 +100,38 @@ function validateTokens(tokens: Token[]): boolean {
  */
 function evaluate(tokens: Token[]): number {
   // First pass: handle * and /
-  const intermediate: (number | string)[] = [];
-  let i = 0;
+  const intermediate: (number | string)[] = []
+  let i = 0
 
   while (i < tokens.length) {
-    const token = tokens[i];
+    const token = tokens[i]
 
     if (token.type === "number") {
-      intermediate.push(token.value);
+      intermediate.push(token.value)
     } else if (token.type === "operator") {
-      const op = token.value;
+      const op = token.value
       if (op === "*" || op === "/") {
-        const left = intermediate.pop() as number;
-        const right = (tokens[i + 1] as { type: "number"; value: number })
-          .value;
-        const result = op === "*" ? left * right : left / right;
-        intermediate.push(result);
-        i++; // Skip the next number since we already used it
+        const left = intermediate.pop() as number
+        const right = (tokens[i + 1] as { type: "number"; value: number }).value
+        const result = op === "*" ? left * right : left / right
+        intermediate.push(result)
+        i++ // Skip the next number since we already used it
       } else {
-        intermediate.push(op);
+        intermediate.push(op)
       }
     }
-    i++;
+    i++
   }
 
   // Second pass: handle + and -
-  let result = intermediate[0] as number;
+  let result = intermediate[0] as number
   for (let j = 1; j < intermediate.length; j += 2) {
-    const op = intermediate[j] as string;
-    const right = intermediate[j + 1] as number;
-    result = op === "+" ? result + right : result - right;
+    const op = intermediate[j] as string
+    const right = intermediate[j + 1] as number
+    result = op === "+" ? result + right : result - right
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -146,41 +143,41 @@ function evaluate(tokens: Token[]): number {
  */
 export function parseExpression(expression: string): ParseResult {
   // 1. Trim and validate input
-  const trimmed = expression.trim();
+  const trimmed = expression.trim()
   if (!trimmed) {
-    return { success: false, error: "Please enter a valid amount" };
+    return { success: false, error: "Please enter a valid amount" }
   }
 
   // 2. Check for valid characters only (digits, operators, decimal point, whitespace)
   if (!/^[\d+\-*/.\s]+$/.test(trimmed)) {
-    return { success: false, error: "Invalid characters in expression" };
+    return { success: false, error: "Invalid characters in expression" }
   }
 
   // 3. Tokenize into numbers and operators
-  const tokens = tokenize(trimmed);
+  const tokens = tokenize(trimmed)
   if (!tokens) {
-    return { success: false, error: "Invalid expression syntax" };
+    return { success: false, error: "Invalid expression syntax" }
   }
 
   // 4. Validate token sequence (no consecutive operators, etc.)
   if (!validateTokens(tokens)) {
-    return { success: false, error: "Invalid expression syntax" };
+    return { success: false, error: "Invalid expression syntax" }
   }
 
   // 5. Evaluate with operator precedence
-  const result = evaluate(tokens);
+  const result = evaluate(tokens)
 
   // 6. Check for division by zero and valid result
   if (!isFinite(result) || isNaN(result)) {
-    return { success: false, error: "Cannot divide by zero" };
+    return { success: false, error: "Cannot divide by zero" }
   }
 
   // 7. Check for zero or negative result
   if (result <= 0) {
-    return { success: false, error: "Amount must be greater than zero" };
+    return { success: false, error: "Amount must be greater than zero" }
   }
 
-  return { success: true, value: result };
+  return { success: true, value: result }
 }
 
 /**
@@ -192,14 +189,12 @@ export function parseExpression(expression: string): ParseResult {
  */
 export function hasOperators(input: string): boolean {
   // Check for operators that are not at the start (to exclude negative numbers)
-  const trimmed = input.trim();
-  if (!trimmed) return false;
+  const trimmed = input.trim()
+  if (!trimmed) return false
 
   // Remove leading minus (negative number) and check for remaining operators
-  const withoutLeadingMinus = trimmed.startsWith("-")
-    ? trimmed.slice(1)
-    : trimmed;
-  return /[+\-*/]/.test(withoutLeadingMinus);
+  const withoutLeadingMinus = trimmed.startsWith("-") ? trimmed.slice(1) : trimmed
+  return /[+\-*/]/.test(withoutLeadingMinus)
 }
 
 /**
@@ -209,5 +204,5 @@ export function hasOperators(input: string): boolean {
  * @returns Formatted string (e.g., "403.00")
  */
 export function formatAmount(value: number): string {
-  return value.toFixed(2);
+  return value.toFixed(2)
 }

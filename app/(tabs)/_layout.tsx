@@ -1,6 +1,6 @@
-import { Link, Tabs } from 'expo-router'
-import { Button, useTheme } from 'tamagui'
-import { Atom, AudioWaveform, Settings } from '@tamagui/lucide-icons'
+import { Tabs } from "expo-router"
+import { useTheme } from "tamagui"
+import { Atom, AudioWaveform, Settings } from "@tamagui/lucide-icons"
 
 export default function TabLayout() {
   const theme = useTheme()
@@ -25,28 +25,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: "Dashboard",
           tabBarIcon: ({ color }) => <Atom color={color as any} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
-          title: 'Add Expense',
+          title: "Add Expense",
           tabBarIcon: ({ color }) => <AudioWaveform color={color as any} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: "History",
           tabBarIcon: ({ color }) => <Atom color={color as any} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: "Settings",
           tabBarIcon: ({ color }) => <Settings color={color as any} />,
         }}
       />

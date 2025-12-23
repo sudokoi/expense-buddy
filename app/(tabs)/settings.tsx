@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 import {
   YStack,
   XStack,
@@ -12,9 +12,9 @@ import {
   Card,
   Switch,
   RadioGroup,
-} from "tamagui";
-import { Alert, Linking } from "react-native";
-import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons";
+} from "tamagui"
+import { Alert, Linking } from "react-native"
+import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons"
 import {
   saveSyncConfig,
   loadSyncConfig,
@@ -28,111 +28,109 @@ import {
   AutoSyncTiming,
   analyzeConflicts,
   smartMerge,
-} from "../../services/sync-manager";
-import { Expense } from "../../types/expense";
+} from "../../services/sync-manager"
+import { Expense } from "../../types/expense"
 import {
   getPendingChangesCount,
   clearPendingChanges,
-} from "../../services/change-tracker";
-import { useExpenses } from "../../context/ExpenseContext";
-import { useNotifications } from "../../context/notification-context";
-import { useSyncStatus } from "../../context/sync-status-context";
-import { checkForUpdates, UpdateInfo } from "../../services/update-checker";
-import { APP_CONFIG } from "../../constants/app-config";
+} from "../../services/change-tracker"
+import { useExpenses } from "../../context/ExpenseContext"
+import { useNotifications } from "../../context/notification-context"
+import { useSyncStatus } from "../../context/sync-status-context"
+import { checkForUpdates, UpdateInfo } from "../../services/update-checker"
+import { APP_CONFIG } from "../../constants/app-config"
 
 export default function SettingsScreen() {
-  const theme = useTheme();
-  const { state, replaceAllExpenses, clearPendingChangesAfterSync } =
-    useExpenses();
-  const { addNotification } = useNotifications();
-  const { startSync, endSync } = useSyncStatus();
+  const theme = useTheme()
+  const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
+  const { addNotification } = useNotifications()
+  const { startSync, endSync } = useSyncStatus()
 
-  const [token, setToken] = useState("");
-  const [repo, setRepo] = useState("");
-  const [branch, setBranch] = useState("main");
-  const [isTesting, setIsTesting] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [token, setToken] = useState("")
+  const [repo, setRepo] = useState("")
+  const [branch, setBranch] = useState("main")
+  const [isTesting, setIsTesting] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  )
 
   // Auto-sync settings
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
-  const [autoSyncTiming, setAutoSyncTiming] =
-    useState<AutoSyncTiming>("on_launch");
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false)
+  const [autoSyncTiming, setAutoSyncTiming] = useState<AutoSyncTiming>("on_launch")
 
   // Update check state
-  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
 
   // Pending sync count state
   const [pendingChangesCount, setPendingChangesCount] = useState<{
-    added: number;
-    edited: number;
-    deleted: number;
-    total: number;
-  } | null>(null);
-  const [isComputingSyncCount, setIsComputingSyncCount] = useState(false);
+    added: number
+    edited: number
+    deleted: number
+    total: number
+  } | null>(null)
+  const [isComputingSyncCount, setIsComputingSyncCount] = useState(false)
 
   useEffect(() => {
-    loadConfig();
-    loadAutoSync();
-  }, []);
+    loadConfig()
+    loadAutoSync()
+  }, [])
 
   // Compute pending changes count when expenses change
   useEffect(() => {
     const computeChangesCount = async () => {
-      setIsComputingSyncCount(true);
+      setIsComputingSyncCount(true)
       try {
-        const result = await getPendingChangesCount();
-        setPendingChangesCount(result);
+        const result = await getPendingChangesCount()
+        setPendingChangesCount(result)
       } catch (error) {
-        console.warn("Failed to compute changes count:", error);
-        setPendingChangesCount(null);
+        console.warn("Failed to compute changes count:", error)
+        setPendingChangesCount(null)
       } finally {
-        setIsComputingSyncCount(false);
+        setIsComputingSyncCount(false)
       }
-    };
+    }
 
-    computeChangesCount();
-  }, [state.expenses]);
+    computeChangesCount()
+  }, [state.expenses])
 
   const loadConfig = async () => {
-    const config = await loadSyncConfig();
+    const config = await loadSyncConfig()
     if (config) {
-      setToken(config.token);
-      setRepo(config.repo);
-      setBranch(config.branch);
+      setToken(config.token)
+      setRepo(config.repo)
+      setBranch(config.branch)
     }
-  };
+  }
 
   const loadAutoSync = async () => {
-    const settings = await loadAutoSyncSettings();
-    setAutoSyncEnabled(settings.enabled);
-    setAutoSyncTiming(settings.timing);
-  };
+    const settings = await loadAutoSyncSettings()
+    setAutoSyncEnabled(settings.enabled)
+    setAutoSyncTiming(settings.timing)
+  }
 
   const handleSaveAutoSync = async () => {
     await saveAutoSyncSettings({
       enabled: autoSyncEnabled,
       timing: autoSyncTiming,
-    });
-    addNotification("Auto-sync settings saved", "success");
-  };
+    })
+    addNotification("Auto-sync settings saved", "success")
+  }
 
   const handleSaveConfig = async () => {
     if (!token || !repo || !branch) {
-      addNotification("Please fill in all fields", "error");
-      return;
+      addNotification("Please fill in all fields", "error")
+      return
     }
 
     // Check if this is first-time configuration (no previous config existed)
-    const previousConfig = await loadSyncConfig();
-    const isFirstTimeSetup = !previousConfig;
+    const previousConfig = await loadSyncConfig()
+    const isFirstTimeSetup = !previousConfig
 
-    const config: SyncConfig = { token, repo, branch };
-    await saveSyncConfig(config);
-    addNotification("Sync configuration saved", "success");
+    const config: SyncConfig = { token, repo, branch }
+    await saveSyncConfig(config)
+    addNotification("Sync configuration saved", "success")
 
     // Only prompt to download if this is first-time setup AND no local expenses
     // This avoids prompting when user has deleted all data intentionally
@@ -146,112 +144,111 @@ export default function SettingsScreen() {
           {
             text: "Download",
             onPress: async () => {
-              setIsSyncing(true);
-              startSync();
-              const result = await syncDown();
-              setIsSyncing(false);
-              endSync(result.success);
+              setIsSyncing(true)
+              startSync()
+              const result = await syncDown()
+              setIsSyncing(false)
+              endSync(result.success)
 
               if (result.success && result.expenses) {
-                replaceAllExpenses(result.expenses);
+                replaceAllExpenses(result.expenses)
                 addNotification(
                   `Downloaded ${result.expenses.length} expenses`,
                   "success"
-                );
+                )
 
                 // Auto-enable sync for convenience
                 if (!autoSyncEnabled) {
-                  setAutoSyncEnabled(true);
+                  setAutoSyncEnabled(true)
                   await saveAutoSyncSettings({
                     enabled: true,
                     timing: autoSyncTiming,
-                  });
-                  addNotification("Auto-sync enabled", "info");
+                  })
+                  addNotification("Auto-sync enabled", "info")
                 }
               } else {
-                addNotification(result.error || result.message, "error");
+                addNotification(result.error || result.message, "error")
               }
             },
           },
         ]
-      );
+      )
     }
-  };
+  }
 
   const handleTestConnection = async () => {
-    setIsTesting(true);
-    setConnectionStatus("idle");
+    setIsTesting(true)
+    setConnectionStatus("idle")
 
-    const result = await testConnection();
+    const result = await testConnection()
 
-    setIsTesting(false);
+    setIsTesting(false)
     if (result.success) {
-      setConnectionStatus("success");
-      addNotification(result.message, "success");
+      setConnectionStatus("success")
+      addNotification(result.message, "success")
     } else {
-      setConnectionStatus("error");
-      addNotification(result.error || result.message, "error");
+      setConnectionStatus("error")
+      addNotification(result.error || result.message, "error")
     }
-  };
+  }
 
   const handleSyncUp = async () => {
-    setIsSyncing(true);
-    startSync();
-    const result = await syncUp(state.expenses);
-    setIsSyncing(false);
-    endSync(result.success);
+    setIsSyncing(true)
+    startSync()
+    const result = await syncUp(state.expenses)
+    setIsSyncing(false)
+    endSync(result.success)
 
     if (result.success) {
-      addNotification(result.message, "success");
+      addNotification(result.message, "success")
       // Clear pending changes after successful sync
-      await clearPendingChangesAfterSync();
+      await clearPendingChangesAfterSync()
       // Refresh pending changes count
-      const changesCount = await getPendingChangesCount();
-      setPendingChangesCount(changesCount);
+      const changesCount = await getPendingChangesCount()
+      setPendingChangesCount(changesCount)
     } else {
-      addNotification(result.error || result.message, "error");
+      addNotification(result.error || result.message, "error")
     }
-  };
+  }
 
   const handleSyncDown = async () => {
-    setIsSyncing(true);
-    startSync();
+    setIsSyncing(true)
+    startSync()
 
     // First, analyze what conflicts exist
-    const analysis = await analyzeConflicts(state.expenses);
+    const analysis = await analyzeConflicts(state.expenses)
 
-    setIsSyncing(false);
-    endSync(analysis.success);
+    setIsSyncing(false)
+    endSync(analysis.success)
 
     if (!analysis.success) {
-      addNotification(analysis.error || "Failed to analyze conflicts", "error");
-      return;
+      addNotification(analysis.error || "Failed to analyze conflicts", "error")
+      return
     }
 
-    const conflicts = analysis.conflicts!;
-    const remoteExpenses = analysis.remoteExpenses!;
+    const conflicts = analysis.conflicts!
+    const remoteExpenses = analysis.remoteExpenses!
 
     // Check if there are any changes at all
-    const hasRemoteUpdates = conflicts.remoteWins > 0;
-    const hasNewFromRemote = conflicts.newFromRemote > 0;
-    const hasLocalOnly = conflicts.newFromLocal > 0;
-    const hasDeletedLocally = conflicts.deletedLocally > 0;
+    const hasRemoteUpdates = conflicts.remoteWins > 0
+    const hasNewFromRemote = conflicts.newFromRemote > 0
+    const hasLocalOnly = conflicts.newFromLocal > 0
+    const hasDeletedLocally = conflicts.deletedLocally > 0
 
     // Build a summary message
-    const summaryParts: string[] = [];
+    const summaryParts: string[] = []
     if (conflicts.newFromRemote > 0)
-      summaryParts.push(`${conflicts.newFromRemote} new from GitHub`);
+      summaryParts.push(`${conflicts.newFromRemote} new from GitHub`)
     if (conflicts.remoteWins > 0)
-      summaryParts.push(`${conflicts.remoteWins} updated from GitHub`);
+      summaryParts.push(`${conflicts.remoteWins} updated from GitHub`)
     if (conflicts.localWins > 0)
-      summaryParts.push(`${conflicts.localWins} local changes kept`);
+      summaryParts.push(`${conflicts.localWins} local changes kept`)
     if (conflicts.newFromLocal > 0)
-      summaryParts.push(`${conflicts.newFromLocal} local-only kept`);
+      summaryParts.push(`${conflicts.newFromLocal} local-only kept`)
     if (conflicts.deletedLocally > 0)
-      summaryParts.push(`${conflicts.deletedLocally} deleted locally`);
+      summaryParts.push(`${conflicts.deletedLocally} deleted locally`)
 
-    const summary =
-      summaryParts.length > 0 ? summaryParts.join(", ") : "No changes";
+    const summary = summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
 
     // If no changes at all, inform the user
     if (
@@ -261,8 +258,8 @@ export default function SettingsScreen() {
       !hasDeletedLocally &&
       conflicts.localWins === 0
     ) {
-      addNotification("Already in sync - no changes needed", "success");
-      return;
+      addNotification("Already in sync - no changes needed", "success")
+      return
     }
 
     // If remote has newer versions that will overwrite local edits, ask for confirmation
@@ -277,41 +274,38 @@ export default function SettingsScreen() {
             onPress: () => performSmartMerge(remoteExpenses, summary),
           },
         ]
-      );
+      )
     } else {
       // No conflicts - just merge automatically
-      await performSmartMerge(remoteExpenses, summary);
+      await performSmartMerge(remoteExpenses, summary)
     }
-  };
+  }
 
-  const performSmartMerge = async (
-    remoteExpenses: Expense[],
-    summary: string
-  ) => {
-    setIsSyncing(true);
-    startSync();
+  const performSmartMerge = async (remoteExpenses: Expense[], summary: string) => {
+    setIsSyncing(true)
+    startSync()
 
     try {
-      const mergeResult = await smartMerge(state.expenses, remoteExpenses);
+      const mergeResult = await smartMerge(state.expenses, remoteExpenses)
 
       // Update local state with merged data
-      replaceAllExpenses(mergeResult.merged);
+      replaceAllExpenses(mergeResult.merged)
 
       // Clear pending changes since we've merged
-      await clearPendingChanges();
-      const changesCount = await getPendingChangesCount();
-      setPendingChangesCount(changesCount);
+      await clearPendingChanges()
+      const changesCount = await getPendingChangesCount()
+      setPendingChangesCount(changesCount)
 
-      setIsSyncing(false);
-      endSync(true);
+      setIsSyncing(false)
+      endSync(true)
 
-      addNotification(`Merged successfully: ${summary}`, "success");
+      addNotification(`Merged successfully: ${summary}`, "success")
     } catch (error) {
-      setIsSyncing(false);
-      endSync(false);
-      addNotification(`Merge failed: ${String(error)}`, "error");
+      setIsSyncing(false)
+      endSync(false)
+      addNotification(`Merge failed: ${String(error)}`, "error")
     }
-  };
+  }
 
   const handleClearConfig = async () => {
     Alert.alert("Confirm Clear", "Remove sync configuration?", [
@@ -320,37 +314,37 @@ export default function SettingsScreen() {
         text: "Clear",
         style: "destructive",
         onPress: async () => {
-          await clearSyncConfig();
-          setToken("");
-          setRepo("");
-          setBranch("main");
-          setConnectionStatus("idle");
-          addNotification("Configuration cleared", "success");
+          await clearSyncConfig()
+          setToken("")
+          setRepo("")
+          setBranch("main")
+          setConnectionStatus("idle")
+          addNotification("Configuration cleared", "success")
         },
       },
-    ]);
-  };
+    ])
+  }
 
   const handleCheckForUpdates = async () => {
-    setIsCheckingUpdate(true);
-    const info = await checkForUpdates();
-    setUpdateInfo(info);
-    setIsCheckingUpdate(false);
+    setIsCheckingUpdate(true)
+    const info = await checkForUpdates()
+    setUpdateInfo(info)
+    setIsCheckingUpdate(false)
 
     if (info.error) {
-      addNotification(info.error, "error");
+      addNotification(info.error, "error")
     } else if (info.hasUpdate) {
-      addNotification(`Update available: v${info.latestVersion}`, "success");
+      addNotification(`Update available: v${info.latestVersion}`, "success")
     } else {
-      addNotification("You're on the latest version", "success");
+      addNotification("You're on the latest version", "success")
     }
-  };
+  }
 
   const handleOpenRelease = () => {
     if (updateInfo?.releaseUrl) {
-      Linking.openURL(updateInfo.releaseUrl);
+      Linking.openURL(updateInfo.releaseUrl)
     }
-  };
+  }
 
   return (
     <ScrollView
@@ -358,10 +352,7 @@ export default function SettingsScreen() {
       style={{ backgroundColor: theme.background.val as string }}
       contentContainerStyle={{ padding: 20 } as any}
     >
-      <YStack
-        space="$4"
-        style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}
-      >
+      <YStack space="$4" style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}>
         <H4 style={{ marginBottom: 8 }}>GitHub Sync Settings</H4>
 
         <Text
@@ -370,8 +361,7 @@ export default function SettingsScreen() {
             marginBottom: 16,
           }}
         >
-          Sync your expenses to a GitHub repository using a Personal Access
-          Token.
+          Sync your expenses to a GitHub repository using a Personal Access Token.
         </Text>
 
         {/* GitHub PAT */}
@@ -441,8 +431,8 @@ export default function SettingsScreen() {
                 connectionStatus === "success"
                   ? "#22c55e" // Bright green
                   : connectionStatus === "error"
-                  ? "#ef4444" // Bright red
-                  : "#3b82f6", // Default blue
+                    ? "#ef4444" // Bright red
+                    : "#3b82f6", // Default blue
             }}
             size="$4"
             onPress={handleTestConnection}
@@ -451,8 +441,8 @@ export default function SettingsScreen() {
               connectionStatus === "success"
                 ? Check
                 : connectionStatus === "error"
-                ? X
-                : undefined
+                  ? X
+                  : undefined
             }
             color={connectionStatus === "idle" ? undefined : "white"}
           >
@@ -473,12 +463,12 @@ export default function SettingsScreen() {
               {isSyncing
                 ? "Syncing..."
                 : isComputingSyncCount
-                ? "Checking changes..."
-                : pendingChangesCount === null
-                ? `Upload to GitHub (${state.expenses.length} expenses)`
-                : pendingChangesCount.total === 0
-                ? "No changes to sync"
-                : `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`}
+                  ? "Checking changes..."
+                  : pendingChangesCount === null
+                    ? `Upload to GitHub (${state.expenses.length} expenses)`
+                    : pendingChangesCount.total === 0
+                      ? "No changes to sync"
+                      : `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`}
             </Button>
 
             <Button
@@ -498,9 +488,7 @@ export default function SettingsScreen() {
           <YStack space="$3">
             {/* Enable Auto-Sync Toggle */}
             <XStack
-              style={
-                { alignItems: "center", justifyContent: "space-between" } as any
-              }
+              style={{ alignItems: "center", justifyContent: "space-between" } as any}
             >
               <YStack flex={1}>
                 <Label>Enable Auto-Sync</Label>
@@ -529,14 +517,10 @@ export default function SettingsScreen() {
                 <Label>When to Sync</Label>
                 <RadioGroup
                   value={autoSyncTiming}
-                  onValueChange={(value) =>
-                    setAutoSyncTiming(value as AutoSyncTiming)
-                  }
+                  onValueChange={(value) => setAutoSyncTiming(value as AutoSyncTiming)}
                 >
                   <XStack
-                    style={
-                      { alignItems: "center", gap: 8, marginVertical: 8 } as any
-                    }
+                    style={{ alignItems: "center", gap: 8, marginVertical: 8 } as any}
                   >
                     <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
                       <RadioGroup.Indicator />
@@ -556,9 +540,7 @@ export default function SettingsScreen() {
                   </XStack>
 
                   <XStack
-                    style={
-                      { alignItems: "center", gap: 8, marginVertical: 8 } as any
-                    }
+                    style={{ alignItems: "center", gap: 8, marginVertical: 8 } as any}
                   >
                     <RadioGroup.Item value="on_change" id="on_change" size="$4">
                       <RadioGroup.Indicator />
@@ -594,9 +576,7 @@ export default function SettingsScreen() {
           <YStack gap="$3">
             {/* Current Version */}
             <XStack
-              style={
-                { alignItems: "center", justifyContent: "space-between" } as any
-              }
+              style={{ alignItems: "center", justifyContent: "space-between" } as any}
             >
               <Text style={{ color: (theme.gray11?.val as string) || "gray" }}>
                 Current Version
@@ -614,9 +594,7 @@ export default function SettingsScreen() {
                   } as any
                 }
               >
-                <Text
-                  style={{ color: (theme.gray11?.val as string) || "gray" }}
-                >
+                <Text style={{ color: (theme.gray11?.val as string) || "gray" }}>
                   Latest Version
                 </Text>
                 <Text
@@ -678,5 +656,5 @@ export default function SettingsScreen() {
         </Button>
       </YStack>
     </ScrollView>
-  );
+  )
 }

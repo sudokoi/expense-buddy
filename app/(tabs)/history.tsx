@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   YStack,
   Text,
@@ -14,108 +14,102 @@ import {
   Select,
   Adapt,
   Sheet,
-} from "tamagui";
-import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons";
-import { SectionList, Platform } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useExpenses } from "../../context/ExpenseContext";
-import { CATEGORIES } from "../../constants/categories";
-import { Trash, Edit3 } from "@tamagui/lucide-icons";
-import { format, parseISO } from "date-fns";
-import { useNotifications } from "../../context/notification-context";
-import type { ExpenseCategory } from "../../types/expense";
-import { syncDownMore } from "../../services/sync-manager";
+} from "tamagui"
+import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
+import { SectionList, Platform } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import DateTimePicker from "@react-native-community/datetimepicker"
+import { useExpenses } from "../../context/ExpenseContext"
+import { CATEGORIES } from "../../constants/categories"
+import { Trash, Edit3 } from "@tamagui/lucide-icons"
+import { format, parseISO } from "date-fns"
+import { useNotifications } from "../../context/notification-context"
+import type { ExpenseCategory, Expense } from "../../types/expense"
+import { syncDownMore } from "../../services/sync-manager"
 import {
   parseExpression,
   hasOperators,
   formatAmount,
-} from "../../utils/expression-parser";
+} from "../../utils/expression-parser"
 
 export default function HistoryScreen() {
-  const { state, deleteExpense, editExpense, replaceAllExpenses } =
-    useExpenses();
-  const { addNotification } = useNotifications();
-  const theme = useTheme();
+  const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
+  const { addNotification } = useNotifications()
+  const theme = useTheme()
   const [editingExpense, setEditingExpense] = React.useState<{
-    id: string;
-    amount: string;
-    category: ExpenseCategory;
-    note: string;
-    date: string; // ISO date string
-  } | null>(null);
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
-  const [deletingExpenseId, setDeletingExpenseId] = React.useState<
-    string | null
-  >(null);
-  const [hasMore, setHasMore] = React.useState(true);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+    id: string
+    amount: string
+    category: ExpenseCategory
+    note: string
+    date: string // ISO date string
+  } | null>(null)
+  const [showDatePicker, setShowDatePicker] = React.useState(false)
+  const [deletingExpenseId, setDeletingExpenseId] = React.useState<string | null>(null)
+  const [hasMore, setHasMore] = React.useState(true)
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false)
 
   // Compute preview when expression contains operators
   const expressionPreview = React.useMemo(() => {
-    if (
-      !editingExpense?.amount.trim() ||
-      !hasOperators(editingExpense.amount)
-    ) {
-      return null;
+    if (!editingExpense?.amount.trim() || !hasOperators(editingExpense.amount)) {
+      return null
     }
-    const result = parseExpression(editingExpense.amount);
+    const result = parseExpression(editingExpense.amount)
     if (result.success && result.value !== undefined) {
-      return formatAmount(result.value);
+      return formatAmount(result.value)
     }
-    return null;
-  }, [editingExpense?.amount]);
+    return null
+  }, [editingExpense?.amount])
 
   const groupedExpenses = React.useMemo(() => {
-    const grouped: { title: string; data: typeof state.expenses }[] = [];
+    const grouped: { title: string; data: Expense[] }[] = []
     const sorted = [...state.expenses].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    )
 
     sorted.forEach((expense) => {
-      const dateKey = format(parseISO(expense.date), "dd/MM/yyyy");
-      const existing = grouped.find((g) => g.title === dateKey);
+      const dateKey = format(parseISO(expense.date), "dd/MM/yyyy")
+      const existing = grouped.find((g) => g.title === dateKey)
       if (existing) {
-        existing.data.push(expense);
+        existing.data.push(expense)
       } else {
-        grouped.push({ title: dateKey, data: [expense] });
+        grouped.push({ title: dateKey, data: [expense] })
       }
-    });
-    return grouped;
-  }, [state.expenses]);
+    })
+    return grouped
+  }, [state.expenses])
 
   const handleDelete = (id: string) => {
-    setDeletingExpenseId(id);
-  };
+    setDeletingExpenseId(id)
+  }
 
   const confirmDelete = () => {
     if (deletingExpenseId) {
-      deleteExpense(deletingExpenseId);
-      addNotification("Expense deleted", "success");
-      setDeletingExpenseId(null);
+      deleteExpense(deletingExpenseId)
+      addNotification("Expense deleted", "success")
+      setDeletingExpenseId(null)
     }
-  };
+  }
 
   const handleLoadMore = async () => {
-    if (isLoadingMore || !hasMore) return;
+    if (isLoadingMore || !hasMore) return
 
-    setIsLoadingMore(true);
+    setIsLoadingMore(true)
     try {
-      const result = await syncDownMore(state.expenses, 7);
+      const result = await syncDownMore(state.expenses, 7)
 
       if (result.success && result.expenses) {
-        replaceAllExpenses(result.expenses);
-        setHasMore(result.hasMore || false);
-        addNotification(result.message, "success");
+        replaceAllExpenses(result.expenses)
+        setHasMore(result.hasMore || false)
+        addNotification(result.message, "success")
       } else {
-        addNotification(result.error || result.message, "error");
+        addNotification(result.error || result.message, "error")
       }
-    } catch (error) {
-      addNotification("Failed to load more expenses", "error");
+    } catch {
+      addNotification("Failed to load more expenses", "error")
     } finally {
-      setIsLoadingMore(false);
+      setIsLoadingMore(false)
     }
-  };
+  }
 
   if (state.expenses.length === 0) {
     return (
@@ -141,7 +135,7 @@ export default function HistoryScreen() {
           Add one from the + tab.
         </Text>
       </YStack>
-    );
+    )
   }
 
   return (
@@ -186,8 +180,7 @@ export default function HistoryScreen() {
           >
             <Dialog.Title>Delete Expense</Dialog.Title>
             <Dialog.Description>
-              Are you sure you want to delete this expense? This action cannot
-              be undone.
+              Are you sure you want to delete this expense? This action cannot be undone.
             </Dialog.Description>
             <XStack gap="$3" style={{ justifyContent: "flex-end" }}>
               <Dialog.Close asChild>
@@ -206,8 +199,8 @@ export default function HistoryScreen() {
         open={!!editingExpense}
         onOpenChange={(open) => {
           if (!open) {
-            setEditingExpense(null);
-            setShowDatePicker(false);
+            setEditingExpense(null)
+            setShowDatePicker(false)
           }
         }}
       >
@@ -242,10 +235,7 @@ export default function HistoryScreen() {
               <YStack gap="$3">
                 <YStack gap="$2">
                   <Label htmlFor="date">Date</Label>
-                  <Button
-                    onPress={() => setShowDatePicker(true)}
-                    icon={Calendar}
-                  >
+                  <Button onPress={() => setShowDatePicker(true)} icon={Calendar}>
                     {editingExpense?.date
                       ? format(parseISO(editingExpense.date), "dd/MM/yyyy")
                       : "Select date"}
@@ -253,25 +243,23 @@ export default function HistoryScreen() {
                   {showDatePicker && (
                     <DateTimePicker
                       value={
-                        editingExpense?.date
-                          ? parseISO(editingExpense.date)
-                          : new Date()
+                        editingExpense?.date ? parseISO(editingExpense.date) : new Date()
                       }
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={(event, selectedDate) => {
-                        setShowDatePicker(Platform.OS === "ios");
+                        setShowDatePicker(Platform.OS === "ios")
                         if (selectedDate && event.type !== "dismissed") {
                           // Preserve the original time from the expense
                           const originalDate = editingExpense?.date
                             ? parseISO(editingExpense.date)
-                            : new Date();
+                            : new Date()
                           selectedDate.setHours(
                             originalDate.getHours(),
                             originalDate.getMinutes(),
                             originalDate.getSeconds(),
                             originalDate.getMilliseconds()
-                          );
+                          )
                           setEditingExpense((prev) =>
                             prev
                               ? {
@@ -279,7 +267,7 @@ export default function HistoryScreen() {
                                   date: selectedDate.toISOString(),
                                 }
                               : null
-                          );
+                          )
                         }
                       }}
                     />
@@ -318,9 +306,7 @@ export default function HistoryScreen() {
                     value={editingExpense?.category || ""}
                     onValueChange={(value) =>
                       setEditingExpense((prev) =>
-                        prev
-                          ? { ...prev, category: value as ExpenseCategory }
-                          : null
+                        prev ? { ...prev, category: value as ExpenseCategory } : null
                       )
                     }
                   >
@@ -356,11 +342,7 @@ export default function HistoryScreen() {
                       <Select.Viewport>
                         <Select.Group>
                           {CATEGORIES.map((cat, idx) => (
-                            <Select.Item
-                              key={cat.value}
-                              index={idx}
-                              value={cat.value}
-                            >
+                            <Select.Item key={cat.value} index={idx} value={cat.value}>
                               <Select.ItemText>{cat.label}</Select.ItemText>
                               <Select.ItemIndicator marginLeft="auto">
                                 <Check size={16} />
@@ -379,19 +361,14 @@ export default function HistoryScreen() {
                     id="note"
                     value={editingExpense?.note || ""}
                     onChangeText={(text) =>
-                      setEditingExpense((prev) =>
-                        prev ? { ...prev, note: text } : null
-                      )
+                      setEditingExpense((prev) => (prev ? { ...prev, note: text } : null))
                     }
                     placeholder="Enter note (optional)"
                   />
                 </YStack>
               </YStack>
 
-              <XStack
-                gap="$3"
-                style={{ justifyContent: "flex-end", marginTop: 16 }}
-              >
+              <XStack gap="$3" style={{ justifyContent: "flex-end", marginTop: 16 }}>
                 <Dialog.Close asChild>
                   <Button>Cancel</Button>
                 </Dialog.Close>
@@ -400,25 +377,22 @@ export default function HistoryScreen() {
                     if (editingExpense) {
                       const expense = state.expenses.find(
                         (e) => e.id === editingExpense.id
-                      );
+                      )
                       if (expense) {
                         if (!editingExpense.amount.trim()) {
-                          addNotification(
-                            "Please enter a valid amount",
-                            "error"
-                          );
-                          return;
+                          addNotification("Please enter a valid amount", "error")
+                          return
                         }
 
                         // Parse the expression
-                        const result = parseExpression(editingExpense.amount);
+                        const result = parseExpression(editingExpense.amount)
 
                         if (!result.success) {
                           addNotification(
                             result.error || "Please enter a valid expression",
                             "error"
-                          );
-                          return;
+                          )
+                          return
                         }
 
                         editExpense(editingExpense.id, {
@@ -426,10 +400,10 @@ export default function HistoryScreen() {
                           category: editingExpense.category,
                           date: editingExpense.date, // Use the edited date
                           note: editingExpense.note,
-                        });
-                        addNotification("Expense updated", "success");
-                        setEditingExpense(null);
-                        setShowDatePicker(false);
+                        })
+                        addNotification("Expense updated", "success")
+                        setEditingExpense(null)
+                        setShowDatePicker(false)
                       }
                     }
                   }}
@@ -452,21 +426,17 @@ export default function HistoryScreen() {
               paddingVertical: 8,
             }}
           >
-            <H6 style={{ color: (theme.gray11?.val as string) || "gray" }}>
-              {title}
-            </H6>
+            <H6 style={{ color: (theme.gray11?.val as string) || "gray" }}>{title}</H6>
           </YStack>
         )}
         renderItem={({ item }) => {
-          const categoryInfo = CATEGORIES.find(
-            (cat) => item.category === cat.value
-          );
+          const categoryInfo = CATEGORIES.find((cat) => item.category === cat.value)
 
           if (!categoryInfo) {
-            return null;
+            return null
           }
 
-          const Icon = categoryInfo.icon;
+          const Icon = categoryInfo.icon
 
           return (
             <Card
@@ -504,8 +474,7 @@ export default function HistoryScreen() {
                       fontSize: 12,
                     }}
                   >
-                    {format(parseISO(item.date), "h:mm a")} •{" "}
-                    {categoryInfo.label}
+                    {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
                   </Text>
                 </YStack>
               </XStack>
@@ -531,7 +500,7 @@ export default function HistoryScreen() {
                       category: item.category,
                       note: item.note || "",
                       date: item.date,
-                    });
+                    })
                   }}
                   aria-label="Edit"
                 />
@@ -544,18 +513,14 @@ export default function HistoryScreen() {
                 />
               </XStack>
             </Card>
-          );
+          )
         }}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           hasMore ? (
             <YStack style={{ padding: 16, alignItems: "center" }}>
-              <Button
-                size="$4"
-                onPress={handleLoadMore}
-                disabled={isLoadingMore}
-              >
+              <Button size="$4" onPress={handleLoadMore} disabled={isLoadingMore}>
                 {isLoadingMore ? "Loading..." : "Load More"}
               </Button>
             </YStack>
@@ -563,5 +528,5 @@ export default function HistoryScreen() {
         }
       />
     </YStack>
-  );
+  )
 }

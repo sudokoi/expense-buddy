@@ -3,48 +3,42 @@
  */
 
 interface GitHubFileResponse {
-  content: string;
-  sha: string;
+  content: string
+  sha: string
 }
 
 interface GitHubCommitRequest {
-  message: string;
-  content: string;
-  sha?: string;
+  message: string
+  content: string
+  sha?: string
 }
 
 // Batch commit types for atomic multi-file operations
 
 /** File to be uploaded in a batch commit */
 export interface BatchFileUpload {
-  path: string; // e.g., "expenses-2024-01-15.csv"
-  content: string; // CSV content
+  path: string // e.g., "expenses-2024-01-15.csv"
+  content: string // CSV content
 }
 
 /** File to be deleted in a batch commit */
 export interface BatchFileDelete {
-  path: string; // e.g., "expenses-2024-01-10.csv"
+  path: string // e.g., "expenses-2024-01-10.csv"
 }
 
 /** Request for a batch commit operation */
 export interface BatchCommitRequest {
-  uploads: BatchFileUpload[];
-  deletions: BatchFileDelete[];
-  message: string;
+  uploads: BatchFileUpload[]
+  deletions: BatchFileDelete[]
+  message: string
 }
 
 /** Result of a batch commit operation */
 export interface BatchCommitResult {
-  success: boolean;
-  commitSha?: string;
-  error?: string;
-  errorCode?:
-    | "AUTH"
-    | "PERMISSION"
-    | "NOT_FOUND"
-    | "CONFLICT"
-    | "RATE_LIMIT"
-    | "UNKNOWN";
+  success: boolean
+  commitSha?: string
+  error?: string
+  errorCode?: "AUTH" | "PERMISSION" | "NOT_FOUND" | "CONFLICT" | "RATE_LIMIT" | "UNKNOWN"
 }
 
 /**
@@ -53,26 +47,23 @@ export interface BatchCommitResult {
  * @param deletions Number of files being deleted
  * @returns Formatted commit message
  */
-export function generateCommitMessage(
-  uploads: number,
-  deletions: number
-): string {
-  const parts: string[] = [];
+export function generateCommitMessage(uploads: number, deletions: number): string {
+  const parts: string[] = []
 
   if (uploads > 0) {
-    parts.push(`${uploads} file${uploads > 1 ? "s" : ""} updated`);
+    parts.push(`${uploads} file${uploads > 1 ? "s" : ""} updated`)
   }
 
   if (deletions > 0) {
-    parts.push(`${deletions} file${deletions > 1 ? "s" : ""} deleted`);
+    parts.push(`${deletions} file${deletions > 1 ? "s" : ""} deleted`)
   }
 
   if (parts.length === 0) {
-    return `Sync expenses - ${new Date().toISOString()}`;
+    return `Sync expenses - ${new Date().toISOString()}`
   }
 
-  const timestamp = new Date().toISOString();
-  return `Sync expenses: ${parts.join(", ")} - ${timestamp}`;
+  const timestamp = new Date().toISOString()
+  return `Sync expenses: ${parts.join(", ")} - ${timestamp}`
 }
 
 // ============================================================================
@@ -81,47 +72,47 @@ export function generateCommitMessage(
 
 /** Response from GET /repos/{owner}/{repo}/git/ref/heads/{branch} */
 interface GitRefResponse {
-  ref: string;
+  ref: string
   object: {
-    sha: string;
-    type: string;
-  };
+    sha: string
+    type: string
+  }
 }
 
 /** Response from GET /repos/{owner}/{repo}/git/commits/{sha} */
 interface GitCommitResponse {
-  sha: string;
+  sha: string
   tree: {
-    sha: string;
-  };
-  message: string;
-  parents: { sha: string }[];
+    sha: string
+  }
+  message: string
+  parents: { sha: string }[]
 }
 
 /** Response from POST /repos/{owner}/{repo}/git/blobs */
 interface GitBlobResponse {
-  sha: string;
+  sha: string
 }
 
 /** Tree entry for creating a new tree */
 interface TreeEntry {
-  path: string;
-  mode: "100644" | "100755" | "040000" | "160000" | "120000";
-  type: "blob" | "tree" | "commit";
-  sha: string | null; // null for deletions
+  path: string
+  mode: "100644" | "100755" | "040000" | "160000" | "120000"
+  type: "blob" | "tree" | "commit"
+  sha: string | null // null for deletions
 }
 
 /** Response from POST /repos/{owner}/{repo}/git/trees */
 interface GitTreeResponse {
-  sha: string;
-  tree: TreeEntry[];
+  sha: string
+  tree: TreeEntry[]
 }
 
 /** Response from POST /repos/{owner}/{repo}/git/commits */
 interface GitNewCommitResponse {
-  sha: string;
-  tree: { sha: string };
-  message: string;
+  sha: string
+  tree: { sha: string }
+  message: string
 }
 
 /**
@@ -133,41 +124,39 @@ function mapHttpError(
 ): { error: string; errorCode: BatchCommitResult["errorCode"] } {
   switch (status) {
     case 401:
-      return { error: "Invalid or expired token", errorCode: "AUTH" };
+      return { error: "Invalid or expired token", errorCode: "AUTH" }
     case 403:
       return {
         error: message?.includes("rate limit")
           ? "Rate limit exceeded - try again later"
           : "Token lacks required permissions",
-        errorCode: message?.includes("rate limit")
-          ? "RATE_LIMIT"
-          : "PERMISSION",
-      };
+        errorCode: message?.includes("rate limit") ? "RATE_LIMIT" : "PERMISSION",
+      }
     case 404:
       return {
         error: "Repository or branch not found",
         errorCode: "NOT_FOUND",
-      };
+      }
     case 409:
       return {
         error: "Conflict - branch may have been updated",
         errorCode: "CONFLICT",
-      };
+      }
     case 422:
       return {
         error: "Invalid request - check file paths",
         errorCode: "UNKNOWN",
-      };
+      }
     case 429:
       return {
         error: "Rate limit exceeded - try again later",
         errorCode: "RATE_LIMIT",
-      };
+      }
     default:
       return {
         error: message || `GitHub API error (${status})`,
         errorCode: "UNKNOWN",
-      };
+      }
   }
 }
 
@@ -188,9 +177,9 @@ export async function getBranchRef(
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     const response = await fetch(
@@ -202,17 +191,17 @@ export async function getBranchRef(
           "X-GitHub-Api-Version": "2022-11-28",
         },
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    const data: GitRefResponse = await response.json();
-    return { sha: data.object.sha };
+    const data: GitRefResponse = await response.json()
+    return { sha: data.object.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -230,13 +219,12 @@ export async function getCommitTree(
   repo: string,
   commitSha: string
 ): Promise<
-  | { treeSha: string }
-  | { error: string; errorCode: BatchCommitResult["errorCode"] }
+  { treeSha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     const response = await fetch(
@@ -248,17 +236,17 @@ export async function getCommitTree(
           "X-GitHub-Api-Version": "2022-11-28",
         },
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    const data: GitCommitResponse = await response.json();
-    return { treeSha: data.tree.sha };
+    const data: GitCommitResponse = await response.json()
+    return { treeSha: data.tree.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -279,13 +267,13 @@ export async function createBlob(
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     // Base64 encode the content
-    const encodedContent = btoa(unescape(encodeURIComponent(content)));
+    const encodedContent = btoa(unescape(encodeURIComponent(content)))
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/blobs`,
@@ -302,17 +290,17 @@ export async function createBlob(
           encoding: "base64",
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    const data: GitBlobResponse = await response.json();
-    return { sha: data.sha };
+    const data: GitBlobResponse = await response.json()
+    return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -335,9 +323,9 @@ export async function createTree(
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     // Build tree entries - for deletions, sha is null; for uploads, sha is the blob SHA
@@ -346,7 +334,7 @@ export async function createTree(
       mode: "100644" as const, // Regular file
       type: "blob" as const,
       sha: entry.sha, // null for deletions, blob SHA for uploads
-    }));
+    }))
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/trees`,
@@ -363,17 +351,17 @@ export async function createTree(
           tree: treeEntries,
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    const data: GitTreeResponse = await response.json();
-    return { sha: data.sha };
+    const data: GitTreeResponse = await response.json()
+    return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -398,9 +386,9 @@ export async function createCommit(
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     const response = await fetch(
@@ -419,17 +407,17 @@ export async function createCommit(
           parents: [parentSha],
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    const data: GitNewCommitResponse = await response.json();
-    return { sha: data.sha };
+    const data: GitNewCommitResponse = await response.json()
+    return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -449,13 +437,12 @@ export async function updateRef(
   branch: string,
   commitSha: string
 ): Promise<
-  | { success: true }
-  | { error: string; errorCode: BatchCommitResult["errorCode"] }
+  { success: true } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" };
+      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
     }
 
     const response = await fetch(
@@ -472,16 +459,16 @@ export async function updateRef(
           sha: commitSha,
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return mapHttpError(response.status, errorData.message);
+      const errorData = await response.json().catch(() => ({}))
+      return mapHttpError(response.status, errorData.message)
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" };
+    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
   }
 }
 
@@ -505,97 +492,91 @@ export async function batchCommit(
   branch: string,
   request: BatchCommitRequest
 ): Promise<BatchCommitResult> {
-  const { uploads, deletions, message } = request;
+  const { uploads, deletions, message } = request
 
   // Handle empty batch case - return early with success
   if (uploads.length === 0 && deletions.length === 0) {
-    return { success: true };
+    return { success: true }
   }
 
   // Step 1: Get current branch ref (HEAD SHA)
-  const refResult = await getBranchRef(token, repo, branch);
+  const refResult = await getBranchRef(token, repo, branch)
   if ("error" in refResult) {
     return {
       success: false,
       error: refResult.error,
       errorCode: refResult.errorCode,
-    };
+    }
   }
-  const headSha = refResult.sha;
+  const headSha = refResult.sha
 
   // Step 2: Get base tree SHA from commit
-  const treeResult = await getCommitTree(token, repo, headSha);
+  const treeResult = await getCommitTree(token, repo, headSha)
   if ("error" in treeResult) {
     return {
       success: false,
       error: treeResult.error,
       errorCode: treeResult.errorCode,
-    };
+    }
   }
-  const baseTreeSha = treeResult.treeSha;
+  const baseTreeSha = treeResult.treeSha
 
   // Step 3: Create blobs for each file to upload
-  const treeEntries: { path: string; sha: string | null }[] = [];
+  const treeEntries: { path: string; sha: string | null }[] = []
 
   for (const upload of uploads) {
-    const blobResult = await createBlob(token, repo, upload.content);
+    const blobResult = await createBlob(token, repo, upload.content)
     if ("error" in blobResult) {
       return {
         success: false,
         error: `Failed to create blob for ${upload.path}: ${blobResult.error}`,
         errorCode: blobResult.errorCode,
-      };
+      }
     }
-    treeEntries.push({ path: upload.path, sha: blobResult.sha });
+    treeEntries.push({ path: upload.path, sha: blobResult.sha })
   }
 
   // Step 4: Add deletions to tree entries (sha: null marks deletion)
   for (const deletion of deletions) {
-    treeEntries.push({ path: deletion.path, sha: null });
+    treeEntries.push({ path: deletion.path, sha: null })
   }
 
   // Step 5: Create new tree with all changes
-  const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries);
+  const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries)
   if ("error" in newTreeResult) {
     return {
       success: false,
       error: newTreeResult.error,
       errorCode: newTreeResult.errorCode,
-    };
+    }
   }
-  const newTreeSha = newTreeResult.sha;
+  const newTreeSha = newTreeResult.sha
 
   // Step 6: Create commit pointing to new tree
-  const commitResult = await createCommit(
-    token,
-    repo,
-    message,
-    newTreeSha,
-    headSha
-  );
+  const commitResult = await createCommit(token, repo, message, newTreeSha, headSha)
   if ("error" in commitResult) {
     return {
       success: false,
       error: commitResult.error,
       errorCode: commitResult.errorCode,
-    };
+    }
   }
-  const newCommitSha = commitResult.sha;
+  const newCommitSha = commitResult.sha
 
   // Step 7: Update branch ref to new commit
-  const updateResult = await updateRef(token, repo, branch, newCommitSha);
+  const updateResult = await updateRef(token, repo, branch, newCommitSha)
   if ("error" in updateResult) {
     return {
       success: false,
       error: updateResult.error,
       errorCode: updateResult.errorCode,
-    };
+    }
   }
 
   return {
     success: true,
     commitSha: newCommitSha,
-  };
+  }
 }
 
 // ============================================================================
@@ -610,74 +591,71 @@ export async function validatePAT(
   repo: string
 ): Promise<{ valid: boolean; error?: string }> {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
       return {
         valid: false,
         error: "Invalid repository format. Use: username/repo",
-      };
+      }
     }
 
     console.log(
       "Testing connection to:",
       `https://api.github.com/repos/${owner}/${repoName}`
-    );
+    )
 
-    const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-      }
-    );
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    })
 
-    console.log("GitHub API Response status:", response.status);
+    console.log("GitHub API Response status:", response.status)
 
     if (response.status === 404) {
       return {
         valid: false,
         error:
           "Repository not found or token lacks access. Check: 1) Repo name is correct 2) Token has Contents permission 3) Token can access this specific repo",
-      };
+      }
     }
 
     if (response.status === 401) {
       return {
         valid: false,
         error: "Invalid or expired Personal Access Token",
-      };
+      }
     }
 
     if (response.status === 403) {
-      const errorData = await response.json().catch(() => ({}));
-      console.log("403 Error details:", errorData);
+      const errorData = await response.json().catch(() => ({}))
+      console.log("403 Error details:", errorData)
       return {
         valid: false,
         error:
           "Access forbidden. Token may lack required permissions (Contents: Read and Write)",
-      };
+      }
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.log("API Error:", errorData);
+      const errorData = await response.json().catch(() => ({}))
+      console.log("API Error:", errorData)
       return {
         valid: false,
         error: `GitHub API error (${response.status}): ${
           errorData.message || response.statusText
         }`,
-      };
+      }
     }
 
-    const repoData = await response.json();
-    console.log("Repository found:", repoData.full_name);
-    return { valid: true };
+    const repoData = await response.json()
+    console.log("Repository found:", repoData.full_name)
+    return { valid: true }
   } catch (error) {
-    console.error("Connection test error:", error);
-    return { valid: false, error: `Network error: ${error}` };
+    console.error("Connection test error:", error)
+    return { valid: false, error: `Network error: ${error}` }
   }
 }
 
@@ -692,27 +670,27 @@ export async function uploadCSV(
   filePath: string = "expenses.csv"
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const [owner, repoName] = repo.split("/");
-    const encodedContent = btoa(unescape(encodeURIComponent(csvContent)));
+    const [owner, repoName] = repo.split("/")
+    const encodedContent = btoa(unescape(encodeURIComponent(csvContent)))
 
     // First, try to get existing file SHA
-    let existingSHA: string | undefined;
+    let existingSHA: string | undefined
     try {
-      const fileData = await downloadCSV(token, repo, branch, filePath);
+      const fileData = await downloadCSV(token, repo, branch, filePath)
       if (fileData) {
-        existingSHA = fileData.sha;
+        existingSHA = fileData.sha
       }
-    } catch (e) {
+    } catch {
       // File doesn't exist, that's okay
     }
 
     const requestBody: GitHubCommitRequest = {
       message: `Update expenses - ${new Date().toISOString()}`,
       content: encodedContent,
-    };
+    }
 
     if (existingSHA) {
-      requestBody.sha = existingSHA;
+      requestBody.sha = existingSHA
     }
 
     const response = await fetch(
@@ -729,19 +707,19 @@ export async function uploadCSV(
           branch,
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json()
       return {
         success: false,
         error: errorData.message || response.statusText,
-      };
+      }
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    return { success: false, error: `Upload failed: ${error}` };
+    return { success: false, error: `Upload failed: ${error}` }
   }
 }
 
@@ -755,7 +733,7 @@ export async function downloadCSV(
   filePath: string = "expenses.csv"
 ): Promise<{ content: string; sha: string } | null> {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}?ref=${branch}`,
@@ -765,29 +743,29 @@ export async function downloadCSV(
           Accept: "application/vnd.github+json",
         },
       }
-    );
+    )
 
     if (response.status === 404) {
       // File doesn't exist yet
-      return null;
+      return null
     }
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`);
+      throw new Error(`GitHub API error: ${response.statusText}`)
     }
 
-    const data: GitHubFileResponse = await response.json();
+    const data: GitHubFileResponse = await response.json()
     const decodedContent = decodeURIComponent(
       escape(atob(data.content.replace(/\n/g, "")))
-    );
+    )
 
     return {
       content: decodedContent,
       sha: data.sha,
-    };
+    }
   } catch (error) {
-    console.error("Download CSV error:", error);
-    throw error;
+    console.error("Download CSV error:", error)
+    throw error
   }
 }
 
@@ -801,7 +779,7 @@ export async function listFiles(
   path: string = ""
 ): Promise<{ name: string; path: string; sha: string }[]> {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/contents/${path}?ref=${branch}`,
@@ -811,18 +789,18 @@ export async function listFiles(
           Accept: "application/vnd.github+json",
         },
       }
-    );
+    )
 
     if (response.status === 404) {
       // Directory doesn't exist yet
-      return [];
+      return []
     }
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`);
+      throw new Error(`GitHub API error: ${response.statusText}`)
     }
 
-    const data = await response.json();
+    const data = await response.json()
 
     // Filter for files only (not directories)
     if (Array.isArray(data)) {
@@ -832,13 +810,13 @@ export async function listFiles(
           name: item.name,
           path: item.path,
           sha: item.sha,
-        }));
+        }))
     }
 
-    return [];
+    return []
   } catch (error) {
-    console.error("List files error:", error);
-    return [];
+    console.error("List files error:", error)
+    return []
   }
 }
 
@@ -853,7 +831,7 @@ export async function deleteFile(
   sha: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const [owner, repoName] = repo.split("/");
+    const [owner, repoName] = repo.split("/")
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`,
@@ -870,18 +848,18 @@ export async function deleteFile(
           branch,
         }),
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json()
       return {
         success: false,
         error: errorData.message || response.statusText,
-      };
+      }
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    return { success: false, error: `Delete failed: ${error}` };
+    return { success: false, error: `Delete failed: ${error}` }
   }
 }

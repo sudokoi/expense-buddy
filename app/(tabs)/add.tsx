@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo } from "react"
 import {
   YStack,
   XStack,
@@ -10,59 +10,56 @@ import {
   Card,
   H4,
   Label,
-} from "tamagui";
-import { useRouter, Href } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useExpenses } from "../../context/ExpenseContext";
-import { CATEGORIES } from "../../constants/categories";
-import { ExpenseCategory } from "../../types/expense";
-import { Calendar, Check } from "@tamagui/lucide-icons";
-import { Alert } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+} from "tamagui"
+import { useRouter, Href } from "expo-router"
+import DateTimePicker from "@react-native-community/datetimepicker"
+import { useExpenses } from "../../context/ExpenseContext"
+import { CATEGORIES } from "../../constants/categories"
+import { ExpenseCategory } from "../../types/expense"
+import { Calendar, Check } from "@tamagui/lucide-icons"
+import { Alert } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import {
   parseExpression,
   hasOperators,
   formatAmount,
-} from "../../utils/expression-parser";
+} from "../../utils/expression-parser"
 
 export default function AddExpenseScreen() {
-  const router = useRouter();
-  const theme = useTheme();
-  const { addExpense } = useExpenses();
+  const router = useRouter()
+  const theme = useTheme()
+  const { addExpense } = useExpenses()
 
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<ExpenseCategory>("Food");
-  const [date, setDate] = useState(new Date());
-  const [note, setNote] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [amount, setAmount] = useState("")
+  const [category, setCategory] = useState<ExpenseCategory>("Food")
+  const [date, setDate] = useState(new Date())
+  const [note, setNote] = useState("")
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Compute preview when expression contains operators
   const expressionPreview = useMemo(() => {
     if (!amount.trim() || !hasOperators(amount)) {
-      return null;
+      return null
     }
-    const result = parseExpression(amount);
+    const result = parseExpression(amount)
     if (result.success && result.value !== undefined) {
-      return formatAmount(result.value);
+      return formatAmount(result.value)
     }
-    return null;
-  }, [amount]);
+    return null
+  }, [amount])
 
   const handleSave = () => {
     if (!amount.trim()) {
-      Alert.alert("Invalid Amount", "Please enter a valid amount");
-      return;
+      Alert.alert("Invalid Amount", "Please enter a valid amount")
+      return
     }
 
     // Parse the expression
-    const result = parseExpression(amount);
+    const result = parseExpression(amount)
 
     if (!result.success) {
-      Alert.alert(
-        "Invalid Expression",
-        result.error || "Please enter a valid expression"
-      );
-      return;
+      Alert.alert("Invalid Expression", result.error || "Please enter a valid expression")
+      return
     }
 
     addExpense({
@@ -70,19 +67,19 @@ export default function AddExpenseScreen() {
       category,
       date: date.toISOString(),
       note,
-    });
+    })
 
     // Reset and go back or to history
-    setAmount("");
-    setNote("");
-    router.push("/(tabs)/history" as Href);
-  };
+    setAmount("")
+    setNote("")
+    router.push("/(tabs)/history" as Href)
+  }
 
   const onChangeDate = (_event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(false);
-    setDate(currentDate);
-  };
+    const currentDate = selectedDate || date
+    setShowDatePicker(false)
+    setDate(currentDate)
+  }
 
   return (
     <KeyboardAwareScrollView
@@ -90,13 +87,8 @@ export default function AddExpenseScreen() {
       contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
       bottomOffset={50}
     >
-      <YStack
-        space="$4"
-        style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}
-      >
-        <H4 style={{ textAlign: "center", marginBottom: 8 }}>
-          Add New Expense
-        </H4>
+      <YStack space="$4" style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}>
+        <H4 style={{ textAlign: "center", marginBottom: 8 }}>Add New Expense</H4>
 
         {/* Amount Input */}
         <YStack space="$2">
@@ -126,7 +118,7 @@ export default function AddExpenseScreen() {
           <Label>Category</Label>
           <XStack style={{ flexWrap: "wrap", gap: 12 }}>
             {CATEGORIES.map((cat) => {
-              const isSelected = category === cat.value;
+              const isSelected = category === cat.value
               return (
                 <Card
                   key={cat.value}
@@ -159,7 +151,7 @@ export default function AddExpenseScreen() {
                     {cat.label}
                   </Text>
                 </Card>
-              );
+              )
             })}
           </XStack>
         </YStack>
@@ -214,5 +206,5 @@ export default function AddExpenseScreen() {
         </Text>
       </YStack>
     </KeyboardAwareScrollView>
-  );
+  )
 }

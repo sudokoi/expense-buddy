@@ -1,5 +1,5 @@
-import { Toast, useToastController, useToastState } from '@tamagui/toast'
-import { Button, H4, XStack, YStack, isWeb } from 'tamagui'
+import { Toast, useToastController, useToastState } from "@tamagui/toast"
+import { Button, H4, XStack, YStack, isWeb } from "tamagui"
 
 export function CurrentToast() {
   const currentToast = useToastState()
@@ -13,7 +13,7 @@ export function CurrentToast() {
       viewportName={currentToast.viewportName}
       enterStyle={{ opacity: 0, scale: 0.5, y: -25 }}
       exitStyle={{ opacity: 0, scale: 1, y: -20 }}
-      y={isWeb ? '$12' : 0}
+      y={isWeb ? "$12" : 0}
       theme="accent"
       rounded="$6"
       animation="quick"
@@ -37,7 +37,7 @@ export function ToastControl() {
       <XStack gap="$2" justify="center">
         <Button
           onPress={() => {
-            toast.show('Successfully saved!', {
+            toast.show("Successfully saved!", {
               message: "Don't worry, we've got your data.",
             })
           }}

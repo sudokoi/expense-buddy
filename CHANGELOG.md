@@ -23,7 +23,6 @@
 - Inputs (especially the note field) were getting hidden behind the keyboard when focused.
 
   **Changes:**
-
   - Added `react-native-keyboard-controller` with `KeyboardProvider` in app layout
   - Replaced ScrollView with `KeyboardAwareScrollView` in add expense and edit dialog screens
 

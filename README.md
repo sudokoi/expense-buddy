@@ -102,7 +102,6 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 1. **Create a GitHub Personal Access Token**
 
    **Option A: Fine-grained token (Recommended)**
-
    - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
    - Click "Generate new token"
    - Give it a name (e.g., "Expense Buddy Sync")
@@ -114,7 +113,6 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
    - Click "Generate token" and copy it
 
    **Option B: Classic token**
-
    - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
    - Click "Generate new token (classic)"
    - Give it a name and set expiration
@@ -122,7 +120,6 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
    - Click "Generate token" and copy it
 
 2. **Configure in App**
-
    - Go to **Settings** tab
    - Enter your GitHub token
    - Enter repository name (format: `username/repo`)

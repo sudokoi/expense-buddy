@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+.tamagui/
+dist/
+build/
+*.lock
+yarn.lock
+package-lock.json
+.yarn/

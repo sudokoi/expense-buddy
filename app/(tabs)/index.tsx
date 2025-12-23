@@ -1,4 +1,4 @@
-import { format, parseISO, subDays } from "date-fns";
+import { format, parseISO, subDays } from "date-fns"
 import {
   YStack,
   H4,
@@ -9,80 +9,73 @@ import {
   SizableText,
   ScrollView,
   useTheme,
-} from "tamagui";
-import { useToastController } from "@tamagui/toast";
-import { BarChart } from "react-native-gifted-charts";
-import { useExpenses } from "../../context/ExpenseContext";
-import { useRouter } from "expo-router";
-import { Dimensions } from "react-native";
-import { CATEGORIES } from "../../constants/categories";
-import React from "react";
+} from "tamagui"
+import { useToastController } from "@tamagui/toast"
+import { BarChart } from "react-native-gifted-charts"
+import { useExpenses } from "../../context/ExpenseContext"
+import { useRouter } from "expo-router"
+import { Dimensions } from "react-native"
+import { CATEGORIES } from "../../constants/categories"
+import React from "react"
 
 export default function DashboardScreen() {
-  const { state, clearSyncNotification } = useExpenses();
-  const theme = useTheme();
-  const router = useRouter();
-  const screenWidth = Dimensions.get("window").width;
-  const toast = useToastController();
+  const { state, clearSyncNotification } = useExpenses()
+  const theme = useTheme()
+  const router = useRouter()
+  const screenWidth = Dimensions.get("window").width
+  const toast = useToastController()
 
-  const totalExpenses = state.expenses.reduce(
-    (sum, item) => sum + item.amount,
-    0
-  );
-  const recentExpenses = state.expenses.slice(0, 5);
-
-  // Group by Date -> Category
-  // Using expenses array, its length, and a computed total as dependencies
-  // to ensure the chart updates when any expense data changes
-  const expensesTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = state.expenses.reduce((sum, item) => sum + item.amount, 0)
+  const recentExpenses = state.expenses.slice(0, 5)
 
   const chartData = React.useMemo(() => {
-    const grouped: Record<string, Record<string, number>> = {};
-    const last7Days: string[] = [];
+    const grouped: Record<string, Record<string, number>> = {}
+    const last7Days: string[] = []
 
     // Generate last 7 days keys
     for (let i = 6; i >= 0; i--) {
-      const d = subDays(new Date(), i);
-      last7Days.push(format(d, "yyyy-MM-dd"));
+      const d = subDays(new Date(), i)
+      last7Days.push(format(d, "yyyy-MM-dd"))
     }
 
     // Aggregate
     state.expenses.forEach((e) => {
-      const dateKey = e.date.split("T")[0];
-      if (!grouped[dateKey]) grouped[dateKey] = {};
-      if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0;
-      grouped[dateKey][e.category] += e.amount;
-    });
+      const dateKey = e.date.split("T")[0]
+      if (!grouped[dateKey]) grouped[dateKey] = {}
+      if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
+      grouped[dateKey][e.category] += e.amount
+    })
 
     // Format for Chart - only include days with actual expenses
     return last7Days
       .map((dateKey) => {
-        const dayExpenses = grouped[dateKey] || {};
+        const dayExpenses = grouped[dateKey] || {}
         const stacks = Object.keys(dayExpenses).map((cat) => {
-          const categoryConfig = CATEGORIES.find((c) => c.value === cat);
+          const categoryConfig = CATEGORIES.find((c) => c.value === cat)
           return {
             value: dayExpenses[cat],
             color: categoryConfig?.color || "#888",
             marginBottom: 2,
-          };
-        });
+          }
+        })
 
         return {
           stacks: stacks,
           label: format(parseISO(dateKey), "dd/MM"),
           onPress: () => router.push(`/day/${dateKey}` as any),
           dateKey, // Keep for filtering
-        };
+        }
       })
-      .filter((item) => item.stacks.length > 0); // Only show days with data
-  }, [state.expenses, state.expenses.length, expensesTotal, router]);
+      .filter((item) => item.stacks.length > 0) // Only show days with data
+  }, [state.expenses, router])
 
-  const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0);
+  const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0)
 
   // Generate a unique key for the chart based on data to force re-render
   const chartKey = React.useMemo(() => {
-    return `chart-${state.expenses.length}-${expensesTotal}`;
-  }, [state.expenses.length, expensesTotal]);
+    const total = state.expenses.reduce((sum, e) => sum + e.amount, 0)
+    return `chart-${state.expenses.length}-${total}`
+  }, [state.expenses])
 
   // Show toast when sync notification is available
   React.useEffect(() => {
@@ -90,11 +83,11 @@ export default function DashboardScreen() {
       toast.show(state.syncNotification.message, {
         message: `${state.syncNotification.newItemsCount} new, ${state.syncNotification.updatedItemsCount} updated`,
         duration: 4000,
-      });
+      })
       // Clear notification after showing
-      setTimeout(() => clearSyncNotification(), 500);
+      setTimeout(() => clearSyncNotification(), 500)
     }
-  }, [state.syncNotification]);
+  }, [state.syncNotification, clearSyncNotification, toast])
 
   return (
     <ScrollView
@@ -116,11 +109,7 @@ export default function DashboardScreen() {
             Welcome back!
           </Text>
         </YStack>
-        <Button
-          size="$3"
-          themeInverse
-          onPress={() => router.push("/(tabs)/add" as any)}
-        >
+        <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add" as any)}>
           + Add
         </Button>
       </XStack>
@@ -214,9 +203,7 @@ export default function DashboardScreen() {
 
       {/* Recent Transactions List (Mini) */}
       <YStack gap="$3">
-        <XStack
-          style={{ justifyContent: "space-between", alignItems: "center" }}
-        >
+        <XStack style={{ justifyContent: "space-between", alignItems: "center" }}>
           <H4 fontSize="$5">Recent Transactions</H4>
           <Button
             chromeless
@@ -234,8 +221,8 @@ export default function DashboardScreen() {
         )}
 
         {recentExpenses.map((expense) => {
-          const cat = CATEGORIES.find((c) => c.value === expense.category);
-          const Icon = cat?.icon;
+          const cat = CATEGORIES.find((c) => c.value === expense.category)
+          const Icon = cat?.icon
           return (
             <Card
               key={expense.id}
@@ -251,8 +238,7 @@ export default function DashboardScreen() {
               <XStack style={{ gap: 12, alignItems: "center" }}>
                 <YStack
                   style={{
-                    backgroundColor:
-                      cat?.color || (theme.gray8?.val as string) || "gray",
+                    backgroundColor: cat?.color || (theme.gray8?.val as string) || "gray",
                     padding: 8,
                     borderRadius: 8,
                     alignItems: "center",
@@ -271,8 +257,7 @@ export default function DashboardScreen() {
                       fontSize: 12,
                     }}
                   >
-                    {format(parseISO(expense.date), "dd/MM/yyyy")} •{" "}
-                    {cat?.label}
+                    {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
                   </Text>
                 </YStack>
               </XStack>
@@ -285,9 +270,9 @@ export default function DashboardScreen() {
                 -₹{expense.amount.toFixed(2)}
               </H4>
             </Card>
-          );
+          )
         })}
       </YStack>
     </ScrollView>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { ExpenseCategory } from "../types/expense";
+import { ExpenseCategory } from "../types/expense"
 import {
   Utensils,
   Car,
@@ -7,16 +7,16 @@ import {
   Activity,
   Circle,
   ShoppingCart,
-} from "@tamagui/lucide-icons";
-import { ComponentProps, JSX } from "react";
+} from "@tamagui/lucide-icons"
+import { ComponentProps, JSX } from "react"
 
-type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element;
+type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element
 
 export const CATEGORIES: {
-  label: string;
-  value: ExpenseCategory;
-  icon: IconComponent;
-  color: string;
+  label: string
+  value: ExpenseCategory
+  icon: IconComponent
+  color: string
 }[] = [
   { label: "Food", value: "Food", icon: Utensils, color: "#f97316" }, // orange
   {
@@ -35,4 +35,4 @@ export const CATEGORIES: {
   }, // purple
   { label: "Health", value: "Health", icon: Activity, color: "#ef4444" }, // red
   { label: "Other", value: "Other", icon: Circle, color: "#6b7280" }, // gray
-];
+]

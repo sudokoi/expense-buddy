@@ -1,43 +1,42 @@
-import React from 'react';
-import { YStack, Card, Text, useTheme } from 'tamagui';
-import { CheckCircle, XCircle, Info, AlertTriangle } from '@tamagui/lucide-icons';
-import { useNotifications, NotificationType } from '../context/notification-context';
+import React from "react"
+import { YStack, Card, Text } from "tamagui"
+import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
+import { useNotifications, NotificationType } from "../context/notification-context"
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  const iconProps = { size: 20, color: 'white' };
+  const iconProps = { size: 20, color: "white" }
 
   switch (type) {
-    case 'success':
-      return <CheckCircle {...iconProps} />;
-    case 'error':
-      return <XCircle {...iconProps} />;
-    case 'warning':
-      return <AlertTriangle {...iconProps} />;
-    case 'info':
+    case "success":
+      return <CheckCircle {...iconProps} />
+    case "error":
+      return <XCircle {...iconProps} />
+    case "warning":
+      return <AlertTriangle {...iconProps} />
+    case "info":
     default:
-      return <Info {...iconProps} />;
+      return <Info {...iconProps} />
   }
-};
+}
 
 const getNotificationColor = (type: NotificationType): string => {
   switch (type) {
-    case 'success':
-      return '#22c55e'; // Green
-    case 'error':
-      return '#ef4444'; // Red
-    case 'warning':
-      return '#f59e0b'; // Orange
-    case 'info':
+    case "success":
+      return "#22c55e" // Green
+    case "error":
+      return "#ef4444" // Red
+    case "warning":
+      return "#f59e0b" // Orange
+    case "info":
     default:
-      return '#3b82f6'; // Blue
+      return "#3b82f6" // Blue
   }
-};
+}
 
 export const NotificationStack: React.FC = () => {
-  const { notifications } = useNotifications();
-  const theme = useTheme();
+  const { notifications } = useNotifications()
 
-  if (notifications.length === 0) return null;
+  if (notifications.length === 0) return null
 
   return (
     <YStack
@@ -50,7 +49,7 @@ export const NotificationStack: React.FC = () => {
       zIndex={9999}
       pointerEvents="box-none"
     >
-      {notifications.map((notification, index) => (
+      {notifications.map((notification) => (
         <Card
           key={notification.id}
           bordered
@@ -60,10 +59,10 @@ export const NotificationStack: React.FC = () => {
           style={{
             backgroundColor: getNotificationColor(notification.type),
             padding: 12,
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: "row",
+            alignItems: "center",
             gap: 12,
-            shadowColor: '#000',
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
             shadowRadius: 3.84,
@@ -73,9 +72,9 @@ export const NotificationStack: React.FC = () => {
           <NotificationIcon type={notification.type} />
           <Text
             style={{
-              color: 'white',
+              color: "white",
               fontSize: 14,
-              fontWeight: '500',
+              fontWeight: "500",
               flex: 1,
             }}
           >
@@ -84,5 +83,5 @@ export const NotificationStack: React.FC = () => {
         </Card>
       ))}
     </YStack>
-  );
-};
+  )
+}
