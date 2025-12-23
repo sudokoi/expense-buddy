@@ -5,15 +5,13 @@ import {
   Text,
   Input,
   Button,
-  H4,
   Label,
-  ScrollView,
-  useTheme,
   Card,
   Switch,
   RadioGroup,
+  useTheme,
 } from "tamagui"
-import { Alert, Linking } from "react-native"
+import { Alert, Linking, ViewStyle } from "react-native"
 import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons"
 import {
   saveSyncConfig,
@@ -39,12 +37,54 @@ import { useNotifications } from "../../context/notification-context"
 import { useSyncStatus } from "../../context/sync-status-context"
 import { checkForUpdates, UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
+import { ScreenContainer, SectionHeader } from "../../components/ui"
+
+// Layout styles that Tamagui's type system doesn't support as direct props
+const layoutStyles = {
+  container: {
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
+  } as ViewStyle,
+  buttonRow: {
+    flexWrap: "wrap",
+  } as ViewStyle,
+  autoSyncRow: {
+    alignItems: "center",
+    justifyContent: "space-between",
+  } as ViewStyle,
+  radioRow: {
+    alignItems: "center",
+    marginVertical: 8,
+  } as ViewStyle,
+  versionRow: {
+    alignItems: "center",
+    justifyContent: "space-between",
+  } as ViewStyle,
+  descriptionText: {
+    marginBottom: 16,
+  },
+  helperText: {
+    marginTop: 4,
+  },
+  clearButton: {
+    marginTop: 16,
+  } as ViewStyle,
+}
 
 export default function SettingsScreen() {
   const theme = useTheme()
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
+
+  // Theme colors for components that need raw values due to Tamagui type constraints
+  const gray9Color = theme.gray9?.val as string
+  const gray10Color = theme.gray10?.val as string
+  const gray11Color = theme.gray11?.val as string
+  const green10Color = theme.green10?.val as string
+  const red10Color = theme.red10?.val as string
+  const blue10Color = theme.blue10?.val as string
 
   const [token, setToken] = useState("")
   const [repo, setRepo] = useState("")
@@ -347,25 +387,16 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView
-      flex={1}
-      style={{ backgroundColor: theme.background.val as string }}
-      contentContainerStyle={{ padding: 20 } as any}
-    >
-      <YStack space="$4" style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}>
-        <H4 style={{ marginBottom: 8 }}>GitHub Sync Settings</H4>
+    <ScreenContainer>
+      <YStack gap="$4" style={layoutStyles.container}>
+        <SectionHeader>GitHub Sync Settings</SectionHeader>
 
-        <Text
-          style={{
-            color: (theme.gray10?.val as string) || "gray",
-            marginBottom: 16,
-          }}
-        >
+        <Text color={gray10Color as any} style={layoutStyles.descriptionText as any}>
           Sync your expenses to a GitHub repository using a Personal Access Token.
         </Text>
 
         {/* GitHub PAT */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>GitHub Personal Access Token</Label>
           <Input
             secureTextEntry
@@ -376,18 +407,13 @@ export default function SettingsScreen() {
             borderWidth={2}
             borderColor="$borderColor"
           />
-          <Text
-            style={{
-              fontSize: 12,
-              color: (theme.gray9?.val as string) || "gray",
-            }}
-          >
+          <Text fontSize="$2" color={gray9Color as any}>
             Create a fine-grained PAT with Contents (read/write) permission
           </Text>
         </YStack>
 
         {/* Repository */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Repository</Label>
           <Input
             placeholder="username/repo-name"
@@ -400,7 +426,7 @@ export default function SettingsScreen() {
         </YStack>
 
         {/* Branch */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Branch</Label>
           <Input
             placeholder="main"
@@ -413,27 +439,12 @@ export default function SettingsScreen() {
         </YStack>
 
         {/* Action Buttons */}
-        <XStack style={{ gap: 12, flexWrap: "wrap" }}>
-          <Button
-            flex={1}
-            style={{ minWidth: "45%" }}
-            size="$4"
-            onPress={handleSaveConfig}
-            themeInverse
-          >
+        <XStack gap="$3" style={layoutStyles.buttonRow}>
+          <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
             Save Configuration
           </Button>
           <Button
             flex={1}
-            style={{
-              minWidth: "45%",
-              backgroundColor:
-                connectionStatus === "success"
-                  ? "#22c55e" // Bright green
-                  : connectionStatus === "error"
-                    ? "#ef4444" // Bright red
-                    : "#3b82f6", // Default blue
-            }}
             size="$4"
             onPress={handleTestConnection}
             disabled={isTesting || !token || !repo}
@@ -444,6 +455,14 @@ export default function SettingsScreen() {
                   ? X
                   : undefined
             }
+            style={{
+              backgroundColor:
+                connectionStatus === "success"
+                  ? green10Color
+                  : connectionStatus === "error"
+                    ? red10Color
+                    : blue10Color,
+            }}
             color={connectionStatus === "idle" ? undefined : "white"}
           >
             {isTesting ? "Testing..." : "Test Connection"}
@@ -451,10 +470,10 @@ export default function SettingsScreen() {
         </XStack>
 
         {/* Sync Actions */}
-        <Card bordered style={{ padding: 16, marginTop: 16 }}>
-          <H4 style={{ marginBottom: 12, fontSize: 16 }}>Manual Sync</H4>
+        <Card bordered padding="$4" marginTop="$4">
+          <SectionHeader>Manual Sync</SectionHeader>
 
-          <YStack space="$3">
+          <YStack gap="$3">
             <Button
               size="$4"
               onPress={handleSyncUp}
@@ -482,22 +501,18 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Auto-Sync Settings */}
-        <Card bordered style={{ padding: 16, marginTop: 16 }}>
-          <H4 style={{ marginBottom: 12, fontSize: 16 }}>Auto-Sync Settings</H4>
+        <Card bordered padding="$4" marginTop="$4">
+          <SectionHeader>Auto-Sync Settings</SectionHeader>
 
-          <YStack space="$3">
+          <YStack gap="$3">
             {/* Enable Auto-Sync Toggle */}
-            <XStack
-              style={{ alignItems: "center", justifyContent: "space-between" } as any}
-            >
+            <XStack style={layoutStyles.autoSyncRow}>
               <YStack flex={1}>
                 <Label>Enable Auto-Sync</Label>
                 <Text
-                  style={{
-                    fontSize: 12,
-                    color: (theme.gray9?.val as string) || "gray",
-                    marginTop: 4,
-                  }}
+                  fontSize="$2"
+                  color={gray9Color as any}
+                  style={layoutStyles.helperText as any}
                 >
                   Automatically sync with GitHub when configured
                 </Text>
@@ -519,40 +534,32 @@ export default function SettingsScreen() {
                   value={autoSyncTiming}
                   onValueChange={(value) => setAutoSyncTiming(value as AutoSyncTiming)}
                 >
-                  <XStack
-                    style={{ alignItems: "center", gap: 8, marginVertical: 8 } as any}
-                  >
+                  <XStack gap="$2" style={layoutStyles.radioRow}>
                     <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
                       <RadioGroup.Indicator />
                     </RadioGroup.Item>
                     <Label htmlFor="on_launch" flex={1}>
                       On App Launch
                       <Text
-                        style={{
-                          fontSize: 12,
-                          color: (theme.gray9?.val as string) || "gray",
-                          marginTop: 4,
-                        }}
+                        fontSize="$2"
+                        color={gray9Color as any}
+                        style={layoutStyles.helperText as any}
                       >
                         Sync when the app starts
                       </Text>
                     </Label>
                   </XStack>
 
-                  <XStack
-                    style={{ alignItems: "center", gap: 8, marginVertical: 8 } as any}
-                  >
+                  <XStack gap="$2" style={layoutStyles.radioRow}>
                     <RadioGroup.Item value="on_change" id="on_change" size="$4">
                       <RadioGroup.Indicator />
                     </RadioGroup.Item>
                     <Label htmlFor="on_change" flex={1}>
                       On Every Change
                       <Text
-                        style={{
-                          fontSize: 12,
-                          color: (theme.gray9?.val as string) || "gray",
-                          marginTop: 4,
-                        }}
+                        fontSize="$2"
+                        color={gray9Color as any}
+                        style={layoutStyles.helperText as any}
                       >
                         Sync after adding, editing, or deleting expenses
                       </Text>
@@ -570,40 +577,25 @@ export default function SettingsScreen() {
         </Card>
 
         {/* App Info & Updates */}
-        <Card bordered style={{ padding: 16, marginTop: 16 }}>
-          <H4 style={{ marginBottom: 12, fontSize: 16 }}>App Information</H4>
+        <Card bordered padding="$4" marginTop="$4">
+          <SectionHeader>App Information</SectionHeader>
 
           <YStack gap="$3">
             {/* Current Version */}
-            <XStack
-              style={{ alignItems: "center", justifyContent: "space-between" } as any}
-            >
-              <Text style={{ color: (theme.gray11?.val as string) || "gray" }}>
-                Current Version
-              </Text>
-              <Text style={{ fontWeight: "bold" }}>v{APP_CONFIG.version}</Text>
+            <XStack style={layoutStyles.versionRow}>
+              <Text color={gray11Color as any}>Current Version</Text>
+              <Text fontWeight="bold">v{APP_CONFIG.version}</Text>
             </XStack>
 
             {/* Update Info */}
             {updateInfo && !updateInfo.error && (
-              <XStack
-                style={
-                  {
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  } as any
-                }
-              >
-                <Text style={{ color: (theme.gray11?.val as string) || "gray" }}>
-                  Latest Version
-                </Text>
+              <XStack style={layoutStyles.versionRow}>
+                <Text color={gray11Color as any}>Latest Version</Text>
                 <Text
-                  style={{
-                    fontWeight: "bold",
-                    color: updateInfo.hasUpdate
-                      ? (theme.green10?.val as string) || "green"
-                      : (theme.gray11?.val as string) || "gray",
-                  }}
+                  fontWeight="bold"
+                  color={
+                    updateInfo.hasUpdate ? (green10Color as any) : (gray11Color as any)
+                  }
                 >
                   v{updateInfo.latestVersion}
                 </Text>
@@ -648,13 +640,13 @@ export default function SettingsScreen() {
         <Button
           size="$3"
           chromeless
-          color="$red10"
+          color={red10Color as any}
           onPress={handleClearConfig}
-          style={{ marginTop: 16 }}
+          style={layoutStyles.clearButton}
         >
           Clear Configuration
         </Button>
       </YStack>
-    </ScrollView>
+    </ScreenContainer>
   )
 }

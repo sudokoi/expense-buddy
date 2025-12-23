@@ -1,16 +1,41 @@
 import React from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
-import { YStack, Text, Card, H4, XStack, Button, useTheme, ScrollView } from "tamagui"
+import { YStack, Text, XStack, Button, useTheme } from "tamagui"
 import { useExpenses } from "../../context/ExpenseContext"
 import { format, parseISO } from "date-fns"
 import { CATEGORIES } from "../../constants/categories"
 import { Trash } from "@tamagui/lucide-icons"
-import { Alert } from "react-native"
+import { Alert, ViewStyle, TextStyle } from "react-native"
+import {
+  ExpenseCard,
+  AmountText,
+  CategoryIcon,
+  ScreenContainer,
+  SectionHeader,
+} from "../../components/ui"
+
+// Layout styles that Tamagui's type system doesn't support as direct props
+const layoutStyles = {
+  expenseDetails: {
+    alignItems: "center",
+  } as ViewStyle,
+  actionButtons: {
+    alignItems: "center",
+  } as ViewStyle,
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+  } as TextStyle,
+}
 
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense } = useExpenses()
   const theme = useTheme()
+
+  // Theme colors for components that need raw values due to Tamagui type constraints
+  const gray10Color = theme.gray10?.val as string
+  const backgroundColor = theme.background?.val as string
 
   // Filter expenses for this date
   const dayExpenses = React.useMemo(() => {
@@ -33,7 +58,7 @@ export default function DayExpensesScreen() {
     const cat = CATEGORIES.find((c) => c.value === catValue)
     return cat
       ? { color: cat.color, label: cat.label }
-      : { color: (theme.gray10?.val as string) || "gray", label: "Other" }
+      : { color: gray10Color || "gray", label: "Other" }
   }
 
   // Format date for display: dd/MM/yyyy
@@ -42,78 +67,37 @@ export default function DayExpensesScreen() {
     : "Invalid Date"
 
   return (
-    <YStack
-      flex={1}
-      style={{ backgroundColor: (theme.background?.val as string) || "white" }}
-    >
+    <YStack flex={1} style={{ backgroundColor }}>
       <Stack.Screen options={{ title: formattedDisplayDate, headerBackTitle: "Back" }} />
 
-      <ScrollView>
-        <H4 style={{ marginBottom: 16 }}>Transactions for {formattedDisplayDate}</H4>
+      <ScreenContainer>
+        <SectionHeader>Transactions for {formattedDisplayDate}</SectionHeader>
 
         {dayExpenses.length === 0 ? (
-          <Text
-            style={{
-              color: (theme.gray10?.val as string) || "gray",
-              textAlign: "center",
-              marginTop: 20,
-            }}
-          >
+          <Text color={gray10Color as any} style={layoutStyles.emptyText}>
             No expenses found for this date.
           </Text>
         ) : (
           dayExpenses.map((expense) => {
             const categoryInfo = getCategoryIcon(expense.category)
             return (
-              <Card
-                key={expense.id}
-                bordered
-                style={{
-                  marginBottom: 12,
-                  padding: 12,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <XStack flex={1} style={{ gap: 12, alignItems: "center" }}>
-                  <YStack
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 16,
-                      backgroundColor: categoryInfo.color,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text style={{ fontSize: 20 }}>{categoryInfo.label[0]}</Text>
-                  </YStack>
+              <ExpenseCard key={expense.id}>
+                <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
+                  <CategoryIcon backgroundColor={categoryInfo.color}>
+                    <Text fontSize="$6">{categoryInfo.label[0]}</Text>
+                  </CategoryIcon>
                   <YStack flex={1}>
-                    <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                    <Text fontWeight="bold" fontSize="$4">
                       {expense.note || categoryInfo.label}
                     </Text>
-                    <Text
-                      style={{
-                        color: (theme.gray10?.val as string) || "gray",
-                        fontSize: 12,
-                      }}
-                    >
+                    <Text color={gray10Color as any} fontSize="$2">
                       {format(parseISO(expense.date), "h:mm a")} • {expense.category}
                     </Text>
                   </YStack>
                 </XStack>
 
-                <XStack style={{ alignItems: "center", gap: 12 }}>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: 16,
-                      color: (theme.red10?.val as string) || "red",
-                    }}
-                  >
-                    -₹{expense.amount.toFixed(2)}
-                  </Text>
+                <XStack gap="$3" style={layoutStyles.actionButtons}>
+                  <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
                   <Button
                     size="$2"
                     icon={Trash}
@@ -122,11 +106,11 @@ export default function DayExpensesScreen() {
                     aria-label="Delete"
                   />
                 </XStack>
-              </Card>
+              </ExpenseCard>
             )
           })
         )}
-      </ScrollView>
+      </ScreenContainer>
     </YStack>
   )
 }

@@ -5,8 +5,6 @@ import {
   XStack,
   H4,
   Button,
-  Card,
-  useTheme,
   H6,
   Input,
   Dialog,
@@ -14,9 +12,10 @@ import {
   Select,
   Adapt,
   Sheet,
+  useTheme,
 } from "tamagui"
 import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
-import { SectionList, Platform } from "react-native"
+import { SectionList, Platform, ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
@@ -31,10 +30,57 @@ import {
   hasOperators,
   formatAmount,
 } from "../../utils/expression-parser"
+import { ExpenseCard, AmountText, CategoryIcon } from "../../components/ui"
+
+// Layout styles that Tamagui's type system doesn't support as direct props
+const layoutStyles = {
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+  } as ViewStyle,
+  emptyText: {
+    fontSize: 24,
+  } as TextStyle,
+  emptySubtext: {
+    fontSize: 16,
+    marginTop: 8,
+  } as TextStyle,
+  mainContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  } as ViewStyle,
+  header: {
+    marginBottom: 16,
+  } as TextStyle,
+  dialogButtonRow: {
+    justifyContent: "flex-end",
+  } as ViewStyle,
+  editDialogButtonRow: {
+    justifyContent: "flex-end",
+    marginTop: 16,
+  } as ViewStyle,
+  sectionHeader: {
+    paddingVertical: 8,
+  } as ViewStyle,
+  expenseDetails: {
+    alignItems: "center",
+  } as ViewStyle,
+  actionButtons: {
+    alignItems: "center",
+  } as ViewStyle,
+  loadMoreContainer: {
+    padding: 16,
+    alignItems: "center",
+  } as ViewStyle,
+}
 
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
+  // Keep theme for background color which requires raw value
   const theme = useTheme()
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string
@@ -47,6 +93,12 @@ export default function HistoryScreen() {
   const [deletingExpenseId, setDeletingExpenseId] = React.useState<string | null>(null)
   const [hasMore, setHasMore] = React.useState(true)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
+
+  // Theme colors for components that need raw values due to Tamagui type constraints
+  const gray8Color = theme.gray8?.val as string
+  const gray10Color = theme.gray10?.val as string
+  const gray11Color = theme.gray11?.val as string
+  const backgroundColor = theme.background?.val as string
 
   // Compute preview when expression contains operators
   const expressionPreview = React.useMemo(() => {
@@ -113,25 +165,11 @@ export default function HistoryScreen() {
 
   if (state.expenses.length === 0) {
     return (
-      <YStack
-        flex={1}
-        style={{ alignItems: "center", justifyContent: "center", padding: 16 }}
-      >
-        <Text
-          style={{
-            fontSize: 24,
-            color: (theme.gray10?.val as string) || "gray",
-          }}
-        >
+      <YStack style={layoutStyles.emptyContainer}>
+        <Text style={layoutStyles.emptyText} color={gray10Color as any}>
           No expenses yet.
         </Text>
-        <Text
-          style={{
-            fontSize: 16,
-            color: (theme.gray8?.val as string) || "gray",
-            marginTop: 8,
-          }}
-        >
+        <Text style={layoutStyles.emptySubtext} color={gray8Color as any}>
           Add one from the + tab.
         </Text>
       </YStack>
@@ -139,15 +177,8 @@ export default function HistoryScreen() {
   }
 
   return (
-    <YStack
-      flex={1}
-      style={{
-        backgroundColor: (theme.background?.val as string) || "white",
-        paddingHorizontal: 16,
-        paddingTop: 16,
-      }}
-    >
-      <H4 style={{ marginBottom: 16 }}>Expense History</H4>
+    <YStack style={[layoutStyles.mainContainer, { backgroundColor }]}>
+      <H4 style={layoutStyles.header}>Expense History</H4>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -182,7 +213,7 @@ export default function HistoryScreen() {
             <Dialog.Description>
               Are you sure you want to delete this expense? This action cannot be undone.
             </Dialog.Description>
-            <XStack gap="$3" style={{ justifyContent: "flex-end" }}>
+            <XStack gap="$3" style={layoutStyles.dialogButtonRow}>
               <Dialog.Close asChild>
                 <Button>Cancel</Button>
               </Dialog.Close>
@@ -250,7 +281,6 @@ export default function HistoryScreen() {
                       onChange={(event, selectedDate) => {
                         setShowDatePicker(Platform.OS === "ios")
                         if (selectedDate && event.type !== "dismissed") {
-                          // Preserve the original time from the expense
                           const originalDate = editingExpense?.date
                             ? parseISO(editingExpense.date)
                             : new Date()
@@ -293,7 +323,7 @@ export default function HistoryScreen() {
                     keyboardType="default"
                   />
                   {expressionPreview && (
-                    <Text fontSize="$3" color="$gray10">
+                    <Text fontSize="$3" color={gray10Color as any}>
                       = ₹{expressionPreview}
                     </Text>
                   )}
@@ -368,7 +398,7 @@ export default function HistoryScreen() {
                 </YStack>
               </YStack>
 
-              <XStack gap="$3" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+              <XStack gap="$3" style={layoutStyles.editDialogButtonRow}>
                 <Dialog.Close asChild>
                   <Button>Cancel</Button>
                 </Dialog.Close>
@@ -384,7 +414,6 @@ export default function HistoryScreen() {
                           return
                         }
 
-                        // Parse the expression
                         const result = parseExpression(editingExpense.amount)
 
                         if (!result.success) {
@@ -398,7 +427,7 @@ export default function HistoryScreen() {
                         editExpense(editingExpense.id, {
                           amount: result.value!,
                           category: editingExpense.category,
-                          date: editingExpense.date, // Use the edited date
+                          date: editingExpense.date,
                           note: editingExpense.note,
                         })
                         addNotification("Expense updated", "success")
@@ -420,13 +449,8 @@ export default function HistoryScreen() {
         sections={groupedExpenses}
         keyExtractor={(item) => item.id}
         renderSectionHeader={({ section: { title } }) => (
-          <YStack
-            style={{
-              backgroundColor: (theme.background?.val as string) || "white",
-              paddingVertical: 8,
-            }}
-          >
-            <H6 style={{ color: (theme.gray11?.val as string) || "gray" }}>{title}</H6>
+          <YStack style={[layoutStyles.sectionHeader, { backgroundColor }]}>
+            <H6 color={gray11Color as any}>{title}</H6>
           </YStack>
         )}
         renderItem={({ item }) => {
@@ -439,56 +463,23 @@ export default function HistoryScreen() {
           const Icon = categoryInfo.icon
 
           return (
-            <Card
-              bordered
-              style={{
-                marginBottom: 12,
-                padding: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-              animation="lazy"
-              hoverStyle={{ scale: 1.01 }}
-            >
-              <XStack flex={1} style={{ gap: 12, alignItems: "center" }}>
-                <YStack
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 16,
-                    backgroundColor: categoryInfo.color,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+            <ExpenseCard>
+              <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
+                <CategoryIcon size="md" backgroundColor={categoryInfo.color}>
                   <Icon color="white" size={20} />
-                </YStack>
+                </CategoryIcon>
                 <YStack flex={1}>
-                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                  <Text fontWeight="bold" fontSize="$4">
                     {item.note || categoryInfo.label}
                   </Text>
-                  <Text
-                    style={{
-                      color: (theme.gray10?.val as string) || "gray",
-                      fontSize: 12,
-                    }}
-                  >
+                  <Text color={gray10Color as any} fontSize="$2">
                     {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
                   </Text>
                 </YStack>
               </XStack>
 
-              <XStack style={{ alignItems: "center", gap: 12 }}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 16,
-                    color: (theme.red10?.val as string) || "red",
-                  }}
-                >
-                  -₹{item.amount.toFixed(2)}
-                </Text>
+              <XStack gap="$3" style={layoutStyles.actionButtons}>
+                <AmountText type="expense">-₹{item.amount.toFixed(2)}</AmountText>
                 <Button
                   size="$2"
                   icon={Edit3}
@@ -512,14 +503,14 @@ export default function HistoryScreen() {
                   aria-label="Delete"
                 />
               </XStack>
-            </Card>
+            </ExpenseCard>
           )
         }}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           hasMore ? (
-            <YStack style={{ padding: 16, alignItems: "center" }}>
+            <YStack style={layoutStyles.loadMoreContainer}>
               <Button size="$4" onPress={handleLoadMore} disabled={isLoadingMore}>
                 {isLoadingMore ? "Loading..." : "Load More"}
               </Button>

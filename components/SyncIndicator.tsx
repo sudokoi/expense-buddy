@@ -1,12 +1,29 @@
 import React, { useEffect, useRef } from "react"
-import { YStack, useTheme } from "tamagui"
+import { getTokenValue } from "tamagui"
 import { Cloud, CheckCircle, XCircle } from "@tamagui/lucide-icons"
-import { Animated, Easing } from "react-native"
+import { Animated, Easing, View, StyleSheet } from "react-native"
 import { useSyncStatus } from "../context/sync-status-context"
+
+// Using StyleSheet for positioning that Tamagui's type system doesn't support
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10000,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+})
 
 export const SyncIndicator: React.FC = () => {
   const { syncStatus } = useSyncStatus()
-  const theme = useTheme()
   const spinValue = useRef(new Animated.Value(0)).current
   const scaleValue = useRef(new Animated.Value(1)).current
 
@@ -52,36 +69,22 @@ export const SyncIndicator: React.FC = () => {
   })
 
   const getIcon = () => {
-    const iconColor = (theme.blue10?.val as string) || "#3b82f6"
+    // Using getTokenValue with 'color' category and fallback
+    const iconColor = getTokenValue("$blue10" as any, "color") || "#3b82f6"
     switch (syncStatus) {
       case "syncing":
-        return <Cloud size={24} color={iconColor} />
+        return <Cloud size={24} color={iconColor as any} />
       case "success":
-        return <CheckCircle size={24} color="#22c55e" />
+        return <CheckCircle size={24} color={"#22c55e" as any} />
       case "error":
-        return <XCircle size={24} color="#ef4444" />
+        return <XCircle size={24} color={"#ef4444" as any} />
       default:
         return null
     }
   }
 
   return (
-    <YStack
-      position="absolute"
-      style={{
-        top: 50,
-        right: 20,
-        zIndex: 10000,
-        backgroundColor: theme.background.val as string,
-        borderRadius: 20,
-        padding: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-      }}
-    >
+    <View style={styles.container}>
       <Animated.View
         style={{
           transform: [
@@ -92,6 +95,6 @@ export const SyncIndicator: React.FC = () => {
       >
         {getIcon()}
       </Animated.View>
-    </YStack>
+    </View>
   )
 }

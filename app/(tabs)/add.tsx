@@ -1,33 +1,45 @@
 import { useState, useMemo } from "react"
-import {
-  YStack,
-  XStack,
-  Text,
-  Input,
-  Button,
-  TextArea,
-  useTheme,
-  Card,
-  H4,
-  Label,
-} from "tamagui"
+import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
 import { ExpenseCategory } from "../../types/expense"
 import { Calendar, Check } from "@tamagui/lucide-icons"
-import { Alert } from "react-native"
+import { Alert, ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import {
   parseExpression,
   hasOperators,
   formatAmount,
 } from "../../utils/expression-parser"
+import { CategoryCard } from "../../components/ui"
+
+// Layout styles that Tamagui's type system doesn't support as direct props
+const layoutStyles = {
+  container: {
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
+  } as ViewStyle,
+  header: {
+    textAlign: "center",
+    marginBottom: 8,
+  } as TextStyle,
+  amountRow: {
+    alignItems: "center",
+  } as ViewStyle,
+  categoryRow: {
+    flexWrap: "wrap",
+    gap: 12,
+  } as ViewStyle,
+  saveButton: {
+    marginTop: 16,
+  } as ViewStyle,
+}
 
 export default function AddExpenseScreen() {
   const router = useRouter()
-  const theme = useTheme()
   const { addExpense } = useExpenses()
 
   const [amount, setAmount] = useState("")
@@ -83,17 +95,17 @@ export default function AddExpenseScreen() {
 
   return (
     <KeyboardAwareScrollView
-      style={{ flex: 1, backgroundColor: theme.background.val as string }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
       bottomOffset={50}
     >
-      <YStack space="$4" style={{ maxWidth: 600, alignSelf: "center", width: "100%" }}>
-        <H4 style={{ textAlign: "center", marginBottom: 8 }}>Add New Expense</H4>
+      <YStack gap="$4" style={layoutStyles.container}>
+        <H4 style={layoutStyles.header}>Add New Expense</H4>
 
         {/* Amount Input */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Amount</Label>
-          <XStack style={{ alignItems: "center" }}>
+          <XStack style={layoutStyles.amountRow}>
             <Input
               flex={1}
               size="$5"
@@ -107,57 +119,33 @@ export default function AddExpenseScreen() {
             />
           </XStack>
           {expressionPreview && (
-            <Text fontSize="$3" color="$gray10">
+            <Text fontSize="$3" color={"$gray10" as any}>
               = ₹{expressionPreview}
             </Text>
           )}
         </YStack>
 
         {/* Category Selection */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Category</Label>
-          <XStack style={{ flexWrap: "wrap", gap: 12 }}>
+          <XStack style={layoutStyles.categoryRow}>
             {CATEGORIES.map((cat) => {
               const isSelected = category === cat.value
               return (
-                <Card
+                <CategoryCard
                   key={cat.value}
-                  bordered
-                  animation="bouncy"
-                  scale={0.97}
-                  hoverStyle={{ scale: 1 }}
-                  pressStyle={{ scale: 0.95 }}
-                  style={{
-                    backgroundColor: isSelected
-                      ? cat.color
-                      : (theme.background.val as string),
-                    borderColor: isSelected
-                      ? cat.color
-                      : (theme.borderColor.val as string),
-                    padding: 12,
-                    borderRadius: 16,
-                    width: "30%",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  isSelected={isSelected}
+                  categoryColor={cat.color}
+                  label={cat.label}
                   onPress={() => setCategory(cat.value)}
-                >
-                  <Text
-                    style={{
-                      fontWeight: isSelected ? "bold" : "normal",
-                      color: isSelected ? "white" : (theme.color.val as string),
-                    }}
-                  >
-                    {cat.label}
-                  </Text>
-                </Card>
+                />
               )
             })}
           </XStack>
         </YStack>
 
         {/* Date Picker */}
-        <YStack space="$2">
+        <YStack gap="$2">
           <Label>Date</Label>
           <Button
             icon={<Calendar size="$1" />}
@@ -192,7 +180,7 @@ export default function AddExpenseScreen() {
 
         {/* Save Button */}
         <Button
-          style={{ marginTop: 16 }}
+          style={layoutStyles.saveButton}
           size="$5"
           themeInverse
           onPress={handleSave}

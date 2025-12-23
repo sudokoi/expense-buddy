@@ -1,25 +1,54 @@
 import { format, parseISO, subDays } from "date-fns"
-import {
-  YStack,
-  H4,
-  XStack,
-  Card,
-  Text,
-  Button,
-  SizableText,
-  ScrollView,
-  useTheme,
-} from "tamagui"
+import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
 import { useToastController } from "@tamagui/toast"
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses } from "../../context/ExpenseContext"
 import { useRouter } from "expo-router"
-import { Dimensions } from "react-native"
+import { Dimensions, ViewStyle, TextStyle } from "react-native"
 import { CATEGORIES } from "../../constants/categories"
 import React from "react"
+import {
+  ExpenseCard,
+  AmountText,
+  CategoryIcon,
+  ScreenContainer,
+  SectionHeader,
+} from "../../components/ui"
+
+// Layout styles that Tamagui's type system doesn't support as direct props
+const layoutStyles = {
+  headerRow: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  } as ViewStyle,
+  summaryCardsRow: {
+    gap: 12,
+    marginBottom: 20,
+  } as ViewStyle,
+  chartSection: {
+    marginBottom: 20,
+  } as ViewStyle,
+  chartContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  } as ViewStyle,
+  transactionsHeader: {
+    justifyContent: "space-between",
+    alignItems: "center",
+  } as ViewStyle,
+  transactionDetails: {
+    gap: 12,
+    alignItems: "center",
+  } as ViewStyle,
+  cardValue: {
+    marginTop: 8,
+  } as TextStyle,
+}
 
 export default function DashboardScreen() {
   const { state, clearSyncNotification } = useExpenses()
+  // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
@@ -89,25 +118,24 @@ export default function DashboardScreen() {
     }
   }, [state.syncNotification, clearSyncNotification, toast])
 
+  // Get theme colors for BarChart which requires raw color values (third-party component)
+  const chartTextColor = theme.color.val as string
+  // Theme colors for components that need raw values due to Tamagui type constraints
+  const gray10Color = theme.gray10?.val as string
+  const blue3Color = theme.blue3.val as string
+  const blue11Color = theme.blue11.val as string
+  const blue12Color = theme.blue12.val as string
+  const green3Color = theme.green3.val as string
+  const green11Color = theme.green11.val as string
+  const green12Color = theme.green12.val as string
+
   return (
-    <ScrollView
-      flex={1}
-      style={{ backgroundColor: theme.background.val as string }}
-      contentContainerStyle={{ padding: 20 } as any}
-    >
+    <ScreenContainer>
       {/* Header */}
-      <XStack
-        style={{
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
+      <XStack style={layoutStyles.headerRow}>
         <YStack>
           <H4>Dashboard</H4>
-          <Text style={{ color: (theme.gray10?.val as string) || "gray" }}>
-            Welcome back!
-          </Text>
+          <Text color={gray10Color as any}>Welcome back!</Text>
         </YStack>
         <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add" as any)}>
           + Add
@@ -115,25 +143,24 @@ export default function DashboardScreen() {
       </XStack>
 
       {/* Summary Cards */}
-      <XStack style={{ gap: 12, marginBottom: 20 }}>
+      <XStack style={layoutStyles.summaryCardsRow}>
         <Card
           flex={1}
           bordered
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
-          style={{ padding: 16, backgroundColor: theme.blue3.val as string }}
+          padding="$4"
+          backgroundColor={blue3Color as any}
         >
           <Text
-            style={{
-              color: theme.blue11.val as string,
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              fontSize: 13,
-            }}
+            fontWeight="bold"
+            textTransform="uppercase"
+            fontSize="$3"
+            color={blue11Color as any}
           >
             Total Spent
           </Text>
-          <H4 style={{ color: theme.blue12.val as string, marginTop: 8 }}>
+          <H4 style={layoutStyles.cardValue} color={blue12Color as any}>
             ₹{totalExpenses.toFixed(2)}
           </H4>
         </Card>
@@ -142,29 +169,29 @@ export default function DashboardScreen() {
           bordered
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
-          style={{ padding: 16, backgroundColor: theme.green3.val as string }}
+          padding="$4"
+          backgroundColor={green3Color as any}
         >
           <Text
-            style={{
-              color: theme.green11.val as string,
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              fontSize: 13,
-            }}
+            fontWeight="bold"
+            textTransform="uppercase"
+            fontSize="$3"
+            color={green11Color as any}
           >
             Entries
           </Text>
-          <H4 style={{ color: theme.green12.val as string, marginTop: 8 }}>
+          <H4 style={layoutStyles.cardValue} color={green12Color as any}>
             {state.expenses.length}
           </H4>
         </Card>
       </XStack>
 
       {/* Chart Section */}
-      <YStack gap="$4" style={{ marginBottom: 20 }}>
-        <H4 fontSize="$5">Last 7 Days</H4>
+      <YStack gap="$4" style={layoutStyles.chartSection}>
+        <SectionHeader>Last 7 Days</SectionHeader>
         {hasData ? (
-          <YStack style={{ alignItems: "center", justifyContent: "center" }}>
+          <YStack style={layoutStyles.chartContainer}>
+            {/* BarChart requires raw color values - keeping theme.xxx.val for third-party component */}
             <BarChart
               key={chartKey}
               stackData={chartData}
@@ -177,34 +204,30 @@ export default function DashboardScreen() {
               width={screenWidth - 60}
               isAnimated
               xAxisLabelTextStyle={{
-                color: theme.color.val as string,
+                color: chartTextColor,
                 fontSize: 10,
               }}
-              yAxisTextStyle={{ color: theme.color.val as string }}
+              yAxisTextStyle={{ color: chartTextColor }}
               spacing={20}
             />
           </YStack>
         ) : (
           <Card
             bordered
-            style={{
-              padding: 16,
-              alignItems: "center",
-              justifyContent: "center",
-              height: 150,
-            }}
+            padding="$4"
+            alignItems="center"
+            justifyContent="center"
+            height={150}
           >
-            <Text style={{ color: (theme.gray10?.val as string) || "gray" }}>
-              No data to display yet.
-            </Text>
+            <Text color={gray10Color as any}>No data to display yet.</Text>
           </Card>
         )}
       </YStack>
 
       {/* Recent Transactions List (Mini) */}
       <YStack gap="$3">
-        <XStack style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <H4 fontSize="$5">Recent Transactions</H4>
+        <XStack style={layoutStyles.transactionsHeader}>
+          <SectionHeader>Recent Transactions</SectionHeader>
           <Button
             chromeless
             size="$2"
@@ -215,64 +238,32 @@ export default function DashboardScreen() {
         </XStack>
 
         {recentExpenses.length === 0 && (
-          <Text style={{ color: (theme.gray10?.val as string) || "gray" }}>
-            No recent transactions.
-          </Text>
+          <Text color={gray10Color as any}>No recent transactions.</Text>
         )}
 
         {recentExpenses.map((expense) => {
           const cat = CATEGORIES.find((c) => c.value === expense.category)
           const Icon = cat?.icon
           return (
-            <Card
-              key={expense.id}
-              bordered
-              style={{
-                padding: 12,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
-              <XStack style={{ gap: 12, alignItems: "center" }}>
-                <YStack
-                  style={{
-                    backgroundColor: cat?.color || (theme.gray8?.val as string) || "gray",
-                    padding: 8,
-                    borderRadius: 8,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+            <ExpenseCard key={expense.id}>
+              <XStack style={layoutStyles.transactionDetails}>
+                <CategoryIcon backgroundColor={cat?.color || "#888"}>
                   {Icon && <Icon color="white" size={16} />}
-                </YStack>
+                </CategoryIcon>
                 <YStack>
                   <SizableText size="$4" fontWeight="bold">
                     {expense.note || cat?.label}
                   </SizableText>
-                  <Text
-                    style={{
-                      color: (theme.gray10?.val as string) || "gray",
-                      fontSize: 12,
-                    }}
-                  >
+                  <Text fontSize="$2" color={gray10Color as any}>
                     {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
                   </Text>
                 </YStack>
               </XStack>
-              <H4
-                style={{
-                  fontWeight: "bold",
-                  color: (theme.red10?.val as string) || "red",
-                }}
-              >
-                -₹{expense.amount.toFixed(2)}
-              </H4>
-            </Card>
+              <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
+            </ExpenseCard>
           )
         })}
       </YStack>
-    </ScrollView>
+    </ScreenContainer>
   )
 }
