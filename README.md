@@ -45,7 +45,8 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 ### 🎨 User Experience
 
 - **Cross-Platform**: Works on iOS, Android, and Web
-- **Dark Mode**: Automatic theme switching
+- **Dark Mode**: Automatic theme switching with proper token-based styling
+- **Reusable UI Components**: Consistent styling with `ExpenseCard`, `AmountText`, `CategoryIcon`, `ScreenContainer`, `SectionHeader`, and `CategoryCard`
 - **Notifications**: Toast messages for sync status and actions
 - **Offline First**: Works without internet, syncs when connected
 - **First-Time Setup**: Guided flow to download existing data
@@ -166,6 +167,21 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Date Handling**: date-fns
 - **CSV Parsing**: PapaParse
 
+### UI Component Library
+
+The app includes a set of reusable styled components in `components/ui/`:
+
+| Component         | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| `AmountText`      | Displays expense/income amounts with semantic colors |
+| `CategoryCard`    | Selectable category card with color theming          |
+| `CategoryIcon`    | Circular icon container with category color          |
+| `ExpenseCard`     | Card wrapper for expense list items                  |
+| `ScreenContainer` | Scrollable screen wrapper with consistent padding    |
+| `SectionHeader`   | Styled section title text                            |
+
+All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
+
 ### Project Structure
 
 ```
@@ -173,11 +189,21 @@ expense-buddy/
 ├── app/                    # Expo Router pages
 │   ├── (tabs)/            # Tab navigation screens
 │   │   ├── index.tsx      # Dashboard with charts
-│   │   ├── history.tsx    # Expense history
+│   │   ├── add.tsx        # Add expense screen
+│   │   ├── history.tsx    # Expense history with edit/delete
 │   │   ├── settings.tsx   # Sync settings
 │   │   └── _layout.tsx    # Tab layout
+│   ├── day/[date].tsx     # Day detail view
 │   └── _layout.tsx        # Root layout
 ├── components/            # Reusable components
+│   ├── ui/               # Styled UI components
+│   │   ├── AmountText.tsx     # Styled amount display
+│   │   ├── CategoryCard.tsx   # Category selection card
+│   │   ├── CategoryIcon.tsx   # Category icon with background
+│   │   ├── ExpenseCard.tsx    # Expense list item card
+│   │   ├── ScreenContainer.tsx # Screen wrapper with padding
+│   │   ├── SectionHeader.tsx  # Section title component
+│   │   └── index.ts           # Component exports
 │   ├── Provider.tsx       # App providers
 │   ├── NotificationStack.tsx
 │   └── SyncIndicator.tsx
@@ -195,6 +221,7 @@ expense-buddy/
 │   └── auto-sync-service.ts
 ├── constants/            # App constants
 │   └── categories.ts
+├── tamagui.config.ts     # Tamagui theme configuration with getColorValue helper
 └── types/               # TypeScript types
     └── expense.ts
 ```
@@ -270,10 +297,10 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 
 **Automated releases:**
 
-- Changesets are automatically processed on merge to main
-- Version bumps and CHANGELOG updates happen automatically
-- APK builds are triggered via GitHub Actions
-- See [.github/RELEASE.md](.github/RELEASE.md) for details
+- When PRs with changesets are merged, a "Version Packages" PR is automatically created
+- Merging the Version PR triggers automatic tag creation
+- Tag push triggers APK build and GitHub Release creation
+- See [.github/RELEASE.md](.github/RELEASE.md) for the full workflow
 
 ## 📝 License
 
