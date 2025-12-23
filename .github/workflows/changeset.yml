@@ -15,39 +15,47 @@ permissions:
 
 jobs:
   changeset:
-    name: Version Packages
+    name: 📦 Version Packages
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
+      - name: 🏗️ Checkout
         uses: actions/checkout@v4
         with:
           # Use PAT to allow commits to trigger workflows
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Setup Node
+      - name: 📦 Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24.x
 
-      - name: Get yarn cache directory
+      - name: 📂 Get yarn cache directory
         id: yarn-cache
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
 
-      - name: Cache yarn dependencies
+      - name: 💾 Cache yarn downloads
         uses: actions/cache@v4
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-cache-
 
-      - name: Install dependencies
+      - name: 💾 Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: 📥 Install dependencies
         run: yarn install --immutable
 
-      - name: Create Release PR or Publish
+      - name: 🔄 Create Release PR or Publish
         id: changesets
         uses: changesets/action@v1
         with:
@@ -57,7 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
-      - name: Check if version PR was merged
+      - name: 🔍 Check if version PR was merged
         id: check-release
         run: |
           # Check if there are no changesets and no open version PR
@@ -84,7 +92,7 @@ jobs:
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Push tag
+      - name: 🏷️ Push tag
         id: push-tag
         if: steps.check-release.outputs.should_release == 'true'
         run: |
@@ -107,7 +115,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
-      - name: Comment on merged PR
+      - name: 💬 Comment on merged PR
         if: steps.check-release.outputs.should_release == 'true'
         uses: actions/github-script@v7
         with:

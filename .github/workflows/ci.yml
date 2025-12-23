@@ -10,39 +10,47 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint, Format & Test
+    name: ✅ Lint, Format & Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
+      - name: 🏗️ Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 📦 Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24.x
 
-      - name: Get yarn cache directory
+      - name: 📂 Get yarn cache directory
         id: yarn-cache
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
 
-      - name: Cache yarn dependencies
+      - name: 💾 Cache yarn downloads
         uses: actions/cache@v4
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-cache-
 
-      - name: Install dependencies
+      - name: 💾 Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: 📥 Install dependencies
         run: yarn install --immutable
 
-      - name: Check formatting
+      - name: 🎨 Check formatting
         run: yarn format:check
 
-      - name: Lint
+      - name: 🔍 Lint
         run: yarn lint
 
-      - name: Test
+      - name: 🧪 Test
         run: yarn test
