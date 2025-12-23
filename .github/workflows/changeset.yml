@@ -52,18 +52,43 @@ jobs:
         uses: changesets/action@v1
         with:
           version: yarn changeset:version
-          publish: echo "skip-publish"
           commit: "chore: version packages"
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
-      - name: Push tags if version PR was merged
-        id: push-tag
-        if: steps.changesets.outputs.published == 'true'
+      - name: Check if version PR was merged
+        id: check-release
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v$VERSION"
+          # Check if there are no changesets and no open version PR
+          # This means the version PR was just merged
+
+          CHANGESET_COUNT=$(ls .changeset/*.md 2>/dev/null | grep -v README.md | wc -l || echo "0")
+          echo "Changeset count: $CHANGESET_COUNT"
+
+          if [ "$CHANGESET_COUNT" -eq "0" ] && [ "${{ steps.changesets.outputs.hasChangesets }}" != "true" ]; then
+            # Check if current version has a tag
+            VERSION=$(node -p "require('./package.json').version")
+            TAG="v$VERSION"
+            
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "Tag $TAG already exists"
+              echo "should_release=false" >> $GITHUB_OUTPUT
+            else
+              echo "No tag for $TAG, should release"
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              echo "tag=$TAG" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Changesets pending or PR created, skipping release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push tag
+        id: push-tag
+        if: steps.check-release.outputs.should_release == 'true'
+        run: |
+          TAG="${{ steps.check-release.outputs.tag }}"
 
           echo "Creating and pushing tag: $TAG"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -77,20 +102,13 @@ jobs:
           git config user.name "$USER_NAME"
           git config user.email "$USER_ID+$USER_LOGIN@users.noreply.github.com"
 
-          # Check if tag already exists
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping"
-            echo "skipped=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Comment on merged PR
-        if: steps.changesets.outputs.published == 'true' && steps.push-tag.outputs.skipped != 'true'
+        if: steps.check-release.outputs.should_release == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_PAT }}
