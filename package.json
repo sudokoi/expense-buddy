@@ -4,6 +4,10 @@
   "version": "1.2.1",
   "packageManager": "yarn@4.5.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sudokoi/expense-buddy.git"
+  },
   "scripts": {
     "upgrade:tamagui": "yarn up '*tamagui*'@latest '@tamagui/*'@latest",
     "upgrade:tamagui:canary": "yarn up '*tamagui*'@canary '@tamagui/*'@canary",
