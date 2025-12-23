@@ -26,6 +26,11 @@ import { format, parseISO } from "date-fns";
 import { useNotifications } from "../../context/notification-context";
 import type { ExpenseCategory } from "../../types/expense";
 import { syncDownMore } from "../../services/sync-manager";
+import {
+  parseExpression,
+  hasOperators,
+  formatAmount,
+} from "../../utils/expression-parser";
 
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } =
@@ -45,6 +50,21 @@ export default function HistoryScreen() {
   >(null);
   const [hasMore, setHasMore] = React.useState(true);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+
+  // Compute preview when expression contains operators
+  const expressionPreview = React.useMemo(() => {
+    if (
+      !editingExpense?.amount.trim() ||
+      !hasOperators(editingExpense.amount)
+    ) {
+      return null;
+    }
+    const result = parseExpression(editingExpense.amount);
+    if (result.success && result.value !== undefined) {
+      return formatAmount(result.value);
+    }
+    return null;
+  }, [editingExpense?.amount]);
 
   const groupedExpenses = React.useMemo(() => {
     const grouped: { title: string; data: typeof state.expenses }[] = [];
@@ -281,9 +301,14 @@ export default function HistoryScreen() {
                         prev ? { ...prev, amount: text } : null
                       )
                     }
-                    placeholder="Enter amount"
-                    keyboardType="numeric"
+                    placeholder="Enter amount or expression (e.g., 100+50)"
+                    keyboardType="default"
                   />
+                  {expressionPreview && (
+                    <Text fontSize="$3" color="$gray10">
+                      = ₹{expressionPreview}
+                    </Text>
+                  )}
                 </YStack>
 
                 <YStack gap="$2">
@@ -377,16 +402,27 @@ export default function HistoryScreen() {
                         (e) => e.id === editingExpense.id
                       );
                       if (expense) {
-                        const amount = parseFloat(editingExpense.amount);
-                        if (isNaN(amount) || amount <= 0) {
+                        if (!editingExpense.amount.trim()) {
                           addNotification(
                             "Please enter a valid amount",
                             "error"
                           );
                           return;
                         }
+
+                        // Parse the expression
+                        const result = parseExpression(editingExpense.amount);
+
+                        if (!result.success) {
+                          addNotification(
+                            result.error || "Please enter a valid expression",
+                            "error"
+                          );
+                          return;
+                        }
+
                         editExpense(editingExpense.id, {
-                          amount,
+                          amount: result.value!,
                           category: editingExpense.category,
                           date: editingExpense.date, // Use the edited date
                           note: editingExpense.note,

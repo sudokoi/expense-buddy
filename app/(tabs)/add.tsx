@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   YStack,
   XStack,
@@ -19,6 +19,11 @@ import { ExpenseCategory } from "../../types/expense";
 import { Calendar, Check } from "@tamagui/lucide-icons";
 import { Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  parseExpression,
+  hasOperators,
+  formatAmount,
+} from "../../utils/expression-parser";
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -31,14 +36,37 @@ export default function AddExpenseScreen() {
   const [note, setNote] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Compute preview when expression contains operators
+  const expressionPreview = useMemo(() => {
+    if (!amount.trim() || !hasOperators(amount)) {
+      return null;
+    }
+    const result = parseExpression(amount);
+    if (result.success && result.value !== undefined) {
+      return formatAmount(result.value);
+    }
+    return null;
+  }, [amount]);
+
   const handleSave = () => {
-    if (!amount || isNaN(Number(amount))) {
-      Alert.alert("Invalid Amount", "Please enter a valid number");
+    if (!amount.trim()) {
+      Alert.alert("Invalid Amount", "Please enter a valid amount");
+      return;
+    }
+
+    // Parse the expression
+    const result = parseExpression(amount);
+
+    if (!result.success) {
+      Alert.alert(
+        "Invalid Expression",
+        result.error || "Please enter a valid expression"
+      );
       return;
     }
 
     addExpense({
-      amount: Number(amount),
+      amount: result.value!,
       category,
       date: date.toISOString(),
       note,
@@ -77,8 +105,8 @@ export default function AddExpenseScreen() {
             <Input
               flex={1}
               size="$5"
-              placeholder="0.00"
-              keyboardType="numeric"
+              placeholder="0.00 or 100+50"
+              keyboardType="default"
               value={amount}
               onChangeText={setAmount}
               borderWidth={2}
@@ -86,6 +114,11 @@ export default function AddExpenseScreen() {
               focusStyle={{ borderColor: "$blue10" }}
             />
           </XStack>
+          {expressionPreview && (
+            <Text fontSize="$3" color="$gray10">
+              = ₹{expressionPreview}
+            </Text>
+          )}
         </YStack>
 
         {/* Category Selection */}
@@ -177,7 +210,7 @@ export default function AddExpenseScreen() {
           Save Expense
         </Button>
         <Text fontSize={40} color="$color" fontWeight="bold">
-          ₹{amount || "0"}
+          ₹{expressionPreview || amount || "0"}
         </Text>
       </YStack>
     </KeyboardAwareScrollView>
