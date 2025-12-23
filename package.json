@@ -1,7 +1,7 @@
 {
   "name": "expense-buddy",
   "main": "expo-router/entry",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "packageManager": "yarn@4.5.0",
   "private": true,
   "repository": {
@@ -19,7 +19,7 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "changeset": "changeset",
-    "changeset:version": "changeset version && node scripts/sync-app-version.mjs",
+    "changeset:version": "changeset version && node scripts/sync-app-version.mjs && prettier --write app.json",
     "changeset:status": "changeset status",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",

@@ -1,5 +1,20 @@
 # expense-buddy
 
+## 1.3.0
+
+### Minor Changes
+
+- [`648ef34`](https://github.com/sudokoi/expense-buddy/commit/648ef34f00f0bdbb5a97bda769df3518690259bc) Thanks [@sudokoi](https://github.com/sudokoi)!
+
+  ### Features
+  - Add arithmetic expression support in expense entry (e.g., `10+5*2`)
+  - Add expression parser utility with property-based tests
+  - Add ESLint 9 and Prettier for linting and formatting
+
+  ### CI/CD
+  - Add PR workflow for lint, format, and test
+  - Automate changelog and release flow with changesets action
+
 ## 1.2.1
 
 ### Patch Changes
