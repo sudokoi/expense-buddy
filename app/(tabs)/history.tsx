@@ -95,12 +95,6 @@ export default function HistoryScreen() {
   const [hasMore, setHasMore] = React.useState(true)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
 
-  // Theme colors - use getColorValue for Tamagui component compatibility
-  const gray8Color = getColorValue(theme.gray8)
-  const gray10Color = getColorValue(theme.gray10)
-  const gray11Color = getColorValue(theme.gray11)
-  const backgroundColor = theme.background?.val as string
-
   // Handle back button to close dialogs instead of navigating
   React.useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -184,11 +178,11 @@ export default function HistoryScreen() {
 
   if (state.expenses.length === 0) {
     return (
-      <YStack style={layoutStyles.emptyContainer}>
-        <Text style={layoutStyles.emptyText} color={gray10Color}>
+      <YStack flex={1} background="$background" style={layoutStyles.emptyContainer}>
+        <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
           No expenses yet.
         </Text>
-        <Text style={layoutStyles.emptySubtext} color={gray8Color}>
+        <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
           Add one from the + tab.
         </Text>
       </YStack>
@@ -196,7 +190,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <YStack style={[layoutStyles.mainContainer, { backgroundColor }]}>
+    <YStack flex={1} background="$background" style={layoutStyles.mainContainer}>
       <H4 style={layoutStyles.header}>Expense History</H4>
 
       {/* Delete Confirmation Dialog */}
@@ -284,7 +278,9 @@ export default function HistoryScreen() {
             <KeyboardAwareScrollView bottomOffset={20}>
               <YStack gap="$3">
                 <YStack gap="$2">
-                  <Label htmlFor="date">Date</Label>
+                  <Label color="$color" opacity={0.8} htmlFor="date">
+                    Date
+                  </Label>
                   <Button onPress={() => setShowDatePicker(true)} icon={Calendar}>
                     {editingExpense?.date
                       ? format(parseISO(editingExpense.date), "dd/MM/yyyy")
@@ -329,7 +325,9 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$2">
-                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Label color="$color" opacity={0.8} htmlFor="amount">
+                    Amount (₹)
+                  </Label>
                   <Input
                     id="amount"
                     value={editingExpense?.amount || ""}
@@ -342,14 +340,16 @@ export default function HistoryScreen() {
                     keyboardType="default"
                   />
                   {expressionPreview && (
-                    <Text fontSize="$3" color={gray10Color}>
+                    <Text fontSize="$3" color="$color" opacity={0.7}>
                       = ₹{expressionPreview}
                     </Text>
                   )}
                 </YStack>
 
                 <YStack gap="$2">
-                  <Label htmlFor="category">Category</Label>
+                  <Label color="$color" opacity={0.8} htmlFor="category">
+                    Category
+                  </Label>
                   <Select
                     id="category"
                     value={editingExpense?.category || ""}
@@ -405,7 +405,9 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$2">
-                  <Label htmlFor="note">Note</Label>
+                  <Label color="$color" opacity={0.8} htmlFor="note">
+                    Note
+                  </Label>
                   <Input
                     id="note"
                     value={editingExpense?.note || ""}
@@ -422,6 +424,7 @@ export default function HistoryScreen() {
                   <Button>Cancel</Button>
                 </Dialog.Close>
                 <Button
+                  themeInverse
                   onPress={() => {
                     if (editingExpense) {
                       const expense = state.expenses.find(
@@ -468,8 +471,10 @@ export default function HistoryScreen() {
         sections={groupedExpenses}
         keyExtractor={(item) => item.id}
         renderSectionHeader={({ section: { title } }) => (
-          <YStack style={[layoutStyles.sectionHeader, { backgroundColor }]}>
-            <H6 color={gray11Color}>{title}</H6>
+          <YStack background="$background" style={layoutStyles.sectionHeader}>
+            <H6 color="$color" opacity={0.8}>
+              {title}
+            </H6>
           </YStack>
         )}
         renderItem={({ item }) => {
@@ -491,7 +496,7 @@ export default function HistoryScreen() {
                   <Text fontWeight="bold" fontSize="$4">
                     {item.note || categoryInfo.label}
                   </Text>
-                  <Text color={gray10Color} fontSize="$2">
+                  <Text color="$color" opacity={0.6} fontSize="$2">
                     {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
                   </Text>
                 </YStack>
@@ -530,7 +535,12 @@ export default function HistoryScreen() {
         ListFooterComponent={
           hasMore ? (
             <YStack style={layoutStyles.loadMoreContainer}>
-              <Button size="$4" onPress={handleLoadMore} disabled={isLoadingMore}>
+              <Button
+                size="$4"
+                themeInverse
+                onPress={handleLoadMore}
+                disabled={isLoadingMore}
+              >
                 {isLoadingMore ? "Loading..." : "Load More"}
               </Button>
             </YStack>

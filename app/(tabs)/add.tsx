@@ -55,8 +55,6 @@ export default function AddExpenseScreen() {
   const theme = useTheme()
 
   // Theme colors - extract raw values for components that need them
-  const backgroundColor = theme.background.val
-  const gray10Color = getColorValue(theme.gray10)
 
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState<ExpenseCategory>("Food")
@@ -110,105 +108,114 @@ export default function AddExpenseScreen() {
   }
 
   return (
-    <KeyboardAwareScrollView
-      style={{ flex: 1, backgroundColor }}
-      contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-      bottomOffset={50}
-    >
-      <YStack gap="$4" style={layoutStyles.container}>
-        <H4 style={layoutStyles.header}>Add New Expense</H4>
+    <YStack flex={1} background="$background">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        bottomOffset={50}
+      >
+        <YStack gap="$4" style={layoutStyles.container}>
+          <H4 style={layoutStyles.header}>Add New Expense</H4>
 
-        {/* Amount Input */}
-        <YStack gap="$2">
-          <Label>Amount</Label>
-          <XStack style={layoutStyles.amountRow}>
-            <Input
-              flex={1}
-              size="$5"
-              placeholder="0.00 or 100+50"
-              keyboardType="default"
-              value={amount}
-              onChangeText={setAmount}
-              borderWidth={2}
-              borderColor="$borderColor"
-              focusStyle={{ borderColor: "$blue10" }}
+          {/* Amount Input */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Amount
+            </Label>
+            <XStack style={layoutStyles.amountRow}>
+              <Input
+                flex={1}
+                size="$5"
+                placeholder="0.00 or 100+50"
+                keyboardType="default"
+                value={amount}
+                onChangeText={setAmount}
+                borderWidth={2}
+                borderColor="$borderColor"
+                focusStyle={{ borderColor: "$blue10" }}
+              />
+            </XStack>
+            {expressionPreview && (
+              <Text fontSize="$3" color="$color" opacity={0.7}>
+                = ₹{expressionPreview}
+              </Text>
+            )}
+          </YStack>
+
+          {/* Category Selection */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Category
+            </Label>
+            <XStack style={layoutStyles.categoryRow}>
+              {CATEGORIES.map((cat) => {
+                const isSelected = category === cat.value
+                return (
+                  <CategoryCard
+                    key={cat.value}
+                    isSelected={isSelected}
+                    categoryColor={cat.color}
+                    label={cat.label}
+                    onPress={() => setCategory(cat.value)}
+                  />
+                )
+              })}
+            </XStack>
+          </YStack>
+
+          {/* Date Picker */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Date
+            </Label>
+            <Button
+              icon={<Calendar size="$1" />}
+              size="$4"
+              onPress={() => setShowDatePicker(true)}
+              chromeless
+              borderWidth={1}
+            >
+              {date.toLocaleDateString()}
+            </Button>
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                display="default"
+                onChange={onChangeDate}
+              />
+            )}
+          </YStack>
+
+          {/* Note Input */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Note (Optional)
+            </Label>
+            <TextArea
+              placeholder="What was this for?"
+              value={note}
+              onChangeText={setNote}
+              numberOfLines={3}
             />
-          </XStack>
-          {expressionPreview && (
-            <Text fontSize="$3" color={gray10Color}>
-              = ₹{expressionPreview}
-            </Text>
-          )}
-        </YStack>
+          </YStack>
 
-        {/* Category Selection */}
-        <YStack gap="$2">
-          <Label>Category</Label>
-          <XStack style={layoutStyles.categoryRow}>
-            {CATEGORIES.map((cat) => {
-              const isSelected = category === cat.value
-              return (
-                <CategoryCard
-                  key={cat.value}
-                  isSelected={isSelected}
-                  categoryColor={cat.color}
-                  label={cat.label}
-                  onPress={() => setCategory(cat.value)}
-                />
-              )
-            })}
-          </XStack>
-        </YStack>
-
-        {/* Date Picker */}
-        <YStack gap="$2">
-          <Label>Date</Label>
+          {/* Save Button */}
           <Button
-            icon={<Calendar size="$1" />}
-            size="$4"
-            onPress={() => setShowDatePicker(true)}
-            chromeless
-            borderWidth={1}
+            style={layoutStyles.saveButton}
+            size="$5"
+            themeInverse
+            onPress={handleSave}
+            icon={<Check size="$2" />}
+            fontWeight="bold"
           >
-            {date.toLocaleDateString()}
+            Save Expense
           </Button>
-          {showDatePicker && (
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={date}
-              mode="date"
-              display="default"
-              onChange={onChangeDate}
-            />
-          )}
+          <Text fontSize={40} color="$color" fontWeight="bold">
+            ₹{expressionPreview || amount || "0"}
+          </Text>
         </YStack>
-
-        {/* Note Input */}
-        <YStack gap="$2">
-          <Label>Note (Optional)</Label>
-          <TextArea
-            placeholder="What was this for?"
-            value={note}
-            onChangeText={setNote}
-            numberOfLines={3}
-          />
-        </YStack>
-
-        {/* Save Button */}
-        <Button
-          style={layoutStyles.saveButton}
-          size="$5"
-          themeInverse
-          onPress={handleSave}
-          icon={<Check size="$2" />}
-          fontWeight="bold"
-        >
-          Save Expense
-        </Button>
-        <Text fontSize={40} color="$color" fontWeight="bold">
-          ₹{expressionPreview || amount || "0"}
-        </Text>
-      </YStack>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </YStack>
   )
 }

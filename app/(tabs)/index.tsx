@@ -122,13 +122,6 @@ export default function DashboardScreen() {
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
   // Theme colors - use getColorValue for Tamagui component compatibility
-  const gray10Color = getColorValue(theme.gray10)
-  const blue3Color = getColorValue(theme.blue3)
-  const blue11Color = getColorValue(theme.blue11)
-  const blue12Color = getColorValue(theme.blue12)
-  const green3Color = getColorValue(theme.green3)
-  const green11Color = getColorValue(theme.green11)
-  const green12Color = getColorValue(theme.green12)
 
   return (
     <ScreenContainer>
@@ -136,7 +129,9 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.headerRow}>
         <YStack>
           <H4>Dashboard</H4>
-          <Text color={gray10Color}>Welcome back!</Text>
+          <Text color="$color" opacity={0.6}>
+            Welcome back!
+          </Text>
         </YStack>
         <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add")}>
           + Add
@@ -151,17 +146,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={blue3Color}
+          backgroundColor={theme.blue3}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={blue11Color}
+            color={theme.blue11}
           >
             Total Spent
           </Text>
-          <H4 style={layoutStyles.cardValue} color={blue12Color}>
+          <H4 style={layoutStyles.cardValue} color={theme.blue12}>
             ₹{totalExpenses.toFixed(2)}
           </H4>
         </Card>
@@ -171,17 +166,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={green3Color}
+          backgroundColor={theme.green3}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={green11Color}
+            color={theme.green11}
           >
             Entries
           </Text>
-          <H4 style={layoutStyles.cardValue} color={green12Color}>
+          <H4 style={layoutStyles.cardValue} color={theme.green12}>
             {state.expenses.length}
           </H4>
         </Card>
@@ -220,7 +215,9 @@ export default function DashboardScreen() {
             justifyContent="center"
             height={150}
           >
-            <Text color={gray10Color}>No data to display yet.</Text>
+            <Text color="$color" opacity={0.6}>
+              No data to display yet.
+            </Text>
           </Card>
         )}
       </YStack>
@@ -235,7 +232,9 @@ export default function DashboardScreen() {
         </XStack>
 
         {recentExpenses.length === 0 && (
-          <Text color={gray10Color}>No recent transactions.</Text>
+          <Text color="$color" opacity={0.6}>
+            No recent transactions.
+          </Text>
         )}
 
         {recentExpenses.map((expense) => {
@@ -251,7 +250,7 @@ export default function DashboardScreen() {
                   <SizableText size="$4" fontWeight="bold">
                     {expense.note || cat?.label}
                   </SizableText>
-                  <Text fontSize="$2" color={gray10Color}>
+                  <Text fontSize="$2" color="$color" opacity={0.6}>
                     {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
                   </Text>
                 </YStack>
