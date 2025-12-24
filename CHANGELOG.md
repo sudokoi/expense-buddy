@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 1.3.2
+
+### Patch Changes
+
+- [`6ff0a31`](https://github.com/sudokoi/expense-buddy/commit/6ff0a31fadd6e4bd03a318964c06a19508d728dd) Thanks [@sudokoi](https://github.com/sudokoi)! - UI Legibility and Theme Enhancements
+  - _Dynamic Theming_: Fixed Add and History tabs to correctly switch backgrounds between light and dark modes.
+  - _Improved Contrast_: Replaced hardcoded grays with themed tokens and opacities for better subtext legibility across the app.
+  - _Button Visibility_: Fixed "Load More" and "Save" button visibility in light mode using theme inversion.
+  - _Settings UI_: Refined spacing for auto-sync descriptions and improved the visibility of app version information.
+  - _Code Cleanup_: Removed unused color constants and resolved Tamagui-related TypeScript linting errors.
+
 ## 1.3.1
 
 ### Patch Changes
