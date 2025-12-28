@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.3.4
+
+### Patch Changes
+
+- [`a3b28e4`](https://github.com/sudokoi/expense-buddy/commit/a3b28e43d65902f8f1c42fadd6c6c58b702cd6c3) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix UI theming and safe area issues
+  - Add themed header styling to day view screen for consistent app bar appearance in light/dark modes
+  - Fix safe area insets for bottom navigation to prevent content overlap on devices with home indicators
+  - Update ScreenContainer, Add Expense, and History screens to use dynamic safe area padding
+  - Fix day view transaction text readability in dark mode by using theme-aware colors
+
 ## 1.3.3
 
 ### Patch Changes
