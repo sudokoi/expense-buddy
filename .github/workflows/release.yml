@@ -84,15 +84,20 @@ jobs:
           echo "${{ matrix.profile }}_build_url=$BUILD_URL" >> $GITHUB_OUTPUT
           echo "Build URL: $BUILD_URL"
 
-      - name: 📥 Download APK
+      - name: 📥 Download app bundle
         run: |
           BUILD_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
-          echo "Downloading APK from: $BUILD_URL"
-          curl -L -o expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk "$BUILD_URL"
-          ls -lh expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
+          echo "Downloading build from: $BUILD_URL"
+          if [ "${{ matrix.profile }}" == "production" ]; then
+            EXT="aab"
+          else
+            EXT="apk"
+          fi
+          curl -L -o expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.$EXT "$BUILD_URL"
+          ls -lh expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.$EXT
 
-      - name: 📤 Upload APK as artifact
+      - name: 📤 Upload build as artifact
         uses: actions/upload-artifact@v4
         with:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
-          path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
+          path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}

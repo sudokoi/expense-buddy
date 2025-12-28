@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Release App
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: 🔨 Build APK Locally (${{ matrix.profile }})
+    name: 🔨 Build (${{ matrix.profile }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -103,16 +103,21 @@ jobs:
             echo "Using commit SHA: $VERSION"
           fi
 
-      - name: 🚀 Build APK Locally (${{ matrix.profile }})
+      - name: 🚀 Build Locally (${{ matrix.profile }})
         run: |
-          echo "Building APK locally on GitHub runner..."
-          eas build --platform android --profile ${{ matrix.profile }} --local --non-interactive --output=./expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
+          echo "Building locally on GitHub runner..."
+          if [ "${{ matrix.profile }}" == "production" ]; then
+            EXT="aab"
+          else
+            EXT="apk"
+          fi
+          eas build --platform android --profile ${{ matrix.profile }} --local --non-interactive --output=./expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.$EXT
 
-      - name: 📤 Upload APK as artifact
+      - name: 📤 Upload build as artifact
         uses: actions/upload-artifact@v4
         with:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
-          path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
+          path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
   release:
     name: 🎉 Create GitHub Release
@@ -163,7 +168,7 @@ jobs:
             echo "⚠️ CHANGELOG.md not found"
           fi
 
-      - name: 📥 Download all APK artifacts
+      - name: 📥 Download all app artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: expense-buddy-${{ steps.version.outputs.version_name }}-*
@@ -174,16 +179,16 @@ jobs:
         with:
           files: |
             expense-buddy-${{ steps.version.outputs.version_name }}-internal.apk
-            expense-buddy-${{ steps.version.outputs.version_name }}-production.apk
+            expense-buddy-${{ steps.version.outputs.version_name }}-production.aab
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
-            ## 📱 Download APK
+            ## 📱 Download
 
-            Download the APKs from the **Assets** section below:
-            - `expense-buddy-${{ steps.version.outputs.version_name }}-internal.apk` - Internal distribution
-            - `expense-buddy-${{ steps.version.outputs.version_name }}-production.apk` - Production build
+            Download from the **Assets** section below:
+            - `expense-buddy-${{ steps.version.outputs.version_name }}-internal.apk` - Internal distribution (APK)
+            - `expense-buddy-${{ steps.version.outputs.version_name }}-production.aab` - Production build (AAB for Play Store)
 
             ---
 
