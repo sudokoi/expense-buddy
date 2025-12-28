@@ -1,15 +1,5 @@
 import { useState, useMemo } from "react"
-import {
-  YStack,
-  XStack,
-  Text,
-  Input,
-  Button,
-  TextArea,
-  H4,
-  Label,
-  useTheme,
-} from "tamagui"
+import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
@@ -25,7 +15,6 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { CategoryCard } from "../../components/ui"
-import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -53,7 +42,6 @@ const layoutStyles = {
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
-  const theme = useTheme()
   const insets = useSafeAreaInsets()
 
   // Theme colors - extract raw values for components that need them

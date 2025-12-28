@@ -12,7 +12,6 @@ import {
   Select,
   Adapt,
   Sheet,
-  useTheme,
 } from "tamagui"
 import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
@@ -32,7 +31,6 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { ExpenseCard, AmountText, CategoryIcon } from "../../components/ui"
-import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -82,8 +80,6 @@ const layoutStyles = {
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
-  // Keep theme for background color which requires raw value
-  const theme = useTheme()
   const insets = useSafeAreaInsets()
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string

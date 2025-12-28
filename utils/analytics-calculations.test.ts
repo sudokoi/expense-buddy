@@ -15,7 +15,7 @@ import {
   filterExpensesByCategories,
 } from "./analytics-calculations"
 import { Expense, ExpenseCategory } from "../types/expense"
-import { format, parseISO, subDays, addDays, isWithinInterval } from "date-fns"
+import { format, parseISO, subDays, isWithinInterval } from "date-fns"
 
 // Helper to generate valid expense categories
 const categoryArb = fc.constantFrom<ExpenseCategory>(

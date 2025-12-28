@@ -14,7 +14,6 @@ import {
   ScreenContainer,
   SectionHeader,
 } from "../../components/ui"
-import { getColorValue } from "../../tamagui.config"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
