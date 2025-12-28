@@ -178,19 +178,19 @@ export default function HistoryScreen() {
 
   if (state.expenses.length === 0) {
     return (
-      <YStack flex={1} background="$background" style={layoutStyles.emptyContainer}>
+      <YStack flex={1} backgroundColor="$background" style={layoutStyles.emptyContainer}>
         <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
           No expenses yet.
         </Text>
         <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
-          Add one from the + tab.
+          Add one from the Add Expense tab.
         </Text>
       </YStack>
     )
   }
 
   return (
-    <YStack flex={1} background="$background" style={layoutStyles.mainContainer}>
+    <YStack flex={1} backgroundColor="$background" style={layoutStyles.mainContainer}>
       <H4 style={layoutStyles.header}>Expense History</H4>
 
       {/* Delete Confirmation Dialog */}

@@ -108,7 +108,7 @@ export default function AddExpenseScreen() {
   }
 
   return (
-    <YStack flex={1} background="$background">
+    <YStack flex={1} backgroundColor="$background">
       <KeyboardAwareScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         bottomOffset={50}

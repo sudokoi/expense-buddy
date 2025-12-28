@@ -87,6 +87,9 @@ function RootLayoutNav() {
           name="(tabs)"
           options={{
             headerShown: false,
+            contentStyle: {
+              backgroundColor: theme.background.val,
+            },
           }}
         />
 
