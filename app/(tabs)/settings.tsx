@@ -520,6 +520,7 @@ export default function SettingsScreen() {
                 size="$4"
                 checked={autoSyncEnabled}
                 onCheckedChange={setAutoSyncEnabled}
+                backgroundColor={autoSyncEnabled ? "$green8" : "$gray8"}
               >
                 <Switch.Thumb animation="quick" />
               </Switch>

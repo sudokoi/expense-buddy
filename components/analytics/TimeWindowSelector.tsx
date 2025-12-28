@@ -1,0 +1,42 @@
+import { XStack, Button } from "tamagui"
+import { TimeWindow } from "../../utils/analytics-calculations"
+
+interface TimeWindowSelectorProps {
+  value: TimeWindow
+  onChange: (value: TimeWindow) => void
+}
+
+const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
+  { label: "7 Days", value: "7d" },
+  { label: "15 Days", value: "15d" },
+  { label: "1 Month", value: "1m" },
+]
+
+/**
+ * TimeWindowSelector - Toggle buttons for selecting analytics time window
+ * Provides 7d, 15d, and 1m options with visual feedback for selection
+ */
+export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps) {
+  return (
+    <XStack gap="$2" justifyContent="center" marginBottom="$4">
+      {TIME_WINDOWS.map((window) => {
+        const isSelected = value === window.value
+        return (
+          <Button
+            key={window.value}
+            size="$3"
+            themeInverse={isSelected}
+            bordered={!isSelected}
+            onPress={() => onChange(window.value)}
+            animation="bouncy"
+            pressStyle={{ scale: 0.95 }}
+          >
+            {window.label}
+          </Button>
+        )
+      })}
+    </XStack>
+  )
+}
+
+export type { TimeWindowSelectorProps }

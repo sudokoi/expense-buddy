@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router"
 import { useTheme } from "tamagui"
-import { Atom, AudioWaveform, Settings } from "@tamagui/lucide-icons"
+import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getColorValue } from "../../tamagui.config"
 
@@ -12,6 +12,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.blue10.val,
+        tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: theme.background.val,
           borderTopColor: theme.borderColor.val,
@@ -29,28 +30,37 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color }) => <Atom color={getColorValue(color)} />,
+          tabBarIcon: ({ color }) => <Home color={getColorValue(color)} size={24} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
           title: "Add Expense",
-          tabBarIcon: ({ color }) => <AudioWaveform color={getColorValue(color)} />,
+          tabBarIcon: ({ color }) => (
+            <PlusCircle color={getColorValue(color)} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+          tabBarIcon: ({ color }) => <PieChart color={getColorValue(color)} size={24} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: "History",
-          tabBarIcon: ({ color }) => <Atom color={getColorValue(color)} />,
+          tabBarIcon: ({ color }) => <Clock color={getColorValue(color)} size={24} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <Settings color={getColorValue(color)} />,
+          tabBarIcon: ({ color }) => <Settings color={getColorValue(color)} size={24} />,
         }}
       />
     </Tabs>

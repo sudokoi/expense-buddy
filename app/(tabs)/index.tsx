@@ -184,7 +184,12 @@ export default function DashboardScreen() {
 
       {/* Chart Section */}
       <YStack gap="$4" style={layoutStyles.chartSection}>
-        <SectionHeader>Last 7 Days</SectionHeader>
+        <XStack style={layoutStyles.transactionsHeader}>
+          <SectionHeader>Last 7 Days</SectionHeader>
+          <Button chromeless size="$2" onPress={() => router.push("/(tabs)/analytics")}>
+            View Analytics
+          </Button>
+        </XStack>
         {hasData ? (
           <YStack style={layoutStyles.chartContainer}>
             {/* BarChart requires raw color values - keeping theme.xxx.val for third-party component */}
