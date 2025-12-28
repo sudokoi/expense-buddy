@@ -302,6 +302,10 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 - Tag push triggers APK build and GitHub Release creation
 - See [.github/RELEASE.md](.github/RELEASE.md) for the full workflow
 
+## 🔒 Privacy Policy
+
+Expense Buddy does not collect any data. All your expense data is stored locally on your device. The optional GitHub sync feature uses your own credentials and repository. Read the full [Privacy Policy](PRIVACY.md).
+
 ## 📝 License
 
 This project is open source and available under the [MIT License](LICENSE).
