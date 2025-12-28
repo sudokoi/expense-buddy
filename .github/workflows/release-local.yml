@@ -1,0 +1,164 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version_suffix:
+        description: "Version suffix (leave empty to use commit SHA)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 🔨 Build APK Locally
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: 🏗️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📁 Get yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - name: 📦 Cache yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-cache-
+
+      - name: 📦 Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: 🐘 Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 🛠️ Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Install dependencies
+        run: yarn install --immutable
+
+      - name: � Extracit changelog for this version
+        id: changelog
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            VERSION_NO_V="${VERSION#v}"
+            
+            if [ -f "CHANGELOG.md" ]; then
+              echo "Found CHANGELOG.md, extracting section for $VERSION_NO_V"
+              
+              CHANGELOG_CONTENT=$(awk -v version="$VERSION_NO_V" '
+                /^## / {
+                  if (found) exit
+                  if ($0 ~ version) {
+                    found=1
+                    next
+                  }
+                }
+                found { print }
+              ' CHANGELOG.md)
+              
+              if [ -n "$CHANGELOG_CONTENT" ]; then
+                echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+                echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+                echo "✅ Changelog extracted successfully"
+              else
+                echo "CHANGELOG=_No changelog entry found for $VERSION_NO_V_" >> $GITHUB_OUTPUT
+                echo "⚠️ No changelog entry found for $VERSION_NO_V"
+              fi
+            else
+              echo "CHANGELOG=_No CHANGELOG.md found._" >> $GITHUB_OUTPUT
+              echo "⚠️ CHANGELOG.md not found"
+            fi
+          else
+            echo "CHANGELOG=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔧 Determine version name
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            echo "version_name=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using tag version: $VERSION"
+          elif [ -n "${{ github.event.inputs.version_suffix }}" ]; then
+            VERSION="${{ github.event.inputs.version_suffix }}"
+            echo "version_name=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using custom version: $VERSION"
+          else
+            VERSION="${GITHUB_SHA:0:7}"
+            echo "version_name=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using commit SHA: $VERSION"
+          fi
+
+      - name: 🚀 Build APK Locally
+        run: |
+          echo "Building APK locally on GitHub runner..."
+          eas build --platform android --profile internal --local --non-interactive --output=./expense-buddy-${{ steps.version.outputs.version_name }}.apk
+
+      - name: 📤 Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expense-buddy-${{ steps.version.outputs.version_name }}
+          path: expense-buddy-${{ steps.version.outputs.version_name }}.apk
+
+      - name: 🎉 Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: expense-buddy-${{ steps.version.outputs.version_name }}.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 📱 Download APK
+
+            Download `expense-buddy-${{ steps.version.outputs.version_name }}.apk` from the **Assets** section below.
+
+            ---
+
+            ## 📝 Changelog
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
