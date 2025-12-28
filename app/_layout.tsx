@@ -94,6 +94,19 @@ function RootLayoutNav() {
         />
 
         <Stack.Screen
+          name="day/[date]"
+          options={{
+            headerStyle: {
+              backgroundColor: theme.background.val,
+            },
+            headerTintColor: theme.color.val,
+            contentStyle: {
+              backgroundColor: theme.background.val,
+            },
+          }}
+        />
+
+        <Stack.Screen
           name="modal"
           options={{
             title: "Tamagui + Expo",

@@ -1,10 +1,12 @@
 import { Tabs } from "expo-router"
 import { useTheme } from "tamagui"
 import { Atom, AudioWaveform, Settings } from "@tamagui/lucide-icons"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getColorValue } from "../../tamagui.config"
 
 export default function TabLayout() {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
 
   return (
     <Tabs
@@ -13,8 +15,8 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.background.val,
           borderTopColor: theme.borderColor.val,
-          height: 60,
-          paddingBottom: 10,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
         },
         headerStyle: {
           backgroundColor: theme.background.val,

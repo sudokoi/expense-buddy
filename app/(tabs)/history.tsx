@@ -17,6 +17,7 @@ import {
 import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
@@ -83,6 +84,7 @@ export default function HistoryScreen() {
   const { addNotification } = useNotifications()
   // Keep theme for background color which requires raw value
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string
     amount: string
@@ -530,7 +532,7 @@ export default function HistoryScreen() {
             </ExpenseCard>
           )
         }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 20 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           hasMore ? (

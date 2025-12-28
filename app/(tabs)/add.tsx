@@ -18,6 +18,7 @@ import { ExpenseCategory } from "../../types/expense"
 import { Calendar, Check } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   parseExpression,
   hasOperators,
@@ -53,6 +54,7 @@ export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
 
   // Theme colors - extract raw values for components that need them
 
@@ -110,7 +112,7 @@ export default function AddExpenseScreen() {
   return (
     <YStack flex={1} backgroundColor="$background">
       <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}
         bottomOffset={50}
       >
         <YStack gap="$4" style={layoutStyles.container}>
