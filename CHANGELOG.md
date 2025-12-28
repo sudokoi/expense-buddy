@@ -1,5 +1,23 @@
 # expense-buddy
 
+## 1.4.0
+
+### Minor Changes
+
+- [#13](https://github.com/sudokoi/expense-buddy/pull/13) [`9cf1641`](https://github.com/sudokoi/expense-buddy/commit/9cf164182fd97362b53a60f1e522dedb23e5d6e4) Thanks [@sudokoi](https://github.com/sudokoi)! - Add Analytics tab with expense insights and UI improvements
+
+  Analytics Features:
+  - New Analytics tab with pie chart (category breakdown) and line chart (daily spending)
+  - Time window selector (7 days, 15 days, 1 month)
+  - Category filter for focused analysis
+  - Statistics cards showing total spent, daily average, top category, and peak day
+  - Collapsible chart sections
+
+  Navigation & UI:
+  - Icon-only tab bar with Analytics (PieChart) icon
+  - "View Analytics" link on dashboard chart section
+  - Green auto-sync toggle with improved dark mode contrast
+
 ## 1.3.4
 
 ### Patch Changes
