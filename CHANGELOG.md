@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.3.3
+
+### Patch Changes
+
+- [`acebb96`](https://github.com/sudokoi/expense-buddy/commit/acebb96e5cb9a8689fcd75d64d254436d995fa67) Thanks [@sudokoi](https://github.com/sudokoi)! - Resolve white background issue on Android native and improve text consistency
+  - Fix background color not applying on Android by using `backgroundColor` prop instead of `background` shorthand in Add Expense and History screens
+  - Add `contentStyle` with theme background to root Stack.Screen for tabs navigation
+  - Standardize empty state text opacity across screens for consistent light/dark mode visibility
+  - Update empty state message to reference "Add Expense tab" instead of "+ tab"
+
 ## 1.3.2
 
 ### Patch Changes
