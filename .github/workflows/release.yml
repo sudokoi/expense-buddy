@@ -7,17 +7,23 @@ on:
         description: "Version suffix (leave empty to use commit SHA)"
         required: false
         default: ""
+        placeholder: "e.g. v1.2.3-beta"
 
 permissions:
   contents: write
 
 jobs:
   build:
-    name: 🔨 Build APK with EAS
+    name: 🔨 Build APK (${{ matrix.profile }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [internal, production]
     outputs:
-      build_url: ${{ steps.build.outputs.build_url }}
+      internal_build_url: ${{ steps.build.outputs.internal_build_url }}
+      production_build_url: ${{ steps.build.outputs.production_build_url }}
       version_name: ${{ steps.version.outputs.version_name }}
     steps:
       - name: 🏗️ Checkout
@@ -28,11 +34,11 @@ jobs:
         with:
           node-version: 24.x
 
-      - name: � Gett yarn cache directory
+      - name: 📁 Get yarn cache directory
         id: yarn-cache
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
 
-      - name: � Cache  yarn downloads
+      - name: 📦 Cache yarn downloads
         uses: actions/cache@v4
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
@@ -40,7 +46,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-cache-
 
-      - name: � CCache node_modules
+      - name: 📦 Cache node_modules
         uses: actions/cache@v4
         with:
           path: node_modules
@@ -54,7 +60,7 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: � Installl dependencies
+      - name: 📥 Install dependencies
         run: yarn install --immutable
 
       - name: 🔧 Determine version name
@@ -68,30 +74,25 @@ jobs:
           echo "version_name=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
 
-      - name: 🚀 Trigger EAS Build
+      - name: 🚀 Trigger EAS Build (${{ matrix.profile }})
         id: build
         run: |
-          echo "Starting EAS cloud build (this will wait for completion)..."
-          eas build --platform android --profile internal --non-interactive --json > build-output.json
+          echo "Starting EAS cloud build for ${{ matrix.profile }} profile..."
+          eas build --platform android --profile ${{ matrix.profile }} --non-interactive --json > build-output.json
           cat build-output.json
           BUILD_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
-          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "${{ matrix.profile }}_build_url=$BUILD_URL" >> $GITHUB_OUTPUT
           echo "Build URL: $BUILD_URL"
 
-  download-and-upload:
-    name: 📤 Download and Upload APK
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 10
-    steps:
       - name: 📥 Download APK
         run: |
-          echo "Downloading APK from: ${{ needs.build.outputs.build_url }}"
-          curl -L -o expense-buddy-${{ needs.build.outputs.version_name }}.apk "${{ needs.build.outputs.build_url }}"
-          ls -lh expense-buddy-${{ needs.build.outputs.version_name }}.apk
+          BUILD_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
+          echo "Downloading APK from: $BUILD_URL"
+          curl -L -o expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk "$BUILD_URL"
+          ls -lh expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
 
       - name: 📤 Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: expense-buddy-${{ needs.build.outputs.version_name }}
-          path: expense-buddy-${{ needs.build.outputs.version_name }}.apk
+          name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
+          path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.apk
