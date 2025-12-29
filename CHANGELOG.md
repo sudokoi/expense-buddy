@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.4.2
+
+### Patch Changes
+
+- Add smart update checker with Play Store detection
+  - Check for Updates now detects install source: Play Store installs open the store page directly, sideloaded installs check GitHub releases
+  - Added Google Play Store badge and link to README
+  - CI workflows now auto-submit production builds to Play Store (with continue-on-error)
+  - Added react-native-device-info for install source detection
+
 ## 1.4.1
 
 ### Patch Changes

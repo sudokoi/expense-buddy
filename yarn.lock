@@ -10848,6 +10848,7 @@ __metadata:
     react: "npm:19.1.0"
     react-dom: "npm:19.1.0"
     react-native: "npm:0.81.5"
+    react-native-device-info: "npm:^15.0.1"
     react-native-gifted-charts: "npm:^1.4.70"
     react-native-keyboard-controller: "npm:^1.20.1"
     react-native-reanimated: "npm:~4.1.6"
@@ -17037,6 +17038,15 @@ __metadata:
     react-native-svg:
       optional: true
   checksum: 10/778520da829b3360e2a233af59c5c10720cf315cc60eac43869865ac2ce21ab09bb4ef483838451e2921e686859129b5aba26d44173a9477a9fa2caea4e8f311
+  languageName: node
+  linkType: hard
+
+"react-native-device-info@npm:^15.0.1":
+  version: 15.0.1
+  resolution: "react-native-device-info@npm:15.0.1"
+  peerDependencies:
+    react-native: "*"
+  checksum: 10/965cccc8b6453c2890a5ee72919189f4b29b076ff02a166ebe0743083db5e1c6b01a720f50e8d3c30af00f0ad204c8e6faaadd3ba57852763944f59fb711b789
   languageName: node
   linkType: hard
 

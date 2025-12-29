@@ -7,4 +7,7 @@ export const APP_CONFIG = {
     repo: "expense-buddy",
     url: "https://github.com/sudokoi/expense-buddy",
   },
+  playStore: {
+    url: "https://play.google.com/store/apps/details?id=com.sudokoi.expensebuddy",
+  },
 } as const

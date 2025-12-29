@@ -104,5 +104,6 @@ jobs:
 
       - name: 🚀 Submit to Google Play Store
         if: matrix.profile == 'production'
+        continue-on-error: true
         run: |
           eas submit --platform android --profile production --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive

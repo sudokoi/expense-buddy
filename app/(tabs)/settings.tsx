@@ -35,7 +35,11 @@ import {
 import { useExpenses } from "../../context/ExpenseContext"
 import { useNotifications } from "../../context/notification-context"
 import { useSyncStatus } from "../../context/sync-status-context"
-import { checkForUpdates, UpdateInfo } from "../../services/update-checker"
+import {
+  checkForUpdates,
+  UpdateInfo,
+  isPlayStoreInstall,
+} from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer, SectionHeader } from "../../components/ui"
 import { getColorValue } from "../../tamagui.config"
@@ -364,6 +368,14 @@ export default function SettingsScreen() {
   }
 
   const handleCheckForUpdates = async () => {
+    // If installed from Play Store, open Play Store page directly
+    const fromPlayStore = await isPlayStoreInstall()
+    if (fromPlayStore) {
+      Linking.openURL(APP_CONFIG.playStore.url)
+      return
+    }
+
+    // Otherwise, check GitHub for updates
     setIsCheckingUpdate(true)
     const info = await checkForUpdates()
     setUpdateInfo(info)
@@ -520,7 +532,7 @@ export default function SettingsScreen() {
                 size="$4"
                 checked={autoSyncEnabled}
                 onCheckedChange={setAutoSyncEnabled}
-                backgroundColor={autoSyncEnabled ? "$green8" : "$gray8"}
+                backgroundColor={autoSyncEnabled ? ("$green8" as any) : ("$gray8" as any)}
               >
                 <Switch.Thumb animation="quick" />
               </Switch>

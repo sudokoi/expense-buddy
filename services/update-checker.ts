@@ -1,4 +1,6 @@
 import { APP_CONFIG } from "../constants/app-config"
+import { Platform } from "react-native"
+import DeviceInfo from "react-native-device-info"
 
 export interface UpdateInfo {
   hasUpdate: boolean
@@ -7,6 +9,22 @@ export interface UpdateInfo {
   releaseUrl?: string
   releaseNotes?: string
   error?: string
+}
+
+/**
+ * Check if the app was installed from Google Play Store
+ */
+export async function isPlayStoreInstall(): Promise<boolean> {
+  if (Platform.OS !== "android") {
+    return false
+  }
+
+  try {
+    const installerPackage = await DeviceInfo.getInstallerPackageName()
+    return installerPackage === "com.android.vending"
+  } catch {
+    return false
+  }
 }
 
 /**
