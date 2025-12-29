@@ -25,7 +25,7 @@ const versionCode = major * 10000 + minor * 100 + patch
 
 export default {
   expo: {
-    name: "expense-buddy",
+    name: "Expense Buddy",
     slug: "expense-buddy",
     version,
     orientation: "portrait",
