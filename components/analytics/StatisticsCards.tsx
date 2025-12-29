@@ -1,8 +1,9 @@
 import { memo } from "react"
-import { XStack, YStack, Card, Text, H4, useTheme } from "tamagui"
+import { XStack, YStack, Card, Text, H4 } from "tamagui"
 import { format, parseISO } from "date-fns"
 import { ViewStyle, TextStyle } from "react-native"
 import { AnalyticsStatistics } from "../../utils/analytics-calculations"
+import { CARD_COLORS } from "../../constants/theme-colors"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -28,8 +29,6 @@ const styles = {
 export const StatisticsCards = memo(function StatisticsCards({
   statistics,
 }: StatisticsCardsProps) {
-  const theme = useTheme()
-
   const formatDate = (dateStr: string): string => {
     try {
       return format(parseISO(dateStr), "MMM d")
@@ -48,17 +47,17 @@ export const StatisticsCards = memo(function StatisticsCards({
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$3"
-          backgroundColor={theme.blue3}
+          backgroundColor={CARD_COLORS.blue.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$2"
-            color={theme.blue11}
+            color={CARD_COLORS.blue.text}
           >
             Total Spent
           </Text>
-          <H4 style={styles.cardValue} color={theme.blue12}>
+          <H4 style={styles.cardValue} color={CARD_COLORS.blue.accent}>
             ₹{statistics.totalSpending.toFixed(2)}
           </H4>
         </Card>
@@ -69,17 +68,17 @@ export const StatisticsCards = memo(function StatisticsCards({
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$3"
-          backgroundColor={theme.green3}
+          backgroundColor={CARD_COLORS.green.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$2"
-            color={theme.green11}
+            color={CARD_COLORS.green.text}
           >
             Daily Avg
           </Text>
-          <H4 style={styles.cardValue} color={theme.green12}>
+          <H4 style={styles.cardValue} color={CARD_COLORS.green.accent}>
             ₹{statistics.averageDaily.toFixed(2)}
           </H4>
         </Card>
@@ -93,21 +92,27 @@ export const StatisticsCards = memo(function StatisticsCards({
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$3"
-          backgroundColor={theme.orange3}
+          backgroundColor={CARD_COLORS.orange.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$2"
-            color={theme.orange11}
+            color={CARD_COLORS.orange.text}
           >
             Top Category
           </Text>
-          <H4 style={styles.cardValue} color={theme.orange12}>
+          <H4
+            style={styles.cardValue}
+            color={CARD_COLORS.orange.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {statistics.highestCategory?.category ?? "—"}
           </H4>
           {statistics.highestCategory && (
-            <Text fontSize="$2" color={theme.orange11}>
+            <Text fontSize="$2" color={CARD_COLORS.orange.text}>
               ₹{statistics.highestCategory.amount.toFixed(2)}
             </Text>
           )}
@@ -119,21 +124,21 @@ export const StatisticsCards = memo(function StatisticsCards({
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$3"
-          backgroundColor={theme.purple3}
+          backgroundColor={CARD_COLORS.purple.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$2"
-            color={theme.purple11}
+            color={CARD_COLORS.purple.text}
           >
             Peak Day
           </Text>
-          <H4 style={styles.cardValue} color={theme.purple12}>
+          <H4 style={styles.cardValue} color={CARD_COLORS.purple.accent}>
             {statistics.highestDay ? formatDate(statistics.highestDay.date) : "—"}
           </H4>
           {statistics.highestDay && (
-            <Text fontSize="$2" color={theme.purple11}>
+            <Text fontSize="$2" color={CARD_COLORS.purple.text}>
               ₹{statistics.highestDay.amount.toFixed(2)}
             </Text>
           )}

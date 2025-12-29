@@ -31,6 +31,19 @@ export async function isPlayStoreInstall(): Promise<boolean> {
 }
 
 /**
+ * Check if running in Expo Go (native modules not available)
+ */
+function isExpoGo(): boolean {
+  try {
+    // In Expo Go, Constants.appOwnership is 'expo'
+    const Constants = require("expo-constants").default
+    return Constants.appOwnership === "expo"
+  } catch {
+    return false
+  }
+}
+
+/**
  * Compare two semantic versions
  * Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
  */
@@ -51,11 +64,28 @@ function compareVersions(v1: string, v2: string): number {
 
 /**
  * Check for app updates from GitHub releases
+ * In Expo Go, always uses GitHub check (Play Store check not available)
  */
 export async function checkForUpdates(): Promise<UpdateInfo> {
   const currentVersion = APP_CONFIG.version
 
   try {
+    // In Expo Go, skip Play Store check and go straight to GitHub
+    if (!isExpoGo()) {
+      // Check if installed from Play Store (only works in standalone builds)
+      const fromPlayStore = await isPlayStoreInstall()
+      if (fromPlayStore) {
+        // For Play Store installs, we can't check programmatically
+        // Return info directing user to Play Store
+        return {
+          hasUpdate: false,
+          currentVersion,
+          releaseUrl: APP_CONFIG.playStore?.url,
+          error: "Check Play Store for updates",
+        }
+      }
+    }
+
     const { owner, repo } = APP_CONFIG.github
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`
 

@@ -20,7 +20,7 @@ export function ScreenContainer({ children, style }: ScreenContainerProps) {
       flex={1}
       bg="$background"
       contentContainerStyle={
-        { padding: 8, paddingBottom: 8 + insets.bottom } as React.ComponentProps<
+        { padding: 16, paddingBottom: insets.bottom } as React.ComponentProps<
           typeof ScrollView
         >["contentContainerStyle"]
       }

@@ -268,7 +268,7 @@ export default function HistoryScreen() {
 
             <KeyboardAwareScrollView
               bottomOffset={20}
-              contentContainerStyle={{ paddingBottom: 8 + insets.bottom }}
+              contentContainerStyle={{ paddingBottom: insets.bottom }}
             >
               <YStack gap="$3">
                 <YStack gap="$2">
@@ -496,7 +496,7 @@ export default function HistoryScreen() {
             </ExpenseCard>
           )
         }}
-        contentContainerStyle={{ paddingBottom: 8 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: insets.bottom }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           hasMore ? (

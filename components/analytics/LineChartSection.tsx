@@ -3,29 +3,11 @@ import { YStack, Text, useTheme, Card } from "tamagui"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { LineChartDataItem } from "../../utils/analytics-calculations"
-import { Dimensions, ScrollView, ViewStyle } from "react-native"
+import { Dimensions, ScrollView, ViewStyle, useColorScheme } from "react-native"
+import { getChartColors, getOverlayColors } from "../../constants/theme-colors"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
-}
-
-const styles = {
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 150,
-  } as ViewStyle,
-  tooltipContainer: {
-    backgroundColor: "white",
-    padding: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  } as ViewStyle,
 }
 
 const POINT_SPACING = 50
@@ -38,7 +20,33 @@ export const LineChartSection = memo(function LineChartSection({
   data,
 }: LineChartSectionProps) {
   const theme = useTheme()
+  const colorScheme = useColorScheme() ?? "light"
+  const chartColors = getChartColors(colorScheme)
+  const overlayColors = getOverlayColors(colorScheme)
   const screenWidth = Dimensions.get("window").width
+
+  // Memoize styles with theme colors
+  const styles = useMemo(
+    () => ({
+      emptyContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        height: 150,
+      } as ViewStyle,
+      tooltipContainer: {
+        backgroundColor: overlayColors.background,
+        padding: 8,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: overlayColors.border,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      } as ViewStyle,
+    }),
+    [overlayColors]
+  )
 
   // Memoize chart dimensions
   const { chartWidth, needsScroll } = useMemo(() => {
@@ -49,14 +57,14 @@ export const LineChartSection = memo(function LineChartSection({
     }
   }, [screenWidth, data.length])
 
-  // Memoize theme colors
+  // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
-      line: theme.blue9?.val ?? "#3b82f6",
-      area: theme.blue4?.val ?? "#93c5fd",
-      text: theme.color?.val ?? "#000",
+      line: theme.pink9?.val ?? "#FFB6C1",
+      area: theme.pink4?.val ?? "#FFD1DC",
+      text: theme.color?.val ?? "#4A4458",
     }),
-    [theme.blue9?.val, theme.blue4?.val, theme.color?.val]
+    [theme.pink9?.val, theme.pink4?.val, theme.color?.val]
   )
 
   // Memoize chart data transformation
@@ -74,23 +82,26 @@ export const LineChartSection = memo(function LineChartSection({
   const maxValue = useMemo(() => Math.max(...data.map((d) => d.value), 1) * 1.1, [data])
 
   // Memoize pointer label component
-  const PointerLabel = useCallback((items: { value: number }[]) => {
-    const item = items[0]
-    if (!item) return null
-    return (
-      <Card style={styles.tooltipContainer}>
-        <Text fontWeight="bold" fontSize="$3">
-          ₹{item.value.toFixed(2)}
-        </Text>
-      </Card>
-    )
-  }, [])
+  const PointerLabel = useCallback(
+    (items: { value: number }[]) => {
+      const item = items[0]
+      if (!item) return null
+      return (
+        <Card style={styles.tooltipContainer}>
+          <Text fontWeight="bold" fontSize="$3">
+            ₹{item.value.toFixed(2)}
+          </Text>
+        </Card>
+      )
+    },
+    [styles.tooltipContainer]
+  )
 
   // Memoize pointer config
   const pointerConfig = useMemo(
     () => ({
       pointerStripHeight: 200,
-      pointerStripColor: "lightgray",
+      pointerStripColor: chartColors.axisLine,
       pointerStripWidth: 2,
       pointerColor: colors.line,
       radius: 6,
@@ -100,7 +111,7 @@ export const LineChartSection = memo(function LineChartSection({
       autoAdjustPointerLabelPosition: true,
       pointerLabelComponent: PointerLabel,
     }),
-    [colors.line, PointerLabel]
+    [colors.line, chartColors.axisLine, PointerLabel]
   )
 
   if (data.length === 0) {
@@ -135,15 +146,15 @@ export const LineChartSection = memo(function LineChartSection({
       dataPointsColor={colors.line}
       dataPointsRadius={4}
       showVerticalLines
-      verticalLinesColor="rgba(0,0,0,0.1)"
-      xAxisColor="rgba(0,0,0,0.2)"
-      yAxisColor="rgba(0,0,0,0.2)"
+      verticalLinesColor={chartColors.gridLine}
+      xAxisColor={chartColors.axisLine}
+      yAxisColor={chartColors.axisLine}
       yAxisTextStyle={{ color: colors.text, fontSize: 10 }}
       xAxisLabelTextStyle={{ color: colors.text, fontSize: 10 }}
       noOfSections={4}
       maxValue={maxValue}
       rulesType="solid"
-      rulesColor="rgba(0,0,0,0.05)"
+      rulesColor={chartColors.rules}
       pointerConfig={pointerConfig}
     />
   )

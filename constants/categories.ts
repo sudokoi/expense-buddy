@@ -9,6 +9,7 @@ import {
   ShoppingCart,
 } from "@tamagui/lucide-icons"
 import { ComponentProps, JSX } from "react"
+import { CATEGORY_COLORS } from "./category-colors"
 
 type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element
 
@@ -18,21 +19,26 @@ export const CATEGORIES: {
   icon: IconComponent
   color: string
 }[] = [
-  { label: "Food", value: "Food", icon: Utensils, color: "#f97316" }, // orange
+  { label: "Food", value: "Food", icon: Utensils, color: CATEGORY_COLORS.Food },
   {
     label: "Groceries",
     value: "Groceries",
     icon: ShoppingCart,
-    color: "#10b981",
-  }, // emerald/teal green
-  { label: "Transport", value: "Transport", icon: Car, color: "#3b82f6" }, // blue
-  { label: "Utilities", value: "Utilities", icon: Home, color: "#eab308" }, // yellow
+    color: CATEGORY_COLORS.Groceries,
+  },
+  { label: "Transport", value: "Transport", icon: Car, color: CATEGORY_COLORS.Transport },
+  {
+    label: "Utilities",
+    value: "Utilities",
+    icon: Home,
+    color: CATEGORY_COLORS.Utilities,
+  },
   {
     label: "Entertainment",
     value: "Entertainment",
     icon: Film,
-    color: "#a855f7",
-  }, // purple
-  { label: "Health", value: "Health", icon: Activity, color: "#ef4444" }, // red
-  { label: "Other", value: "Other", icon: Circle, color: "#6b7280" }, // gray
+    color: CATEGORY_COLORS.Entertainment,
+  },
+  { label: "Health", value: "Health", icon: Activity, color: CATEGORY_COLORS.Health },
+  { label: "Other", value: "Other", icon: Circle, color: CATEGORY_COLORS.Other },
 ]

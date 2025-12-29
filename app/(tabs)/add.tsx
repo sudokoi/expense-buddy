@@ -15,6 +15,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { CategoryCard } from "../../components/ui"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -100,7 +101,7 @@ export default function AddExpenseScreen() {
   return (
     <YStack flex={1} bg="$background">
       <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 8, paddingBottom: 8 + insets.bottom }}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom }}
         bottomOffset={50}
       >
         <YStack gap="$3" style={layoutStyles.container}>
@@ -121,7 +122,7 @@ export default function AddExpenseScreen() {
                 onChangeText={setAmount}
                 borderWidth={2}
                 borderColor="$borderColor"
-                focusStyle={{ borderColor: "$blue10" }}
+                focusStyle={{ borderColor: ACCENT_COLORS.primary }}
               />
             </XStack>
             {expressionPreview && (

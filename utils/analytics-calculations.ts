@@ -8,17 +8,7 @@ import {
   eachDayOfInterval,
   isWithinInterval,
 } from "date-fns"
-
-// Category colors - duplicated from constants/categories.ts to avoid React Native imports in tests
-const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
-  Food: "#f97316",
-  Groceries: "#10b981",
-  Transport: "#3b82f6",
-  Utilities: "#eab308",
-  Entertainment: "#a855f7",
-  Health: "#ef4444",
-  Other: "#6b7280",
-}
+import { CATEGORY_COLORS } from "../constants/category-colors"
 
 // Time window type
 export type TimeWindow = "7d" | "15d" | "1m"

@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback, memo } from "react"
-import { YStack, XStack, Text, View } from "tamagui"
+import { YStack, XStack, Text, View, useTheme } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { PieChartDataItem } from "../../utils/analytics-calculations"
-import { Dimensions, ViewStyle, Pressable } from "react-native"
+import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
+import { getChartColors } from "../../constants/theme-colors"
 
 interface PieChartSectionProps {
   data: PieChartDataItem[]
@@ -48,10 +49,12 @@ const styles = {
 const LegendItem = memo(function LegendItem({
   item,
   isSelected,
+  selectedBgColor,
   onPress,
 }: {
   item: PieChartDataItem
   isSelected: boolean
+  selectedBgColor: string
   onPress: () => void
 }) {
   return (
@@ -59,7 +62,7 @@ const LegendItem = memo(function LegendItem({
       <XStack
         style={[
           styles.legendRow,
-          isSelected ? { backgroundColor: "rgba(0,0,0,0.05)" } : undefined,
+          isSelected ? { backgroundColor: selectedBgColor } : undefined,
         ]}
       >
         <XStack style={styles.legendLeft}>
@@ -88,6 +91,8 @@ export const PieChartSection = memo(function PieChartSection({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
+  const colorScheme = useColorScheme() ?? "light"
+  const chartColors = getChartColors(colorScheme)
 
   const handleSegmentPress = useCallback(
     (category: string) => {
@@ -165,6 +170,7 @@ export const PieChartSection = memo(function PieChartSection({
               key={item.category}
               item={item}
               isSelected={selectedCategory === item.category}
+              selectedBgColor={chartColors.selectedBg}
               onPress={() => handleSegmentPress(item.category)}
             />
           ))}

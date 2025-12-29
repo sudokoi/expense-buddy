@@ -1,36 +1,39 @@
 import React, { useEffect, useRef } from "react"
 import { useTheme } from "tamagui"
 import { Cloud, CheckCircle, XCircle } from "@tamagui/lucide-icons"
-import { Animated, Easing, View, StyleSheet } from "react-native"
+import { Animated, Easing, View, StyleSheet, useColorScheme } from "react-native"
 import { useSyncStatus } from "../context/sync-status-context"
 import { getColorValue } from "../tamagui.config"
-
-// Using StyleSheet for positioning that Tamagui's type system doesn't support
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    zIndex: 10000,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-})
+import { SEMANTIC_COLORS, getOverlayColors } from "../constants/theme-colors"
 
 export const SyncIndicator: React.FC = () => {
   const { syncStatus } = useSyncStatus()
   const theme = useTheme()
+  const colorScheme = useColorScheme() ?? "light"
+  const overlayColors = getOverlayColors(colorScheme)
   const spinValue = useRef(new Animated.Value(0)).current
   const scaleValue = useRef(new Animated.Value(1)).current
 
   // Theme colors
-  const blue10Color = getColorValue(theme.blue10)
+  const accentColor = getColorValue(theme.pink10) // Use kawaii pink accent
+
+  // Dynamic styles based on theme
+  const styles = StyleSheet.create({
+    container: {
+      position: "absolute",
+      top: 50,
+      right: 20,
+      zIndex: 10000,
+      backgroundColor: overlayColors.background,
+      borderRadius: 20,
+      padding: 8,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+  })
 
   // Spinning animation for syncing state
   useEffect(() => {
@@ -76,11 +79,11 @@ export const SyncIndicator: React.FC = () => {
   const getIcon = () => {
     switch (syncStatus) {
       case "syncing":
-        return <Cloud size={24} color={blue10Color} />
+        return <Cloud size={24} color={accentColor} />
       case "success":
-        return <CheckCircle size={24} color="#22c55e" />
+        return <CheckCircle size={24} color={SEMANTIC_COLORS.success} />
       case "error":
-        return <XCircle size={24} color="#ef4444" />
+        return <XCircle size={24} color={SEMANTIC_COLORS.error} />
       default:
         return null
     }

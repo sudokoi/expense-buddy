@@ -9,7 +9,6 @@ import {
   Card,
   Switch,
   RadioGroup,
-  useTheme,
 } from "tamagui"
 import { Alert, Linking, ViewStyle } from "react-native"
 import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons"
@@ -42,7 +41,7 @@ import {
 } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer, SectionHeader } from "../../components/ui"
-import { getColorValue } from "../../tamagui.config"
+import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -78,15 +77,14 @@ const layoutStyles = {
 }
 
 export default function SettingsScreen() {
-  const theme = useTheme()
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
 
-  // Theme colors
-  const green10Color = getColorValue(theme.green10)
-  const red10Color = getColorValue(theme.red10)
-  const blue10Color = getColorValue(theme.blue10)
+  // Theme colors - using kawaii semantic colors
+  const successColor = SEMANTIC_COLORS.success
+  const errorColor = SEMANTIC_COLORS.error
+  const primaryColor = ACCENT_COLORS.primary
 
   const [token, setToken] = useState("")
   const [repo, setRepo] = useState("")
@@ -468,10 +466,10 @@ export default function SettingsScreen() {
             style={{
               backgroundColor:
                 connectionStatus === "success"
-                  ? green10Color
+                  ? successColor
                   : connectionStatus === "error"
-                    ? red10Color
-                    : blue10Color,
+                    ? errorColor
+                    : primaryColor,
             }}
             color={connectionStatus === "idle" ? undefined : "white"}
           >
@@ -532,7 +530,9 @@ export default function SettingsScreen() {
                 size="$4"
                 checked={autoSyncEnabled}
                 onCheckedChange={setAutoSyncEnabled}
-                backgroundColor={autoSyncEnabled ? ("$green8" as any) : ("$gray8" as any)}
+                backgroundColor={
+                  autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
+                }
               >
                 <Switch.Thumb animation="quick" />
               </Switch>
@@ -613,7 +613,7 @@ export default function SettingsScreen() {
                 </Text>
                 <Text
                   fontWeight="bold"
-                  color={updateInfo.hasUpdate ? green10Color : "$color"}
+                  color={updateInfo.hasUpdate ? successColor : "$color"}
                   opacity={updateInfo.hasUpdate ? 1 : 0.8}
                 >
                   v{updateInfo.latestVersion}
@@ -659,7 +659,7 @@ export default function SettingsScreen() {
         <Button
           size="$3"
           chromeless
-          color={red10Color}
+          color={errorColor}
           onPress={handleClearConfig}
           style={layoutStyles.clearButton}
         >

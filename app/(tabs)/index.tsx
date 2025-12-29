@@ -14,6 +14,7 @@ import {
   ScreenContainer,
   SectionHeader,
 } from "../../components/ui"
+import { CARD_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -145,17 +146,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={theme.blue3}
+          backgroundColor={CARD_COLORS.blue.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={theme.blue11}
+            color={CARD_COLORS.blue.text}
           >
             Total Spent
           </Text>
-          <H4 style={layoutStyles.cardValue} color={theme.blue12}>
+          <H4 style={layoutStyles.cardValue} color={CARD_COLORS.blue.accent}>
             ₹{totalExpenses.toFixed(2)}
           </H4>
         </Card>
@@ -165,17 +166,17 @@ export default function DashboardScreen() {
           animation="bouncy"
           hoverStyle={{ scale: 1.02 }}
           padding="$4"
-          backgroundColor={theme.green3}
+          backgroundColor={CARD_COLORS.green.bg}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
             fontSize="$3"
-            color={theme.green11}
+            color={CARD_COLORS.green.text}
           >
             Entries
           </Text>
-          <H4 style={layoutStyles.cardValue} color={theme.green12}>
+          <H4 style={layoutStyles.cardValue} color={CARD_COLORS.green.accent}>
             {state.expenses.length}
           </H4>
         </Card>
@@ -227,7 +228,7 @@ export default function DashboardScreen() {
       </YStack>
 
       {/* Recent Transactions List (Mini) */}
-      <YStack gap="$3">
+      <YStack>
         <XStack style={layoutStyles.transactionsHeader}>
           <SectionHeader>Recent Transactions</SectionHeader>
           <Button chromeless size="$2" onPress={() => router.push("/(tabs)/history")}>

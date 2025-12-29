@@ -1,5 +1,18 @@
 # expense-buddy
 
+## 1.5.0
+
+### Minor Changes
+
+- Complete kawaii theme implementation with UI consistency improvements
+  - Apply kawaii theme colors across entire app (tab bar, settings, add screen, modal)
+  - Centralize theme colors in `constants/theme-colors.ts` (semantic, financial, accent, chart, card colors)
+  - Create single source of truth for category colors in `constants/category-colors.ts`
+  - Update statistics cards to use kawaii pastel colors
+  - Fix padding/margin inconsistencies across screens (standardize to 16px)
+  - Fix expense card spacing consistency between dashboard and history
+  - Add auto-shrink font for long category names in analytics cards
+
 ## 1.4.4
 
 ### Patch Changes

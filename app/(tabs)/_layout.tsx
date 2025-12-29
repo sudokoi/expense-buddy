@@ -3,6 +3,7 @@ import { useTheme } from "tamagui"
 import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { getColorValue } from "../../tamagui.config"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 export default function TabLayout() {
   const theme = useTheme()
@@ -11,12 +12,12 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.blue10.val,
+        tabBarActiveTintColor: ACCENT_COLORS.primary, // Kawaii pink
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: theme.background.val,
           borderTopColor: theme.borderColor.val,
-          height: 60 + insets.bottom,
+          height: 40 + insets.bottom,
           paddingBottom: insets.bottom,
         },
         headerStyle: {
