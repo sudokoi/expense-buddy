@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 1.4.1
+
+### Patch Changes
+
+- Derive Android versionCode and iOS buildNumber from package.json version
+  - Replace static `app.json` with dynamic `app.config.js`
+  - Auto-calculate versionCode using formula: `MAJOR * 10000 + MINOR * 100 + PATCH`
+  - Single source of truth for versioning (package.json)
+  - Remove `sync-app-version.mjs` script (no longer needed)
+  - Change `appVersionSource` from "remote" to "local" in eas.json
+
 ## 1.4.0
 
 ### Minor Changes
