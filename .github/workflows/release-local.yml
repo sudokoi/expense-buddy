@@ -125,12 +125,6 @@ jobs:
         run: |
           eas submit --platform android --profile production --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
 
-      - name: 🚀 Submit to Google Play Store (Alpha)
-        if: matrix.profile == 'production'
-        continue-on-error: true
-        run: |
-          eas submit --platform android --profile alpha --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
-
   release:
     name: 🎉 Create GitHub Release
     runs-on: ubuntu-latest

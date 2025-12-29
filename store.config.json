@@ -1,8 +1,0 @@
-{
-  "configVersion": 0,
-  "android": {
-    "en-IN": {
-      "releaseNotes": "We've squashed some bugs and made things run smoother. Curious what changed? Check out the full changelog here: https://github.com/sudokoi/expense-buddy/blob/main/CHANGELOG.md"
-    }
-  }
-}
