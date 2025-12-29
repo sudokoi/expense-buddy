@@ -102,8 +102,14 @@ jobs:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
           path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
-      - name: 🚀 Submit to Google Play Store
+      - name: 🚀 Submit to Google Play Store (Internal)
         if: matrix.profile == 'production'
         continue-on-error: true
         run: |
           eas submit --platform android --profile production --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
+
+      - name: 🚀 Submit to Google Play Store (Alpha)
+        if: matrix.profile == 'production'
+        continue-on-error: true
+        run: |
+          eas submit --platform android --profile alpha --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive

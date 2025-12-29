@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 1.4.3
+
+### Patch Changes
+
+- Add alpha track submission to release workflows
+  - Submit production AAB to both internal and alpha tracks
+  - Add alpha submit profile to eas.json
+
 ## 1.4.2
 
 ### Patch Changes
