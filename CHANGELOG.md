@@ -1,5 +1,19 @@
 # expense-buddy
 
+## 1.4.4
+
+### Patch Changes
+
+- UI standardization and improvements:
+  - Fixed TypeScript errors by using `bg` prop instead of `backgroundColor` for Tamagui components
+  - Standardized safe area padding to `8 + insets.bottom` for cleaner spacing
+  - Fixed edit transaction modal extending outside safe area with `maxHeight="80%"`
+  - Replaced category dropdown with compact category buttons in edit expense modal
+  - Made category cards more compact to fit all content without scrolling
+  - Fixed Expo Go compatibility by using dynamic import for react-native-device-info
+  - Removed large amount preview text from add expense screen
+  - Standardized action button sizes to `$4` across all screens for consistency
+
 ## 1.4.3
 
 ### Patch Changes

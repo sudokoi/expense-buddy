@@ -1,4 +1,5 @@
 import { XStack, Button } from "tamagui"
+import { ViewStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
 
 interface TimeWindowSelectorProps {
@@ -12,13 +13,19 @@ const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
   { label: "1 Month", value: "1m" },
 ]
 
+const layoutStyles = {
+  container: {
+    justifyContent: "center",
+  } as ViewStyle,
+}
+
 /**
  * TimeWindowSelector - Toggle buttons for selecting analytics time window
  * Provides 7d, 15d, and 1m options with visual feedback for selection
  */
 export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps) {
   return (
-    <XStack gap="$2" justifyContent="center" marginBottom="$4">
+    <XStack gap="$2" mb="$4" style={layoutStyles.container}>
       {TIME_WINDOWS.map((window) => {
         const isSelected = value === window.value
         return (

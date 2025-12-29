@@ -8,6 +8,7 @@ interface CategoryCardProps {
   label: string
   onPress: () => void
   children?: ReactNode
+  compact?: boolean
 }
 
 /**
@@ -19,6 +20,7 @@ export function CategoryCard({
   categoryColor,
   label,
   onPress,
+  compact = false,
 }: CategoryCardProps) {
   return (
     <Card
@@ -29,9 +31,9 @@ export function CategoryCard({
       pressStyle={{ scale: 0.95 }}
       backgroundColor={isSelected ? getColorValue(categoryColor) : "$background"}
       borderColor={isSelected ? getColorValue(categoryColor) : "$borderColor"}
-      padding="$3"
-      borderRadius="$4"
-      width="30%"
+      padding={compact ? "$2" : "$3"}
+      borderRadius={compact ? "$3" : "$4"}
+      width={compact ? "22%" : "30%"}
       alignItems="center"
       justifyContent="center"
       onPress={onPress}
@@ -39,6 +41,8 @@ export function CategoryCard({
       <Text
         fontWeight={isSelected ? "bold" : "normal"}
         color={isSelected ? "#ffffff" : "$color"}
+        fontSize={compact ? "$1" : "$3"}
+        numberOfLines={1}
       >
         {label}
       </Text>

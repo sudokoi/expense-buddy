@@ -1,6 +1,5 @@
 import { APP_CONFIG } from "../constants/app-config"
 import { Platform } from "react-native"
-import DeviceInfo from "react-native-device-info"
 
 export interface UpdateInfo {
   hasUpdate: boolean
@@ -13,6 +12,7 @@ export interface UpdateInfo {
 
 /**
  * Check if the app was installed from Google Play Store
+ * Returns false in Expo Go since native modules aren't available
  */
 export async function isPlayStoreInstall(): Promise<boolean> {
   if (Platform.OS !== "android") {
@@ -20,9 +20,12 @@ export async function isPlayStoreInstall(): Promise<boolean> {
   }
 
   try {
-    const installerPackage = await DeviceInfo.getInstallerPackageName()
+    // Dynamic import to avoid crash in Expo Go where native modules aren't available
+    const DeviceInfo = await import("react-native-device-info")
+    const installerPackage = await DeviceInfo.default.getInstallerPackageName()
     return installerPackage === "com.android.vending"
   } catch {
+    // In Expo Go or if module fails, assume not from Play Store
     return false
   }
 }

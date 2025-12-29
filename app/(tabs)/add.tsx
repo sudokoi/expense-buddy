@@ -32,7 +32,7 @@ const layoutStyles = {
   } as ViewStyle,
   categoryRow: {
     flexWrap: "wrap",
-    gap: 12,
+    gap: 8,
   } as ViewStyle,
   saveButton: {
     marginTop: 16,
@@ -98,12 +98,12 @@ export default function AddExpenseScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <YStack flex={1} bg="$background">
       <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}
+        contentContainerStyle={{ padding: 8, paddingBottom: 8 + insets.bottom }}
         bottomOffset={50}
       >
-        <YStack gap="$4" style={layoutStyles.container}>
+        <YStack gap="$3" style={layoutStyles.container}>
           <H4 style={layoutStyles.header}>Add New Expense</H4>
 
           {/* Amount Input */}
@@ -146,6 +146,7 @@ export default function AddExpenseScreen() {
                     categoryColor={cat.color}
                     label={cat.label}
                     onPress={() => setCategory(cat.value)}
+                    compact
                   />
                 )
               })}
@@ -186,24 +187,21 @@ export default function AddExpenseScreen() {
               placeholder="What was this for?"
               value={note}
               onChangeText={setNote}
-              numberOfLines={3}
+              numberOfLines={2}
             />
           </YStack>
 
           {/* Save Button */}
           <Button
             style={layoutStyles.saveButton}
-            size="$5"
+            size="$4"
             themeInverse
             onPress={handleSave}
-            icon={<Check size="$2" />}
+            icon={<Check size="$1" />}
             fontWeight="bold"
           >
             Save Expense
           </Button>
-          <Text fontSize={40} color="$color" fontWeight="bold">
-            ₹{expressionPreview || amount || "0"}
-          </Text>
         </YStack>
       </KeyboardAwareScrollView>
     </YStack>

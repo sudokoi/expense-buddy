@@ -132,7 +132,7 @@ export default function DashboardScreen() {
             Welcome back!
           </Text>
         </YStack>
-        <Button size="$3" themeInverse onPress={() => router.push("/(tabs)/add")}>
+        <Button size="$4" themeInverse onPress={() => router.push("/(tabs)/add")}>
           + Add
         </Button>
       </XStack>

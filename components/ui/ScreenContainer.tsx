@@ -14,23 +14,20 @@ interface ScreenContainerProps {
  */
 export function ScreenContainer({ children, style }: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
-  // Using type assertion to work around Tamagui's complex type inference
-  const ScrollViewComponent = ScrollView as React.ComponentType<{
-    flex: number
-    backgroundColor: string
-    contentContainerStyle: any
-    style?: StyleProp<ViewStyle>
-    children?: ReactNode
-  }>
+
   return (
-    <ScrollViewComponent
+    <ScrollView
       flex={1}
-      backgroundColor="$background"
-      contentContainerStyle={{ padding: 20, paddingBottom: 20 + insets.bottom }}
+      bg="$background"
+      contentContainerStyle={
+        { padding: 8, paddingBottom: 8 + insets.bottom } as React.ComponentProps<
+          typeof ScrollView
+        >["contentContainerStyle"]
+      }
       style={style}
     >
       {children}
-    </ScrollViewComponent>
+    </ScrollView>
   )
 }
 

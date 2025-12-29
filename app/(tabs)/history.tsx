@@ -1,19 +1,6 @@
 import React from "react"
-import {
-  YStack,
-  Text,
-  XStack,
-  H4,
-  Button,
-  H6,
-  Input,
-  Dialog,
-  Label,
-  Select,
-  Adapt,
-  Sheet,
-} from "tamagui"
-import { Check, ChevronDown, Calendar } from "@tamagui/lucide-icons"
+import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label } from "tamagui"
+import { Calendar } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -30,7 +17,7 @@ import {
   hasOperators,
   formatAmount,
 } from "../../utils/expression-parser"
-import { ExpenseCard, AmountText, CategoryIcon } from "../../components/ui"
+import { ExpenseCard, AmountText, CategoryIcon, CategoryCard } from "../../components/ui"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -74,6 +61,10 @@ const layoutStyles = {
   loadMoreContainer: {
     padding: 16,
     alignItems: "center",
+  } as ViewStyle,
+  categoryRow: {
+    flexWrap: "wrap",
+    gap: 8,
   } as ViewStyle,
 }
 
@@ -176,7 +167,7 @@ export default function HistoryScreen() {
 
   if (state.expenses.length === 0) {
     return (
-      <YStack flex={1} backgroundColor="$background" style={layoutStyles.emptyContainer}>
+      <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
         <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
           No expenses yet.
         </Text>
@@ -188,7 +179,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor="$background" style={layoutStyles.mainContainer}>
+    <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
       <H4 style={layoutStyles.header}>Expense History</H4>
 
       {/* Delete Confirmation Dialog */}
@@ -226,9 +217,9 @@ export default function HistoryScreen() {
             </Dialog.Description>
             <XStack gap="$3" style={layoutStyles.dialogButtonRow}>
               <Dialog.Close asChild>
-                <Button>Cancel</Button>
+                <Button size="$4">Cancel</Button>
               </Dialog.Close>
-              <Button theme="red" onPress={confirmDelete}>
+              <Button size="$4" theme="red" onPress={confirmDelete}>
                 Delete
               </Button>
             </XStack>
@@ -258,6 +249,8 @@ export default function HistoryScreen() {
             bordered
             elevate
             key="content"
+            // @ts-expect-error maxHeight works at runtime but isn't in Dialog.Content types
+            maxHeight="80%"
             animation={[
               "quick",
               {
@@ -273,13 +266,20 @@ export default function HistoryScreen() {
             <Dialog.Title>Edit Expense</Dialog.Title>
             <Dialog.Description>Update the expense details</Dialog.Description>
 
-            <KeyboardAwareScrollView bottomOffset={20}>
+            <KeyboardAwareScrollView
+              bottomOffset={20}
+              contentContainerStyle={{ paddingBottom: 8 + insets.bottom }}
+            >
               <YStack gap="$3">
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8} htmlFor="date">
                     Date
                   </Label>
-                  <Button onPress={() => setShowDatePicker(true)} icon={Calendar}>
+                  <Button
+                    size="$4"
+                    onPress={() => setShowDatePicker(true)}
+                    icon={Calendar}
+                  >
                     {editingExpense?.date
                       ? format(parseISO(editingExpense.date), "dd/MM/yyyy")
                       : "Select date"}
@@ -316,7 +316,7 @@ export default function HistoryScreen() {
                     />
                   )}
                   {showDatePicker && Platform.OS === "ios" && (
-                    <Button size="$3" onPress={() => setShowDatePicker(false)}>
+                    <Button size="$4" onPress={() => setShowDatePicker(false)}>
                       Done
                     </Button>
                   )}
@@ -345,61 +345,28 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$2">
-                  <Label color="$color" opacity={0.8} htmlFor="category">
+                  <Label color="$color" opacity={0.8}>
                     Category
                   </Label>
-                  <Select
-                    id="category"
-                    value={editingExpense?.category || ""}
-                    onValueChange={(value) =>
-                      setEditingExpense((prev) =>
-                        prev ? { ...prev, category: value as ExpenseCategory } : null
-                      )
-                    }
-                  >
-                    <Select.Trigger iconAfter={ChevronDown}>
-                      <Select.Value placeholder="Select category" />
-                    </Select.Trigger>
-
-                    <Adapt when="sm" platform="touch">
-                      <Sheet
-                        modal
-                        dismissOnSnapToBottom
-                        animationConfig={{
-                          type: "spring",
-                          damping: 20,
-                          mass: 1.2,
-                          stiffness: 250,
-                        }}
-                      >
-                        <Sheet.Frame>
-                          <Sheet.ScrollView>
-                            <Adapt.Contents />
-                          </Sheet.ScrollView>
-                        </Sheet.Frame>
-                        <Sheet.Overlay
-                          animation="lazy"
-                          enterStyle={{ opacity: 0 }}
-                          exitStyle={{ opacity: 0 }}
+                  <XStack style={layoutStyles.categoryRow}>
+                    {CATEGORIES.map((cat) => {
+                      const isSelected = editingExpense?.category === cat.value
+                      return (
+                        <CategoryCard
+                          key={cat.value}
+                          isSelected={isSelected}
+                          categoryColor={cat.color}
+                          label={cat.label}
+                          onPress={() =>
+                            setEditingExpense((prev) =>
+                              prev ? { ...prev, category: cat.value } : null
+                            )
+                          }
+                          compact
                         />
-                      </Sheet>
-                    </Adapt>
-
-                    <Select.Content zIndex={200000}>
-                      <Select.Viewport>
-                        <Select.Group>
-                          {CATEGORIES.map((cat, idx) => (
-                            <Select.Item key={cat.value} index={idx} value={cat.value}>
-                              <Select.ItemText>{cat.label}</Select.ItemText>
-                              <Select.ItemIndicator marginLeft="auto">
-                                <Check size={16} />
-                              </Select.ItemIndicator>
-                            </Select.Item>
-                          ))}
-                        </Select.Group>
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select>
+                      )
+                    })}
+                  </XStack>
                 </YStack>
 
                 <YStack gap="$2">
@@ -419,9 +386,10 @@ export default function HistoryScreen() {
 
               <XStack gap="$3" style={layoutStyles.editDialogButtonRow}>
                 <Dialog.Close asChild>
-                  <Button>Cancel</Button>
+                  <Button size="$4">Cancel</Button>
                 </Dialog.Close>
                 <Button
+                  size="$4"
                   themeInverse
                   onPress={() => {
                     if (editingExpense) {
@@ -528,7 +496,7 @@ export default function HistoryScreen() {
             </ExpenseCard>
           )
         }}
-        contentContainerStyle={{ paddingBottom: 20 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 8 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
           hasMore ? (
