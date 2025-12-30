@@ -1,5 +1,5 @@
 import React from "react"
-import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label } from "tamagui"
+import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label, Card } from "tamagui"
 import { Calendar } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -7,10 +7,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
+import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
 import { useNotifications } from "../../context/notification-context"
-import type { ExpenseCategory, Expense } from "../../types/expense"
+import type { ExpenseCategory, Expense, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { syncDownMore } from "../../services/sync-manager"
 import {
   parseExpression,
@@ -18,6 +19,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { ExpenseCard, AmountText, CategoryIcon, CategoryCard } from "../../components/ui"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -66,6 +68,43 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: 8,
   } as ViewStyle,
+  paymentMethodRow: {
+    flexWrap: "wrap",
+    gap: 8,
+  } as ViewStyle,
+}
+
+// Payment method selection card component for edit dialog
+function PaymentMethodCard({
+  config,
+  isSelected,
+  onPress,
+}: {
+  config: PaymentMethodConfig
+  isSelected: boolean
+  onPress: () => void
+}) {
+  const Icon = config.icon
+  return (
+    <Card
+      bordered
+      padding="$2"
+      paddingHorizontal="$3"
+      backgroundColor={isSelected ? "$color5" : "$background"}
+      borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
+      borderWidth={isSelected ? 2 : 1}
+      pressStyle={{ scale: 0.97, opacity: 0.9 }}
+      onPress={onPress}
+      animation="quick"
+    >
+      <XStack gap="$2" style={{ alignItems: "center" }}>
+        <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
+        <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
+          {config.label}
+        </Text>
+      </XStack>
+    </Card>
+  )
 }
 
 export default function HistoryScreen() {
@@ -78,6 +117,8 @@ export default function HistoryScreen() {
     category: ExpenseCategory
     note: string
     date: string // ISO date string
+    paymentMethodType?: PaymentMethodType
+    paymentMethodId: string
   } | null>(null)
   const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = React.useState<string | null>(null)
@@ -113,6 +154,33 @@ export default function HistoryScreen() {
     }
     return null
   }, [editingExpense?.amount])
+
+  // Get current payment method config for identifier input in edit dialog
+  const selectedPaymentConfig = React.useMemo(() => {
+    if (!editingExpense?.paymentMethodType) return null
+    return PAYMENT_METHODS.find((pm) => pm.value === editingExpense.paymentMethodType) || null
+  }, [editingExpense?.paymentMethodType])
+
+  const handlePaymentMethodSelect = (type: PaymentMethodType) => {
+    setEditingExpense((prev) => {
+      if (!prev) return null
+      if (prev.paymentMethodType === type) {
+        // Deselect if already selected
+        return { ...prev, paymentMethodType: undefined, paymentMethodId: "" }
+      } else {
+        return { ...prev, paymentMethodType: type, paymentMethodId: "" }
+      }
+    })
+  }
+
+  const handleIdentifierChange = (text: string) => {
+    // Only allow digits and limit to maxLength
+    const digitsOnly = text.replace(/\D/g, "")
+    const maxLen = selectedPaymentConfig?.maxLength || 4
+    setEditingExpense((prev) =>
+      prev ? { ...prev, paymentMethodId: digitsOnly.slice(0, maxLen) } : null
+    )
+  }
 
   const groupedExpenses = React.useMemo(() => {
     const grouped: { title: string; data: Expense[] }[] = []
@@ -306,9 +374,9 @@ export default function HistoryScreen() {
                           setEditingExpense((prev) =>
                             prev
                               ? {
-                                  ...prev,
-                                  date: selectedDate.toISOString(),
-                                }
+                                ...prev,
+                                date: selectedDate.toISOString(),
+                              }
                               : null
                           )
                         }
@@ -382,6 +450,40 @@ export default function HistoryScreen() {
                     placeholder="Enter note (optional)"
                   />
                 </YStack>
+
+                {/* Payment Method Selection */}
+                <YStack gap="$2">
+                  <Label color="$color" opacity={0.8}>
+                    Payment Method (Optional)
+                  </Label>
+                  <XStack style={layoutStyles.paymentMethodRow}>
+                    {PAYMENT_METHODS.map((pm) => (
+                      <PaymentMethodCard
+                        key={pm.value}
+                        config={pm}
+                        isSelected={editingExpense?.paymentMethodType === pm.value}
+                        onPress={() => handlePaymentMethodSelect(pm.value)}
+                      />
+                    ))}
+                  </XStack>
+
+                  {/* Identifier input for cards/UPI */}
+                  {selectedPaymentConfig?.hasIdentifier && (
+                    <YStack gap="$1" style={{ marginTop: 8 }}>
+                      <Label color="$color" opacity={0.6} fontSize="$2">
+                        {selectedPaymentConfig.identifierLabel} (Optional)
+                      </Label>
+                      <Input
+                        size="$4"
+                        placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                        keyboardType="numeric"
+                        value={editingExpense?.paymentMethodId || ""}
+                        onChangeText={handleIdentifierChange}
+                        maxLength={selectedPaymentConfig.maxLength}
+                      />
+                    </YStack>
+                  )}
+                </YStack>
               </YStack>
 
               <XStack gap="$3" style={layoutStyles.editDialogButtonRow}>
@@ -412,11 +514,21 @@ export default function HistoryScreen() {
                           return
                         }
 
+                        // Build payment method object if type is selected
+                        const paymentMethod: PaymentMethod | undefined =
+                          editingExpense.paymentMethodType
+                            ? {
+                              type: editingExpense.paymentMethodType,
+                              identifier: editingExpense.paymentMethodId.trim() || undefined,
+                            }
+                            : undefined
+
                         editExpense(editingExpense.id, {
                           amount: result.value!,
                           category: editingExpense.category,
                           date: editingExpense.date,
                           note: editingExpense.note,
+                          paymentMethod,
                         })
                         addNotification("Expense updated", "success")
                         setEditingExpense(null)
@@ -452,6 +564,13 @@ export default function HistoryScreen() {
 
           const Icon = categoryInfo.icon
 
+          // Build payment method display string
+          const paymentMethodDisplay = item.paymentMethod
+            ? item.paymentMethod.identifier
+              ? `${item.paymentMethod.type} (${item.paymentMethod.identifier})`
+              : item.paymentMethod.type
+            : null
+
           return (
             <ExpenseCard>
               <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
@@ -464,6 +583,7 @@ export default function HistoryScreen() {
                   </Text>
                   <Text color="$color" opacity={0.6} fontSize="$2">
                     {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
+                    {paymentMethodDisplay && ` • ${paymentMethodDisplay}`}
                   </Text>
                 </YStack>
               </XStack>
@@ -481,6 +601,8 @@ export default function HistoryScreen() {
                       category: item.category,
                       note: item.note || "",
                       date: item.date,
+                      paymentMethodType: item.paymentMethod?.type,
+                      paymentMethodId: item.paymentMethod?.identifier || "",
                     })
                   }}
                   aria-label="Edit"

@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react"
-import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
+import { YStack, XStack, Text, Input, Button, TextArea, H4, Label, Card } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
-import { ExpenseCategory } from "../../types/expense"
+import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
+import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -35,9 +36,46 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: 8,
   } as ViewStyle,
+  paymentMethodRow: {
+    flexWrap: "wrap",
+    gap: 8,
+  } as ViewStyle,
   saveButton: {
     marginTop: 16,
   } as ViewStyle,
+}
+
+// Payment method selection card component
+function PaymentMethodCard({
+  config,
+  isSelected,
+  onPress,
+}: {
+  config: PaymentMethodConfig
+  isSelected: boolean
+  onPress: () => void
+}) {
+  const Icon = config.icon
+  return (
+    <Card
+      bordered
+      padding="$2"
+      paddingHorizontal="$3"
+      backgroundColor={isSelected ? "$color5" : "$background"}
+      borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
+      borderWidth={isSelected ? 2 : 1}
+      pressStyle={{ scale: 0.97, opacity: 0.9 }}
+      onPress={onPress}
+      animation="quick"
+    >
+      <XStack gap="$2" style={{ alignItems: "center" }}>
+        <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
+        <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
+          {config.label}
+        </Text>
+      </XStack>
+    </Card>
+  )
 }
 
 export default function AddExpenseScreen() {
@@ -53,6 +91,18 @@ export default function AddExpenseScreen() {
   const [note, setNote] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
 
+  // Payment method state
+  const [paymentMethodType, setPaymentMethodType] = useState<PaymentMethodType | undefined>(
+    undefined
+  )
+  const [paymentMethodId, setPaymentMethodId] = useState("")
+
+  // Get current payment method config for identifier input
+  const selectedPaymentConfig = useMemo(() => {
+    if (!paymentMethodType) return null
+    return PAYMENT_METHODS.find((pm) => pm.value === paymentMethodType) || null
+  }, [paymentMethodType])
+
   // Compute preview when expression contains operators
   const expressionPreview = useMemo(() => {
     if (!amount.trim() || !hasOperators(amount)) {
@@ -64,6 +114,24 @@ export default function AddExpenseScreen() {
     }
     return null
   }, [amount])
+
+  const handlePaymentMethodSelect = (type: PaymentMethodType) => {
+    if (paymentMethodType === type) {
+      // Deselect if already selected
+      setPaymentMethodType(undefined)
+      setPaymentMethodId("")
+    } else {
+      setPaymentMethodType(type)
+      setPaymentMethodId("") // Clear identifier when changing type
+    }
+  }
+
+  const handleIdentifierChange = (text: string) => {
+    // Only allow digits and limit to maxLength
+    const digitsOnly = text.replace(/\D/g, "")
+    const maxLen = selectedPaymentConfig?.maxLength || 4
+    setPaymentMethodId(digitsOnly.slice(0, maxLen))
+  }
 
   const handleSave = () => {
     if (!amount.trim()) {
@@ -79,16 +147,27 @@ export default function AddExpenseScreen() {
       return
     }
 
+    // Build payment method object if type is selected
+    const paymentMethod: PaymentMethod | undefined = paymentMethodType
+      ? {
+        type: paymentMethodType,
+        identifier: paymentMethodId.trim() || undefined,
+      }
+      : undefined
+
     addExpense({
       amount: result.value!,
       category,
       date: date.toISOString(),
       note,
+      paymentMethod,
     })
 
     // Reset and go back or to history
     setAmount("")
     setNote("")
+    setPaymentMethodType(undefined)
+    setPaymentMethodId("")
     router.push("/(tabs)/history" as Href)
   }
 
@@ -192,6 +271,40 @@ export default function AddExpenseScreen() {
             />
           </YStack>
 
+          {/* Payment Method Selection */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Payment Method (Optional)
+            </Label>
+            <XStack style={layoutStyles.paymentMethodRow}>
+              {PAYMENT_METHODS.map((pm) => (
+                <PaymentMethodCard
+                  key={pm.value}
+                  config={pm}
+                  isSelected={paymentMethodType === pm.value}
+                  onPress={() => handlePaymentMethodSelect(pm.value)}
+                />
+              ))}
+            </XStack>
+
+            {/* Identifier input for cards/UPI */}
+            {selectedPaymentConfig?.hasIdentifier && (
+              <YStack gap="$1" style={{ marginTop: 8 }}>
+                <Label color="$color" opacity={0.6} fontSize="$2">
+                  {selectedPaymentConfig.identifierLabel} (Optional)
+                </Label>
+                <Input
+                  size="$4"
+                  placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                  keyboardType="numeric"
+                  value={paymentMethodId}
+                  onChangeText={handleIdentifierChange}
+                  maxLength={selectedPaymentConfig.maxLength}
+                />
+              </YStack>
+            )}
+          </YStack>
+
           {/* Save Button */}
           <Button
             style={layoutStyles.saveButton}
@@ -208,3 +321,4 @@ export default function AddExpenseScreen() {
     </YStack>
   )
 }
+

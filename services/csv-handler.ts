@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { Expense, ExpenseCategory } from "../types/expense"
+import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
 
 export interface CSVRow {
   id: string
@@ -7,6 +7,8 @@ export interface CSVRow {
   category: string
   date: string
   note: string
+  paymentMethodType: string
+  paymentMethodId: string
   createdAt: string
   updatedAt: string
 }
@@ -21,18 +23,31 @@ export function exportToCSV(expenses: Expense[]): string {
     category: expense.category,
     date: expense.date,
     note: expense.note || "",
+    paymentMethodType: expense.paymentMethod?.type || "",
+    paymentMethodId: expense.paymentMethod?.identifier || "",
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt,
   }))
 
   return Papa.unparse(rows, {
     header: true,
-    columns: ["id", "amount", "category", "date", "note", "createdAt", "updatedAt"],
+    columns: [
+      "id",
+      "amount",
+      "category",
+      "date",
+      "note",
+      "paymentMethodType",
+      "paymentMethodId",
+      "createdAt",
+      "updatedAt",
+    ],
   })
 }
 
 /**
  * Import expenses from CSV format
+ * Handles backward compatibility for CSVs without payment method columns
  */
 export function importFromCSV(csvString: string): Expense[] {
   const result = Papa.parse<CSVRow>(csvString, {
@@ -46,14 +61,27 @@ export function importFromCSV(csvString: string): Expense[] {
 
   const now = new Date().toISOString()
 
-  return result.data.map((row) => ({
-    id: row.id,
-    amount: parseFloat(row.amount),
-    category: row.category as ExpenseCategory,
-    date: row.date,
-    note: row.note || "",
-    // Use timestamps from CSV if available, otherwise default to now
-    createdAt: row.createdAt || now,
-    updatedAt: row.updatedAt || now,
-  }))
+  return result.data.map((row) => {
+    // Build payment method only if type is present
+    const paymentMethod =
+      row.paymentMethodType && row.paymentMethodType.trim()
+        ? {
+          type: row.paymentMethodType as PaymentMethodType,
+          identifier: row.paymentMethodId?.trim() || undefined,
+        }
+        : undefined
+
+    return {
+      id: row.id,
+      amount: parseFloat(row.amount),
+      category: row.category as ExpenseCategory,
+      date: row.date,
+      note: row.note || "",
+      paymentMethod,
+      // Use timestamps from CSV if available, otherwise default to now
+      createdAt: row.createdAt || now,
+      updatedAt: row.updatedAt || now,
+    }
+  })
 }
+
