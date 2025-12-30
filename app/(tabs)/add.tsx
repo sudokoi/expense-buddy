@@ -100,9 +100,9 @@ export default function AddExpenseScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Payment method state
-  const [paymentMethodType, setPaymentMethodType] = useState<PaymentMethodType | undefined>(
-    undefined
-  )
+  const [paymentMethodType, setPaymentMethodType] = useState<
+    PaymentMethodType | undefined
+  >(undefined)
   const [paymentMethodId, setPaymentMethodId] = useState("")
 
   // Collapsible state for payment method section - persisted across app launches
@@ -199,9 +199,9 @@ export default function AddExpenseScreen() {
     // Build payment method object if type is selected
     const paymentMethod: PaymentMethod | undefined = paymentMethodType
       ? {
-        type: paymentMethodType,
-        identifier: paymentMethodId.trim() || undefined,
-      }
+          type: paymentMethodType,
+          identifier: paymentMethodId.trim() || undefined,
+        }
       : undefined
 
     addExpense({
@@ -388,5 +388,3 @@ export default function AddExpenseScreen() {
     </YStack>
   )
 }
-
-

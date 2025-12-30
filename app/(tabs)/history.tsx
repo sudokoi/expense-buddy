@@ -11,7 +11,12 @@ import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-me
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
 import { useNotifications } from "../../context/notification-context"
-import type { ExpenseCategory, Expense, PaymentMethodType, PaymentMethod } from "../../types/expense"
+import type {
+  ExpenseCategory,
+  Expense,
+  PaymentMethodType,
+  PaymentMethod,
+} from "../../types/expense"
 import { syncDownMore } from "../../services/sync-manager"
 import {
   parseExpression,
@@ -158,7 +163,9 @@ export default function HistoryScreen() {
   // Get current payment method config for identifier input in edit dialog
   const selectedPaymentConfig = React.useMemo(() => {
     if (!editingExpense?.paymentMethodType) return null
-    return PAYMENT_METHODS.find((pm) => pm.value === editingExpense.paymentMethodType) || null
+    return (
+      PAYMENT_METHODS.find((pm) => pm.value === editingExpense.paymentMethodType) || null
+    )
   }, [editingExpense?.paymentMethodType])
 
   const handlePaymentMethodSelect = (type: PaymentMethodType) => {
@@ -374,9 +381,9 @@ export default function HistoryScreen() {
                           setEditingExpense((prev) =>
                             prev
                               ? {
-                                ...prev,
-                                date: selectedDate.toISOString(),
-                              }
+                                  ...prev,
+                                  date: selectedDate.toISOString(),
+                                }
                               : null
                           )
                         }
@@ -518,9 +525,10 @@ export default function HistoryScreen() {
                         const paymentMethod: PaymentMethod | undefined =
                           editingExpense.paymentMethodType
                             ? {
-                              type: editingExpense.paymentMethodType,
-                              identifier: editingExpense.paymentMethodId.trim() || undefined,
-                            }
+                                type: editingExpense.paymentMethodType,
+                                identifier:
+                                  editingExpense.paymentMethodId.trim() || undefined,
+                              }
                             : undefined
 
                         editExpense(editingExpense.id, {

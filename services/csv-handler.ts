@@ -66,9 +66,9 @@ export function importFromCSV(csvString: string): Expense[] {
     const paymentMethod =
       row.paymentMethodType && row.paymentMethodType.trim()
         ? {
-          type: row.paymentMethodType as PaymentMethodType,
-          identifier: row.paymentMethodId?.trim() || undefined,
-        }
+            type: row.paymentMethodType as PaymentMethodType,
+            identifier: row.paymentMethodId?.trim() || undefined,
+          }
         : undefined
 
     return {
@@ -84,4 +84,3 @@ export function importFromCSV(csvString: string): Expense[] {
     }
   })
 }
-
