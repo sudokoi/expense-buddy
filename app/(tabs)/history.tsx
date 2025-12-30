@@ -583,8 +583,12 @@ export default function HistoryScreen() {
                   </Text>
                   <Text color="$color" opacity={0.6} fontSize="$2">
                     {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
-                    {paymentMethodDisplay && ` • ${paymentMethodDisplay}`}
                   </Text>
+                  {paymentMethodDisplay && (
+                    <Text color="$color" opacity={0.5} fontSize="$2">
+                      {paymentMethodDisplay}
+                    </Text>
+                  )}
                 </YStack>
               </XStack>
 

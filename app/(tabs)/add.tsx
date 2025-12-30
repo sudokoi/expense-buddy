@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label, Card } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import { Calendar, Check } from "@tamagui/lucide-icons"
+import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -17,6 +18,9 @@ import {
 } from "../../utils/expression-parser"
 import { CategoryCard } from "../../components/ui"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+
+// Storage key for payment method section expanded state
+const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -42,6 +46,10 @@ const layoutStyles = {
   } as ViewStyle,
   saveButton: {
     marginTop: 16,
+  } as ViewStyle,
+  expandHeader: {
+    justifyContent: "space-between",
+    alignItems: "center",
   } as ViewStyle,
 }
 
@@ -97,6 +105,43 @@ export default function AddExpenseScreen() {
   )
   const [paymentMethodId, setPaymentMethodId] = useState("")
 
+  // Collapsible state for payment method section - persisted across app launches
+  const [isPaymentMethodExpanded, setIsPaymentMethodExpanded] = useState(false)
+  const [isExpandedLoaded, setIsExpandedLoaded] = useState(false)
+
+  // Load expanded state from storage on mount
+  useEffect(() => {
+    const loadExpandedState = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY)
+        if (stored !== null) {
+          setIsPaymentMethodExpanded(stored === "true")
+        }
+      } catch {
+        // Default to collapsed if loading fails
+      }
+      setIsExpandedLoaded(true)
+    }
+    loadExpandedState()
+  }, [])
+
+  // Save expanded state to storage when it changes
+  useEffect(() => {
+    // Only save after initial load to avoid overwriting with default
+    if (!isExpandedLoaded) return
+    const saveExpandedState = async () => {
+      try {
+        await AsyncStorage.setItem(
+          PAYMENT_METHOD_EXPANDED_KEY,
+          isPaymentMethodExpanded ? "true" : "false"
+        )
+      } catch {
+        // Ignore save errors
+      }
+    }
+    saveExpandedState()
+  }, [isPaymentMethodExpanded, isExpandedLoaded])
+
   // Get current payment method config for identifier input
   const selectedPaymentConfig = useMemo(() => {
     if (!paymentMethodType) return null
@@ -131,6 +176,10 @@ export default function AddExpenseScreen() {
     const digitsOnly = text.replace(/\D/g, "")
     const maxLen = selectedPaymentConfig?.maxLength || 4
     setPaymentMethodId(digitsOnly.slice(0, maxLen))
+  }
+
+  const togglePaymentMethodSection = () => {
+    setIsPaymentMethodExpanded((prev) => !prev)
   }
 
   const handleSave = () => {
@@ -271,36 +320,54 @@ export default function AddExpenseScreen() {
             />
           </YStack>
 
-          {/* Payment Method Selection */}
+          {/* Payment Method Selection - Collapsible */}
           <YStack gap="$2">
-            <Label color="$color" opacity={0.8}>
-              Payment Method (Optional)
-            </Label>
-            <XStack style={layoutStyles.paymentMethodRow}>
-              {PAYMENT_METHODS.map((pm) => (
-                <PaymentMethodCard
-                  key={pm.value}
-                  config={pm}
-                  isSelected={paymentMethodType === pm.value}
-                  onPress={() => handlePaymentMethodSelect(pm.value)}
-                />
-              ))}
-            </XStack>
-
-            {/* Identifier input for cards/UPI */}
-            {selectedPaymentConfig?.hasIdentifier && (
-              <YStack gap="$1" style={{ marginTop: 8 }}>
-                <Label color="$color" opacity={0.6} fontSize="$2">
-                  {selectedPaymentConfig.identifierLabel} (Optional)
+            <Button
+              chromeless
+              onPress={togglePaymentMethodSection}
+              style={{ paddingHorizontal: 0, paddingVertical: 0 }}
+            >
+              <XStack flex={1} style={layoutStyles.expandHeader}>
+                <Label color="$color" opacity={0.8} pointerEvents="none">
+                  Payment Method (Optional)
                 </Label>
-                <Input
-                  size="$4"
-                  placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
-                  keyboardType="numeric"
-                  value={paymentMethodId}
-                  onChangeText={handleIdentifierChange}
-                  maxLength={selectedPaymentConfig.maxLength}
-                />
+                {isPaymentMethodExpanded ? (
+                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                ) : (
+                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                )}
+              </XStack>
+            </Button>
+
+            {isPaymentMethodExpanded && (
+              <YStack gap="$2" animation="quick" enterStyle={{ opacity: 0 }}>
+                <XStack style={layoutStyles.paymentMethodRow}>
+                  {PAYMENT_METHODS.map((pm) => (
+                    <PaymentMethodCard
+                      key={pm.value}
+                      config={pm}
+                      isSelected={paymentMethodType === pm.value}
+                      onPress={() => handlePaymentMethodSelect(pm.value)}
+                    />
+                  ))}
+                </XStack>
+
+                {/* Identifier input for cards/UPI */}
+                {selectedPaymentConfig?.hasIdentifier && (
+                  <YStack gap="$1" style={{ marginTop: 8 }}>
+                    <Label color="$color" opacity={0.6} fontSize="$2">
+                      {selectedPaymentConfig.identifierLabel} (Optional)
+                    </Label>
+                    <Input
+                      size="$4"
+                      placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                      keyboardType="numeric"
+                      value={paymentMethodId}
+                      onChangeText={handleIdentifierChange}
+                      maxLength={selectedPaymentConfig.maxLength}
+                    />
+                  </YStack>
+                )}
               </YStack>
             )}
           </YStack>
@@ -321,4 +388,5 @@ export default function AddExpenseScreen() {
     </YStack>
   )
 }
+
 
