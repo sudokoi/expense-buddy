@@ -1,4 +1,5 @@
 import { Card, XStack, Text } from "tamagui"
+import { memo } from "react"
 import { PaymentMethodConfig } from "../../constants/payment-methods"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
@@ -11,8 +12,9 @@ interface PaymentMethodCardProps {
 /**
  * Reusable payment method selection card component.
  * Used in both Add Expense and History screens for consistent payment method selection UI.
+ * Memoized to prevent unnecessary re-renders when other payment methods change.
  */
-export function PaymentMethodCard({
+export const PaymentMethodCard = memo(function PaymentMethodCard({
   config,
   isSelected,
   onPress,
@@ -38,4 +40,4 @@ export function PaymentMethodCard({
       </XStack>
     </Card>
   )
-}
+})

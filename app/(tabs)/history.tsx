@@ -141,7 +141,12 @@ export default function HistoryScreen() {
     )
   }, [editingExpense?.paymentMethodType])
 
-  const handlePaymentMethodSelect = (type: PaymentMethodType) => {
+  // Memoized category selection handler for edit dialog
+  const handleCategorySelect = React.useCallback((category: ExpenseCategory) => {
+    setEditingExpense((prev) => (prev ? { ...prev, category } : null))
+  }, [])
+
+  const handlePaymentMethodSelect = React.useCallback((type: PaymentMethodType) => {
     setEditingExpense((prev) => {
       if (!prev) return null
       if (prev.paymentMethodType === type) {
@@ -151,7 +156,7 @@ export default function HistoryScreen() {
         return { ...prev, paymentMethodType: type, paymentMethodId: "" }
       }
     })
-  }
+  }, [])
 
   const handleIdentifierChange = (text: string) => {
     // Use the validated identifier utility function
@@ -404,11 +409,7 @@ export default function HistoryScreen() {
                           isSelected={isSelected}
                           categoryColor={cat.color}
                           label={cat.label}
-                          onPress={() =>
-                            setEditingExpense((prev) =>
-                              prev ? { ...prev, category: cat.value } : null
-                            )
-                          }
+                          onPress={() => handleCategorySelect(cat.value)}
                           compact
                         />
                       )

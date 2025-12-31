@@ -140,14 +140,7 @@ export default function DashboardScreen() {
 
       {/* Summary Cards */}
       <XStack style={layoutStyles.summaryCardsRow}>
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$4"
-          backgroundColor={CARD_COLORS.blue.bg}
-        >
+        <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.blue.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -160,14 +153,7 @@ export default function DashboardScreen() {
             ₹{totalExpenses.toFixed(2)}
           </H4>
         </Card>
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$4"
-          backgroundColor={CARD_COLORS.green.bg}
-        >
+        <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.green.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"

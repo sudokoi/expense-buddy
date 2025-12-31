@@ -41,14 +41,7 @@ export const StatisticsCards = memo(function StatisticsCards({
     <YStack style={styles.container}>
       {/* First row */}
       <XStack style={styles.row}>
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$3"
-          backgroundColor={CARD_COLORS.blue.bg}
-        >
+        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.blue.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -62,14 +55,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
         </Card>
 
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$3"
-          backgroundColor={CARD_COLORS.green.bg}
-        >
+        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.green.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -86,14 +72,7 @@ export const StatisticsCards = memo(function StatisticsCards({
 
       {/* Second row */}
       <XStack style={styles.row}>
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$3"
-          backgroundColor={CARD_COLORS.orange.bg}
-        >
+        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.orange.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -118,14 +97,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           )}
         </Card>
 
-        <Card
-          flex={1}
-          bordered
-          animation="bouncy"
-          hoverStyle={{ scale: 1.02 }}
-          padding="$3"
-          backgroundColor={CARD_COLORS.purple.bg}
-        >
+        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.purple.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"

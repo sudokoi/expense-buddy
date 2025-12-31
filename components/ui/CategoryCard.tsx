@@ -1,5 +1,5 @@
 import { Card, Text } from "tamagui"
-import { ReactNode } from "react"
+import { memo, useMemo } from "react"
 import { getColorValue } from "../../tamagui.config"
 
 interface CategoryCardProps {
@@ -7,30 +7,31 @@ interface CategoryCardProps {
   categoryColor: string
   label: string
   onPress: () => void
-  children?: ReactNode
   compact?: boolean
 }
 
 /**
  * CategoryCard - A styled Card for category selection
  * Provides consistent styling for category selection cards with selected/unselected states
+ * Memoized to prevent unnecessary re-renders when other categories change
  */
-export function CategoryCard({
+export const CategoryCard = memo(function CategoryCard({
   isSelected,
   categoryColor,
   label,
   onPress,
   compact = false,
 }: CategoryCardProps) {
+  // Memoize color computation to avoid recalculating on every render
+  const resolvedColor = useMemo(() => getColorValue(categoryColor), [categoryColor])
+
   return (
     <Card
       bordered
-      animation="bouncy"
-      scale={0.97}
-      hoverStyle={{ scale: 1 }}
-      pressStyle={{ scale: 0.95 }}
-      backgroundColor={isSelected ? getColorValue(categoryColor) : "$background"}
-      borderColor={isSelected ? getColorValue(categoryColor) : "$borderColor"}
+      animation="quick"
+      pressStyle={{ scale: 0.95, opacity: 0.9 }}
+      backgroundColor={isSelected ? resolvedColor : "$background"}
+      borderColor={isSelected ? resolvedColor : "$borderColor"}
       padding={compact ? "$2" : "$3"}
       borderRadius={compact ? "$3" : "$4"}
       width={compact ? "22%" : "30%"}
@@ -48,6 +49,6 @@ export function CategoryCard({
       </Text>
     </Card>
   )
-}
+})
 
 export type { CategoryCardProps }

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
@@ -137,6 +137,11 @@ export default function AddExpenseScreen() {
     return PAYMENT_METHODS.find((pm) => pm.value === paymentMethodType) || null
   }, [paymentMethodType])
 
+  // Memoized category selection handler to prevent unnecessary re-renders
+  const handleCategorySelect = useCallback((value: ExpenseCategory) => {
+    setCategory(value)
+  }, [])
+
   // Compute preview when expression contains operators
   const expressionPreview = useMemo(() => {
     if (!amount.trim() || !hasOperators(amount)) {
@@ -262,7 +267,7 @@ export default function AddExpenseScreen() {
                     isSelected={isSelected}
                     categoryColor={cat.color}
                     label={cat.label}
-                    onPress={() => setCategory(cat.value)}
+                    onPress={() => handleCategorySelect(cat.value)}
                     compact
                   />
                 )

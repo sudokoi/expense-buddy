@@ -1,4 +1,5 @@
 import { XStack, Button } from "tamagui"
+import { memo, useCallback } from "react"
 import { ViewStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
 
@@ -22,8 +23,19 @@ const layoutStyles = {
 /**
  * TimeWindowSelector - Toggle buttons for selecting analytics time window
  * Provides 7d, 15d, and 1m options with visual feedback for selection
+ * Memoized to prevent unnecessary re-renders
  */
-export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps) {
+export const TimeWindowSelector = memo(function TimeWindowSelector({
+  value,
+  onChange,
+}: TimeWindowSelectorProps) {
+  const handlePress = useCallback(
+    (windowValue: TimeWindow) => {
+      onChange(windowValue)
+    },
+    [onChange]
+  )
+
   return (
     <XStack gap="$2" mb="$4" style={layoutStyles.container}>
       {TIME_WINDOWS.map((window) => {
@@ -34,9 +46,9 @@ export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps)
             size="$3"
             themeInverse={isSelected}
             bordered={!isSelected}
-            onPress={() => onChange(window.value)}
-            animation="bouncy"
-            pressStyle={{ scale: 0.95 }}
+            onPress={() => handlePress(window.value)}
+            animation="quick"
+            pressStyle={{ scale: 0.97 }}
           >
             {window.label}
           </Button>
@@ -44,6 +56,6 @@ export function TimeWindowSelector({ value, onChange }: TimeWindowSelectorProps)
       })}
     </XStack>
   )
-}
+})
 
 export type { TimeWindowSelectorProps }
