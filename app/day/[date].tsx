@@ -13,6 +13,7 @@ import {
   ScreenContainer,
   SectionHeader,
 } from "../../components/ui"
+import type { Expense } from "../../types/expense"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -28,6 +29,54 @@ const layoutStyles = {
   } as TextStyle,
 }
 
+// Memoized helper to get category info
+const getCategoryInfo = (catValue: string) => {
+  const cat = CATEGORIES.find((c) => c.value === catValue)
+  return cat ? { color: cat.color, label: cat.label } : { color: "gray", label: "Other" }
+}
+
+// Memoized expense item component
+interface DayExpenseItemProps {
+  expense: Expense
+  onDelete: (id: string) => void
+}
+
+const DayExpenseItem = React.memo(function DayExpenseItem({
+  expense,
+  onDelete,
+}: DayExpenseItemProps) {
+  const categoryInfo = getCategoryInfo(expense.category)
+
+  return (
+    <ExpenseCard>
+      <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
+        <CategoryIcon backgroundColor={categoryInfo.color}>
+          <Text fontSize="$6">{categoryInfo.label[0]}</Text>
+        </CategoryIcon>
+        <YStack flex={1}>
+          <Text fontWeight="bold" fontSize="$4">
+            {expense.note || categoryInfo.label}
+          </Text>
+          <Text color="$color" opacity={0.6} fontSize="$2">
+            {format(parseISO(expense.date), "h:mm a")} • {expense.category}
+          </Text>
+        </YStack>
+      </XStack>
+
+      <XStack gap="$3" style={layoutStyles.actionButtons}>
+        <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
+        <Button
+          size="$2"
+          icon={Trash}
+          chromeless
+          onPress={() => onDelete(expense.id)}
+          aria-label="Delete"
+        />
+      </XStack>
+    </ExpenseCard>
+  )
+})
+
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense } = useExpenses()
@@ -42,24 +91,22 @@ export default function DayExpensesScreen() {
     })
   }, [state.expenses, date])
 
-  const handleDelete = (id: string) => {
-    Alert.alert("Delete Expense", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteExpense(id) },
-    ])
-  }
-
-  const getCategoryIcon = (catValue: string) => {
-    const cat = CATEGORIES.find((c) => c.value === catValue)
-    return cat
-      ? { color: cat.color, label: cat.label }
-      : { color: "gray", label: "Other" }
-  }
+  // Memoized delete handler
+  const handleDelete = React.useCallback(
+    (id: string) => {
+      Alert.alert("Delete Expense", "Are you sure?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteExpense(id) },
+      ])
+    },
+    [deleteExpense]
+  )
 
   // Format date for display: dd/MM/yyyy
-  const formattedDisplayDate = date
-    ? format(parseISO(date), "dd/MM/yyyy")
-    : "Invalid Date"
+  const formattedDisplayDate = React.useMemo(
+    () => (date ? format(parseISO(date), "dd/MM/yyyy") : "Invalid Date"),
+    [date]
+  )
 
   return (
     <ScreenContainer>
@@ -72,37 +119,9 @@ export default function DayExpensesScreen() {
           No expenses found for this date.
         </Text>
       ) : (
-        dayExpenses.map((expense) => {
-          const categoryInfo = getCategoryIcon(expense.category)
-          return (
-            <ExpenseCard key={expense.id}>
-              <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
-                <CategoryIcon backgroundColor={categoryInfo.color}>
-                  <Text fontSize="$6">{categoryInfo.label[0]}</Text>
-                </CategoryIcon>
-                <YStack flex={1}>
-                  <Text fontWeight="bold" fontSize="$4">
-                    {expense.note || categoryInfo.label}
-                  </Text>
-                  <Text color="$color" opacity={0.6} fontSize="$2">
-                    {format(parseISO(expense.date), "h:mm a")} • {expense.category}
-                  </Text>
-                </YStack>
-              </XStack>
-
-              <XStack gap="$3" style={layoutStyles.actionButtons}>
-                <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
-                <Button
-                  size="$2"
-                  icon={Trash}
-                  chromeless
-                  onPress={() => handleDelete(expense.id)}
-                  aria-label="Delete"
-                />
-              </XStack>
-            </ExpenseCard>
-          )
-        })
+        dayExpenses.map((expense) => (
+          <DayExpenseItem key={expense.id} expense={expense} onDelete={handleDelete} />
+        ))
       )}
     </ScreenContainer>
   )

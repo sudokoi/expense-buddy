@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react"
+import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
@@ -24,17 +24,18 @@ const styles = {
 /**
  * CollapsibleSection - Reusable wrapper with expand/collapse toggle
  * Features static chevron indicator that changes direction based on state
+ * Memoized to prevent unnecessary re-renders
  */
-export function CollapsibleSection({
+export const CollapsibleSection = memo(function CollapsibleSection({
   title,
   defaultExpanded = true,
   children,
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded)
-  }
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev)
+  }, [])
 
   return (
     <Card bordered style={{ marginBottom: 16 }}>
@@ -61,6 +62,6 @@ export function CollapsibleSection({
       {isExpanded && <YStack style={styles.content}>{children}</YStack>}
     </Card>
   )
-}
+})
 
 export type { CollapsibleSectionProps }

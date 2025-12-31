@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import {
   YStack,
   XStack,
@@ -100,6 +100,11 @@ const layoutStyles = {
   } as ViewStyle,
 }
 
+// Memoized theme colors
+const successColor = SEMANTIC_COLORS.success
+const errorColor = SEMANTIC_COLORS.error
+const primaryColor = ACCENT_COLORS.primary
+
 export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
@@ -111,11 +116,6 @@ export default function SettingsScreen() {
     setDefaultPaymentMethod,
     replaceSettings,
   } = useSettings()
-
-  // Theme colors - using kawaii semantic colors
-  const successColor = SEMANTIC_COLORS.success
-  const errorColor = SEMANTIC_COLORS.error
-  const primaryColor = ACCENT_COLORS.primary
 
   const [token, setToken] = useState("")
   const [repo, setRepo] = useState("")
@@ -144,7 +144,22 @@ export default function SettingsScreen() {
   } | null>(null)
   const [isComputingSyncCount, setIsComputingSyncCount] = useState(false)
 
+  // Load config on mount
   useEffect(() => {
+    const loadConfig = async () => {
+      const config = await loadSyncConfig()
+      if (config) {
+        setToken(config.token)
+        setRepo(config.repo)
+        setBranch(config.branch)
+        setIsConfigured(true)
+      }
+    }
+    const loadAutoSync = async () => {
+      const autoSyncSettings = await loadAutoSyncSettings()
+      setAutoSyncEnabled(autoSyncSettings.enabled)
+      setAutoSyncTiming(autoSyncSettings.timing)
+    }
     loadConfig()
     loadAutoSync()
   }, [])
@@ -167,31 +182,67 @@ export default function SettingsScreen() {
     computeChangesCount()
   }, [state.expenses])
 
-  const loadConfig = async () => {
-    const config = await loadSyncConfig()
-    if (config) {
-      setToken(config.token)
-      setRepo(config.repo)
-      setBranch(config.branch)
-      setIsConfigured(true)
-    }
-  }
+  // Memoized smart merge function
+  const performSmartMerge = useCallback(
+    async (
+      remoteExpenses: Expense[],
+      summary: string,
+      downloadedSettings?: import("../../services/settings-manager").AppSettings
+    ) => {
+      setIsSyncing(true)
+      startSync()
 
-  const loadAutoSync = async () => {
-    const settings = await loadAutoSyncSettings()
-    setAutoSyncEnabled(settings.enabled)
-    setAutoSyncTiming(settings.timing)
-  }
+      try {
+        const mergeResult = await smartMerge(state.expenses, remoteExpenses)
 
-  const handleSaveAutoSync = async () => {
+        // Update local state with merged data
+        replaceAllExpenses(mergeResult.merged)
+
+        // Apply downloaded settings if available and settings sync is enabled
+        if (downloadedSettings && settings.syncSettings) {
+          await replaceSettings(downloadedSettings)
+        }
+
+        // Clear pending changes since we've merged
+        await clearPendingChanges()
+        const changesCount = await getPendingChangesCount()
+        setPendingChangesCount(changesCount)
+
+        setIsSyncing(false)
+        endSync(true)
+
+        const messageParts = [`Merged successfully: ${summary}`]
+        if (downloadedSettings && settings.syncSettings) {
+          messageParts.push("settings applied")
+        }
+        addNotification(messageParts.join(", "), "success")
+      } catch (error) {
+        setIsSyncing(false)
+        endSync(false)
+        addNotification(`Merge failed: ${String(error)}`, "error")
+      }
+    },
+    [
+      state.expenses,
+      settings.syncSettings,
+      startSync,
+      endSync,
+      replaceAllExpenses,
+      replaceSettings,
+      addNotification,
+    ]
+  )
+
+  // Memoized handlers
+  const handleSaveAutoSync = useCallback(async () => {
     await saveAutoSyncSettings({
       enabled: autoSyncEnabled,
       timing: autoSyncTiming,
     })
     addNotification("Auto-sync settings saved", "success")
-  }
+  }, [autoSyncEnabled, autoSyncTiming, addNotification])
 
-  const handleSaveConfig = async () => {
+  const handleSaveConfig = useCallback(async () => {
     if (!token || !repo || !branch) {
       addNotification("Please fill in all fields", "error")
       return
@@ -207,9 +258,7 @@ export default function SettingsScreen() {
     addNotification("Sync configuration saved", "success")
 
     // Only prompt to download if this is first-time setup AND no local expenses
-    // This avoids prompting when user has deleted all data intentionally
     if (isFirstTimeSetup && state.expenses.length === 0) {
-      // Prompt user to download existing data from GitHub
       Alert.alert(
         "Download Existing Data?",
         "Would you like to download your expenses from GitHub now?",
@@ -231,13 +280,11 @@ export default function SettingsScreen() {
                   "success"
                 )
 
-                // Apply downloaded settings if available and settings sync is enabled
                 if (result.settings && settings.syncSettings) {
                   await replaceSettings(result.settings)
                   addNotification("Settings applied from GitHub", "success")
                 }
 
-                // Auto-enable sync for convenience
                 if (!autoSyncEnabled) {
                   setAutoSyncEnabled(true)
                   await saveAutoSyncSettings({
@@ -254,9 +301,22 @@ export default function SettingsScreen() {
         ]
       )
     }
-  }
+  }, [
+    token,
+    repo,
+    branch,
+    state.expenses.length,
+    settings.syncSettings,
+    autoSyncEnabled,
+    autoSyncTiming,
+    startSync,
+    endSync,
+    replaceAllExpenses,
+    replaceSettings,
+    addNotification,
+  ])
 
-  const handleTestConnection = async () => {
+  const handleTestConnection = useCallback(async () => {
     setIsTesting(true)
     setConnectionStatus("idle")
 
@@ -270,9 +330,9 @@ export default function SettingsScreen() {
       setConnectionStatus("error")
       addNotification(result.error || result.message, "error")
     }
-  }
+  }, [addNotification])
 
-  const handleSyncUp = async () => {
+  const handleSyncUp = useCallback(async () => {
     setIsSyncing(true)
     startSync()
     const result = await syncUp(state.expenses)
@@ -281,21 +341,18 @@ export default function SettingsScreen() {
 
     if (result.success) {
       addNotification(result.message, "success")
-      // Clear pending changes after successful sync
       await clearPendingChangesAfterSync()
-      // Refresh pending changes count
       const changesCount = await getPendingChangesCount()
       setPendingChangesCount(changesCount)
     } else {
       addNotification(result.error || result.message, "error")
     }
-  }
+  }, [state.expenses, startSync, endSync, clearPendingChangesAfterSync, addNotification])
 
-  const handleSyncDown = async () => {
+  const handleSyncDown = useCallback(async () => {
     setIsSyncing(true)
     startSync()
 
-    // First, analyze what conflicts exist
     const analysis = await analyzeConflicts(state.expenses)
 
     if (!analysis.success) {
@@ -305,7 +362,6 @@ export default function SettingsScreen() {
       return
     }
 
-    // Also download settings if settings sync is enabled
     let downloadedSettings:
       | import("../../services/settings-manager").AppSettings
       | undefined
@@ -317,7 +373,6 @@ export default function SettingsScreen() {
         }
       } catch (settingsError) {
         console.warn("Failed to download settings:", settingsError)
-        // Continue without settings - don't fail the whole sync
       }
     }
 
@@ -327,13 +382,11 @@ export default function SettingsScreen() {
     const conflicts = analysis.conflicts!
     const remoteExpenses = analysis.remoteExpenses!
 
-    // Check if there are any changes at all
     const hasRemoteUpdates = conflicts.remoteWins > 0
     const hasNewFromRemote = conflicts.newFromRemote > 0
     const hasLocalOnly = conflicts.newFromLocal > 0
     const hasDeletedLocally = conflicts.deletedLocally > 0
 
-    // Build a summary message
     const summaryParts: string[] = []
     if (conflicts.newFromRemote > 0)
       summaryParts.push(`${conflicts.newFromRemote} new from GitHub`)
@@ -348,7 +401,6 @@ export default function SettingsScreen() {
 
     const summary = summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
 
-    // If no changes at all (expenses and settings), inform the user
     if (
       !hasRemoteUpdates &&
       !hasNewFromRemote &&
@@ -361,7 +413,6 @@ export default function SettingsScreen() {
       return
     }
 
-    // If only settings changed (no expense changes), apply settings directly
     if (
       !hasRemoteUpdates &&
       !hasNewFromRemote &&
@@ -375,7 +426,6 @@ export default function SettingsScreen() {
       return
     }
 
-    // If remote has newer versions that will overwrite local edits, ask for confirmation
     if (hasRemoteUpdates) {
       Alert.alert(
         "Merge Conflicts Detected",
@@ -389,51 +439,19 @@ export default function SettingsScreen() {
         ]
       )
     } else {
-      // No conflicts - just merge automatically
       await performSmartMerge(remoteExpenses, summary, downloadedSettings)
     }
-  }
+  }, [
+    state.expenses,
+    settings.syncSettings,
+    startSync,
+    endSync,
+    replaceSettings,
+    addNotification,
+    performSmartMerge,
+  ])
 
-  const performSmartMerge = async (
-    remoteExpenses: Expense[],
-    summary: string,
-    downloadedSettings?: import("../../services/settings-manager").AppSettings
-  ) => {
-    setIsSyncing(true)
-    startSync()
-
-    try {
-      const mergeResult = await smartMerge(state.expenses, remoteExpenses)
-
-      // Update local state with merged data
-      replaceAllExpenses(mergeResult.merged)
-
-      // Apply downloaded settings if available and settings sync is enabled
-      if (downloadedSettings && settings.syncSettings) {
-        await replaceSettings(downloadedSettings)
-      }
-
-      // Clear pending changes since we've merged
-      await clearPendingChanges()
-      const changesCount = await getPendingChangesCount()
-      setPendingChangesCount(changesCount)
-
-      setIsSyncing(false)
-      endSync(true)
-
-      const messageParts = [`Merged successfully: ${summary}`]
-      if (downloadedSettings && settings.syncSettings) {
-        messageParts.push("settings applied")
-      }
-      addNotification(messageParts.join(", "), "success")
-    } catch (error) {
-      setIsSyncing(false)
-      endSync(false)
-      addNotification(`Merge failed: ${String(error)}`, "error")
-    }
-  }
-
-  const handleClearConfig = async () => {
+  const handleClearConfig = useCallback(() => {
     Alert.alert("Confirm Clear", "Remove sync configuration?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -450,17 +468,15 @@ export default function SettingsScreen() {
         },
       },
     ])
-  }
+  }, [addNotification])
 
-  const handleCheckForUpdates = async () => {
-    // If installed from Play Store, open Play Store page directly
+  const handleCheckForUpdates = useCallback(async () => {
     const fromPlayStore = await isPlayStoreInstall()
     if (fromPlayStore) {
       Linking.openURL(APP_CONFIG.playStore.url)
       return
     }
 
-    // Otherwise, check GitHub for updates
     setIsCheckingUpdate(true)
     const info = await checkForUpdates()
     setUpdateInfo(info)
@@ -473,27 +489,52 @@ export default function SettingsScreen() {
     } else {
       addNotification("You're on the latest version", "success")
     }
-  }
+  }, [addNotification])
 
-  const handleOpenRelease = () => {
+  const handleOpenRelease = useCallback(() => {
     if (updateInfo?.releaseUrl) {
       Linking.openURL(updateInfo.releaseUrl)
     }
-  }
+  }, [updateInfo?.releaseUrl])
 
-  const handleThemeChange = async (theme: "light" | "dark" | "system") => {
-    await setTheme(theme)
-  }
+  const handleOpenGitHub = useCallback(() => {
+    Linking.openURL(APP_CONFIG.github.url)
+  }, [])
 
-  const handleSyncSettingsToggle = async (enabled: boolean) => {
-    await setSyncSettings(enabled)
-  }
+  const handleThemeChange = useCallback(
+    async (theme: "light" | "dark" | "system") => {
+      await setTheme(theme)
+    },
+    [setTheme]
+  )
 
-  const handleDefaultPaymentMethodChange = async (
-    paymentMethod: PaymentMethodType | undefined
-  ) => {
-    await setDefaultPaymentMethod(paymentMethod)
-  }
+  const handleSyncSettingsToggle = useCallback(
+    async (enabled: boolean) => {
+      await setSyncSettings(enabled)
+    },
+    [setSyncSettings]
+  )
+
+  const handleDefaultPaymentMethodChange = useCallback(
+    async (paymentMethod: PaymentMethodType | undefined) => {
+      await setDefaultPaymentMethod(paymentMethod)
+    },
+    [setDefaultPaymentMethod]
+  )
+
+  const handleAutoSyncTimingChange = useCallback((value: string) => {
+    setAutoSyncTiming(value as AutoSyncTiming)
+  }, [])
+
+  // Memoized sync button text
+  const syncUpButtonText = useMemo(() => {
+    if (isSyncing) return "Syncing..."
+    if (isComputingSyncCount) return "Checking changes..."
+    if (pendingChangesCount === null)
+      return `Upload to GitHub (${state.expenses.length} expenses)`
+    if (pendingChangesCount.total === 0) return "No changes to sync"
+    return `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`
+  }, [isSyncing, isComputingSyncCount, pendingChangesCount, state.expenses.length])
 
   return (
     <ScreenContainer>
@@ -641,15 +682,7 @@ export default function SettingsScreen() {
               onPress={handleSyncUp}
               disabled={isSyncing || !token || !repo || pendingChangesCount?.total === 0}
             >
-              {isSyncing
-                ? "Syncing..."
-                : isComputingSyncCount
-                  ? "Checking changes..."
-                  : pendingChangesCount === null
-                    ? `Upload to GitHub (${state.expenses.length} expenses)`
-                    : pendingChangesCount.total === 0
-                      ? "No changes to sync"
-                      : `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`}
+              {syncUpButtonText}
             </Button>
 
             <Button
@@ -721,7 +754,7 @@ export default function SettingsScreen() {
                 <Label>When to Sync</Label>
                 <RadioGroup
                   value={autoSyncTiming}
-                  onValueChange={(value) => setAutoSyncTiming(value as AutoSyncTiming)}
+                  onValueChange={handleAutoSyncTimingChange}
                 >
                   <XStack gap="$2" style={layoutStyles.radioRow}>
                     <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
@@ -807,12 +840,7 @@ export default function SettingsScreen() {
             )}
 
             {/* GitHub Link */}
-            <Button
-              size="$3"
-              chromeless
-              onPress={() => Linking.openURL(APP_CONFIG.github.url)}
-              icon={ExternalLink}
-            >
+            <Button size="$3" chromeless onPress={handleOpenGitHub} icon={ExternalLink}>
               View on GitHub
             </Button>
           </YStack>

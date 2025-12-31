@@ -84,6 +84,75 @@ const layoutStyles = {
   } as ViewStyle,
 }
 
+// Memoized expense list item component
+interface ExpenseListItemProps {
+  item: Expense
+  onEdit: (expense: Expense) => void
+  onDelete: (id: string) => void
+}
+
+const ExpenseListItem = React.memo(function ExpenseListItem({
+  item,
+  onEdit,
+  onDelete,
+}: ExpenseListItemProps) {
+  const categoryInfo = CATEGORIES.find((cat) => item.category === cat.value)
+
+  if (!categoryInfo) {
+    return null
+  }
+
+  const Icon = categoryInfo.icon
+
+  // Build payment method display string
+  const paymentMethodDisplay = item.paymentMethod
+    ? item.paymentMethod.identifier
+      ? `${item.paymentMethod.type} (${item.paymentMethod.identifier})`
+      : item.paymentMethod.type
+    : null
+
+  return (
+    <ExpenseCard>
+      <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
+        <CategoryIcon size="md" backgroundColor={categoryInfo.color}>
+          <Icon color="white" size={20} />
+        </CategoryIcon>
+        <YStack flex={1}>
+          <Text fontWeight="bold" fontSize="$4">
+            {item.note || categoryInfo.label}
+          </Text>
+          <Text color="$color" opacity={0.6} fontSize="$2">
+            {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
+          </Text>
+          {paymentMethodDisplay && (
+            <Text color="$color" opacity={0.5} fontSize="$2">
+              {paymentMethodDisplay}
+            </Text>
+          )}
+        </YStack>
+      </XStack>
+
+      <XStack gap="$3" style={layoutStyles.actionButtons}>
+        <AmountText type="expense">-₹{item.amount.toFixed(2)}</AmountText>
+        <Button
+          size="$2"
+          icon={Edit3}
+          chromeless
+          onPress={() => onEdit(item)}
+          aria-label="Edit"
+        />
+        <Button
+          size="$2"
+          icon={Trash}
+          chromeless
+          onPress={() => onDelete(item.id)}
+          aria-label="Delete"
+        />
+      </XStack>
+    </ExpenseCard>
+  )
+})
+
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
@@ -157,13 +226,16 @@ export default function HistoryScreen() {
     })
   }, [])
 
-  const handleIdentifierChange = (text: string) => {
-    // Use the validated identifier utility function
-    const maxLen = selectedPaymentConfig?.maxLength || 4
-    setEditingExpense((prev) =>
-      prev ? { ...prev, paymentMethodId: validateIdentifier(text, maxLen) } : null
-    )
-  }
+  const handleIdentifierChange = React.useCallback(
+    (text: string) => {
+      // Use the validated identifier utility function
+      const maxLen = selectedPaymentConfig?.maxLength || 4
+      setEditingExpense((prev) =>
+        prev ? { ...prev, paymentMethodId: validateIdentifier(text, maxLen) } : null
+      )
+    },
+    [selectedPaymentConfig?.maxLength]
+  )
 
   const groupedExpenses = React.useMemo(() => {
     const grouped: { title: string; data: Expense[] }[] = []
@@ -183,19 +255,32 @@ export default function HistoryScreen() {
     return grouped
   }, [state.expenses])
 
-  const handleDelete = (id: string) => {
-    setDeletingExpenseId(id)
-  }
+  // Memoized handlers for list item actions
+  const handleEdit = React.useCallback((expense: Expense) => {
+    setEditingExpense({
+      id: expense.id,
+      amount: expense.amount.toString(),
+      category: expense.category,
+      note: expense.note || "",
+      date: expense.date,
+      paymentMethodType: expense.paymentMethod?.type,
+      paymentMethodId: expense.paymentMethod?.identifier || "",
+    })
+  }, [])
 
-  const confirmDelete = () => {
+  const handleDelete = React.useCallback((id: string) => {
+    setDeletingExpenseId(id)
+  }, [])
+
+  const confirmDelete = React.useCallback(() => {
     if (deletingExpenseId) {
       deleteExpense(deletingExpenseId)
       addNotification("Expense deleted", "success")
       setDeletingExpenseId(null)
     }
-  }
+  }, [deletingExpenseId, deleteExpense, addNotification])
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = React.useCallback(async () => {
     if (isLoadingMore || !hasMore) return
 
     setIsLoadingMore(true)
@@ -214,7 +299,93 @@ export default function HistoryScreen() {
     } finally {
       setIsLoadingMore(false)
     }
-  }
+  }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification])
+
+  // Memoized renderItem function
+  const renderItem = React.useCallback(
+    ({ item }: { item: Expense }) => (
+      <ExpenseListItem item={item} onEdit={handleEdit} onDelete={handleDelete} />
+    ),
+    [handleEdit, handleDelete]
+  )
+
+  // Memoized renderSectionHeader function
+  const renderSectionHeader = React.useCallback(
+    ({ section: { title } }: { section: { title: string } }) => (
+      <YStack background="$background" style={layoutStyles.sectionHeader}>
+        <H6 color="$color" opacity={0.8}>
+          {title}
+        </H6>
+      </YStack>
+    ),
+    []
+  )
+
+  // Memoized keyExtractor
+  const keyExtractor = React.useCallback((item: Expense) => item.id, [])
+
+  // Memoized ListFooterComponent
+  const ListFooterComponent = React.useMemo(
+    () =>
+      hasMore ? (
+        <YStack style={layoutStyles.loadMoreContainer}>
+          <Button
+            size="$4"
+            themeInverse
+            onPress={handleLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </YStack>
+      ) : null,
+    [hasMore, handleLoadMore, isLoadingMore]
+  )
+
+  // Memoized content container style
+  const contentContainerStyle = React.useMemo(
+    () => ({ paddingBottom: insets.bottom }),
+    [insets.bottom]
+  )
+
+  // Memoized save handler for edit dialog
+  const handleSaveEdit = React.useCallback(() => {
+    if (editingExpense) {
+      const expense = state.expenses.find((e) => e.id === editingExpense.id)
+      if (expense) {
+        if (!editingExpense.amount.trim()) {
+          addNotification("Please enter a valid amount", "error")
+          return
+        }
+
+        const result = parseExpression(editingExpense.amount)
+
+        if (!result.success) {
+          addNotification(result.error || "Please enter a valid expression", "error")
+          return
+        }
+
+        // Build payment method object if type is selected
+        const paymentMethod: PaymentMethod | undefined = editingExpense.paymentMethodType
+          ? {
+              type: editingExpense.paymentMethodType,
+              identifier: editingExpense.paymentMethodId.trim() || undefined,
+            }
+          : undefined
+
+        editExpense(editingExpense.id, {
+          amount: result.value!,
+          category: editingExpense.category,
+          date: editingExpense.date,
+          note: editingExpense.note,
+          paymentMethod,
+        })
+        addNotification("Expense updated", "success")
+        setEditingExpense(null)
+        setShowDatePicker(false)
+      }
+    }
+  }, [editingExpense, state.expenses, editExpense, addNotification])
 
   if (state.expenses.length === 0) {
     return (
@@ -432,54 +603,7 @@ export default function HistoryScreen() {
                 <Dialog.Close asChild>
                   <Button size="$4">Cancel</Button>
                 </Dialog.Close>
-                <Button
-                  size="$4"
-                  themeInverse
-                  onPress={() => {
-                    if (editingExpense) {
-                      const expense = state.expenses.find(
-                        (e) => e.id === editingExpense.id
-                      )
-                      if (expense) {
-                        if (!editingExpense.amount.trim()) {
-                          addNotification("Please enter a valid amount", "error")
-                          return
-                        }
-
-                        const result = parseExpression(editingExpense.amount)
-
-                        if (!result.success) {
-                          addNotification(
-                            result.error || "Please enter a valid expression",
-                            "error"
-                          )
-                          return
-                        }
-
-                        // Build payment method object if type is selected
-                        const paymentMethod: PaymentMethod | undefined =
-                          editingExpense.paymentMethodType
-                            ? {
-                                type: editingExpense.paymentMethodType,
-                                identifier:
-                                  editingExpense.paymentMethodId.trim() || undefined,
-                              }
-                            : undefined
-
-                        editExpense(editingExpense.id, {
-                          amount: result.value!,
-                          category: editingExpense.category,
-                          date: editingExpense.date,
-                          note: editingExpense.note,
-                          paymentMethod,
-                        })
-                        addNotification("Expense updated", "success")
-                        setEditingExpense(null)
-                        setShowDatePicker(false)
-                      }
-                    }
-                  }}
-                >
+                <Button size="$4" themeInverse onPress={handleSaveEdit}>
                   Save
                 </Button>
               </XStack>
@@ -490,97 +614,12 @@ export default function HistoryScreen() {
 
       <SectionList
         sections={groupedExpenses}
-        keyExtractor={(item) => item.id}
-        renderSectionHeader={({ section: { title } }) => (
-          <YStack background="$background" style={layoutStyles.sectionHeader}>
-            <H6 color="$color" opacity={0.8}>
-              {title}
-            </H6>
-          </YStack>
-        )}
-        renderItem={({ item }) => {
-          const categoryInfo = CATEGORIES.find((cat) => item.category === cat.value)
-
-          if (!categoryInfo) {
-            return null
-          }
-
-          const Icon = categoryInfo.icon
-
-          // Build payment method display string
-          const paymentMethodDisplay = item.paymentMethod
-            ? item.paymentMethod.identifier
-              ? `${item.paymentMethod.type} (${item.paymentMethod.identifier})`
-              : item.paymentMethod.type
-            : null
-
-          return (
-            <ExpenseCard>
-              <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
-                <CategoryIcon size="md" backgroundColor={categoryInfo.color}>
-                  <Icon color="white" size={20} />
-                </CategoryIcon>
-                <YStack flex={1}>
-                  <Text fontWeight="bold" fontSize="$4">
-                    {item.note || categoryInfo.label}
-                  </Text>
-                  <Text color="$color" opacity={0.6} fontSize="$2">
-                    {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
-                  </Text>
-                  {paymentMethodDisplay && (
-                    <Text color="$color" opacity={0.5} fontSize="$2">
-                      {paymentMethodDisplay}
-                    </Text>
-                  )}
-                </YStack>
-              </XStack>
-
-              <XStack gap="$3" style={layoutStyles.actionButtons}>
-                <AmountText type="expense">-₹{item.amount.toFixed(2)}</AmountText>
-                <Button
-                  size="$2"
-                  icon={Edit3}
-                  chromeless
-                  onPress={() => {
-                    setEditingExpense({
-                      id: item.id,
-                      amount: item.amount.toString(),
-                      category: item.category,
-                      note: item.note || "",
-                      date: item.date,
-                      paymentMethodType: item.paymentMethod?.type,
-                      paymentMethodId: item.paymentMethod?.identifier || "",
-                    })
-                  }}
-                  aria-label="Edit"
-                />
-                <Button
-                  size="$2"
-                  icon={Trash}
-                  chromeless
-                  onPress={() => handleDelete(item.id)}
-                  aria-label="Delete"
-                />
-              </XStack>
-            </ExpenseCard>
-          )
-        }}
-        contentContainerStyle={{ paddingBottom: insets.bottom }}
+        keyExtractor={keyExtractor}
+        renderSectionHeader={renderSectionHeader}
+        renderItem={renderItem}
+        contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={
-          hasMore ? (
-            <YStack style={layoutStyles.loadMoreContainer}>
-              <Button
-                size="$4"
-                themeInverse
-                onPress={handleLoadMore}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore ? "Loading..." : "Load More"}
-              </Button>
-            </YStack>
-          ) : null
-        }
+        ListFooterComponent={ListFooterComponent}
       />
     </YStack>
   )

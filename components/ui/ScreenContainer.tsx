@@ -1,5 +1,5 @@
 import { ScrollView } from "tamagui"
-import { ReactNode } from "react"
+import { ReactNode, memo } from "react"
 import { StyleProp, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -11,8 +11,12 @@ interface ScreenContainerProps {
 /**
  * ScreenContainer - A styled ScrollView for consistent screen layouts
  * Provides consistent background color and padding with safe area support
+ * Memoized to prevent unnecessary re-renders
  */
-export function ScreenContainer({ children, style }: ScreenContainerProps) {
+export const ScreenContainer = memo(function ScreenContainer({
+  children,
+  style,
+}: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
 
   return (
@@ -29,6 +33,6 @@ export function ScreenContainer({ children, style }: ScreenContainerProps) {
       {children}
     </ScrollView>
   )
-}
+})
 
 export type { ScreenContainerProps }
