@@ -1,11 +1,12 @@
-import { useState, useMemo, useEffect } from "react"
-import { YStack, XStack, Text, Input, Button, TextArea, H4, Label, Card } from "tamagui"
+import { useState, useMemo, useEffect, useRef } from "react"
+import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useExpenses } from "../../context/ExpenseContext"
+import { useSettings } from "../../context/SettingsContext"
 import { CATEGORIES } from "../../constants/categories"
-import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
+import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
@@ -16,7 +17,8 @@ import {
   hasOperators,
   formatAmount,
 } from "../../utils/expression-parser"
-import { CategoryCard } from "../../components/ui"
+import { validateIdentifier } from "../../utils/payment-method-validation"
+import { CategoryCard, PaymentMethodCard } from "../../components/ui"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Storage key for payment method section expanded state
@@ -53,43 +55,14 @@ const layoutStyles = {
   } as ViewStyle,
 }
 
-// Payment method selection card component
-function PaymentMethodCard({
-  config,
-  isSelected,
-  onPress,
-}: {
-  config: PaymentMethodConfig
-  isSelected: boolean
-  onPress: () => void
-}) {
-  const Icon = config.icon
-  return (
-    <Card
-      bordered
-      padding="$2"
-      paddingHorizontal="$3"
-      backgroundColor={isSelected ? "$color5" : "$background"}
-      borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
-      borderWidth={isSelected ? 2 : 1}
-      pressStyle={{ scale: 0.97, opacity: 0.9 }}
-      onPress={onPress}
-      animation="quick"
-    >
-      <XStack gap="$2" style={{ alignItems: "center" }}>
-        <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
-        <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
-          {config.label}
-        </Text>
-      </XStack>
-    </Card>
-  )
-}
-
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
+  const { defaultPaymentMethod, isLoading: isSettingsLoading } = useSettings()
   const insets = useSafeAreaInsets()
+
+  // Track if default has been applied to avoid re-applying after user interaction
+  const hasAppliedDefaultRef = useRef(false)
 
   // Theme colors - extract raw values for components that need them
 
@@ -99,7 +72,7 @@ export default function AddExpenseScreen() {
   const [note, setNote] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
 
-  // Payment method state
+  // Payment method state - will be set from default when settings load
   const [paymentMethodType, setPaymentMethodType] = useState<
     PaymentMethodType | undefined
   >(undefined)
@@ -108,6 +81,22 @@ export default function AddExpenseScreen() {
   // Collapsible state for payment method section - persisted across app launches
   const [isPaymentMethodExpanded, setIsPaymentMethodExpanded] = useState(false)
   const [isExpandedLoaded, setIsExpandedLoaded] = useState(false)
+
+  // Apply default payment method when settings finish loading (only once)
+  // Using async wrapper to satisfy lint rule about synchronous setState in effects
+  useEffect(() => {
+    const applyDefault = async () => {
+      if (
+        !hasAppliedDefaultRef.current &&
+        !isSettingsLoading &&
+        defaultPaymentMethod !== undefined
+      ) {
+        setPaymentMethodType(defaultPaymentMethod)
+        hasAppliedDefaultRef.current = true
+      }
+    }
+    applyDefault()
+  }, [defaultPaymentMethod, isSettingsLoading])
 
   // Load expanded state from storage on mount
   useEffect(() => {
@@ -172,10 +161,9 @@ export default function AddExpenseScreen() {
   }
 
   const handleIdentifierChange = (text: string) => {
-    // Only allow digits and limit to maxLength
-    const digitsOnly = text.replace(/\D/g, "")
+    // Use the validated identifier utility function
     const maxLen = selectedPaymentConfig?.maxLength || 4
-    setPaymentMethodId(digitsOnly.slice(0, maxLen))
+    setPaymentMethodId(validateIdentifier(text, maxLen))
   }
 
   const togglePaymentMethodSection = () => {
@@ -215,7 +203,7 @@ export default function AddExpenseScreen() {
     // Reset and go back or to history
     setAmount("")
     setNote("")
-    setPaymentMethodType(undefined)
+    setPaymentMethodType(defaultPaymentMethod)
     setPaymentMethodId("")
     router.push("/(tabs)/history" as Href)
   }

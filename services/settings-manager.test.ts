@@ -18,6 +18,7 @@ import {
   saveSettingsHash,
   computeSettingsHash,
 } from "./settings-manager"
+import { PaymentMethodType } from "../types/expense"
 
 // Mock AsyncStorage for testing
 const mockStorage: Map<string, string> = new Map()
@@ -42,9 +43,21 @@ beforeEach(() => {
 // Arbitrary generators for settings types
 const themePreferenceArb = fc.constantFrom<ThemePreference>("light", "dark", "system")
 
+const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
+  "Cash",
+  "UPI",
+  "Credit Card",
+  "Debit Card",
+  "Net Banking",
+  "Other"
+)
+
+const optionalPaymentMethodTypeArb = fc.option(paymentMethodTypeArb, { nil: undefined })
+
 const appSettingsArb = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  defaultPaymentMethod: optionalPaymentMethodTypeArb,
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
@@ -136,6 +149,7 @@ describe("Settings Manager Properties", () => {
           return (
             loaded.theme === settings.theme &&
             loaded.syncSettings === settings.syncSettings &&
+            loaded.defaultPaymentMethod === settings.defaultPaymentMethod &&
             loaded.version === settings.version
           )
         }),
@@ -156,6 +170,7 @@ describe("Settings Manager Properties", () => {
           return (
             parsed.theme === settings.theme &&
             parsed.syncSettings === settings.syncSettings &&
+            parsed.defaultPaymentMethod === settings.defaultPaymentMethod &&
             parsed.updatedAt === settings.updatedAt &&
             parsed.version === settings.version
           )
@@ -265,6 +280,23 @@ describe("Settings Manager Properties", () => {
       expect(hash1).not.toBe(hash2)
     })
 
+    it("should compute different hashes for different defaultPaymentMethod", () => {
+      const settings1: AppSettings = { ...DEFAULT_SETTINGS, defaultPaymentMethod: "Cash" }
+      const settings2: AppSettings = { ...DEFAULT_SETTINGS, defaultPaymentMethod: "UPI" }
+      const settings3: AppSettings = {
+        ...DEFAULT_SETTINGS,
+        defaultPaymentMethod: undefined,
+      }
+
+      const hash1 = computeSettingsHash(settings1)
+      const hash2 = computeSettingsHash(settings2)
+      const hash3 = computeSettingsHash(settings3)
+
+      expect(hash1).not.toBe(hash2)
+      expect(hash1).not.toBe(hash3)
+      expect(hash2).not.toBe(hash3)
+    })
+
     it("should ignore updatedAt when computing hash", () => {
       const settings1: AppSettings = {
         ...DEFAULT_SETTINGS,
@@ -300,7 +332,88 @@ describe("Settings Manager Properties", () => {
 
       expect(loaded.theme).toBe("system")
       expect(loaded.syncSettings).toBe(false)
-      expect(loaded.version).toBe(1)
+      expect(loaded.defaultPaymentMethod).toBeUndefined()
+      expect(loaded.version).toBe(2)
+    })
+  })
+
+  /**
+   * Property 7: Settings Sync Includes Default Payment Method
+   * For any settings object with defaultPaymentMethod set, serializing for sync
+   * and deserializing SHALL preserve the defaultPaymentMethod value.
+   *
+   * **Feature: payment-method, Property 7: Settings Sync Includes Default Payment Method**
+   * **Validates: Requirements 6.1, 6.2**
+   */
+  describe("Property 7: Settings Sync Includes Default Payment Method", () => {
+    it("should preserve defaultPaymentMethod through serialize/deserialize cycle", async () => {
+      await fc.assert(
+        fc.asyncProperty(appSettingsArb, async (settings) => {
+          mockStorage.clear()
+
+          // Save settings (simulates sync upload)
+          await saveSettings(settings)
+
+          // Load settings back (simulates sync download)
+          const loaded = await loadSettings()
+
+          // defaultPaymentMethod should be preserved
+          return loaded.defaultPaymentMethod === settings.defaultPaymentMethod
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should include defaultPaymentMethod in hash computation for sync change detection", () => {
+      fc.assert(
+        fc.property(
+          optionalPaymentMethodTypeArb,
+          optionalPaymentMethodTypeArb,
+          (pm1, pm2) => {
+            // Skip if both are the same
+            if (pm1 === pm2) return true
+
+            const settings1: AppSettings = {
+              ...DEFAULT_SETTINGS,
+              defaultPaymentMethod: pm1,
+            }
+            const settings2: AppSettings = {
+              ...DEFAULT_SETTINGS,
+              defaultPaymentMethod: pm2,
+            }
+
+            const hash1 = computeSettingsHash(settings1)
+            const hash2 = computeSettingsHash(settings2)
+
+            // Different payment methods should produce different hashes
+            return hash1 !== hash2
+          }
+        ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should preserve all payment method types through round-trip", async () => {
+      await fc.assert(
+        fc.asyncProperty(paymentMethodTypeArb, async (paymentMethod) => {
+          mockStorage.clear()
+
+          const settings: AppSettings = {
+            ...DEFAULT_SETTINGS,
+            defaultPaymentMethod: paymentMethod,
+          }
+
+          // Save settings
+          await saveSettings(settings)
+
+          // Load settings back
+          const loaded = await loadSettings()
+
+          // Payment method should be preserved exactly
+          return loaded.defaultPaymentMethod === paymentMethod
+        }),
+        { numRuns: 100 }
+      )
     })
   })
 })

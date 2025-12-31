@@ -4,11 +4,13 @@ import { ExpenseCategory } from "../types/expense"
 import {
   TimeWindow,
   PieChartDataItem,
+  PaymentMethodChartDataItem,
   LineChartDataItem,
   AnalyticsStatistics,
   filterExpensesByTimeWindow,
   filterExpensesByCategories,
   aggregateByCategory,
+  aggregateByPaymentMethod,
   aggregateByDay,
   calculateStatistics,
   getDateRangeForTimeWindow,
@@ -21,6 +23,7 @@ import {
 export interface AnalyticsData {
   filteredExpenses: ReturnType<typeof filterExpensesByTimeWindow>
   pieChartData: PieChartDataItem[]
+  paymentMethodChartData: PaymentMethodChartDataItem[]
   lineChartData: LineChartDataItem[]
   statistics: AnalyticsStatistics
   isLoading: boolean
@@ -55,6 +58,11 @@ export function useAnalyticsData(
     return aggregateByCategory(filteredExpenses)
   }, [filteredExpenses])
 
+  // Memoized: Payment method chart data aggregated by payment method
+  const paymentMethodChartData = useMemo(() => {
+    return aggregateByPaymentMethod(filteredExpenses)
+  }, [filteredExpenses])
+
   // Memoized: Line chart data aggregated by day
   const lineChartData = useMemo(() => {
     const dateRange = getDateRangeForTimeWindow(timeWindow)
@@ -70,6 +78,7 @@ export function useAnalyticsData(
   return {
     filteredExpenses,
     pieChartData,
+    paymentMethodChartData,
     lineChartData,
     statistics,
     isLoading,

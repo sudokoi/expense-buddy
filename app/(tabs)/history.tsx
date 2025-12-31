@@ -1,5 +1,5 @@
 import React from "react"
-import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label, Card } from "tamagui"
+import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label } from "tamagui"
 import { Calendar } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses } from "../../context/ExpenseContext"
 import { CATEGORIES } from "../../constants/categories"
-import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
+import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
 import { useNotifications } from "../../context/notification-context"
@@ -23,8 +23,14 @@ import {
   hasOperators,
   formatAmount,
 } from "../../utils/expression-parser"
-import { ExpenseCard, AmountText, CategoryIcon, CategoryCard } from "../../components/ui"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { validateIdentifier } from "../../utils/payment-method-validation"
+import {
+  ExpenseCard,
+  AmountText,
+  CategoryIcon,
+  CategoryCard,
+  PaymentMethodCard,
+} from "../../components/ui"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -77,39 +83,6 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: 8,
   } as ViewStyle,
-}
-
-// Payment method selection card component for edit dialog
-function PaymentMethodCard({
-  config,
-  isSelected,
-  onPress,
-}: {
-  config: PaymentMethodConfig
-  isSelected: boolean
-  onPress: () => void
-}) {
-  const Icon = config.icon
-  return (
-    <Card
-      bordered
-      padding="$2"
-      paddingHorizontal="$3"
-      backgroundColor={isSelected ? "$color5" : "$background"}
-      borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
-      borderWidth={isSelected ? 2 : 1}
-      pressStyle={{ scale: 0.97, opacity: 0.9 }}
-      onPress={onPress}
-      animation="quick"
-    >
-      <XStack gap="$2" style={{ alignItems: "center" }}>
-        <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
-        <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
-          {config.label}
-        </Text>
-      </XStack>
-    </Card>
-  )
 }
 
 export default function HistoryScreen() {
@@ -181,11 +154,10 @@ export default function HistoryScreen() {
   }
 
   const handleIdentifierChange = (text: string) => {
-    // Only allow digits and limit to maxLength
-    const digitsOnly = text.replace(/\D/g, "")
+    // Use the validated identifier utility function
     const maxLen = selectedPaymentConfig?.maxLength || 4
     setEditingExpense((prev) =>
-      prev ? { ...prev, paymentMethodId: digitsOnly.slice(0, maxLen) } : null
+      prev ? { ...prev, paymentMethodId: validateIdentifier(text, maxLen) } : null
     )
   }
 

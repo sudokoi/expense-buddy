@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { computeContentHash } from "./hash-storage"
+import { PaymentMethodType } from "../types/expense"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -17,6 +18,7 @@ export type ThemePreference = "light" | "dark" | "system"
 export interface AppSettings {
   theme: ThemePreference
   syncSettings: boolean // Whether to sync settings to GitHub
+  defaultPaymentMethod?: PaymentMethodType // Optional default payment method
   updatedAt: string // ISO timestamp
   version: number // Schema version for migrations
 }
@@ -27,8 +29,9 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   syncSettings: false,
+  defaultPaymentMethod: undefined,
   updatedAt: new Date().toISOString(),
-  version: 1,
+  version: 2,
 }
 
 /**
@@ -130,8 +133,9 @@ export async function saveSettingsHash(hash: string): Promise<void> {
 export function computeSettingsHash(settings: AppSettings): string {
   // Create a stable JSON representation (sorted keys)
   const stableJson = JSON.stringify({
-    theme: settings.theme,
+    defaultPaymentMethod: settings.defaultPaymentMethod,
     syncSettings: settings.syncSettings,
+    theme: settings.theme,
     version: settings.version,
     // Note: updatedAt is intentionally excluded from hash
     // so that timestamp changes alone don't trigger re-sync

@@ -9,6 +9,7 @@ import { TimeWindowSelector } from "../../components/analytics/TimeWindowSelecto
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import { CategoryFilter } from "../../components/analytics/CategoryFilter"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
+import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
 
 const styles = {
@@ -78,8 +79,14 @@ export default function AnalyticsScreen() {
   const [selectedCategories, setSelectedCategories] = useState<ExpenseCategory[]>([])
 
   // Get analytics data from hook
-  const { filteredExpenses, pieChartData, lineChartData, statistics, isLoading } =
-    useAnalyticsData(timeWindow, selectedCategories)
+  const {
+    filteredExpenses,
+    pieChartData,
+    paymentMethodChartData,
+    lineChartData,
+    statistics,
+    isLoading,
+  } = useAnalyticsData(timeWindow, selectedCategories)
 
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback((category: string | null) => {
@@ -127,6 +134,7 @@ export default function AnalyticsScreen() {
                 data={pieChartData}
                 onCategorySelect={handleCategorySelect}
               />
+              <PaymentMethodPieChart data={paymentMethodChartData} />
               <LineChartSection data={lineChartData} />
             </>
           )}

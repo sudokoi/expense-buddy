@@ -26,7 +26,7 @@ import {
   analyzeConflicts,
   smartMerge,
 } from "../../services/sync-manager"
-import { Expense } from "../../types/expense"
+import { Expense, PaymentMethodType } from "../../types/expense"
 import {
   getPendingChangesCount,
   clearPendingChanges,
@@ -41,7 +41,12 @@ import {
   isPlayStoreInstall,
 } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
-import { ScreenContainer, ThemeSelector, SettingsSection } from "../../components/ui"
+import {
+  ScreenContainer,
+  ThemeSelector,
+  SettingsSection,
+  DefaultPaymentMethodSelector,
+} from "../../components/ui"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -102,7 +107,13 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
-  const { settings, setTheme, setSyncSettings, replaceSettings } = useSettings()
+  const {
+    settings,
+    setTheme,
+    setSyncSettings,
+    setDefaultPaymentMethod,
+    replaceSettings,
+  } = useSettings()
 
   // Theme colors - using kawaii semantic colors
   const successColor = SEMANTIC_COLORS.success
@@ -481,6 +492,12 @@ export default function SettingsScreen() {
     await setSyncSettings(enabled)
   }
 
+  const handleDefaultPaymentMethodChange = async (
+    paymentMethod: PaymentMethodType | undefined
+  ) => {
+    await setDefaultPaymentMethod(paymentMethod)
+  }
+
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
@@ -489,6 +506,19 @@ export default function SettingsScreen() {
           <YStack gap="$2">
             <Label>Theme</Label>
             <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+          </YStack>
+        </SettingsSection>
+
+        {/* DEFAULT PAYMENT METHOD Section */}
+        <SettingsSection title="DEFAULT PAYMENT METHOD">
+          <YStack gap="$2">
+            <Text color="$color" opacity={0.7} fontSize="$3">
+              Pre-select this payment method when adding new expenses.
+            </Text>
+            <DefaultPaymentMethodSelector
+              value={settings.defaultPaymentMethod}
+              onChange={handleDefaultPaymentMethodChange}
+            />
           </YStack>
         </SettingsSection>
 

@@ -10,6 +10,7 @@ import {
   clearSettingsChanged,
   hasSettingsChanged,
 } from "../services/settings-manager"
+import { PaymentMethodType } from "../types/expense"
 
 /**
  * Settings context value interface
@@ -20,10 +21,12 @@ export interface SettingsContextValue {
   isLoading: boolean
   effectiveTheme: "light" | "dark" // Resolved theme (system -> actual)
   hasUnsyncedChanges: boolean
+  defaultPaymentMethod?: PaymentMethodType // Convenience accessor
 
   // Actions
   setTheme: (theme: ThemePreference) => Promise<void>
   setSyncSettings: (enabled: boolean) => Promise<void>
+  setDefaultPaymentMethod: (paymentMethod: PaymentMethodType | undefined) => Promise<void>
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>
   replaceSettings: (settings: AppSettings) => Promise<void>
   clearSettingsChangeFlag: () => Promise<void>
@@ -125,6 +128,29 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   )
 
   /**
+   * Set default payment method preference
+   */
+  const setDefaultPaymentMethod = useCallback(
+    async (paymentMethod: PaymentMethodType | undefined): Promise<void> => {
+      const updatedSettings: AppSettings = {
+        ...settings,
+        defaultPaymentMethod: paymentMethod,
+      }
+
+      // Update state immediately
+      setSettings(updatedSettings)
+
+      // Persist to storage
+      await saveSettings(updatedSettings)
+
+      // Mark as changed for sync tracking
+      await markSettingsChanged()
+      setHasUnsyncedChanges(true)
+    },
+    [settings]
+  )
+
+  /**
    * Update multiple settings at once
    */
   const updateSettings = useCallback(
@@ -175,8 +201,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading,
     effectiveTheme,
     hasUnsyncedChanges,
+    defaultPaymentMethod: settings.defaultPaymentMethod,
     setTheme,
     setSyncSettings,
+    setDefaultPaymentMethod,
     updateSettings,
     replaceSettings,
     clearSettingsChangeFlag,

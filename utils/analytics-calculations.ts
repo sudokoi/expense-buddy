@@ -1,4 +1,4 @@
-import { Expense, ExpenseCategory } from "../types/expense"
+import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
 import {
   parseISO,
   subDays,
@@ -9,6 +9,7 @@ import {
   isWithinInterval,
 } from "date-fns"
 import { CATEGORY_COLORS } from "../constants/category-colors"
+import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
 // Time window type
 export type TimeWindow = "7d" | "15d" | "1m"
@@ -20,6 +21,15 @@ export interface PieChartDataItem {
   text: string
   percentage: number
   category: ExpenseCategory
+}
+
+// Payment method chart data item
+export interface PaymentMethodChartDataItem {
+  value: number
+  color: string
+  text: string
+  percentage: number
+  paymentMethodType: PaymentMethodType | "Other"
 }
 
 // Line chart data item
@@ -149,6 +159,55 @@ export function aggregateByCategory(expenses: Expense[]): PieChartDataItem[] {
         text: category,
         percentage: (amount / total) * 100,
         category,
+      })
+    }
+  }
+
+  // Sort by value descending
+  return pieData.sort((a, b) => b.value - a.value)
+}
+
+/**
+ * Aggregate expenses by payment method for pie chart
+ * Returns pie chart data with payment method totals, colors, and percentages
+ * Expenses without paymentMethod are grouped under "Other"
+ * Excludes payment method types with zero total amount
+ */
+export function aggregateByPaymentMethod(
+  expenses: Expense[]
+): PaymentMethodChartDataItem[] {
+  // Group and sum by payment method type
+  // Expenses without paymentMethod are grouped under "Other"
+  const paymentMethodTotals = new Map<PaymentMethodType | "Other", number>()
+
+  for (const expense of expenses) {
+    const paymentMethodType: PaymentMethodType | "Other" =
+      expense.paymentMethod?.type ?? "Other"
+    const current = paymentMethodTotals.get(paymentMethodType) ?? 0
+    paymentMethodTotals.set(paymentMethodType, current + Math.abs(expense.amount))
+  }
+
+  // Calculate total for percentages
+  const total = Array.from(paymentMethodTotals.values()).reduce(
+    (sum, val) => sum + val,
+    0
+  )
+
+  if (total === 0) {
+    return []
+  }
+
+  // Convert to pie chart data, excluding zero-amount types
+  const pieData: PaymentMethodChartDataItem[] = []
+
+  for (const [paymentMethodType, amount] of paymentMethodTotals) {
+    if (amount > 0) {
+      pieData.push({
+        value: amount,
+        color: PAYMENT_METHOD_COLORS[paymentMethodType],
+        text: paymentMethodType,
+        percentage: (amount / total) * 100,
+        paymentMethodType,
       })
     }
   }

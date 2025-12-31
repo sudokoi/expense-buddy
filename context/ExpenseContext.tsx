@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Expense } from "../types/expense"
@@ -70,16 +70,19 @@ export const ExpenseProvider: React.FC<ExpenseProviderProps> = ({
   })
 
   // Helper function to apply downloaded settings
-  const applyDownloadedSettings = async (downloadedSettings: AppSettings) => {
-    // Save settings to storage
-    await saveSettings(downloadedSettings)
-    // Clear the change flag since we just synced
-    await clearSettingsChanged()
-    // Notify parent component (SettingsContext) to update its state
-    if (onSettingsDownloaded) {
-      onSettingsDownloaded(downloadedSettings)
-    }
-  }
+  const applyDownloadedSettings = useCallback(
+    async (downloadedSettings: AppSettings) => {
+      // Save settings to storage
+      await saveSettings(downloadedSettings)
+      // Clear the change flag since we just synced
+      await clearSettingsChanged()
+      // Notify parent component (SettingsContext) to update its state
+      if (onSettingsDownloaded) {
+        onSettingsDownloaded(downloadedSettings)
+      }
+    },
+    [onSettingsDownloaded]
+  )
 
   // Auto-sync on app launch
   useEffect(() => {
@@ -116,7 +119,7 @@ export const ExpenseProvider: React.FC<ExpenseProviderProps> = ({
     if (!isLoading) {
       performLaunchSync()
     }
-  }, [isLoading, expenses, queryClient, onSettingsDownloaded]) // Run once when loading completes
+  }, [isLoading, expenses, queryClient, applyDownloadedSettings]) // Run once when loading completes
 
   const addMutation = useMutation({
     mutationFn: async (newExpense: Expense) => {

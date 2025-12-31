@@ -13,8 +13,9 @@ import {
   getTimeWindowDays,
   TimeWindow,
   filterExpensesByCategories,
+  aggregateByPaymentMethod,
 } from "./analytics-calculations"
-import { Expense, ExpenseCategory } from "../types/expense"
+import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
 import { format, parseISO, subDays, isWithinInterval } from "date-fns"
 
 // Helper to generate valid expense categories
@@ -25,6 +26,16 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Utilities",
   "Entertainment",
   "Health",
+  "Other"
+)
+
+// Helper to generate valid payment method types
+const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
+  "Cash",
+  "UPI",
+  "Credit Card",
+  "Debit Card",
+  "Net Banking",
   "Other"
 )
 
@@ -44,6 +55,33 @@ const expenseArb = (dateRange?: { minDaysAgo: number; maxDaysAgo: number }) =>
       })
       .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
     note: fc.string({ maxLength: 50 }),
+    createdAt: fc.constant(new Date().toISOString()),
+    updatedAt: fc.constant(new Date().toISOString()),
+  }) as fc.Arbitrary<Expense>
+
+// Helper to generate a valid expense with optional payment method
+const expenseWithPaymentMethodArb = (dateRange?: {
+  minDaysAgo: number
+  maxDaysAgo: number
+}) =>
+  fc.record({
+    id: fc.uuid(),
+    amount: fc.float({ min: Math.fround(0.01), max: Math.fround(10000), noNaN: true }),
+    category: categoryArb,
+    date: fc
+      .integer({
+        min: dateRange?.minDaysAgo ?? 0,
+        max: dateRange?.maxDaysAgo ?? 60,
+      })
+      .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
+    note: fc.string({ maxLength: 50 }),
+    paymentMethod: fc.option(
+      fc.record({
+        type: paymentMethodTypeArb,
+        identifier: fc.option(fc.stringMatching(/^\d{3,4}$/), { nil: undefined }),
+      }),
+      { nil: undefined }
+    ),
     createdAt: fc.constant(new Date().toISOString()),
     updatedAt: fc.constant(new Date().toISOString()),
   }) as fc.Arbitrary<Expense>
@@ -597,6 +635,120 @@ describe("Property 11: Filter Independence", () => {
 
           // Results should be identical
           return timeFiltered.length === withEmptyFilter.length
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+})
+
+/**
+ * Property 12: Payment Method Aggregation
+ * For any list of expenses, aggregating by payment method SHALL:
+ * - Group expenses without payment method under "Other"
+ * - Calculate correct percentages that sum to 100%
+ * - Exclude payment method types with zero total amount
+ *
+ * Feature: payment-method, Property 8: Payment Method Aggregation
+ * Validates: Requirements 9.2, 9.3, 9.5
+ */
+describe("Property 12: Payment Method Aggregation", () => {
+  it("should have percentages sum to 100 for non-empty data", () => {
+    fc.assert(
+      fc.property(
+        fc.array(expenseWithPaymentMethodArb({ minDaysAgo: 0, maxDaysAgo: 30 }), {
+          minLength: 1,
+          maxLength: 50,
+        }),
+        (expenses) => {
+          const pieData = aggregateByPaymentMethod(expenses)
+
+          if (pieData.length === 0) {
+            return true // Empty data is valid
+          }
+
+          const percentageSum = pieData.reduce((sum, item) => sum + item.percentage, 0)
+
+          // Should sum to 100 within tolerance
+          return Math.abs(percentageSum - 100) < 0.01
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+
+  it("should exclude payment method types with zero total amount", () => {
+    fc.assert(
+      fc.property(
+        fc.array(expenseWithPaymentMethodArb({ minDaysAgo: 0, maxDaysAgo: 30 }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
+        (expenses) => {
+          const pieData = aggregateByPaymentMethod(expenses)
+
+          // All pie chart items should have value > 0
+          return pieData.every((item) => item.value > 0)
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+
+  it("should group expenses without payment method under 'Other'", () => {
+    fc.assert(
+      fc.property(
+        fc.array(expenseWithPaymentMethodArb({ minDaysAgo: 0, maxDaysAgo: 30 }), {
+          minLength: 1,
+          maxLength: 50,
+        }),
+        (expenses) => {
+          const pieData = aggregateByPaymentMethod(expenses)
+
+          // Calculate expected "Other" total:
+          // - Expenses without payment method (undefined)
+          // - Expenses with paymentMethod.type === "Other"
+          const expectedOtherTotal = expenses
+            .filter((e) => !e.paymentMethod || e.paymentMethod.type === "Other")
+            .reduce((sum, e) => sum + Math.abs(e.amount), 0)
+
+          // Find "Other" in pie data
+          const otherItem = pieData.find((item) => item.paymentMethodType === "Other")
+
+          if (expectedOtherTotal === 0) {
+            // If no expenses should be in "Other", it should not be in pie data
+            return otherItem === undefined
+          } else {
+            // If there are expenses that should be in "Other", verify the total matches
+            return (
+              otherItem !== undefined &&
+              Math.abs(otherItem.value - expectedOtherTotal) < 0.01
+            )
+          }
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+
+  it("should have pie chart total equal to sum of all expense amounts", () => {
+    fc.assert(
+      fc.property(
+        fc.array(expenseWithPaymentMethodArb({ minDaysAgo: 0, maxDaysAgo: 30 }), {
+          minLength: 1,
+          maxLength: 50,
+        }),
+        (expenses) => {
+          const pieData = aggregateByPaymentMethod(expenses)
+
+          // Sum of pie chart values
+          const pieTotal = pieData.reduce((sum, item) => sum + item.value, 0)
+
+          // Sum of all expense amounts (absolute values)
+          const expenseTotal = expenses.reduce((sum, e) => sum + Math.abs(e.amount), 0)
+
+          // Should be equal within floating point tolerance
+          return Math.abs(pieTotal - expenseTotal) < 0.01
         }
       ),
       { numRuns: 100 }
