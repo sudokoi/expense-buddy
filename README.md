@@ -5,7 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://play.google.com/store/apps/details?id=com.sudokoi.expensebuddy"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80" /></a>
+  <a href="https://play.google.com/apps/internaltest/4701597444730122014"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80" /></a>
+  <br/>
+  <em>📱 Currently in internal testing - <a href="https://play.google.com/apps/internaltest/4701597444730122014">Join the test</a></em>
 </p>
 
 <p align="center">
