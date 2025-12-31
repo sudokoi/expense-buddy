@@ -8,7 +8,10 @@ import { useFonts } from "expo-font"
 import { SplashScreen, Stack } from "expo-router"
 import { Provider } from "components/Provider"
 import { useTheme } from "tamagui"
-import { ExpenseProvider } from "../context/ExpenseContext"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { NotificationStack } from "../components/NotificationStack"
+import { SyncIndicator } from "../components/SyncIndicator"
+import { KeyboardProvider } from "react-native-keyboard-controller"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -22,6 +25,8 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
+
+const queryClient = new QueryClient()
 
 export default function RootLayout() {
   const [interLoaded, interError] = useFonts({
@@ -47,54 +52,14 @@ export default function RootLayout() {
   )
 }
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { NotificationProvider } from "../context/notification-context"
-import { SyncStatusProvider } from "../context/sync-status-context"
-import { NotificationStack } from "../components/NotificationStack"
-import { SyncIndicator } from "../components/SyncIndicator"
-import { KeyboardProvider } from "react-native-keyboard-controller"
-import { useSettings } from "../context/SettingsContext"
-import { AppSettings } from "../services/settings-manager"
-
-const queryClient = new QueryClient()
-
-/**
- * Inner component that connects ExpenseProvider to SettingsContext
- * This allows downloaded settings from auto-sync to be applied to the settings context
- */
-const ExpenseProviderWithSettingsCallback = ({
-  children,
-}: {
-  children: React.ReactNode
-}) => {
-  const { replaceSettings } = useSettings()
-
-  const handleSettingsDownloaded = async (downloadedSettings: AppSettings) => {
-    // Apply downloaded settings to the settings context
-    await replaceSettings(downloadedSettings)
-  }
-
-  return (
-    <ExpenseProvider onSettingsDownloaded={handleSettingsDownloaded}>
-      {children}
-    </ExpenseProvider>
-  )
-}
-
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <KeyboardProvider>
       <Provider>
         <QueryClientProvider client={queryClient}>
-          <NotificationProvider>
-            <SyncStatusProvider>
-              <ExpenseProviderWithSettingsCallback>
-                {children}
-                <NotificationStack />
-                <SyncIndicator />
-              </ExpenseProviderWithSettingsCallback>
-            </SyncStatusProvider>
-          </NotificationProvider>
+          {children}
+          <NotificationStack />
+          <SyncIndicator />
         </QueryClientProvider>
       </Provider>
     </KeyboardProvider>

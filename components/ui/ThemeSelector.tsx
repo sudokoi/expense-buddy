@@ -1,7 +1,7 @@
 import { Text, Card, View, useTheme } from "tamagui"
 import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
-import { ThemePreference } from "../../context/SettingsContext"
+import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
 
 interface ThemeSelectorProps {

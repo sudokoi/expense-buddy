@@ -1,12 +1,7 @@
 import { useState, ReactNode } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
-import { ChevronDown } from "@tamagui/lucide-icons"
+import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  useSharedValue,
-} from "react-native-reanimated"
 
 interface CollapsibleSectionProps {
   title: string
@@ -28,7 +23,7 @@ const styles = {
 
 /**
  * CollapsibleSection - Reusable wrapper with expand/collapse toggle
- * Features animated height transition and chevron indicator
+ * Features static chevron indicator that changes direction based on state
  */
 export function CollapsibleSection({
   title,
@@ -36,16 +31,10 @@ export function CollapsibleSection({
   children,
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const rotation = useSharedValue(defaultExpanded ? 180 : 0)
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded)
-    rotation.value = withTiming(isExpanded ? 0 : 180, { duration: 200 })
   }
-
-  const chevronStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }))
 
   return (
     <Card bordered style={{ marginBottom: 16 }}>
@@ -61,9 +50,11 @@ export function CollapsibleSection({
           <Text fontWeight="bold" fontSize="$4">
             {title}
           </Text>
-          <Animated.View style={chevronStyle}>
+          {isExpanded ? (
+            <ChevronUp size={20} color="$color" />
+          ) : (
             <ChevronDown size={20} color="$color" />
-          </Animated.View>
+          )}
         </XStack>
       </Pressable>
 

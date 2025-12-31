@@ -17,8 +17,6 @@ export function ExpenseCard(props: ExpenseCardProps) {
       flexDirection="row"
       alignItems="center"
       justifyContent="space-between"
-      animation="lazy"
-      hoverStyle={{ scale: 1.01 }}
       {...props}
     />
   )

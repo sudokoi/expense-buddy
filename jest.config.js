@@ -3,7 +3,7 @@ module.exports = {
   testMatch: [
     "**/utils/**/*.test.ts",
     "**/services/**/*.test.ts",
-    "**/context/**/*.test.ts",
+    "**/stores/**/*.test.ts",
   ],
   transform: {
     "^.+\\.tsx?$": ["babel-jest", { presets: ["@babel/preset-typescript"] }],

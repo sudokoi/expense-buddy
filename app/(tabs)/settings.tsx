@@ -31,10 +31,7 @@ import {
   getPendingChangesCount,
   clearPendingChanges,
 } from "../../services/change-tracker"
-import { useExpenses } from "../../context/ExpenseContext"
-import { useNotifications } from "../../context/notification-context"
-import { useSyncStatus } from "../../context/sync-status-context"
-import { useSettings } from "../../context/SettingsContext"
+import { useExpenses, useNotifications, useSyncStatus, useSettings } from "../../stores"
 import {
   checkForUpdates,
   UpdateInfo,
@@ -529,11 +526,7 @@ export default function SettingsScreen() {
           </Text>
 
           {/* Collapsible GitHub Configuration */}
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue={isConfigured ? undefined : "github-config"}
-          >
+          <Accordion type="single" collapsible defaultValue={undefined}>
             <Accordion.Item value="github-config">
               <Accordion.Trigger
                 bg="$backgroundHover"
@@ -646,7 +639,7 @@ export default function SettingsScreen() {
             <Button
               size="$4"
               onPress={handleSyncUp}
-              disabled={isSyncing || !token || !repo}
+              disabled={isSyncing || !token || !repo || pendingChangesCount?.total === 0}
             >
               {isSyncing
                 ? "Syncing..."
@@ -693,7 +686,7 @@ export default function SettingsScreen() {
                   autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
                 }
               >
-                <Switch.Thumb animation="quick" />
+                <Switch.Thumb />
               </Switch>
             </XStack>
 
@@ -718,7 +711,7 @@ export default function SettingsScreen() {
                   settings.syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)
                 }
               >
-                <Switch.Thumb animation="quick" />
+                <Switch.Thumb />
               </Switch>
             </XStack>
 
@@ -734,36 +727,24 @@ export default function SettingsScreen() {
                     <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
                       <RadioGroup.Indicator />
                     </RadioGroup.Item>
-                    <Label htmlFor="on_launch" flex={1}>
-                      On App Launch
-                      <Text
-                        fontSize="$2"
-                        color="$color"
-                        opacity={0.6}
-                        paddingInlineStart="$2"
-                        style={layoutStyles.helperText}
-                      >
+                    <YStack flex={1}>
+                      <Label htmlFor="on_launch">On App Launch</Label>
+                      <Text fontSize="$2" color="$color" opacity={0.6}>
                         Sync when the app starts
                       </Text>
-                    </Label>
+                    </YStack>
                   </XStack>
 
                   <XStack gap="$2" style={layoutStyles.radioRow}>
                     <RadioGroup.Item value="on_change" id="on_change" size="$4">
                       <RadioGroup.Indicator />
                     </RadioGroup.Item>
-                    <Label htmlFor="on_change" flex={1}>
-                      On Every Change
-                      <Text
-                        fontSize="$2"
-                        color="$color"
-                        opacity={0.6}
-                        paddingInlineStart="$2"
-                        style={layoutStyles.helperText}
-                      >
+                    <YStack flex={1}>
+                      <Label htmlFor="on_change">On Every Change</Label>
+                      <Text fontSize="$2" color="$color" opacity={0.6}>
                         Sync after adding, editing, or deleting expenses
                       </Text>
-                    </Label>
+                    </YStack>
                   </XStack>
                 </RadioGroup>
               </YStack>

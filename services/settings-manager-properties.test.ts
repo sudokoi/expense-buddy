@@ -1,16 +1,17 @@
 /**
- * Property-based tests for Settings Context
+ * Property-based tests for Settings Manager Service
  *
  * Tests the theme resolution and change tracking functionality.
+ * These tests validate the pure functions and service layer used by the settings store.
  */
 
 import fc from "fast-check"
-import { ThemePreference, AppSettings } from "../services/settings-manager"
+import { ThemePreference, AppSettings } from "./settings-manager"
 
 /**
  * Resolves the effective theme based on preference and system color scheme
  * This is a pure function extracted for testing purposes.
- * The same logic is used in SettingsContext.tsx
+ * The same logic is used in settings-store.ts (selectEffectiveTheme)
  */
 function resolveEffectiveTheme(
   preference: ThemePreference,
@@ -44,7 +45,7 @@ import {
   clearSettingsChanged,
   hasSettingsChanged,
   saveSettings,
-} from "../services/settings-manager"
+} from "./settings-manager"
 
 // Clear mock storage before each test
 beforeEach(() => {
@@ -77,16 +78,14 @@ const operationArb: fc.Arbitrary<Operation> = fc.oneof(
   fc.constant({ type: "sync" as const })
 )
 
-describe("Settings Context Properties", () => {
+describe("Settings Manager Properties", () => {
   /**
-   * Property 2: Effective theme resolution
+   * Property: Effective theme resolution
    * For any theme preference and system color scheme state, the effectiveTheme
    * SHALL be "light" or "dark" (never "system"), and when theme preference is
    * "system", effectiveTheme SHALL match the system color scheme.
-   *
-   * **Validates: Requirements 2.3, 2.4**
    */
-  describe("Property 2: Effective theme resolution", () => {
+  describe("Effective theme resolution", () => {
     it("should always resolve to light or dark, never system", () => {
       fc.assert(
         fc.property(
@@ -154,13 +153,11 @@ describe("Settings Context Properties", () => {
   })
 
   /**
-   * Property 8: Change tracking accuracy
+   * Property: Change tracking accuracy
    * For any settings state, hasUnsyncedChanges SHALL be true if and only if
    * settings have been modified since the last successful sync.
-   *
-   * **Validates: Requirements 7.1, 7.2, 7.4**
    */
-  describe("Property 8: Change tracking accuracy", () => {
+  describe("Change tracking accuracy", () => {
     it("should track changes correctly after modifications", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {

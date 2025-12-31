@@ -7399,6 +7399,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xstate/store@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "@xstate/store@npm:3.14.0"
+  peerDependencies:
+    react: ^18.2.0 || ^19.0.0
+    solid-js: ^1.7.6
+  peerDependenciesMeta:
+    react:
+      optional: true
+    solid-js:
+      optional: true
+  checksum: 10/2a7a568b73f9a37b21db30f1dbfad22110db56dc1e354595b7eb1428c020973571e9207d3c6b8dd54fc6f1255dcb8fb7728d086571b0a29ec0507ee85e91c2d9
+  languageName: node
+  linkType: hard
+
 "abab@npm:^2.0.6":
   version: 2.0.6
   resolution: "abab@npm:2.0.6"
@@ -10345,6 +10360,7 @@ __metadata:
     "@types/react-native": "npm:^0.73.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
     "@typescript-eslint/parser": "npm:^8.50.1"
+    "@xstate/store": "npm:^3.14.0"
     babel-preset-expo: "npm:~54.0.9"
     burnt: "npm:^0.12.2"
     date-fns: "npm:^4.1.0"

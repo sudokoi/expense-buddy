@@ -1,12 +1,9 @@
 /**
  * Property-based tests for Default Payment Method Pre-Selection
  *
- * Property 6: Default Payment Method Pre-Selection
- * For any default payment method setting, when opening the expense entry screen,
- * the payment method selector SHALL have that type pre-selected.
- * When no default is set, no payment method SHALL be selected.
- *
- * **Validates: Requirements 3.3, 3.4, 3.5**
+ * Tests the pure functions for payment method pre-selection logic used in add.tsx.
+ * These functions determine how the payment method selector behaves based on
+ * the default payment method setting.
  */
 
 import fc from "fast-check"
@@ -67,11 +64,9 @@ const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
 
 const optionalPaymentMethodTypeArb = fc.option(paymentMethodTypeArb, { nil: undefined })
 
-describe("Property 6: Default Payment Method Pre-Selection", () => {
+describe("Default Payment Method Pre-Selection", () => {
   /**
-   * Feature: payment-method, Property 6: Default Payment Method Pre-Selection
    * For any default payment method setting, the initial state SHALL match the default.
-   * **Validates: Requirements 3.3, 3.4, 3.5**
    */
   describe("Initial state matches default setting", () => {
     it("should pre-select the default payment method when one is set", () => {
@@ -107,9 +102,7 @@ describe("Property 6: Default Payment Method Pre-Selection", () => {
   })
 
   /**
-   * Feature: payment-method, Property 6: Reset behavior after save
    * After saving an expense, the payment method should reset to the default.
-   * **Validates: Requirements 3.4**
    */
   describe("Reset to default after save", () => {
     it("should reset to default payment method after saving", () => {
@@ -133,9 +126,7 @@ describe("Property 6: Default Payment Method Pre-Selection", () => {
   })
 
   /**
-   * Feature: payment-method, Property 6: Update behavior when default changes
    * When the default setting changes, it should only update if no selection exists.
-   * **Validates: Requirements 3.5**
    */
   describe("Update behavior when default changes", () => {
     it("should update to new default when current selection is undefined", () => {
@@ -175,9 +166,7 @@ describe("Property 6: Default Payment Method Pre-Selection", () => {
   })
 
   /**
-   * Feature: payment-method, Property 6: Idempotence of initialization
    * Initializing with the same default multiple times should produce the same result.
-   * **Validates: Requirements 3.3**
    */
   describe("Idempotence of initialization", () => {
     it("should produce same result when initialized multiple times with same default", () => {

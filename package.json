@@ -35,6 +35,7 @@
     "@tamagui/toast": "^1.141.5",
     "@tanstack/react-query": "^5.90.12",
     "@types/papaparse": "^5.5.1",
+    "@xstate/store": "^3.14.0",
     "babel-preset-expo": "~54.0.9",
     "burnt": "^0.12.2",
     "date-fns": "^4.1.0",

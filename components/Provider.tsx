@@ -3,17 +3,17 @@ import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { ToastProvider, ToastViewport } from "@tamagui/toast"
 import { CurrentToast } from "./CurrentToast"
 import { config } from "../tamagui.config"
-import { SettingsProvider, useSettings } from "../context/SettingsContext"
+import { StoreProvider, useSettings } from "../stores"
 
 /**
- * Inner provider component that uses effectiveTheme from SettingsContext
- * This must be inside SettingsProvider to access the settings context
+ * Inner provider component that uses effectiveTheme from settings store
+ * This must be inside StoreProvider to access the settings
  */
 function ThemedProvider({ children, ...rest }: Omit<TamaguiProviderProps, "config">) {
   const { effectiveTheme, isLoading } = useSettings()
   const systemColorScheme = useColorScheme()
 
-  // Use effectiveTheme from settings context, fallback to system during loading
+  // Use effectiveTheme from settings store, fallback to system during loading
   const theme = isLoading
     ? systemColorScheme === "dark"
       ? "dark"
@@ -42,12 +42,12 @@ function ThemedProvider({ children, ...rest }: Omit<TamaguiProviderProps, "confi
 
 /**
  * Main Provider component that wraps the app with all necessary providers
- * SettingsProvider is the outermost to allow ThemedProvider to access settings
+ * StoreProvider is the outermost to allow ThemedProvider to access settings
  */
 export function Provider({ children, ...rest }: Omit<TamaguiProviderProps, "config">) {
   return (
-    <SettingsProvider>
+    <StoreProvider>
       <ThemedProvider {...rest}>{children}</ThemedProvider>
-    </SettingsProvider>
+    </StoreProvider>
   )
 }

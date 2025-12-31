@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useExpenses } from "../context/ExpenseContext"
+import { useExpenses } from "../stores"
 import { ExpenseCategory } from "../types/expense"
 import {
   TimeWindow,

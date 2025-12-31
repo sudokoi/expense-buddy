@@ -5,12 +5,11 @@ import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses } from "../../context/ExpenseContext"
+import { useExpenses, useNotifications } from "../../stores"
 import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
-import { useNotifications } from "../../context/notification-context"
 import type {
   ExpenseCategory,
   Expense,
@@ -240,29 +239,8 @@ export default function HistoryScreen() {
         onOpenChange={(open) => !open && setDeletingExpenseId(null)}
       >
         <Dialog.Portal>
-          <Dialog.Overlay
-            key="overlay"
-            animation="quick"
-            opacity={0.5}
-            enterStyle={{ opacity: 0 }}
-            exitStyle={{ opacity: 0 }}
-          />
-          <Dialog.Content
-            bordered
-            elevate
-            key="content"
-            animation={[
-              "quick",
-              {
-                opacity: {
-                  overshootClamping: true,
-                },
-              },
-            ]}
-            enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-            exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-            gap="$4"
-          >
+          <Dialog.Overlay key="overlay" opacity={0.5} />
+          <Dialog.Content bordered elevate key="content" gap="$4">
             <Dialog.Title>Delete Expense</Dialog.Title>
             <Dialog.Description>
               Are you sure you want to delete this expense? This action cannot be undone.
@@ -290,29 +268,13 @@ export default function HistoryScreen() {
         }}
       >
         <Dialog.Portal>
-          <Dialog.Overlay
-            key="overlay"
-            animation="quick"
-            opacity={0.5}
-            enterStyle={{ opacity: 0 }}
-            exitStyle={{ opacity: 0 }}
-          />
+          <Dialog.Overlay key="overlay" opacity={0.5} />
           <Dialog.Content
             bordered
             elevate
             key="content"
             // @ts-expect-error maxHeight works at runtime but isn't in Dialog.Content types
             maxHeight="80%"
-            animation={[
-              "quick",
-              {
-                opacity: {
-                  overshootClamping: true,
-                },
-              },
-            ]}
-            enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-            exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
             gap="$4"
           >
             <Dialog.Title>Edit Expense</Dialog.Title>

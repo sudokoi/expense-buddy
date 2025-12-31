@@ -1,7 +1,7 @@
 import React from "react"
 import { Card, Text, styled } from "tamagui"
 import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
-import { useNotifications, NotificationType } from "../context/notification-context"
+import { useNotifications, NotificationType } from "../stores"
 import { View, StyleSheet } from "react-native"
 import { getNotificationColor } from "../constants/theme-colors"
 
@@ -64,9 +64,6 @@ export const NotificationStack: React.FC = () => {
       {notifications.map((notification) => (
         <Card
           key={notification.id}
-          animation="quick"
-          enterStyle={{ opacity: 0, y: -20 }}
-          exitStyle={{ opacity: 0, y: -20 }}
           style={[
             styles.card,
             { backgroundColor: getNotificationColor(notification.type) },

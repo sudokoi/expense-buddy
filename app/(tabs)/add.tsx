@@ -3,8 +3,7 @@ import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagu
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useExpenses } from "../../context/ExpenseContext"
-import { useSettings } from "../../context/SettingsContext"
+import { useExpenses, useSettings } from "../../stores"
 import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
@@ -333,7 +332,7 @@ export default function AddExpenseScreen() {
             </Button>
 
             {isPaymentMethodExpanded && (
-              <YStack gap="$2" animation="quick" enterStyle={{ opacity: 0 }}>
+              <YStack gap="$2">
                 <XStack style={layoutStyles.paymentMethodRow}>
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard

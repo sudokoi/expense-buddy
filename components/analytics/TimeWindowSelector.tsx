@@ -47,8 +47,6 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
             themeInverse={isSelected}
             bordered={!isSelected}
             onPress={() => handlePress(window.value)}
-            animation="quick"
-            pressStyle={{ scale: 0.97 }}
           >
             {window.label}
           </Button>

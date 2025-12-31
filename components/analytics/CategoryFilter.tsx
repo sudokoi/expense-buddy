@@ -61,8 +61,6 @@ export const CategoryFilter = memo(function CategoryFilter({
           themeInverse={isAllSelected}
           bordered={!isAllSelected}
           onPress={handleAllPress}
-          animation="quick"
-          pressStyle={{ scale: 0.97 }}
         >
           All
         </Button>
@@ -80,8 +78,6 @@ export const CategoryFilter = memo(function CategoryFilter({
                 isSelected ? { backgroundColor: getColorValue(cat.color) } : undefined
               }
               onPress={() => handleCategoryPress(cat.value)}
-              animation="quick"
-              pressStyle={{ scale: 0.97 }}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >
               <Button.Text color={isSelected ? "white" : "$color"}>

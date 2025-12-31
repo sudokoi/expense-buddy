@@ -28,9 +28,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       backgroundColor={isSelected ? "$color5" : "$background"}
       borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
       borderWidth={isSelected ? 2 : 1}
-      pressStyle={{ scale: 0.97, opacity: 0.9 }}
       onPress={onPress}
-      animation="quick"
     >
       <XStack gap="$2" alignItems="center">
         <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />

@@ -1,7 +1,7 @@
 import React from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
-import { useExpenses } from "../../context/ExpenseContext"
+import { useExpenses } from "../../stores"
 import { format, parseISO } from "date-fns"
 import { CATEGORIES } from "../../constants/categories"
 import { Trash } from "@tamagui/lucide-icons"
