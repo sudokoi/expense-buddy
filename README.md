@@ -23,6 +23,8 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
 - **Smart Categories**: Pre-defined categories (Food, Transport, Utilities, Entertainment, Health, Groceries, Other)
+- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking)
+- **Default Payment Method**: Set a preferred payment method for faster entry
 - **Full CRUD**: Create, read, update, and delete expenses with ease
 - **History View**: Browse expenses organized by date with search and filter
 
@@ -30,6 +32,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Visual Charts**: Bar charts showing daily spending patterns
 - **Category Breakdown**: See spending distribution across categories
+- **Payment Method Analysis**: Pie chart showing expense distribution by payment method
 - **Time-based Analysis**: Track expenses over days, weeks, and months
 
 ### ☁️ GitHub Sync
@@ -177,14 +180,16 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 The app includes a set of reusable styled components in `components/ui/`:
 
-| Component         | Description                                          |
-| ----------------- | ---------------------------------------------------- |
-| `AmountText`      | Displays expense/income amounts with semantic colors |
-| `CategoryCard`    | Selectable category card with color theming          |
-| `CategoryIcon`    | Circular icon container with category color          |
-| `ExpenseCard`     | Card wrapper for expense list items                  |
-| `ScreenContainer` | Scrollable screen wrapper with consistent padding    |
-| `SectionHeader`   | Styled section title text                            |
+| Component                      | Description                                          |
+| ------------------------------ | ---------------------------------------------------- |
+| `AmountText`                   | Displays expense/income amounts with semantic colors |
+| `CategoryCard`                 | Selectable category card with color theming          |
+| `CategoryIcon`                 | Circular icon container with category color          |
+| `ExpenseCard`                  | Card wrapper for expense list items                  |
+| `ScreenContainer`              | Scrollable screen wrapper with consistent padding    |
+| `SectionHeader`                | Styled section title text                            |
+| `DefaultPaymentMethodSelector` | Payment method preference selector                   |
+| `PaymentMethodCard`            | Selectable payment method display card               |
 
 All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
 
@@ -202,6 +207,9 @@ expense-buddy/
 │   ├── day/[date].tsx     # Day detail view
 │   └── _layout.tsx        # Root layout
 ├── components/            # Reusable components
+│   ├── analytics/        # Analytics chart components
+│   │   ├── PaymentMethodPieChart.tsx  # Payment method breakdown
+│   │   └── CollapsibleSection.tsx     # Collapsible chart wrapper
 │   ├── ui/               # Styled UI components
 │   │   ├── AmountText.tsx     # Styled amount display
 │   │   ├── CategoryCard.tsx   # Category selection card
@@ -209,6 +217,8 @@ expense-buddy/
 │   │   ├── ExpenseCard.tsx    # Expense list item card
 │   │   ├── ScreenContainer.tsx # Screen wrapper with padding
 │   │   ├── SectionHeader.tsx  # Section title component
+│   │   ├── DefaultPaymentMethodSelector.tsx # Payment method preference
+│   │   ├── PaymentMethodCard.tsx  # Payment method display card
 │   │   └── index.ts           # Component exports
 │   ├── Provider.tsx       # App providers
 │   ├── NotificationStack.tsx
@@ -226,7 +236,9 @@ expense-buddy/
 │   ├── change-tracker.ts # Record-level change tracking
 │   └── auto-sync-service.ts
 ├── constants/            # App constants
-│   └── categories.ts
+│   ├── categories.ts
+│   ├── payment-methods.ts    # Payment method definitions
+│   └── payment-method-colors.ts  # Chart colors for payment methods
 ├── tamagui.config.ts     # Tamagui theme configuration with getColorValue helper
 └── types/               # TypeScript types
     └── expense.ts
