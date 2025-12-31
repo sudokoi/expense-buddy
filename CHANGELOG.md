@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.5.3
+
+### Patch Changes
+
+- [`9809010`](https://github.com/sudokoi/expense-buddy/commit/98090107731ad603ea5732221c925005c1916c6c) Thanks [@sudokoi](https://github.com/sudokoi)! - Optimize category and payment method selection responsiveness
+  - Replace slow "bouncy" animations with "quick" across selection components
+  - Memoize CategoryCard and PaymentMethodCard to prevent unnecessary re-renders
+  - Add useCallback for selection handlers in add/edit flows
+  - Remove unnecessary animations from static display cards
+
 ## 1.5.2
 
 ### Patch Changes
