@@ -5,6 +5,7 @@ import {
   loadSyncConfig,
   SyncNotification,
 } from "./sync-manager"
+import { AppSettings, loadSettings } from "./settings-manager"
 
 /**
  * Main auto-sync orchestration function
@@ -14,12 +15,13 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   synced: boolean
   expenses?: Expense[]
   notification?: SyncNotification
+  downloadedSettings?: AppSettings
   error?: string
 }> {
   try {
     // Check if auto-sync is enabled
-    const settings = await loadAutoSyncSettings()
-    if (!settings.enabled) {
+    const autoSyncSettings = await loadAutoSyncSettings()
+    if (!autoSyncSettings.enabled) {
       return { synced: false }
     }
 
@@ -29,19 +31,28 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       return { synced: false }
     }
 
-    // Perform the sync
-    const result = await autoSync(localExpenses)
+    // Load current app settings to check if settings sync is enabled
+    const appSettings = await loadSettings()
+
+    // Perform the sync with settings if enabled
+    const result = await autoSync(
+      localExpenses,
+      appSettings.syncSettings ? appSettings : undefined,
+      appSettings.syncSettings
+    )
 
     if (result.success && result.expenses) {
       return {
         synced: true,
         expenses: result.expenses,
         notification: result.notification,
+        downloadedSettings: result.downloadedSettings,
       }
     } else {
       return {
         synced: false,
         error: result.error || result.message,
+        downloadedSettings: result.downloadedSettings,
       }
     }
   } catch (error) {

@@ -13,11 +13,21 @@ import {
   trackDelete,
   clearPendingChanges,
 } from "../services/change-tracker"
+import {
+  saveSettings,
+  clearSettingsChanged,
+  AppSettings,
+} from "../services/settings-manager"
 
 interface ExpenseState {
   expenses: Expense[]
   isLoading: boolean
   syncNotification: SyncNotification | null
+}
+
+interface ExpenseProviderProps {
+  children: React.ReactNode
+  onSettingsDownloaded?: (settings: AppSettings) => void
 }
 
 const ExpenseContext = createContext<
@@ -47,8 +57,9 @@ const fetchExpenses = async (): Promise<Expense[]> => {
   }
 }
 
-export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
+export const ExpenseProvider: React.FC<ExpenseProviderProps> = ({
   children,
+  onSettingsDownloaded,
 }) => {
   const queryClient = useQueryClient()
   const [syncNotification, setSyncNotification] = useState<SyncNotification | null>(null)
@@ -57,6 +68,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: [EXPENSES_KEY],
     queryFn: fetchExpenses,
   })
+
+  // Helper function to apply downloaded settings
+  const applyDownloadedSettings = async (downloadedSettings: AppSettings) => {
+    // Save settings to storage
+    await saveSettings(downloadedSettings)
+    // Clear the change flag since we just synced
+    await clearSettingsChanged()
+    // Notify parent component (SettingsContext) to update its state
+    if (onSettingsDownloaded) {
+      onSettingsDownloaded(downloadedSettings)
+    }
+  }
 
   // Auto-sync on app launch
   useEffect(() => {
@@ -73,10 +96,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
           // Clear pending changes after successful auto-sync
           await clearPendingChanges()
 
+          // Apply downloaded settings if available
+          if (result.downloadedSettings) {
+            await applyDownloadedSettings(result.downloadedSettings)
+          }
+
           // Show notification if there are updates
           if (result.notification) {
             setSyncNotification(result.notification)
           }
+        } else if (result.downloadedSettings) {
+          // Even if expense sync failed, apply settings if downloaded
+          await applyDownloadedSettings(result.downloadedSettings)
         }
       }
     }
@@ -85,7 +116,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!isLoading) {
       performLaunchSync()
     }
-  }, [isLoading, expenses, queryClient]) // Run once when loading completes
+  }, [isLoading, expenses, queryClient, onSettingsDownloaded]) // Run once when loading completes
 
   const addMutation = useMutation({
     mutationFn: async (newExpense: Expense) => {
@@ -116,10 +147,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
           // Clear pending changes after successful auto-sync
           await clearPendingChanges()
 
+          // Apply downloaded settings if available
+          if (result.downloadedSettings) {
+            await applyDownloadedSettings(result.downloadedSettings)
+          }
+
           // Show notification if there are updates from remote
           if (result.notification) {
             setSyncNotification(result.notification)
           }
+        } else if (result.downloadedSettings) {
+          // Even if expense sync failed, apply settings if downloaded
+          await applyDownloadedSettings(result.downloadedSettings)
         }
       }
     },
@@ -150,10 +189,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
           // Clear pending changes after successful auto-sync
           await clearPendingChanges()
 
+          // Apply downloaded settings if available
+          if (result.downloadedSettings) {
+            await applyDownloadedSettings(result.downloadedSettings)
+          }
+
           // Show notification if there are updates from remote
           if (result.notification) {
             setSyncNotification(result.notification)
           }
+        } else if (result.downloadedSettings) {
+          // Even if expense sync failed, apply settings if downloaded
+          await applyDownloadedSettings(result.downloadedSettings)
         }
       }
     },
@@ -186,10 +233,18 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
           // Clear pending changes after successful auto-sync
           await clearPendingChanges()
 
+          // Apply downloaded settings if available
+          if (result.downloadedSettings) {
+            await applyDownloadedSettings(result.downloadedSettings)
+          }
+
           // Show notification if there are updates from remote
           if (result.notification) {
             setSyncNotification(result.notification)
           }
+        } else if (result.downloadedSettings) {
+          // Even if expense sync failed, apply settings if downloaded
+          await applyDownloadedSettings(result.downloadedSettings)
         }
       }
     },

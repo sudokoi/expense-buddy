@@ -11,7 +11,15 @@ import {
   generateCommitMessage,
   BatchFileUpload,
   BatchFileDelete,
+  downloadSettingsFile,
 } from "./github-sync"
+import {
+  AppSettings,
+  computeSettingsHash,
+  getSettingsHash,
+  saveSettingsHash,
+  clearSettingsChanged,
+} from "./settings-manager"
 import {
   groupExpensesByDay,
   getFilenameForDay,
@@ -45,6 +53,10 @@ export interface SyncResult {
   filesUploaded?: number
   filesSkipped?: number
   filesDeleted?: number
+  // Settings sync reporting fields
+  settingsSynced?: boolean
+  settingsSkipped?: boolean
+  settingsError?: string
 }
 
 export type AutoSyncTiming = "on_launch" | "on_change"
@@ -176,8 +188,13 @@ export async function testConnection(): Promise<SyncResult> {
  * Uses differential sync to only upload changed files
  * Uses batch commit to upload all changes in a single commit
  * Also deletes files for days that no longer have expenses
+ * Optionally includes settings in the sync if syncSettingsEnabled is true
  */
-export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
+export async function syncUp(
+  expenses: Expense[],
+  settings?: AppSettings,
+  syncSettingsEnabled?: boolean
+): Promise<SyncResult> {
   try {
     const config = await loadSyncConfig()
     if (!config) {
@@ -245,6 +262,30 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
     }
 
     // =========================================================================
+    // Settings sync: Check if settings should be included
+    // =========================================================================
+    let shouldSyncSettings = false
+    let settingsContent: string | undefined
+    let newSettingsHash: string | undefined
+
+    if (syncSettingsEnabled && settings) {
+      // Compute hash of current settings
+      newSettingsHash = computeSettingsHash(settings)
+      const storedSettingsHash = await getSettingsHash()
+
+      // Only sync if settings have changed (hash-based skip)
+      if (storedSettingsHash !== newSettingsHash) {
+        shouldSyncSettings = true
+        settingsContent = JSON.stringify(settings, null, 2)
+        // Add settings to the batch upload
+        filesToUpload.push({
+          path: "settings.json",
+          content: settingsContent,
+        })
+      }
+    }
+
+    // =========================================================================
     // Task 4.2: Replace individual calls with single batchCommit call
     // =========================================================================
 
@@ -256,6 +297,8 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
+        settingsSynced: false,
+        settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
       }
     }
 
@@ -298,19 +341,32 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 
       await saveFileHashes(updatedHashes)
 
+      // Update settings hash if settings were synced
+      if (shouldSyncSettings && newSettingsHash) {
+        await saveSettingsHash(newSettingsHash)
+        await clearSettingsChanged()
+      }
+
       const message: string[] = []
-      if (filesToUpload.length > 0)
-        message.push(`${filesToUpload.length} file(s) uploaded`)
+      // Count expense files only (exclude settings.json)
+      const expenseFilesUploaded = filesToUpload.filter(
+        (f) => f.path !== "settings.json"
+      ).length
+      if (expenseFilesUploaded > 0)
+        message.push(`${expenseFilesUploaded} file(s) uploaded`)
       if (skippedFiles > 0) message.push(`${skippedFiles} file(s) unchanged`)
       if (filesToDelete.length > 0)
         message.push(`${filesToDelete.length} file(s) deleted`)
+      if (shouldSyncSettings) message.push("settings synced")
 
       return {
         success: true,
         message: `Synced ${expenses.length} expenses: ${message.join(", ")}`,
-        filesUploaded: filesToUpload.length,
+        filesUploaded: expenseFilesUploaded,
         filesSkipped: skippedFiles,
         filesDeleted: filesToDelete.length,
+        settingsSynced: shouldSyncSettings,
+        settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
       }
     } else {
       // On failure: preserve existing hashes (don't update anything)
@@ -321,6 +377,7 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
+        settingsSynced: false,
       }
     }
   } catch (error) {
@@ -330,13 +387,19 @@ export async function syncUp(expenses: Expense[]): Promise<SyncResult> {
 
 /**
  * Sync expenses from GitHub (download) - downloads last N days of files
+ * Optionally downloads settings if syncSettingsEnabled is true
  */
-export async function syncDown(daysToDownload: number = 7): Promise<{
+export async function syncDown(
+  daysToDownload: number = 7,
+  syncSettingsEnabled?: boolean
+): Promise<{
   success: boolean
   message: string
   expenses?: Expense[]
+  settings?: AppSettings
   error?: string
   hasMore?: boolean
+  settingsDownloaded?: boolean
 }> {
   try {
     const config = await loadSyncConfig()
@@ -361,10 +424,33 @@ export async function syncDown(daysToDownload: number = 7): Promise<{
       .sort((a, b) => b.dayKey.localeCompare(a.dayKey)) // Sort descending (newest first)
 
     if (expenseFiles.length === 0) {
+      // No expense files, but we might still have settings to download
+      let downloadedSettings: AppSettings | undefined
+      let settingsDownloaded = false
+
+      if (syncSettingsEnabled) {
+        try {
+          const settingsResult = await downloadSettingsFile(
+            config.token,
+            config.repo,
+            config.branch
+          )
+          if (settingsResult) {
+            downloadedSettings = JSON.parse(settingsResult.content) as AppSettings
+            settingsDownloaded = true
+          }
+        } catch (settingsError) {
+          console.warn("Failed to download settings:", settingsError)
+          // Continue without settings - don't fail the whole sync
+        }
+      }
+
       return {
         success: false,
         message: "No expense files found in repository",
         error: "No files found",
+        settings: downloadedSettings,
+        settingsDownloaded,
       }
     }
 
@@ -391,11 +477,41 @@ export async function syncDown(daysToDownload: number = 7): Promise<{
       }
     }
 
+    // Download settings if enabled
+    let downloadedSettings: AppSettings | undefined
+    let settingsDownloaded = false
+
+    if (syncSettingsEnabled) {
+      try {
+        const settingsResult = await downloadSettingsFile(
+          config.token,
+          config.repo,
+          config.branch
+        )
+        if (settingsResult) {
+          downloadedSettings = JSON.parse(settingsResult.content) as AppSettings
+          settingsDownloaded = true
+        }
+      } catch (settingsError) {
+        console.warn("Failed to download settings:", settingsError)
+        // Continue without settings - don't fail the whole sync
+      }
+    }
+
+    const messageParts = [
+      `Downloaded ${allExpenses.length} expenses from ${downloadedFiles} file(s)`,
+    ]
+    if (settingsDownloaded) {
+      messageParts.push("settings downloaded")
+    }
+
     return {
       success: true,
-      message: `Downloaded ${allExpenses.length} expenses from ${downloadedFiles} file(s)`,
+      message: messageParts.join(", "),
       expenses: allExpenses,
+      settings: downloadedSettings,
       hasMore,
+      settingsDownloaded,
     }
   } catch (error) {
     return { success: false, message: "Download failed", error: String(error) }
@@ -513,13 +629,22 @@ async function saveLastSyncTime(): Promise<void> {
 
 /**
  * Bidirectional sync with timestamp-based conflict resolution
+ * Optionally includes settings sync if settings and syncSettingsEnabled are provided
  */
 export async function autoSync(
-  localExpenses: Expense[]
-): Promise<SyncResult & { expenses?: Expense[]; notification?: SyncNotification }> {
+  localExpenses: Expense[],
+  settings?: AppSettings,
+  syncSettingsEnabled?: boolean
+): Promise<
+  SyncResult & {
+    expenses?: Expense[]
+    notification?: SyncNotification
+    downloadedSettings?: AppSettings
+  }
+> {
   try {
     const lastSyncTime = await getLastSyncTime()
-    const downloadResult = await syncDown()
+    const downloadResult = await syncDown(7, syncSettingsEnabled)
 
     if (downloadResult.success && downloadResult.expenses) {
       const remoteExpenses = downloadResult.expenses
@@ -529,8 +654,8 @@ export async function autoSync(
         lastSyncTime
       )
 
-      // Upload merged data
-      const uploadResult = await syncUp(mergeResult.merged)
+      // Upload merged data (with settings if enabled)
+      const uploadResult = await syncUp(mergeResult.merged, settings, syncSettingsEnabled)
 
       if (uploadResult.success) {
         await saveLastSyncTime()
@@ -555,8 +680,20 @@ export async function autoSync(
           message: `Synced: ${mergeResult.merged.length} expenses (${localExpenses.length} local, ${remoteExpenses.length} remote)`,
           expenses: mergeResult.merged,
           notification,
+          downloadedSettings: downloadResult.settings,
+          settingsSynced: uploadResult.settingsSynced,
+          settingsSkipped: uploadResult.settingsSkipped,
         }
       } else {
+        // Upload failed - report partial success if settings were downloaded
+        if (downloadResult.settingsDownloaded && downloadResult.settings) {
+          return {
+            success: false,
+            message: "Expenses upload failed, but settings were downloaded",
+            error: uploadResult.error,
+            downloadedSettings: downloadResult.settings,
+          }
+        }
         return {
           success: false,
           message: "Upload after merge failed",
@@ -564,15 +701,20 @@ export async function autoSync(
         }
       }
     } else {
-      // No remote data, just upload local
-      const uploadResult = await syncUp(localExpenses)
+      // No remote expense data, just upload local
+      const uploadResult = await syncUp(localExpenses, settings, syncSettingsEnabled)
       if (uploadResult.success) {
         await saveLastSyncTime()
       }
+
+      // Even if expense download failed, we might have settings
       return {
         success: uploadResult.success,
         message: uploadResult.message,
         error: uploadResult.error,
+        downloadedSettings: downloadResult.settings,
+        settingsSynced: uploadResult.settingsSynced,
+        settingsSkipped: uploadResult.settingsSkipped,
       }
     }
   } catch (error) {

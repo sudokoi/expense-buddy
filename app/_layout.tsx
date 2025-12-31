@@ -53,8 +53,33 @@ import { SyncStatusProvider } from "../context/sync-status-context"
 import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
 import { KeyboardProvider } from "react-native-keyboard-controller"
+import { useSettings } from "../context/SettingsContext"
+import { AppSettings } from "../services/settings-manager"
 
 const queryClient = new QueryClient()
+
+/**
+ * Inner component that connects ExpenseProvider to SettingsContext
+ * This allows downloaded settings from auto-sync to be applied to the settings context
+ */
+const ExpenseProviderWithSettingsCallback = ({
+  children,
+}: {
+  children: React.ReactNode
+}) => {
+  const { replaceSettings } = useSettings()
+
+  const handleSettingsDownloaded = async (downloadedSettings: AppSettings) => {
+    // Apply downloaded settings to the settings context
+    await replaceSettings(downloadedSettings)
+  }
+
+  return (
+    <ExpenseProvider onSettingsDownloaded={handleSettingsDownloaded}>
+      {children}
+    </ExpenseProvider>
+  )
+}
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -63,11 +88,11 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         <QueryClientProvider client={queryClient}>
           <NotificationProvider>
             <SyncStatusProvider>
-              <ExpenseProvider>
+              <ExpenseProviderWithSettingsCallback>
                 {children}
                 <NotificationStack />
                 <SyncIndicator />
-              </ExpenseProvider>
+              </ExpenseProviderWithSettingsCallback>
             </SyncStatusProvider>
           </NotificationProvider>
         </QueryClientProvider>

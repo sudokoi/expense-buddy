@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { hasSettingsChanged } from "./settings-manager"
 
 const PENDING_CHANGES_KEY = "pending_sync_changes"
 
@@ -111,16 +112,23 @@ export async function getPendingChangesCount(): Promise<{
   added: number
   edited: number
   deleted: number
+  settingsChanged: number
   total: number
 }> {
   const changes = await loadPendingChanges()
   const added = changes.added.size
   const edited = changes.edited.size
   const deleted = changes.deleted.size
+
+  // Check if settings have changed
+  const settingsHaveChanged = await hasSettingsChanged()
+  const settingsChanged = settingsHaveChanged ? 1 : 0
+
   return {
     added,
     edited,
     deleted,
-    total: added + edited + deleted,
+    settingsChanged,
+    total: added + edited + deleted + settingsChanged,
   }
 }

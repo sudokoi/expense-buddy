@@ -102,7 +102,7 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
-  const { settings, setTheme, setSyncSettings } = useSettings()
+  const { settings, setTheme, setSyncSettings, replaceSettings } = useSettings()
 
   // Theme colors - using kawaii semantic colors
   const successColor = SEMANTIC_COLORS.success
@@ -212,7 +212,7 @@ export default function SettingsScreen() {
             onPress: async () => {
               setIsSyncing(true)
               startSync()
-              const result = await syncDown()
+              const result = await syncDown(7, settings.syncSettings)
               setIsSyncing(false)
               endSync(result.success)
 
@@ -222,6 +222,12 @@ export default function SettingsScreen() {
                   `Downloaded ${result.expenses.length} expenses`,
                   "success"
                 )
+
+                // Apply downloaded settings if available and settings sync is enabled
+                if (result.settings && settings.syncSettings) {
+                  await replaceSettings(result.settings)
+                  addNotification("Settings applied from GitHub", "success")
+                }
 
                 // Auto-enable sync for convenience
                 if (!autoSyncEnabled) {
@@ -284,13 +290,31 @@ export default function SettingsScreen() {
     // First, analyze what conflicts exist
     const analysis = await analyzeConflicts(state.expenses)
 
-    setIsSyncing(false)
-    endSync(analysis.success)
-
     if (!analysis.success) {
+      setIsSyncing(false)
+      endSync(false)
       addNotification(analysis.error || "Failed to analyze conflicts", "error")
       return
     }
+
+    // Also download settings if settings sync is enabled
+    let downloadedSettings:
+      | import("../../services/settings-manager").AppSettings
+      | undefined
+    if (settings.syncSettings) {
+      try {
+        const settingsResult = await syncDown(7, true)
+        if (settingsResult.success && settingsResult.settings) {
+          downloadedSettings = settingsResult.settings
+        }
+      } catch (settingsError) {
+        console.warn("Failed to download settings:", settingsError)
+        // Continue without settings - don't fail the whole sync
+      }
+    }
+
+    setIsSyncing(false)
+    endSync(analysis.success)
 
     const conflicts = analysis.conflicts!
     const remoteExpenses = analysis.remoteExpenses!
@@ -316,15 +340,30 @@ export default function SettingsScreen() {
 
     const summary = summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
 
-    // If no changes at all, inform the user
+    // If no changes at all (expenses and settings), inform the user
     if (
       !hasRemoteUpdates &&
       !hasNewFromRemote &&
       !hasLocalOnly &&
       !hasDeletedLocally &&
-      conflicts.localWins === 0
+      conflicts.localWins === 0 &&
+      !downloadedSettings
     ) {
       addNotification("Already in sync - no changes needed", "success")
+      return
+    }
+
+    // If only settings changed (no expense changes), apply settings directly
+    if (
+      !hasRemoteUpdates &&
+      !hasNewFromRemote &&
+      !hasLocalOnly &&
+      !hasDeletedLocally &&
+      conflicts.localWins === 0 &&
+      downloadedSettings
+    ) {
+      await replaceSettings(downloadedSettings)
+      addNotification("Settings synced from GitHub", "success")
       return
     }
 
@@ -337,17 +376,21 @@ export default function SettingsScreen() {
           { text: "Cancel", style: "cancel" },
           {
             text: "Merge",
-            onPress: () => performSmartMerge(remoteExpenses, summary),
+            onPress: () => performSmartMerge(remoteExpenses, summary, downloadedSettings),
           },
         ]
       )
     } else {
       // No conflicts - just merge automatically
-      await performSmartMerge(remoteExpenses, summary)
+      await performSmartMerge(remoteExpenses, summary, downloadedSettings)
     }
   }
 
-  const performSmartMerge = async (remoteExpenses: Expense[], summary: string) => {
+  const performSmartMerge = async (
+    remoteExpenses: Expense[],
+    summary: string,
+    downloadedSettings?: import("../../services/settings-manager").AppSettings
+  ) => {
     setIsSyncing(true)
     startSync()
 
@@ -357,6 +400,11 @@ export default function SettingsScreen() {
       // Update local state with merged data
       replaceAllExpenses(mergeResult.merged)
 
+      // Apply downloaded settings if available and settings sync is enabled
+      if (downloadedSettings && settings.syncSettings) {
+        await replaceSettings(downloadedSettings)
+      }
+
       // Clear pending changes since we've merged
       await clearPendingChanges()
       const changesCount = await getPendingChangesCount()
@@ -365,7 +413,11 @@ export default function SettingsScreen() {
       setIsSyncing(false)
       endSync(true)
 
-      addNotification(`Merged successfully: ${summary}`, "success")
+      const messageParts = [`Merged successfully: ${summary}`]
+      if (downloadedSettings && settings.syncSettings) {
+        messageParts.push("settings applied")
+      }
+      addNotification(messageParts.join(", "), "success")
     } catch (error) {
       setIsSyncing(false)
       endSync(false)

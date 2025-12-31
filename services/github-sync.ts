@@ -863,3 +863,138 @@ export async function deleteFile(
     return { success: false, error: `Delete failed: ${error}` }
   }
 }
+
+// ============================================================================
+// Settings Sync Functions
+// ============================================================================
+
+const SETTINGS_FILE_PATH = "settings.json"
+
+/**
+ * Upload settings.json to GitHub repository
+ * @param token GitHub Personal Access Token
+ * @param repo Repository in format "owner/repo"
+ * @param branch Branch name
+ * @param settingsContent JSON string of settings
+ * @returns Result with success status or error
+ */
+export async function uploadSettingsFile(
+  token: string,
+  repo: string,
+  branch: string,
+  settingsContent: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const [owner, repoName] = repo.split("/")
+    if (!owner || !repoName) {
+      return { success: false, error: "Invalid repository format" }
+    }
+
+    const encodedContent = btoa(unescape(encodeURIComponent(settingsContent)))
+
+    // First, try to get existing file SHA
+    let existingSHA: string | undefined
+    try {
+      const existingFile = await downloadSettingsFile(token, repo, branch)
+      if (existingFile) {
+        existingSHA = existingFile.sha
+      }
+    } catch {
+      // File doesn't exist, that's okay
+    }
+
+    const requestBody: {
+      message: string
+      content: string
+      branch: string
+      sha?: string
+    } = {
+      message: `Update settings - ${new Date().toISOString()}`,
+      content: encodedContent,
+      branch,
+    }
+
+    if (existingSHA) {
+      requestBody.sha = existingSHA
+    }
+
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/contents/${SETTINGS_FILE_PATH}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.message || response.statusText,
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: `Upload settings failed: ${error}` }
+  }
+}
+
+/**
+ * Download settings.json from GitHub repository
+ * @param token GitHub Personal Access Token
+ * @param repo Repository in format "owner/repo"
+ * @param branch Branch name
+ * @returns Settings content and SHA, or null if file doesn't exist
+ */
+export async function downloadSettingsFile(
+  token: string,
+  repo: string,
+  branch: string
+): Promise<{ content: string; sha: string } | null> {
+  try {
+    const [owner, repoName] = repo.split("/")
+    if (!owner || !repoName) {
+      throw new Error("Invalid repository format")
+    }
+
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/contents/${SETTINGS_FILE_PATH}?ref=${branch}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    )
+
+    if (response.status === 404) {
+      // File doesn't exist yet
+      return null
+    }
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const decodedContent = decodeURIComponent(
+      escape(atob(data.content.replace(/\n/g, "")))
+    )
+
+    return {
+      content: decodedContent,
+      sha: data.sha,
+    }
+  } catch (error) {
+    console.error("Download settings error:", error)
+    throw error
+  }
+}
