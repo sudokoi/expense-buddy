@@ -6,12 +6,12 @@ import {
   Input,
   Button,
   Label,
-  Card,
   Switch,
   RadioGroup,
+  Accordion,
 } from "tamagui"
 import { Alert, Linking, ViewStyle } from "react-native"
-import { Check, X, Download, ExternalLink } from "@tamagui/lucide-icons"
+import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-icons"
 import {
   saveSyncConfig,
   loadSyncConfig,
@@ -34,13 +34,14 @@ import {
 import { useExpenses } from "../../context/ExpenseContext"
 import { useNotifications } from "../../context/notification-context"
 import { useSyncStatus } from "../../context/sync-status-context"
+import { useSettings } from "../../context/SettingsContext"
 import {
   checkForUpdates,
   UpdateInfo,
   isPlayStoreInstall,
 } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
-import { ScreenContainer, SectionHeader } from "../../components/ui"
+import { ScreenContainer, ThemeSelector, SettingsSection } from "../../components/ui"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -65,14 +66,35 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "space-between",
   } as ViewStyle,
-  descriptionText: {
-    marginBottom: 16,
-  },
   helperText: {
     marginTop: 4,
   },
   clearButton: {
     marginTop: 16,
+  } as ViewStyle,
+  accordionTrigger: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 12,
+    borderRadius: 8,
+  } as ViewStyle,
+  accordionTriggerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 8,
+  } as ViewStyle,
+  connectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  } as ViewStyle,
+  accordionContent: {
+    padding: 8,
+    paddingTop: 12,
+  } as ViewStyle,
+  syncButtonsContainer: {
+    marginTop: 8,
   } as ViewStyle,
 }
 
@@ -80,6 +102,7 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { startSync, endSync } = useSyncStatus()
+  const { settings, setTheme, setSyncSettings } = useSettings()
 
   // Theme colors - using kawaii semantic colors
   const successColor = SEMANTIC_COLORS.success
@@ -94,6 +117,7 @@ export default function SettingsScreen() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
+  const [isConfigured, setIsConfigured] = useState(false)
 
   // Auto-sync settings
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false)
@@ -141,6 +165,7 @@ export default function SettingsScreen() {
       setToken(config.token)
       setRepo(config.repo)
       setBranch(config.branch)
+      setIsConfigured(true)
     }
   }
 
@@ -170,6 +195,7 @@ export default function SettingsScreen() {
 
     const config: SyncConfig = { token, repo, branch }
     await saveSyncConfig(config)
+    setIsConfigured(true)
     addNotification("Sync configuration saved", "success")
 
     // Only prompt to download if this is first-time setup AND no local expenses
@@ -359,6 +385,7 @@ export default function SettingsScreen() {
           setRepo("")
           setBranch("main")
           setConnectionStatus("idle")
+          setIsConfigured(false)
           addNotification("Configuration cleared", "success")
         },
       },
@@ -394,94 +421,146 @@ export default function SettingsScreen() {
     }
   }
 
+  const handleThemeChange = async (theme: "light" | "dark" | "system") => {
+    await setTheme(theme)
+  }
+
+  const handleSyncSettingsToggle = async (enabled: boolean) => {
+    await setSyncSettings(enabled)
+  }
+
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
-        <SectionHeader>GitHub Sync Settings</SectionHeader>
+        {/* APPEARANCE Section */}
+        <SettingsSection title="APPEARANCE">
+          <YStack gap="$2">
+            <Label>Theme</Label>
+            <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+          </YStack>
+        </SettingsSection>
 
-        <Text color="$color" opacity={0.7} style={layoutStyles.descriptionText}>
-          Sync your expenses to a GitHub repository using a Personal Access Token.
-        </Text>
-
-        {/* GitHub PAT */}
-        <YStack gap="$2">
-          <Label>GitHub Personal Access Token</Label>
-          <Input
-            secureTextEntry
-            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            value={token}
-            onChangeText={setToken}
-            size="$4"
-            borderWidth={2}
-            borderColor="$borderColor"
-          />
-          <Text fontSize="$2" color="$color" opacity={0.6}>
-            Create a fine-grained PAT with Contents (read/write) permission
+        {/* GITHUB SYNC Section */}
+        <SettingsSection title="GITHUB SYNC">
+          <Text color="$color" opacity={0.7} fontSize="$3">
+            Sync your expenses to a GitHub repository using a Personal Access Token.
           </Text>
-        </YStack>
 
-        {/* Repository */}
-        <YStack gap="$2">
-          <Label>Repository</Label>
-          <Input
-            placeholder="username/repo-name"
-            value={repo}
-            onChangeText={setRepo}
-            size="$4"
-            borderWidth={2}
-            borderColor="$borderColor"
-          />
-        </YStack>
-
-        {/* Branch */}
-        <YStack gap="$2">
-          <Label>Branch</Label>
-          <Input
-            placeholder="main"
-            value={branch}
-            onChangeText={setBranch}
-            size="$4"
-            borderWidth={2}
-            borderColor="$borderColor"
-          />
-        </YStack>
-
-        {/* Action Buttons */}
-        <XStack gap="$3" style={layoutStyles.buttonRow}>
-          <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
-            Save Configuration
-          </Button>
-          <Button
-            flex={1}
-            size="$4"
-            onPress={handleTestConnection}
-            disabled={isTesting || !token || !repo}
-            icon={
-              connectionStatus === "success"
-                ? Check
-                : connectionStatus === "error"
-                  ? X
-                  : undefined
-            }
-            style={{
-              backgroundColor:
-                connectionStatus === "success"
-                  ? successColor
-                  : connectionStatus === "error"
-                    ? errorColor
-                    : primaryColor,
-            }}
-            color={connectionStatus === "idle" ? undefined : "white"}
+          {/* Collapsible GitHub Configuration */}
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue={isConfigured ? undefined : "github-config"}
           >
-            {isTesting ? "Testing..." : "Test Connection"}
-          </Button>
-        </XStack>
+            <Accordion.Item value="github-config">
+              <Accordion.Trigger
+                bg="$backgroundHover"
+                style={layoutStyles.accordionTrigger}
+              >
+                {({ open }: { open: boolean }) => (
+                  <>
+                    <XStack style={layoutStyles.accordionTriggerInner}>
+                      <Text fontWeight="500">GitHub Configuration</Text>
+                      {isConfigured && (
+                        <XStack style={layoutStyles.connectedBadge}>
+                          <Check size={14} color={successColor} />
+                          <Text fontSize="$2" color={successColor}>
+                            Connected
+                          </Text>
+                        </XStack>
+                      )}
+                    </XStack>
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transform: [{ rotate: open ? "180deg" : "0deg" }],
+                      }}
+                    />
+                  </>
+                )}
+              </Accordion.Trigger>
+              <Accordion.Content style={layoutStyles.accordionContent}>
+                <YStack gap="$3">
+                  {/* GitHub PAT */}
+                  <YStack gap="$2">
+                    <Label>GitHub Personal Access Token</Label>
+                    <Input
+                      secureTextEntry
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                      value={token}
+                      onChangeText={setToken}
+                      size="$4"
+                      borderWidth={2}
+                      borderColor="$borderColor"
+                    />
+                    <Text fontSize="$2" color="$color" opacity={0.6}>
+                      Create a fine-grained PAT with Contents (read/write) permission
+                    </Text>
+                  </YStack>
 
-        {/* Sync Actions */}
-        <Card bordered padding="$4" marginTop="$4">
-          <SectionHeader>Manual Sync</SectionHeader>
+                  {/* Repository */}
+                  <YStack gap="$2">
+                    <Label>Repository</Label>
+                    <Input
+                      placeholder="username/repo-name"
+                      value={repo}
+                      onChangeText={setRepo}
+                      size="$4"
+                      borderWidth={2}
+                      borderColor="$borderColor"
+                    />
+                  </YStack>
 
-          <YStack gap="$3">
+                  {/* Branch */}
+                  <YStack gap="$2">
+                    <Label>Branch</Label>
+                    <Input
+                      placeholder="main"
+                      value={branch}
+                      onChangeText={setBranch}
+                      size="$4"
+                      borderWidth={2}
+                      borderColor="$borderColor"
+                    />
+                  </YStack>
+
+                  {/* Action Buttons */}
+                  <XStack gap="$3" style={layoutStyles.buttonRow}>
+                    <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
+                      Save Config
+                    </Button>
+                    <Button
+                      flex={1}
+                      size="$4"
+                      onPress={handleTestConnection}
+                      disabled={isTesting || !token || !repo}
+                      icon={
+                        connectionStatus === "success"
+                          ? Check
+                          : connectionStatus === "error"
+                            ? X
+                            : undefined
+                      }
+                      style={{
+                        backgroundColor:
+                          connectionStatus === "success"
+                            ? successColor
+                            : connectionStatus === "error"
+                              ? errorColor
+                              : primaryColor,
+                      }}
+                      color={connectionStatus === "idle" ? undefined : "white"}
+                    >
+                      {isTesting ? "Testing..." : "Test"}
+                    </Button>
+                  </XStack>
+                </YStack>
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion>
+
+          {/* Sync Buttons */}
+          <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
             <Button
               size="$4"
               onPress={handleSyncUp}
@@ -506,12 +585,10 @@ export default function SettingsScreen() {
               Sync from GitHub
             </Button>
           </YStack>
-        </Card>
+        </SettingsSection>
 
-        {/* Auto-Sync Settings */}
-        <Card bordered padding="$4" marginTop="$4">
-          <SectionHeader>Auto-Sync Settings</SectionHeader>
-
+        {/* AUTO-SYNC Section */}
+        <SettingsSection title="AUTO-SYNC">
           <YStack gap="$3">
             {/* Enable Auto-Sync Toggle */}
             <XStack style={layoutStyles.autoSyncRow}>
@@ -532,6 +609,31 @@ export default function SettingsScreen() {
                 onCheckedChange={setAutoSyncEnabled}
                 backgroundColor={
                   autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
+                }
+              >
+                <Switch.Thumb animation="quick" />
+              </Switch>
+            </XStack>
+
+            {/* Also sync settings toggle */}
+            <XStack style={layoutStyles.autoSyncRow}>
+              <YStack flex={1}>
+                <Label>Also sync settings</Label>
+                <Text
+                  fontSize="$2"
+                  color="$color"
+                  opacity={0.6}
+                  style={layoutStyles.helperText}
+                >
+                  Include theme and preferences in sync
+                </Text>
+              </YStack>
+              <Switch
+                size="$4"
+                checked={settings.syncSettings}
+                onCheckedChange={handleSyncSettingsToggle}
+                backgroundColor={
+                  settings.syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)
                 }
               >
                 <Switch.Thumb animation="quick" />
@@ -590,12 +692,10 @@ export default function SettingsScreen() {
               Save Auto-Sync Settings
             </Button>
           </YStack>
-        </Card>
+        </SettingsSection>
 
-        {/* App Info & Updates */}
-        <Card bordered padding="$4" marginTop="$4">
-          <SectionHeader>App Information</SectionHeader>
-
+        {/* APP INFORMATION Section */}
+        <SettingsSection title="APP INFORMATION">
           <YStack gap="$3">
             {/* Current Version */}
             <XStack style={layoutStyles.versionRow}>
@@ -653,7 +753,7 @@ export default function SettingsScreen() {
               View on GitHub
             </Button>
           </YStack>
-        </Card>
+        </SettingsSection>
 
         {/* Clear Config */}
         <Button
