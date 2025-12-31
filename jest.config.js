@@ -1,6 +1,10 @@
 module.exports = {
   testEnvironment: "node",
-  testMatch: ["**/utils/**/*.test.ts"],
+  testMatch: [
+    "**/utils/**/*.test.ts",
+    "**/services/**/*.test.ts",
+    "**/context/**/*.test.ts",
+  ],
   transform: {
     "^.+\\.tsx?$": ["babel-jest", { presets: ["@babel/preset-typescript"] }],
   },

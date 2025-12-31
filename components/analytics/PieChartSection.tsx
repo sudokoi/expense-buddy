@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react"
-import { YStack, XStack, Text, View, useTheme } from "tamagui"
+import { YStack, XStack, Text, View } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { PieChartDataItem } from "../../utils/analytics-calculations"
