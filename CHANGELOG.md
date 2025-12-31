@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 1.5.1
+
+### Patch Changes
+
+- Add settings sync with GitHub and redesigned settings screen
+  - Redesigned settings screen with organized sections (Appearance, GitHub Sync, Auto-Sync, App Information)
+  - Added theme selector with Light, Dark, and System Default options
+  - Settings now sync to GitHub alongside expenses when enabled
+  - Added "Also sync settings" toggle to control settings sync behavior
+  - Settings changes reflected in sync button badge count
+
 ## 1.5.0
 
 ### Minor Changes
