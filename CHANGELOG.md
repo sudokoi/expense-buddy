@@ -1,5 +1,35 @@
 # expense-buddy
 
+## 1.6.0
+
+### Minor Changes
+
+- Migrate to XState Store and improve rendering performance
+
+  ### State Management Migration
+  - Replace React Context + useState with XState Store v3 for all application state
+  - Create 4 dedicated stores: expense-store, settings-store, notification-store, sync-status-store
+  - Add custom hooks (useExpenses, useSettings, useNotifications, useSyncStatus) for store access
+  - Delete old context files (ExpenseContext, SettingsContext, notification-context, sync-status-context)
+
+  ### Performance Optimizations
+  - Remove all animations from UI components for improved performance
+  - Wrap ExpenseCard, CollapsibleSection, ScreenContainer with React.memo
+  - Create memoized list item components (ExpenseListItem, RecentExpenseItem, DayExpenseItem)
+  - Memoize event handlers with useCallback across all screens
+  - Memoize computed values with useMemo (totalExpenses, chartData, groupedExpenses)
+  - Extract static theme colors and layout styles outside components
+
+  ### UI Fixes
+  - Fix auto-sync helper text spacing
+  - Set GitHub config accordion to collapsed by default
+  - Disable sync button when no pending changes
+
+  ### Testing
+  - Add 52 unit tests for all 4 stores
+  - Add 11 property-based tests validating store correctness
+  - Add fast-check dependency for property-based testing
+
 ## 1.5.3
 
 ### Patch Changes

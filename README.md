@@ -59,6 +59,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Notifications**: Toast messages for sync status and actions
 - **Offline First**: Works without internet, syncs when connected
 - **First-Time Setup**: Guided flow to download existing data
+- **Performance Optimized**: Memoized components and handlers for smooth scrolling
 
 ## 🚀 Getting Started
 
@@ -170,11 +171,12 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Framework**: React Native with Expo
 - **Routing**: Expo Router (file-based routing)
 - **UI Library**: Tamagui (universal design system)
-- **State Management**: TanStack Query (React Query)
+- **State Management**: XState Store v3 (reactive stores) + TanStack Query (async state)
 - **Storage**: AsyncStorage + Expo SecureStore
 - **Charts**: react-native-gifted-charts
 - **Date Handling**: date-fns
 - **CSV Parsing**: PapaParse
+- **Testing**: Jest + fast-check (property-based testing)
 
 ### UI Component Library
 
@@ -188,6 +190,8 @@ The app includes a set of reusable styled components in `components/ui/`:
 | `ExpenseCard`                  | Card wrapper for expense list items                  |
 | `ScreenContainer`              | Scrollable screen wrapper with consistent padding    |
 | `SectionHeader`                | Styled section title text                            |
+| `SettingsSection`              | Card wrapper for settings groups                     |
+| `ThemeSelector`                | Theme preference selector (light/dark/system)        |
 | `DefaultPaymentMethodSelector` | Payment method preference selector                   |
 | `PaymentMethodCard`            | Selectable payment method display card               |
 
@@ -223,10 +227,15 @@ expense-buddy/
 │   ├── Provider.tsx       # App providers
 │   ├── NotificationStack.tsx
 │   └── SyncIndicator.tsx
-├── context/              # React contexts
-│   ├── ExpenseContext.tsx
-│   ├── notification-context.tsx
-│   └── sync-status-context.tsx
+├── stores/               # XState Store state management
+│   ├── expense-store.ts      # Expense data store
+│   ├── settings-store.ts     # App settings store
+│   ├── notification-store.ts # Toast notifications store
+│   ├── sync-status-store.ts  # Sync status store
+│   ├── hooks.ts              # Custom hooks (useExpenses, useSettings, etc.)
+│   ├── store-provider.tsx    # Store initialization provider
+│   └── index.ts              # Store exports
+│   └── __tests__/            # Unit and property-based tests
 ├── services/             # Business logic
 │   ├── sync-manager.ts   # Sync orchestration
 │   ├── github-sync.ts    # GitHub API client (includes batch commit via Git Data API)
@@ -243,6 +252,24 @@ expense-buddy/
 └── types/               # TypeScript types
     └── expense.ts
 ```
+
+## 🧪 Testing
+
+The app includes comprehensive unit tests and property-based tests:
+
+```bash
+# Run all tests
+yarn test
+
+# Run tests in watch mode
+yarn test:watch
+```
+
+### Test Coverage
+
+- **Unit Tests**: 52 tests covering all 4 stores
+- **Property-Based Tests**: 11 properties validating store correctness using fast-check
+- **Test Files**: Located in `stores/__tests__/` and `services/`
 
 ## 🔧 Configuration
 
