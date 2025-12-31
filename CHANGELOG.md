@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.5.2
+
+### Patch Changes
+
+- [`f2cf2db`](https://github.com/sudokoi/expense-buddy/commit/f2cf2db05027d9688c0bff631a0f1e36d9e97e16) Thanks [@sudokoi](https://github.com/sudokoi)! - Add payment method tracking with analytics pie chart, default payment method selection in settings, and improved expense categorization by payment type
+
 ## 1.5.1
 
 ### Patch Changes
