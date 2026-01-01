@@ -12,6 +12,7 @@ const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
   { label: "7 Days", value: "7d" },
   { label: "15 Days", value: "15d" },
   { label: "1 Month", value: "1m" },
+  { label: "All", value: "all" },
 ]
 
 const layoutStyles = {

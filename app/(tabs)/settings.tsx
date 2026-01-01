@@ -115,6 +115,7 @@ export default function SettingsScreen() {
     setSyncSettings,
     setDefaultPaymentMethod,
     replaceSettings,
+    clearSettingsChangeFlag,
   } = useSettings()
 
   const [token, setToken] = useState("")
@@ -140,6 +141,7 @@ export default function SettingsScreen() {
     added: number
     edited: number
     deleted: number
+    settingsChanged: number
     total: number
   } | null>(null)
   const [isComputingSyncCount, setIsComputingSyncCount] = useState(false)
@@ -335,23 +337,50 @@ export default function SettingsScreen() {
   const handleSyncUp = useCallback(async () => {
     setIsSyncing(true)
     startSync()
-    const result = await syncUp(state.expenses)
+    // Pass settings if settings sync is enabled
+    const result = await syncUp(
+      state.expenses,
+      settings.syncSettings ? settings : undefined,
+      settings.syncSettings
+    )
     setIsSyncing(false)
     endSync(result.success)
 
     if (result.success) {
       addNotification(result.message, "success")
       await clearPendingChangesAfterSync()
+      // Clear settings change flag if settings were synced
+      if (settings.syncSettings && result.settingsSynced) {
+        clearSettingsChangeFlag()
+      }
       const changesCount = await getPendingChangesCount()
       setPendingChangesCount(changesCount)
     } else {
       addNotification(result.error || result.message, "error")
     }
-  }, [state.expenses, startSync, endSync, clearPendingChangesAfterSync, addNotification])
+  }, [
+    state.expenses,
+    settings,
+    startSync,
+    endSync,
+    clearPendingChangesAfterSync,
+    clearSettingsChangeFlag,
+    addNotification,
+  ])
 
   const handleSyncDown = useCallback(async () => {
     setIsSyncing(true)
     startSync()
+
+    // Download expenses and optionally settings in one call
+    const downloadResult = await syncDown(7, settings.syncSettings)
+
+    if (!downloadResult.success) {
+      setIsSyncing(false)
+      endSync(false)
+      addNotification(downloadResult.error || "Failed to download", "error")
+      return
+    }
 
     const analysis = await analyzeConflicts(state.expenses)
 
@@ -362,19 +391,7 @@ export default function SettingsScreen() {
       return
     }
 
-    let downloadedSettings:
-      | import("../../services/settings-manager").AppSettings
-      | undefined
-    if (settings.syncSettings) {
-      try {
-        const settingsResult = await syncDown(7, true)
-        if (settingsResult.success && settingsResult.settings) {
-          downloadedSettings = settingsResult.settings
-        }
-      } catch (settingsError) {
-        console.warn("Failed to download settings:", settingsError)
-      }
-    }
+    const downloadedSettings = downloadResult.settings
 
     setIsSyncing(false)
     endSync(analysis.success)
@@ -422,6 +439,9 @@ export default function SettingsScreen() {
       downloadedSettings
     ) {
       await replaceSettings(downloadedSettings)
+      // Refresh pending changes count after settings sync
+      const changesCount = await getPendingChangesCount()
+      setPendingChangesCount(changesCount)
       addNotification("Settings synced from GitHub", "success")
       return
     }
@@ -502,22 +522,22 @@ export default function SettingsScreen() {
   }, [])
 
   const handleThemeChange = useCallback(
-    async (theme: "light" | "dark" | "system") => {
-      await setTheme(theme)
+    (theme: "light" | "dark" | "system") => {
+      setTheme(theme)
     },
     [setTheme]
   )
 
   const handleSyncSettingsToggle = useCallback(
-    async (enabled: boolean) => {
-      await setSyncSettings(enabled)
+    (enabled: boolean) => {
+      setSyncSettings(enabled)
     },
     [setSyncSettings]
   )
 
   const handleDefaultPaymentMethodChange = useCallback(
-    async (paymentMethod: PaymentMethodType | undefined) => {
-      await setDefaultPaymentMethod(paymentMethod)
+    (paymentMethod: PaymentMethodType | undefined) => {
+      setDefaultPaymentMethod(paymentMethod)
     },
     [setDefaultPaymentMethod]
   )
@@ -532,9 +552,39 @@ export default function SettingsScreen() {
     if (isComputingSyncCount) return "Checking changes..."
     if (pendingChangesCount === null)
       return `Upload to GitHub (${state.expenses.length} expenses)`
-    if (pendingChangesCount.total === 0) return "No changes to sync"
-    return `Upload to GitHub (${pendingChangesCount.total} record(s) changed)`
-  }, [isSyncing, isComputingSyncCount, pendingChangesCount, state.expenses.length])
+
+    // Build a descriptive message
+    const parts: string[] = []
+    const expenseChanges =
+      pendingChangesCount.added + pendingChangesCount.edited + pendingChangesCount.deleted
+    if (expenseChanges > 0) {
+      parts.push(`${expenseChanges} expense(s)`)
+    }
+    // Only show settings label when settings sync is enabled
+    if (settings.syncSettings && pendingChangesCount.settingsChanged > 0) {
+      parts.push("settings")
+    }
+
+    if (parts.length === 0) return "No changes to sync"
+    return `Upload to GitHub (${parts.join(" + ")} changed)`
+  }, [
+    isSyncing,
+    isComputingSyncCount,
+    pendingChangesCount,
+    state.expenses.length,
+    settings.syncSettings,
+  ])
+
+  // Memoized check for whether there are changes to sync (respects settings sync toggle)
+  const hasChangesToSync = useMemo(() => {
+    if (pendingChangesCount === null) return true // Assume there might be changes
+    const expenseChanges =
+      pendingChangesCount.added + pendingChangesCount.edited + pendingChangesCount.deleted
+    const settingsChanges = settings.syncSettings
+      ? pendingChangesCount.settingsChanged
+      : 0
+    return expenseChanges + settingsChanges > 0
+  }, [pendingChangesCount, settings.syncSettings])
 
   return (
     <ScreenContainer>
@@ -680,7 +730,7 @@ export default function SettingsScreen() {
             <Button
               size="$4"
               onPress={handleSyncUp}
-              disabled={isSyncing || !token || !repo || pendingChangesCount?.total === 0}
+              disabled={isSyncing || !token || !repo || !hasChangesToSync}
             >
               {syncUpButtonText}
             </Button>

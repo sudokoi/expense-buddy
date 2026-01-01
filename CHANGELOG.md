@@ -1,5 +1,24 @@
 # expense-buddy
 
+## 1.6.1
+
+### Patch Changes
+
+- Fix sync notifications and improve analytics time window options
+
+  ### Bug Fixes
+  - Fix toast notification missing background in dark mode by replacing undefined `theme="accent"` with explicit theme-aware styling
+  - Fix sync button showing "1 record updated" when only settings changed by distinguishing between expense and settings changes in the label
+  - Fix settings sync not clearing the change flag after successful upload
+  - Fix sync down making duplicate network calls for settings
+
+  ### Improvements
+  - Add "All" time window option in Analytics to view all downloaded expenses, not just last 7/15/30 days
+  - Improve sync button text to show descriptive labels like "2 expense(s) + settings changed" instead of generic "X record(s) changed"
+  - Settings label in sync button only appears when settings sync is enabled AND settings have actually changed
+  - Optimize sync handlers by removing redundant async/await calls
+  - Add `hasChangesToSync` memoized value for more accurate sync button disabled state
+
 ## 1.6.0
 
 ### Minor Changes

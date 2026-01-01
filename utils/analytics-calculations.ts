@@ -12,7 +12,7 @@ import { CATEGORY_COLORS } from "../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
 // Time window type
-export type TimeWindow = "7d" | "15d" | "1m"
+export type TimeWindow = "7d" | "15d" | "1m" | "all"
 
 // Pie chart data item
 export interface PieChartDataItem {
@@ -63,6 +63,7 @@ export interface DateRange {
 
 /**
  * Get the number of days for a time window
+ * Returns -1 for "all" to indicate no limit
  */
 export function getTimeWindowDays(timeWindow: TimeWindow): number {
   switch (timeWindow) {
@@ -72,6 +73,8 @@ export function getTimeWindowDays(timeWindow: TimeWindow): number {
       return 15
     case "1m":
       return 30
+    case "all":
+      return -1 // No limit
     default:
       return 7
   }
@@ -79,9 +82,30 @@ export function getTimeWindowDays(timeWindow: TimeWindow): number {
 
 /**
  * Calculate date range for a time window
+ * For "all", returns range from earliest expense date to today
  */
-export function getDateRangeForTimeWindow(timeWindow: TimeWindow): DateRange {
+export function getDateRangeForTimeWindow(
+  timeWindow: TimeWindow,
+  expenses?: Expense[]
+): DateRange {
   const end = endOfDay(new Date())
+
+  if (timeWindow === "all" && expenses && expenses.length > 0) {
+    // Find the earliest expense date
+    let earliestDate = new Date()
+    for (const expense of expenses) {
+      try {
+        const expenseDate = parseISO(expense.date)
+        if (expenseDate < earliestDate) {
+          earliestDate = expenseDate
+        }
+      } catch {
+        // Skip invalid dates
+      }
+    }
+    return { start: startOfDay(earliestDate), end }
+  }
+
   const days = getTimeWindowDays(timeWindow)
   const start = startOfDay(subDays(end, days - 1))
   return { start, end }
@@ -90,11 +114,17 @@ export function getDateRangeForTimeWindow(timeWindow: TimeWindow): DateRange {
 /**
  * Filter expenses by time window
  * Returns only expenses whose date falls within the specified time window
+ * For "all", returns all expenses without filtering
  */
 export function filterExpensesByTimeWindow(
   expenses: Expense[],
   timeWindow: TimeWindow
 ): Expense[] {
+  // For "all", return all expenses without filtering
+  if (timeWindow === "all") {
+    return expenses
+  }
+
   const { start, end } = getDateRangeForTimeWindow(timeWindow)
 
   return expenses.filter((expense) => {

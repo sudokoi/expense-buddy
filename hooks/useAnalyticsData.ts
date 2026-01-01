@@ -65,13 +65,19 @@ export function useAnalyticsData(
 
   // Memoized: Line chart data aggregated by day
   const lineChartData = useMemo(() => {
-    const dateRange = getDateRangeForTimeWindow(timeWindow)
+    const dateRange = getDateRangeForTimeWindow(timeWindow, filteredExpenses)
     return aggregateByDay(filteredExpenses, dateRange)
   }, [filteredExpenses, timeWindow])
 
   // Memoized: Summary statistics
   const statistics = useMemo(() => {
-    const daysInPeriod = getTimeWindowDays(timeWindow)
+    // For "all", calculate actual days from data range
+    let daysInPeriod = getTimeWindowDays(timeWindow)
+    if (timeWindow === "all" && filteredExpenses.length > 0) {
+      const dateRange = getDateRangeForTimeWindow(timeWindow, filteredExpenses)
+      const diffTime = Math.abs(dateRange.end.getTime() - dateRange.start.getTime())
+      daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+    }
     return calculateStatistics(filteredExpenses, daysInPeriod)
   }, [filteredExpenses, timeWindow])
 
