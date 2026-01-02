@@ -107,10 +107,17 @@ export function EditExpenseModal({
   // Validate and set identifier using the same validation as add flow
   const handleIdentifierChange = useCallback(
     (text: string) => {
-      const maxLen = selectedPaymentConfig?.maxLength || 4
-      setPaymentMethodId(validateIdentifier(text, maxLen))
+      // For "Other" payment method, allow any text (description)
+      // For other payment methods, use the validated identifier utility function
+      if (paymentMethodType === "Other") {
+        const maxLen = selectedPaymentConfig?.maxLength || 50
+        setPaymentMethodId(text.slice(0, maxLen))
+      } else {
+        const maxLen = selectedPaymentConfig?.maxLength || 4
+        setPaymentMethodId(validateIdentifier(text, maxLen))
+      }
     },
-    [selectedPaymentConfig]
+    [selectedPaymentConfig, paymentMethodType]
   )
 
   // Handle save with Zod validation (same as add flow)
@@ -284,7 +291,7 @@ export function EditExpenseModal({
               ))}
             </XStack>
 
-            {/* Identifier input for cards/UPI */}
+            {/* Identifier input for cards/UPI/Other */}
             {selectedPaymentConfig?.hasIdentifier && (
               <YStack gap="$1" style={layoutStyles.identifierContainer}>
                 <Label color="$color" opacity={0.6} fontSize="$2">
@@ -292,8 +299,12 @@ export function EditExpenseModal({
                 </Label>
                 <Input
                   size="$4"
-                  placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
-                  keyboardType="numeric"
+                  placeholder={
+                    paymentMethodType === "Other"
+                      ? "e.g., Venmo, PayPal, Gift Card"
+                      : `Enter ${selectedPaymentConfig.maxLength} digits`
+                  }
+                  keyboardType={paymentMethodType === "Other" ? "default" : "numeric"}
                   value={paymentMethodId}
                   onChangeText={handleIdentifierChange}
                   maxLength={selectedPaymentConfig.maxLength}

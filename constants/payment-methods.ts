@@ -54,6 +54,8 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     label: "Other",
     value: "Other",
     icon: Circle,
-    hasIdentifier: false,
+    hasIdentifier: true,
+    identifierLabel: "Description",
+    maxLength: 50,
   },
 ]
