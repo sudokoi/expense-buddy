@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.7.1
+
+### Patch Changes
+
+- [`1678bcd`](https://github.com/sudokoi/expense-buddy/commit/1678bcd9e6a680981602a72c4a7da28bb28b5f0c) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix "Other" input method in edit flow
+
 ## 1.7.0
 
 ### Minor Changes
