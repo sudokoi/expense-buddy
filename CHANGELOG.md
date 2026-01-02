@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 1.7.0
+
+### Minor Changes
+
+- Refactor useEffect hooks and add "Other" payment method description
+  - Removed unnecessary useEffect hooks by moving state management to xstate stores
+  - Sync notifications now auto-route via store effects instead of component effects
+  - Default payment method and expanded section state now load from store initialization
+  - Settings screen reads sync config from store instead of loading via useEffect
+  - Added optional description field for "Other" payment method (e.g., "Venmo", "PayPal")
+
 ## 1.6.3
 
 ### Patch Changes
