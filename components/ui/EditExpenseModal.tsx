@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, Label, Sheet, H4 } from "tamagui"
-import { ViewStyle } from "react-native"
+import { ViewStyle, Keyboard } from "react-native"
 import { Check, X } from "@tamagui/lucide-icons"
 import {
   Expense,
@@ -115,6 +115,9 @@ export function EditExpenseModal({
 
   // Handle save with Zod validation (same as add flow)
   const handleSave = useCallback(() => {
+    // Dismiss keyboard to ensure button press is captured on first tap
+    Keyboard.dismiss()
+
     // Validate with Zod schema (same validation as add flow)
     const validation = validateExpenseForm({
       amount,

@@ -10,7 +10,7 @@ import {
   RadioGroup,
   Accordion,
 } from "tamagui"
-import { Alert, Linking, ViewStyle } from "react-native"
+import { Alert, Keyboard, Linking, ViewStyle } from "react-native"
 import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-icons"
 import {
   saveSyncConfig,
@@ -231,6 +231,9 @@ export default function SettingsScreen() {
 
   // Memoized handlers
   const handleSaveConfig = useCallback(async () => {
+    // Dismiss keyboard to ensure button press is captured
+    Keyboard.dismiss()
+
     // Validate GitHub configuration with Zod
     const validation = validateGitHubConfig({ token, repo, branch })
 
@@ -308,6 +311,7 @@ export default function SettingsScreen() {
   ])
 
   const handleTestConnection = useCallback(async () => {
+    Keyboard.dismiss()
     setIsTesting(true)
     setConnectionStatus("idle")
 

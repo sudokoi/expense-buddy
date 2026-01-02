@@ -8,7 +8,7 @@ import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
-import { ViewStyle, TextStyle } from "react-native"
+import { ViewStyle, TextStyle, Keyboard } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -179,6 +179,9 @@ export default function AddExpenseScreen() {
   }
 
   const handleSave = () => {
+    // Dismiss keyboard to ensure button press is captured on first tap
+    Keyboard.dismiss()
+
     // Validate with Zod schema
     const validation = validateExpenseForm({
       amount,

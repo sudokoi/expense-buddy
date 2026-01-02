@@ -12,6 +12,11 @@
   - Update NotificationStack with kawaii styling (rounded corners,
     colored shadows, icon backgrounds, dark text for contrast)
 
+- Dismiss keyboard before form validation to fix double-tap issue
+  - Add Keyboard.dismiss() to save handlers in settings, add expense, and
+    edit expense flows to ensure button presses are captured on first tap
+    when an input field is focused.
+
 ## 1.6.2
 
 ### Patch Changes

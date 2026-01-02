@@ -1,8 +1,7 @@
 import { format, parseISO, subDays } from "date-fns"
 import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
-import { useToastController } from "@tamagui/toast"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses } from "../../stores"
+import { useExpenses, useNotifications } from "../../stores"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
 import { CATEGORIES } from "../../constants/categories"
@@ -15,6 +14,7 @@ import {
   SectionHeader,
 } from "../../components/ui"
 import { CARD_COLORS } from "../../constants/theme-colors"
+import type { Expense } from "../../types/expense"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -47,16 +47,50 @@ const layoutStyles = {
   } as TextStyle,
 }
 
+// Memoized recent expense item component
+interface RecentExpenseItemProps {
+  expense: Expense
+}
+
+const RecentExpenseItem = React.memo(function RecentExpenseItem({
+  expense,
+}: RecentExpenseItemProps) {
+  const cat = CATEGORIES.find((c) => c.value === expense.category)
+  const Icon = cat?.icon
+
+  return (
+    <ExpenseCard>
+      <XStack style={layoutStyles.transactionDetails}>
+        <CategoryIcon backgroundColor={cat?.color || "#888"}>
+          {Icon && <Icon color="white" size={16} />}
+        </CategoryIcon>
+        <YStack>
+          <SizableText size="$4" fontWeight="bold">
+            {expense.note || cat?.label}
+          </SizableText>
+          <Text fontSize="$2" color="$color" opacity={0.6}>
+            {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
+          </Text>
+        </YStack>
+      </XStack>
+      <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
+    </ExpenseCard>
+  )
+})
+
 export default function DashboardScreen() {
   const { state, clearSyncNotification } = useExpenses()
+  const { addNotification } = useNotifications()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
-  const toast = useToastController()
 
-  const totalExpenses = state.expenses.reduce((sum, item) => sum + item.amount, 0)
-  const recentExpenses = state.expenses.slice(0, 5)
+  const totalExpenses = React.useMemo(
+    () => state.expenses.reduce((sum, item) => sum + item.amount, 0),
+    [state.expenses]
+  )
+  const recentExpenses = React.useMemo(() => state.expenses.slice(0, 5), [state.expenses])
 
   const chartData = React.useMemo(() => {
     const grouped: Record<string, Record<string, number>> = {}
@@ -107,21 +141,31 @@ export default function DashboardScreen() {
     return `chart-${state.expenses.length}-${total}`
   }, [state.expenses])
 
-  // Show toast when sync notification is available
+  // Show notification when sync notification is available
   React.useEffect(() => {
     if (state.syncNotification) {
-      toast.show(state.syncNotification.message, {
-        message: `${state.syncNotification.newItemsCount} new, ${state.syncNotification.updatedItemsCount} updated`,
-        duration: 4000,
-      })
+      const message = `${state.syncNotification.message}: ${state.syncNotification.newItemsCount} new, ${state.syncNotification.updatedItemsCount} updated`
+      addNotification(message, "success", 4000)
       // Clear notification after showing
       setTimeout(() => clearSyncNotification(), 500)
     }
-  }, [state.syncNotification, clearSyncNotification, toast])
+  }, [state.syncNotification, clearSyncNotification, addNotification])
 
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
-  // Theme colors - use getColorValue for Tamagui component compatibility
+
+  // Memoized navigation handlers
+  const handleAddPress = React.useCallback(() => {
+    router.push("/(tabs)/add")
+  }, [router])
+
+  const handleAnalyticsPress = React.useCallback(() => {
+    router.push("/(tabs)/analytics")
+  }, [router])
+
+  const handleHistoryPress = React.useCallback(() => {
+    router.push("/(tabs)/history")
+  }, [router])
 
   return (
     <ScreenContainer>
@@ -133,7 +177,7 @@ export default function DashboardScreen() {
             Welcome back!
           </Text>
         </YStack>
-        <Button size="$4" themeInverse onPress={() => router.push("/(tabs)/add")}>
+        <Button size="$4" themeInverse onPress={handleAddPress}>
           + Add
         </Button>
       </XStack>
@@ -172,7 +216,7 @@ export default function DashboardScreen() {
       <YStack gap="$4" style={layoutStyles.chartSection}>
         <XStack style={layoutStyles.transactionsHeader}>
           <SectionHeader>Last 7 Days</SectionHeader>
-          <Button chromeless size="$2" onPress={() => router.push("/(tabs)/analytics")}>
+          <Button chromeless size="$2" onPress={handleAnalyticsPress}>
             View Analytics
           </Button>
         </XStack>
@@ -217,7 +261,7 @@ export default function DashboardScreen() {
       <YStack>
         <XStack style={layoutStyles.transactionsHeader}>
           <SectionHeader>Recent Transactions</SectionHeader>
-          <Button chromeless size="$2" onPress={() => router.push("/(tabs)/history")}>
+          <Button chromeless size="$2" onPress={handleHistoryPress}>
             See All
           </Button>
         </XStack>
@@ -228,28 +272,9 @@ export default function DashboardScreen() {
           </Text>
         )}
 
-        {recentExpenses.map((expense) => {
-          const cat = CATEGORIES.find((c) => c.value === expense.category)
-          const Icon = cat?.icon
-          return (
-            <ExpenseCard key={expense.id}>
-              <XStack style={layoutStyles.transactionDetails}>
-                <CategoryIcon backgroundColor={cat?.color || "#888"}>
-                  {Icon && <Icon color="white" size={16} />}
-                </CategoryIcon>
-                <YStack>
-                  <SizableText size="$4" fontWeight="bold">
-                    {expense.note || cat?.label}
-                  </SizableText>
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
-                    {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
-                  </Text>
-                </YStack>
-              </XStack>
-              <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
-            </ExpenseCard>
-          )
-        })}
+        {recentExpenses.map((expense) => (
+          <RecentExpenseItem key={expense.id} expense={expense} />
+        ))}
       </YStack>
     </ScreenContainer>
   )
