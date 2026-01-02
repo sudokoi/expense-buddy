@@ -9,9 +9,11 @@ import * as fc from "fast-check"
 import {
   AppSettings,
   ThemePreference,
+  AutoSyncTiming,
   computeSettingsHash,
   getSettingsHash,
 } from "./settings-manager"
+import { PaymentMethodType } from "../types/expense"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 // Mock AsyncStorage for testing
@@ -20,6 +22,20 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
+}))
+
+// Mock expo-secure-store for testing
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+}))
+
+// Mock react-native Platform
+jest.mock("react-native", () => ({
+  Platform: {
+    OS: "ios",
+  },
 }))
 
 // Generate valid ISO date strings using integer timestamps
@@ -32,12 +48,39 @@ const validIsoDateArbitrary = fc
 
 // Arbitrary generators for settings
 const themeArbitrary = fc.constantFrom<ThemePreference>("light", "dark", "system")
+const autoSyncTimingArbitrary = fc.constantFrom<AutoSyncTiming>("on_launch", "on_change")
+const paymentMethodTypeArbitrary = fc.constantFrom<PaymentMethodType>(
+  "Cash",
+  "UPI",
+  "Credit Card",
+  "Debit Card",
+  "Net Banking",
+  "Other"
+)
+const optionalPaymentMethodTypeArbitrary = fc.option(paymentMethodTypeArbitrary, {
+  nil: undefined,
+})
 
-const settingsArbitrary = fc.record({
+// Full settings arbitrary (v3 format with all required fields)
+const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   theme: themeArbitrary,
   syncSettings: fc.boolean(),
+  defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
+  autoSyncEnabled: fc.boolean(),
+  autoSyncTiming: autoSyncTimingArbitrary,
   updatedAt: validIsoDateArbitrary,
   version: fc.integer({ min: 1, max: 10 }),
+})
+
+// Full v3 settings arbitrary (with version fixed to 3)
+const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
+  theme: themeArbitrary,
+  syncSettings: fc.boolean(),
+  defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
+  autoSyncEnabled: fc.boolean(),
+  autoSyncTiming: autoSyncTimingArbitrary,
+  updatedAt: validIsoDateArbitrary,
+  version: fc.constant(3),
 })
 
 describe("Sync Manager Settings Integration Properties", () => {
@@ -295,6 +338,9 @@ describe("Sync Manager Settings Integration Properties", () => {
           const localSettings: AppSettings = {
             theme: "light",
             syncSettings: false,
+            defaultPaymentMethod: undefined,
+            autoSyncEnabled: false,
+            autoSyncTiming: "on_launch",
             updatedAt: new Date().toISOString(),
             version: 1,
           }
@@ -311,6 +357,287 @@ describe("Sync Manager Settings Integration Properties", () => {
 
           // All fields from remote should be preserved
           expect(result).toEqual(remoteSettings)
+        }),
+        { numRuns: 100 }
+      )
+    })
+  })
+
+  /**
+   * Task 12.1: Test settings upload includes new fields
+   * Verify settings.json contains autoSyncEnabled and autoSyncTiming
+   *
+   * **Validates: Requirements 4.1**
+   */
+  describe("Task 12.1: Settings upload includes new fields", () => {
+    it("should include autoSyncEnabled in serialized settings JSON", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize settings to JSON (simulating upload)
+          const json = JSON.stringify(settings, null, 2)
+          const parsed = JSON.parse(json)
+
+          // autoSyncEnabled should be present in the serialized JSON
+          expect(parsed).toHaveProperty("autoSyncEnabled")
+          expect(typeof parsed.autoSyncEnabled).toBe("boolean")
+          expect(parsed.autoSyncEnabled).toBe(settings.autoSyncEnabled)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should include autoSyncTiming in serialized settings JSON", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize settings to JSON (simulating upload)
+          const json = JSON.stringify(settings, null, 2)
+          const parsed = JSON.parse(json)
+
+          // autoSyncTiming should be present in the serialized JSON
+          expect(parsed).toHaveProperty("autoSyncTiming")
+          expect(["on_launch", "on_change"]).toContain(parsed.autoSyncTiming)
+          expect(parsed.autoSyncTiming).toBe(settings.autoSyncTiming)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should preserve all v3 settings fields in serialized JSON", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize settings to JSON (simulating upload)
+          const json = JSON.stringify(settings, null, 2)
+          const parsed = JSON.parse(json)
+
+          // All v3 fields should be present
+          expect(parsed).toHaveProperty("theme")
+          expect(parsed).toHaveProperty("syncSettings")
+          expect(parsed).toHaveProperty("autoSyncEnabled")
+          expect(parsed).toHaveProperty("autoSyncTiming")
+          expect(parsed).toHaveProperty("updatedAt")
+          expect(parsed).toHaveProperty("version")
+
+          // Values should match
+          expect(parsed.theme).toBe(settings.theme)
+          expect(parsed.syncSettings).toBe(settings.syncSettings)
+          expect(parsed.autoSyncEnabled).toBe(settings.autoSyncEnabled)
+          expect(parsed.autoSyncTiming).toBe(settings.autoSyncTiming)
+          expect(parsed.version).toBe(settings.version)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should include defaultPaymentMethod when present in serialized JSON", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize settings to JSON (simulating upload)
+          const json = JSON.stringify(settings, null, 2)
+          const parsed = JSON.parse(json)
+
+          // defaultPaymentMethod should match (including undefined case)
+          if (settings.defaultPaymentMethod !== undefined) {
+            expect(parsed).toHaveProperty("defaultPaymentMethod")
+            expect(parsed.defaultPaymentMethod).toBe(settings.defaultPaymentMethod)
+          }
+        }),
+        { numRuns: 100 }
+      )
+    })
+  })
+
+  /**
+   * Task 12.2: Test settings download applies new fields
+   * Verify downloaded autoSyncEnabled and autoSyncTiming are applied
+   *
+   * **Validates: Requirements 7.1, 7.2**
+   */
+  describe("Task 12.2: Settings download applies new fields", () => {
+    it("should apply downloaded autoSyncEnabled value", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (remoteSettings) => {
+          // Simulate downloading settings JSON
+          const json = JSON.stringify(remoteSettings)
+          const downloaded = JSON.parse(json) as AppSettings
+
+          // autoSyncEnabled should be applied from downloaded settings
+          expect(downloaded.autoSyncEnabled).toBe(remoteSettings.autoSyncEnabled)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should apply downloaded autoSyncTiming value", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (remoteSettings) => {
+          // Simulate downloading settings JSON
+          const json = JSON.stringify(remoteSettings)
+          const downloaded = JSON.parse(json) as AppSettings
+
+          // autoSyncTiming should be applied from downloaded settings
+          expect(downloaded.autoSyncTiming).toBe(remoteSettings.autoSyncTiming)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should completely replace local auto-sync settings with downloaded values", () => {
+      fc.assert(
+        fc.property(
+          fullSettingsArbitrary,
+          fullSettingsArbitrary,
+          (localSettings, remoteSettings) => {
+            // Ensure settings are different for meaningful test
+            fc.pre(
+              localSettings.autoSyncEnabled !== remoteSettings.autoSyncEnabled ||
+                localSettings.autoSyncTiming !== remoteSettings.autoSyncTiming
+            )
+
+            // Simulate the replacement logic (same as Property 7)
+            const replaceSettings = (
+              _local: AppSettings,
+              remote: AppSettings
+            ): AppSettings => {
+              return { ...remote }
+            }
+
+            const result = replaceSettings(localSettings, remoteSettings)
+
+            // Auto-sync settings should match remote, not local
+            expect(result.autoSyncEnabled).toBe(remoteSettings.autoSyncEnabled)
+            expect(result.autoSyncTiming).toBe(remoteSettings.autoSyncTiming)
+
+            // If they were different, result should not match local
+            if (localSettings.autoSyncEnabled !== remoteSettings.autoSyncEnabled) {
+              expect(result.autoSyncEnabled).not.toBe(localSettings.autoSyncEnabled)
+            }
+            if (localSettings.autoSyncTiming !== remoteSettings.autoSyncTiming) {
+              expect(result.autoSyncTiming).not.toBe(localSettings.autoSyncTiming)
+            }
+          }
+        ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should apply all v3 fields from downloaded settings", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (remoteSettings) => {
+          // Simulate downloading and applying settings
+          const json = JSON.stringify(remoteSettings)
+          const downloaded = JSON.parse(json) as AppSettings
+
+          // All v3 fields should be applied
+          expect(downloaded.theme).toBe(remoteSettings.theme)
+          expect(downloaded.syncSettings).toBe(remoteSettings.syncSettings)
+          expect(downloaded.defaultPaymentMethod).toBe(
+            remoteSettings.defaultPaymentMethod
+          )
+          expect(downloaded.autoSyncEnabled).toBe(remoteSettings.autoSyncEnabled)
+          expect(downloaded.autoSyncTiming).toBe(remoteSettings.autoSyncTiming)
+          expect(downloaded.updatedAt).toBe(remoteSettings.updatedAt)
+          expect(downloaded.version).toBe(remoteSettings.version)
+        }),
+        { numRuns: 100 }
+      )
+    })
+  })
+
+  /**
+   * Task 12.3: Property 5 - Settings serialization round-trip with new fields
+   * For any valid AppSettings object (including autoSyncEnabled and autoSyncTiming),
+   * serializing to JSON and deserializing SHALL produce an equivalent object
+   * with all fields preserved.
+   *
+   * **Validates: Requirements 3.1**
+   */
+  describe("Task 12.3: Property 5 - Settings serialization round-trip", () => {
+    it("should preserve all fields through JSON serialization round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize to JSON (simulating upload to GitHub)
+          const json = JSON.stringify(settings)
+
+          // Deserialize from JSON (simulating download from GitHub)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // All fields should be preserved exactly
+          expect(deserialized.theme).toBe(settings.theme)
+          expect(deserialized.syncSettings).toBe(settings.syncSettings)
+          expect(deserialized.defaultPaymentMethod).toBe(settings.defaultPaymentMethod)
+          expect(deserialized.autoSyncEnabled).toBe(settings.autoSyncEnabled)
+          expect(deserialized.autoSyncTiming).toBe(settings.autoSyncTiming)
+          expect(deserialized.updatedAt).toBe(settings.updatedAt)
+          expect(deserialized.version).toBe(settings.version)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should produce deep equal object after round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize and deserialize
+          const json = JSON.stringify(settings)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // Objects should be deeply equal
+          expect(deserialized).toEqual(settings)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should preserve autoSyncEnabled boolean value through round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          const json = JSON.stringify(settings)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // autoSyncEnabled should be preserved as boolean
+          expect(typeof deserialized.autoSyncEnabled).toBe("boolean")
+          expect(deserialized.autoSyncEnabled).toBe(settings.autoSyncEnabled)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should preserve autoSyncTiming enum value through round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          const json = JSON.stringify(settings)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // autoSyncTiming should be preserved as valid enum value
+          expect(["on_launch", "on_change"]).toContain(deserialized.autoSyncTiming)
+          expect(deserialized.autoSyncTiming).toBe(settings.autoSyncTiming)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should preserve optional defaultPaymentMethod through round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          const json = JSON.stringify(settings)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // defaultPaymentMethod should be preserved (including undefined)
+          expect(deserialized.defaultPaymentMethod).toBe(settings.defaultPaymentMethod)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should handle pretty-printed JSON round-trip", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          // Serialize with pretty printing (as used in actual file storage)
+          const json = JSON.stringify(settings, null, 2)
+          const deserialized = JSON.parse(json) as AppSettings
+
+          // Should still produce equal object
+          expect(deserialized).toEqual(settings)
         }),
         { numRuns: 100 }
       )

@@ -23,6 +23,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
+import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import {
   ExpenseCard,
   AmountText,
@@ -104,12 +105,8 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
 
   const Icon = categoryInfo.icon
 
-  // Build payment method display string
-  const paymentMethodDisplay = item.paymentMethod
-    ? item.paymentMethod.identifier
-      ? `${item.paymentMethod.type} (${item.paymentMethod.identifier})`
-      : item.paymentMethod.type
-    : null
+  // Use utility function for consistent payment method display
+  const paymentMethodDisplay = formatPaymentMethodDisplay(item.paymentMethod)
 
   return (
     <ExpenseCard>

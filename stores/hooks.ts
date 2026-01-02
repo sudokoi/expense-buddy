@@ -4,7 +4,11 @@ import { useStoreContext } from "./store-provider"
 import { selectEffectiveTheme } from "./settings-store"
 import { selectIsSyncing, SyncStatus } from "./sync-status-store"
 import { Expense } from "../types/expense"
-import { ThemePreference, AppSettings } from "../services/settings-manager"
+import {
+  ThemePreference,
+  AppSettings,
+  AutoSyncTiming,
+} from "../services/settings-manager"
 import { PaymentMethodType } from "../types/expense"
 import { NotificationType } from "./notification-store"
 
@@ -123,6 +127,16 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setAutoSyncEnabled = useCallback(
+    (enabled: boolean) => settingsStore.trigger.setAutoSyncEnabled({ enabled }),
+    [settingsStore]
+  )
+
+  const setAutoSyncTiming = useCallback(
+    (timing: AutoSyncTiming) => settingsStore.trigger.setAutoSyncTiming({ timing }),
+    [settingsStore]
+  )
+
   const updateSettings = useCallback(
     (updates: Partial<AppSettings>) => settingsStore.trigger.updateSettings({ updates }),
     [settingsStore]
@@ -145,9 +159,13 @@ export const useSettings = () => {
     effectiveTheme,
     hasUnsyncedChanges,
     defaultPaymentMethod: settings.defaultPaymentMethod,
+    autoSyncEnabled: settings.autoSyncEnabled,
+    autoSyncTiming: settings.autoSyncTiming,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
+    setAutoSyncEnabled,
+    setAutoSyncTiming,
     updateSettings,
     replaceSettings,
     clearSettingsChangeFlag,

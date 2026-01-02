@@ -1,5 +1,17 @@
 # expense-buddy
 
+## 1.6.2
+
+### Patch Changes
+
+- Add payment method display, complete settings sync, Zod validation, and toast styling
+  - Display payment method identifiers on expense cards (e.g., "Credit Card (1234)")
+  - Add edit expense modal with payment method support
+  - Extend AppSettings to include auto-sync configuration (v3 migration)
+  - Add Zod validation for expense forms and GitHub configuration
+  - Add type-specific toast notification colors (success, error, warning, info)
+  - Include comprehensive property-based and unit tests
+
 ## 1.6.1
 
 ### Patch Changes

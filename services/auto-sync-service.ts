@@ -1,10 +1,5 @@
 import { Expense } from "../types/expense"
-import {
-  autoSync,
-  loadAutoSyncSettings,
-  loadSyncConfig,
-  SyncNotification,
-} from "./sync-manager"
+import { autoSync, loadSyncConfig, SyncNotification } from "./sync-manager"
 import { AppSettings, loadSettings } from "./settings-manager"
 
 /**
@@ -19,9 +14,11 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   error?: string
 }> {
   try {
+    // Load current app settings to check if auto-sync and settings sync are enabled
+    const appSettings = await loadSettings()
+
     // Check if auto-sync is enabled
-    const autoSyncSettings = await loadAutoSyncSettings()
-    if (!autoSyncSettings.enabled) {
+    if (!appSettings.autoSyncEnabled) {
       return { synced: false }
     }
 
@@ -30,9 +27,6 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
     if (!config) {
       return { synced: false }
     }
-
-    // Load current app settings to check if settings sync is enabled
-    const appSettings = await loadSettings()
 
     // Perform the sync with settings if enabled
     const result = await autoSync(
@@ -70,6 +64,6 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
 export async function shouldAutoSyncForTiming(
   timing: "on_launch" | "on_change"
 ): Promise<boolean> {
-  const settings = await loadAutoSyncSettings()
-  return settings.enabled && settings.timing === timing
+  const settings = await loadSettings()
+  return settings.autoSyncEnabled && settings.autoSyncTiming === timing
 }

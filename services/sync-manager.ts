@@ -36,8 +36,6 @@ import { format } from "date-fns"
 const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
 const GITHUB_BRANCH_KEY = "github_branch"
-const AUTO_SYNC_ENABLED_KEY = "auto_sync_enabled"
-const AUTO_SYNC_TIMING_KEY = "auto_sync_timing"
 
 export interface SyncConfig {
   token: string
@@ -57,13 +55,6 @@ export interface SyncResult {
   settingsSynced?: boolean
   settingsSkipped?: boolean
   settingsError?: string
-}
-
-export type AutoSyncTiming = "on_launch" | "on_change"
-
-export interface AutoSyncSettings {
-  enabled: boolean
-  timing: AutoSyncTiming
 }
 
 export interface SyncNotification {
@@ -129,33 +120,6 @@ export async function clearSyncConfig(): Promise<void> {
   await secureDeleteItem(GITHUB_TOKEN_KEY)
   await secureDeleteItem(GITHUB_REPO_KEY)
   await secureDeleteItem(GITHUB_BRANCH_KEY)
-}
-
-/**
- * Save auto-sync settings
- */
-export async function saveAutoSyncSettings(settings: AutoSyncSettings): Promise<void> {
-  await secureSetItem(AUTO_SYNC_ENABLED_KEY, settings.enabled.toString())
-  await secureSetItem(AUTO_SYNC_TIMING_KEY, settings.timing)
-}
-
-/**
- * Load auto-sync settings
- */
-export async function loadAutoSyncSettings(): Promise<AutoSyncSettings> {
-  const enabled = await secureGetItem(AUTO_SYNC_ENABLED_KEY)
-  let timing = await secureGetItem(AUTO_SYNC_TIMING_KEY)
-
-  // Migrate old "on_expense_entry" to "on_change"
-  if (timing === "on_expense_entry") {
-    timing = "on_change"
-    await secureSetItem(AUTO_SYNC_TIMING_KEY, timing)
-  }
-
-  return {
-    enabled: enabled === "true",
-    timing: (timing as AutoSyncTiming) || "on_launch",
-  }
 }
 
 /**

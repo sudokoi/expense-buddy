@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import * as SecureStore from "expo-secure-store"
+import { Platform } from "react-native"
 import { computeContentHash } from "./hash-storage"
 import { PaymentMethodType } from "../types/expense"
 
@@ -7,10 +9,19 @@ const SETTINGS_KEY = "app_settings"
 const SETTINGS_HASH_KEY = "settings_sync_hash"
 const SETTINGS_CHANGED_KEY = "settings_changed"
 
+// Old auto-sync storage keys (for migration from v2 to v3)
+const OLD_AUTO_SYNC_ENABLED_KEY = "auto_sync_enabled"
+const OLD_AUTO_SYNC_TIMING_KEY = "auto_sync_timing"
+
 /**
  * Theme preference type
  */
 export type ThemePreference = "light" | "dark" | "system"
+
+/**
+ * Auto-sync timing options
+ */
+export type AutoSyncTiming = "on_launch" | "on_change"
 
 /**
  * Application settings interface
@@ -19,6 +30,8 @@ export interface AppSettings {
   theme: ThemePreference
   syncSettings: boolean // Whether to sync settings to GitHub
   defaultPaymentMethod?: PaymentMethodType // Optional default payment method
+  autoSyncEnabled: boolean // Whether auto-sync is enabled
+  autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   updatedAt: string // ISO timestamp
   version: number // Schema version for migrations
 }
@@ -30,20 +43,94 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   syncSettings: false,
   defaultPaymentMethod: undefined,
+  autoSyncEnabled: false,
+  autoSyncTiming: "on_launch",
   updatedAt: new Date().toISOString(),
-  version: 2,
+  version: 3,
+}
+
+// Helper functions for secure storage with platform check (same as sync-manager.ts)
+async function secureGetItem(key: string): Promise<string | null> {
+  if (Platform.OS === "web") {
+    return await AsyncStorage.getItem(key)
+  } else {
+    return await SecureStore.getItemAsync(key)
+  }
+}
+
+async function secureDeleteItem(key: string): Promise<void> {
+  if (Platform.OS === "web") {
+    await AsyncStorage.removeItem(key)
+  } else {
+    await SecureStore.deleteItemAsync(key)
+  }
+}
+
+/**
+ * Migrate settings from version 2 to version 3
+ * Moves auto-sync settings from separate storage keys to AppSettings
+ */
+async function migrateV2ToV3(settings: AppSettings): Promise<AppSettings> {
+  // Load old auto-sync settings from secure storage
+  const oldEnabled = await secureGetItem(OLD_AUTO_SYNC_ENABLED_KEY)
+  const oldTiming = await secureGetItem(OLD_AUTO_SYNC_TIMING_KEY)
+
+  // Migrate old "on_expense_entry" to "on_change" (same as sync-manager.ts)
+  let timing: AutoSyncTiming = "on_launch"
+  if (oldTiming === "on_expense_entry" || oldTiming === "on_change") {
+    timing = "on_change"
+  } else if (oldTiming === "on_launch") {
+    timing = "on_launch"
+  }
+
+  const migrated: AppSettings = {
+    ...settings,
+    autoSyncEnabled: oldEnabled === "true",
+    autoSyncTiming: timing,
+    version: 3,
+  }
+
+  // Clean up old keys after migration
+  try {
+    await secureDeleteItem(OLD_AUTO_SYNC_ENABLED_KEY)
+    await secureDeleteItem(OLD_AUTO_SYNC_TIMING_KEY)
+  } catch (error) {
+    console.warn("Failed to clean up old auto-sync keys:", error)
+    // Continue even if cleanup fails - migration is still successful
+  }
+
+  return migrated
 }
 
 /**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
+ * Performs migration from older versions if needed
  */
 export async function loadSettings(): Promise<AppSettings> {
   try {
     const stored = await AsyncStorage.getItem(SETTINGS_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored) as AppSettings
-      return parsed
+      let parsed = JSON.parse(stored) as AppSettings
+
+      // Migrate if needed (version < 3)
+      if (!parsed.version || parsed.version < 3) {
+        parsed = await migrateV2ToV3(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Ensure all fields have values (for missing fields from older versions)
+      const settings: AppSettings = {
+        theme: parsed.theme ?? DEFAULT_SETTINGS.theme,
+        syncSettings: parsed.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
+        defaultPaymentMethod: parsed.defaultPaymentMethod,
+        autoSyncEnabled: parsed.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
+        autoSyncTiming: parsed.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
+        updatedAt: parsed.updatedAt ?? new Date().toISOString(),
+        version: parsed.version ?? DEFAULT_SETTINGS.version,
+      }
+
+      return settings
     }
   } catch (error) {
     console.warn("Failed to load settings:", error)
@@ -133,6 +220,8 @@ export async function saveSettingsHash(hash: string): Promise<void> {
 export function computeSettingsHash(settings: AppSettings): string {
   // Create a stable JSON representation (sorted keys)
   const stableJson = JSON.stringify({
+    autoSyncEnabled: settings.autoSyncEnabled,
+    autoSyncTiming: settings.autoSyncTiming,
     defaultPaymentMethod: settings.defaultPaymentMethod,
     syncSettings: settings.syncSettings,
     theme: settings.theme,

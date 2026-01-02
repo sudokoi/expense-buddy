@@ -20,12 +20,11 @@ import {
   syncUp,
   syncDown,
   SyncConfig,
-  saveAutoSyncSettings,
-  loadAutoSyncSettings,
-  AutoSyncTiming,
   analyzeConflicts,
   smartMerge,
 } from "../../services/sync-manager"
+import { validateGitHubConfig } from "../../utils/github-config-validation"
+import { AutoSyncTiming } from "../../services/settings-manager"
 import { Expense, PaymentMethodType } from "../../types/expense"
 import {
   getPendingChangesCount,
@@ -114,6 +113,8 @@ export default function SettingsScreen() {
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
+    setAutoSyncEnabled,
+    setAutoSyncTiming,
     replaceSettings,
     clearSettingsChangeFlag,
   } = useSettings()
@@ -127,10 +128,6 @@ export default function SettingsScreen() {
     "idle"
   )
   const [isConfigured, setIsConfigured] = useState(false)
-
-  // Auto-sync settings
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false)
-  const [autoSyncTiming, setAutoSyncTiming] = useState<AutoSyncTiming>("on_launch")
 
   // Update check state
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
@@ -146,6 +143,9 @@ export default function SettingsScreen() {
   } | null>(null)
   const [isComputingSyncCount, setIsComputingSyncCount] = useState(false)
 
+  // GitHub config validation errors
+  const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
+
   // Load config on mount
   useEffect(() => {
     const loadConfig = async () => {
@@ -157,13 +157,7 @@ export default function SettingsScreen() {
         setIsConfigured(true)
       }
     }
-    const loadAutoSync = async () => {
-      const autoSyncSettings = await loadAutoSyncSettings()
-      setAutoSyncEnabled(autoSyncSettings.enabled)
-      setAutoSyncTiming(autoSyncSettings.timing)
-    }
     loadConfig()
-    loadAutoSync()
   }, [])
 
   // Compute pending changes count when expenses change
@@ -236,19 +230,18 @@ export default function SettingsScreen() {
   )
 
   // Memoized handlers
-  const handleSaveAutoSync = useCallback(async () => {
-    await saveAutoSyncSettings({
-      enabled: autoSyncEnabled,
-      timing: autoSyncTiming,
-    })
-    addNotification("Auto-sync settings saved", "success")
-  }, [autoSyncEnabled, autoSyncTiming, addNotification])
-
   const handleSaveConfig = useCallback(async () => {
-    if (!token || !repo || !branch) {
-      addNotification("Please fill in all fields", "error")
+    // Validate GitHub configuration with Zod
+    const validation = validateGitHubConfig({ token, repo, branch })
+
+    if (!validation.success) {
+      setConfigErrors(validation.errors)
+      addNotification("Please fix the validation errors", "error")
       return
     }
+
+    // Clear errors on successful validation
+    setConfigErrors({})
 
     // Check if this is first-time configuration (no previous config existed)
     const previousConfig = await loadSyncConfig()
@@ -287,12 +280,8 @@ export default function SettingsScreen() {
                   addNotification("Settings applied from GitHub", "success")
                 }
 
-                if (!autoSyncEnabled) {
+                if (!settings.autoSyncEnabled) {
                   setAutoSyncEnabled(true)
-                  await saveAutoSyncSettings({
-                    enabled: true,
-                    timing: autoSyncTiming,
-                  })
                   addNotification("Auto-sync enabled", "info")
                 }
               } else {
@@ -309,8 +298,8 @@ export default function SettingsScreen() {
     branch,
     state.expenses.length,
     settings.syncSettings,
-    autoSyncEnabled,
-    autoSyncTiming,
+    settings.autoSyncEnabled,
+    setAutoSyncEnabled,
     startSync,
     endSync,
     replaceAllExpenses,
@@ -542,9 +531,12 @@ export default function SettingsScreen() {
     [setDefaultPaymentMethod]
   )
 
-  const handleAutoSyncTimingChange = useCallback((value: string) => {
-    setAutoSyncTiming(value as AutoSyncTiming)
-  }, [])
+  const handleAutoSyncTimingChange = useCallback(
+    (value: string) => {
+      setAutoSyncTiming(value as AutoSyncTiming)
+    },
+    [setAutoSyncTiming]
+  )
 
   // Memoized sync button text
   const syncUpButtonText = useMemo(() => {
@@ -654,14 +646,29 @@ export default function SettingsScreen() {
                       secureTextEntry
                       placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                       value={token}
-                      onChangeText={setToken}
+                      onChangeText={(text) => {
+                        setToken(text)
+                        // Clear error when user starts typing
+                        if (configErrors.token) {
+                          setConfigErrors((prev) => {
+                            const { token: _, ...rest } = prev
+                            return rest
+                          })
+                        }
+                      }}
                       size="$4"
                       borderWidth={2}
-                      borderColor="$borderColor"
+                      borderColor={configErrors.token ? "$red10" : "$borderColor"}
                     />
-                    <Text fontSize="$2" color="$color" opacity={0.6}>
-                      Create a fine-grained PAT with Contents (read/write) permission
-                    </Text>
+                    {configErrors.token ? (
+                      <Text fontSize="$2" color="$red10">
+                        {configErrors.token}
+                      </Text>
+                    ) : (
+                      <Text fontSize="$2" color="$color" opacity={0.6}>
+                        Create a fine-grained PAT with Contents (read/write) permission
+                      </Text>
+                    )}
                   </YStack>
 
                   {/* Repository */}
@@ -670,11 +677,25 @@ export default function SettingsScreen() {
                     <Input
                       placeholder="username/repo-name"
                       value={repo}
-                      onChangeText={setRepo}
+                      onChangeText={(text) => {
+                        setRepo(text)
+                        // Clear error when user starts typing
+                        if (configErrors.repo) {
+                          setConfigErrors((prev) => {
+                            const { repo: _, ...rest } = prev
+                            return rest
+                          })
+                        }
+                      }}
                       size="$4"
                       borderWidth={2}
-                      borderColor="$borderColor"
+                      borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                     />
+                    {configErrors.repo && (
+                      <Text fontSize="$2" color="$red10">
+                        {configErrors.repo}
+                      </Text>
+                    )}
                   </YStack>
 
                   {/* Branch */}
@@ -683,11 +704,25 @@ export default function SettingsScreen() {
                     <Input
                       placeholder="main"
                       value={branch}
-                      onChangeText={setBranch}
+                      onChangeText={(text) => {
+                        setBranch(text)
+                        // Clear error when user starts typing
+                        if (configErrors.branch) {
+                          setConfigErrors((prev) => {
+                            const { branch: _, ...rest } = prev
+                            return rest
+                          })
+                        }
+                      }}
                       size="$4"
                       borderWidth={2}
-                      borderColor="$borderColor"
+                      borderColor={configErrors.branch ? "$red10" : "$borderColor"}
                     />
+                    {configErrors.branch && (
+                      <Text fontSize="$2" color="$red10">
+                        {configErrors.branch}
+                      </Text>
+                    )}
                   </YStack>
 
                   {/* Action Buttons */}
@@ -763,10 +798,10 @@ export default function SettingsScreen() {
               </YStack>
               <Switch
                 size="$4"
-                checked={autoSyncEnabled}
+                checked={settings.autoSyncEnabled}
                 onCheckedChange={setAutoSyncEnabled}
                 backgroundColor={
-                  autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
+                  settings.autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
                 }
               >
                 <Switch.Thumb />
@@ -799,11 +834,11 @@ export default function SettingsScreen() {
             </XStack>
 
             {/* When to Sync */}
-            {autoSyncEnabled && (
+            {settings.autoSyncEnabled && (
               <YStack gap="$2">
                 <Label>When to Sync</Label>
                 <RadioGroup
-                  value={autoSyncTiming}
+                  value={settings.autoSyncTiming}
                   onValueChange={handleAutoSyncTimingChange}
                 >
                   <XStack gap="$2" style={layoutStyles.radioRow}>
@@ -832,11 +867,6 @@ export default function SettingsScreen() {
                 </RadioGroup>
               </YStack>
             )}
-
-            {/* Save Auto-Sync Button */}
-            <Button size="$4" onPress={handleSaveAutoSync} themeInverse>
-              Save Auto-Sync Settings
-            </Button>
           </YStack>
         </SettingsSection>
 

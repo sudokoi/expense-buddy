@@ -3,6 +3,7 @@ import { Appearance } from "react-native"
 import {
   AppSettings,
   ThemePreference,
+  AutoSyncTiming,
   DEFAULT_SETTINGS,
   loadSettings,
   saveSettings,
@@ -74,6 +75,42 @@ export const settingsStore = createStore({
       const newSettings = {
         ...context.settings,
         defaultPaymentMethod: event.paymentMethod,
+      }
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await markSettingsChanged()
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        hasUnsyncedChanges: true,
+      }
+    },
+
+    setAutoSyncEnabled: (context, event: { enabled: boolean }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        autoSyncEnabled: event.enabled,
+      }
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await markSettingsChanged()
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        hasUnsyncedChanges: true,
+      }
+    },
+
+    setAutoSyncTiming: (context, event: { timing: AutoSyncTiming }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        autoSyncTiming: event.timing,
       }
 
       enqueue.effect(async () => {

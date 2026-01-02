@@ -8,7 +8,7 @@ import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
-import { Alert, ViewStyle, TextStyle } from "react-native"
+import { ViewStyle, TextStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -17,6 +17,7 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
+import { validateExpenseForm } from "../../utils/expense-validation"
 import { CategoryCard, PaymentMethodCard } from "../../components/ui"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
@@ -80,6 +81,9 @@ export default function AddExpenseScreen() {
   // Collapsible state for payment method section - persisted across app launches
   const [isPaymentMethodExpanded, setIsPaymentMethodExpanded] = useState(false)
   const [isExpandedLoaded, setIsExpandedLoaded] = useState(false)
+
+  // Validation errors state for field-level error messages
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Apply default payment method when settings finish loading (only once)
   // Using async wrapper to satisfy lint rule about synchronous setState in effects
@@ -175,16 +179,28 @@ export default function AddExpenseScreen() {
   }
 
   const handleSave = () => {
-    if (!amount.trim()) {
-      Alert.alert("Invalid Amount", "Please enter a valid amount")
-      return
+    // Validate with Zod schema
+    const validation = validateExpenseForm({
+      amount,
+      category,
+      note,
+      paymentMethodType,
+      paymentMethodId,
+    })
+
+    if (!validation.success) {
+      setErrors(validation.errors)
+      return // Don't submit, keep user's input for correction
     }
 
-    // Parse the expression
+    // Clear errors on successful validation
+    setErrors({})
+
+    // Parse the expression for the final amount value
     const result = parseExpression(amount)
 
     if (!result.success) {
-      Alert.alert("Invalid Expression", result.error || "Please enter a valid expression")
+      setErrors({ amount: result.error || "Please enter a valid expression" })
       return
     }
 
@@ -207,6 +223,7 @@ export default function AddExpenseScreen() {
     // Reset and go back or to history
     setAmount("")
     setNote("")
+    setErrors({})
     setPaymentMethodType(defaultPaymentMethod)
     setPaymentMethodId("")
     router.push("/(tabs)/history" as Href)
@@ -239,13 +256,29 @@ export default function AddExpenseScreen() {
                 placeholder="0.00 or 100+50"
                 keyboardType="default"
                 value={amount}
-                onChangeText={setAmount}
+                onChangeText={(text) => {
+                  setAmount(text)
+                  // Clear error when user starts typing
+                  if (errors.amount) {
+                    setErrors((prev) => {
+                      const { amount: _, ...rest } = prev
+                      return rest
+                    })
+                  }
+                }}
                 borderWidth={2}
-                borderColor="$borderColor"
-                focusStyle={{ borderColor: ACCENT_COLORS.primary }}
+                borderColor={errors.amount ? "$red10" : "$borderColor"}
+                focusStyle={{
+                  borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
+                }}
               />
             </XStack>
-            {expressionPreview && (
+            {errors.amount && (
+              <Text fontSize="$2" color="$red10">
+                {errors.amount}
+              </Text>
+            )}
+            {expressionPreview && !errors.amount && (
               <Text fontSize="$3" color="$color" opacity={0.7}>
                 = ₹{expressionPreview}
               </Text>

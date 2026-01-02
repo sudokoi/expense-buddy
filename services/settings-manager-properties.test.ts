@@ -26,6 +26,7 @@ function resolveEffectiveTheme(
 
 // Mock AsyncStorage for testing
 const mockStorage: Map<string, string> = new Map()
+const mockSecureStorage: Map<string, string> = new Map()
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
@@ -39,17 +40,42 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   }),
 }))
 
+// Mock expo-secure-store for testing
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn((key: string) =>
+    Promise.resolve(mockSecureStorage.get(key) ?? null)
+  ),
+  setItemAsync: jest.fn((key: string, value: string) => {
+    mockSecureStorage.set(key, value)
+    return Promise.resolve()
+  }),
+  deleteItemAsync: jest.fn((key: string) => {
+    mockSecureStorage.delete(key)
+    return Promise.resolve()
+  }),
+}))
+
+// Mock react-native Platform
+jest.mock("react-native", () => ({
+  Platform: {
+    OS: "ios", // Use non-web platform to test secure storage
+  },
+}))
+
 // Import settings manager functions after mocking
 import {
   markSettingsChanged,
   clearSettingsChanged,
   hasSettingsChanged,
   saveSettings,
+  computeSettingsHash,
+  AutoSyncTiming,
 } from "./settings-manager"
 
 // Clear mock storage before each test
 beforeEach(() => {
   mockStorage.clear()
+  mockSecureStorage.clear()
 })
 
 // Arbitrary generators for settings types
@@ -61,9 +87,13 @@ const systemColorSchemeArb = fc.constantFrom<"light" | "dark" | null | undefined
   undefined
 )
 
+const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_change")
+
 const appSettingsArb = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  autoSyncEnabled: fc.boolean(),
+  autoSyncTiming: autoSyncTimingArb,
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
@@ -256,6 +286,73 @@ describe("Settings Manager Properties", () => {
           const syncCount = afterSync ? 1 : 0
           return syncCount === 0
         }),
+        { numRuns: 100 }
+      )
+    })
+  })
+
+  /**
+   * Property 6: Settings hash includes all fields
+   * For any two AppSettings objects that differ only in autoSyncEnabled or autoSyncTiming,
+   * the computed hashes SHALL be different.
+   *
+   * Feature: payment-settings-improvements, Property 6: Settings hash includes all fields
+   * Validates: Requirements 4.2
+   */
+  describe("Settings hash includes all fields", () => {
+    it("should produce different hashes when autoSyncEnabled differs", () => {
+      fc.assert(
+        fc.property(appSettingsArb, (baseSettings) => {
+          // Create two settings that differ only in autoSyncEnabled
+          const settings1: AppSettings = { ...baseSettings, autoSyncEnabled: true }
+          const settings2: AppSettings = { ...baseSettings, autoSyncEnabled: false }
+
+          const hash1 = computeSettingsHash(settings1)
+          const hash2 = computeSettingsHash(settings2)
+
+          // Hashes should be different when autoSyncEnabled differs
+          return hash1 !== hash2
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should produce different hashes when autoSyncTiming differs", () => {
+      fc.assert(
+        fc.property(appSettingsArb, (baseSettings) => {
+          // Create two settings that differ only in autoSyncTiming
+          const settings1: AppSettings = { ...baseSettings, autoSyncTiming: "on_launch" }
+          const settings2: AppSettings = { ...baseSettings, autoSyncTiming: "on_change" }
+
+          const hash1 = computeSettingsHash(settings1)
+          const hash2 = computeSettingsHash(settings2)
+
+          // Hashes should be different when autoSyncTiming differs
+          return hash1 !== hash2
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should produce same hash when only updatedAt differs", () => {
+      fc.assert(
+        fc.property(
+          appSettingsArb,
+          fc
+            .integer({ min: 1577836800000, max: 1924905600000 })
+            .map((ms) => new Date(ms).toISOString()),
+          (baseSettings, newUpdatedAt) => {
+            // Create two settings that differ only in updatedAt
+            const settings1: AppSettings = { ...baseSettings }
+            const settings2: AppSettings = { ...baseSettings, updatedAt: newUpdatedAt }
+
+            const hash1 = computeSettingsHash(settings1)
+            const hash2 = computeSettingsHash(settings2)
+
+            // Hashes should be the same when only updatedAt differs
+            return hash1 === hash2
+          }
+        ),
         { numRuns: 100 }
       )
     })

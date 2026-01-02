@@ -1,10 +1,10 @@
-import React from "react"
+import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
 import { useExpenses } from "../../stores"
 import { format, parseISO } from "date-fns"
 import { CATEGORIES } from "../../constants/categories"
-import { Trash } from "@tamagui/lucide-icons"
+import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
 import {
   ExpenseCard,
@@ -12,7 +12,9 @@ import {
   CategoryIcon,
   ScreenContainer,
   SectionHeader,
+  EditExpenseModal,
 } from "../../components/ui"
+import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import type { Expense } from "../../types/expense"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -39,13 +41,16 @@ const getCategoryInfo = (catValue: string) => {
 interface DayExpenseItemProps {
   expense: Expense
   onDelete: (id: string) => void
+  onEdit: (expense: Expense) => void
 }
 
 const DayExpenseItem = React.memo(function DayExpenseItem({
   expense,
   onDelete,
+  onEdit,
 }: DayExpenseItemProps) {
   const categoryInfo = getCategoryInfo(expense.category)
+  const paymentMethodDisplay = formatPaymentMethodDisplay(expense.paymentMethod)
 
   return (
     <ExpenseCard>
@@ -60,11 +65,23 @@ const DayExpenseItem = React.memo(function DayExpenseItem({
           <Text color="$color" opacity={0.6} fontSize="$2">
             {format(parseISO(expense.date), "h:mm a")} • {expense.category}
           </Text>
+          {paymentMethodDisplay && (
+            <Text color="$color" opacity={0.5} fontSize="$2">
+              {paymentMethodDisplay}
+            </Text>
+          )}
         </YStack>
       </XStack>
 
       <XStack gap="$3" style={layoutStyles.actionButtons}>
         <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
+        <Button
+          size="$2"
+          icon={Edit3}
+          chromeless
+          onPress={() => onEdit(expense)}
+          aria-label="Edit"
+        />
         <Button
           size="$2"
           icon={Trash}
@@ -79,7 +96,11 @@ const DayExpenseItem = React.memo(function DayExpenseItem({
 
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
-  const { state, deleteExpense } = useExpenses()
+  const { state, deleteExpense, editExpense } = useExpenses()
+
+  // Edit modal state
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   // Filter expenses for this date
   const dayExpenses = React.useMemo(() => {
@@ -92,7 +113,7 @@ export default function DayExpensesScreen() {
   }, [state.expenses, date])
 
   // Memoized delete handler
-  const handleDelete = React.useCallback(
+  const handleDelete = useCallback(
     (id: string) => {
       Alert.alert("Delete Expense", "Are you sure?", [
         { text: "Cancel", style: "cancel" },
@@ -101,6 +122,28 @@ export default function DayExpensesScreen() {
     },
     [deleteExpense]
   )
+
+  // Memoized edit handler - opens the edit modal
+  const handleEdit = useCallback((expense: Expense) => {
+    setEditingExpense(expense)
+    setIsEditModalOpen(true)
+  }, [])
+
+  // Handle save from edit modal - calls editExpense action
+  const handleSaveEdit = useCallback(
+    (id: string, updates: Omit<Expense, "id" | "createdAt" | "updatedAt">) => {
+      editExpense(id, updates)
+      setIsEditModalOpen(false)
+      setEditingExpense(null)
+    },
+    [editExpense]
+  )
+
+  // Handle close edit modal
+  const handleCloseEditModal = useCallback(() => {
+    setIsEditModalOpen(false)
+    setEditingExpense(null)
+  }, [])
 
   // Format date for display: dd/MM/yyyy
   const formattedDisplayDate = React.useMemo(
@@ -120,8 +163,23 @@ export default function DayExpensesScreen() {
         </Text>
       ) : (
         dayExpenses.map((expense) => (
-          <DayExpenseItem key={expense.id} expense={expense} onDelete={handleDelete} />
+          <DayExpenseItem
+            key={expense.id}
+            expense={expense}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
         ))
+      )}
+
+      {/* Edit Expense Modal */}
+      {editingExpense && (
+        <EditExpenseModal
+          expense={editingExpense}
+          open={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onSave={handleSaveEdit}
+        />
       )}
     </ScreenContainer>
   )

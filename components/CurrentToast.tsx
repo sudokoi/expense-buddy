@@ -1,10 +1,36 @@
 import { Toast, useToastController, useToastState } from "@tamagui/toast"
+import { useColorScheme, ViewStyle } from "react-native"
 import { Button, H4, XStack, YStack, isWeb } from "tamagui"
+
+import { getToastColors } from "../constants/theme-colors"
+import { NotificationType } from "../stores/notification-store"
 
 export function CurrentToast() {
   const currentToast = useToastState()
+  const colorScheme = useColorScheme()
+  const isDark = colorScheme === "dark"
 
   if (!currentToast || currentToast.isHandledNatively) return null
+
+  // Get notification type from toast customData (default to "info")
+  const notificationType = (currentToast.customData?.type as NotificationType) || "info"
+
+  // Get colors based on notification type and color scheme
+  const toastColors = getToastColors(notificationType, isDark ? "dark" : "light")
+
+  // Style for text alignment (not supported directly on Toast.Description)
+  const descriptionStyle = {
+    textAlign: "center" as const,
+  }
+
+  // Toast container style for border radius, padding, and sizing
+  const toastStyle: ViewStyle = {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minWidth: 200,
+    maxWidth: 320,
+  }
 
   return (
     <Toast
@@ -14,22 +40,29 @@ export function CurrentToast() {
       enterStyle={{ opacity: 0, scale: 0.5, y: -25 }}
       exitStyle={{ opacity: 0, scale: 1, y: -20 }}
       y={isWeb ? "$12" : 0}
-      bg="$backgroundFocus"
-      borderColor="$borderColor"
-      borderWidth={1}
-      rounded="$6"
+      bg={toastColors.background}
+      borderColor={toastColors.border}
+      borderWidth={2}
+      style={toastStyle}
       animation="quick"
-      shadowColor="$color"
-      shadowOpacity={0.1}
-      shadowRadius={8}
-      elevation={4}
+      shadowColor={isDark ? "#000000" : toastColors.border}
+      shadowOpacity={isDark ? 0.4 : 0.2}
+      shadowRadius={12}
+      elevation={6}
     >
-      <YStack items="center" p="$2" gap="$2">
-        <Toast.Title fontWeight="bold" color="$color">
+      <YStack items="center" gap="$1.5">
+        <Toast.Title fontWeight="600" color={toastColors.text} fontSize="$4">
           {currentToast.title}
         </Toast.Title>
         {!!currentToast.message && (
-          <Toast.Description color="$color">{currentToast.message}</Toast.Description>
+          <Toast.Description
+            color={toastColors.text}
+            opacity={0.85}
+            fontSize="$3"
+            style={descriptionStyle}
+          >
+            {currentToast.message}
+          </Toast.Description>
         )}
       </YStack>
     </Toast>
@@ -47,6 +80,7 @@ export function ToastControl() {
           onPress={() => {
             toast.show("Successfully saved!", {
               message: "Don't worry, we've got your data.",
+              customData: { type: "success" },
             })
           }}
         >

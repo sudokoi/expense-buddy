@@ -1,7 +1,7 @@
 {
   "name": "expense-buddy",
   "main": "expo-router/entry",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "packageManager": "yarn@4.5.0",
   "private": true,
   "repository": {
@@ -63,7 +63,8 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
-    "tamagui": "^1.141.5"
+    "tamagui": "^1.141.5",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
