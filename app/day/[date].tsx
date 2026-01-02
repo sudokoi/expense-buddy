@@ -175,6 +175,7 @@ export default function DayExpensesScreen() {
       {/* Edit Expense Modal */}
       {editingExpense && (
         <EditExpenseModal
+          key={editingExpense.id}
           expense={editingExpense}
           open={isEditModalOpen}
           onClose={handleCloseEditModal}

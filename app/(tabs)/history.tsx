@@ -225,11 +225,18 @@ export default function HistoryScreen() {
 
   const handleIdentifierChange = React.useCallback(
     (text: string) => {
-      // Use the validated identifier utility function
-      const maxLen = selectedPaymentConfig?.maxLength || 4
-      setEditingExpense((prev) =>
-        prev ? { ...prev, paymentMethodId: validateIdentifier(text, maxLen) } : null
-      )
+      setEditingExpense((prev) => {
+        if (!prev) return null
+        // For "Other" payment method, allow any text (description)
+        // For other payment methods, use the validated identifier utility function
+        if (prev.paymentMethodType === "Other") {
+          const maxLen = selectedPaymentConfig?.maxLength || 50
+          return { ...prev, paymentMethodId: text.slice(0, maxLen) }
+        } else {
+          const maxLen = selectedPaymentConfig?.maxLength || 4
+          return { ...prev, paymentMethodId: validateIdentifier(text, maxLen) }
+        }
+      })
     },
     [selectedPaymentConfig?.maxLength]
   )
@@ -577,7 +584,7 @@ export default function HistoryScreen() {
                     ))}
                   </XStack>
 
-                  {/* Identifier input for cards/UPI */}
+                  {/* Identifier input for cards/UPI/Other */}
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$1" style={{ marginTop: 8 }}>
                       <Label color="$color" opacity={0.6} fontSize="$2">
@@ -585,8 +592,16 @@ export default function HistoryScreen() {
                       </Label>
                       <Input
                         size="$4"
-                        placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
-                        keyboardType="numeric"
+                        placeholder={
+                          editingExpense?.paymentMethodType === "Other"
+                            ? "e.g., Venmo, PayPal, Gift Card"
+                            : `Enter ${selectedPaymentConfig.maxLength} digits`
+                        }
+                        keyboardType={
+                          editingExpense?.paymentMethodType === "Other"
+                            ? "default"
+                            : "numeric"
+                        }
                         value={editingExpense?.paymentMethodId || ""}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
