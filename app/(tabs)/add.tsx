@@ -1,8 +1,7 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useExpenses, useSettings } from "../../stores"
 import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -20,9 +19,6 @@ import { validateIdentifier } from "../../utils/payment-method-validation"
 import { validateExpenseForm } from "../../utils/expense-validation"
 import { CategoryCard, PaymentMethodCard } from "../../components/ui"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
-
-// Storage key for payment method section expanded state
-const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -58,13 +54,16 @@ const layoutStyles = {
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
-  const { defaultPaymentMethod, isLoading: isSettingsLoading } = useSettings()
+  const {
+    defaultPaymentMethod,
+    isLoading: isSettingsLoading,
+    paymentMethodSectionExpanded,
+    setPaymentMethodExpanded,
+  } = useSettings()
   const insets = useSafeAreaInsets()
 
-  // Track if default has been applied to avoid re-applying after user interaction
-  const hasAppliedDefaultRef = useRef(false)
-
-  // Theme colors - extract raw values for components that need them
+  // Track if user has interacted with payment method to prevent overwriting their choice
+  const hasUserInteractedRef = useRef(false)
 
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState<ExpenseCategory>("Food")
@@ -72,73 +71,28 @@ export default function AddExpenseScreen() {
   const [note, setNote] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
 
-  // Payment method state - will be set from default when settings load
+  // Payment method state - tracks user's explicit selection (after interaction)
   const [paymentMethodType, setPaymentMethodType] = useState<
     PaymentMethodType | undefined
   >(undefined)
   const [paymentMethodId, setPaymentMethodId] = useState("")
 
-  // Collapsible state for payment method section - persisted across app launches
-  const [isPaymentMethodExpanded, setIsPaymentMethodExpanded] = useState(false)
-  const [isExpandedLoaded, setIsExpandedLoaded] = useState(false)
-
   // Validation errors state for field-level error messages
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Apply default payment method when settings finish loading (only once)
-  // Using async wrapper to satisfy lint rule about synchronous setState in effects
-  useEffect(() => {
-    const applyDefault = async () => {
-      if (
-        !hasAppliedDefaultRef.current &&
-        !isSettingsLoading &&
-        defaultPaymentMethod !== undefined
-      ) {
-        setPaymentMethodType(defaultPaymentMethod)
-        hasAppliedDefaultRef.current = true
-      }
-    }
-    applyDefault()
-  }, [defaultPaymentMethod, isSettingsLoading])
-
-  // Load expanded state from storage on mount
-  useEffect(() => {
-    const loadExpandedState = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY)
-        if (stored !== null) {
-          setIsPaymentMethodExpanded(stored === "true")
-        }
-      } catch {
-        // Default to collapsed if loading fails
-      }
-      setIsExpandedLoaded(true)
-    }
-    loadExpandedState()
-  }, [])
-
-  // Save expanded state to storage when it changes
-  useEffect(() => {
-    // Only save after initial load to avoid overwriting with default
-    if (!isExpandedLoaded) return
-    const saveExpandedState = async () => {
-      try {
-        await AsyncStorage.setItem(
-          PAYMENT_METHOD_EXPANDED_KEY,
-          isPaymentMethodExpanded ? "true" : "false"
-        )
-      } catch {
-        // Ignore save errors
-      }
-    }
-    saveExpandedState()
-  }, [isPaymentMethodExpanded, isExpandedLoaded])
+  // Derive effective payment method: use user's choice if they've interacted,
+  // otherwise use default from settings (once loaded)
+  const effectivePaymentMethod = hasUserInteractedRef.current
+    ? paymentMethodType
+    : isSettingsLoading
+      ? undefined
+      : defaultPaymentMethod
 
   // Get current payment method config for identifier input
   const selectedPaymentConfig = useMemo(() => {
-    if (!paymentMethodType) return null
-    return PAYMENT_METHODS.find((pm) => pm.value === paymentMethodType) || null
-  }, [paymentMethodType])
+    if (!effectivePaymentMethod) return null
+    return PAYMENT_METHODS.find((pm) => pm.value === effectivePaymentMethod) || null
+  }, [effectivePaymentMethod])
 
   // Memoized category selection handler to prevent unnecessary re-renders
   const handleCategorySelect = useCallback((value: ExpenseCategory) => {
@@ -158,7 +112,10 @@ export default function AddExpenseScreen() {
   }, [amount])
 
   const handlePaymentMethodSelect = (type: PaymentMethodType) => {
-    if (paymentMethodType === type) {
+    // Mark that user has interacted with payment method selection
+    hasUserInteractedRef.current = true
+
+    if (effectivePaymentMethod === type) {
       // Deselect if already selected
       setPaymentMethodType(undefined)
       setPaymentMethodId("")
@@ -175,7 +132,8 @@ export default function AddExpenseScreen() {
   }
 
   const togglePaymentMethodSection = () => {
-    setIsPaymentMethodExpanded((prev) => !prev)
+    // Use store action to toggle and persist
+    setPaymentMethodExpanded(!paymentMethodSectionExpanded)
   }
 
   const handleSave = () => {
@@ -187,7 +145,7 @@ export default function AddExpenseScreen() {
       amount,
       category,
       note,
-      paymentMethodType,
+      paymentMethodType: effectivePaymentMethod,
       paymentMethodId,
     })
 
@@ -208,9 +166,9 @@ export default function AddExpenseScreen() {
     }
 
     // Build payment method object if type is selected
-    const paymentMethod: PaymentMethod | undefined = paymentMethodType
+    const paymentMethod: PaymentMethod | undefined = effectivePaymentMethod
       ? {
-          type: paymentMethodType,
+          type: effectivePaymentMethod,
           identifier: paymentMethodId.trim() || undefined,
         }
       : undefined
@@ -223,11 +181,13 @@ export default function AddExpenseScreen() {
       paymentMethod,
     })
 
-    // Reset and go back or to history
+    // Reset form and navigate to history
     setAmount("")
     setNote("")
     setErrors({})
-    setPaymentMethodType(defaultPaymentMethod)
+    // Reset user interaction flag so default can apply again
+    hasUserInteractedRef.current = false
+    setPaymentMethodType(undefined)
     setPaymentMethodId("")
     router.push("/(tabs)/history" as Href)
   }
@@ -359,7 +319,7 @@ export default function AddExpenseScreen() {
                 <Label color="$color" opacity={0.8} pointerEvents="none">
                   Payment Method (Optional)
                 </Label>
-                {isPaymentMethodExpanded ? (
+                {paymentMethodSectionExpanded ? (
                   <ChevronUp size={20} color="$color" opacity={0.6} />
                 ) : (
                   <ChevronDown size={20} color="$color" opacity={0.6} />
@@ -367,14 +327,14 @@ export default function AddExpenseScreen() {
               </XStack>
             </Button>
 
-            {isPaymentMethodExpanded && (
+            {paymentMethodSectionExpanded && (
               <YStack gap="$2">
                 <XStack style={layoutStyles.paymentMethodRow}>
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard
                       key={pm.value}
                       config={pm}
-                      isSelected={paymentMethodType === pm.value}
+                      isSelected={effectivePaymentMethod === pm.value}
                       onPress={() => handlePaymentMethodSelect(pm.value)}
                     />
                   ))}

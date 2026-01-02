@@ -1,7 +1,7 @@
 import { format, parseISO, subDays } from "date-fns"
 import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses, useNotifications } from "../../stores"
+import { useExpenses } from "../../stores"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
 import { CATEGORIES } from "../../constants/categories"
@@ -79,8 +79,7 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 })
 
 export default function DashboardScreen() {
-  const { state, clearSyncNotification } = useExpenses()
-  const { addNotification } = useNotifications()
+  const { state } = useExpenses()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -140,16 +139,6 @@ export default function DashboardScreen() {
     const total = state.expenses.reduce((sum, e) => sum + e.amount, 0)
     return `chart-${state.expenses.length}-${total}`
   }, [state.expenses])
-
-  // Show notification when sync notification is available
-  React.useEffect(() => {
-    if (state.syncNotification) {
-      const message = `${state.syncNotification.message}: ${state.syncNotification.newItemsCount} new, ${state.syncNotification.updatedItemsCount} updated`
-      addNotification(message, "success", 4000)
-      // Clear notification after showing
-      setTimeout(() => clearSyncNotification(), 500)
-    }
-  }, [state.syncNotification, clearSyncNotification, addNotification])
 
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string

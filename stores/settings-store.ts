@@ -1,5 +1,6 @@
 import { createStore } from "@xstate/store"
 import { Appearance } from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
   AppSettings,
   ThemePreference,
@@ -12,6 +13,15 @@ import {
   hasSettingsChanged,
 } from "../services/settings-manager"
 import { PaymentMethodType } from "../types/expense"
+import {
+  SyncConfig,
+  saveSyncConfig as saveSyncConfigToStorage,
+  clearSyncConfig as clearSyncConfigFromStorage,
+  loadSyncConfig as loadSyncConfigFromStorage,
+} from "../services/sync-manager"
+
+// AsyncStorage key for payment method section expanded state
+const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
 
 export const settingsStore = createStore({
   context: {
@@ -19,17 +29,27 @@ export const settingsStore = createStore({
     isLoading: true,
     hasUnsyncedChanges: false,
     systemColorScheme: (Appearance.getColorScheme() ?? "light") as "light" | "dark",
+    syncConfig: null as SyncConfig | null,
+    paymentMethodSectionExpanded: false,
   },
 
   on: {
     loadSettings: (
       context,
-      event: { settings: AppSettings; hasUnsyncedChanges: boolean }
+      event: {
+        settings: AppSettings
+        hasUnsyncedChanges: boolean
+        syncConfig?: SyncConfig | null
+        paymentMethodSectionExpanded?: boolean
+      }
     ) => ({
       ...context,
       settings: event.settings,
       hasUnsyncedChanges: event.hasUnsyncedChanges,
       isLoading: false,
+      syncConfig: event.syncConfig ?? context.syncConfig,
+      paymentMethodSectionExpanded:
+        event.paymentMethodSectionExpanded ?? context.paymentMethodSectionExpanded,
     }),
 
     setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
@@ -113,15 +133,21 @@ export const settingsStore = createStore({
         autoSyncTiming: event.timing,
       }
 
+      // Only mark as needing sync if auto-sync is enabled
+      // When auto-sync is off, timing changes are not meaningful to sync
+      const shouldMarkChanged = context.settings.autoSyncEnabled
+
       enqueue.effect(async () => {
         await saveSettings(newSettings)
-        await markSettingsChanged()
+        if (shouldMarkChanged) {
+          await markSettingsChanged()
+        }
       })
 
       return {
         ...context,
         settings: newSettings,
-        hasUnsyncedChanges: true,
+        hasUnsyncedChanges: shouldMarkChanged ? true : context.hasUnsyncedChanges,
       }
     },
 
@@ -163,6 +189,49 @@ export const settingsStore = createStore({
         hasUnsyncedChanges: false,
       }
     },
+
+    // Sync config management actions
+    loadSyncConfig: (context, event: { config: SyncConfig | null }) => ({
+      ...context,
+      syncConfig: event.config,
+    }),
+
+    saveSyncConfig: (context, event: { config: SyncConfig }, enqueue) => {
+      enqueue.effect(async () => {
+        await saveSyncConfigToStorage(event.config)
+      })
+
+      return {
+        ...context,
+        syncConfig: event.config,
+      }
+    },
+
+    clearSyncConfig: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        await clearSyncConfigFromStorage()
+      })
+
+      return {
+        ...context,
+        syncConfig: null,
+      }
+    },
+
+    // Payment method section expanded state
+    setPaymentMethodExpanded: (context, event: { expanded: boolean }, enqueue) => {
+      enqueue.effect(async () => {
+        await AsyncStorage.setItem(
+          PAYMENT_METHOD_EXPANDED_KEY,
+          event.expanded ? "true" : "false"
+        )
+      })
+
+      return {
+        ...context,
+        paymentMethodSectionExpanded: event.expanded,
+      }
+    },
   },
 })
 
@@ -188,14 +257,29 @@ Appearance.addChangeListener(({ colorScheme }) => {
 // Exported initialization function - call from React component tree
 export async function initializeSettingsStore(): Promise<void> {
   try {
-    const settings = await loadSettings()
-    const hasChanges = await hasSettingsChanged()
-    settingsStore.trigger.loadSettings({ settings, hasUnsyncedChanges: hasChanges })
+    // Load all settings in parallel
+    const [settings, hasChanges, syncConfig, expandedValue] = await Promise.all([
+      loadSettings(),
+      hasSettingsChanged(),
+      loadSyncConfigFromStorage(),
+      AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
+    ])
+
+    const paymentMethodSectionExpanded = expandedValue === "true"
+
+    settingsStore.trigger.loadSettings({
+      settings,
+      hasUnsyncedChanges: hasChanges,
+      syncConfig,
+      paymentMethodSectionExpanded,
+    })
   } catch (error) {
     console.warn("Failed to initialize settings store:", error)
     settingsStore.trigger.loadSettings({
       settings: DEFAULT_SETTINGS,
       hasUnsyncedChanges: false,
+      syncConfig: null,
+      paymentMethodSectionExpanded: false,
     })
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo } from "react"
 import {
   YStack,
   XStack,
@@ -13,9 +13,6 @@ import {
 import { Alert, Keyboard, Linking, ViewStyle } from "react-native"
 import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-icons"
 import {
-  saveSyncConfig,
-  loadSyncConfig,
-  clearSyncConfig,
   testConnection,
   syncUp,
   syncDown,
@@ -26,10 +23,6 @@ import {
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
 import { Expense, PaymentMethodType } from "../../types/expense"
-import {
-  getPendingChangesCount,
-  clearPendingChanges,
-} from "../../services/change-tracker"
 import { useExpenses, useNotifications, useSyncStatus, useSettings } from "../../stores"
 import {
   checkForUpdates,
@@ -110,6 +103,8 @@ export default function SettingsScreen() {
   const { startSync, endSync } = useSyncStatus()
   const {
     settings,
+    hasUnsyncedChanges: hasUnsyncedSettingsChanges,
+    syncConfig,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
@@ -117,66 +112,29 @@ export default function SettingsScreen() {
     setAutoSyncTiming,
     replaceSettings,
     clearSettingsChangeFlag,
+    saveSyncConfig,
+    clearSyncConfig,
   } = useSettings()
 
-  const [token, setToken] = useState("")
-  const [repo, setRepo] = useState("")
-  const [branch, setBranch] = useState("main")
+  // Initialize form state from store values (syncConfig loaded during store initialization)
+  const [token, setToken] = useState(syncConfig?.token ?? "")
+  const [repo, setRepo] = useState(syncConfig?.repo ?? "")
+  const [branch, setBranch] = useState(syncConfig?.branch ?? "main")
   const [isTesting, setIsTesting] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
-  const [isConfigured, setIsConfigured] = useState(false)
+
+  // Derive isConfigured from syncConfig !== null
+  const isConfigured = syncConfig !== null
 
   // Update check state
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
 
-  // Pending sync count state
-  const [pendingChangesCount, setPendingChangesCount] = useState<{
-    added: number
-    edited: number
-    deleted: number
-    settingsChanged: number
-    total: number
-  } | null>(null)
-  const [isComputingSyncCount, setIsComputingSyncCount] = useState(false)
-
   // GitHub config validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
-
-  // Load config on mount
-  useEffect(() => {
-    const loadConfig = async () => {
-      const config = await loadSyncConfig()
-      if (config) {
-        setToken(config.token)
-        setRepo(config.repo)
-        setBranch(config.branch)
-        setIsConfigured(true)
-      }
-    }
-    loadConfig()
-  }, [])
-
-  // Compute pending changes count when expenses change
-  useEffect(() => {
-    const computeChangesCount = async () => {
-      setIsComputingSyncCount(true)
-      try {
-        const result = await getPendingChangesCount()
-        setPendingChangesCount(result)
-      } catch (error) {
-        console.warn("Failed to compute changes count:", error)
-        setPendingChangesCount(null)
-      } finally {
-        setIsComputingSyncCount(false)
-      }
-    }
-
-    computeChangesCount()
-  }, [state.expenses])
 
   // Memoized smart merge function
   const performSmartMerge = useCallback(
@@ -196,13 +154,11 @@ export default function SettingsScreen() {
 
         // Apply downloaded settings if available and settings sync is enabled
         if (downloadedSettings && settings.syncSettings) {
-          await replaceSettings(downloadedSettings)
+          replaceSettings(downloadedSettings)
         }
 
         // Clear pending changes since we've merged
-        await clearPendingChanges()
-        const changesCount = await getPendingChangesCount()
-        setPendingChangesCount(changesCount)
+        clearPendingChangesAfterSync()
 
         setIsSyncing(false)
         endSync(true)
@@ -221,6 +177,7 @@ export default function SettingsScreen() {
     [
       state.expenses,
       settings.syncSettings,
+      clearPendingChangesAfterSync,
       startSync,
       endSync,
       replaceAllExpenses,
@@ -247,12 +204,10 @@ export default function SettingsScreen() {
     setConfigErrors({})
 
     // Check if this is first-time configuration (no previous config existed)
-    const previousConfig = await loadSyncConfig()
-    const isFirstTimeSetup = !previousConfig
+    const isFirstTimeSetup = syncConfig === null
 
     const config: SyncConfig = { token, repo, branch }
-    await saveSyncConfig(config)
-    setIsConfigured(true)
+    saveSyncConfig(config)
     addNotification("Sync configuration saved", "success")
 
     // Only prompt to download if this is first-time setup AND no local expenses
@@ -279,7 +234,7 @@ export default function SettingsScreen() {
                 )
 
                 if (result.settings && settings.syncSettings) {
-                  await replaceSettings(result.settings)
+                  replaceSettings(result.settings)
                   addNotification("Settings applied from GitHub", "success")
                 }
 
@@ -299,9 +254,11 @@ export default function SettingsScreen() {
     token,
     repo,
     branch,
+    syncConfig,
     state.expenses.length,
     settings.syncSettings,
     settings.autoSyncEnabled,
+    saveSyncConfig,
     setAutoSyncEnabled,
     startSync,
     endSync,
@@ -341,13 +298,11 @@ export default function SettingsScreen() {
 
     if (result.success) {
       addNotification(result.message, "success")
-      await clearPendingChangesAfterSync()
+      clearPendingChangesAfterSync()
       // Clear settings change flag if settings were synced
       if (settings.syncSettings && result.settingsSynced) {
         clearSettingsChangeFlag()
       }
-      const changesCount = await getPendingChangesCount()
-      setPendingChangesCount(changesCount)
     } else {
       addNotification(result.error || result.message, "error")
     }
@@ -431,10 +386,7 @@ export default function SettingsScreen() {
       conflicts.localWins === 0 &&
       downloadedSettings
     ) {
-      await replaceSettings(downloadedSettings)
-      // Refresh pending changes count after settings sync
-      const changesCount = await getPendingChangesCount()
-      setPendingChangesCount(changesCount)
+      replaceSettings(downloadedSettings)
       addNotification("Settings synced from GitHub", "success")
       return
     }
@@ -470,18 +422,17 @@ export default function SettingsScreen() {
       {
         text: "Clear",
         style: "destructive",
-        onPress: async () => {
-          await clearSyncConfig()
+        onPress: () => {
+          clearSyncConfig()
           setToken("")
           setRepo("")
           setBranch("main")
           setConnectionStatus("idle")
-          setIsConfigured(false)
           addNotification("Configuration cleared", "success")
         },
       },
     ])
-  }, [addNotification])
+  }, [clearSyncConfig, addNotification])
 
   const handleCheckForUpdates = useCallback(async () => {
     const fromPlayStore = await isPlayStoreInstall()
@@ -508,7 +459,7 @@ export default function SettingsScreen() {
     if (updateInfo?.releaseUrl) {
       Linking.openURL(updateInfo.releaseUrl)
     }
-  }, [updateInfo?.releaseUrl])
+  }, [updateInfo])
 
   const handleOpenGitHub = useCallback(() => {
     Linking.openURL(APP_CONFIG.github.url)
@@ -545,42 +496,34 @@ export default function SettingsScreen() {
   // Memoized sync button text
   const syncUpButtonText = useMemo(() => {
     if (isSyncing) return "Syncing..."
-    if (isComputingSyncCount) return "Checking changes..."
-    if (pendingChangesCount === null)
-      return `Upload to GitHub (${state.expenses.length} expenses)`
 
     // Build a descriptive message
     const parts: string[] = []
     const expenseChanges =
-      pendingChangesCount.added + pendingChangesCount.edited + pendingChangesCount.deleted
+      state.pendingChanges.added +
+      state.pendingChanges.edited +
+      state.pendingChanges.deleted
     if (expenseChanges > 0) {
       parts.push(`${expenseChanges} expense(s)`)
     }
-    // Only show settings label when settings sync is enabled
-    if (settings.syncSettings && pendingChangesCount.settingsChanged > 0) {
+    // Only show settings label when settings sync is enabled and there are changes
+    if (settings.syncSettings && hasUnsyncedSettingsChanges) {
       parts.push("settings")
     }
 
     if (parts.length === 0) return "No changes to sync"
     return `Upload to GitHub (${parts.join(" + ")} changed)`
-  }, [
-    isSyncing,
-    isComputingSyncCount,
-    pendingChangesCount,
-    state.expenses.length,
-    settings.syncSettings,
-  ])
+  }, [isSyncing, state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
   // Memoized check for whether there are changes to sync (respects settings sync toggle)
   const hasChangesToSync = useMemo(() => {
-    if (pendingChangesCount === null) return true // Assume there might be changes
     const expenseChanges =
-      pendingChangesCount.added + pendingChangesCount.edited + pendingChangesCount.deleted
-    const settingsChanges = settings.syncSettings
-      ? pendingChangesCount.settingsChanged
-      : 0
+      state.pendingChanges.added +
+      state.pendingChanges.edited +
+      state.pendingChanges.deleted
+    const settingsChanges = settings.syncSettings && hasUnsyncedSettingsChanges ? 1 : 0
     return expenseChanges + settingsChanges > 0
-  }, [pendingChangesCount, settings.syncSettings])
+  }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
   return (
     <ScreenContainer>

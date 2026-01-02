@@ -11,6 +11,7 @@ import {
 } from "../services/settings-manager"
 import { PaymentMethodType } from "../types/expense"
 import { NotificationType } from "./notification-store"
+import { SyncConfig } from "../services/sync-manager"
 
 // Import stores directly for useSelector type inference
 import { expenseStore as defaultExpenseStore } from "./expense-store"
@@ -27,6 +28,10 @@ export const useExpenses = () => {
   const syncNotification = useSelector(
     defaultExpenseStore,
     (state) => state.context.syncNotification
+  )
+  const pendingChanges = useSelector(
+    defaultExpenseStore,
+    (state) => state.context.pendingChanges
   )
 
   const addExpense = useCallback(
@@ -86,7 +91,7 @@ export const useExpenses = () => {
   )
 
   return {
-    state: { expenses, isLoading, syncNotification },
+    state: { expenses, isLoading, syncNotification, pendingChanges },
     addExpense,
     editExpense,
     deleteExpense,
@@ -108,6 +113,14 @@ export const useSettings = () => {
   )
   const effectiveTheme = useSelector(defaultSettingsStore, (state) =>
     selectEffectiveTheme(state.context)
+  )
+  const syncConfig = useSelector(
+    defaultSettingsStore,
+    (state) => state.context.syncConfig
+  )
+  const paymentMethodSectionExpanded = useSelector(
+    defaultSettingsStore,
+    (state) => state.context.paymentMethodSectionExpanded
   )
 
   const setTheme = useCallback(
@@ -152,6 +165,21 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setPaymentMethodExpanded = useCallback(
+    (expanded: boolean) => settingsStore.trigger.setPaymentMethodExpanded({ expanded }),
+    [settingsStore]
+  )
+
+  const saveSyncConfig = useCallback(
+    (config: SyncConfig) => settingsStore.trigger.saveSyncConfig({ config }),
+    [settingsStore]
+  )
+
+  const clearSyncConfig = useCallback(
+    () => settingsStore.trigger.clearSyncConfig(),
+    [settingsStore]
+  )
+
   return {
     settings,
     isLoading,
@@ -160,6 +188,8 @@ export const useSettings = () => {
     defaultPaymentMethod: settings.defaultPaymentMethod,
     autoSyncEnabled: settings.autoSyncEnabled,
     autoSyncTiming: settings.autoSyncTiming,
+    syncConfig,
+    paymentMethodSectionExpanded,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
@@ -168,6 +198,9 @@ export const useSettings = () => {
     updateSettings,
     replaceSettings,
     clearSettingsChangeFlag,
+    setPaymentMethodExpanded,
+    saveSyncConfig,
+    clearSyncConfig,
   }
 }
 

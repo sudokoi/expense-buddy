@@ -1,8 +1,16 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef } from "react"
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react"
 import {
   expenseStore as defaultExpenseStore,
   ExpenseStore,
   initializeExpenseStore,
+  onSyncNotification,
 } from "./expense-store"
 import {
   settingsStore as defaultSettingsStore,
@@ -57,6 +65,29 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     initializeSettingsStore()
     initializeExpenseStore()
   }, [skipInitialization])
+
+  // Memoize the notification handler to avoid recreating on every render
+  const handleSyncNotification = useCallback(
+    (notification: {
+      newItemsCount: number
+      updatedItemsCount: number
+      message: string
+    }) => {
+      const message = `${notification.message}: ${notification.newItemsCount} new, ${notification.updatedItemsCount} updated`
+      notificationStore.trigger.addNotification({
+        message,
+        notificationType: "success",
+        duration: 4000,
+      })
+    },
+    [notificationStore]
+  )
+
+  // Subscribe to sync notification events and route to notification store
+  useEffect(() => {
+    const unsubscribe = onSyncNotification(handleSyncNotification)
+    return unsubscribe
+  }, [handleSyncNotification])
 
   const value = useMemo(
     () => ({

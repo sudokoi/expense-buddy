@@ -7,6 +7,7 @@ import {
   trackEdit,
   trackDelete,
   clearPendingChanges,
+  loadPendingChanges,
 } from "../services/change-tracker"
 import {
   performAutoSyncIfEnabled,
@@ -21,13 +22,25 @@ export const expenseStore = createStore({
     expenses: [] as Expense[],
     isLoading: true,
     syncNotification: null as SyncNotification | null,
+    pendingChanges: {
+      added: 0,
+      edited: 0,
+      deleted: 0,
+    },
   },
 
   on: {
-    loadExpenses: (context, event: { expenses: Expense[] }) => ({
+    loadExpenses: (
+      context,
+      event: {
+        expenses: Expense[]
+        pendingChanges?: { added: number; edited: number; deleted: number }
+      }
+    ) => ({
       ...context,
       expenses: event.expenses,
       isLoading: false,
+      pendingChanges: event.pendingChanges ?? context.pendingChanges,
     }),
 
     setLoading: (context, event: { isLoading: boolean }) => ({
@@ -37,6 +50,10 @@ export const expenseStore = createStore({
 
     addExpense: (context, event: { expense: Expense }, enqueue) => {
       const newExpenses = [event.expense, ...context.expenses]
+      const newPendingChanges = {
+        ...context.pendingChanges,
+        added: context.pendingChanges.added + 1,
+      }
 
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
@@ -48,6 +65,7 @@ export const expenseStore = createStore({
           if (result.synced && result.expenses) {
             expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
             await clearPendingChanges()
+            expenseStore.trigger.clearPendingChangesCount()
             if (result.notification) {
               expenseStore.trigger.setSyncNotification({
                 notification: result.notification,
@@ -57,13 +75,19 @@ export const expenseStore = createStore({
         }
       })
 
-      return { ...context, expenses: newExpenses }
+      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
     },
 
     editExpense: (context, event: { expense: Expense }, enqueue) => {
       const newExpenses = context.expenses.map((e) =>
         e.id === event.expense.id ? event.expense : e
       )
+      // Only increment edited if not already in added set (tracked via change-tracker)
+      // For simplicity, we increment here - the actual tracking is in change-tracker
+      const newPendingChanges = {
+        ...context.pendingChanges,
+        edited: context.pendingChanges.edited + 1,
+      }
 
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
@@ -75,6 +99,7 @@ export const expenseStore = createStore({
           if (result.synced && result.expenses) {
             expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
             await clearPendingChanges()
+            expenseStore.trigger.clearPendingChangesCount()
             if (result.notification) {
               expenseStore.trigger.setSyncNotification({
                 notification: result.notification,
@@ -84,11 +109,15 @@ export const expenseStore = createStore({
         }
       })
 
-      return { ...context, expenses: newExpenses }
+      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
     },
 
     deleteExpense: (context, event: { id: string }, enqueue) => {
       const newExpenses = context.expenses.filter((e) => e.id !== event.id)
+      const newPendingChanges = {
+        ...context.pendingChanges,
+        deleted: context.pendingChanges.deleted + 1,
+      }
 
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
@@ -100,6 +129,7 @@ export const expenseStore = createStore({
           if (result.synced && result.expenses) {
             expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
             await clearPendingChanges()
+            expenseStore.trigger.clearPendingChangesCount()
             if (result.notification) {
               expenseStore.trigger.setSyncNotification({
                 notification: result.notification,
@@ -109,7 +139,7 @@ export const expenseStore = createStore({
         }
       })
 
-      return { ...context, expenses: newExpenses }
+      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
     },
 
     replaceExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
@@ -120,21 +150,46 @@ export const expenseStore = createStore({
       return { ...context, expenses: event.expenses }
     },
 
-    setSyncNotification: (context, event: { notification: SyncNotification | null }) => ({
-      ...context,
-      syncNotification: event.notification,
-    }),
+    setSyncNotification: (
+      context,
+      event: { notification: SyncNotification | null },
+      enqueue
+    ) => {
+      if (event.notification) {
+        enqueue.effect(() => {
+          // Emit event for listeners (store provider will handle routing to notification store)
+          emitSyncNotification(event.notification!)
+
+          // Auto-clear after brief delay
+          setTimeout(() => {
+            expenseStore.trigger.clearSyncNotification()
+          }, 500)
+        })
+      }
+      return {
+        ...context,
+        syncNotification: event.notification,
+      }
+    },
 
     clearSyncNotification: (context) => ({
       ...context,
       syncNotification: null,
     }),
 
+    clearPendingChangesCount: (context) => ({
+      ...context,
+      pendingChanges: { added: 0, edited: 0, deleted: 0 },
+    }),
+
     clearPendingChangesAfterSync: (context, _event, enqueue) => {
       enqueue.effect(async () => {
         await clearPendingChanges()
       })
-      return context
+      return {
+        ...context,
+        pendingChanges: { added: 0, edited: 0, deleted: 0 },
+      }
     },
   },
 })
@@ -157,12 +212,39 @@ export function emitSettingsDownloaded(settings: AppSettings): void {
   settingsDownloadedListeners.forEach((listener) => listener(settings))
 }
 
+// Sync notification event emitter for cross-store communication
+type SyncNotificationListener = (notification: SyncNotification) => void
+const syncNotificationListeners: SyncNotificationListener[] = []
+
+export function onSyncNotification(listener: SyncNotificationListener): () => void {
+  syncNotificationListeners.push(listener)
+  return () => {
+    const index = syncNotificationListeners.indexOf(listener)
+    if (index > -1) {
+      syncNotificationListeners.splice(index, 1)
+    }
+  }
+}
+
+function emitSyncNotification(notification: SyncNotification): void {
+  syncNotificationListeners.forEach((listener) => listener(notification))
+}
+
 // Exported initialization function - call from React component tree
 export async function initializeExpenseStore(): Promise<void> {
   try {
     const stored = await AsyncStorage.getItem(EXPENSES_KEY)
     const expenses = stored ? JSON.parse(stored) : []
-    expenseStore.trigger.loadExpenses({ expenses })
+
+    // Load pending changes from storage
+    const pendingChangesData = await loadPendingChanges()
+    const pendingChanges = {
+      added: pendingChangesData.added.size,
+      edited: pendingChangesData.edited.size,
+      deleted: pendingChangesData.deleted.size,
+    }
+
+    expenseStore.trigger.loadExpenses({ expenses, pendingChanges })
 
     const shouldSync = await shouldAutoSyncForTiming("on_launch")
     if (shouldSync) {
@@ -170,6 +252,7 @@ export async function initializeExpenseStore(): Promise<void> {
       if (result.synced && result.expenses) {
         expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
         await clearPendingChanges()
+        expenseStore.trigger.clearPendingChangesCount()
         if (result.downloadedSettings) {
           emitSettingsDownloaded(result.downloadedSettings)
         }
