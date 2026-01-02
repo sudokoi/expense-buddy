@@ -20,14 +20,20 @@
 
 import fc from "fast-check"
 import { createStore } from "@xstate/store"
-import { ThemePreference, AppSettings } from "../../services/settings-manager"
+import {
+  ThemePreference,
+  AppSettings,
+  AutoSyncTiming,
+} from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
+  autoSyncEnabled: false,
+  autoSyncTiming: "on_launch",
   updatedAt: new Date().toISOString(),
-  version: 1,
+  version: 3,
 }
 
 // Create a fresh store for each test
@@ -138,9 +144,13 @@ const paymentMethodArb = fc.constantFrom<PaymentMethodType>(
 )
 const optionalPaymentMethodArb = fc.option(paymentMethodArb, { nil: undefined })
 
+const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_change")
+
 const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  autoSyncEnabled: fc.boolean(),
+  autoSyncTiming: autoSyncTimingArb,
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),

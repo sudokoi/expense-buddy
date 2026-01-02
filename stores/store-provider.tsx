@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useMemo } from "react"
-import { expenseStore as defaultExpenseStore, ExpenseStore } from "./expense-store"
-import { settingsStore as defaultSettingsStore, SettingsStore } from "./settings-store"
+import React, { createContext, useContext, useEffect, useMemo, useRef } from "react"
+import {
+  expenseStore as defaultExpenseStore,
+  ExpenseStore,
+  initializeExpenseStore,
+} from "./expense-store"
+import {
+  settingsStore as defaultSettingsStore,
+  SettingsStore,
+  initializeSettingsStore,
+} from "./settings-store"
 import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
@@ -26,6 +34,8 @@ interface StoreProviderProps {
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
   syncStatusStore?: SyncStatusStore
+  // Skip initialization (for testing)
+  skipInitialization?: boolean
 }
 
 export const StoreProvider: React.FC<StoreProviderProps> = ({
@@ -34,7 +44,20 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
   syncStatusStore = defaultSyncStatusStore,
+  skipInitialization = false,
 }) => {
+  const initializedRef = useRef(false)
+
+  // Initialize stores when component mounts (inside React tree where RN is ready)
+  useEffect(() => {
+    if (skipInitialization || initializedRef.current) return
+    initializedRef.current = true
+
+    // Initialize stores - AsyncStorage is safe to use here
+    initializeSettingsStore()
+    initializeExpenseStore()
+  }, [skipInitialization])
+
   const value = useMemo(
     () => ({
       expenseStore,

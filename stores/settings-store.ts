@@ -180,25 +180,24 @@ export const selectEffectiveTheme = (context: SettingsContext): "light" | "dark"
   return context.settings.theme
 }
 
-// Initialize store
-async function initializeSettingsStore(): Promise<void> {
+// Listen for system color scheme changes
+Appearance.addChangeListener(({ colorScheme }) => {
+  settingsStore.trigger.setSystemColorScheme({ scheme: colorScheme ?? "light" })
+})
+
+// Exported initialization function - call from React component tree
+export async function initializeSettingsStore(): Promise<void> {
   try {
     const settings = await loadSettings()
     const hasChanges = await hasSettingsChanged()
     settingsStore.trigger.loadSettings({ settings, hasUnsyncedChanges: hasChanges })
-  } catch {
+  } catch (error) {
+    console.warn("Failed to initialize settings store:", error)
     settingsStore.trigger.loadSettings({
       settings: DEFAULT_SETTINGS,
       hasUnsyncedChanges: false,
     })
   }
 }
-
-// Listen for system color scheme changes
-Appearance.addChangeListener(({ colorScheme }) => {
-  settingsStore.trigger.setSystemColorScheme({ scheme: colorScheme ?? "light" })
-})
-
-initializeSettingsStore()
 
 export type SettingsStore = typeof settingsStore

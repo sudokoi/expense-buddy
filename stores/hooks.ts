@@ -15,7 +15,6 @@ import { NotificationType } from "./notification-store"
 // Import stores directly for useSelector type inference
 import { expenseStore as defaultExpenseStore } from "./expense-store"
 import { settingsStore as defaultSettingsStore } from "./settings-store"
-import { notificationStore as defaultNotificationStore } from "./notification-store"
 import { syncStatusStore as defaultSyncStatusStore } from "./sync-status-store"
 
 // Expense hooks
@@ -176,14 +175,27 @@ export const useSettings = () => {
 export const useNotifications = () => {
   const { notificationStore } = useStoreContext()
 
+  // Use the store from context for useSelector to ensure proper subscription
   const notifications = useSelector(
-    defaultNotificationStore,
+    notificationStore,
     (state) => state.context.notifications
   )
 
   const addNotification = useCallback(
-    (message: string, type?: NotificationType, duration?: number) =>
-      notificationStore.trigger.addNotification({ message, type, duration }),
+    (message: string, notificationType?: NotificationType, duration?: number) => {
+      const eventPayload: {
+        message: string
+        notificationType?: NotificationType
+        duration?: number
+      } = { message }
+      if (notificationType !== undefined) {
+        eventPayload.notificationType = notificationType
+      }
+      if (duration !== undefined) {
+        eventPayload.duration = duration
+      }
+      notificationStore.trigger.addNotification(eventPayload)
+    },
     [notificationStore]
   )
 

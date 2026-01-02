@@ -3,7 +3,7 @@
  */
 
 import { createStore } from "@xstate/store"
-import { Expense, CategoryType, PaymentMethodType } from "../../types/expense"
+import { Expense, ExpenseCategory, PaymentMethod } from "../../types/expense"
 import { SyncNotification } from "../../services/sync-manager"
 
 // Create a fresh store for each test to avoid state pollution
@@ -71,10 +71,10 @@ function createTestExpense(overrides: Partial<Expense> = {}): Expense {
   return {
     id: Date.now().toString() + Math.random().toString(36),
     amount: 100,
-    category: "Food" as CategoryType,
-    description: "Test expense",
+    category: "Food" as ExpenseCategory,
+    note: "Test expense",
     date: now.split("T")[0],
-    paymentMethod: "Cash" as PaymentMethodType,
+    paymentMethod: { type: "Cash" } as PaymentMethod,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -127,25 +127,25 @@ describe("Expense Store", () => {
   describe("addExpense action", () => {
     it("should add expense to the beginning of the array", () => {
       const store = createTestExpenseStore()
-      const expense1 = createTestExpense({ description: "First" })
-      const expense2 = createTestExpense({ description: "Second" })
+      const expense1 = createTestExpense({ note: "First" })
+      const expense2 = createTestExpense({ note: "Second" })
 
       store.trigger.addExpense({ expense: expense1 })
       store.trigger.addExpense({ expense: expense2 })
 
       const { expenses } = store.getSnapshot().context
       expect(expenses).toHaveLength(2)
-      expect(expenses[0].description).toBe("Second")
-      expect(expenses[1].description).toBe("First")
+      expect(expenses[0].note).toBe("Second")
+      expect(expenses[1].note).toBe("First")
     })
 
     it("should preserve all expense fields", () => {
       const store = createTestExpenseStore()
       const expense = createTestExpense({
         amount: 250.5,
-        category: "Transport" as CategoryType,
-        description: "Uber ride",
-        paymentMethod: "UPI" as PaymentMethodType,
+        category: "Transport" as ExpenseCategory,
+        note: "Uber ride",
+        paymentMethod: { type: "UPI" } as PaymentMethod,
       })
 
       store.trigger.addExpense({ expense })
@@ -157,36 +157,36 @@ describe("Expense Store", () => {
 
   describe("editExpense action", () => {
     it("should update existing expense by id", () => {
-      const expense = createTestExpense({ description: "Original" })
+      const expense = createTestExpense({ note: "Original" })
       const store = createTestExpenseStore([expense])
 
-      const updatedExpense = { ...expense, description: "Updated", amount: 200 }
+      const updatedExpense = { ...expense, note: "Updated", amount: 200 }
       store.trigger.editExpense({ expense: updatedExpense })
 
       const { expenses } = store.getSnapshot().context
-      expect(expenses[0].description).toBe("Updated")
+      expect(expenses[0].note).toBe("Updated")
       expect(expenses[0].amount).toBe(200)
       expect(expenses[0].id).toBe(expense.id)
     })
 
     it("should not modify other expenses", () => {
-      const expense1 = createTestExpense({ id: "1", description: "First" })
-      const expense2 = createTestExpense({ id: "2", description: "Second" })
+      const expense1 = createTestExpense({ id: "1", note: "First" })
+      const expense2 = createTestExpense({ id: "2", note: "Second" })
       const store = createTestExpenseStore([expense1, expense2])
 
-      const updatedExpense1 = { ...expense1, description: "Updated First" }
+      const updatedExpense1 = { ...expense1, note: "Updated First" }
       store.trigger.editExpense({ expense: updatedExpense1 })
 
       const { expenses } = store.getSnapshot().context
-      expect(expenses.find((e) => e.id === "1")?.description).toBe("Updated First")
-      expect(expenses.find((e) => e.id === "2")?.description).toBe("Second")
+      expect(expenses.find((e) => e.id === "1")?.note).toBe("Updated First")
+      expect(expenses.find((e) => e.id === "2")?.note).toBe("Second")
     })
 
     it("should do nothing if expense id not found", () => {
       const expense = createTestExpense({ id: "1" })
       const store = createTestExpenseStore([expense])
 
-      const nonExistentExpense = createTestExpense({ id: "999", description: "Ghost" })
+      const nonExistentExpense = createTestExpense({ id: "999", note: "Ghost" })
       store.trigger.editExpense({ expense: nonExistentExpense })
 
       const { expenses } = store.getSnapshot().context
@@ -256,10 +256,10 @@ describe("Expense Store", () => {
     it("should set sync notification", () => {
       const store = createTestExpenseStore()
       const notification: SyncNotification = {
-        type: "merged",
-        addedCount: 5,
-        updatedCount: 2,
-        deletedCount: 1,
+        newItemsCount: 5,
+        updatedItemsCount: 2,
+        totalCount: 7,
+        message: "Synced 7 items",
       }
 
       store.trigger.setSyncNotification({ notification })
@@ -270,7 +270,12 @@ describe("Expense Store", () => {
     it("should allow setting notification to null", () => {
       const store = createTestExpenseStore()
       store.trigger.setSyncNotification({
-        notification: { type: "merged", addedCount: 1, updatedCount: 0, deletedCount: 0 },
+        notification: {
+          newItemsCount: 1,
+          updatedItemsCount: 0,
+          totalCount: 1,
+          message: "Synced 1 item",
+        },
       })
 
       store.trigger.setSyncNotification({ notification: null })
@@ -283,7 +288,12 @@ describe("Expense Store", () => {
     it("should clear sync notification", () => {
       const store = createTestExpenseStore()
       store.trigger.setSyncNotification({
-        notification: { type: "merged", addedCount: 1, updatedCount: 0, deletedCount: 0 },
+        notification: {
+          newItemsCount: 1,
+          updatedItemsCount: 0,
+          totalCount: 1,
+          message: "Synced 1 item",
+        },
       })
 
       store.trigger.clearSyncNotification()

@@ -84,55 +84,6 @@ export const CARD_COLORS = {
   },
 } as const
 
-// Toast notification colors - contrasting backgrounds for each type
-// Uses SEMANTIC_COLORS as base for borders, with complementary backgrounds
-export const TOAST_COLORS = {
-  light: {
-    success: {
-      background: "#E8F8EE", // Soft mint green (matches CARD_COLORS.green.bg)
-      border: SEMANTIC_COLORS.success, // Soft mint green
-      text: "#2D5A3D",
-    },
-    error: {
-      background: "#FFE8E8", // Soft coral/rose
-      border: SEMANTIC_COLORS.error, // Soft coral/rose
-      text: "#8B3A3A",
-    },
-    warning: {
-      background: "#FFF3E6", // Soft peach (matches CARD_COLORS.orange.bg)
-      border: SEMANTIC_COLORS.warning, // Soft peach
-      text: "#8B5A2B",
-    },
-    info: {
-      background: "#E6F3FF", // Soft sky blue (matches CARD_COLORS.blue.bg)
-      border: SEMANTIC_COLORS.info, // Soft sky blue
-      text: "#2B5A8B",
-    },
-  },
-  dark: {
-    success: {
-      background: "#1A3D2A", // Dark mint
-      border: SEMANTIC_COLORS.success,
-      text: "#C8F7DC",
-    },
-    error: {
-      background: "#3D1A1A", // Dark coral
-      border: SEMANTIC_COLORS.error,
-      text: "#FFD4D4",
-    },
-    warning: {
-      background: "#3D2A1A", // Dark peach
-      border: SEMANTIC_COLORS.warning,
-      text: "#FFE8D4",
-    },
-    info: {
-      background: "#1A2A3D", // Dark blue
-      border: SEMANTIC_COLORS.info,
-      text: "#D4E8FF",
-    },
-  },
-} as const
-
 /**
  * Get notification color based on type
  */
@@ -140,16 +91,6 @@ export function getNotificationColor(
   type: "success" | "error" | "warning" | "info"
 ): string {
   return SEMANTIC_COLORS[type]
-}
-
-/**
- * Get toast colors based on notification type and color scheme
- */
-export function getToastColors(
-  type: "success" | "error" | "warning" | "info",
-  colorScheme: "light" | "dark"
-) {
-  return TOAST_COLORS[colorScheme][type]
 }
 
 /**

@@ -17,14 +17,15 @@ export const notificationStore = createStore({
   on: {
     addNotification: (
       context,
-      event: { message: string; type?: NotificationType; duration?: number },
+      // Use notificationType to avoid collision with xstate's event.type property
+      event: { message: string; notificationType?: NotificationType; duration?: number },
       enqueue
     ) => {
       const id = Date.now().toString() + Math.random().toString(36)
       const notification: Notification = {
         id,
         message: event.message,
-        type: event.type ?? "info",
+        type: event.notificationType ?? "info",
         duration: event.duration ?? 5000,
       }
 

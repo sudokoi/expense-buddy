@@ -30,7 +30,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       borderWidth={isSelected ? 2 : 1}
       onPress={onPress}
     >
-      <XStack gap="$2" alignItems="center">
+      <XStack gap="$2" style={{ alignItems: "center" }}>
         <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
         <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
           {config.label}

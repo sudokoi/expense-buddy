@@ -1,5 +1,17 @@
 # expense-buddy
 
+## 1.6.3
+
+### Patch Changes
+
+- Notification system fixes and kawaii styling
+  - Fix xstate event type collision by renaming 'type' to 'notificationType'
+  - Move store initialization from module load to StoreProvider useEffect
+    to prevent "window is not defined" error on native devices
+  - Remove Tamagui toast system, consolidate to NotificationStack
+  - Update NotificationStack with kawaii styling (rounded corners,
+    colored shadows, icon backgrounds, dark text for contrast)
+
 ## 1.6.2
 
 ### Patch Changes

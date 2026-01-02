@@ -1,58 +1,82 @@
 import React from "react"
-import { Card, Text, styled } from "tamagui"
+import { View as RNView, ViewStyle } from "react-native"
+import { Text, YStack, styled } from "tamagui"
 import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
 import { useNotifications, NotificationType } from "../stores"
-import { View, StyleSheet } from "react-native"
 import { getNotificationColor } from "../constants/theme-colors"
 
-const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  const iconProps = { size: 20, color: "#ffffff" as `#${string}` }
-
-  switch (type) {
-    case "success":
-      return <CheckCircle {...iconProps} />
-    case "error":
-      return <XCircle {...iconProps} />
-    case "warning":
-      return <AlertTriangle {...iconProps} />
-    case "info":
-    default:
-      return <Info {...iconProps} />
-  }
+// Kawaii notification styling with softer colors and rounded design
+const NOTIFICATION_STYLES: Record<
+  NotificationType,
+  { iconBg: string; textColor: string; borderColor: string }
+> = {
+  success: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#1A5A3A", // Dark green for contrast
+    borderColor: "rgba(255, 255, 255, 0.4)",
+  },
+  error: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#8B2A2A", // Dark red for contrast
+    borderColor: "rgba(255, 255, 255, 0.4)",
+  },
+  warning: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#6B4A1A", // Dark orange for contrast
+    borderColor: "rgba(255, 255, 255, 0.4)",
+  },
+  info: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#1A4A6B", // Dark blue for contrast
+    borderColor: "rgba(255, 255, 255, 0.4)",
+  },
 }
 
-// Using StyleSheet for positioning that Tamagui's type system doesn't support
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    top: 60,
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    gap: 12,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-})
+const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
+  const styles = NOTIFICATION_STYLES[type]
+  const iconColor = styles.textColor as `#${string}`
+  const iconProps = { size: 18, color: iconColor }
+
+  const iconContainerStyle: ViewStyle = {
+    backgroundColor: styles.iconBg,
+    borderRadius: 20,
+    padding: 6,
+  }
+
+  const icon = (() => {
+    switch (type) {
+      case "success":
+        return <CheckCircle {...iconProps} />
+      case "error":
+        return <XCircle {...iconProps} />
+      case "warning":
+        return <AlertTriangle {...iconProps} />
+      case "info":
+      default:
+        return <Info {...iconProps} />
+    }
+  })()
+
+  return <RNView style={iconContainerStyle}>{icon}</RNView>
+}
 
 const NotificationText = styled(Text, {
   name: "NotificationText",
-  color: "white",
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: "500",
   flex: 1,
+  lineHeight: 18,
 })
+
+const containerStyle: ViewStyle = {
+  position: "absolute",
+  top: 50,
+  left: 0,
+  right: 0,
+  zIndex: 9999,
+  gap: 10,
+  paddingHorizontal: 16,
+}
 
 export const NotificationStack: React.FC = () => {
   const { notifications } = useNotifications()
@@ -60,19 +84,38 @@ export const NotificationStack: React.FC = () => {
   if (notifications.length === 0) return null
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      {notifications.map((notification) => (
-        <Card
-          key={notification.id}
-          style={[
-            styles.card,
-            { backgroundColor: getNotificationColor(notification.type) },
-          ]}
-        >
-          <NotificationIcon type={notification.type} />
-          <NotificationText>{notification.message}</NotificationText>
-        </Card>
-      ))}
-    </View>
+    <YStack style={containerStyle} pointerEvents="box-none">
+      {notifications.map((notification) => {
+        const bgColor = getNotificationColor(notification.type)
+        const styles = NOTIFICATION_STYLES[notification.type]
+
+        const notificationStyle: ViewStyle = {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+          borderRadius: 16,
+          backgroundColor: bgColor,
+          borderWidth: 2,
+          borderColor: styles.borderColor,
+          // Soft shadow for kawaii feel
+          shadowColor: bgColor,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        }
+
+        return (
+          <RNView key={notification.id} style={notificationStyle}>
+            <NotificationIcon type={notification.type} />
+            <NotificationText style={{ color: styles.textColor }}>
+              {notification.message}
+            </NotificationText>
+          </RNView>
+        )
+      })}
+    </YStack>
   )
 }

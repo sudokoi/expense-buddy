@@ -9,8 +9,10 @@ import { PaymentMethodType } from "../../types/expense"
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
+  autoSyncEnabled: false,
+  autoSyncTiming: "on_launch",
   updatedAt: new Date().toISOString(),
-  version: 1,
+  version: 3,
 }
 
 // Create a fresh store for each test to avoid state pollution
@@ -131,8 +133,10 @@ describe("Settings Store", () => {
       const newSettings: AppSettings = {
         theme: "dark",
         syncSettings: false,
+        autoSyncEnabled: false,
+        autoSyncTiming: "on_launch",
         updatedAt: new Date().toISOString(),
-        version: 2,
+        version: 3,
       }
 
       store.trigger.loadSettings({ settings: newSettings, hasUnsyncedChanges: true })
@@ -223,6 +227,8 @@ describe("Settings Store", () => {
       const newSettings: AppSettings = {
         theme: "light",
         syncSettings: true,
+        autoSyncEnabled: true,
+        autoSyncTiming: "on_change",
         updatedAt: new Date().toISOString(),
         version: 3,
         defaultPaymentMethod: "UPI",

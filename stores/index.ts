@@ -9,8 +9,13 @@ export {
   expenseStore,
   onSettingsDownloaded,
   emitSettingsDownloaded,
+  initializeExpenseStore,
 } from "./expense-store"
-export { settingsStore, selectEffectiveTheme } from "./settings-store"
+export {
+  settingsStore,
+  selectEffectiveTheme,
+  initializeSettingsStore,
+} from "./settings-store"
 export { notificationStore } from "./notification-store"
 export { syncStatusStore, selectIsSyncing } from "./sync-status-store"
 

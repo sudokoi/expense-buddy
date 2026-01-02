@@ -157,8 +157,8 @@ export function emitSettingsDownloaded(settings: AppSettings): void {
   settingsDownloadedListeners.forEach((listener) => listener(settings))
 }
 
-// Initialize store on module load
-async function initializeExpenseStore(): Promise<void> {
+// Exported initialization function - call from React component tree
+export async function initializeExpenseStore(): Promise<void> {
   try {
     const stored = await AsyncStorage.getItem(EXPENSES_KEY)
     const expenses = stored ? JSON.parse(stored) : []
@@ -180,11 +180,10 @@ async function initializeExpenseStore(): Promise<void> {
         emitSettingsDownloaded(result.downloadedSettings)
       }
     }
-  } catch {
+  } catch (error) {
+    console.warn("Failed to initialize expense store:", error)
     expenseStore.trigger.loadExpenses({ expenses: [] })
   }
 }
-
-initializeExpenseStore()
 
 export type ExpenseStore = typeof expenseStore
