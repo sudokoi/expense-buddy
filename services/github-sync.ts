@@ -144,7 +144,7 @@ function mapHttpError(
       }
     case 422:
       return {
-        error: "Invalid request - check file paths",
+        error: message ? `Invalid request: ${message}` : "Invalid request - check file paths",
         errorCode: "UNKNOWN",
       }
     case 429:
@@ -521,6 +521,10 @@ export async function batchCommit(
   }
   const baseTreeSha = treeResult.treeSha
 
+  function sanitizePath(path: string): string {
+    return path.replace(/^\/+/, "")
+  }
+
   // Step 3: Create blobs for each file to upload
   const treeEntries: { path: string; sha: string | null }[] = []
 
@@ -533,12 +537,12 @@ export async function batchCommit(
         errorCode: blobResult.errorCode,
       }
     }
-    treeEntries.push({ path: upload.path, sha: blobResult.sha })
+    treeEntries.push({ path: sanitizePath(upload.path), sha: blobResult.sha })
   }
 
   // Step 4: Add deletions to tree entries (sha: null marks deletion)
   for (const deletion of deletions) {
-    treeEntries.push({ path: deletion.path, sha: null })
+    treeEntries.push({ path: sanitizePath(deletion.path), sha: null })
   }
 
   // Step 5: Create new tree with all changes

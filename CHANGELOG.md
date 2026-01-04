@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.7.2
+
+### Patch Changes
+
+- fix(sync): improve 422 error handling and sanitize paths
+
 ## 1.7.1
 
 ### Patch Changes
