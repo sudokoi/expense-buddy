@@ -456,6 +456,8 @@ export async function syncUp(
           )
           if ("timestamp" in timestampResult) {
             commitTimestamp = timestampResult.timestamp
+            // Save the authoritative server timestamp as the last sync time
+            await saveLastSyncTime(commitTimestamp)
           }
         } catch (e) {
           console.warn("Failed to fetch commit timestamp after sync:", e)
@@ -738,110 +740,8 @@ async function getLastSyncTime(): Promise<string | null> {
 /**
  * Save last sync timestamp
  */
-async function saveLastSyncTime(timestamp?: string): Promise<void> {
-  const now = timestamp || new Date().toISOString()
-  await secureSetItem(LAST_SYNC_TIME_KEY, now)
-}
-
-/**
- * Bidirectional sync with timestamp-based conflict resolution
- * Optionally includes settings sync if settings and syncSettingsEnabled are provided
- */
-export async function autoSync(
-  localExpenses: Expense[],
-  settings?: AppSettings,
-  syncSettingsEnabled?: boolean
-): Promise<
-  SyncResult & {
-    expenses?: Expense[]
-    notification?: SyncNotification
-    downloadedSettings?: AppSettings
-  }
-> {
-  try {
-    const lastSyncTime = await getLastSyncTime()
-    const downloadResult = await syncDown(7, syncSettingsEnabled)
-
-    if (downloadResult.success && downloadResult.expenses) {
-      const remoteExpenses = downloadResult.expenses
-      const mergeResult = mergeExpensesWithTimestamps(
-        localExpenses,
-        remoteExpenses,
-        lastSyncTime
-      )
-
-      // Upload merged data (with settings if enabled)
-      const uploadResult = await syncUp(mergeResult.merged, settings, syncSettingsEnabled)
-
-      if (uploadResult.success) {
-        // If we got a commit timestamp, use it. Otherwise use current time.
-        await saveLastSyncTime(uploadResult.commitTimestamp)
-
-        // Create notification if there are new or updated items from remote
-        let notification: SyncNotification | undefined
-        if (mergeResult.newFromRemote > 0 || mergeResult.updatedFromRemote > 0) {
-          const totalSynced = mergeResult.newFromRemote + mergeResult.updatedFromRemote
-          notification = {
-            newItemsCount: mergeResult.newFromRemote,
-            updatedItemsCount: mergeResult.updatedFromRemote,
-            totalCount: totalSynced,
-            message:
-              totalSynced === 1
-                ? "1 expense synced from GitHub"
-                : `${totalSynced} expenses synced from GitHub`,
-          }
-        }
-
-        return {
-          success: true,
-          message: `Synced: ${mergeResult.merged.length} expenses (${localExpenses.length} local, ${remoteExpenses.length} remote)`,
-          expenses: mergeResult.merged,
-          notification,
-          downloadedSettings: downloadResult.settings,
-          settingsSynced: uploadResult.settingsSynced,
-          settingsSkipped: uploadResult.settingsSkipped,
-        }
-      } else {
-        // Upload failed - report partial success if settings were downloaded
-        if (downloadResult.settingsDownloaded && downloadResult.settings) {
-          return {
-            success: false,
-            message: "Expenses upload failed, but settings were downloaded",
-            error: uploadResult.error,
-            downloadedSettings: downloadResult.settings,
-          }
-        }
-        return {
-          success: false,
-          message: "Upload after merge failed",
-          error: uploadResult.error,
-        }
-      }
-    } else {
-      // No remote expense data, just upload local
-      const uploadResult = await syncUp(localExpenses, settings, syncSettingsEnabled)
-      if (uploadResult.success) {
-        // If we got a commit timestamp, use it. Otherwise use current time.
-        await saveLastSyncTime(uploadResult.commitTimestamp)
-      }
-
-      // Even if expense download failed, we might have settings
-      return {
-        success: uploadResult.success,
-        message: uploadResult.message,
-        error: uploadResult.error,
-        downloadedSettings: downloadResult.settings,
-        settingsSynced: uploadResult.settingsSynced,
-        settingsSkipped: uploadResult.settingsSkipped,
-      }
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: "Auto-sync failed",
-      error: String(error),
-    }
-  }
+async function saveLastSyncTime(timestamp: string): Promise<void> {
+  await secureSetItem(LAST_SYNC_TIME_KEY, timestamp)
 }
 
 /**
@@ -858,7 +758,7 @@ export async function autoSync(
  *    - Otherwise, it's new on remote → add it
  * 3. For expenses only in local: keep them (they're new locally or synced before)
  */
-function mergeExpensesWithTimestamps(
+export function mergeExpensesWithTimestamps(
   local: Expense[],
   remote: Expense[],
   lastSyncTime: string | null
@@ -916,98 +816,6 @@ function mergeExpensesWithTimestamps(
     merged: sortedMerged,
     newFromRemote,
     updatedFromRemote,
-  }
-}
-
-export interface ConflictInfo {
-  localWins: number // Local records that are newer
-  remoteWins: number // Remote records that are newer
-  newFromRemote: number // New records from remote
-  newFromLocal: number // New records from local (not on remote)
-  deletedLocally: number // Records deleted locally that exist on remote
-}
-
-/**
- * Analyze what would happen if we merge local and remote expenses
- * This helps show users what conflicts exist before merging
- */
-export async function analyzeConflicts(localExpenses: Expense[]): Promise<{
-  success: boolean
-  conflicts?: ConflictInfo
-  remoteExpenses?: Expense[]
-  error?: string
-}> {
-  try {
-    const config = await loadSyncConfig()
-    if (!config) {
-      return { success: false, error: "No sync configuration" }
-    }
-
-    const downloadResult = await syncDown()
-    if (!downloadResult.success || !downloadResult.expenses) {
-      return {
-        success: false,
-        error: downloadResult.error || "Download failed",
-      }
-    }
-
-    const remoteExpenses = downloadResult.expenses
-    const lastSyncTime = await getLastSyncTime()
-
-    const localMap = new Map(localExpenses.map((e) => [e.id, e]))
-    const remoteMap = new Map(remoteExpenses.map((e) => [e.id, e]))
-
-    let localWins = 0
-    let remoteWins = 0
-    let newFromRemote = 0
-    let newFromLocal = 0
-    let deletedLocally = 0
-
-    const allIds = new Set([...localMap.keys(), ...remoteMap.keys()])
-
-    for (const id of allIds) {
-      const localItem = localMap.get(id)
-      const remoteItem = remoteMap.get(id)
-
-      if (localItem && remoteItem) {
-        const localTime = new Date(localItem.updatedAt).getTime()
-        const remoteTime = new Date(remoteItem.updatedAt).getTime()
-        if (remoteTime > localTime) {
-          remoteWins++
-        } else if (localTime > remoteTime) {
-          localWins++
-        }
-        // If equal timestamps, no conflict
-      } else if (localItem && !remoteItem) {
-        newFromLocal++
-      } else if (remoteItem && !localItem) {
-        if (lastSyncTime) {
-          const lastSync = new Date(lastSyncTime).getTime()
-          const itemUpdated = new Date(remoteItem.updatedAt).getTime()
-          if (lastSync > itemUpdated) {
-            deletedLocally++
-          } else {
-            newFromRemote++
-          }
-        } else {
-          newFromRemote++
-        }
-      }
-    }
-
-    return {
-      success: true,
-      conflicts: {
-        localWins,
-        remoteWins,
-        newFromRemote,
-        newFromLocal,
-        deletedLocally,
-      },
-      remoteExpenses,
-    }
-  } catch (error) {
-    return { success: false, error: String(error) }
   }
 }
 
