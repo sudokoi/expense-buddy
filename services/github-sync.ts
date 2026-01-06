@@ -622,7 +622,21 @@ export async function getLatestCommitTimestamp(
     )
 
     if (!response.ok) {
-      return { error: `GitHub API error: ${response.status}` }
+      // Provide user-friendly error messages for common scenarios
+      switch (response.status) {
+        case 401:
+          return { error: "Invalid or expired GitHub token" }
+        case 403:
+          return { error: "GitHub rate limit exceeded or access denied" }
+        case 404:
+          return { error: "Repository or branch not found" }
+        case 500:
+        case 502:
+        case 503:
+          return { error: "GitHub is temporarily unavailable. Try again later." }
+        default:
+          return { error: `GitHub sync failed (${response.status})` }
+      }
     }
 
     const commits = await response.json()
@@ -643,7 +657,16 @@ export async function getLatestCommitTimestamp(
 
     return { timestamp }
   } catch (error) {
-    return { error: `Network error: ${error}` }
+    // Check for specific network error types
+    const errorMessage = String(error)
+    if (
+      errorMessage.includes("Failed to fetch") ||
+      errorMessage.includes("Network request failed") ||
+      errorMessage.includes("TypeError")
+    ) {
+      return { error: "No internet connection. Sync will retry when online." }
+    }
+    return { error: `Sync failed: ${error}` }
   }
 }
 
