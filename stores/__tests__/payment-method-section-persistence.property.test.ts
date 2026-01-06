@@ -165,9 +165,9 @@ describe("Payment Method Section Persistence Properties", () => {
             )
           }
         ),
-        { numRuns: 50 }  // Reduced from 100 to prevent timeout (50 runs × 10 toggles × 5ms = 2500ms)
+        { numRuns: 50 } // Reduced from 100 to prevent timeout (50 runs × 10 toggles × 5ms = 2500ms)
       )
-    }, 10000)  // Explicit 10s timeout
+    }, 10000) // Explicit 10s timeout
 
     it("loading persisted state SHALL restore the exact value", async () => {
       await fc.assert(

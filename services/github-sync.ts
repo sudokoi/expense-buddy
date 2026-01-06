@@ -144,7 +144,9 @@ function mapHttpError(
       }
     case 422:
       return {
-        error: message ? `Invalid request: ${message}` : "Invalid request - check file paths",
+        error: message
+          ? `Invalid request: ${message}`
+          : "Invalid request - check file paths",
         errorCode: "UNKNOWN",
       }
     case 429:
@@ -632,7 +634,8 @@ export async function getLatestCommitTimestamp(
 
     // Return the commit timestamp (author date)
     const latestCommit = commits[0]
-    const timestamp = latestCommit.commit?.author?.date || latestCommit.commit?.committer?.date
+    const timestamp =
+      latestCommit.commit?.author?.date || latestCommit.commit?.committer?.date
 
     if (!timestamp) {
       return { error: "Could not extract timestamp from commit" }

@@ -12,8 +12,6 @@ import {
   SyncResult,
 } from "../services/sync-manager"
 
-
-
 export type SyncStatus = "idle" | "syncing" | "success" | "error"
 
 export interface SyncPushParams {
@@ -51,15 +49,12 @@ export interface SmartSyncParams {
   onSettingsDownloaded?: (settings: AppSettings) => void
 }
 
-
-
 export const syncKeys = {
   all: ["sync"] as const,
   push: () => [...syncKeys.all, "push"] as const,
   pull: () => [...syncKeys.all, "pull"] as const,
   direction: () => [...syncKeys.all, "direction"] as const,
 }
-
 
 export function useSyncPush() {
   return useMutation({
@@ -74,7 +69,6 @@ export function useSyncPush() {
   })
 }
 
-
 export function useSyncPull() {
   return useMutation({
     mutationKey: syncKeys.pull(),
@@ -86,7 +80,6 @@ export function useSyncPull() {
     },
   })
 }
-
 
 export function useSmartSync() {
   const queryClient = useQueryClient()
@@ -163,7 +156,6 @@ export function useSmartSync() {
     isPullPending: pullMutation.isPending,
   }
 }
-
 
 export function useSyncStatus() {
   const queryClient = useQueryClient()

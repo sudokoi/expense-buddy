@@ -22,11 +22,7 @@ import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
 import { Expense, PaymentMethodType } from "../../types/expense"
 import { useExpenses, useNotifications, useSettings } from "../../stores"
-import {
-  useSmartSync,
-  useSyncPush,
-  useSyncPull,
-} from "../../hooks/use-sync"
+import { useSmartSync, useSyncPush, useSyncPull } from "../../hooks/use-sync"
 import {
   checkForUpdates,
   UpdateInfo,
@@ -108,7 +104,8 @@ export default function SettingsScreen() {
   const pushMutation = useSyncPush()
   const pullMutation = useSyncPull()
   const smartSyncMutation = useSmartSync()
-  const isSyncing = pushMutation.isPending || pullMutation.isPending || smartSyncMutation.isPending
+  const isSyncing =
+    pushMutation.isPending || pullMutation.isPending || smartSyncMutation.isPending
 
   const {
     settings,
@@ -393,7 +390,8 @@ export default function SettingsScreen() {
                 { text: "Cancel", style: "cancel" },
                 {
                   text: "Merge",
-                  onPress: () => performSmartMerge(remoteExpenses, summary, downloadedSettings),
+                  onPress: () =>
+                    performSmartMerge(remoteExpenses, summary, downloadedSettings),
                 },
               ]
             )
@@ -753,12 +751,7 @@ export default function SettingsScreen() {
           {/* Sync Button - only shown when configured */}
           {isConfigured && (
             <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
-              <Button
-                size="$4"
-                onPress={handleSync}
-                disabled={isSyncing}
-                themeInverse
-              >
+              <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
                 {isSyncing ? "Syncing..." : "Sync"}
               </Button>
             </YStack>
