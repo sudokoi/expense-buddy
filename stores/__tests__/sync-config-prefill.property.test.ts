@@ -1,12 +1,8 @@
 /**
  * Property-based tests for Sync Config Pre-fill
  *
- * **Feature: useeffect-cleanup, Property 4: Sync Config Pre-fill**
- *
  * For any previously saved sync configuration, when the settings screen reads from the store,
  * the config values SHALL match the saved values.
- *
- * **Validates: Requirements 6.4**
  */
 
 import fc from "fast-check"
@@ -104,11 +100,6 @@ function initializeFormStateFromStore(syncConfig: SyncConfig | null): {
 }
 
 describe("Sync Config Pre-fill Properties", () => {
-  /**
-   * Property 4: Sync Config Pre-fill
-   * **Feature: useeffect-cleanup, Property 4: Sync Config Pre-fill**
-   * **Validates: Requirements 6.4**
-   */
   describe("Property 4: Sync Config Pre-fill", () => {
     it("previously saved sync config SHALL be pre-filled in form state", () => {
       fc.assert(

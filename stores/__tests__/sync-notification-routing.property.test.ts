@@ -1,13 +1,9 @@
 /**
  * Property-based tests for Sync Notification Routing
  *
- * **Feature: useeffect-cleanup, Property 1: Sync Notification Routing**
- *
  * For any sync operation that completes with changes (newItemsCount > 0 or updatedItemsCount > 0),
  * setting a sync notification in the expense store SHALL result in a corresponding notification
  * being added to the notification store.
- *
- * **Validates: Requirements 1.1, 6.3**
  */
 
 import fc from "fast-check"
@@ -140,11 +136,6 @@ const syncNotificationWithAtLeastOneChangeArb: fc.Arbitrary<SyncNotification> = 
   }))
 
 describe("Sync Notification Routing Properties", () => {
-  /**
-   * Property 1: Sync Notification Routing
-   * **Feature: useeffect-cleanup, Property 1: Sync Notification Routing**
-   * **Validates: Requirements 1.1, 6.3**
-   */
   describe("Property 1: Sync Notification Routing", () => {
     it("setting sync notification SHALL emit to all registered listeners", () => {
       fc.assert(

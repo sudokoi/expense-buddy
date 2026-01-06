@@ -15,14 +15,15 @@ import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-i
 import {
   testConnection,
   SyncConfig,
-  analyzeConflicts,
   smartMerge,
+  syncDown,
 } from "../../services/sync-manager"
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
 import { Expense, PaymentMethodType } from "../../types/expense"
 import { useExpenses, useNotifications, useSettings } from "../../stores"
-import { useSmartSync, useSyncPush, useSyncPull } from "../../hooks/use-sync"
+import { useSyncMachine } from "../../hooks/use-sync-machine"
+
 import {
   checkForUpdates,
   UpdateInfo,
@@ -101,11 +102,9 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
 
-  const pushMutation = useSyncPush()
-  const pullMutation = useSyncPull()
-  const smartSyncMutation = useSmartSync()
-  const isSyncing =
-    pushMutation.isPending || pullMutation.isPending || smartSyncMutation.isPending
+  // XState sync machine for the main sync flow
+  const syncMachine = useSyncMachine()
+  const isSyncing = syncMachine.isSyncing
 
   const {
     settings,
@@ -219,36 +218,31 @@ export default function SettingsScreen() {
           { text: "Not Now", style: "cancel" },
           {
             text: "Download",
-            onPress: () => {
-              pullMutation.mutate(
-                { daysToDownload: 7, syncSettingsEnabled: settings.syncSettings },
-                {
-                  onSuccess: (result) => {
-                    if (result.success && result.expenses) {
-                      replaceAllExpenses(result.expenses)
-                      addNotification(
-                        `Downloaded ${result.expenses.length} expenses`,
-                        "success"
-                      )
+            onPress: async () => {
+              try {
+                const result = await syncDown(7, settings.syncSettings)
+                if (result.success && result.expenses) {
+                  replaceAllExpenses(result.expenses)
+                  addNotification(
+                    `Downloaded ${result.expenses.length} expenses`,
+                    "success"
+                  )
 
-                      if (result.settings && settings.syncSettings) {
-                        replaceSettings(result.settings)
-                        addNotification("Settings applied from GitHub", "success")
-                      }
+                  if (result.settings && settings.syncSettings) {
+                    replaceSettings(result.settings)
+                    addNotification("Settings applied from GitHub", "success")
+                  }
 
-                      if (!settings.autoSyncEnabled) {
-                        setAutoSyncEnabled(true)
-                        addNotification("Auto-sync enabled", "info")
-                      }
-                    } else {
-                      addNotification(result.error || result.message, "error")
-                    }
-                  },
-                  onError: (error) => {
-                    addNotification(String(error), "error")
-                  },
+                  if (!settings.autoSyncEnabled) {
+                    setAutoSyncEnabled(true)
+                    addNotification("Auto-sync enabled", "info")
+                  }
+                } else {
+                  addNotification(result.error || result.message, "error")
                 }
-              )
+              } catch (error) {
+                addNotification(String(error), "error")
+              }
             },
           },
         ]
@@ -264,7 +258,6 @@ export default function SettingsScreen() {
     settings.autoSyncEnabled,
     saveSyncConfig,
     setAutoSyncEnabled,
-    pullMutation,
     replaceAllExpenses,
     replaceSettings,
     addNotification,
@@ -286,143 +279,6 @@ export default function SettingsScreen() {
       addNotification(result.error || result.message, "error")
     }
   }, [addNotification])
-
-  const handlePush = useCallback(() => {
-    pushMutation.mutate(
-      {
-        expenses: state.expenses,
-        settings: settings.syncSettings ? settings : undefined,
-        syncSettingsEnabled: settings.syncSettings,
-      },
-      {
-        onSuccess: (result) => {
-          if (result.success) {
-            addNotification(result.message, "success")
-            clearPendingChangesAfterSync()
-            if (settings.syncSettings && result.settingsSynced) {
-              clearSettingsChangeFlag()
-            }
-          } else {
-            addNotification(result.error || result.message, "error")
-          }
-        },
-        onError: (error) => {
-          addNotification(String(error), "error")
-        },
-      }
-    )
-  }, [
-    pushMutation,
-    state.expenses,
-    settings,
-    addNotification,
-    clearPendingChangesAfterSync,
-    clearSettingsChangeFlag,
-  ])
-
-  const handlePull = useCallback(async () => {
-    pullMutation.mutate(
-      {
-        daysToDownload: 7,
-        syncSettingsEnabled: settings.syncSettings,
-      },
-      {
-        onSuccess: async (downloadResult) => {
-          if (!downloadResult.success) {
-            addNotification(downloadResult.error || "Failed to download", "error")
-            return
-          }
-
-          const analysis = await analyzeConflicts(state.expenses)
-
-          if (!analysis.success) {
-            addNotification(analysis.error || "Failed to analyze conflicts", "error")
-            return
-          }
-
-          const downloadedSettings = downloadResult.settings
-          const conflicts = analysis.conflicts!
-          const remoteExpenses = analysis.remoteExpenses!
-
-          const hasRemoteUpdates = conflicts.remoteWins > 0
-          const hasNewFromRemote = conflicts.newFromRemote > 0
-          const hasLocalOnly = conflicts.newFromLocal > 0
-          const hasDeletedLocally = conflicts.deletedLocally > 0
-          const settingsDownloaded = !!downloadedSettings
-
-          const summaryParts: string[] = []
-          if (conflicts.newFromRemote > 0)
-            summaryParts.push(`${conflicts.newFromRemote} new`)
-          if (conflicts.remoteWins > 0)
-            summaryParts.push(`${conflicts.remoteWins} updated`)
-          if (conflicts.localWins > 0)
-            summaryParts.push(`${conflicts.localWins} local kept`)
-          if (conflicts.deletedLocally > 0)
-            summaryParts.push(`${conflicts.deletedLocally} deleted locally`)
-
-          if (settingsDownloaded) {
-            summaryParts.push("settings updated")
-          }
-
-          const changesSummary =
-            summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
-
-          if (
-            !hasRemoteUpdates &&
-            !hasNewFromRemote &&
-            !hasLocalOnly &&
-            !hasDeletedLocally &&
-            conflicts.localWins === 0 &&
-            !settingsDownloaded
-          ) {
-            addNotification("Already in sync - no changes needed", "success")
-            return
-          }
-
-          // Case where we only have settings updates but no expense conflicts
-          if (
-            !hasRemoteUpdates &&
-            !hasNewFromRemote &&
-            !hasLocalOnly &&
-            !hasDeletedLocally &&
-            conflicts.localWins === 0 &&
-            settingsDownloaded
-          ) {
-            replaceSettings(downloadedSettings)
-            addNotification(`Synced from GitHub: ${changesSummary}`, "success")
-            return
-          }
-
-          if (hasRemoteUpdates) {
-            Alert.alert(
-              "Merge Conflicts Detected",
-              `${conflicts.remoteWins} record(s) on GitHub are newer than your local version and will overwrite them.\n\nSummary: ${changesSummary}\n\nProceed with merge?`,
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Merge",
-                  onPress: () =>
-                    performSmartMerge(remoteExpenses, changesSummary, downloadedSettings),
-                },
-              ]
-            )
-          } else {
-            await performSmartMerge(remoteExpenses, changesSummary, downloadedSettings)
-          }
-        },
-        onError: (error) => {
-          addNotification(String(error), "error")
-        },
-      }
-    )
-  }, [
-    pullMutation,
-    state.expenses,
-    settings.syncSettings,
-    replaceSettings,
-    addNotification,
-    performSmartMerge,
-  ])
 
   const handleClearConfig = useCallback(() => {
     Alert.alert("Confirm Clear", "Remove sync configuration?", [
@@ -510,71 +366,69 @@ export default function SettingsScreen() {
     return expenseChanges + settingsChanges > 0
   }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
+  // Handle sync using XState machine with callbacks
   const handleSync = useCallback(() => {
-    smartSyncMutation.mutate(
-      {
-        expenses: state.expenses,
-        settings: settings.syncSettings ? settings : undefined,
-        syncSettingsEnabled: settings.syncSettings,
-        hasLocalChanges: hasChangesToSync,
-      },
-      {
+    syncMachine.sync({
+      localExpenses: state.expenses,
+      settings: settings.syncSettings ? settings : undefined,
+      syncSettingsEnabled: settings.syncSettings,
+      hasLocalChanges: hasChangesToSync,
+      callbacks: {
+        onConflict: () => {
+          Alert.alert(
+            "Sync Conflict",
+            "Both local and remote have changes since last sync. How would you like to proceed?",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => syncMachine.cancel(),
+              },
+              {
+                text: "Upload Local",
+                onPress: () => syncMachine.forcePush(),
+              },
+              {
+                text: "Download Remote",
+                onPress: () => syncMachine.forcePull(),
+              },
+            ]
+          )
+        },
         onSuccess: (result) => {
-          switch (result.action) {
-            case "in_sync":
-              addNotification("Already in sync - no changes needed", "success")
-              break
-
-            case "push":
-              addNotification(result.message, "success")
-              clearPendingChangesAfterSync()
-              if (settings.syncSettings && result.result?.settingsSynced) {
-                clearSettingsChangeFlag()
-              }
-              break
-
-            case "pull":
-              if (result.downloadResult?.settings) {
-                replaceSettings(result.downloadResult.settings)
-              }
-              addNotification(result.message, "success")
-              break
-
-            case "conflict":
-              Alert.alert(
-                "Sync Conflict",
-                "Both local and remote have changes since last sync. How would you like to proceed?",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Upload Local",
-                    onPress: () => handlePush(),
-                  },
-                  {
-                    text: "Download Remote",
-                    onPress: () => handlePull(),
-                  },
-                ]
-              )
-              break
+          if (result.syncResult) {
+            // Push completed
+            addNotification(result.syncResult.message, "success")
+            clearPendingChangesAfterSync()
+            if (settings.syncSettings && result.syncResult.settingsSynced) {
+              clearSettingsChangeFlag()
+            }
+          } else if (result.downloadedExpenses) {
+            // Pull completed - merge with local
+            performSmartMerge(
+              result.downloadedExpenses,
+              `Downloaded ${result.downloadedExpenses.length} expenses`,
+              result.downloadedSettings
+            )
           }
         },
-        onError: (error) => {
-          addNotification(String(error), "error")
+        onInSync: () => {
+          addNotification("Already in sync - no changes needed", "success")
         },
-      }
-    )
+        onError: (error) => {
+          addNotification(error, "error")
+        },
+      },
+    })
   }, [
-    smartSyncMutation,
+    syncMachine,
     state.expenses,
     settings,
     hasChangesToSync,
     addNotification,
     clearPendingChangesAfterSync,
     clearSettingsChangeFlag,
-    replaceSettings,
-    handlePush,
-    handlePull,
+    performSmartMerge,
   ])
 
   return (

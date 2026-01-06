@@ -1,12 +1,8 @@
 /**
  * Property-based tests for Payment Method Section Persistence
  *
- * Property 3: Payment Method Section Persistence
  * For any toggle of the payment method section expanded state, the settings store
  * SHALL persist the new value, and subsequent reads SHALL return the persisted value.
- *
- * **Feature: useeffect-cleanup, Property 3: Payment Method Section Persistence**
- * **Validates: Requirements 3.1**
  */
 
 import fc from "fast-check"
@@ -73,11 +69,6 @@ describe("Payment Method Section Persistence Properties", () => {
     jest.clearAllMocks()
   })
 
-  /**
-   * Property 3: Payment Method Section Persistence
-   * **Feature: useeffect-cleanup, Property 3: Payment Method Section Persistence**
-   * **Validates: Requirements 3.1**
-   */
   describe("Property 3: Payment Method Section Persistence", () => {
     it("setPaymentMethodExpanded SHALL update store state to the new value", () => {
       fc.assert(
