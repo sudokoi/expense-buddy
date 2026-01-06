@@ -1,31 +1,3 @@
-/**
- * Property-based tests for MergeEngine
- *
- * Property 1: Merge Completeness
- * For any local expense set L and remote expense set R, the merge result M SHALL contain
- * all expenses from L ∪ R (union), with duplicates resolved by ID.
- *
- * Property 2: ID Uniqueness in Merge Result
- * For any merge result, each expense ID SHALL appear exactly once.
- *
- * Property 3: Timestamp-Based Resolution
- * For any expense that exists in both local and remote with different content, if
- * local.updatedAt > remote.updatedAt, the merge result SHALL contain the local version;
- * if remote.updatedAt > local.updatedAt, the merge result SHALL contain the remote version.
- *
- * Property 4: True Conflict Detection
- * For any expense that exists in both local and remote with different content AND
- * |local.updatedAt - remote.updatedAt| <= threshold, the merge SHALL report it as a true conflict.
- *
- * Property 5: Soft Delete Propagation
- * For any expense that is soft-deleted (has deletedAt set) on one side, the merge result
- * SHALL include the soft-deleted version, and the deletedAt timestamp SHALL be preserved.
- *
- * **Validates: Requirements 2.1-2.4, 3.1-3.3, 4.1, 5.1-5.3, 5.5**
- *
- * **Feature: git-style-sync**
- */
-
 import fc from "fast-check"
 import { mergeExpenses, DEFAULT_CONFLICT_THRESHOLD_MS } from "../merge-engine"
 import {
@@ -44,6 +16,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Groceries",
   "Transport",
   "Utilities",
+  "Rent",
   "Entertainment",
   "Health",
   "Other"
@@ -111,11 +84,6 @@ const uniqueExpensesWithSoftDeleteArb = (minLength: number, maxLength: number) =
     .map((expenses) => expenses.map((e, i) => ({ ...e, id: `expense-${i}` })))
 
 describe("MergeEngine Properties", () => {
-  /**
-   * Property 1: Merge Completeness
-   * **Feature: git-style-sync, Property 1: Merge Completeness**
-   * **Validates: Requirements 2.2, 2.3, 2.4**
-   */
   describe("Property 1: Merge Completeness", () => {
     it("merge result SHALL contain all unique IDs from both local and remote", () => {
       fc.assert(
@@ -183,11 +151,6 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  /**
-   * Property 2: ID Uniqueness in Merge Result
-   * **Feature: git-style-sync, Property 2: ID Uniqueness in Merge Result**
-   * **Validates: Requirements 2.1, 2.4**
-   */
   describe("Property 2: ID Uniqueness in Merge Result", () => {
     it("each expense ID SHALL appear exactly once in merge result", () => {
       fc.assert(
@@ -239,11 +202,6 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  /**
-   * Property 3: Timestamp-Based Resolution
-   * **Feature: git-style-sync, Property 3: Timestamp-Based Resolution**
-   * **Validates: Requirements 3.1, 3.2, 3.3**
-   */
   describe("Property 3: Timestamp-Based Resolution", () => {
     it("newer local version SHALL win when timestamps differ significantly", () => {
       fc.assert(
@@ -356,11 +314,6 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  /**
-   * Property 4: True Conflict Detection
-   * **Feature: git-style-sync, Property 4: True Conflict Detection**
-   * **Validates: Requirements 4.1, 4.2, 4.3**
-   */
   describe("Property 4: True Conflict Detection", () => {
     it("equal timestamps with different content SHALL be detected as true conflict", () => {
       fc.assert(
@@ -477,11 +430,6 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  /**
-   * Property 5: Soft Delete Propagation
-   * **Feature: git-style-sync, Property 5: Soft Delete Propagation**
-   * **Validates: Requirements 5.1, 5.2, 5.3, 5.5**
-   */
   describe("Property 5: Soft Delete Propagation", () => {
     it("soft-deleted expense from remote SHALL be included in merge result", () => {
       fc.assert(

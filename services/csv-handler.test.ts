@@ -13,6 +13,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Food",
   "Groceries",
   "Transport",
+  "Rent",
   "Utilities",
   "Entertainment",
   "Health",

@@ -41,15 +41,19 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Secure Backup**: Sync expenses to your private GitHub repository
 - **Daily File Organization**: Expenses stored as `expenses-YYYY-MM-DD.csv` files (one file per day)
+- **Git-Style Sync**: Fetch-merge-push workflow prevents accidental data loss
+  - Always fetches remote data before pushing
+  - Merges local and remote changes by expense ID
+  - Timestamp-based auto-resolution (newer version wins)
+  - True conflict detection when edits happen within the same time window
+- **Soft Delete**: Expenses are marked with `deletedAt` timestamp instead of being removed, ensuring deletions sync correctly across devices
 - **Smart Sync**:
   - Auto-sync on app launch or after every change
   - Manual sync with upload/download controls
   - Incremental loading (last 7 days by default)
-  - Automatic cleanup: deletes files for days with no expenses
 - **Differential Sync**: Only uploads changed files using content hashing for efficiency
 - **Batched Commits**: All file changes (uploads and deletions) are combined into a single atomic commit
-- **Accurate Sync Count**: Upload button shows exact number of files that will be synced
-- **Conflict Resolution**: Timestamp-based merging handles concurrent edits (latest wins)
+- **Detailed Sync Feedback**: Shows counts of expenses added, updated, and auto-resolved
 - **Load More**: Download older expenses 7 days at a time
 - **Migration Support**: Automatically migrates from old single-file format to daily files
 
@@ -151,15 +155,16 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 **Smart Sync:**
 
-- Tap **Sync Now** – automatically determines direction:
-  - **Push**: When only local changes exist
-  - **Pull**: When only remote changes exist
-  - **Conflict**: Shows dialog when both have changes
+- Tap **Sync Now** – uses git-style fetch-merge-push:
+  - Fetches all remote expenses first
+  - Merges with local data (newer timestamps win)
+  - Prompts only for true conflicts (same expense edited on both sides within seconds)
+  - Pushes merged result to remote
 
 **Auto-Sync:**
 
 - Happens automatically based on your settings
-- Shows notifications when sync completes
+- Shows notifications when sync completes with detailed counts
 - Handles conflicts using timestamps (latest wins)
 
 ### Loading More History
@@ -243,8 +248,9 @@ expense-buddy/
 │   └── index.ts              # Store exports
 │   └── __tests__/            # Unit and property-based tests
 ├── services/             # Business logic
-│   ├── sync-machine.ts   # XState sync state machine (idle/push/pull/conflict/error)
+│   ├── sync-machine.ts   # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
 │   ├── sync-manager.ts   # Sync orchestration
+│   ├── merge-engine.ts   # Git-style merge logic (ID-based merge, timestamp resolution)
 │   ├── github-sync.ts    # GitHub API client (includes batch commit via Git Data API)
 │   ├── csv-handler.ts    # CSV import/export
 │   ├── daily-file-manager.ts

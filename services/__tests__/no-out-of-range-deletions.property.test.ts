@@ -1,15 +1,3 @@
-/**
- * Property-based test for No Out-of-Range Deletions
- *
- * Property 6: No Out-of-Range Deletions
- * For any sync operation, remote files for days outside the local date range
- * SHALL NOT be deleted.
- *
- * **Validates: Requirements 5.4**
- *
- * **Feature: git-style-sync, Property 6: No Out-of-Range Deletions**
- */
-
 import fc from "fast-check"
 import { Expense, ExpenseCategory } from "../../types/expense"
 import { groupExpensesByDay, getFilenameForDay } from "../daily-file-manager"
@@ -103,10 +91,6 @@ function isOutsideLocalRange(dayKey: string, localExpenses: Expense[]): boolean 
 // =============================================================================
 
 describe("Property 6: No Out-of-Range Deletions", () => {
-  /**
-   * **Feature: git-style-sync, Property 6: No Out-of-Range Deletions**
-   * **Validates: Requirements 5.4**
-   */
   it("remote files outside local date range SHALL NOT be deleted", () => {
     fc.assert(
       fc.property(

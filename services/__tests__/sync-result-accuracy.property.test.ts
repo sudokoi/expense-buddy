@@ -1,15 +1,3 @@
-/**
- * Property-based tests for Sync Result Accuracy
- *
- * Property 7: Merge Result Accuracy
- * For any sync operation, the reported counts (addedFromRemote, updatedFromRemote,
- * addedFromLocal, autoResolved) SHALL accurately reflect the actual changes made.
- *
- * **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
- *
- * **Feature: git-style-sync, Property 7: Merge Result Accuracy**
- */
-
 import fc from "fast-check"
 import { mergeExpenses, DEFAULT_CONFLICT_THRESHOLD_MS } from "../merge-engine"
 import {
@@ -25,6 +13,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Groceries",
   "Transport",
   "Utilities",
+  "Rent",
   "Entertainment",
   "Health",
   "Other"
@@ -73,15 +62,7 @@ const uniqueExpensesArb = (minLength: number, maxLength: number) =>
     .map((expenses) => expenses.map((e, i) => ({ ...e, id: `expense-${i}` })))
 
 describe("Sync Result Accuracy Properties", () => {
-  /**
-   * Property 7: Merge Result Accuracy
-   * **Feature: git-style-sync, Property 7: Merge Result Accuracy**
-   * **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
-   */
   describe("Property 7: Merge Result Accuracy", () => {
-    /**
-     * Requirement 7.1: addedFromRemote count SHALL accurately reflect expenses added from remote
-     */
     it("addedFromRemote count SHALL match actual remote-only expenses", () => {
       fc.assert(
         fc.property(
@@ -109,9 +90,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Requirement 7.2: updatedFromRemote count SHALL accurately reflect expenses updated from remote
-     */
     it("updatedFromRemote count SHALL match actual remote-wins conflicts", () => {
       fc.assert(
         fc.property(
@@ -151,9 +129,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Requirement 7.3: addedFromLocal count SHALL accurately reflect local-only expenses
-     */
     it("addedFromLocal count SHALL match actual local-only expenses", () => {
       fc.assert(
         fc.property(
@@ -181,9 +156,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Requirement 7.4: autoResolved count SHALL accurately reflect auto-resolved conflicts
-     */
     it("autoResolved count SHALL match actual timestamp-resolved conflicts", () => {
       fc.assert(
         fc.property(
@@ -226,9 +198,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Verify that all reported counts sum correctly
-     */
     it("sum of all change counts SHALL equal total unique IDs processed", () => {
       fc.assert(
         fc.property(
@@ -272,9 +241,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Verify addedFromRemote expenses are actually in merged result
-     */
     it("all addedFromRemote expenses SHALL be present in merged result", () => {
       fc.assert(
         fc.property(
@@ -299,9 +265,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Verify addedFromLocal expenses are actually in merged result
-     */
     it("all addedFromLocal expenses SHALL be present in merged result", () => {
       fc.assert(
         fc.property(
@@ -326,9 +289,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Verify updatedFromRemote expenses are actually in merged result
-     */
     it("all updatedFromRemote expenses SHALL be present in merged result", () => {
       fc.assert(
         fc.property(
@@ -370,9 +330,6 @@ describe("Sync Result Accuracy Properties", () => {
       )
     })
 
-    /**
-     * Verify autoResolved conflicts have correct winner information
-     */
     it("autoResolved conflicts SHALL have correct winner based on timestamps", () => {
       fc.assert(
         fc.property(

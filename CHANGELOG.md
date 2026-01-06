@@ -1,5 +1,23 @@
 # expense-buddy
 
+## 1.9.1
+
+### Patch Changes
+
+- Implement git-style sync with fetch-merge-push flow
+
+  This release introduces a safer synchronization mechanism that prevents accidental data loss when syncing expenses across devices.
+
+  **Key changes:**
+  - **Merge-first sync**: Always fetches remote data before pushing, similar to git's workflow
+  - **Soft deletes**: Deleted expenses are now marked with a `deletedAt` timestamp instead of being removed, ensuring deletions sync correctly across devices
+  - **Timestamp-based conflict resolution**: When the same expense is edited on multiple devices, the newer version wins automatically
+  - **True conflict detection**: Prompts user only when edits happen within the same time window
+  - **Detailed sync feedback**: Shows counts of added, updated, and auto-resolved items after sync
+
+  **Breaking changes:**
+  - Expenses now include an optional `deletedAt` field (backward compatible - existing data works without migration)
+
 ## 1.9.0
 
 ### Minor Changes

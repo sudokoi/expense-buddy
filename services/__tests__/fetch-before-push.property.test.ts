@@ -1,19 +1,3 @@
-/**
- * Property-based tests for Fetch Before Push guarantee
- *
- * Property 8: Fetch Before Push
- * For any sync operation that results in a push, remote data SHALL have been fetched first.
- *
- * **Validates: Requirements 1.1, 1.2**
- *
- * **Feature: git-style-sync, Property 8: Fetch Before Push**
- *
- * This test validates the contract of fetchAllRemoteExpenses:
- * - It SHALL fetch ALL expense files from the repository (not just recent window)
- * - It SHALL return a complete list of remote expenses
- * - It SHALL handle errors gracefully and return error results
- */
-
 import fc from "fast-check"
 import {
   Expense,
@@ -28,6 +12,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Groceries",
   "Transport",
   "Utilities",
+  "Rent",
   "Entertainment",
   "Health",
   "Other"
@@ -77,12 +62,6 @@ const uniqueExpensesArb = (minLength: number, maxLength: number) =>
 
 /**
  * Simulates the fetch-before-push contract
- *
- * This function represents the contract that any git-style sync operation must follow:
- * 1. Fetch all remote expenses first
- * 2. Only then proceed with merge and push
- *
- * The property tests validate that this contract is correctly implemented.
  */
 interface FetchResult {
   success: boolean
@@ -140,11 +119,6 @@ function simulateSyncOperation(
 }
 
 describe("Fetch Before Push Property Tests", () => {
-  /**
-   * Property 8: Fetch Before Push
-   * **Feature: git-style-sync, Property 8: Fetch Before Push**
-   * **Validates: Requirements 1.1, 1.2**
-   */
   describe("Property 8: Fetch Before Push", () => {
     it("fetch SHALL be called before any push operation", () => {
       fc.assert(

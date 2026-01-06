@@ -24,6 +24,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
   "Groceries",
   "Transport",
   "Utilities",
+  "Rent",
   "Entertainment",
   "Health",
   "Other"
