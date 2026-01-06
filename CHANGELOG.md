@@ -1,5 +1,18 @@
 # expense-buddy
 
+## 1.9.0
+
+### Minor Changes
+
+- [#23](https://github.com/sudokoi/expense-buddy/pull/23) [`05efbcb`](https://github.com/sudokoi/expense-buddy/commit/05efbcb6a093bec13f3e55ecb2a24500bee8cea7) Thanks [@sudokoi](https://github.com/sudokoi)! - **Refactored GitHub Sync Architecture with XState**
+  - **Architecture**: Replaced TanStack Query with a robust XState v5 state machine `sync-machine.ts` for better sync orchestration and error handling.
+  - **Performance**: Eliminated unnecessary remote data downloads when already in sync.
+  - **Bug Fixes**:
+    - Fixed false "conflict" detection when creating new expenses.
+    - Resolved issue where identical remote files were reported as updates.
+  - **UX**: Added user-friendly error messages for specific network and authentication failures (e.g., "No internet connection", "Rate limit exceeded").
+  - **Cleanup**: Removed `@tanstack/react-query` dependency and ~200 lines of dead code (`autoSync`, `analyzeConflicts`).
+
 ## 1.8.1
 
 ### Patch Changes
