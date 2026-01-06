@@ -366,6 +366,23 @@ export default function SettingsScreen() {
     return expenseChanges + settingsChanges > 0
   }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
+  // Calculate pending count for display on sync button
+  const pendingCount = useMemo(() => {
+    const expenseChanges =
+      state.pendingChanges.added +
+      state.pendingChanges.edited +
+      state.pendingChanges.deleted
+    const settingsChanges = settings.syncSettings && hasUnsyncedSettingsChanges ? 1 : 0
+    return expenseChanges + settingsChanges
+  }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
+
+  // Sync button text with pending count
+  const syncButtonText = useMemo(() => {
+    if (isSyncing) return "Syncing..."
+    if (pendingCount > 0) return `Sync Now (${pendingCount})`
+    return "Sync Now"
+  }, [isSyncing, pendingCount])
+
   // Handle sync using XState machine with callbacks
   const handleSync = useCallback(() => {
     syncMachine.sync({
@@ -630,7 +647,7 @@ export default function SettingsScreen() {
           {isConfigured && (
             <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
               <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
-                {isSyncing ? "Syncing..." : "Sync Now"}
+                {syncButtonText}
               </Button>
 
               {/* Auto Sync Settings - grouped here as requested */}

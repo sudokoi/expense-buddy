@@ -6,6 +6,7 @@ import React, {
   useRef,
   useCallback,
 } from "react"
+import { createActor, ActorRefFrom } from "xstate"
 import {
   expenseStore as defaultExpenseStore,
   ExpenseStore,
@@ -21,11 +22,13 @@ import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
 } from "./notification-store"
+import { syncMachine } from "../services/sync-machine"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
   settingsStore: SettingsStore
   notificationStore: NotificationStore
+  syncActor: ActorRefFrom<typeof syncMachine>
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
@@ -36,6 +39,7 @@ interface StoreProviderProps {
   expenseStore?: ExpenseStore
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
+  syncActor?: ActorRefFrom<typeof syncMachine>
   // Skip initialization (for testing)
   skipInitialization?: boolean
 }
@@ -45,9 +49,27 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   expenseStore = defaultExpenseStore,
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
+  syncActor: providedSyncActor,
   skipInitialization = false,
 }) => {
   const initializedRef = useRef(false)
+
+  // Create sync actor once on mount (using ref to avoid recreating)
+  const syncActorRef = useRef<ActorRefFrom<typeof syncMachine> | null>(null)
+  if (!syncActorRef.current && !providedSyncActor) {
+    syncActorRef.current = createActor(syncMachine)
+    syncActorRef.current.start()
+  }
+  const syncActor = providedSyncActor ?? syncActorRef.current!
+
+  // Cleanup sync actor on unmount
+  useEffect(() => {
+    return () => {
+      if (syncActorRef.current) {
+        syncActorRef.current.stop()
+      }
+    }
+  }, [])
 
   // Initialize stores when component mounts (inside React tree where RN is ready)
   useEffect(() => {
@@ -87,8 +109,9 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       expenseStore,
       settingsStore,
       notificationStore,
+      syncActor,
     }),
-    [expenseStore, settingsStore, notificationStore]
+    [expenseStore, settingsStore, notificationStore, syncActor]
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

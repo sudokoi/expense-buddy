@@ -1,8 +1,15 @@
 /**
- * XState Sync Machine
+ * XState v5 Sync Machine
  *
  * A state machine that manages the GitHub sync flow with explicit states and transitions.
  * Uses callbacks for side effects (notifications, alerts) instead of useEffect.
+ *
+ * XState v5 Best Practices Applied:
+ * - Uses setup() for proper type inference
+ * - Guards use inline functions in transitions for proper event typing
+ * - Actions use assign() for context updates
+ * - Callbacks are invoked in transition actions to access event.output directly
+ * - Actors are defined in setup() for proper typing
  */
 import { setup, assign, fromPromise } from "xstate"
 import { Expense } from "../types/expense"
@@ -67,35 +74,16 @@ export type SyncMachineEvent =
   | { type: "CANCEL" }
   | { type: "RESET" }
 
-// =============================================================================
-// Actors (Promise-based services)
-// =============================================================================
-
-const checkRemoteActor = fromPromise<SyncDirectionResult, { hasLocalChanges: boolean }>(
-  async ({ input }) => {
-    return determineSyncDirection(input.hasLocalChanges)
-  }
-)
-
-const pushActor = fromPromise<
-  SyncResult,
-  { expenses: Expense[]; settings?: AppSettings; syncSettingsEnabled: boolean }
->(async ({ input }) => {
-  return syncUp(input.expenses, input.settings, input.syncSettingsEnabled)
-})
-
-const pullActor = fromPromise<
-  {
-    success: boolean
-    message: string
-    expenses?: Expense[]
-    settings?: AppSettings
-    error?: string
-  },
-  { syncSettingsEnabled: boolean }
->(async ({ input }) => {
-  return syncDown(7, input.syncSettingsEnabled)
-})
+/**
+ * Pull result type for proper typing
+ */
+interface PullResult {
+  success: boolean
+  message: string
+  expenses?: Expense[]
+  settings?: AppSettings
+  error?: string
+}
 
 // =============================================================================
 // State Machine Definition
@@ -107,54 +95,23 @@ export const syncMachine = setup({
     events: {} as SyncMachineEvent,
   },
   actors: {
-    checkRemote: checkRemoteActor,
-    push: pushActor,
-    pull: pullActor,
-  },
-  guards: {
-    shouldPush: ({ context }) => {
-      return context.directionResult?.direction === "push"
-    },
-    shouldPull: ({ context }) => {
-      return context.directionResult?.direction === "pull"
-    },
-    isConflict: ({ context }) => {
-      return context.directionResult?.direction === "conflict"
-    },
-    isInSync: ({ context }) => {
-      return context.directionResult?.direction === "in_sync"
-    },
-    isError: ({ context }) => {
-      return context.directionResult?.direction === "error"
-    },
-    pushSucceeded: ({ context }) => {
-      return context.syncResult?.success === true
-    },
-    pullSucceeded: ({ context }) => {
-      return context.downloadedExpenses !== undefined
-    },
-  },
-  actions: {
-    // Callback actions - invoke the provided callbacks
-    invokeOnConflict: ({ context }) => {
-      context.callbacks.onConflict?.()
-    },
-    invokeOnSuccess: ({ context }) => {
-      context.callbacks.onSuccess?.({
-        syncResult: context.syncResult,
-        downloadedExpenses: context.downloadedExpenses,
-        downloadedSettings: context.downloadedSettings,
-      })
-    },
-    invokeOnInSync: ({ context }) => {
-      context.callbacks.onInSync?.()
-    },
-    invokeOnError: ({ context }) => {
-      context.callbacks.onError?.(context.error || "Unknown error")
-    },
+    checkRemote: fromPromise<SyncDirectionResult, { hasLocalChanges: boolean }>(
+      async ({ input }) => {
+        return determineSyncDirection(input.hasLocalChanges)
+      }
+    ),
+    push: fromPromise<
+      SyncResult,
+      { expenses: Expense[]; settings?: AppSettings; syncSettingsEnabled: boolean }
+    >(async ({ input }) => {
+      return syncUp(input.expenses, input.settings, input.syncSettingsEnabled)
+    }),
+    pull: fromPromise<PullResult, { syncSettingsEnabled: boolean }>(async ({ input }) => {
+      return syncDown(7, input.syncSettingsEnabled)
+    }),
   },
   delays: {
-    SUCCESS_DISPLAY_TIME: 2000, // 2 seconds to show success state
+    SUCCESS_DISPLAY_TIME: 2000,
   },
 }).createMachine({
   id: "sync",
@@ -192,8 +149,9 @@ export const syncMachine = setup({
         src: "checkRemote",
         input: ({ context }) => ({ hasLocalChanges: context.hasLocalChanges }),
         onDone: [
+          // XState v5: Use inline guard functions for proper event.output typing
           {
-            guard: "isError",
+            guard: ({ event }) => event.output.direction === "error",
             target: "error",
             actions: assign({
               directionResult: ({ event }) => event.output,
@@ -201,28 +159,28 @@ export const syncMachine = setup({
             }),
           },
           {
-            guard: "isInSync",
+            guard: ({ event }) => event.output.direction === "in_sync",
             target: "inSync",
             actions: assign({
               directionResult: ({ event }) => event.output,
             }),
           },
           {
-            guard: "shouldPush",
+            guard: ({ event }) => event.output.direction === "push",
             target: "pushing",
             actions: assign({
               directionResult: ({ event }) => event.output,
             }),
           },
           {
-            guard: "shouldPull",
+            guard: ({ event }) => event.output.direction === "pull",
             target: "pulling",
             actions: assign({
               directionResult: ({ event }) => event.output,
             }),
           },
           {
-            guard: "isConflict",
+            guard: ({ event }) => event.output.direction === "conflict",
             target: "conflict",
             actions: assign({
               directionResult: ({ event }) => event.output,
@@ -248,11 +206,20 @@ export const syncMachine = setup({
         }),
         onDone: [
           {
-            guard: "pushSucceeded",
+            guard: ({ event }) => event.output.success === true,
             target: "success",
-            actions: assign({
-              syncResult: ({ event }) => event.output,
-            }),
+            actions: [
+              assign({
+                syncResult: ({ event }) => event.output,
+              }),
+              // Invoke callback with event.output directly (not from context)
+              // This ensures the callback receives the data immediately
+              ({ context, event }) => {
+                context.callbacks.onSuccess?.({
+                  syncResult: event.output,
+                })
+              },
+            ],
           },
           {
             target: "error",
@@ -279,12 +246,22 @@ export const syncMachine = setup({
         }),
         onDone: [
           {
-            guard: "pullSucceeded",
+            guard: ({ event }) => event.output.expenses !== undefined,
             target: "success",
-            actions: assign({
-              downloadedExpenses: ({ event }) => event.output.expenses,
-              downloadedSettings: ({ event }) => event.output.settings,
-            }),
+            actions: [
+              assign({
+                downloadedExpenses: ({ event }) => event.output.expenses,
+                downloadedSettings: ({ event }) => event.output.settings,
+              }),
+              // Invoke callback with event.output directly (not from context)
+              // This ensures the callback receives the data immediately
+              ({ context, event }) => {
+                context.callbacks.onSuccess?.({
+                  downloadedExpenses: event.output.expenses,
+                  downloadedSettings: event.output.settings,
+                })
+              },
+            ],
           },
           {
             target: "error",
@@ -303,8 +280,9 @@ export const syncMachine = setup({
     },
 
     conflict: {
-      // Invoke callback on entry
-      entry: "invokeOnConflict",
+      entry: ({ context }) => {
+        context.callbacks.onConflict?.()
+      },
       on: {
         FORCE_PUSH: "pushing",
         FORCE_PULL: "pulling",
@@ -313,30 +291,29 @@ export const syncMachine = setup({
     },
 
     inSync: {
-      // Invoke callback on entry, then auto-reset
-      entry: "invokeOnInSync",
+      entry: ({ context }) => {
+        context.callbacks.onInSync?.()
+      },
       after: {
-        // Auto-reset to idle after brief moment
         100: "idle",
       },
     },
 
     success: {
-      // Invoke callback on entry
-      entry: "invokeOnSuccess",
+      // Callback is invoked in transition actions (pushing/pulling onDone)
+      // to ensure it receives event.output data directly
       after: {
-        // Auto-reset after 2 seconds (for UI to show success state)
         SUCCESS_DISPLAY_TIME: "idle",
       },
       on: {
-        // Allow manual reset
         RESET: "idle",
       },
     },
 
     error: {
-      // Invoke callback on entry
-      entry: "invokeOnError",
+      entry: ({ context }) => {
+        context.callbacks.onError?.(context.error || "Unknown error")
+      },
       on: {
         RESET: "idle",
         SYNC: {

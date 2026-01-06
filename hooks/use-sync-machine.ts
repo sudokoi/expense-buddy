@@ -3,12 +3,14 @@
  *
  * Provides a clean API for React components to interact with the sync state machine.
  * Uses callbacks passed to sync() instead of useEffect for side effects.
+ * The sync actor is shared via StoreProvider context - all components see the same state.
  */
-import { useMachine } from "@xstate/react"
+import { useSelector } from "@xstate/react"
 import { useCallback, useMemo } from "react"
 import { Expense } from "../types/expense"
 import { AppSettings } from "../services/settings-manager"
-import { syncMachine, SyncMachineState, SyncCallbacks } from "../services/sync-machine"
+import { SyncMachineState, SyncCallbacks } from "../services/sync-machine"
+import { useStoreContext } from "../stores/store-provider"
 
 // Re-export for convenience
 export type { SyncCallbacks }
@@ -59,7 +61,10 @@ export interface UseSyncMachineReturn {
 }
 
 export function useSyncMachine(): UseSyncMachineReturn {
-  const [snapshot, send] = useMachine(syncMachine)
+  const { syncActor } = useStoreContext()
+
+  // Use useSelector to subscribe to actor state reactively
+  const snapshot = useSelector(syncActor, (state) => state)
 
   // Extract current state string
   const state = snapshot.value as SyncMachineState
@@ -73,10 +78,10 @@ export function useSyncMachine(): UseSyncMachineReturn {
   const isError = state === "error"
   const isInSync = state === "inSync"
 
-  // Actions
+  // Actions use the shared actor's send
   const sync = useCallback(
     (params: SyncParams) => {
-      send({
+      syncActor.send({
         type: "SYNC",
         localExpenses: params.localExpenses,
         settings: params.settings,
@@ -85,24 +90,24 @@ export function useSyncMachine(): UseSyncMachineReturn {
         callbacks: params.callbacks,
       })
     },
-    [send]
+    [syncActor]
   )
 
   const forcePush = useCallback(() => {
-    send({ type: "FORCE_PUSH" })
-  }, [send])
+    syncActor.send({ type: "FORCE_PUSH" })
+  }, [syncActor])
 
   const forcePull = useCallback(() => {
-    send({ type: "FORCE_PULL" })
-  }, [send])
+    syncActor.send({ type: "FORCE_PULL" })
+  }, [syncActor])
 
   const cancel = useCallback(() => {
-    send({ type: "CANCEL" })
-  }, [send])
+    syncActor.send({ type: "CANCEL" })
+  }, [syncActor])
 
   const reset = useCallback(() => {
-    send({ type: "RESET" })
-  }, [send])
+    syncActor.send({ type: "RESET" })
+  }, [syncActor])
 
   // Memoize context extraction to avoid unnecessary re-renders
   const contextData = useMemo(
