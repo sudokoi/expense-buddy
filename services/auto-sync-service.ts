@@ -7,6 +7,8 @@ import { syncMachine } from "./sync-machine"
 /**
  * Main auto-sync orchestration function
  * Uses the XState sync machine for background sync operations
+ *
+ * Updated for git-style sync: uses unified fetch-merge-push flow
  */
 export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promise<{
   synced: boolean
@@ -34,16 +36,13 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
     const actor = createActor(syncMachine)
     actor.start()
 
-    // Calculate if there are local changes (simplified - assume there are if called)
-    const hasLocalChanges = localExpenses.length > 0
-
     // Send the SYNC event with the current state
+    // Note: git-style sync doesn't need hasLocalChanges - it always does fetch-merge-push
     actor.send({
       type: "SYNC",
       localExpenses,
       settings: appSettings.syncSettings ? appSettings : undefined,
       syncSettingsEnabled: appSettings.syncSettings,
-      hasLocalChanges,
     })
 
     // Wait for the machine to reach a final state
@@ -63,34 +62,49 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
     const context = finalSnapshot.context
 
     if (state === "success") {
-      // Build notification from sync result
+      // Build notification from merge result
       let notification: SyncNotification | undefined
-      if (context.syncResult) {
+      const mergeResult = context.mergeResult
+
+      if (mergeResult) {
+        const addedCount = mergeResult.addedFromRemote.length
+        const updatedCount = mergeResult.updatedFromRemote.length
+        const totalMerged = mergeResult.merged.length
+
+        notification = {
+          newItemsCount: addedCount,
+          updatedItemsCount: updatedCount,
+          totalCount: totalMerged,
+          message: context.syncResult?.message || "Sync complete",
+        }
+
+        // Return merged expenses (includes both local and remote changes)
+        return {
+          synced: true,
+          expenses: mergeResult.merged,
+          notification,
+        }
+      } else if (context.syncResult) {
         notification = {
           newItemsCount: 0,
           updatedItemsCount: context.syncResult.filesUploaded || 0,
           totalCount: localExpenses.length,
           message: context.syncResult.message,
         }
-      } else if (context.downloadedExpenses) {
-        notification = {
-          newItemsCount: context.downloadedExpenses.length,
-          updatedItemsCount: 0,
-          totalCount: context.downloadedExpenses.length,
-          message: `Downloaded ${context.downloadedExpenses.length} expenses`,
+
+        return {
+          synced: true,
+          expenses: localExpenses,
+          notification,
         }
       }
 
-      return {
-        synced: true,
-        expenses: context.downloadedExpenses || localExpenses,
-        notification,
-        downloadedSettings: context.downloadedSettings,
-      }
+      return { synced: true, expenses: localExpenses }
     } else if (state === "inSync") {
       return { synced: true, expenses: localExpenses }
     } else if (state === "conflict") {
       // For auto-sync, we don't show conflict dialogs - just skip
+      // User needs to manually sync to resolve conflicts
       return {
         synced: false,
         error: "Conflict detected - manual sync required",

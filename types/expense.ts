@@ -30,4 +30,5 @@ export interface Expense {
   paymentMethod?: PaymentMethod // Optional payment method
   createdAt: string // ISO timestamp
   updatedAt: string // ISO timestamp
+  deletedAt?: string // ISO timestamp - when soft-deleted (undefined if not deleted)
 }

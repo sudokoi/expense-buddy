@@ -41,12 +41,13 @@ export function useAnalyticsData(
   selectedCategories: ExpenseCategory[]
 ): AnalyticsData {
   const { state } = useExpenses()
-  const { expenses, isLoading } = state
+  // Use activeExpenses (excludes soft-deleted) for analytics
+  const { activeExpenses, isLoading } = state
 
   // Memoized: Filter expenses by time window
   const timeFilteredExpenses = useMemo(() => {
-    return filterExpensesByTimeWindow(expenses, timeWindow)
-  }, [expenses, timeWindow])
+    return filterExpensesByTimeWindow(activeExpenses, timeWindow)
+  }, [activeExpenses, timeWindow])
 
   // Memoized: Filter expenses by selected categories
   const filteredExpenses = useMemo(() => {

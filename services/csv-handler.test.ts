@@ -47,6 +47,7 @@ const expenseWithPaymentMethodArb = fc.record({
   ),
   createdAt: fc.constant(new Date().toISOString()),
   updatedAt: fc.constant(new Date().toISOString()),
+  deletedAt: fc.option(fc.constant(new Date().toISOString()), { nil: undefined }),
 }) as fc.Arbitrary<Expense>
 
 /**
@@ -90,6 +91,11 @@ function expensesAreEquivalent(original: Expense, imported: Expense): boolean {
   // Timestamps should match
   if (original.createdAt !== imported.createdAt) return false
   if (original.updatedAt !== imported.updatedAt) return false
+
+  // deletedAt comparison (empty string vs undefined are equivalent)
+  const originalDeletedAt = original.deletedAt || ""
+  const importedDeletedAt = imported.deletedAt || ""
+  if (originalDeletedAt !== importedDeletedAt) return false
 
   return true
 }
@@ -157,6 +163,9 @@ describe("CSV Handler Properties", () => {
               }),
               createdAt: fc.constant(new Date().toISOString()),
               updatedAt: fc.constant(new Date().toISOString()),
+              deletedAt: fc.option(fc.constant(new Date().toISOString()), {
+                nil: undefined,
+              }),
             }) as fc.Arbitrary<Expense>,
             { minLength: 1, maxLength: 30 }
           ),
@@ -211,6 +220,9 @@ describe("CSV Handler Properties", () => {
               paymentMethod: fc.constant(undefined),
               createdAt: fc.constant(new Date().toISOString()),
               updatedAt: fc.constant(new Date().toISOString()),
+              deletedAt: fc.option(fc.constant(new Date().toISOString()), {
+                nil: undefined,
+              }),
             }) as fc.Arbitrary<Expense>,
             { minLength: 1, maxLength: 30 }
           ),
@@ -259,6 +271,73 @@ describe("CSV Handler Properties", () => {
             return (
               originalWithPM === importedWithPM && originalWithoutPM === importedWithoutPM
             )
+          }
+        ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should handle backward compatibility with CSVs missing deletedAt column", () => {
+      // Simulate a CSV from before soft delete was added (no deletedAt column)
+      const legacyCsv = `id,amount,category,date,note,paymentMethodType,paymentMethodId,createdAt,updatedAt
+abc123,100,Food,2024-01-15,Lunch,Cash,,2024-01-15T12:00:00.000Z,2024-01-15T12:00:00.000Z
+def456,50.5,Transport,2024-01-16,Bus fare,UPI,1234,2024-01-16T08:00:00.000Z,2024-01-16T08:00:00.000Z`
+
+      const imported = importFromCSV(legacyCsv)
+
+      // Should import successfully
+      expect(imported).toHaveLength(2)
+
+      // All expenses should have deletedAt as undefined (not deleted)
+      expect(imported[0].deletedAt).toBeUndefined()
+      expect(imported[1].deletedAt).toBeUndefined()
+
+      // Other fields should be preserved
+      expect(imported[0].id).toBe("abc123")
+      expect(imported[0].amount).toBe(100)
+      expect(imported[1].paymentMethod?.type).toBe("UPI")
+      expect(imported[1].paymentMethod?.identifier).toBe("1234")
+    })
+
+    it("should preserve soft-deleted expenses through round-trip", () => {
+      fc.assert(
+        fc.property(
+          fc.array(
+            fc.record({
+              id: fc.uuid(),
+              amount: fc.float({
+                min: Math.fround(0.01),
+                max: Math.fround(10000),
+                noNaN: true,
+              }),
+              category: categoryArb,
+              date: fc
+                .integer({ min: 0, max: 60 })
+                .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
+              note: fc.string({ maxLength: 50 }).map((s) => s.replace(/[\n\r,]/g, " ")),
+              paymentMethod: fc.constant(undefined),
+              createdAt: fc.constant(new Date().toISOString()),
+              updatedAt: fc.constant(new Date().toISOString()),
+              // Always set deletedAt for this test
+              deletedAt: fc.constant(new Date().toISOString()),
+            }) as fc.Arbitrary<Expense>,
+            { minLength: 1, maxLength: 20 }
+          ),
+          (expenses) => {
+            const csv = exportToCSV(expenses)
+            const imported = importFromCSV(csv)
+
+            // All imported expenses should have deletedAt set
+            for (let i = 0; i < expenses.length; i++) {
+              if (!imported[i].deletedAt) {
+                return false // Should have deletedAt
+              }
+              if (expenses[i].deletedAt !== imported[i].deletedAt) {
+                return false // deletedAt should match
+              }
+            }
+
+            return true
           }
         ),
         { numRuns: 100 }

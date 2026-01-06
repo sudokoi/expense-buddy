@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { useSelector } from "@xstate/store/react"
 import { useStoreContext } from "./store-provider"
 import { selectEffectiveTheme } from "./settings-store"
@@ -13,7 +13,7 @@ import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
 
 // Import stores directly for useSelector type inference
-import { expenseStore as defaultExpenseStore } from "./expense-store"
+import { expenseStore as defaultExpenseStore, getActiveExpenses } from "./expense-store"
 import { settingsStore as defaultSettingsStore } from "./settings-store"
 
 // Expense hooks
@@ -31,6 +31,9 @@ export const useExpenses = () => {
     defaultExpenseStore,
     (state) => state.context.pendingChanges
   )
+
+  // Memoized: Filter out soft-deleted expenses for display
+  const activeExpenses = useMemo(() => getActiveExpenses(expenses), [expenses])
 
   const addExpense = useCallback(
     (expense: Omit<Expense, "id" | "createdAt" | "updatedAt">) => {
@@ -89,7 +92,9 @@ export const useExpenses = () => {
   )
 
   return {
-    state: { expenses, isLoading, syncNotification, pendingChanges },
+    // state.expenses contains ALL expenses (including soft-deleted) for sync operations
+    // state.activeExpenses contains only non-deleted expenses for display
+    state: { expenses, activeExpenses, isLoading, syncNotification, pendingChanges },
     addExpense,
     editExpense,
     deleteExpense,

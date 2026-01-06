@@ -85,11 +85,15 @@ export default function DashboardScreen() {
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
 
+  // Use activeExpenses (excludes soft-deleted) for display
   const totalExpenses = React.useMemo(
-    () => state.expenses.reduce((sum, item) => sum + item.amount, 0),
-    [state.expenses]
+    () => state.activeExpenses.reduce((sum, item) => sum + item.amount, 0),
+    [state.activeExpenses]
   )
-  const recentExpenses = React.useMemo(() => state.expenses.slice(0, 5), [state.expenses])
+  const recentExpenses = React.useMemo(
+    () => state.activeExpenses.slice(0, 5),
+    [state.activeExpenses]
+  )
 
   const chartData = React.useMemo(() => {
     const grouped: Record<string, Record<string, number>> = {}
@@ -101,8 +105,8 @@ export default function DashboardScreen() {
       last7Days.push(format(d, "yyyy-MM-dd"))
     }
 
-    // Aggregate
-    state.expenses.forEach((e) => {
+    // Aggregate using activeExpenses (excludes soft-deleted)
+    state.activeExpenses.forEach((e) => {
       const dateKey = e.date.split("T")[0]
       if (!grouped[dateKey]) grouped[dateKey] = {}
       if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
@@ -130,15 +134,15 @@ export default function DashboardScreen() {
         }
       })
       .filter((item) => item.stacks.length > 0) // Only show days with data
-  }, [state.expenses, router])
+  }, [state.activeExpenses, router])
 
   const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0)
 
   // Generate a unique key for the chart based on data to force re-render
   const chartKey = React.useMemo(() => {
-    const total = state.expenses.reduce((sum, e) => sum + e.amount, 0)
-    return `chart-${state.expenses.length}-${total}`
-  }, [state.expenses])
+    const total = state.activeExpenses.reduce((sum, e) => sum + e.amount, 0)
+    return `chart-${state.activeExpenses.length}-${total}`
+  }, [state.activeExpenses])
 
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
@@ -196,7 +200,7 @@ export default function DashboardScreen() {
             Entries
           </Text>
           <H4 style={layoutStyles.cardValue} color={CARD_COLORS.green.accent}>
-            {state.expenses.length}
+            {state.activeExpenses.length}
           </H4>
         </Card>
       </XStack>

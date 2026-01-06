@@ -243,7 +243,8 @@ export default function HistoryScreen() {
 
   const groupedExpenses = React.useMemo(() => {
     const grouped: { title: string; data: Expense[] }[] = []
-    const sorted = [...state.expenses].sort(
+    // Use activeExpenses (excludes soft-deleted) for display
+    const sorted = [...state.activeExpenses].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     )
 
@@ -257,7 +258,7 @@ export default function HistoryScreen() {
       }
     })
     return grouped
-  }, [state.expenses])
+  }, [state.activeExpenses])
 
   // Memoized handlers for list item actions
   const handleEdit = React.useCallback((expense: Expense) => {
@@ -355,7 +356,8 @@ export default function HistoryScreen() {
   // Memoized save handler for edit dialog
   const handleSaveEdit = React.useCallback(() => {
     if (editingExpense) {
-      const expense = state.expenses.find((e) => e.id === editingExpense.id)
+      // Use activeExpenses for finding the expense to edit (soft-deleted expenses shouldn't be editable)
+      const expense = state.activeExpenses.find((e) => e.id === editingExpense.id)
       if (expense) {
         if (!editingExpense.amount.trim()) {
           addNotification("Please enter a valid amount", "error")
@@ -389,9 +391,9 @@ export default function HistoryScreen() {
         setShowDatePicker(false)
       }
     }
-  }, [editingExpense, state.expenses, editExpense, addNotification])
+  }, [editingExpense, state.activeExpenses, editExpense, addNotification])
 
-  if (state.expenses.length === 0) {
+  if (state.activeExpenses.length === 0) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
         <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>

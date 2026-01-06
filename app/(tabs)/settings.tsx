@@ -12,17 +12,16 @@ import {
 } from "tamagui"
 import { Alert, Keyboard, Linking, ViewStyle } from "react-native"
 import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-icons"
-import {
-  testConnection,
-  SyncConfig,
-  smartMerge,
-  syncDown,
-} from "../../services/sync-manager"
+import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
-import { Expense, PaymentMethodType } from "../../types/expense"
+import { PaymentMethodType } from "../../types/expense"
 import { useExpenses, useNotifications, useSettings } from "../../stores"
-import { useSyncMachine } from "../../hooks/use-sync-machine"
+import {
+  useSyncMachine,
+  TrueConflict,
+  ConflictResolution,
+} from "../../hooks/use-sync-machine"
 
 import {
   checkForUpdates,
@@ -37,7 +36,6 @@ import {
   DefaultPaymentMethodSelector,
 } from "../../components/ui"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
-import type { AppSettings } from "../../services/settings-manager"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -139,51 +137,6 @@ export default function SettingsScreen() {
 
   // GitHub config validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
-
-  const performSmartMerge = useCallback(
-    async (
-      remoteExpenses: Expense[],
-      summary: string,
-      downloadedSettings?: AppSettings
-    ) => {
-      try {
-        const mergeResult = await smartMerge(state.expenses, remoteExpenses)
-
-        // Update local state with merged data
-        replaceAllExpenses(mergeResult.merged)
-
-        // Apply downloaded settings if available and settings sync is enabled
-        if (downloadedSettings && settings.syncSettings) {
-          replaceSettings(downloadedSettings)
-        }
-
-        // Clear pending changes since we've merged
-        clearPendingChangesAfterSync()
-
-        const messageParts = [`Merged successfully: ${summary}`]
-        // Note: summary from handlePull already includes "settings updated" text if applicable
-        // so we don't need to append it again here if it's already in the summary
-        if (
-          downloadedSettings &&
-          settings.syncSettings &&
-          !summary.includes("settings")
-        ) {
-          messageParts.push("settings applied")
-        }
-        addNotification(messageParts.join(", "), "success")
-      } catch (error) {
-        addNotification(`Merge failed: ${String(error)}`, "error")
-      }
-    },
-    [
-      state.expenses,
-      settings.syncSettings,
-      clearPendingChangesAfterSync,
-      replaceAllExpenses,
-      replaceSettings,
-      addNotification,
-    ]
-  )
 
   // Memoized handlers
   const handleSaveConfig = useCallback(async () => {
@@ -357,15 +310,6 @@ export default function SettingsScreen() {
     [setAutoSyncTiming]
   )
 
-  const hasChangesToSync = useMemo(() => {
-    const expenseChanges =
-      state.pendingChanges.added +
-      state.pendingChanges.edited +
-      state.pendingChanges.deleted
-    const settingsChanges = settings.syncSettings && hasUnsyncedSettingsChanges ? 1 : 0
-    return expenseChanges + settingsChanges > 0
-  }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
-
   // Calculate pending count for display on sync button
   const pendingCount = useMemo(() => {
     const expenseChanges =
@@ -383,50 +327,137 @@ export default function SettingsScreen() {
     return "Sync Now"
   }, [isSyncing, pendingCount])
 
+  /**
+   * Show conflict resolution dialog for true conflicts
+   * Returns user's resolution choices or undefined if cancelled
+   */
+  const showConflictDialog = useCallback(
+    (conflicts: TrueConflict[]): Promise<ConflictResolution[] | undefined> => {
+      return new Promise((resolve) => {
+        // For simplicity, show a dialog with options to keep all local or all remote
+        // A more advanced UI could show each conflict individually
+        const conflictCount = conflicts.length
+        const conflictSummary = conflicts
+          .slice(0, 3)
+          .map((c) => {
+            const localNote = c.localVersion.note || "Unnamed"
+            const remoteNote = c.remoteVersion.note || "Unnamed"
+            const localAmount = `$${c.localVersion.amount}`
+            const remoteAmount = `$${c.remoteVersion.amount}`
+
+            // Show both versions side by side
+            return `• Local: ${localNote} (${localAmount})\n  Remote: ${remoteNote} (${remoteAmount})`
+          })
+          .join("\n\n")
+        const moreText = conflictCount > 3 ? `\n\n...and ${conflictCount - 3} more` : ""
+
+        Alert.alert(
+          `${conflictCount} Conflict${conflictCount > 1 ? "s" : ""} Found`,
+          `Both local and remote have changes to the same expense${conflictCount > 1 ? "s" : ""}:\n\n${conflictSummary}${moreText}\n\nWhich version would you like to keep?`,
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => resolve(undefined),
+            },
+            {
+              text: "Keep Local",
+              onPress: () => {
+                const resolutions: ConflictResolution[] = conflicts.map((c) => ({
+                  expenseId: c.expenseId,
+                  choice: "local" as const,
+                }))
+                resolve(resolutions)
+              },
+            },
+            {
+              text: "Keep Remote",
+              onPress: () => {
+                const resolutions: ConflictResolution[] = conflicts.map((c) => ({
+                  expenseId: c.expenseId,
+                  choice: "remote" as const,
+                }))
+                resolve(resolutions)
+              },
+            },
+          ]
+        )
+      })
+    },
+    []
+  )
+
   // Handle sync using XState machine with callbacks
   const handleSync = useCallback(() => {
     syncMachine.sync({
       localExpenses: state.expenses,
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
-      hasLocalChanges: hasChangesToSync,
       callbacks: {
-        onConflict: () => {
-          Alert.alert(
-            "Sync Conflict",
-            "Both local and remote have changes since last sync. How would you like to proceed?",
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-                onPress: () => syncMachine.cancel(),
-              },
-              {
-                text: "Upload Local",
-                onPress: () => syncMachine.forcePush(),
-              },
-              {
-                text: "Download Remote",
-                onPress: () => syncMachine.forcePull(),
-              },
-            ]
-          )
+        onConflict: async (conflicts: TrueConflict[]) => {
+          // Show conflict resolution dialog
+          const resolutions = await showConflictDialog(conflicts)
+          if (resolutions) {
+            // User chose to resolve - send resolutions to state machine
+            syncMachine.resolveConflicts(resolutions)
+          } else {
+            // User cancelled
+            syncMachine.cancel()
+          }
         },
         onSuccess: (result) => {
-          if (result.syncResult) {
-            // Push completed
-            addNotification(result.syncResult.message, "success")
-            clearPendingChangesAfterSync()
-            if (settings.syncSettings && result.syncResult.settingsSynced) {
-              clearSettingsChangeFlag()
+          // Build success message from merge result (Requirements 7.1, 7.2, 7.3, 7.4)
+          const messageParts: string[] = []
+
+          if (result.mergeResult) {
+            const {
+              addedFromRemote,
+              updatedFromRemote,
+              addedFromLocal,
+              updatedFromLocal,
+              autoResolved,
+            } = result.mergeResult
+            if (addedFromRemote.length > 0) {
+              messageParts.push(`${addedFromRemote.length} new from remote`)
             }
-          } else if (result.downloadedExpenses) {
-            // Pull completed - merge with local
-            performSmartMerge(
-              result.downloadedExpenses,
-              `Downloaded ${result.downloadedExpenses.length} expenses`,
-              result.downloadedSettings
-            )
+            if (updatedFromRemote.length > 0) {
+              messageParts.push(`${updatedFromRemote.length} updated from remote`)
+            }
+            if (addedFromLocal.length > 0) {
+              messageParts.push(`${addedFromLocal.length} new from local`)
+            }
+            if (updatedFromLocal.length > 0) {
+              messageParts.push(`${updatedFromLocal.length} updated from local`)
+            }
+            // Include auto-resolved conflicts count (Requirement 7.4)
+            if (autoResolved.length > 0) {
+              messageParts.push(`${autoResolved.length} auto-resolved`)
+            }
+          }
+
+          if (result.syncResult) {
+            if (result.syncResult.filesUploaded > 0) {
+              messageParts.push(`${result.syncResult.filesUploaded} file(s) uploaded`)
+            }
+            if (result.syncResult.filesSkipped > 0) {
+              messageParts.push(`${result.syncResult.filesSkipped} unchanged`)
+            }
+          }
+
+          const message =
+            messageParts.length > 0
+              ? `Synced: ${messageParts.join(", ")}`
+              : "Sync complete"
+
+          addNotification(message, "success")
+          clearPendingChangesAfterSync()
+          if (settings.syncSettings) {
+            clearSettingsChangeFlag()
+          }
+
+          // Update local expenses with merged result if available
+          if (result.mergeResult && result.mergeResult.merged.length > 0) {
+            replaceAllExpenses(result.mergeResult.merged)
           }
         },
         onInSync: () => {
@@ -441,11 +472,11 @@ export default function SettingsScreen() {
     syncMachine,
     state.expenses,
     settings,
-    hasChangesToSync,
+    showConflictDialog,
     addNotification,
     clearPendingChangesAfterSync,
     clearSettingsChangeFlag,
-    performSmartMerge,
+    replaceAllExpenses,
   ])
 
   return (

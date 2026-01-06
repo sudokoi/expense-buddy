@@ -33,6 +33,12 @@ import {
   FileHashMap,
 } from "./hash-storage"
 import { format } from "date-fns"
+import {
+  mergeExpenses,
+  applyConflictResolutions,
+  MergeResult,
+  TrueConflict,
+} from "./merge-engine"
 
 const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
@@ -318,6 +324,23 @@ export async function syncUp(
     const localDayKeys = new Set(groupedByDay.keys())
 
     // =========================================================================
+    // Determine the local data range to avoid deleting remote files we never downloaded
+    // =========================================================================
+
+    // Find the date range of local expenses
+    let oldestLocalDate: string | null = null
+    let newestLocalDate: string | null = null
+
+    for (const dayKey of localDayKeys) {
+      if (!oldestLocalDate || dayKey < oldestLocalDate) {
+        oldestLocalDate = dayKey
+      }
+      if (!newestLocalDate || dayKey > newestLocalDate) {
+        newestLocalDate = dayKey
+      }
+    }
+
+    // =========================================================================
     // Task 4.1: Collect all changes before committing
     // =========================================================================
 
@@ -348,9 +371,21 @@ export async function syncUp(
     }
 
     // Build list of files to delete (exist on remote but not locally)
+    // IMPORTANT: Only delete files within our local date range to avoid
+    // deleting remote files we never downloaded (e.g., data older than 7 days)
     const filesToDelete: BatchFileDelete[] = []
     for (const file of existingExpenseFiles) {
-      if (!localDayKeys.has(file.dayKey)) {
+      // Only consider deleting if:
+      // 1. The file's day is not in our local data
+      // 2. The file's day is WITHIN our local date range (we know about this day)
+      // This prevents deleting files for days we never downloaded
+      const isWithinLocalRange =
+        oldestLocalDate &&
+        newestLocalDate &&
+        file.dayKey >= oldestLocalDate &&
+        file.dayKey <= newestLocalDate
+
+      if (!localDayKeys.has(file.dayKey) && isWithinLocalRange) {
         filesToDelete.push({
           path: file.path,
         })
@@ -623,6 +658,22 @@ export async function syncDown(
       messageParts.push("settings downloaded")
     }
 
+    // Save the remote timestamp as last sync time after successful pull
+    // This prevents false conflicts when pushing local changes later
+    try {
+      const timestampResult = await getLatestCommitTimestamp(
+        config.token,
+        config.repo,
+        config.branch
+      )
+      if ("timestamp" in timestampResult) {
+        await saveLastSyncTime(timestampResult.timestamp)
+      }
+    } catch (e) {
+      console.warn("Failed to save last sync time after pull:", e)
+      // Continue - the pull was still successful
+    }
+
     return {
       success: true,
       message: messageParts.join(", "),
@@ -735,6 +786,131 @@ const LAST_SYNC_TIME_KEY = "last_sync_time"
  */
 async function getLastSyncTime(): Promise<string | null> {
   return await secureGetItem(LAST_SYNC_TIME_KEY)
+}
+
+// ============================================================================
+// Fetch All Remote Expenses (for git-style sync)
+// ============================================================================
+
+/**
+ * Result of fetching all remote expenses
+ */
+export interface FetchAllRemoteResult {
+  success: boolean
+  expenses?: Expense[]
+  error?: string
+  filesDownloaded?: number
+}
+
+/**
+ * Fetch ALL remote expenses from the repository
+ * Unlike syncDown which only fetches recent days, this fetches all expense files
+ * to ensure complete data for merge operations.
+ *
+ * Requirements: 1.1, 1.2
+ */
+export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
+  try {
+    const config = await loadSyncConfig()
+    if (!config) {
+      return {
+        success: false,
+        error: "No sync configuration found",
+      }
+    }
+
+    // List all files in the repository
+    let files: { name: string; path: string; sha: string }[]
+    try {
+      files = await listFiles(config.token, config.repo, config.branch)
+    } catch (listError) {
+      // Requirement 1.3: Catch network errors during fetch
+      const errorMessage = String(listError)
+      if (
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("Network request failed") ||
+        errorMessage.includes("TypeError")
+      ) {
+        return {
+          success: false,
+          error: "No internet connection. Cannot fetch remote expenses.",
+        }
+      }
+      return {
+        success: false,
+        error: `Failed to list remote files: ${errorMessage}`,
+      }
+    }
+
+    // Filter for expense files (expenses-YYYY-MM-DD.csv)
+    const expenseFiles = files.filter((file) => getDayKeyFromFilename(file.name) !== null)
+
+    if (expenseFiles.length === 0) {
+      // No expense files found - return empty array (not an error)
+      return {
+        success: true,
+        expenses: [],
+        filesDownloaded: 0,
+      }
+    }
+
+    // Download and parse ALL expense files (not just recent window)
+    const allExpenses: Expense[] = []
+    let downloadedFiles = 0
+    const downloadErrors: string[] = []
+
+    for (const file of expenseFiles) {
+      try {
+        const fileData = await downloadCSV(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path
+        )
+
+        if (fileData) {
+          const expenses = importFromCSV(fileData.content)
+          allExpenses.push(...expenses)
+          downloadedFiles++
+        }
+      } catch (fileError) {
+        // Log but continue with other files - one bad file shouldn't fail entire fetch
+        console.warn(`Failed to download ${file.path}:`, fileError)
+        downloadErrors.push(file.path)
+      }
+    }
+
+    // If we couldn't download ANY files, that's an error
+    if (downloadedFiles === 0 && expenseFiles.length > 0) {
+      return {
+        success: false,
+        error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
+      }
+    }
+
+    return {
+      success: true,
+      expenses: allExpenses,
+      filesDownloaded: downloadedFiles,
+    }
+  } catch (error) {
+    // Requirement 1.3: Catch network errors during fetch
+    const errorMessage = String(error)
+    if (
+      errorMessage.includes("Failed to fetch") ||
+      errorMessage.includes("Network request failed") ||
+      errorMessage.includes("TypeError")
+    ) {
+      return {
+        success: false,
+        error: "No internet connection. Cannot fetch remote expenses.",
+      }
+    }
+    return {
+      success: false,
+      error: `Fetch failed: ${errorMessage}`,
+    }
+  }
 }
 
 /**
@@ -938,3 +1114,390 @@ export async function migrateToDailyFiles(): Promise<{
     }
   }
 }
+
+// ============================================================================
+// Git-Style Sync (fetch-merge-push workflow)
+// ============================================================================
+
+/**
+ * Resolution choice for a true conflict
+ */
+export interface ConflictResolution {
+  expenseId: string
+  choice: "local" | "remote"
+}
+
+/**
+ * Result of a git-style sync operation
+ */
+export interface GitStyleSyncResult {
+  success: boolean
+  message: string
+  /** The merge result containing all details about what was merged */
+  mergeResult?: MergeResult
+  /** Number of files uploaded to remote */
+  filesUploaded: number
+  /** Number of files skipped (unchanged) */
+  filesSkipped: number
+  /** Number of files deleted from remote */
+  filesDeleted?: number
+  /** Error message if sync failed */
+  error?: string
+  /** Timestamp of the commit if one was created */
+  commitTimestamp?: string
+}
+
+/**
+ * Callback type for handling true conflicts during sync
+ * Returns resolutions for each conflict, or undefined to cancel sync
+ */
+export type OnConflictCallback = (
+  conflicts: TrueConflict[]
+) => Promise<ConflictResolution[] | undefined>
+
+/**
+ * Perform a git-style sync: fetch → merge → resolve conflicts → push
+ *
+ * This implements the unified sync flow where:
+ * 1. All remote expenses are fetched first (Requirement 1.1, 1.2)
+ * 2. Local and remote are merged using ID-based merging (Requirement 2.1)
+ * 3. Conflicts are auto-resolved by timestamp (Requirement 3.1, 3.2, 3.3)
+ * 4. True conflicts are presented to user via callback (Requirement 4.2, 4.3)
+ * 5. Merged result is pushed to remote (Requirement 6.1)
+ * 6. Local store and sync time are updated (Requirement 6.3, 6.4)
+ *
+ * @param localExpenses - Current local expenses (including soft-deleted)
+ * @param onConflict - Optional callback to handle true conflicts
+ * @returns GitStyleSyncResult with sync details
+ */
+export async function gitStyleSync(
+  localExpenses: Expense[],
+  onConflict?: OnConflictCallback
+): Promise<GitStyleSyncResult> {
+  try {
+    const config = await loadSyncConfig()
+    if (!config) {
+      return {
+        success: false,
+        message: "Sync not configured",
+        error: "No sync configuration found",
+        filesUploaded: 0,
+        filesSkipped: 0,
+      }
+    }
+
+    // =========================================================================
+    // Step 1: Fetch all remote expenses (Requirement 1.1, 1.2)
+    // =========================================================================
+    const fetchResult = await fetchAllRemoteExpenses()
+
+    if (!fetchResult.success) {
+      // Requirement 1.3: If fetch fails, abort sync
+      return {
+        success: false,
+        message: "Failed to fetch remote expenses",
+        error: fetchResult.error,
+        filesUploaded: 0,
+        filesSkipped: 0,
+      }
+    }
+
+    const remoteExpenses = fetchResult.expenses || []
+
+    // =========================================================================
+    // Step 2: Merge local and remote (Requirement 2.1, 3.1)
+    // =========================================================================
+    let mergeResult = mergeExpenses(localExpenses, remoteExpenses)
+
+    // =========================================================================
+    // Step 3: Handle true conflicts (Requirement 4.2, 4.3, 4.4)
+    // =========================================================================
+    if (mergeResult.trueConflicts.length > 0) {
+      if (!onConflict) {
+        // No conflict handler provided - cannot proceed with conflicts
+        return {
+          success: false,
+          message: `Sync has ${mergeResult.trueConflicts.length} conflict(s) that require resolution`,
+          error: "Conflicts detected but no conflict handler provided",
+          mergeResult,
+          filesUploaded: 0,
+          filesSkipped: 0,
+        }
+      }
+
+      // Call the conflict callback to get user's resolution choices
+      const resolutions = await onConflict(mergeResult.trueConflicts)
+
+      if (!resolutions) {
+        // User cancelled - abort sync
+        return {
+          success: false,
+          message: "Sync cancelled by user",
+          error: "User cancelled conflict resolution",
+          mergeResult,
+          filesUploaded: 0,
+          filesSkipped: 0,
+        }
+      }
+
+      // Apply the resolutions to the merge result
+      const resolutionMap = new Map(resolutions.map((r) => [r.expenseId, r.choice]))
+      mergeResult = applyConflictResolutions(mergeResult, resolutionMap)
+
+      // Check if all conflicts were resolved
+      if (mergeResult.trueConflicts.length > 0) {
+        return {
+          success: false,
+          message: `${mergeResult.trueConflicts.length} conflict(s) were not resolved`,
+          error: "Not all conflicts were resolved",
+          mergeResult,
+          filesUploaded: 0,
+          filesSkipped: 0,
+        }
+      }
+    }
+
+    // =========================================================================
+    // Step 4: Push merged result (Requirement 6.1, 6.2)
+    // =========================================================================
+    const mergedExpenses = mergeResult.merged
+
+    // Load stored hashes for differential sync
+    const storedHashes = await loadFileHashes()
+
+    // Get list of existing files on GitHub
+    const existingFiles = await listFiles(config.token, config.repo, config.branch)
+    const existingExpenseFiles = existingFiles
+      .filter((file) => getDayKeyFromFilename(file.name) !== null)
+      .map((file) => ({
+        ...file,
+        dayKey: getDayKeyFromFilename(file.name)!,
+      }))
+
+    // Group merged expenses by day
+    const groupedByDay = groupExpensesByDay(mergedExpenses)
+    const localDayKeys = new Set(groupedByDay.keys())
+
+    // Determine the local data range to avoid deleting remote files we never downloaded
+    let oldestLocalDate: string | null = null
+    let newestLocalDate: string | null = null
+
+    for (const dayKey of localDayKeys) {
+      if (!oldestLocalDate || dayKey < oldestLocalDate) {
+        oldestLocalDate = dayKey
+      }
+      if (!newestLocalDate || dayKey > newestLocalDate) {
+        newestLocalDate = dayKey
+      }
+    }
+
+    // Build list of files to upload (changed hashes)
+    const filesToUpload: BatchFileUpload[] = []
+    const uploadedFileHashes: Map<string, string> = new Map()
+    let skippedFiles = 0
+
+    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+      const filename = getFilenameForDay(dayKey)
+      const csvContent = exportToCSV(dayExpenses)
+      const contentHash = computeContentHash(csvContent)
+
+      // Check if content has changed (hash-based file exclusion)
+      if (storedHashes[filename] === contentHash) {
+        skippedFiles++
+        continue
+      }
+
+      filesToUpload.push({
+        path: filename,
+        content: csvContent,
+      })
+      uploadedFileHashes.set(filename, contentHash)
+    }
+
+    // Build list of files to delete (exist on remote but not locally)
+    // IMPORTANT: Only delete files within our local date range (Requirement 5.4)
+    const filesToDelete: BatchFileDelete[] = []
+    for (const file of existingExpenseFiles) {
+      const isWithinLocalRange =
+        oldestLocalDate &&
+        newestLocalDate &&
+        file.dayKey >= oldestLocalDate &&
+        file.dayKey <= newestLocalDate
+
+      if (!localDayKeys.has(file.dayKey) && isWithinLocalRange) {
+        filesToDelete.push({
+          path: file.path,
+        })
+      }
+    }
+
+    // If no changes to make, return success with merge info
+    if (filesToUpload.length === 0 && filesToDelete.length === 0) {
+      // Still update sync time since we successfully fetched and merged
+      try {
+        const timestampResult = await getLatestCommitTimestamp(
+          config.token,
+          config.repo,
+          config.branch
+        )
+        if ("timestamp" in timestampResult) {
+          await saveLastSyncTime(timestampResult.timestamp)
+        }
+      } catch (e) {
+        console.warn("Failed to update sync time:", e)
+      }
+
+      return {
+        success: true,
+        message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
+        mergeResult,
+        filesUploaded: 0,
+        filesSkipped: skippedFiles,
+        filesDeleted: 0,
+      }
+    }
+
+    // Generate commit message
+    const commitMessage = generateCommitMessage(
+      filesToUpload.length,
+      filesToDelete.length
+    )
+
+    // Execute batch commit
+    const batchResult = await batchCommit(config.token, config.repo, config.branch, {
+      uploads: filesToUpload,
+      deletions: filesToDelete,
+      message: commitMessage,
+    })
+
+    if (!batchResult.success) {
+      return {
+        success: false,
+        message: "Failed to push merged expenses",
+        error: batchResult.error,
+        mergeResult,
+        filesUploaded: 0,
+        filesSkipped: skippedFiles,
+      }
+    }
+
+    // =========================================================================
+    // Step 5: Update hashes and sync time (Requirement 6.3)
+    // =========================================================================
+    const updatedHashes: FileHashMap = {}
+
+    // Keep hashes for unchanged files
+    for (const [dayKey] of groupedByDay.entries()) {
+      const filename = getFilenameForDay(dayKey)
+      if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
+        updatedHashes[filename] = storedHashes[filename]
+      }
+    }
+
+    // Add hashes for newly uploaded files
+    for (const [filename, hash] of uploadedFileHashes.entries()) {
+      updatedHashes[filename] = hash
+    }
+
+    await saveFileHashes(updatedHashes)
+
+    // Fetch and save the commit timestamp (Requirement 6.3)
+    let commitTimestamp: string | undefined
+    try {
+      const timestampResult = await getLatestCommitTimestamp(
+        config.token,
+        config.repo,
+        config.branch
+      )
+      if ("timestamp" in timestampResult) {
+        commitTimestamp = timestampResult.timestamp
+        await saveLastSyncTime(commitTimestamp)
+      }
+    } catch (e) {
+      console.warn("Failed to fetch commit timestamp after sync:", e)
+    }
+
+    // =========================================================================
+    // Step 6: Build result with detailed reporting (Requirement 7.1-7.4)
+    // =========================================================================
+    return {
+      success: true,
+      message: buildSyncMessage(
+        mergeResult,
+        filesToUpload.length,
+        skippedFiles,
+        filesToDelete.length
+      ),
+      mergeResult,
+      filesUploaded: filesToUpload.length,
+      filesSkipped: skippedFiles,
+      filesDeleted: filesToDelete.length,
+      commitTimestamp,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: "Sync failed",
+      error: String(error),
+      filesUploaded: 0,
+      filesSkipped: 0,
+    }
+  }
+}
+
+/**
+ * Build a human-readable sync message from merge result and file counts
+ * (Requirement 7.1, 7.2, 7.3, 7.4)
+ */
+function buildSyncMessage(
+  mergeResult: MergeResult,
+  filesUploaded: number,
+  filesSkipped: number,
+  filesDeleted: number
+): string {
+  const parts: string[] = []
+
+  // Report items added from remote (Requirement 7.1)
+  if (mergeResult.addedFromRemote.length > 0) {
+    parts.push(`${mergeResult.addedFromRemote.length} added from remote`)
+  }
+
+  // Report items updated from remote (Requirement 7.2)
+  if (mergeResult.updatedFromRemote.length > 0) {
+    parts.push(`${mergeResult.updatedFromRemote.length} updated from remote`)
+  }
+
+  // Report local changes pushed (Requirement 7.3)
+  const localChangesPushed =
+    mergeResult.addedFromLocal.length + mergeResult.updatedFromLocal.length
+  if (localChangesPushed > 0) {
+    parts.push(`${localChangesPushed} local changes pushed`)
+  }
+
+  // Report auto-resolved conflicts (Requirement 7.4)
+  if (mergeResult.autoResolved.length > 0) {
+    parts.push(`${mergeResult.autoResolved.length} auto-resolved`)
+  }
+
+  // Report file operations
+  if (filesUploaded > 0) {
+    parts.push(`${filesUploaded} file(s) uploaded`)
+  }
+  if (filesSkipped > 0) {
+    parts.push(`${filesSkipped} file(s) unchanged`)
+  }
+  if (filesDeleted > 0) {
+    parts.push(`${filesDeleted} file(s) deleted`)
+  }
+
+  if (parts.length === 0) {
+    return "Already in sync"
+  }
+
+  return `Sync complete: ${parts.join(", ")}`
+}
+
+/**
+ * Export saveLastSyncTime for use in state machine
+ */
+export { saveLastSyncTime }

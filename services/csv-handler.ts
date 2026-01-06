@@ -11,6 +11,7 @@ export interface CSVRow {
   paymentMethodId: string
   createdAt: string
   updatedAt: string
+  deletedAt: string
 }
 
 /**
@@ -27,6 +28,7 @@ export function exportToCSV(expenses: Expense[]): string {
     paymentMethodId: expense.paymentMethod?.identifier || "",
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt,
+    deletedAt: expense.deletedAt || "",
   }))
 
   return Papa.unparse(rows, {
@@ -41,13 +43,14 @@ export function exportToCSV(expenses: Expense[]): string {
       "paymentMethodId",
       "createdAt",
       "updatedAt",
+      "deletedAt",
     ],
   })
 }
 
 /**
  * Import expenses from CSV format
- * Handles backward compatibility for CSVs without payment method columns
+ * Handles backward compatibility for CSVs without payment method columns or deletedAt column
  */
 export function importFromCSV(csvString: string): Expense[] {
   const result = Papa.parse<CSVRow>(csvString, {
@@ -81,6 +84,8 @@ export function importFromCSV(csvString: string): Expense[] {
       // Use timestamps from CSV if available, otherwise default to now
       createdAt: row.createdAt || now,
       updatedAt: row.updatedAt || now,
+      // Handle deletedAt - empty string or missing means not deleted (undefined)
+      deletedAt: row.deletedAt?.trim() || undefined,
     }
   })
 }

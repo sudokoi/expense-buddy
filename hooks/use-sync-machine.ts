@@ -4,23 +4,41 @@
  * Provides a clean API for React components to interact with the sync state machine.
  * Uses callbacks passed to sync() instead of useEffect for side effects.
  * The sync actor is shared via StoreProvider context - all components see the same state.
+ *
+ * Updated for git-style sync with unified fetch-merge-push flow.
  */
 import { useSelector } from "@xstate/react"
 import { useCallback, useMemo } from "react"
 import { Expense } from "../types/expense"
 import { AppSettings } from "../services/settings-manager"
-import { SyncMachineState, SyncCallbacks } from "../services/sync-machine"
+import {
+  SyncMachineState,
+  SyncCallbacks,
+  ConflictResolver,
+  TrueConflict,
+  MergeResult,
+  ConflictResolution,
+  GitStyleSyncResult,
+} from "../services/sync-machine"
 import { useStoreContext } from "../stores/store-provider"
 
-// Re-export for convenience
-export type { SyncCallbacks }
+// Re-export types for convenience
+export type {
+  SyncCallbacks,
+  ConflictResolver,
+  TrueConflict,
+  MergeResult,
+  ConflictResolution,
+  GitStyleSyncResult,
+}
 
 export interface SyncParams {
   localExpenses: Expense[]
   settings?: AppSettings
   syncSettingsEnabled: boolean
-  hasLocalChanges: boolean
   callbacks?: SyncCallbacks
+  /** Optional conflict resolver - if not provided, conflicts will pause sync */
+  conflictResolver?: ConflictResolver
 }
 
 export interface UseSyncMachineReturn {
@@ -29,34 +47,26 @@ export interface UseSyncMachineReturn {
   isIdle: boolean
   isSyncing: boolean
   isConflict: boolean
+  isPushing: boolean
   isSuccess: boolean
   isError: boolean
   isInSync: boolean
 
   // Context data
   error?: string
-  syncResult?: {
-    success: boolean
-    message: string
-    filesUploaded?: number
-    filesSkipped?: number
-    filesDeleted?: number
-    settingsSynced?: boolean
-    settingsSkipped?: boolean
-  }
-  downloadedExpenses?: Expense[]
-  downloadedSettings?: AppSettings
-  directionResult?: {
-    direction: "push" | "pull" | "conflict" | "in_sync" | "error"
-    localTime: string | null
-    remoteTime: string | null
-  }
+  syncResult?: GitStyleSyncResult
+  mergeResult?: MergeResult
+  /** Pending conflicts that need resolution */
+  pendingConflicts?: TrueConflict[]
 
   // Actions
+  /** Start a sync operation */
   sync: (params: SyncParams) => void
-  forcePush: () => void
-  forcePull: () => void
+  /** Resolve conflicts and continue sync */
+  resolveConflicts: (resolutions: ConflictResolution[]) => void
+  /** Cancel sync (from conflict state) */
   cancel: () => void
+  /** Reset to idle state */
   reset: () => void
 }
 
@@ -71,9 +81,9 @@ export function useSyncMachine(): UseSyncMachineReturn {
 
   // Derived state flags
   const isIdle = state === "idle"
-  const isSyncing =
-    state === "checkingRemote" || state === "pushing" || state === "pulling"
+  const isSyncing = state === "syncing"
   const isConflict = state === "conflict"
+  const isPushing = state === "pushing"
   const isSuccess = state === "success"
   const isError = state === "error"
   const isInSync = state === "inSync"
@@ -86,20 +96,22 @@ export function useSyncMachine(): UseSyncMachineReturn {
         localExpenses: params.localExpenses,
         settings: params.settings,
         syncSettingsEnabled: params.syncSettingsEnabled,
-        hasLocalChanges: params.hasLocalChanges,
         callbacks: params.callbacks,
+        conflictResolver: params.conflictResolver,
       })
     },
     [syncActor]
   )
 
-  const forcePush = useCallback(() => {
-    syncActor.send({ type: "FORCE_PUSH" })
-  }, [syncActor])
-
-  const forcePull = useCallback(() => {
-    syncActor.send({ type: "FORCE_PULL" })
-  }, [syncActor])
+  const resolveConflicts = useCallback(
+    (resolutions: ConflictResolution[]) => {
+      syncActor.send({
+        type: "RESOLVE_CONFLICTS",
+        resolutions,
+      })
+    },
+    [syncActor]
+  )
 
   const cancel = useCallback(() => {
     syncActor.send({ type: "CANCEL" })
@@ -114,9 +126,8 @@ export function useSyncMachine(): UseSyncMachineReturn {
     () => ({
       error: snapshot.context.error,
       syncResult: snapshot.context.syncResult,
-      downloadedExpenses: snapshot.context.downloadedExpenses,
-      downloadedSettings: snapshot.context.downloadedSettings,
-      directionResult: snapshot.context.directionResult,
+      mergeResult: snapshot.context.mergeResult,
+      pendingConflicts: snapshot.context.pendingConflicts,
     }),
     [snapshot.context]
   )
@@ -126,13 +137,13 @@ export function useSyncMachine(): UseSyncMachineReturn {
     isIdle,
     isSyncing,
     isConflict,
+    isPushing,
     isSuccess,
     isError,
     isInSync,
     ...contextData,
     sync,
-    forcePush,
-    forcePull,
+    resolveConflicts,
     cancel,
     reset,
   }

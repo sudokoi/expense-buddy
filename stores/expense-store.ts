@@ -113,7 +113,11 @@ export const expenseStore = createStore({
     },
 
     deleteExpense: (context, event: { id: string }, enqueue) => {
-      const newExpenses = context.expenses.filter((e) => e.id !== event.id)
+      const now = new Date().toISOString()
+      // Soft delete: mark with deletedAt timestamp instead of removing
+      const newExpenses = context.expenses.map((e) =>
+        e.id === event.id ? { ...e, deletedAt: now, updatedAt: now } : e
+      )
       const newPendingChanges = {
         ...context.pendingChanges,
         deleted: context.pendingChanges.deleted + 1,
@@ -270,3 +274,18 @@ export async function initializeExpenseStore(): Promise<void> {
 }
 
 export type ExpenseStore = typeof expenseStore
+
+/**
+ * Filter out soft-deleted expenses for display purposes.
+ * Expenses with a deletedAt timestamp are considered deleted and should not be shown to users.
+ */
+export function getActiveExpenses(expenses: Expense[]): Expense[] {
+  return expenses.filter((expense) => !expense.deletedAt)
+}
+
+/**
+ * Check if an expense is soft-deleted
+ */
+export function isExpenseDeleted(expense: Expense): boolean {
+  return !!expense.deletedAt
+}

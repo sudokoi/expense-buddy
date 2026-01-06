@@ -102,15 +102,15 @@ export default function DayExpensesScreen() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
-  // Filter expenses for this date
+  // Filter expenses for this date (using activeExpenses to exclude soft-deleted)
   const dayExpenses = React.useMemo(() => {
     if (!date) return []
-    return state.expenses.filter((expense) => {
+    return state.activeExpenses.filter((expense) => {
       // Assuming date param is YYYY-MM-DD
       const expenseDate = expense.date.split("T")[0]
       return expenseDate === date
     })
-  }, [state.expenses, date])
+  }, [state.activeExpenses, date])
 
   // Memoized delete handler
   const handleDelete = useCallback(

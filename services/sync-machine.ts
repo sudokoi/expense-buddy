@@ -1,8 +1,11 @@
 /**
- * XState v5 Sync Machine
+ * XState v5 Sync Machine - Git-Style Unified Flow
  *
- * A state machine that manages the GitHub sync flow with explicit states and transitions.
+ * A state machine that manages the GitHub sync flow with a unified fetch-merge-push approach.
  * Uses callbacks for side effects (notifications, alerts) instead of useEffect.
+ *
+ * State Flow:
+ * idle → fetching → merging → [conflict] → pushing → success
  *
  * XState v5 Best Practices Applied:
  * - Uses setup() for proper type inference
@@ -15,12 +18,12 @@ import { setup, assign, fromPromise } from "xstate"
 import { Expense } from "../types/expense"
 import { AppSettings } from "./settings-manager"
 import {
-  syncUp,
-  syncDown,
-  determineSyncDirection,
-  SyncResult,
-  SyncDirectionResult,
+  gitStyleSync,
+  GitStyleSyncResult,
+  ConflictResolution,
+  loadSyncConfig,
 } from "./sync-manager"
+import { TrueConflict, MergeResult } from "./merge-engine"
 
 // =============================================================================
 // Types
@@ -30,31 +33,42 @@ import {
  * Callbacks for handling sync events - passed as input to avoid useEffect
  */
 export interface SyncCallbacks {
-  onConflict?: () => void
+  /** Called when true conflicts are detected that need user resolution */
+  onConflict?: (conflicts: TrueConflict[]) => void
+  /** Called when sync completes successfully */
   onSuccess?: (result: {
-    syncResult?: SyncResult
-    downloadedExpenses?: Expense[]
-    downloadedSettings?: AppSettings
+    syncResult?: GitStyleSyncResult
+    mergeResult?: MergeResult
   }) => void
+  /** Called when already in sync (no changes needed) */
   onInSync?: () => void
+  /** Called when an error occurs */
   onError?: (error: string) => void
 }
+
+/**
+ * Conflict resolution handler that returns user's choices
+ */
+export type ConflictResolver = (
+  conflicts: TrueConflict[]
+) => Promise<ConflictResolution[] | undefined>
 
 export interface SyncMachineContext {
   // Input data
   localExpenses: Expense[]
   settings?: AppSettings
   syncSettingsEnabled: boolean
-  hasLocalChanges: boolean
 
   // Callbacks for side effects
   callbacks: SyncCallbacks
 
+  // Conflict resolution
+  conflictResolver?: ConflictResolver
+  pendingConflicts?: TrueConflict[]
+
   // Results
-  syncResult?: SyncResult
-  downloadedExpenses?: Expense[]
-  downloadedSettings?: AppSettings
-  directionResult?: SyncDirectionResult
+  syncResult?: GitStyleSyncResult
+  mergeResult?: MergeResult
 
   // Error
   error?: string
@@ -66,23 +80,26 @@ export type SyncMachineEvent =
       localExpenses: Expense[]
       settings?: AppSettings
       syncSettingsEnabled: boolean
-      hasLocalChanges: boolean
       callbacks?: SyncCallbacks
+      conflictResolver?: ConflictResolver
     }
-  | { type: "FORCE_PUSH" }
-  | { type: "FORCE_PULL" }
+  | {
+      type: "RESOLVE_CONFLICTS"
+      resolutions: ConflictResolution[]
+    }
   | { type: "CANCEL" }
   | { type: "RESET" }
 
 /**
- * Pull result type for proper typing
+ * Result from the unified sync actor
  */
-interface PullResult {
+interface UnifiedSyncActorResult {
   success: boolean
-  message: string
-  expenses?: Expense[]
-  settings?: AppSettings
+  syncResult?: GitStyleSyncResult
+  mergeResult?: MergeResult
+  pendingConflicts?: TrueConflict[]
   error?: string
+  isInSync?: boolean
 }
 
 // =============================================================================
@@ -95,23 +112,94 @@ export const syncMachine = setup({
     events: {} as SyncMachineEvent,
   },
   actors: {
-    checkRemote: fromPromise<SyncDirectionResult, { hasLocalChanges: boolean }>(
-      async ({ input }) => {
-        return determineSyncDirection(input.hasLocalChanges)
+    /**
+     * Unified sync actor that performs fetch → merge → push
+     * If conflicts are detected, it returns them for user resolution
+     */
+    unifiedSync: fromPromise<
+      UnifiedSyncActorResult,
+      {
+        localExpenses: Expense[]
+        conflictResolver?: ConflictResolver
       }
-    ),
-    push: fromPromise<
-      SyncResult,
-      { expenses: Expense[]; settings?: AppSettings; syncSettingsEnabled: boolean }
     >(async ({ input }) => {
-      return syncUp(input.expenses, input.settings, input.syncSettingsEnabled)
+      // Check if sync is configured
+      const config = await loadSyncConfig()
+      if (!config) {
+        return {
+          success: false,
+          error: "No sync configuration found",
+        }
+      }
+
+      // Perform git-style sync with optional conflict resolver
+      const result = await gitStyleSync(input.localExpenses, input.conflictResolver)
+
+      // Check if there are unresolved conflicts
+      if (
+        !result.success &&
+        result.mergeResult?.trueConflicts &&
+        result.mergeResult.trueConflicts.length > 0
+      ) {
+        return {
+          success: false,
+          syncResult: result,
+          mergeResult: result.mergeResult,
+          pendingConflicts: result.mergeResult.trueConflicts,
+          error: result.error,
+        }
+      }
+
+      // Check if already in sync (no changes made)
+      if (
+        result.success &&
+        result.filesUploaded === 0 &&
+        result.filesSkipped > 0 &&
+        result.mergeResult?.addedFromRemote.length === 0 &&
+        result.mergeResult?.updatedFromRemote.length === 0
+      ) {
+        return {
+          success: true,
+          syncResult: result,
+          mergeResult: result.mergeResult,
+          isInSync: true,
+        }
+      }
+
+      return {
+        success: result.success,
+        syncResult: result,
+        mergeResult: result.mergeResult,
+        error: result.error,
+      }
     }),
-    pull: fromPromise<PullResult, { syncSettingsEnabled: boolean }>(async ({ input }) => {
-      return syncDown(7, input.syncSettingsEnabled)
+
+    /**
+     * Retry sync after conflict resolution
+     */
+    retryAfterConflict: fromPromise<
+      UnifiedSyncActorResult,
+      {
+        localExpenses: Expense[]
+        resolutions: ConflictResolution[]
+      }
+    >(async ({ input }) => {
+      // Create a resolver that returns the provided resolutions
+      const resolver = async () => input.resolutions
+
+      const result = await gitStyleSync(input.localExpenses, resolver)
+
+      return {
+        success: result.success,
+        syncResult: result,
+        mergeResult: result.mergeResult,
+        error: result.error,
+      }
     }),
   },
   delays: {
     SUCCESS_DISPLAY_TIME: 2000,
+    IN_SYNC_DISPLAY_TIME: 100,
   },
 }).createMachine({
   id: "sync",
@@ -119,71 +207,95 @@ export const syncMachine = setup({
   context: {
     localExpenses: [],
     syncSettingsEnabled: false,
-    hasLocalChanges: false,
     callbacks: {},
   },
   states: {
     idle: {
       on: {
         SYNC: {
-          target: "checkingRemote",
+          target: "syncing",
           actions: assign({
             localExpenses: ({ event }) => event.localExpenses,
             settings: ({ event }) => event.settings,
             syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            hasLocalChanges: ({ event }) => event.hasLocalChanges,
             callbacks: ({ event }) => event.callbacks || {},
+            conflictResolver: ({ event }) => event.conflictResolver,
             // Clear previous results
             syncResult: undefined,
-            downloadedExpenses: undefined,
-            downloadedSettings: undefined,
-            directionResult: undefined,
+            mergeResult: undefined,
+            pendingConflicts: undefined,
             error: undefined,
           }),
         },
       },
     },
 
-    checkingRemote: {
+    /**
+     * Unified syncing state - performs fetch → merge → push
+     * This replaces the old checkingRemote → pushing/pulling flow
+     */
+    syncing: {
       invoke: {
-        src: "checkRemote",
-        input: ({ context }) => ({ hasLocalChanges: context.hasLocalChanges }),
+        src: "unifiedSync",
+        input: ({ context }) => ({
+          localExpenses: context.localExpenses,
+          conflictResolver: context.conflictResolver,
+        }),
         onDone: [
-          // XState v5: Use inline guard functions for proper event.output typing
+          // Check for conflicts that need resolution
           {
-            guard: ({ event }) => event.output.direction === "error",
-            target: "error",
-            actions: assign({
-              directionResult: ({ event }) => event.output,
-              error: ({ event }) => event.output.error,
-            }),
+            guard: ({ event }) =>
+              event.output.pendingConflicts !== undefined &&
+              event.output.pendingConflicts.length > 0,
+            target: "conflict",
+            actions: [
+              assign({
+                pendingConflicts: ({ event }) => event.output.pendingConflicts,
+                syncResult: ({ event }) => event.output.syncResult,
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              // Notify about conflicts
+              ({ context, event }) => {
+                if (event.output.pendingConflicts) {
+                  context.callbacks.onConflict?.(event.output.pendingConflicts)
+                }
+              },
+            ],
           },
+          // Check if already in sync
           {
-            guard: ({ event }) => event.output.direction === "in_sync",
+            guard: ({ event }) => event.output.isInSync === true,
             target: "inSync",
             actions: assign({
-              directionResult: ({ event }) => event.output,
+              syncResult: ({ event }) => event.output.syncResult,
+              mergeResult: ({ event }) => event.output.mergeResult,
             }),
           },
+          // Success case
           {
-            guard: ({ event }) => event.output.direction === "push",
-            target: "pushing",
-            actions: assign({
-              directionResult: ({ event }) => event.output,
-            }),
+            guard: ({ event }) => event.output.success === true,
+            target: "success",
+            actions: [
+              assign({
+                syncResult: ({ event }) => event.output.syncResult,
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              // Invoke success callback
+              ({ context, event }) => {
+                context.callbacks.onSuccess?.({
+                  syncResult: event.output.syncResult,
+                  mergeResult: event.output.mergeResult,
+                })
+              },
+            ],
           },
+          // Error case
           {
-            guard: ({ event }) => event.output.direction === "pull",
-            target: "pulling",
+            target: "error",
             actions: assign({
-              directionResult: ({ event }) => event.output,
-            }),
-          },
-          {
-            guard: ({ event }) => event.output.direction === "conflict",
-            target: "conflict",
-            actions: assign({
-              directionResult: ({ event }) => event.output,
+              syncResult: ({ event }) => event.output.syncResult,
+              mergeResult: ({ event }) => event.output.mergeResult,
+              error: ({ event }) => event.output.error || "Sync failed",
             }),
           },
         ],
@@ -196,13 +308,40 @@ export const syncMachine = setup({
       },
     },
 
+    /**
+     * Conflict state - waiting for user to resolve true conflicts
+     * User can choose keep-local, keep-remote for each conflict, or cancel
+     */
+    conflict: {
+      on: {
+        RESOLVE_CONFLICTS: {
+          target: "pushing",
+          actions: assign({
+            // Store resolutions for the retry
+          }),
+        },
+        CANCEL: {
+          target: "idle",
+          actions: assign({
+            pendingConflicts: undefined,
+            error: undefined,
+          }),
+        },
+      },
+    },
+
+    /**
+     * Pushing state - retry sync after conflict resolution
+     */
     pushing: {
       invoke: {
-        src: "push",
-        input: ({ context }) => ({
-          expenses: context.localExpenses,
-          settings: context.settings,
-          syncSettingsEnabled: context.syncSettingsEnabled,
+        src: "retryAfterConflict",
+        input: ({ context, event }) => ({
+          localExpenses: context.localExpenses,
+          resolutions:
+            event.type === "RESOLVE_CONFLICTS"
+              ? event.resolutions
+              : ([] as ConflictResolution[]),
         }),
         onDone: [
           {
@@ -210,13 +349,14 @@ export const syncMachine = setup({
             target: "success",
             actions: [
               assign({
-                syncResult: ({ event }) => event.output,
+                syncResult: ({ event }) => event.output.syncResult,
+                mergeResult: ({ event }) => event.output.mergeResult,
+                pendingConflicts: undefined,
               }),
-              // Invoke callback with event.output directly (not from context)
-              // This ensures the callback receives the data immediately
               ({ context, event }) => {
                 context.callbacks.onSuccess?.({
-                  syncResult: event.output,
+                  syncResult: event.output.syncResult,
+                  mergeResult: event.output.mergeResult,
                 })
               },
             ],
@@ -224,8 +364,9 @@ export const syncMachine = setup({
           {
             target: "error",
             actions: assign({
-              syncResult: ({ event }) => event.output,
-              error: ({ event }) => event.output.error || event.output.message,
+              syncResult: ({ event }) => event.output.syncResult,
+              error: ({ event }) =>
+                event.output.error || "Push failed after conflict resolution",
             }),
           },
         ],
@@ -235,58 +376,6 @@ export const syncMachine = setup({
             error: ({ event }) => String(event.error),
           }),
         },
-      },
-    },
-
-    pulling: {
-      invoke: {
-        src: "pull",
-        input: ({ context }) => ({
-          syncSettingsEnabled: context.syncSettingsEnabled,
-        }),
-        onDone: [
-          {
-            guard: ({ event }) => event.output.expenses !== undefined,
-            target: "success",
-            actions: [
-              assign({
-                downloadedExpenses: ({ event }) => event.output.expenses,
-                downloadedSettings: ({ event }) => event.output.settings,
-              }),
-              // Invoke callback with event.output directly (not from context)
-              // This ensures the callback receives the data immediately
-              ({ context, event }) => {
-                context.callbacks.onSuccess?.({
-                  downloadedExpenses: event.output.expenses,
-                  downloadedSettings: event.output.settings,
-                })
-              },
-            ],
-          },
-          {
-            target: "error",
-            actions: assign({
-              error: ({ event }) => event.output.error || event.output.message,
-            }),
-          },
-        ],
-        onError: {
-          target: "error",
-          actions: assign({
-            error: ({ event }) => String(event.error),
-          }),
-        },
-      },
-    },
-
-    conflict: {
-      entry: ({ context }) => {
-        context.callbacks.onConflict?.()
-      },
-      on: {
-        FORCE_PUSH: "pushing",
-        FORCE_PULL: "pulling",
-        CANCEL: "idle",
       },
     },
 
@@ -295,13 +384,11 @@ export const syncMachine = setup({
         context.callbacks.onInSync?.()
       },
       after: {
-        100: "idle",
+        IN_SYNC_DISPLAY_TIME: "idle",
       },
     },
 
     success: {
-      // Callback is invoked in transition actions (pushing/pulling onDone)
-      // to ensure it receives event.output data directly
       after: {
         SUCCESS_DISPLAY_TIME: "idle",
       },
@@ -317,14 +404,15 @@ export const syncMachine = setup({
       on: {
         RESET: "idle",
         SYNC: {
-          target: "checkingRemote",
+          target: "syncing",
           actions: assign({
             localExpenses: ({ event }) => event.localExpenses,
             settings: ({ event }) => event.settings,
             syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            hasLocalChanges: ({ event }) => event.hasLocalChanges,
             callbacks: ({ event }) => event.callbacks || {},
+            conflictResolver: ({ event }) => event.conflictResolver,
             error: undefined,
+            pendingConflicts: undefined,
           }),
         },
       },
@@ -335,10 +423,12 @@ export const syncMachine = setup({
 // Type exports for external use
 export type SyncMachineState =
   | "idle"
-  | "checkingRemote"
-  | "pushing"
-  | "pulling"
+  | "syncing"
   | "conflict"
+  | "pushing"
   | "inSync"
   | "success"
   | "error"
+
+// Re-export types for convenience
+export type { TrueConflict, MergeResult, ConflictResolution, GitStyleSyncResult }
