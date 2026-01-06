@@ -2,7 +2,6 @@
  * TanStack Query hooks for GitHub sync operations
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Alert } from "react-native"
 import { Expense } from "../types/expense"
 import { AppSettings } from "../services/settings-manager"
 import {
@@ -10,9 +9,7 @@ import {
   syncDown,
   determineSyncDirection,
   analyzeConflicts,
-  smartMerge,
   SyncResult,
-  SyncNotification,
 } from "../services/sync-manager"
 
 
@@ -207,17 +204,4 @@ export function useSyncStatus() {
     isSuccess,
     isError,
   }
-}
-
-
-export async function performMergeWithConflicts(
-  localExpenses: Expense[],
-  remoteExpenses: Expense[],
-  downloadedSettings?: AppSettings
-): Promise<{
-  merged: Expense[]
-  newFromRemote: number
-  updatedFromRemote: number
-}> {
-  return smartMerge(localExpenses, remoteExpenses)
 }

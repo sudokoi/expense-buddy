@@ -492,11 +492,6 @@ export default function SettingsScreen() {
     [setAutoSyncTiming]
   )
 
-  const syncButtonText = useMemo(() => {
-    if (isSyncing) return "Syncing..."
-    return "Sync"
-  }, [isSyncing])
-
   const hasChangesToSync = useMemo(() => {
     const expenseChanges =
       state.pendingChanges.added +
@@ -755,17 +750,19 @@ export default function SettingsScreen() {
             </Accordion.Item>
           </Accordion>
 
-          {/* Sync Button */}
-          <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
-            <Button
-              size="$4"
-              onPress={handleSync}
-              disabled={isSyncing || !token || !repo}
-              themeInverse
-            >
-              {isSyncing ? "Syncing..." : "Sync"}
-            </Button>
-          </YStack>
+          {/* Sync Button - only shown when configured */}
+          {isConfigured && (
+            <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
+              <Button
+                size="$4"
+                onPress={handleSync}
+                disabled={isSyncing}
+                themeInverse
+              >
+                {isSyncing ? "Syncing..." : "Sync"}
+              </Button>
+            </YStack>
+          )}
         </SettingsSection>
 
         {/* AUTO-SYNC Section */}

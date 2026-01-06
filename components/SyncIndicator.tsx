@@ -12,20 +12,17 @@ export const SyncIndicator: React.FC = () => {
   const { syncStatus } = useSyncStatus()
   const colorScheme = useColorScheme() ?? "light"
   const overlayColors = getOverlayColors(colorScheme)
-  const [visible, setVisible] = useState(false)
+  const [hideSuccess, setHideSuccess] = useState(false)
 
+  // Only use effect for the 2-second hide timer on success
   useEffect(() => {
-    if (syncStatus === "syncing") {
-      setVisible(true)
-    } else if (syncStatus === "success") {
-      setVisible(true)
-      const timer = setTimeout(() => setVisible(false), 2000)
+    if (syncStatus === "success") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHideSuccess(false)
+      const timer = setTimeout(() => setHideSuccess(true), 2000)
       return () => clearTimeout(timer)
-    } else if (syncStatus === "error") {
-      setVisible(true)
-    } else {
-      setVisible(false)
     }
+    setHideSuccess(false)
   }, [syncStatus])
 
   const styles = StyleSheet.create({
@@ -44,6 +41,12 @@ export const SyncIndicator: React.FC = () => {
       elevation: 5,
     },
   })
+
+  // Derive visibility: show for syncing/error, show success until hideSuccess is true
+  const visible =
+    syncStatus === "syncing" ||
+    syncStatus === "error" ||
+    (syncStatus === "success" && !hideSuccess)
 
   if (!visible) return null
 
