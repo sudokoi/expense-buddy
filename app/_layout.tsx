@@ -8,7 +8,6 @@ import { useFonts } from "expo-font"
 import { SplashScreen, Stack } from "expo-router"
 import { Provider } from "components/Provider"
 import { useTheme } from "tamagui"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
 import { KeyboardProvider } from "react-native-keyboard-controller"
@@ -25,8 +24,6 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
-
-const queryClient = new QueryClient()
 
 export default function RootLayout() {
   const [interLoaded, interError] = useFonts({
@@ -56,11 +53,9 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <KeyboardProvider>
       <Provider>
-        <QueryClientProvider client={queryClient}>
-          {children}
-          <NotificationStack />
-          <SyncIndicator />
-        </QueryClientProvider>
+        {children}
+        <NotificationStack />
+        <SyncIndicator />
       </Provider>
     </KeyboardProvider>
   )

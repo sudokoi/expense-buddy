@@ -6983,24 +6983,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/query-core@npm:5.90.12":
-  version: 5.90.12
-  resolution: "@tanstack/query-core@npm:5.90.12"
-  checksum: 10/e7a23a83152c40c5eced669a0d0965b19467c03009b383b6bc18b5ee86db7a7357984a2c851ba60859cbeb6966bb9756314c153c14532c75fd24d0159cbe7e56
-  languageName: node
-  linkType: hard
-
-"@tanstack/react-query@npm:^5.90.12":
-  version: 5.90.12
-  resolution: "@tanstack/react-query@npm:5.90.12"
-  dependencies:
-    "@tanstack/query-core": "npm:5.90.12"
-  peerDependencies:
-    react: ^18 || ^19
-  checksum: 10/8119fbaeec7f40fba68723f438b6440dcf4ac10e086f252f84ca3eef1ce5c416e02cfe26f8d43f6faf4ad0b0835741853824cdff7da8dd7aea5e515a7ce67c01
-  languageName: node
-  linkType: hard
-
 "@tootallnate/once@npm:2":
   version: 2.0.0
   resolution: "@tootallnate/once@npm:2.0.0"
@@ -7396,6 +7378,22 @@ __metadata:
   version: 0.8.10
   resolution: "@xmldom/xmldom@npm:0.8.10"
   checksum: 10/62400bc5e0e75b90650e33a5ceeb8d94829dd11f9b260962b71a784cd014ddccec3e603fe788af9c1e839fa4648d8c521ebd80d8b752878d3a40edabc9ce7ccf
+  languageName: node
+  linkType: hard
+
+"@xstate/react@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@xstate/react@npm:6.0.0"
+  dependencies:
+    use-isomorphic-layout-effect: "npm:^1.1.2"
+    use-sync-external-store: "npm:^1.2.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    xstate: ^5.20.0
+  peerDependenciesMeta:
+    xstate:
+      optional: true
+  checksum: 10/bf6cbc5f8c3972c3e3c77935102297c2db524b7d4c2e07655c46d5a3800abede627ad86fc023e3666306bd60f520a18143fe408a06eb4e8483c42aadfb2a24e9
   languageName: node
   linkType: hard
 
@@ -10353,13 +10351,13 @@ __metadata:
     "@tamagui/lucide-icons": "npm:^1.141.5"
     "@tamagui/metro-plugin": "npm:^1.141.5"
     "@tamagui/toast": "npm:^1.141.5"
-    "@tanstack/react-query": "npm:^5.90.12"
     "@types/jest": "npm:29.5.14"
     "@types/papaparse": "npm:^5.5.1"
     "@types/react": "npm:~19.1.17"
     "@types/react-native": "npm:^0.73.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.50.1"
     "@typescript-eslint/parser": "npm:^8.50.1"
+    "@xstate/react": "npm:^6.0.0"
     "@xstate/store": "npm:^3.14.0"
     babel-preset-expo: "npm:~54.0.9"
     burnt: "npm:^0.12.2"
@@ -10400,6 +10398,7 @@ __metadata:
     tamagui: "npm:^1.141.5"
     typescript: "npm:~5.9.3"
     typescript-eslint: "npm:^8.50.1"
+    xstate: "npm:^5.25.0"
     zod: "npm:^4.3.4"
   languageName: unknown
   linkType: soft
@@ -18701,6 +18700,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"use-isomorphic-layout-effect@npm:^1.1.2":
+  version: 1.2.1
+  resolution: "use-isomorphic-layout-effect@npm:1.2.1"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10/a52155ffa7d67a5107ef2033ae2c63f5290c3e3b198de30d4d4f78cd7921e1ab1ea31eeec387defb67ef61adb672d3b8d25b54b7dcc089bacc4f885abde96e9d
+  languageName: node
+  linkType: hard
+
 "use-latest-callback@npm:^0.2.1, use-latest-callback@npm:^0.2.3":
   version: 0.2.3
   resolution: "use-latest-callback@npm:0.2.3"
@@ -18732,6 +18743,15 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 10/2fec05eb851cdfc4a4657b1dfb434e686f346c3265ffc9db8a974bb58f8128bd4a708a3cc00e8f51655fccf81822ed4419ebed42f41610589e3aab0cf2492edb
+  languageName: node
+  linkType: hard
+
+"use-sync-external-store@npm:^1.2.0":
+  version: 1.6.0
+  resolution: "use-sync-external-store@npm:1.6.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10/b40ad2847ba220695bff2d4ba4f4d60391c0fb4fb012faa7a4c18eb38b69181936f5edc55a522c4d20a788d1a879b73c3810952c9d0fd128d01cb3f22042c09e
   languageName: node
   linkType: hard
 
@@ -19191,6 +19211,13 @@ __metadata:
   version: 2.2.0
   resolution: "xmlchars@npm:2.2.0"
   checksum: 10/4ad5924974efd004a47cce6acf5c0269aee0e62f9a805a426db3337af7bcbd331099df174b024ace4fb18971b8a56de386d2e73a1c4b020e3abd63a4a9b917f1
+  languageName: node
+  linkType: hard
+
+"xstate@npm:^5.25.0":
+  version: 5.25.0
+  resolution: "xstate@npm:5.25.0"
+  checksum: 10/89994a2aff6e62405643350649c4d0bd8b384d0d08adc5bb730929216e1b8cfa72bbacc5e2df5603d186558f50b92ff4c50aa6471b4d133b8b9ab018144cfd0a
   languageName: node
   linkType: hard
 

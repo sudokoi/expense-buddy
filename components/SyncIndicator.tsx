@@ -1,29 +1,33 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
-import { useSyncStatus } from "../hooks/use-sync"
+import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
   SEMANTIC_COLORS,
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
 
+/**
+ * Global sync status indicator
+ *
+ * Shows spinning indicator during sync, checkmark on success, X on error.
+ * Visibility is derived directly from XState machine state:
+ * - syncing: show spinner
+ * - success: show checkmark (machine auto-resets after 2s)
+ * - error: show X
+ * - idle/inSync: hidden
+ */
 export const SyncIndicator: React.FC = () => {
-  const { syncStatus } = useSyncStatus()
+  const { isSyncing, isSuccess, isError } = useSyncMachine()
   const colorScheme = useColorScheme() ?? "light"
   const overlayColors = getOverlayColors(colorScheme)
-  const [hideSuccess, setHideSuccess] = useState(false)
 
-  // Only use effect for the 2-second hide timer on success
-  useEffect(() => {
-    if (syncStatus === "success") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHideSuccess(false)
-      const timer = setTimeout(() => setHideSuccess(true), 2000)
-      return () => clearTimeout(timer)
-    }
-    setHideSuccess(false)
-  }, [syncStatus])
+  // Derive visibility directly from machine state
+  // Machine auto-resets from success after 2 seconds
+  const visible = isSyncing || isSuccess || isError
+
+  if (!visible) return null
 
   const styles = StyleSheet.create({
     container: {
@@ -42,25 +46,17 @@ export const SyncIndicator: React.FC = () => {
     },
   })
 
-  // Derive visibility: show for syncing/error, show success until hideSuccess is true
-  const visible =
-    syncStatus === "syncing" ||
-    syncStatus === "error" ||
-    (syncStatus === "success" && !hideSuccess)
-
-  if (!visible) return null
-
   const getIcon = () => {
-    switch (syncStatus) {
-      case "syncing":
-        return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
-      case "success":
-        return <CheckCircle size={24} color={SEMANTIC_COLORS.success} />
-      case "error":
-        return <XCircle size={24} color={SEMANTIC_COLORS.error} />
-      default:
-        return null
+    if (isSyncing) {
+      return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
     }
+    if (isSuccess) {
+      return <CheckCircle size={24} color={SEMANTIC_COLORS.success} />
+    }
+    if (isError) {
+      return <XCircle size={24} color={SEMANTIC_COLORS.error} />
+    }
+    return null
   }
 
   return <View style={styles.container}>{getIcon()}</View>

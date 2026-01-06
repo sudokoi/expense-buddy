@@ -149,10 +149,12 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 ### Syncing Data
 
-**Manual Sync:**
+**Smart Sync:**
 
-- **Upload to GitHub**: Tap "Upload to GitHub" to backup current data
-- **Download from GitHub**: Tap "Download from GitHub" to restore data
+- Tap **Sync Now** – automatically determines direction:
+  - **Push**: When only local changes exist
+  - **Pull**: When only remote changes exist
+  - **Conflict**: Shows dialog when both have changes
 
 **Auto-Sync:**
 
@@ -173,7 +175,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Framework**: React Native with Expo
 - **Routing**: Expo Router (file-based routing)
 - **UI Library**: Tamagui (universal design system)
-- **State Management**: XState Store v3 (reactive stores) + TanStack Query (async state)
+- **State Management**: XState Store v3 (reactive stores) + XState v5 (sync state machine)
 - **Storage**: AsyncStorage + Expo SecureStore
 - **Charts**: react-native-gifted-charts
 - **Date Handling**: date-fns
@@ -229,6 +231,8 @@ expense-buddy/
 │   ├── Provider.tsx       # App providers
 │   ├── NotificationStack.tsx
 │   └── SyncIndicator.tsx
+├── hooks/                # React hooks
+│   └── use-sync-machine.ts   # XState sync machine React hook
 ├── stores/               # XState Store state management
 │   ├── expense-store.ts      # Expense data store
 │   ├── settings-store.ts     # App settings store
@@ -239,6 +243,7 @@ expense-buddy/
 │   └── index.ts              # Store exports
 │   └── __tests__/            # Unit and property-based tests
 ├── services/             # Business logic
+│   ├── sync-machine.ts   # XState sync state machine (idle/push/pull/conflict/error)
 │   ├── sync-manager.ts   # Sync orchestration
 │   ├── github-sync.ts    # GitHub API client (includes batch commit via Git Data API)
 │   ├── csv-handler.ts    # CSV import/export

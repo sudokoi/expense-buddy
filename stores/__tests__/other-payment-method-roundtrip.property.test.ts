@@ -1,9 +1,6 @@
 /**
  * Property-based tests for Other Payment Method Description Round-Trip
  *
- * Feature: useeffect-cleanup, Property 5: Other Payment Method Description Round-Trip
- * Validates: Requirements 7.4, 7.5
- *
  * For any expense with "Other" payment method and a non-empty description,
  * syncing up and then syncing down SHALL preserve the description exactly.
  */
@@ -70,9 +67,6 @@ describe("Other Payment Method Description Round-Trip Properties", () => {
    * Property 5: Other Payment Method Description Round-Trip
    * For any expense with "Other" payment method and a non-empty description,
    * syncing up and then syncing down SHALL preserve the description exactly.
-   *
-   * Feature: useeffect-cleanup, Property 5: Other Payment Method Description Round-Trip
-   * Validates: Requirements 7.4, 7.5
    */
   describe("Property 5: Other Payment Method Description Round-Trip", () => {
     it("should preserve description for Other payment method through CSV round-trip", () => {
