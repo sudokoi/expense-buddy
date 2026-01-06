@@ -8,6 +8,7 @@ export const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   Food: "#FFB07C", // soft coral/peach
   Groceries: "#7FDBCA", // soft mint/seafoam
   Transport: "#87CEEB", // soft sky blue
+  Rent: "#A8C686", // soft olive green
   Utilities: "#FFE4A0", // soft butter yellow
   Entertainment: "#DDA0DD", // soft lavender/plum
   Health: "#FFB5BA", // soft rose pink

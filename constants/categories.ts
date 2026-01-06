@@ -7,12 +7,14 @@ import {
   Activity,
   Circle,
   ShoppingCart,
+  Building,
 } from "@tamagui/lucide-icons"
 import { ComponentProps, JSX } from "react"
 import { CATEGORY_COLORS } from "./category-colors"
 
 type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element
 
+// Ordered by usage frequency (most common first, Other last)
 export const CATEGORIES: {
   label: string
   value: ExpenseCategory
@@ -20,13 +22,14 @@ export const CATEGORIES: {
   color: string
 }[] = [
   { label: "Food", value: "Food", icon: Utensils, color: CATEGORY_COLORS.Food },
+  { label: "Transport", value: "Transport", icon: Car, color: CATEGORY_COLORS.Transport },
   {
     label: "Groceries",
     value: "Groceries",
     icon: ShoppingCart,
     color: CATEGORY_COLORS.Groceries,
   },
-  { label: "Transport", value: "Transport", icon: Car, color: CATEGORY_COLORS.Transport },
+  { label: "Rent", value: "Rent", icon: Building, color: CATEGORY_COLORS.Rent },
   {
     label: "Utilities",
     value: "Utilities",

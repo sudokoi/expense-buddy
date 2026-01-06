@@ -12,6 +12,7 @@ import {
   BatchFileUpload,
   BatchFileDelete,
   downloadSettingsFile,
+  getLatestCommitTimestamp,
 } from "./github-sync"
 import {
   AppSettings,
@@ -143,6 +144,135 @@ export async function testConnection(): Promise<SyncResult> {
       success: false,
       message: "Connection failed",
       error: result.error,
+    }
+  }
+}
+
+/**
+ * Sync direction types for the unified sync button
+ */
+export type SyncDirection = "push" | "pull" | "conflict" | "in_sync" | "error"
+
+/**
+ * Result of determining sync direction
+ */
+export interface SyncDirectionResult {
+  direction: SyncDirection
+  localTime: string | null
+  remoteTime: string | null
+  error?: string
+}
+
+/**
+ * Determine sync direction based on local and remote timestamps
+ *
+ * Logic:
+ * - If local is newer than remote → push
+ * - If remote is newer than local → pull
+ * - If both have changes since last sync → conflict
+ * - If no changes → in_sync
+ */
+export async function determineSyncDirection(
+  hasLocalChanges: boolean
+): Promise<SyncDirectionResult> {
+  try {
+    const config = await loadSyncConfig()
+    if (!config) {
+      return {
+        direction: "error",
+        localTime: null,
+        remoteTime: null,
+        error: "No sync configuration",
+      }
+    }
+
+    // Get local last sync time
+    const localLastSync = await getLastSyncTime()
+
+    // Get remote last modified time
+    const remoteResult = await getLatestCommitTimestamp(
+      config.token,
+      config.repo,
+      config.branch
+    )
+
+    if ("error" in remoteResult) {
+      return {
+        direction: "error",
+        localTime: localLastSync,
+        remoteTime: null,
+        error: remoteResult.error,
+      }
+    }
+
+    const remoteTime = remoteResult.timestamp
+
+    // Case 1: No local sync time (first sync)
+    if (!localLastSync) {
+      // If we have local changes and remote has data, that's a conflict
+      if (hasLocalChanges && new Date(remoteTime).getTime() > 0) {
+        return {
+          direction: "conflict",
+          localTime: null,
+          remoteTime: remoteTime,
+        }
+      }
+      // If we have local changes but remote is empty, push
+      if (hasLocalChanges) {
+        return { direction: "push", localTime: null, remoteTime: remoteTime }
+      }
+      // Otherwise pull from remote
+      return { direction: "pull", localTime: null, remoteTime: remoteTime }
+    }
+
+    const localSyncMs = new Date(localLastSync).getTime()
+    const remoteMs = new Date(remoteTime).getTime()
+
+    // Case 2: Remote is newer than our last sync
+    const remoteIsNewer = remoteMs > localSyncMs
+
+    // Case 3: We have local changes since last sync
+    const localHasChanges = hasLocalChanges
+
+    if (remoteIsNewer && localHasChanges) {
+      // Both sides have changes - conflict
+      return {
+        direction: "conflict",
+        localTime: localLastSync,
+        remoteTime: remoteTime,
+      }
+    }
+
+    if (remoteIsNewer) {
+      // Only remote has changes - pull
+      return {
+        direction: "pull",
+        localTime: localLastSync,
+        remoteTime: remoteTime,
+      }
+    }
+
+    if (localHasChanges) {
+      // Only local has changes - push
+      return {
+        direction: "push",
+        localTime: localLastSync,
+        remoteTime: remoteTime,
+      }
+    }
+
+    // No changes on either side
+    return {
+      direction: "in_sync",
+      localTime: localLastSync,
+      remoteTime: remoteTime,
+    }
+  } catch (error) {
+    return {
+      direction: "error",
+      localTime: null,
+      remoteTime: null,
+      error: String(error),
     }
   }
 }

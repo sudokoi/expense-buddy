@@ -10,6 +10,7 @@ const ALL_EXPENSE_CATEGORIES: ExpenseCategory[] = [
   "Food",
   "Groceries",
   "Transport",
+  "Rent",
   "Utilities",
   "Entertainment",
   "Health",
@@ -41,7 +42,7 @@ describe("Category Color Completeness", () => {
     )
   })
 
-  it("should have all seven categories defined in CATEGORY_COLORS", () => {
+  it("should have all eight categories defined in CATEGORY_COLORS", () => {
     const definedCategories = Object.keys(CATEGORY_COLORS) as ExpenseCategory[]
 
     for (const category of ALL_EXPENSE_CATEGORIES) {

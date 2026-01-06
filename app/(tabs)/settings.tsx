@@ -19,6 +19,7 @@ import {
   SyncConfig,
   analyzeConflicts,
   smartMerge,
+  determineSyncDirection,
 } from "../../services/sync-manager"
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
@@ -284,10 +285,10 @@ export default function SettingsScreen() {
     }
   }, [addNotification])
 
-  const handleSyncUp = useCallback(async () => {
+  // Unified sync handler - performs push or pull based on state
+  const performPush = useCallback(async () => {
     setIsSyncing(true)
     startSync()
-    // Pass settings if settings sync is enabled
     const result = await syncUp(
       state.expenses,
       settings.syncSettings ? settings : undefined,
@@ -299,7 +300,6 @@ export default function SettingsScreen() {
     if (result.success) {
       addNotification(result.message, "success")
       clearPendingChangesAfterSync()
-      // Clear settings change flag if settings were synced
       if (settings.syncSettings && result.settingsSynced) {
         clearSettingsChangeFlag()
       }
@@ -316,11 +316,10 @@ export default function SettingsScreen() {
     addNotification,
   ])
 
-  const handleSyncDown = useCallback(async () => {
+  const performPull = useCallback(async () => {
     setIsSyncing(true)
     startSync()
 
-    // Download expenses and optionally settings in one call
     const downloadResult = await syncDown(7, settings.syncSettings)
 
     if (!downloadResult.success) {
@@ -525,6 +524,63 @@ export default function SettingsScreen() {
     return expenseChanges + settingsChanges > 0
   }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
+  // Unified sync button handler
+  const handleSync = useCallback(async () => {
+    setIsSyncing(true)
+    startSync()
+
+    const directionResult = await determineSyncDirection(hasChangesToSync)
+
+    if (directionResult.direction === "error") {
+      setIsSyncing(false)
+      endSync(false)
+      addNotification(directionResult.error || "Failed to check sync status", "error")
+      return
+    }
+
+    setIsSyncing(false)
+    endSync(true)
+
+    switch (directionResult.direction) {
+      case "in_sync":
+        addNotification("Already in sync - no changes needed", "success")
+        break
+
+      case "push":
+        await performPush()
+        break
+
+      case "pull":
+        await performPull()
+        break
+
+      case "conflict":
+        Alert.alert(
+          "Sync Conflict",
+          "Both local and remote have changes since last sync. How would you like to proceed?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Upload Local",
+              onPress: () => performPush(),
+            },
+            {
+              text: "Download Remote",
+              onPress: () => performPull(),
+            },
+          ]
+        )
+        break
+    }
+  }, [
+    hasChangesToSync,
+    startSync,
+    endSync,
+    addNotification,
+    performPush,
+    performPull,
+  ])
+
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
@@ -707,22 +763,15 @@ export default function SettingsScreen() {
             </Accordion.Item>
           </Accordion>
 
-          {/* Sync Buttons */}
+          {/* Sync Button */}
           <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
             <Button
               size="$4"
-              onPress={handleSyncUp}
-              disabled={isSyncing || !token || !repo || !hasChangesToSync}
-            >
-              {syncUpButtonText}
-            </Button>
-
-            <Button
-              size="$4"
-              onPress={handleSyncDown}
+              onPress={handleSync}
               disabled={isSyncing || !token || !repo}
+              themeInverse
             >
-              Sync from GitHub
+              {isSyncing ? "Syncing..." : "Sync"}
             </Button>
           </YStack>
         </SettingsSection>

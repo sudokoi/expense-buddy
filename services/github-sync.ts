@@ -588,6 +588,63 @@ export async function batchCommit(
 // ============================================================================
 
 /**
+ * Get the timestamp of the latest commit on the branch
+ * Uses the commits API to get the most recent commit date
+ *
+ * @param token GitHub Personal Access Token
+ * @param repo Repository in format "owner/repo"
+ * @param branch Branch name
+ * @returns The ISO timestamp of the latest commit, or null if unable to fetch
+ */
+export async function getLatestCommitTimestamp(
+  token: string,
+  repo: string,
+  branch: string
+): Promise<{ timestamp: string } | { error: string }> {
+  try {
+    const [owner, repoName] = repo.split("/")
+    if (!owner || !repoName) {
+      return { error: "Invalid repository format" }
+    }
+
+    // Get the latest commit on the branch
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/commits?sha=${branch}&per_page=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    )
+
+    if (!response.ok) {
+      return { error: `GitHub API error: ${response.status}` }
+    }
+
+    const commits = await response.json()
+
+    if (!Array.isArray(commits) || commits.length === 0) {
+      // No commits on this branch - treat as fresh repo
+      return { timestamp: new Date(0).toISOString() }
+    }
+
+    // Return the commit timestamp (author date)
+    const latestCommit = commits[0]
+    const timestamp = latestCommit.commit?.author?.date || latestCommit.commit?.committer?.date
+
+    if (!timestamp) {
+      return { error: "Could not extract timestamp from commit" }
+    }
+
+    return { timestamp }
+  } catch (error) {
+    return { error: `Network error: ${error}` }
+  }
+}
+
+/**
  * Validate GitHub Personal Access Token and repository access
  */
 export async function validatePAT(
