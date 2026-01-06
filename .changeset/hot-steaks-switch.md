@@ -1,10 +1,10 @@
 ---
-"expense-buddy": patch
+"expense-buddy": minor
 ---
 
 **Refactored GitHub Sync Architecture with XState**
 
-- **Architecture**: Replaced TanStack Query with a robust XState v5 state machine ([sync-machine.ts](cci:7://file:///d:/code/expense-buddy/services/sync-machine.ts:0:0-0:0)) for better sync orchestration and error handling.
+- **Architecture**: Replaced TanStack Query with a robust XState v5 state machine `sync-machine.ts` for better sync orchestration and error handling.
 - **Performance**: Eliminated unnecessary remote data downloads when already in sync.
 - **Bug Fixes**:
   - Fixed false "conflict" detection when creating new expenses.
