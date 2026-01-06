@@ -1,5 +1,21 @@
 # expense-buddy
 
+## 1.8.0
+
+### Minor Changes
+
+- [#21](https://github.com/sudokoi/expense-buddy/pull/21) [`8fd359d`](https://github.com/sudokoi/expense-buddy/commit/8fd359d3533a0067f049ebc3bb7d057481f2eede) Thanks [@sudokoi](https://github.com/sudokoi)! - Add "Rent" expense category and refactor sync logic
+
+  ### Features
+  - Add "Rent" expense category with Building icon and soft olive green color
+  - Unify sync buttons into single intelligent "Sync" button with automatic push/pull detection
+  - Reorder categories by usage frequency (Food → Transport → Groceries → Rent → ...)
+
+  ### Refactoring
+  - Migrate sync state management from xstate to TanStack Query mutations
+  - Add `useSyncPush`, `useSyncPull`, `useSmartSync`, and `useSyncStatus` hooks
+  - Remove `sync-status-store.ts` in favor of mutation-derived state
+
 ## 1.7.2
 
 ### Patch Changes
