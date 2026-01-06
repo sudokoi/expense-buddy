@@ -1,10 +1,6 @@
 /**
  * TanStack Query hooks for GitHub sync operations
- *
- * Replaces xstate sync-status-store with proper mutation-based state management
  */
-
-import { useState, useEffect, useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Alert } from "react-native"
 import { Expense } from "../types/expense"
@@ -19,9 +15,7 @@ import {
   SyncNotification,
 } from "../services/sync-manager"
 
-// ============================================================================
-// Types
-// ============================================================================
+
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error"
 
@@ -60,9 +54,7 @@ export interface SmartSyncParams {
   onSettingsDownloaded?: (settings: AppSettings) => void
 }
 
-// ============================================================================
-// Mutation Keys
-// ============================================================================
+
 
 export const syncKeys = {
   all: ["sync"] as const,
@@ -71,9 +63,6 @@ export const syncKeys = {
   direction: () => [...syncKeys.all, "direction"] as const,
 }
 
-// ============================================================================
-// useSyncPush - Mutation for uploading to GitHub
-// ============================================================================
 
 export function useSyncPush() {
   return useMutation({
@@ -88,9 +77,6 @@ export function useSyncPush() {
   })
 }
 
-// ============================================================================
-// useSyncPull - Mutation for downloading from GitHub
-// ============================================================================
 
 export function useSyncPull() {
   return useMutation({
@@ -104,9 +90,6 @@ export function useSyncPull() {
   })
 }
 
-// ============================================================================
-// useSmartSync - Unified sync that determines direction and acts accordingly
-// ============================================================================
 
 export function useSmartSync() {
   const queryClient = useQueryClient()
@@ -118,14 +101,12 @@ export function useSmartSync() {
     mutationFn: async (params: SmartSyncParams) => {
       const { expenses, settings, syncSettingsEnabled, hasLocalChanges } = params
 
-      // Step 1: Determine sync direction
       const directionResult = await determineSyncDirection(hasLocalChanges)
 
       if (directionResult.direction === "error") {
         throw new Error(directionResult.error || "Failed to check sync status")
       }
 
-      // Step 2: Execute based on direction
       switch (directionResult.direction) {
         case "in_sync":
           return {
@@ -166,7 +147,6 @@ export function useSmartSync() {
         }
 
         case "conflict":
-          // Return conflict info - caller will handle the UI prompt
           return {
             action: "conflict" as const,
             message: "Both local and remote have changes",
@@ -176,32 +156,22 @@ export function useSmartSync() {
       }
     },
     onSuccess: () => {
-      // Invalidate any sync-related queries
       queryClient.invalidateQueries({ queryKey: syncKeys.all })
     },
   })
 
   return {
     ...smartSyncMutation,
-    // Expose individual mutation states for combined status
     isPushPending: pushMutation.isPending,
     isPullPending: pullMutation.isPending,
   }
 }
 
-// ============================================================================
-// useSyncStatus - Derived sync status from mutation states
-// Replaces xstate sync-status-store with proper TanStack Query state
-// ============================================================================
 
 export function useSyncStatus() {
-  const [displayStatus, setDisplayStatus] = useState<SyncStatus>("idle")
   const queryClient = useQueryClient()
-
-  // Get all sync mutation states
   const mutationCache = queryClient.getMutationCache()
 
-  // Check if any sync mutation is pending
   const isSyncing = mutationCache
     .getAll()
     .some(
@@ -211,7 +181,6 @@ export function useSyncStatus() {
         mutation.options.mutationKey[0] === "sync"
     )
 
-  // Check latest mutation result
   const latestSyncMutation = mutationCache
     .getAll()
     .filter(
@@ -224,35 +193,22 @@ export function useSyncStatus() {
   const isSuccess = latestSyncMutation?.state.status === "success"
   const isError = latestSyncMutation?.state.status === "error"
 
-  // Compute current status
-  useEffect(() => {
-    if (isSyncing) {
-      setDisplayStatus("syncing")
-    } else if (isSuccess) {
-      setDisplayStatus("success")
-      // Auto-reset success status after 2 seconds (matching xstate behavior)
-      const timer = setTimeout(() => {
-        setDisplayStatus("idle")
-      }, 2000)
-      return () => clearTimeout(timer)
-    } else if (isError) {
-      setDisplayStatus("error")
-    } else {
-      setDisplayStatus("idle")
-    }
-  }, [isSyncing, isSuccess, isError])
+  const syncStatus: SyncStatus = isSyncing
+    ? "syncing"
+    : isSuccess
+      ? "success"
+      : isError
+        ? "error"
+        : "idle"
 
   return {
-    syncStatus: displayStatus,
-    isSyncing: displayStatus === "syncing",
-    isSuccess: displayStatus === "success",
-    isError: displayStatus === "error",
+    syncStatus,
+    isSyncing,
+    isSuccess,
+    isError,
   }
 }
 
-// ============================================================================
-// Helper: Perform smart merge with conflict handling
-// ============================================================================
 
 export async function performMergeWithConflicts(
   localExpenses: Expense[],

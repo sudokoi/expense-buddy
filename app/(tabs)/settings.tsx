@@ -105,12 +105,9 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
 
-  // TanStack Query mutations for sync operations
   const pushMutation = useSyncPush()
   const pullMutation = useSyncPull()
   const smartSyncMutation = useSmartSync()
-
-  // Derived sync state from mutations (replaces xstate sync-status-store)
   const isSyncing = pushMutation.isPending || pullMutation.isPending || smartSyncMutation.isPending
 
   const {
@@ -147,7 +144,6 @@ export default function SettingsScreen() {
   // GitHub config validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
 
-  // Memoized smart merge function (no longer needs sync state - mutations handle that)
   const performSmartMerge = useCallback(
     async (
       remoteExpenses: Expense[],
@@ -288,7 +284,6 @@ export default function SettingsScreen() {
     }
   }, [addNotification])
 
-  // Push handler using TanStack Query mutation
   const handlePush = useCallback(() => {
     pushMutation.mutate(
       {
@@ -322,7 +317,6 @@ export default function SettingsScreen() {
     clearSettingsChangeFlag,
   ])
 
-  // Pull handler using TanStack Query mutation
   const handlePull = useCallback(async () => {
     pullMutation.mutate(
       {
@@ -498,13 +492,11 @@ export default function SettingsScreen() {
     [setAutoSyncTiming]
   )
 
-  // Memoized sync button text - now just shows "Sync" or "Syncing..."
   const syncButtonText = useMemo(() => {
     if (isSyncing) return "Syncing..."
     return "Sync"
   }, [isSyncing])
 
-  // Memoized check for whether there are changes to sync (respects settings sync toggle)
   const hasChangesToSync = useMemo(() => {
     const expenseChanges =
       state.pendingChanges.added +
@@ -514,7 +506,6 @@ export default function SettingsScreen() {
     return expenseChanges + settingsChanges > 0
   }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
 
-  // Unified sync button handler using smart sync mutation
   const handleSync = useCallback(() => {
     smartSyncMutation.mutate(
       {
@@ -539,7 +530,6 @@ export default function SettingsScreen() {
               break
 
             case "pull":
-              // Pull success - need to handle merge/settings
               if (result.downloadResult?.settings) {
                 replaceSettings(result.downloadResult.settings)
               }

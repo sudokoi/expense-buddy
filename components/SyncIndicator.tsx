@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
 import { useSyncStatus } from "../hooks/use-sync"
@@ -12,6 +12,21 @@ export const SyncIndicator: React.FC = () => {
   const { syncStatus } = useSyncStatus()
   const colorScheme = useColorScheme() ?? "light"
   const overlayColors = getOverlayColors(colorScheme)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (syncStatus === "syncing") {
+      setVisible(true)
+    } else if (syncStatus === "success") {
+      setVisible(true)
+      const timer = setTimeout(() => setVisible(false), 2000)
+      return () => clearTimeout(timer)
+    } else if (syncStatus === "error") {
+      setVisible(true)
+    } else {
+      setVisible(false)
+    }
+  }, [syncStatus])
 
   const styles = StyleSheet.create({
     container: {
@@ -30,7 +45,7 @@ export const SyncIndicator: React.FC = () => {
     },
   })
 
-  if (syncStatus === "idle") return null
+  if (!visible) return null
 
   const getIcon = () => {
     switch (syncStatus) {
