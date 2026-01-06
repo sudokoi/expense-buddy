@@ -1,7 +1,7 @@
 import React from "react"
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
-import { useSyncStatus } from "../stores"
+import { useSyncStatus } from "../hooks/use-sync"
 import {
   SEMANTIC_COLORS,
   getOverlayColors,

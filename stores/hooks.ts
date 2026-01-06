@@ -2,7 +2,6 @@ import { useCallback } from "react"
 import { useSelector } from "@xstate/store/react"
 import { useStoreContext } from "./store-provider"
 import { selectEffectiveTheme } from "./settings-store"
-import { selectIsSyncing, SyncStatus } from "./sync-status-store"
 import { Expense } from "../types/expense"
 import {
   ThemePreference,
@@ -16,7 +15,6 @@ import { SyncConfig } from "../services/sync-manager"
 // Import stores directly for useSelector type inference
 import { expenseStore as defaultExpenseStore } from "./expense-store"
 import { settingsStore as defaultSettingsStore } from "./settings-store"
-import { syncStatusStore as defaultSyncStatusStore } from "./sync-status-store"
 
 // Expense hooks
 export const useExpenses = () => {
@@ -241,41 +239,5 @@ export const useNotifications = () => {
     notifications,
     addNotification,
     removeNotification,
-  }
-}
-
-// Sync status hooks
-export const useSyncStatus = () => {
-  const { syncStatusStore } = useStoreContext()
-
-  const syncStatus = useSelector(
-    defaultSyncStatusStore,
-    (state) => state.context.syncStatus
-  )
-  const isSyncing = useSelector(defaultSyncStatusStore, (state) =>
-    selectIsSyncing(state.context)
-  )
-
-  const setSyncStatus = useCallback(
-    (status: SyncStatus) => syncStatusStore.trigger.setStatus({ status }),
-    [syncStatusStore]
-  )
-
-  const startSync = useCallback(
-    () => syncStatusStore.trigger.startSync(),
-    [syncStatusStore]
-  )
-
-  const endSync = useCallback(
-    (success: boolean) => syncStatusStore.trigger.endSync({ success }),
-    [syncStatusStore]
-  )
-
-  return {
-    syncStatus,
-    isSyncing,
-    setSyncStatus,
-    startSync,
-    endSync,
   }
 }

@@ -21,16 +21,11 @@ import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
 } from "./notification-store"
-import {
-  syncStatusStore as defaultSyncStatusStore,
-  SyncStatusStore,
-} from "./sync-status-store"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
   settingsStore: SettingsStore
   notificationStore: NotificationStore
-  syncStatusStore: SyncStatusStore
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
@@ -41,7 +36,6 @@ interface StoreProviderProps {
   expenseStore?: ExpenseStore
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
-  syncStatusStore?: SyncStatusStore
   // Skip initialization (for testing)
   skipInitialization?: boolean
 }
@@ -51,7 +45,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   expenseStore = defaultExpenseStore,
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
-  syncStatusStore = defaultSyncStatusStore,
   skipInitialization = false,
 }) => {
   const initializedRef = useRef(false)
@@ -94,9 +87,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       expenseStore,
       settingsStore,
       notificationStore,
-      syncStatusStore,
     }),
-    [expenseStore, settingsStore, notificationStore, syncStatusStore]
+    [expenseStore, settingsStore, notificationStore]
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

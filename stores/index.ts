@@ -2,7 +2,7 @@
 export { StoreProvider, useStoreContext } from "./store-provider"
 
 // Hooks
-export { useExpenses, useSettings, useNotifications, useSyncStatus } from "./hooks"
+export { useExpenses, useSettings, useNotifications } from "./hooks"
 
 // Store instances (for direct access if needed)
 export {
@@ -17,7 +17,6 @@ export {
   initializeSettingsStore,
 } from "./settings-store"
 export { notificationStore } from "./notification-store"
-export { syncStatusStore, selectIsSyncing } from "./sync-status-store"
 
 // Types
 export type { ExpenseStore } from "./expense-store"
@@ -27,4 +26,3 @@ export type {
   Notification,
   NotificationType,
 } from "./notification-store"
-export type { SyncStatusStore, SyncStatus } from "./sync-status-store"
