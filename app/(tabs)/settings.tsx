@@ -40,6 +40,7 @@ import {
   DefaultPaymentMethodSelector,
 } from "../../components/ui"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
+import type { AppSettings } from "../../services/settings-manager"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -151,7 +152,7 @@ export default function SettingsScreen() {
     async (
       remoteExpenses: Expense[],
       summary: string,
-      downloadedSettings?: import("../../services/settings-manager").AppSettings
+      downloadedSettings?: AppSettings
     ) => {
       try {
         const mergeResult = await smartMerge(state.expenses, remoteExpenses)
