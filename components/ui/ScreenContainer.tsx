@@ -29,6 +29,7 @@ export const ScreenContainer = memo(function ScreenContainer({
         >["contentContainerStyle"]
       }
       style={style}
+      keyboardShouldPersistTaps="handled"
     >
       {children}
     </ScrollView>

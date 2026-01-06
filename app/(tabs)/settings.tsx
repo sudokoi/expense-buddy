@@ -162,7 +162,13 @@ export default function SettingsScreen() {
         clearPendingChangesAfterSync()
 
         const messageParts = [`Merged successfully: ${summary}`]
-        if (downloadedSettings && settings.syncSettings) {
+        // Note: summary from handlePull already includes "settings updated" text if applicable
+        // so we don't need to append it again here if it's already in the summary
+        if (
+          downloadedSettings &&
+          settings.syncSettings &&
+          !summary.includes("settings")
+        ) {
           messageParts.push("settings applied")
         }
         addNotification(messageParts.join(", "), "success")
@@ -342,20 +348,24 @@ export default function SettingsScreen() {
           const hasNewFromRemote = conflicts.newFromRemote > 0
           const hasLocalOnly = conflicts.newFromLocal > 0
           const hasDeletedLocally = conflicts.deletedLocally > 0
+          const settingsDownloaded = !!downloadedSettings
 
           const summaryParts: string[] = []
           if (conflicts.newFromRemote > 0)
-            summaryParts.push(`${conflicts.newFromRemote} new from GitHub`)
+            summaryParts.push(`${conflicts.newFromRemote} new`)
           if (conflicts.remoteWins > 0)
-            summaryParts.push(`${conflicts.remoteWins} updated from GitHub`)
+            summaryParts.push(`${conflicts.remoteWins} updated`)
           if (conflicts.localWins > 0)
-            summaryParts.push(`${conflicts.localWins} local changes kept`)
-          if (conflicts.newFromLocal > 0)
-            summaryParts.push(`${conflicts.newFromLocal} local-only kept`)
+            summaryParts.push(`${conflicts.localWins} local kept`)
           if (conflicts.deletedLocally > 0)
             summaryParts.push(`${conflicts.deletedLocally} deleted locally`)
 
-          const summary = summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
+          if (settingsDownloaded) {
+            summaryParts.push("settings updated")
+          }
+
+          const changesSummary =
+            summaryParts.length > 0 ? summaryParts.join(", ") : "No changes"
 
           if (
             !hasRemoteUpdates &&
@@ -363,40 +373,41 @@ export default function SettingsScreen() {
             !hasLocalOnly &&
             !hasDeletedLocally &&
             conflicts.localWins === 0 &&
-            !downloadedSettings
+            !settingsDownloaded
           ) {
             addNotification("Already in sync - no changes needed", "success")
             return
           }
 
+          // Case where we only have settings updates but no expense conflicts
           if (
             !hasRemoteUpdates &&
             !hasNewFromRemote &&
             !hasLocalOnly &&
             !hasDeletedLocally &&
             conflicts.localWins === 0 &&
-            downloadedSettings
+            settingsDownloaded
           ) {
             replaceSettings(downloadedSettings)
-            addNotification("Settings synced from GitHub", "success")
+            addNotification(`Synced from GitHub: ${changesSummary}`, "success")
             return
           }
 
           if (hasRemoteUpdates) {
             Alert.alert(
               "Merge Conflicts Detected",
-              `${conflicts.remoteWins} record(s) on GitHub are newer than your local version and will overwrite them.\n\nSummary: ${summary}\n\nProceed with merge?`,
+              `${conflicts.remoteWins} record(s) on GitHub are newer than your local version and will overwrite them.\n\nSummary: ${changesSummary}\n\nProceed with merge?`,
               [
                 { text: "Cancel", style: "cancel" },
                 {
                   text: "Merge",
                   onPress: () =>
-                    performSmartMerge(remoteExpenses, summary, downloadedSettings),
+                    performSmartMerge(remoteExpenses, changesSummary, downloadedSettings),
                 },
               ]
             )
           } else {
-            await performSmartMerge(remoteExpenses, summary, downloadedSettings)
+            await performSmartMerge(remoteExpenses, changesSummary, downloadedSettings)
           }
         },
         onError: (error) => {
@@ -743,6 +754,19 @@ export default function SettingsScreen() {
                       {isTesting ? "Testing..." : "Test"}
                     </Button>
                   </XStack>
+
+                  {/* Clear Configuration Button */}
+                  {isConfigured && (
+                    <Button
+                      size="$3"
+                      color="white"
+                      onPress={handleClearConfig}
+                      icon={X}
+                      style={{ marginTop: 12, backgroundColor: errorColor }}
+                    >
+                      Clear Configuration
+                    </Button>
+                  )}
                 </YStack>
               </Accordion.Content>
             </Accordion.Item>
@@ -750,102 +774,111 @@ export default function SettingsScreen() {
 
           {/* Sync Button - only shown when configured */}
           {isConfigured && (
-            <YStack gap="$3" style={layoutStyles.syncButtonsContainer}>
+            <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
               <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
-                {isSyncing ? "Syncing..." : "Sync"}
+                {isSyncing ? "Syncing..." : "Sync Now"}
               </Button>
+
+              {/* Auto Sync Settings - grouped here as requested */}
+              <YStack
+                gap="$3"
+                borderTopWidth={1}
+                borderTopColor="$borderColor"
+                style={{ paddingTop: 16 }}
+              >
+                <Text fontSize="$4" fontWeight="600">
+                  Auto-Sync & Options
+                </Text>
+
+                {/* Enable Auto-Sync Toggle */}
+                <XStack style={layoutStyles.autoSyncRow}>
+                  <YStack flex={1}>
+                    <Label>Enable Auto-Sync</Label>
+                    <Text
+                      fontSize="$2"
+                      color="$color"
+                      opacity={0.6}
+                      style={layoutStyles.helperText}
+                    >
+                      Automatically sync with GitHub when configured
+                    </Text>
+                  </YStack>
+                  <Switch
+                    size="$4"
+                    checked={settings.autoSyncEnabled}
+                    onCheckedChange={setAutoSyncEnabled}
+                    backgroundColor={
+                      settings.autoSyncEnabled
+                        ? SEMANTIC_COLORS.success
+                        : ("$gray8" as any)
+                    }
+                  >
+                    <Switch.Thumb />
+                  </Switch>
+                </XStack>
+
+                {/* Also sync settings toggle */}
+                <XStack style={layoutStyles.autoSyncRow}>
+                  <YStack flex={1}>
+                    <Label>Also sync settings</Label>
+                    <Text
+                      fontSize="$2"
+                      color="$color"
+                      opacity={0.6}
+                      style={layoutStyles.helperText}
+                    >
+                      Include theme and preferences in sync
+                    </Text>
+                  </YStack>
+                  <Switch
+                    size="$4"
+                    checked={settings.syncSettings}
+                    onCheckedChange={handleSyncSettingsToggle}
+                    backgroundColor={
+                      settings.syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)
+                    }
+                  >
+                    <Switch.Thumb />
+                  </Switch>
+                </XStack>
+
+                {/* When to Sync */}
+                {settings.autoSyncEnabled && (
+                  <YStack gap="$2" style={{ marginTop: 8 }}>
+                    <Label>When to Sync</Label>
+                    <RadioGroup
+                      value={settings.autoSyncTiming}
+                      onValueChange={handleAutoSyncTimingChange}
+                    >
+                      <XStack gap="$2" style={layoutStyles.radioRow}>
+                        <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
+                          <RadioGroup.Indicator />
+                        </RadioGroup.Item>
+                        <YStack flex={1}>
+                          <Label htmlFor="on_launch">On App Launch</Label>
+                          <Text fontSize="$2" color="$color" opacity={0.6}>
+                            Sync when the app starts
+                          </Text>
+                        </YStack>
+                      </XStack>
+
+                      <XStack gap="$2" style={layoutStyles.radioRow}>
+                        <RadioGroup.Item value="on_change" id="on_change" size="$4">
+                          <RadioGroup.Indicator />
+                        </RadioGroup.Item>
+                        <YStack flex={1}>
+                          <Label htmlFor="on_change">On Every Change</Label>
+                          <Text fontSize="$2" color="$color" opacity={0.6}>
+                            Sync immediately after making changes
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </RadioGroup>
+                  </YStack>
+                )}
+              </YStack>
             </YStack>
           )}
-        </SettingsSection>
-
-        {/* AUTO-SYNC Section */}
-        <SettingsSection title="AUTO-SYNC">
-          <YStack gap="$3">
-            {/* Enable Auto-Sync Toggle */}
-            <XStack style={layoutStyles.autoSyncRow}>
-              <YStack flex={1}>
-                <Label>Enable Auto-Sync</Label>
-                <Text
-                  fontSize="$2"
-                  color="$color"
-                  opacity={0.6}
-                  style={layoutStyles.helperText}
-                >
-                  Automatically sync with GitHub when configured
-                </Text>
-              </YStack>
-              <Switch
-                size="$4"
-                checked={settings.autoSyncEnabled}
-                onCheckedChange={setAutoSyncEnabled}
-                backgroundColor={
-                  settings.autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)
-                }
-              >
-                <Switch.Thumb />
-              </Switch>
-            </XStack>
-
-            {/* Also sync settings toggle */}
-            <XStack style={layoutStyles.autoSyncRow}>
-              <YStack flex={1}>
-                <Label>Also sync settings</Label>
-                <Text
-                  fontSize="$2"
-                  color="$color"
-                  opacity={0.6}
-                  style={layoutStyles.helperText}
-                >
-                  Include theme and preferences in sync
-                </Text>
-              </YStack>
-              <Switch
-                size="$4"
-                checked={settings.syncSettings}
-                onCheckedChange={handleSyncSettingsToggle}
-                backgroundColor={
-                  settings.syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)
-                }
-              >
-                <Switch.Thumb />
-              </Switch>
-            </XStack>
-
-            {/* When to Sync */}
-            {settings.autoSyncEnabled && (
-              <YStack gap="$2">
-                <Label>When to Sync</Label>
-                <RadioGroup
-                  value={settings.autoSyncTiming}
-                  onValueChange={handleAutoSyncTimingChange}
-                >
-                  <XStack gap="$2" style={layoutStyles.radioRow}>
-                    <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
-                      <RadioGroup.Indicator />
-                    </RadioGroup.Item>
-                    <YStack flex={1}>
-                      <Label htmlFor="on_launch">On App Launch</Label>
-                      <Text fontSize="$2" color="$color" opacity={0.6}>
-                        Sync when the app starts
-                      </Text>
-                    </YStack>
-                  </XStack>
-
-                  <XStack gap="$2" style={layoutStyles.radioRow}>
-                    <RadioGroup.Item value="on_change" id="on_change" size="$4">
-                      <RadioGroup.Indicator />
-                    </RadioGroup.Item>
-                    <YStack flex={1}>
-                      <Label htmlFor="on_change">On Every Change</Label>
-                      <Text fontSize="$2" color="$color" opacity={0.6}>
-                        Sync after adding, editing, or deleting expenses
-                      </Text>
-                    </YStack>
-                  </XStack>
-                </RadioGroup>
-              </YStack>
-            )}
-          </YStack>
         </SettingsSection>
 
         {/* APP INFORMATION Section */}
@@ -903,17 +936,6 @@ export default function SettingsScreen() {
             </Button>
           </YStack>
         </SettingsSection>
-
-        {/* Clear Config */}
-        <Button
-          size="$3"
-          chromeless
-          color={errorColor}
-          onPress={handleClearConfig}
-          style={layoutStyles.clearButton}
-        >
-          Clear Configuration
-        </Button>
       </YStack>
     </ScreenContainer>
   )

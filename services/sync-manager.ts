@@ -56,6 +56,8 @@ export interface SyncResult {
   settingsSynced?: boolean
   settingsSkipped?: boolean
   settingsError?: string
+  // Timestamp of the commit if one was created
+  commitTimestamp?: string
 }
 
 export interface SyncNotification {
@@ -441,6 +443,25 @@ export async function syncUp(
         await clearSettingsChanged()
       }
 
+      // Fetch the actual commit timestamp from GitHub to ensure perfect sync
+      let commitTimestamp: string | undefined
+      if (batchResult.commitSha) {
+        // We just made a commit, so the remote time is now AUTHORITATIVE
+        // We must use this exact timestamp to avoid "remote is newer" false positives
+        try {
+          const timestampResult = await getLatestCommitTimestamp(
+            config.token,
+            config.repo,
+            config.branch
+          )
+          if ("timestamp" in timestampResult) {
+            commitTimestamp = timestampResult.timestamp
+          }
+        } catch (e) {
+          console.warn("Failed to fetch commit timestamp after sync:", e)
+        }
+      }
+
       const message: string[] = []
       // Count expense files only (exclude settings.json)
       const expenseFilesUploaded = filesToUpload.filter(
@@ -461,6 +482,7 @@ export async function syncUp(
         filesDeleted: filesToDelete.length,
         settingsSynced: shouldSyncSettings,
         settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
+        commitTimestamp,
       }
     } else {
       // On failure: preserve existing hashes (don't update anything)
@@ -716,8 +738,8 @@ async function getLastSyncTime(): Promise<string | null> {
 /**
  * Save last sync timestamp
  */
-async function saveLastSyncTime(): Promise<void> {
-  const now = new Date().toISOString()
+async function saveLastSyncTime(timestamp?: string): Promise<void> {
+  const now = timestamp || new Date().toISOString()
   await secureSetItem(LAST_SYNC_TIME_KEY, now)
 }
 
@@ -752,7 +774,8 @@ export async function autoSync(
       const uploadResult = await syncUp(mergeResult.merged, settings, syncSettingsEnabled)
 
       if (uploadResult.success) {
-        await saveLastSyncTime()
+        // If we got a commit timestamp, use it. Otherwise use current time.
+        await saveLastSyncTime(uploadResult.commitTimestamp)
 
         // Create notification if there are new or updated items from remote
         let notification: SyncNotification | undefined
@@ -798,7 +821,8 @@ export async function autoSync(
       // No remote expense data, just upload local
       const uploadResult = await syncUp(localExpenses, settings, syncSettingsEnabled)
       if (uploadResult.success) {
-        await saveLastSyncTime()
+        // If we got a commit timestamp, use it. Otherwise use current time.
+        await saveLastSyncTime(uploadResult.commitTimestamp)
       }
 
       // Even if expense download failed, we might have settings

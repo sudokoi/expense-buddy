@@ -1,5 +1,12 @@
 # expense-buddy
 
+## 1.8.1
+
+### Patch Changes
+
+- Refine GitHub Sync logic and UI:
+  - Detailed sync feedback, robust server-side timestamp handling, improved settings layout, and usability fixes for configuration.
+
 ## 1.8.0
 
 ### Minor Changes
