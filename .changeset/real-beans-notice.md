@@ -10,3 +10,10 @@ Add custom category management with full CRUD support
 - Category sync support with conflict resolution via merge engine
 - Automatic expense reassignment when deleting categories
 - Dynamic icon rendering for custom category icons
+
+Bug fixes:
+
+- Fix category ordering in add/edit expense flows (Other always appears last)
+- Improve EditExpenseModal with larger snap point (95%) and ScrollView
+- Show category filter in analytics empty state for filter reset
+- Centralize category sorting logic in useCategories hook
