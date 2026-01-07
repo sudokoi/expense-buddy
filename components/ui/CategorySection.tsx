@@ -25,7 +25,9 @@ const layoutStyles = {
     padding: 8,
     paddingTop: 12,
   } as ViewStyle,
-  categoryList: {
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   } as ViewStyle,
   reorderButtons: {
@@ -33,15 +35,14 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 0,
-    paddingRight: 4,
-  } as ViewStyle,
-  categoryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
   } as ViewStyle,
   addButtonContainer: {
     marginTop: 16,
+  } as ViewStyle,
+  otherCategoryContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
   } as ViewStyle,
 }
 
@@ -62,7 +63,8 @@ interface CategorySectionProps {
 
 /**
  * CategorySection - Collapsible settings section for managing categories
- * Displays category list with add, edit, delete, and reorder functionality
+ * Displays category list with up/down buttons for reordering
+ * "Other" category is always at the bottom and not reorderable
  */
 export const CategorySection = memo(function CategorySection({
   categories,
@@ -72,38 +74,48 @@ export const CategorySection = memo(function CategorySection({
   onReorder,
   getExpenseCount,
 }: CategorySectionProps) {
-  // Sort categories by order - memoized to avoid re-sorting on every render
-  const sortedCategories = useMemo(
-    () => [...categories].sort((a, b) => a.order - b.order),
-    [categories]
-  )
+  // Separate "Other" category from reorderable categories
+  const { reorderableCategories, otherCategory } = useMemo(() => {
+    const sorted = [...categories].sort((a, b) => a.order - b.order)
+    const other = sorted.find((c) => c.label === "Other")
+    const reorderable = sorted.filter((c) => c.label !== "Other")
+    return { reorderableCategories: reorderable, otherCategory: other }
+  }, [categories])
 
   // Handle move up
   const handleMoveUp = useCallback(
     (index: number) => {
       if (index <= 0) return
-      const labels = sortedCategories.map((c) => c.label)
+      const labels = reorderableCategories.map((c) => c.label)
       // Swap with previous
       const temp = labels[index]
       labels[index] = labels[index - 1]
       labels[index - 1] = temp
+      // Append "Other" at the end
+      if (otherCategory) {
+        labels.push("Other")
+      }
       onReorder(labels)
     },
-    [sortedCategories, onReorder]
+    [reorderableCategories, otherCategory, onReorder]
   )
 
   // Handle move down
   const handleMoveDown = useCallback(
     (index: number) => {
-      if (index >= sortedCategories.length - 1) return
-      const labels = sortedCategories.map((c) => c.label)
+      if (index >= reorderableCategories.length - 1) return
+      const labels = reorderableCategories.map((c) => c.label)
       // Swap with next
       const temp = labels[index]
       labels[index] = labels[index + 1]
       labels[index + 1] = temp
+      // Append "Other" at the end
+      if (otherCategory) {
+        labels.push("Other")
+      }
       onReorder(labels)
     },
-    [sortedCategories, onReorder]
+    [reorderableCategories, otherCategory, onReorder]
   )
 
   return (
@@ -133,29 +145,29 @@ export const CategorySection = memo(function CategorySection({
             )}
           </Accordion.Trigger>
           <Accordion.Content style={layoutStyles.accordionContent}>
-            <YStack gap="$3">
-              {/* Category list */}
-              <YStack style={layoutStyles.categoryList}>
-                {sortedCategories.map((category, index) => (
+            <YStack gap="$2">
+              {/* Reorderable category list */}
+              <YStack gap="$2">
+                {reorderableCategories.map((category, index) => (
                   <XStack key={category.label} style={layoutStyles.categoryRow}>
-                    {/* Reorder buttons - compact vertical layout */}
+                    {/* Reorder buttons */}
                     <YStack style={layoutStyles.reorderButtons}>
                       <Button
-                        size="$1"
+                        size="$2"
                         chromeless
-                        icon={<ChevronUp size={14} />}
+                        icon={<ChevronUp size={16} />}
                         onPress={() => handleMoveUp(index)}
                         disabled={index === 0}
                         opacity={index === 0 ? 0.3 : 0.7}
                         aria-label={`Move ${category.label} up`}
                       />
                       <Button
-                        size="$1"
+                        size="$2"
                         chromeless
-                        icon={<ChevronDown size={14} />}
+                        icon={<ChevronDown size={16} />}
                         onPress={() => handleMoveDown(index)}
-                        disabled={index === sortedCategories.length - 1}
-                        opacity={index === sortedCategories.length - 1 ? 0.3 : 0.7}
+                        disabled={index === reorderableCategories.length - 1}
+                        opacity={index === reorderableCategories.length - 1 ? 0.3 : 0.7}
                         aria-label={`Move ${category.label} down`}
                       />
                     </YStack>
@@ -167,12 +179,42 @@ export const CategorySection = memo(function CategorySection({
                         onEdit={onEdit}
                         onDelete={onDelete}
                         expenseCount={getExpenseCount?.(category.label) ?? 0}
-                        canDelete={category.label !== "Other"}
+                        canDelete={true}
                       />
                     </YStack>
                   </XStack>
                 ))}
               </YStack>
+
+              {/* "Other" category - always at bottom, not reorderable */}
+              {otherCategory && (
+                <YStack
+                  style={layoutStyles.otherCategoryContainer}
+                  borderColor="$borderColor"
+                >
+                  <XStack style={layoutStyles.categoryRow}>
+                    {/* Empty space where reorder buttons would be */}
+                    <YStack style={layoutStyles.reorderButtons} opacity={0.2}>
+                      <ChevronUp size={16} />
+                      <ChevronDown size={16} />
+                    </YStack>
+
+                    {/* Category item */}
+                    <YStack flex={1}>
+                      <CategoryListItem
+                        category={otherCategory}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        expenseCount={getExpenseCount?.(otherCategory.label) ?? 0}
+                        canDelete={false}
+                      />
+                    </YStack>
+                  </XStack>
+                  <Text fontSize="$1" color="$color" opacity={0.4} pl="$8">
+                    &quot;Other&quot; always stays at the bottom
+                  </Text>
+                </YStack>
+              )}
 
               {/* Add Category button */}
               <YStack style={layoutStyles.addButtonContainer}>

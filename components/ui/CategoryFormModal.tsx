@@ -6,6 +6,7 @@ import { Check, X } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
+import { ColorPickerSheet } from "./ColorPickerSheet"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { getColorValue } from "../../tamagui.config"
@@ -90,10 +91,13 @@ export function CategoryFormModal({
   // Form state - derived from props when modal opens
   const [label, setLabel] = useState("")
   const [icon, setIcon] = useState("Circle")
-  const [color] = useState("#C4B7C9")
+  const [color, setColor] = useState("#C4B7C9")
 
   // Icon picker state
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
+
+  // Color picker state
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -112,6 +116,9 @@ export function CategoryFormModal({
     }
     if (icon !== (category?.icon ?? "Circle")) {
       setIcon(category?.icon ?? "Circle")
+    }
+    if (color !== (category?.color ?? "#C4B7C9")) {
+      setColor(category?.color ?? "#C4B7C9")
     }
     if (Object.keys(errors).length > 0) {
       setErrors({})
@@ -137,6 +144,11 @@ export function CategoryFormModal({
   // Handle icon selection
   const handleIconSelect = useCallback((iconName: string) => {
     setIcon(iconName)
+  }, [])
+
+  // Handle color selection
+  const handleColorSelect = useCallback((selectedColor: string) => {
+    setColor(selectedColor)
   }, [])
 
   // Handle save with validation
@@ -180,6 +192,16 @@ export function CategoryFormModal({
   // Handle closing icon picker
   const handleCloseIconPicker = useCallback(() => {
     setIconPickerOpen(false)
+  }, [])
+
+  // Handle opening color picker
+  const handleOpenColorPicker = useCallback(() => {
+    setColorPickerOpen(true)
+  }, [])
+
+  // Handle closing color picker
+  const handleCloseColorPicker = useCallback(() => {
+    setColorPickerOpen(false)
   }, [])
 
   // Computed style with safe area padding
@@ -272,26 +294,28 @@ export function CategoryFormModal({
               </Pressable>
             </YStack>
 
-            {/* Color Display (read-only) */}
+            {/* Color Picker Trigger */}
             <YStack gap="$2">
               <Label color="$color" opacity={0.8}>
                 Color
               </Label>
-              <XStack
-                style={layoutStyles.colorPreview}
-                bg="$backgroundHover"
-                borderColor="$borderColor"
-              >
-                <YStack
-                  style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
-                />
-                <YStack flex={1}>
-                  <Text fontWeight="500">{color}</Text>
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
-                    {isEditMode ? "Color cannot be changed" : "Auto-assigned color"}
-                  </Text>
-                </YStack>
-              </XStack>
+              <Pressable onPress={handleOpenColorPicker}>
+                <XStack
+                  style={layoutStyles.colorPreview}
+                  bg="$backgroundHover"
+                  borderColor="$borderColor"
+                >
+                  <YStack
+                    style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
+                  />
+                  <YStack flex={1}>
+                    <Text fontWeight="500">{color}</Text>
+                    <Text fontSize="$2" color="$color" opacity={0.6}>
+                      Tap to change color
+                    </Text>
+                  </YStack>
+                </XStack>
+              </Pressable>
             </YStack>
 
             {/* Action Buttons */}
@@ -319,6 +343,14 @@ export function CategoryFormModal({
         onClose={handleCloseIconPicker}
         selectedIcon={icon}
         onSelect={handleIconSelect}
+      />
+
+      {/* Color Picker Sheet */}
+      <ColorPickerSheet
+        open={colorPickerOpen}
+        onClose={handleCloseColorPicker}
+        selectedColor={color}
+        onSelect={handleColorSelect}
       />
     </>
   )
