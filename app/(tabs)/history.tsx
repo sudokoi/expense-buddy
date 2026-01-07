@@ -5,8 +5,7 @@ import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useNotifications, useSettings } from "../../stores"
-import { CATEGORIES } from "../../constants/categories"
+import { useExpenses, useNotifications, useSettings, useCategories } from "../../stores"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
@@ -27,9 +26,9 @@ import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import {
   ExpenseCard,
   AmountText,
-  CategoryIcon,
   CategoryCard,
   PaymentMethodCard,
+  DynamicCategoryIcon,
 } from "../../components/ui"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -97,13 +96,12 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
   onEdit,
   onDelete,
 }: ExpenseListItemProps) {
-  const categoryInfo = CATEGORIES.find((cat) => item.category === cat.value)
+  const { getCategoryByLabel } = useCategories()
+  const categoryInfo = getCategoryByLabel(item.category)
 
   if (!categoryInfo) {
     return null
   }
-
-  const Icon = categoryInfo.icon
 
   // Use utility function for consistent payment method display
   const paymentMethodDisplay = formatPaymentMethodDisplay(item.paymentMethod)
@@ -111,9 +109,11 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
   return (
     <ExpenseCard>
       <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
-        <CategoryIcon size="md" backgroundColor={categoryInfo.color}>
-          <Icon color="white" size={20} />
-        </CategoryIcon>
+        <DynamicCategoryIcon
+          name={categoryInfo.icon}
+          size={20}
+          color={categoryInfo.color as `#${string}`}
+        />
         <YStack flex={1}>
           <Text fontWeight="bold" fontSize="$4">
             {item.note || categoryInfo.label}
@@ -154,6 +154,7 @@ export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const { syncConfig } = useSettings()
+  const { categories } = useCategories()
   const insets = useSafeAreaInsets()
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string
@@ -541,15 +542,15 @@ export default function HistoryScreen() {
                     Category
                   </Label>
                   <XStack style={layoutStyles.categoryRow}>
-                    {CATEGORIES.map((cat) => {
-                      const isSelected = editingExpense?.category === cat.value
+                    {categories.map((cat) => {
+                      const isSelected = editingExpense?.category === cat.label
                       return (
                         <CategoryCard
-                          key={cat.value}
+                          key={cat.label}
                           isSelected={isSelected}
                           categoryColor={cat.color}
                           label={cat.label}
-                          onPress={() => handleCategorySelect(cat.value)}
+                          onPress={() => handleCategorySelect(cat.label)}
                           compact
                         />
                       )

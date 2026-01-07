@@ -24,7 +24,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 ### 📊 Expense Management
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
-- **Smart Categories**: Pre-defined categories (Food, Transport, Utilities, Entertainment, Health, Groceries, Other)
+- **Custom Categories**: Create, edit, and reorder expense categories with custom colors and icons
 - **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking)
 - **Default Payment Method**: Set a preferred payment method for faster entry
 - **Full CRUD**: Create, read, update, and delete expenses with ease
@@ -203,6 +203,9 @@ The app includes a set of reusable styled components in `components/ui/`:
 | `ThemeSelector`                | Theme preference selector (light/dark/system)        |
 | `DefaultPaymentMethodSelector` | Payment method preference selector                   |
 | `PaymentMethodCard`            | Selectable payment method display card               |
+| `CategoryFormModal`            | Modal for creating/editing custom categories         |
+| `ColorPickerSheet`             | Bottom sheet for selecting category colors           |
+| `DynamicCategoryIcon`          | Runtime icon rendering for custom categories         |
 
 All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
 

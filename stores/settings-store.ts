@@ -324,7 +324,8 @@ export const settingsStore = createStore({
     // Category management actions
 
     /**
-     * Add a new category with auto-assigned order and color
+     * Add a new category with auto-assigned order
+     * New categories are inserted before "Other" which always stays at the bottom
      */
     addCategory: (
       context,
@@ -332,17 +333,32 @@ export const settingsStore = createStore({
       enqueue
     ) => {
       const existingColors = context.settings.categories.map((c) => c.color)
-      const maxOrder = Math.max(...context.settings.categories.map((c) => c.order), -1)
 
+      // Find "Other" category to get its order (it should always be last)
+      const otherCategory = context.settings.categories.find((c) => c.label === "Other")
+      const otherOrder = otherCategory?.order ?? context.settings.categories.length
+
+      // New category gets the order that "Other" currently has
       const newCategory: Category = {
         ...event.category,
-        // Use provided color or assign a random one
         color: event.category.color || getRandomCategoryColor(existingColors),
-        order: maxOrder + 1,
+        order: otherOrder,
         updatedAt: new Date().toISOString(),
       }
 
-      const newCategories = [...context.settings.categories, newCategory]
+      // Update "Other" to have a higher order so it stays at the bottom
+      const newCategories = context.settings.categories.map((cat) => {
+        if (cat.label === "Other") {
+          return {
+            ...cat,
+            order: otherOrder + 1,
+            updatedAt: new Date().toISOString(),
+          }
+        }
+        return cat
+      })
+      newCategories.push(newCategory)
+
       const newSettings = { ...context.settings, categories: newCategories }
       const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
 
@@ -403,6 +419,7 @@ export const settingsStore = createStore({
     /**
      * Delete a category by label
      * Note: "Other" category cannot be deleted (should be checked by caller)
+     * When a category is deleted, "Other"'s order is decremented to stay at the bottom
      */
     deleteCategory: (context, event: { label: string }, enqueue) => {
       // Prevent deletion of "Other" category
@@ -410,9 +427,19 @@ export const settingsStore = createStore({
         return context
       }
 
-      const newCategories = context.settings.categories.filter(
-        (cat) => cat.label !== event.label
-      )
+      // Filter out the deleted category and decrement "Other"'s order
+      const newCategories = context.settings.categories
+        .filter((cat) => cat.label !== event.label)
+        .map((cat) => {
+          if (cat.label === "Other") {
+            return {
+              ...cat,
+              order: cat.order - 1,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+          return cat
+        })
 
       const newSettings = { ...context.settings, categories: newCategories }
       const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)

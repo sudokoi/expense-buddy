@@ -17,23 +17,22 @@ import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
 import { Category } from "../types/category"
 
-// Import stores directly for useSelector type inference
-import { expenseStore as defaultExpenseStore, getActiveExpenses } from "./expense-store"
-import { settingsStore as defaultSettingsStore } from "./settings-store"
+// Import for helper function only
+import { getActiveExpenses } from "./expense-store"
 
 // Expense hooks
 export const useExpenses = () => {
   const { expenseStore } = useStoreContext()
 
-  // Use default store for type inference, but the actual store from context
-  const expenses = useSelector(defaultExpenseStore, (state) => state.context.expenses)
-  const isLoading = useSelector(defaultExpenseStore, (state) => state.context.isLoading)
+  // Use the store from context for useSelector to ensure proper subscription
+  const expenses = useSelector(expenseStore, (state) => state.context.expenses)
+  const isLoading = useSelector(expenseStore, (state) => state.context.isLoading)
   const syncNotification = useSelector(
-    defaultExpenseStore,
+    expenseStore,
     (state) => state.context.syncNotification
   )
   const pendingChanges = useSelector(
-    defaultExpenseStore,
+    expenseStore,
     (state) => state.context.pendingChanges
   )
 
@@ -120,20 +119,18 @@ export const useExpenses = () => {
 export const useSettings = () => {
   const { settingsStore } = useStoreContext()
 
-  const settings = useSelector(defaultSettingsStore, (state) => state.context.settings)
-  const isLoading = useSelector(defaultSettingsStore, (state) => state.context.isLoading)
-  const hasUnsyncedChanges = useSelector(defaultSettingsStore, (state) =>
+  // Use the store from context for useSelector to ensure proper subscription
+  const settings = useSelector(settingsStore, (state) => state.context.settings)
+  const isLoading = useSelector(settingsStore, (state) => state.context.isLoading)
+  const hasUnsyncedChanges = useSelector(settingsStore, (state) =>
     selectHasUnsyncedChanges(state.context)
   )
-  const effectiveTheme = useSelector(defaultSettingsStore, (state) =>
+  const effectiveTheme = useSelector(settingsStore, (state) =>
     selectEffectiveTheme(state.context)
   )
-  const syncConfig = useSelector(
-    defaultSettingsStore,
-    (state) => state.context.syncConfig
-  )
+  const syncConfig = useSelector(settingsStore, (state) => state.context.syncConfig)
   const paymentMethodSectionExpanded = useSelector(
-    defaultSettingsStore,
+    settingsStore,
     (state) => state.context.paymentMethodSectionExpanded
   )
 
@@ -262,15 +259,23 @@ export const useNotifications = () => {
 export const useCategories = () => {
   const { settingsStore } = useStoreContext()
 
-  // Get raw categories from settings (stable reference)
+  // Use the store from context for useSelector to ensure proper subscription
   const rawCategories = useSelector(
-    defaultSettingsStore,
+    settingsStore,
     (state) => state.context.settings.categories
   )
 
   // Sort categories in useMemo to maintain stable reference
+  // "Other" category is always sorted to the end, regardless of its order value
   const categories = useMemo(
-    () => [...rawCategories].sort((a, b) => a.order - b.order),
+    () =>
+      [...rawCategories].sort((a, b) => {
+        // "Other" always goes to the end
+        if (a.label === "Other") return 1
+        if (b.label === "Other") return -1
+        // Otherwise sort by order
+        return a.order - b.order
+      }),
     [rawCategories]
   )
 

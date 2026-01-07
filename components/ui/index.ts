@@ -6,6 +6,7 @@
 export { ExpenseCard } from "./ExpenseCard"
 export { AmountText } from "./AmountText"
 export { CategoryIcon } from "./CategoryIcon"
+export { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 export { ScreenContainer } from "./ScreenContainer"
 export { SectionHeader } from "./SectionHeader"
 export { CategoryCard } from "./CategoryCard"

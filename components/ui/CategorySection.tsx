@@ -75,10 +75,10 @@ export const CategorySection = memo(function CategorySection({
   getExpenseCount,
 }: CategorySectionProps) {
   // Separate "Other" category from reorderable categories
+  // Categories are already sorted by order in useCategories hook
   const { reorderableCategories, otherCategory } = useMemo(() => {
-    const sorted = [...categories].sort((a, b) => a.order - b.order)
-    const other = sorted.find((c) => c.label === "Other")
-    const reorderable = sorted.filter((c) => c.label !== "Other")
+    const other = categories.find((c) => c.label === "Other")
+    const reorderable = categories.filter((c) => c.label !== "Other")
     return { reorderableCategories: reorderable, otherCategory: other }
   }, [categories])
 

@@ -32,18 +32,35 @@ function createTestCategoryStore(initialCategories: Category[] = DEFAULT_CATEGOR
         event: { category: Omit<Category, "order" | "updatedAt"> }
       ) => {
         const existingColors = context.categories.map((c) => c.color)
-        const maxOrder = Math.max(...context.categories.map((c) => c.order), -1)
 
+        // Find "Other" category to get its order (it should always be last)
+        const otherCategory = context.categories.find((c) => c.label === "Other")
+        const otherOrder = otherCategory?.order ?? context.categories.length
+
+        // New category gets the order that "Other" currently has
         const newCategory: Category = {
           ...event.category,
           color: event.category.color || getRandomCategoryColor(existingColors),
-          order: maxOrder + 1,
+          order: otherOrder,
           updatedAt: new Date().toISOString(),
         }
 
+        // Update "Other" to have a higher order so it stays at the bottom
+        const updatedCategories = context.categories.map((cat) => {
+          if (cat.label === "Other") {
+            return {
+              ...cat,
+              order: otherOrder + 1,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+          return cat
+        })
+        updatedCategories.push(newCategory)
+
         return {
           ...context,
-          categories: [...context.categories, newCategory],
+          categories: updatedCategories,
         }
       },
 
@@ -74,9 +91,23 @@ function createTestCategoryStore(initialCategories: Category[] = DEFAULT_CATEGOR
           return context
         }
 
+        // Filter out the deleted category and decrement "Other"'s order
+        const newCategories = context.categories
+          .filter((cat) => cat.label !== event.label)
+          .map((cat) => {
+            if (cat.label === "Other") {
+              return {
+                ...cat,
+                order: cat.order - 1,
+                updatedAt: new Date().toISOString(),
+              }
+            }
+            return cat
+          })
+
         return {
           ...context,
-          categories: context.categories.filter((cat) => cat.label !== event.label),
+          categories: newCategories,
         }
       },
 
@@ -167,20 +198,29 @@ describe("Category Store Properties", () => {
       )
     })
 
-    it("added category SHALL have order equal to max existing order + 1", () => {
+    it("added category SHALL be inserted before 'Other' category", () => {
       fc.assert(
         fc.property(newCategoryArb, (newCategory) => {
           const store = createTestCategoryStore(DEFAULT_CATEGORIES)
-          const maxOrderBefore = Math.max(
-            ...store.getSnapshot().context.categories.map((c) => c.order)
-          )
+          const otherBefore = store
+            .getSnapshot()
+            .context.categories.find((c) => c.label === "Other")
+          const otherOrderBefore = otherBefore?.order ?? 0
 
           store.trigger.addCategory({ category: newCategory })
 
           const categories = store.getSnapshot().context.categories
           const found = categories.find((c) => c.label === newCategory.label)
+          const otherAfter = categories.find((c) => c.label === "Other")
 
-          return found !== undefined && found.order === maxOrderBefore + 1
+          // New category should have the order that "Other" had before
+          // "Other" should now have a higher order
+          return (
+            found !== undefined &&
+            found.order === otherOrderBefore &&
+            otherAfter !== undefined &&
+            otherAfter.order === otherOrderBefore + 1
+          )
         }),
         { numRuns: 100 }
       )

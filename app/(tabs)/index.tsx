@@ -1,17 +1,16 @@
 import { format, parseISO, subDays } from "date-fns"
 import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses } from "../../stores"
+import { useExpenses, useCategories } from "../../stores"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
-import { CATEGORIES } from "../../constants/categories"
 import React from "react"
 import {
   ExpenseCard,
   AmountText,
-  CategoryIcon,
   ScreenContainer,
   SectionHeader,
+  DynamicCategoryIcon,
 } from "../../components/ui"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import type { Expense } from "../../types/expense"
@@ -55,15 +54,17 @@ interface RecentExpenseItemProps {
 const RecentExpenseItem = React.memo(function RecentExpenseItem({
   expense,
 }: RecentExpenseItemProps) {
-  const cat = CATEGORIES.find((c) => c.value === expense.category)
-  const Icon = cat?.icon
+  const { getCategoryByLabel } = useCategories()
+  const cat = getCategoryByLabel(expense.category)
 
   return (
     <ExpenseCard>
       <XStack style={layoutStyles.transactionDetails}>
-        <CategoryIcon backgroundColor={cat?.color || "#888"}>
-          {Icon && <Icon color="white" size={16} />}
-        </CategoryIcon>
+        <DynamicCategoryIcon
+          name={cat?.icon || "Circle"}
+          size={16}
+          color={(cat?.color || "#888") as `#${string}`}
+        />
         <YStack>
           <SizableText size="$4" fontWeight="bold">
             {expense.note || cat?.label}
@@ -80,6 +81,7 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 
 export default function DashboardScreen() {
   const { state } = useExpenses()
+  const { getCategoryByLabel } = useCategories()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -118,7 +120,7 @@ export default function DashboardScreen() {
       .map((dateKey) => {
         const dayExpenses = grouped[dateKey] || {}
         const stacks = Object.keys(dayExpenses).map((cat) => {
-          const categoryConfig = CATEGORIES.find((c) => c.value === cat)
+          const categoryConfig = getCategoryByLabel(cat)
           return {
             value: dayExpenses[cat],
             color: categoryConfig?.color || "#888",
@@ -134,7 +136,7 @@ export default function DashboardScreen() {
         }
       })
       .filter((item) => item.stacks.length > 0) // Only show days with data
-  }, [state.activeExpenses, router])
+  }, [state.activeExpenses, router, getCategoryByLabel])
 
   const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0)
 
