@@ -14,6 +14,7 @@ import {
   getSettingsHash,
 } from "./settings-manager"
 import { PaymentMethodType } from "../types/expense"
+import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 // Mock AsyncStorage for testing
@@ -61,26 +62,30 @@ const optionalPaymentMethodTypeArbitrary = fc.option(paymentMethodTypeArbitrary,
   nil: undefined,
 })
 
-// Full settings arbitrary (v3 format with all required fields)
+// Full settings arbitrary (v4 format with all required fields)
 const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   theme: themeArbitrary,
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArbitrary,
+  categories: fc.constant(DEFAULT_CATEGORIES),
+  categoriesVersion: fc.constant(1),
   updatedAt: validIsoDateArbitrary,
-  version: fc.integer({ min: 1, max: 10 }),
+  version: fc.integer({ min: 4, max: 10 }),
 })
 
-// Full v3 settings arbitrary (with version fixed to 3)
+// Full v4 settings arbitrary (with version fixed to 4)
 const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   theme: themeArbitrary,
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArbitrary,
+  categories: fc.constant(DEFAULT_CATEGORIES),
+  categoriesVersion: fc.constant(1),
   updatedAt: validIsoDateArbitrary,
-  version: fc.constant(3),
+  version: fc.constant(4),
 })
 
 describe("Sync Manager Settings Integration Properties", () => {
@@ -332,8 +337,10 @@ describe("Sync Manager Settings Integration Properties", () => {
             defaultPaymentMethod: undefined,
             autoSyncEnabled: false,
             autoSyncTiming: "on_launch",
+            categories: DEFAULT_CATEGORIES,
+            categoriesVersion: 1,
             updatedAt: new Date().toISOString(),
-            version: 1,
+            version: 4,
           }
 
           // Replace local with remote

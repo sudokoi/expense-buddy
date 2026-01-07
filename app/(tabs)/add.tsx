@@ -1,9 +1,8 @@
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useSettings } from "../../stores"
-import { CATEGORIES } from "../../constants/categories"
+import { useExpenses, useSettings, useCategories } from "../../stores"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
@@ -60,6 +59,7 @@ export default function AddExpenseScreen() {
     paymentMethodSectionExpanded,
     setPaymentMethodExpanded,
   } = useSettings()
+  const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
   // Track if user has interacted with payment method to prevent overwriting their choice
@@ -70,6 +70,16 @@ export default function AddExpenseScreen() {
   const [date, setDate] = useState(new Date())
   const [note, setNote] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
+
+  // Track if user has manually selected a category
+  const hasUserSelectedCategoryRef = useRef(false)
+
+  // Set default category to first in list when categories load (if user hasn't selected one)
+  useEffect(() => {
+    if (categories.length > 0 && !hasUserSelectedCategoryRef.current) {
+      setCategory(categories[0].label)
+    }
+  }, [categories])
 
   // Payment method state - tracks user's explicit selection (after interaction)
   const [paymentMethodType, setPaymentMethodType] = useState<
@@ -96,6 +106,7 @@ export default function AddExpenseScreen() {
 
   // Memoized category selection handler to prevent unnecessary re-renders
   const handleCategorySelect = useCallback((value: ExpenseCategory) => {
+    hasUserSelectedCategoryRef.current = true
     setCategory(value)
   }, [])
 
@@ -191,10 +202,15 @@ export default function AddExpenseScreen() {
     setAmount("")
     setNote("")
     setErrors({})
-    // Reset user interaction flag so default can apply again
+    // Reset user interaction flags so defaults can apply again
     hasUserInteractedRef.current = false
+    hasUserSelectedCategoryRef.current = false
     setPaymentMethodType(undefined)
     setPaymentMethodId("")
+    // Reset category to first in list
+    if (categories.length > 0) {
+      setCategory(categories[0].label)
+    }
     router.push("/(tabs)/history" as Href)
   }
 
@@ -260,15 +276,15 @@ export default function AddExpenseScreen() {
               Category
             </Label>
             <XStack style={layoutStyles.categoryRow}>
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat.value
+              {categories.map((cat) => {
+                const isSelected = category === cat.label
                 return (
                   <CategoryCard
-                    key={cat.value}
+                    key={cat.label}
                     isSelected={isSelected}
                     categoryColor={cat.color}
                     label={cat.label}
-                    onPress={() => handleCategorySelect(cat.value)}
+                    onPress={() => handleCategorySelect(cat.label)}
                     compact
                   />
                 )

@@ -1,12 +1,4 @@
-export type ExpenseCategory =
-  | "Food"
-  | "Groceries"
-  | "Transport"
-  | "Rent"
-  | "Utilities"
-  | "Entertainment"
-  | "Health"
-  | "Other"
+export type ExpenseCategory = string
 
 export type PaymentMethodType =
   | "Cash"

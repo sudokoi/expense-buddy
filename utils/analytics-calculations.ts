@@ -1,4 +1,4 @@
-import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
+import { Expense, PaymentMethodType } from "../types/expense"
 import {
   parseISO,
   subDays,
@@ -11,6 +11,9 @@ import {
 import { CATEGORY_COLORS } from "../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
+// Category color map type for dynamic categories
+export type CategoryColorMap = Record<string, string>
+
 // Time window type
 export type TimeWindow = "7d" | "15d" | "1m" | "all"
 
@@ -20,7 +23,7 @@ export interface PieChartDataItem {
   color: string
   text: string
   percentage: number
-  category: ExpenseCategory
+  category: string
 }
 
 // Payment method chart data item
@@ -45,7 +48,7 @@ export interface AnalyticsStatistics {
   totalSpending: number
   averageDaily: number
   highestCategory: {
-    category: ExpenseCategory
+    category: string
     amount: number
   } | null
   highestDay: {
@@ -142,7 +145,7 @@ export function filterExpensesByTimeWindow(
  */
 export function filterExpensesByCategories(
   expenses: Expense[],
-  selectedCategories: ExpenseCategory[]
+  selectedCategories: string[]
 ): Expense[] {
   if (selectedCategories.length === 0) {
     return expenses
@@ -151,9 +154,21 @@ export function filterExpensesByCategories(
 }
 
 /**
- * Get category color
+ * Get category color from a color map with fallback
+ * Uses the provided color map (from dynamic categories) or falls back to static CATEGORY_COLORS
+ * @param category - The category label
+ * @param categoryColors - Optional color map from dynamic categories
+ * @returns The hex color for the category
  */
-function getCategoryColor(category: ExpenseCategory): string {
+export function getCategoryColor(
+  category: string,
+  categoryColors?: CategoryColorMap
+): string {
+  // First try the provided color map (dynamic categories)
+  if (categoryColors && categoryColors[category]) {
+    return categoryColors[category]
+  }
+  // Fall back to static CATEGORY_COLORS for backward compatibility
   return CATEGORY_COLORS[category] ?? "#6b7280"
 }
 
@@ -161,10 +176,15 @@ function getCategoryColor(category: ExpenseCategory): string {
  * Aggregate expenses by category for pie chart
  * Returns pie chart data with category totals, colors, and percentages
  * Excludes categories with zero expenses
+ * @param expenses - Array of expenses to aggregate
+ * @param categoryColors - Optional color map from dynamic categories
  */
-export function aggregateByCategory(expenses: Expense[]): PieChartDataItem[] {
+export function aggregateByCategory(
+  expenses: Expense[],
+  categoryColors?: CategoryColorMap
+): PieChartDataItem[] {
   // Group and sum by category
-  const categoryTotals = new Map<ExpenseCategory, number>()
+  const categoryTotals = new Map<string, number>()
 
   for (const expense of expenses) {
     const current = categoryTotals.get(expense.category) ?? 0
@@ -185,7 +205,7 @@ export function aggregateByCategory(expenses: Expense[]): PieChartDataItem[] {
     if (amount > 0) {
       pieData.push({
         value: amount,
-        color: getCategoryColor(category),
+        color: getCategoryColor(category, categoryColors),
         text: category,
         percentage: (amount / total) * 100,
         category,
@@ -302,13 +322,13 @@ export function calculateStatistics(
   const averageDaily = daysInPeriod > 0 ? totalSpending / daysInPeriod : 0
 
   // Find highest spending category
-  const categoryTotals = new Map<ExpenseCategory, number>()
+  const categoryTotals = new Map<string, number>()
   for (const expense of expenses) {
     const current = categoryTotals.get(expense.category) ?? 0
     categoryTotals.set(expense.category, current + Math.abs(expense.amount))
   }
 
-  let highestCategory: { category: ExpenseCategory; amount: number } | null = null
+  let highestCategory: { category: string; amount: number } | null = null
   for (const [category, amount] of categoryTotals) {
     if (!highestCategory || amount > highestCategory.amount) {
       highestCategory = { category, amount }

@@ -5,14 +5,17 @@
 import { createStore } from "@xstate/store"
 import { ThemePreference, AppSettings } from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
+import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
+  categories: DEFAULT_CATEGORIES,
+  categoriesVersion: 1,
   updatedAt: new Date().toISOString(),
-  version: 3,
+  version: 4,
 }
 
 // Create a fresh store for each test to avoid state pollution
@@ -135,8 +138,10 @@ describe("Settings Store", () => {
         syncSettings: false,
         autoSyncEnabled: false,
         autoSyncTiming: "on_launch",
+        categories: DEFAULT_CATEGORIES,
+        categoriesVersion: 1,
         updatedAt: new Date().toISOString(),
-        version: 3,
+        version: 4,
       }
 
       store.trigger.loadSettings({ settings: newSettings, hasUnsyncedChanges: true })
@@ -229,8 +234,10 @@ describe("Settings Store", () => {
         syncSettings: true,
         autoSyncEnabled: true,
         autoSyncTiming: "on_change",
+        categories: DEFAULT_CATEGORIES,
+        categoriesVersion: 1,
         updatedAt: new Date().toISOString(),
-        version: 3,
+        version: 4,
         defaultPaymentMethod: "UPI",
       }
 

@@ -113,7 +113,7 @@ describe("Expense Validation", () => {
   })
 
   describe("Category validation", () => {
-    it("should accept all valid categories", () => {
+    it("should accept any non-empty category string (custom categories supported)", () => {
       const categories = [
         "Food",
         "Groceries",
@@ -122,6 +122,8 @@ describe("Expense Validation", () => {
         "Entertainment",
         "Health",
         "Other",
+        "CustomCategory",
+        "My Custom Category",
       ]
 
       for (const category of categories) {
@@ -133,13 +135,16 @@ describe("Expense Validation", () => {
       }
     })
 
-    it("should reject invalid category", () => {
+    it("should reject empty category", () => {
       const result = validateExpenseForm({
         amount: "10",
-        category: "InvalidCategory",
+        category: "",
       })
 
       expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.errors.category).toBe("Category is required")
+      }
     })
   })
 

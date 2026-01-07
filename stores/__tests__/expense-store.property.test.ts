@@ -24,12 +24,7 @@
 
 import fc from "fast-check"
 import { createStore } from "@xstate/store"
-import {
-  Expense,
-  ExpenseCategory,
-  PaymentMethod,
-  PaymentMethodType,
-} from "../../types/expense"
+import { Expense, PaymentMethod, PaymentMethodType } from "../../types/expense"
 import { SyncNotification } from "../../services/sync-manager"
 
 // Create a fresh store for each test
@@ -82,12 +77,27 @@ function createTestExpenseStore(initialExpenses: Expense[] = []) {
         ...context,
         syncNotification: null,
       }),
+
+      reassignExpensesToOther: (context, event: { fromCategory: string }) => {
+        const now = new Date().toISOString()
+        const newExpenses = context.expenses.map((expense) => {
+          if (expense.category === event.fromCategory) {
+            return {
+              ...expense,
+              category: "Other",
+              updatedAt: now,
+            }
+          }
+          return expense
+        })
+        return { ...context, expenses: newExpenses }
+      },
     },
   })
 }
 
 // Arbitrary generators
-const categoryArb = fc.constantFrom<ExpenseCategory>(
+const categoryArb = fc.constantFrom(
   "Food",
   "Groceries",
   "Transport",
@@ -388,6 +398,125 @@ describe("Expense Store Properties", () => {
 
           return store.getSnapshot().context.syncNotification === null
         }),
+        { numRuns: 100 }
+      )
+    })
+  })
+
+  /**
+   * Property 9: Expense Reassignment on Category Delete
+   * For any set of expenses where some have a specific category, after calling
+   * reassignExpensesToOther, ALL expenses that previously had that category
+   * SHALL have category "Other".
+   */
+  describe("Property 9: Expense Reassignment on Category Delete", () => {
+    it("all expenses with deleted category SHALL be reassigned to Other", () => {
+      fc.assert(
+        fc.property(
+          fc
+            .array(expenseArb, { minLength: 1, maxLength: 10 })
+            .map((expenses) => expenses.map((e, i) => ({ ...e, id: `expense-${i}` }))),
+          categoryArb,
+          (expenses, targetCategory) => {
+            // Ensure at least one expense has the target category
+            const expensesWithTarget = expenses.map((e, i) =>
+              i === 0 ? { ...e, category: targetCategory } : e
+            )
+
+            const store = createTestExpenseStore(expensesWithTarget)
+
+            store.trigger.reassignExpensesToOther({ fromCategory: targetCategory })
+
+            const { expenses: resultExpenses } = store.getSnapshot().context
+
+            // All expenses that had the target category should now be "Other"
+            const originalWithTarget = expensesWithTarget.filter(
+              (e) => e.category === targetCategory
+            )
+            const reassignedCorrectly = originalWithTarget.every((original) => {
+              const result = resultExpenses.find((e) => e.id === original.id)
+              return result !== undefined && result.category === "Other"
+            })
+
+            // Expenses that didn't have the target category should be unchanged
+            const originalWithoutTarget = expensesWithTarget.filter(
+              (e) => e.category !== targetCategory
+            )
+            const unchangedCorrectly = originalWithoutTarget.every((original) => {
+              const result = resultExpenses.find((e) => e.id === original.id)
+              return result !== undefined && result.category === original.category
+            })
+
+            return reassignedCorrectly && unchangedCorrectly
+          }
+        ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("reassigned expenses SHALL have updated updatedAt timestamp", () => {
+      // Use past-only timestamps to ensure the new timestamp is always newer
+      const pastIsoDateArb = fc
+        .integer({ min: 1577836800000, max: Date.now() - 60000 }) // At least 1 minute in the past
+        .map((ms) => new Date(ms).toISOString())
+
+      const pastExpenseArb: fc.Arbitrary<Expense> = fc.record({
+        id: fc.string({ minLength: 1, maxLength: 20 }).map((s) => `expense-${s}`),
+        amount: fc.integer({ min: 1, max: 100000000 }).map((n) => n / 100),
+        category: categoryArb,
+        note: fc.string({ minLength: 0, maxLength: 200 }),
+        date: dateStringArb,
+        paymentMethod: optionalPaymentMethodArb,
+        createdAt: pastIsoDateArb,
+        updatedAt: pastIsoDateArb,
+      })
+
+      fc.assert(
+        fc.property(pastExpenseArb, categoryArb, (expense, targetCategory) => {
+          const expenseWithTarget = { ...expense, category: targetCategory }
+          const originalUpdatedAt = expenseWithTarget.updatedAt
+
+          const store = createTestExpenseStore([expenseWithTarget])
+
+          store.trigger.reassignExpensesToOther({ fromCategory: targetCategory })
+
+          const { expenses } = store.getSnapshot().context
+          const result = expenses.find((e) => e.id === expense.id)
+
+          // updatedAt should be different (newer) than original
+          return (
+            result !== undefined &&
+            result.updatedAt !== originalUpdatedAt &&
+            new Date(result.updatedAt) >= new Date(originalUpdatedAt)
+          )
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("expenses already with Other category SHALL remain unchanged", () => {
+      fc.assert(
+        fc.property(
+          expenseArb,
+          categoryArb.filter((c) => c !== "Other"),
+          (expense, targetCategory) => {
+            const expenseWithOther = { ...expense, category: "Other" }
+
+            const store = createTestExpenseStore([expenseWithOther])
+
+            store.trigger.reassignExpensesToOther({ fromCategory: targetCategory })
+
+            const { expenses } = store.getSnapshot().context
+            const result = expenses.find((e) => e.id === expense.id)
+
+            // Expense should remain unchanged
+            return (
+              result !== undefined &&
+              result.category === "Other" &&
+              result.updatedAt === expenseWithOther.updatedAt
+            )
+          }
+        ),
         { numRuns: 100 }
       )
     })

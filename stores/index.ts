@@ -2,7 +2,7 @@
 export { StoreProvider, useStoreContext } from "./store-provider"
 
 // Hooks
-export { useExpenses, useSettings, useNotifications } from "./hooks"
+export { useExpenses, useSettings, useNotifications, useCategories } from "./hooks"
 
 // Store instances (for direct access if needed)
 export {
@@ -14,6 +14,8 @@ export {
 export {
   settingsStore,
   selectEffectiveTheme,
+  selectCategories,
+  selectCategoryByLabel,
   initializeSettingsStore,
 } from "./settings-store"
 export { notificationStore } from "./notification-store"

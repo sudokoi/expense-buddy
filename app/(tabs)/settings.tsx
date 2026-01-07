@@ -16,7 +16,7 @@ import { testConnection, SyncConfig, syncDown } from "../../services/sync-manage
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
-import { useExpenses, useNotifications, useSettings } from "../../stores"
+import { useExpenses, useNotifications, useSettings, useCategories } from "../../stores"
 import {
   useSyncMachine,
   TrueConflict,
@@ -34,8 +34,11 @@ import {
   ThemeSelector,
   SettingsSection,
   DefaultPaymentMethodSelector,
+  CategorySection,
+  CategoryFormModal,
 } from "../../components/ui"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
+import { Category } from "../../types/category"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -97,8 +100,21 @@ const errorColor = SEMANTIC_COLORS.error
 const primaryColor = ACCENT_COLORS.primary
 
 export default function SettingsScreen() {
-  const { state, replaceAllExpenses, clearPendingChangesAfterSync } = useExpenses()
+  const {
+    state,
+    replaceAllExpenses,
+    clearPendingChangesAfterSync,
+    reassignExpensesToOther,
+  } = useExpenses()
   const { addNotification } = useNotifications()
+  const {
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    reorderCategories,
+    replaceCategories,
+  } = useCategories()
 
   // XState sync machine for the main sync flow
   const syncMachine = useSyncMachine()
@@ -134,6 +150,10 @@ export default function SettingsScreen() {
   // Update check state
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
+
+  // Category form modal state
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
 
   // GitHub config validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
@@ -310,6 +330,97 @@ export default function SettingsScreen() {
     [setAutoSyncTiming]
   )
 
+  // Category CRUD handlers
+  const handleAddCategory = useCallback(() => {
+    setEditingCategory(undefined)
+    setCategoryFormOpen(true)
+  }, [])
+
+  const handleEditCategory = useCallback((category: Category) => {
+    setEditingCategory(category)
+    setCategoryFormOpen(true)
+  }, [])
+
+  const handleCategoryFormClose = useCallback(() => {
+    setCategoryFormOpen(false)
+    setEditingCategory(undefined)
+  }, [])
+
+  const handleCategorySave = useCallback(
+    (categoryData: Omit<Category, "order" | "updatedAt">) => {
+      if (editingCategory) {
+        // Edit mode - update existing category
+        updateCategory(editingCategory.label, {
+          label: categoryData.label,
+          icon: categoryData.icon,
+          color: categoryData.color,
+          isDefault: categoryData.isDefault,
+        })
+        addNotification(`Category "${categoryData.label}" updated`, "success")
+      } else {
+        // Add mode - create new category
+        addCategory(categoryData)
+        addNotification(`Category "${categoryData.label}" added`, "success")
+      }
+    },
+    [editingCategory, updateCategory, addCategory, addNotification]
+  )
+
+  const handleCategoryReorder = useCallback(
+    (labels: string[]) => {
+      reorderCategories(labels)
+    },
+    [reorderCategories]
+  )
+
+  // Get existing category labels for uniqueness validation
+  const existingCategoryLabels = useMemo(
+    () => categories.map((c) => c.label),
+    [categories]
+  )
+
+  // Get expense count for a category (for delete confirmation)
+  const getExpenseCountForCategory = useCallback(
+    (label: string): number => {
+      return state.expenses.filter((e) => e.category === label && !e.deletedAt).length
+    },
+    [state.expenses]
+  )
+
+  // Handle category deletion with confirmation and expense reassignment
+  const handleCategoryDelete = useCallback(
+    (label: string) => {
+      // Prevent deletion of "Other" category
+      if (label === "Other") {
+        addNotification('The "Other" category cannot be deleted', "error")
+        return
+      }
+
+      const expenseCount = getExpenseCountForCategory(label)
+      const message =
+        expenseCount > 0
+          ? `Delete "${label}"? ${expenseCount} expense${expenseCount === 1 ? "" : "s"} will be reassigned to "Other".`
+          : `Delete "${label}"?`
+
+      Alert.alert("Delete Category", message, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            // Reassign expenses to "Other" before deleting the category
+            if (expenseCount > 0) {
+              reassignExpensesToOther(label)
+            }
+            deleteCategory(label)
+            addNotification(`Category "${label}" deleted`, "success")
+          },
+        },
+      ])
+    },
+    [getExpenseCountForCategory, reassignExpensesToOther, deleteCategory, addNotification]
+  )
+
   // Calculate pending count for display on sync button
   const pendingCount = useMemo(() => {
     const expenseChanges =
@@ -459,6 +570,11 @@ export default function SettingsScreen() {
           if (result.mergeResult && result.mergeResult.merged.length > 0) {
             replaceAllExpenses(result.mergeResult.merged)
           }
+
+          // Apply merged categories from sync if available
+          if (result.syncResult?.mergedCategories) {
+            replaceCategories(result.syncResult.mergedCategories)
+          }
         },
         onInSync: () => {
           addNotification("Already in sync - no changes needed", "success")
@@ -477,6 +593,7 @@ export default function SettingsScreen() {
     clearPendingChangesAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
+    replaceCategories,
   ])
 
   return (
@@ -502,6 +619,25 @@ export default function SettingsScreen() {
             />
           </YStack>
         </SettingsSection>
+
+        {/* CATEGORIES Section */}
+        <CategorySection
+          categories={categories}
+          onAdd={handleAddCategory}
+          onEdit={handleEditCategory}
+          onDelete={handleCategoryDelete}
+          onReorder={handleCategoryReorder}
+          getExpenseCount={getExpenseCountForCategory}
+        />
+
+        {/* Category Form Modal */}
+        <CategoryFormModal
+          open={categoryFormOpen}
+          onClose={handleCategoryFormClose}
+          category={editingCategory}
+          existingLabels={existingCategoryLabels}
+          onSave={handleCategorySave}
+        />
 
         {/* GITHUB SYNC Section */}
         <SettingsSection title="GITHUB SYNC">

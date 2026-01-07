@@ -1,16 +1,5 @@
 import { z } from "zod"
-import { ExpenseCategory, PaymentMethodType } from "../types/expense"
-
-// Define category values as a tuple for Zod enum
-const CATEGORY_VALUES: [ExpenseCategory, ...ExpenseCategory[]] = [
-  "Food",
-  "Groceries",
-  "Transport",
-  "Utilities",
-  "Entertainment",
-  "Health",
-  "Other",
-]
+import { PaymentMethodType } from "../types/expense"
 
 // Define payment method values as a tuple for Zod enum
 const PAYMENT_METHOD_VALUES: [PaymentMethodType, ...PaymentMethodType[]] = [
@@ -25,6 +14,7 @@ const PAYMENT_METHOD_VALUES: [PaymentMethodType, ...PaymentMethodType[]] = [
 /**
  * Zod schema for expense form validation
  * Used by both add and edit flows for consistent validation
+ * Category is now a string to support custom categories
  */
 export const expenseFormSchema = z.object({
   amount: z
@@ -36,7 +26,7 @@ export const expenseFormSchema = z.object({
     .refine((val) => parseFloat(val) > 0, {
       message: "Amount must be positive",
     }),
-  category: z.enum(CATEGORY_VALUES),
+  category: z.string().min(1, "Category is required"),
   note: z.string().optional(),
   paymentMethodType: z.enum(PAYMENT_METHOD_VALUES).optional(),
   paymentMethodId: z.string().optional(),

@@ -5,7 +5,7 @@ import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useNotifications } from "../../stores"
+import { useExpenses, useNotifications, useSettings } from "../../stores"
 import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
@@ -153,6 +153,7 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
+  const { syncConfig } = useSettings()
   const insets = useSafeAreaInsets()
   const [editingExpense, setEditingExpense] = React.useState<{
     id: string
@@ -329,10 +330,10 @@ export default function HistoryScreen() {
   // Memoized keyExtractor
   const keyExtractor = React.useCallback((item: Expense) => item.id, [])
 
-  // Memoized ListFooterComponent
+  // Memoized ListFooterComponent - only show if GitHub is configured and there's more data
   const ListFooterComponent = React.useMemo(
     () =>
-      hasMore ? (
+      hasMore && syncConfig ? (
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
             size="$4"
@@ -344,7 +345,7 @@ export default function HistoryScreen() {
           </Button>
         </YStack>
       ) : null,
-    [hasMore, handleLoadMore, isLoadingMore]
+    [hasMore, syncConfig, handleLoadMore, isLoadingMore]
   )
 
   // Memoized content container style
@@ -418,7 +419,7 @@ export default function HistoryScreen() {
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
           <Dialog.Content bordered elevate key="content" gap="$4">
-            <Dialog.Title>Delete Expense</Dialog.Title>
+            <Dialog.Title size="$6">Delete Expense</Dialog.Title>
             <Dialog.Description>
               Are you sure you want to delete this expense? This action cannot be undone.
             </Dialog.Description>
@@ -454,7 +455,7 @@ export default function HistoryScreen() {
             maxHeight="80%"
             gap="$4"
           >
-            <Dialog.Title>Edit Expense</Dialog.Title>
+            <Dialog.Title size="$6">Edit Expense</Dialog.Title>
             <Dialog.Description>Update the expense details</Dialog.Description>
 
             <KeyboardAwareScrollView

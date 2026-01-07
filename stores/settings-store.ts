@@ -21,6 +21,8 @@ import {
   clearSyncConfig as clearSyncConfigFromStorage,
   loadSyncConfig as loadSyncConfigFromStorage,
 } from "../services/sync-manager"
+import { Category } from "../types/category"
+import { getRandomCategoryColor } from "../constants/category-colors"
 
 // AsyncStorage key for payment method section expanded state
 const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
@@ -318,6 +320,195 @@ export const settingsStore = createStore({
         paymentMethodSectionExpanded: event.expanded,
       }
     },
+
+    // Category management actions
+
+    /**
+     * Add a new category with auto-assigned order and color
+     */
+    addCategory: (
+      context,
+      event: { category: Omit<Category, "order" | "updatedAt"> },
+      enqueue
+    ) => {
+      const existingColors = context.settings.categories.map((c) => c.color)
+      const maxOrder = Math.max(...context.settings.categories.map((c) => c.order), -1)
+
+      const newCategory: Category = {
+        ...event.category,
+        // Use provided color or assign a random one
+        color: event.category.color || getRandomCategoryColor(existingColors),
+        order: maxOrder + 1,
+        updatedAt: new Date().toISOString(),
+      }
+
+      const newCategories = [...context.settings.categories, newCategory]
+      const newSettings = { ...context.settings, categories: newCategories }
+      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    /**
+     * Update an existing category by label
+     */
+    updateCategory: (
+      context,
+      event: { label: string; updates: Partial<Omit<Category, "updatedAt">> },
+      enqueue
+    ) => {
+      const newCategories = context.settings.categories.map((cat) => {
+        if (cat.label === event.label) {
+          return {
+            ...cat,
+            ...event.updates,
+            updatedAt: new Date().toISOString(),
+          }
+        }
+        return cat
+      })
+
+      const newSettings = { ...context.settings, categories: newCategories }
+      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    /**
+     * Delete a category by label
+     * Note: "Other" category cannot be deleted (should be checked by caller)
+     */
+    deleteCategory: (context, event: { label: string }, enqueue) => {
+      // Prevent deletion of "Other" category
+      if (event.label === "Other") {
+        return context
+      }
+
+      const newCategories = context.settings.categories.filter(
+        (cat) => cat.label !== event.label
+      )
+
+      const newSettings = { ...context.settings, categories: newCategories }
+      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    /**
+     * Reorder categories by providing an array of labels in the new order
+     */
+    reorderCategories: (context, event: { labels: string[] }, enqueue) => {
+      // Create a map of label to category for quick lookup
+      const categoryMap = new Map(
+        context.settings.categories.map((cat) => [cat.label, cat])
+      )
+
+      // Reorder categories based on the provided labels array
+      const newCategories = event.labels
+        .map((label, index) => {
+          const cat = categoryMap.get(label)
+          if (cat) {
+            return {
+              ...cat,
+              order: index,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+          return null
+        })
+        .filter((cat): cat is Category => cat !== null)
+
+      // Add any categories not in the labels array (shouldn't happen, but safety)
+      const labelsSet = new Set(event.labels)
+      const missingCategories = context.settings.categories
+        .filter((cat) => !labelsSet.has(cat.label))
+        .map((cat, index) => ({
+          ...cat,
+          order: newCategories.length + index,
+          updatedAt: new Date().toISOString(),
+        }))
+
+      const finalCategories = [...newCategories, ...missingCategories]
+      const newSettings = { ...context.settings, categories: finalCategories }
+      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    /**
+     * Replace all categories (used for sync)
+     */
+    replaceCategories: (context, event: { categories: Category[] }, enqueue) => {
+      const newSettings = { ...context.settings, categories: event.categories }
+      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
   },
 })
 
@@ -341,6 +532,24 @@ export const selectEffectiveTheme = (context: SettingsContext): "light" | "dark"
  */
 export const selectHasUnsyncedChanges = (context: SettingsContext): boolean => {
   return context.settingsSyncState === "modified"
+}
+
+/**
+ * Selector to get categories sorted by order
+ */
+export const selectCategories = (context: SettingsContext): Category[] => {
+  return [...context.settings.categories].sort((a, b) => a.order - b.order)
+}
+
+/**
+ * Selector to get a category by label (case-insensitive)
+ */
+export const selectCategoryByLabel = (
+  context: SettingsContext,
+  label: string
+): Category | undefined => {
+  const lowerLabel = label.toLowerCase()
+  return context.settings.categories.find((cat) => cat.label.toLowerCase() === lowerLabel)
 }
 
 // Listen for system color scheme changes

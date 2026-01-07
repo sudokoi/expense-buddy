@@ -7,6 +7,7 @@
 
 import fc from "fast-check"
 import { ThemePreference, AppSettings } from "./settings-manager"
+import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 
 /**
  * Resolves the effective theme based on preference and system color scheme
@@ -89,15 +90,17 @@ const systemColorSchemeArb = fc.constantFrom<"light" | "dark" | null | undefined
 
 const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_change")
 
-const appSettingsArb = fc.record({
+const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
+  categories: fc.constant(DEFAULT_CATEGORIES),
+  categoriesVersion: fc.constant(1),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 1, max: 10 }),
+  version: fc.integer({ min: 4, max: 10 }),
 })
 
 // Operation types for change tracking simulation

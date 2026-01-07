@@ -3,6 +3,8 @@ import * as SecureStore from "expo-secure-store"
 import { Platform } from "react-native"
 import { computeContentHash } from "./hash-storage"
 import { PaymentMethodType } from "../types/expense"
+import { Category } from "../types/category"
+import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -32,6 +34,8 @@ export interface AppSettings {
   defaultPaymentMethod?: PaymentMethodType // Optional default payment method
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
+  categories: Category[] // User-defined expense categories
+  categoriesVersion: number // Schema version for category migrations
   updatedAt: string // ISO timestamp
   version: number // Schema version for migrations
 }
@@ -45,8 +49,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultPaymentMethod: undefined,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
+  categories: DEFAULT_CATEGORIES,
+  categoriesVersion: 1,
   updatedAt: new Date().toISOString(),
-  version: 3,
+  version: 4,
 }
 
 // Helper functions for secure storage with platform check (same as sync-manager.ts)
@@ -103,6 +109,19 @@ async function migrateV2ToV3(settings: AppSettings): Promise<AppSettings> {
 }
 
 /**
+ * Migrate settings from version 3 to version 4
+ * Adds categories field with default categories
+ */
+function migrateV3ToV4(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    categories: DEFAULT_CATEGORIES,
+    categoriesVersion: 1,
+    version: 4,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -119,6 +138,12 @@ export async function loadSettings(): Promise<AppSettings> {
         await saveSettings(parsed)
       }
 
+      // Migrate from v3 to v4 (add categories)
+      if (parsed.version < 4) {
+        parsed = migrateV3ToV4(parsed)
+        await saveSettings(parsed)
+      }
+
       // Ensure all fields have values (for missing fields from older versions)
       const settings: AppSettings = {
         theme: parsed.theme ?? DEFAULT_SETTINGS.theme,
@@ -126,6 +151,8 @@ export async function loadSettings(): Promise<AppSettings> {
         defaultPaymentMethod: parsed.defaultPaymentMethod,
         autoSyncEnabled: parsed.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
         autoSyncTiming: parsed.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
+        categories: parsed.categories ?? DEFAULT_CATEGORIES,
+        categoriesVersion: parsed.categoriesVersion ?? DEFAULT_SETTINGS.categoriesVersion,
         updatedAt: parsed.updatedAt ?? new Date().toISOString(),
         version: parsed.version ?? DEFAULT_SETTINGS.version,
       }
@@ -219,9 +246,23 @@ export async function saveSettingsHash(hash: string): Promise<void> {
  */
 export function computeSettingsHash(settings: AppSettings): string {
   // Create a stable JSON representation (sorted keys)
+  // Categories are sorted by label for consistent hashing
+  const sortedCategories = [...settings.categories].sort((a, b) =>
+    a.label.localeCompare(b.label)
+  )
   const stableJson = JSON.stringify({
     autoSyncEnabled: settings.autoSyncEnabled,
     autoSyncTiming: settings.autoSyncTiming,
+    categories: sortedCategories.map((c) => ({
+      color: c.color,
+      icon: c.icon,
+      isDefault: c.isDefault,
+      label: c.label,
+      order: c.order,
+      // Note: updatedAt is intentionally excluded from hash
+      // so that timestamp changes alone don't trigger re-sync
+    })),
+    categoriesVersion: settings.categoriesVersion,
     defaultPaymentMethod: settings.defaultPaymentMethod,
     syncSettings: settings.syncSettings,
     theme: settings.theme,

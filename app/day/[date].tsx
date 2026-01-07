@@ -1,9 +1,8 @@
 import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
-import { useExpenses } from "../../stores"
+import { useExpenses, useCategories } from "../../stores"
 import { format, parseISO } from "date-fns"
-import { CATEGORIES } from "../../constants/categories"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
 import {
@@ -16,6 +15,7 @@ import {
 } from "../../components/ui"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import type { Expense } from "../../types/expense"
+import type { Category } from "../../types/category"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -31,25 +31,37 @@ const layoutStyles = {
   } as TextStyle,
 }
 
-// Memoized helper to get category info
-const getCategoryInfo = (catValue: string) => {
-  const cat = CATEGORIES.find((c) => c.value === catValue)
-  return cat ? { color: cat.color, label: cat.label } : { color: "gray", label: "Other" }
+// Default color for categories that no longer exist
+const DEFAULT_CATEGORY_COLOR = "#C4B7C9"
+
+// Helper to get category info from categories array
+// Returns the category if found, or a fallback with the label directly
+const getCategoryInfo = (
+  catLabel: string,
+  categories: Category[]
+): { color: string; label: string } => {
+  const cat = categories.find((c) => c.label === catLabel)
+  if (cat) {
+    return { color: cat.color, label: cat.label }
+  }
+  // Category no longer exists - show the label directly with default color
+  return { color: DEFAULT_CATEGORY_COLOR, label: catLabel }
 }
 
 // Memoized expense item component
 interface DayExpenseItemProps {
   expense: Expense
+  categoryInfo: { color: string; label: string }
   onDelete: (id: string) => void
   onEdit: (expense: Expense) => void
 }
 
 const DayExpenseItem = React.memo(function DayExpenseItem({
   expense,
+  categoryInfo,
   onDelete,
   onEdit,
 }: DayExpenseItemProps) {
-  const categoryInfo = getCategoryInfo(expense.category)
   const paymentMethodDisplay = formatPaymentMethodDisplay(expense.paymentMethod)
 
   return (
@@ -97,6 +109,7 @@ const DayExpenseItem = React.memo(function DayExpenseItem({
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense, editExpense } = useExpenses()
+  const { categories } = useCategories()
 
   // Edit modal state
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
@@ -111,6 +124,12 @@ export default function DayExpensesScreen() {
       return expenseDate === date
     })
   }, [state.activeExpenses, date])
+
+  // Memoize category info lookup for all expenses
+  const getCategoryInfoForExpense = useCallback(
+    (catLabel: string) => getCategoryInfo(catLabel, categories),
+    [categories]
+  )
 
   // Memoized delete handler
   const handleDelete = useCallback(
@@ -166,6 +185,7 @@ export default function DayExpensesScreen() {
           <DayExpenseItem
             key={expense.id}
             expense={expense}
+            categoryInfo={getCategoryInfoForExpense(expense.category)}
             onDelete={handleDelete}
             onEdit={handleEdit}
           />

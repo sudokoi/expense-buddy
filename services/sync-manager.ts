@@ -39,6 +39,7 @@ import {
   MergeResult,
   TrueConflict,
 } from "./merge-engine"
+import { mergeCategories } from "./category-merger"
 
 const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
@@ -1151,6 +1152,8 @@ export interface GitStyleSyncResult {
   settingsSkipped?: boolean
   /** Error message if settings sync failed */
   settingsError?: string
+  /** Merged categories from local and remote (caller should apply to store) */
+  mergedCategories?: import("../types/category").Category[]
 }
 
 /**
@@ -1343,20 +1346,57 @@ export async function gitStyleSync(
     }
 
     // =========================================================================
-    // Settings sync: Check if settings should be included
+    // Settings sync: Download remote, merge categories, then push merged result
     // =========================================================================
     let shouldSyncSettings = false
     let newSettingsHash: string | undefined
+    let mergedCategories: import("../types/category").Category[] | undefined
+    let settingsToSync: AppSettings | undefined
 
     if (syncSettingsEnabled && settings) {
-      // Compute hash of current settings
-      newSettingsHash = computeSettingsHash(settings)
+      // Download remote settings to merge categories
+      let remoteSettings: AppSettings | undefined
+      try {
+        const remoteSettingsResult = await downloadSettingsFile(
+          config.token,
+          config.repo,
+          config.branch
+        )
+        if (remoteSettingsResult) {
+          remoteSettings = JSON.parse(remoteSettingsResult.content) as AppSettings
+        }
+      } catch (e) {
+        console.warn("Failed to download remote settings for merge:", e)
+        // Continue without remote settings - will just push local
+      }
+
+      // Merge categories if both local and remote have them
+      if (remoteSettings?.categories && settings.categories) {
+        const categoryMergeResult = mergeCategories(
+          settings.categories,
+          remoteSettings.categories
+        )
+        mergedCategories = categoryMergeResult.merged
+
+        // Create merged settings with merged categories
+        settingsToSync = {
+          ...settings,
+          categories: mergedCategories,
+          updatedAt: new Date().toISOString(),
+        }
+      } else {
+        // No remote categories or no local categories - use local settings as-is
+        settingsToSync = settings
+      }
+
+      // Compute hash of settings to sync
+      newSettingsHash = computeSettingsHash(settingsToSync)
       const storedSettingsHash = await getSettingsHash()
 
       // Only sync if settings have changed (hash-based skip)
       if (storedSettingsHash !== newSettingsHash) {
         shouldSyncSettings = true
-        const settingsContent = JSON.stringify(settings, null, 2)
+        const settingsContent = JSON.stringify(settingsToSync, null, 2)
         // Add settings to the batch upload
         filesToUpload.push({
           path: "settings.json",
@@ -1390,6 +1430,7 @@ export async function gitStyleSync(
         filesDeleted: 0,
         settingsSynced: false,
         settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
+        mergedCategories,
       }
     }
 
@@ -1483,6 +1524,7 @@ export async function gitStyleSync(
       commitTimestamp,
       settingsSynced: shouldSyncSettings,
       settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
+      mergedCategories,
     }
   } catch (error) {
     return {

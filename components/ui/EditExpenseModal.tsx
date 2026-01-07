@@ -8,13 +8,13 @@ import {
   PaymentMethodType,
   PaymentMethod,
 } from "../../types/expense"
-import { CATEGORIES } from "../../constants/categories"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { validateExpenseForm } from "../../utils/expense-validation"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { useCategories } from "../../stores"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -64,6 +64,9 @@ export function EditExpenseModal({
   onClose,
   onSave,
 }: EditExpenseModalProps) {
+  // Get categories from store (sorted by order)
+  const { categories } = useCategories()
+
   // Form state - pre-populated from expense
   const [amount, setAmount] = useState(expense.amount.toString())
   const [category, setCategory] = useState<ExpenseCategory>(expense.category)
@@ -246,15 +249,15 @@ export function EditExpenseModal({
               Category
             </Label>
             <XStack style={layoutStyles.categoryRow}>
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat.value
+              {categories.map((cat) => {
+                const isSelected = category === cat.label
                 return (
                   <CategoryCard
-                    key={cat.value}
+                    key={cat.label}
                     isSelected={isSelected}
                     categoryColor={cat.color}
                     label={cat.label}
-                    onPress={() => handleCategorySelect(cat.value)}
+                    onPress={() => handleCategorySelect(cat.label)}
                     compact
                   />
                 )

@@ -1,12 +1,12 @@
 import { useMemo } from "react"
-import { useExpenses } from "../stores"
-import { ExpenseCategory } from "../types/expense"
+import { useExpenses, useCategories } from "../stores"
 import {
   TimeWindow,
   PieChartDataItem,
   PaymentMethodChartDataItem,
   LineChartDataItem,
   AnalyticsStatistics,
+  CategoryColorMap,
   filterExpensesByTimeWindow,
   filterExpensesByCategories,
   aggregateByCategory,
@@ -38,11 +38,21 @@ export interface AnalyticsData {
  */
 export function useAnalyticsData(
   timeWindow: TimeWindow,
-  selectedCategories: ExpenseCategory[]
+  selectedCategories: string[]
 ): AnalyticsData {
   const { state } = useExpenses()
+  const { categories } = useCategories()
   // Use activeExpenses (excludes soft-deleted) for analytics
   const { activeExpenses, isLoading } = state
+
+  // Memoized: Build category color map from dynamic categories
+  const categoryColorMap = useMemo((): CategoryColorMap => {
+    const colorMap: CategoryColorMap = {}
+    for (const category of categories) {
+      colorMap[category.label] = category.color
+    }
+    return colorMap
+  }, [categories])
 
   // Memoized: Filter expenses by time window
   const timeFilteredExpenses = useMemo(() => {
@@ -54,10 +64,10 @@ export function useAnalyticsData(
     return filterExpensesByCategories(timeFilteredExpenses, selectedCategories)
   }, [timeFilteredExpenses, selectedCategories])
 
-  // Memoized: Pie chart data aggregated by category
+  // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
-    return aggregateByCategory(filteredExpenses)
-  }, [filteredExpenses])
+    return aggregateByCategory(filteredExpenses, categoryColorMap)
+  }, [filteredExpenses, categoryColorMap])
 
   // Memoized: Payment method chart data aggregated by payment method
   const paymentMethodChartData = useMemo(() => {

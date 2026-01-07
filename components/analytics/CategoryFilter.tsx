@@ -1,13 +1,12 @@
-import { memo, useCallback } from "react"
+import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
-import { ExpenseCategory } from "../../types/expense"
-import { CATEGORIES } from "../../constants/categories"
-import { getColorValue } from "../../tamagui.config"
+import { useCategories } from "../../stores"
+import * as LucideIcons from "@tamagui/lucide-icons"
 
 interface CategoryFilterProps {
-  selectedCategories: ExpenseCategory[]
-  onChange: (categories: ExpenseCategory[]) => void
+  selectedCategories: string[]
+  onChange: (categories: string[]) => void
 }
 
 const styles = {
@@ -21,20 +20,40 @@ const styles = {
 
 /**
  * CategoryFilter - Multi-select category chips for filtering analytics
- * Includes "All" option to reset selection, uses category colors for styling
+ * Includes "All" option to reset selection, uses dynamic category colors from store
  */
 export const CategoryFilter = memo(function CategoryFilter({
   selectedCategories,
   onChange,
 }: CategoryFilterProps) {
+  const { categories } = useCategories()
   const isAllSelected = selectedCategories.length === 0
+
+  // Memoize category items with icons
+  const categoryItems = useMemo(() => {
+    return categories.map((cat) => {
+      // Get icon component from Lucide icons
+      const IconComponent =
+        (
+          LucideIcons as Record<
+            string,
+            React.ComponentType<{ size?: number; color?: string }>
+          >
+        )[cat.icon] ?? LucideIcons.Circle
+      return {
+        label: cat.label,
+        color: cat.color,
+        Icon: IconComponent,
+      }
+    })
+  }, [categories])
 
   const handleAllPress = useCallback(() => {
     onChange([])
   }, [onChange])
 
   const handleCategoryPress = useCallback(
-    (category: ExpenseCategory) => {
+    (category: string) => {
       if (selectedCategories.includes(category)) {
         // Remove category from selection
         const newSelection = selectedCategories.filter((c) => c !== category)
@@ -66,18 +85,16 @@ export const CategoryFilter = memo(function CategoryFilter({
         </Button>
 
         {/* Category chips */}
-        {CATEGORIES.map((cat) => {
-          const isSelected = selectedCategories.includes(cat.value)
-          const Icon = cat.icon
+        {categoryItems.map((cat) => {
+          const isSelected = selectedCategories.includes(cat.label)
+          const Icon = cat.Icon
           return (
             <Button
-              key={cat.value}
+              key={cat.label}
               size="$2"
               bordered={!isSelected}
-              style={
-                isSelected ? { backgroundColor: getColorValue(cat.color) } : undefined
-              }
-              onPress={() => handleCategoryPress(cat.value)}
+              style={isSelected ? { backgroundColor: cat.color } : undefined}
+              onPress={() => handleCategoryPress(cat.label)}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >
               <Button.Text color={isSelected ? "white" : "$color"}>

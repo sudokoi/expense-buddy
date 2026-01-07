@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from "react"
 import { useSelector } from "@xstate/store/react"
 import { useStoreContext } from "./store-provider"
-import { selectEffectiveTheme, selectHasUnsyncedChanges } from "./settings-store"
+import {
+  selectEffectiveTheme,
+  selectHasUnsyncedChanges,
+  selectCategoryByLabel,
+} from "./settings-store"
 import { Expense } from "../types/expense"
 import {
   ThemePreference,
@@ -11,6 +15,7 @@ import {
 import { PaymentMethodType } from "../types/expense"
 import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
+import { Category } from "../types/category"
 
 // Import stores directly for useSelector type inference
 import { expenseStore as defaultExpenseStore, getActiveExpenses } from "./expense-store"
@@ -91,6 +96,12 @@ export const useExpenses = () => {
     [expenseStore]
   )
 
+  const reassignExpensesToOther = useCallback(
+    (fromCategory: string) =>
+      expenseStore.trigger.reassignExpensesToOther({ fromCategory }),
+    [expenseStore]
+  )
+
   return {
     // state.expenses contains ALL expenses (including soft-deleted) for sync operations
     // state.activeExpenses contains only non-deleted expenses for display
@@ -101,6 +112,7 @@ export const useExpenses = () => {
     replaceAllExpenses,
     clearSyncNotification,
     clearPendingChangesAfterSync,
+    reassignExpensesToOther,
   }
 }
 
@@ -243,5 +255,81 @@ export const useNotifications = () => {
     notifications,
     addNotification,
     removeNotification,
+  }
+}
+
+// Category hooks
+export const useCategories = () => {
+  const { settingsStore } = useStoreContext()
+
+  // Get raw categories from settings (stable reference)
+  const rawCategories = useSelector(
+    defaultSettingsStore,
+    (state) => state.context.settings.categories
+  )
+
+  // Sort categories in useMemo to maintain stable reference
+  const categories = useMemo(
+    () => [...rawCategories].sort((a, b) => a.order - b.order),
+    [rawCategories]
+  )
+
+  // Get a category by label
+  const getCategoryByLabel = useCallback(
+    (label: string): Category | undefined => {
+      const state = settingsStore.getSnapshot()
+      return selectCategoryByLabel(state.context, label)
+    },
+    [settingsStore]
+  )
+
+  // Add a new category
+  const addCategory = useCallback(
+    (category: Omit<Category, "order" | "updatedAt">) => {
+      settingsStore.trigger.addCategory({ category })
+    },
+    [settingsStore]
+  )
+
+  // Update an existing category
+  const updateCategory = useCallback(
+    (label: string, updates: Partial<Omit<Category, "updatedAt">>) => {
+      settingsStore.trigger.updateCategory({ label, updates })
+    },
+    [settingsStore]
+  )
+
+  // Delete a category
+  const deleteCategory = useCallback(
+    (label: string) => {
+      settingsStore.trigger.deleteCategory({ label })
+    },
+    [settingsStore]
+  )
+
+  // Reorder categories
+  const reorderCategories = useCallback(
+    (labels: string[]) => {
+      settingsStore.trigger.reorderCategories({ labels })
+    },
+    [settingsStore]
+  )
+
+  // Replace all categories (for sync)
+  const replaceCategories = useCallback(
+    (newCategories: Category[]) => {
+      settingsStore.trigger.replaceCategories({ categories: newCategories })
+    },
+    [settingsStore]
+  )
+
+  return {
+    categories,
+    getCategoryByLabel,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    reorderCategories,
+    replaceCategories,
   }
 }

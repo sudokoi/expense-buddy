@@ -1,7 +1,6 @@
 import { useState, useCallback, memo } from "react"
 import { YStack, H4, XStack, Text } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
-import { ExpenseCategory } from "../../types/expense"
 import { TimeWindow } from "../../utils/analytics-calculations"
 import { useAnalyticsData } from "../../hooks/use-analytics-data"
 import { ScreenContainer } from "../../components/ui"
@@ -76,7 +75,7 @@ export default function AnalyticsScreen() {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("7d")
 
   // Local state for selected categories (empty = all categories)
-  const [selectedCategories, setSelectedCategories] = useState<ExpenseCategory[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   // Get analytics data from hook
   const {
@@ -92,9 +91,7 @@ export default function AnalyticsScreen() {
   const handleCategorySelect = useCallback((category: string | null) => {
     if (category) {
       setSelectedCategories((prev) =>
-        prev.includes(category as ExpenseCategory)
-          ? prev.filter((c) => c !== category)
-          : [...prev, category as ExpenseCategory]
+        prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
       )
     }
   }, [])

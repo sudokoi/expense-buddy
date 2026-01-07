@@ -24,14 +24,17 @@ import {
   AutoSyncTiming,
 } from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
+import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
+  categories: DEFAULT_CATEGORIES,
+  categoriesVersion: 1,
   updatedAt: new Date().toISOString(),
-  version: 3,
+  version: 4,
 }
 
 // Create a fresh store for each test
@@ -149,10 +152,12 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   syncSettings: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
+  categories: fc.constant(DEFAULT_CATEGORIES),
+  categoriesVersion: fc.constant(1),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 1, max: 10 }),
+  version: fc.integer({ min: 4, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
 })
 

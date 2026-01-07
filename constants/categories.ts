@@ -1,4 +1,3 @@
-import { ExpenseCategory } from "../types/expense"
 import {
   Utensils,
   Car,
@@ -17,7 +16,7 @@ type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element
 // Ordered by usage frequency (most common first, Other last)
 export const CATEGORIES: {
   label: string
-  value: ExpenseCategory
+  value: string
   icon: IconComponent
   color: string
 }[] = [
