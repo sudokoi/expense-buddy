@@ -278,6 +278,11 @@ describe("MergeEngine Properties", () => {
           fc.integer({ min: 1, max: 100000000 }).map((n) => n / 100),
           fc.boolean(),
           (baseExpense, newAmount, localIsNewer) => {
+            // Skip if amounts are the same - no conflict to resolve
+            if (newAmount === baseExpense.amount) {
+              return true
+            }
+
             const baseTime = new Date(baseExpense.updatedAt).getTime()
             const timeDiff = DEFAULT_CONFLICT_THRESHOLD_MS + 5000
 
