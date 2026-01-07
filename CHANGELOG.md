@@ -1,5 +1,23 @@
 # expense-buddy
 
+## 1.10.0
+
+### Minor Changes
+
+- [#25](https://github.com/sudokoi/expense-buddy/pull/25) [`f108750`](https://github.com/sudokoi/expense-buddy/commit/f10875070606115debb5d12ee256cf6f9db34bdc) Thanks [@sudokoi](https://github.com/sudokoi)! - Add custom category management with full CRUD support
+  - Create, edit, and delete custom expense categories with validation
+  - Color picker for customizing category appearance
+  - Reorder categories with up/down controls (Other stays fixed at bottom)
+  - Category sync support with conflict resolution via merge engine
+  - Automatic expense reassignment when deleting categories
+  - Dynamic icon rendering for custom category icons
+
+  Bug fixes:
+  - Fix category ordering in add/edit expense flows (Other always appears last)
+  - Improve EditExpenseModal with larger snap point (95%) and ScrollView
+  - Show category filter in analytics empty state for filter reset
+  - Centralize category sorting logic in useCategories hook
+
 ## 1.9.2
 
 ### Patch Changes

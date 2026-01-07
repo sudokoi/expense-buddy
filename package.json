@@ -1,7 +1,7 @@
 {
   "name": "expense-buddy",
   "main": "expo-router/entry",
-  "version": "1.9.2",
+  "version": "1.10.0",
   "packageManager": "yarn@4.5.0",
   "private": true,
   "repository": {
