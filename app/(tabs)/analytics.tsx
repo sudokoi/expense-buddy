@@ -107,26 +107,27 @@ export default function AnalyticsScreen() {
 
       {isLoading ? (
         <EmptyState title="Loading analytics..." subtitle="" />
-      ) : !hasAnyExpenses ? (
-        <EmptyState
-          title="No expenses recorded in this period."
-          subtitle="Try selecting a different time window or add some expenses."
-        />
       ) : (
         <>
-          <StatisticsCards statistics={statistics} />
+          {/* Always show category filter so users can reset it */}
           <CategoryFilter
             selectedCategories={selectedCategories}
             onChange={setSelectedCategories}
           />
 
-          {!hasData && selectedCategories.length > 0 ? (
+          {!hasAnyExpenses ? (
+            <EmptyState
+              title="No expenses recorded in this period."
+              subtitle="Try selecting a different time window or add some expenses."
+            />
+          ) : !hasData && selectedCategories.length > 0 ? (
             <EmptyState
               title="No expenses in selected categories."
-              subtitle="Try selecting different categories or reset filters."
+              subtitle="Try selecting different categories or tap 'All' to reset."
             />
           ) : (
             <>
+              <StatisticsCards statistics={statistics} />
               <PieChartSection
                 data={pieChartData}
                 onCategorySelect={handleCategorySelect}
