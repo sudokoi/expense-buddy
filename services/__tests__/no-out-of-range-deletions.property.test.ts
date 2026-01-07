@@ -90,7 +90,7 @@ function isOutsideLocalRange(dayKey: string, localExpenses: Expense[]): boolean 
 // Property Tests
 // =============================================================================
 
-describe("Property 6: No Out-of-Range Deletions", () => {
+describe("No Out-of-Range Deletions", () => {
   it("remote files outside local date range SHALL NOT be deleted", () => {
     fc.assert(
       fc.property(

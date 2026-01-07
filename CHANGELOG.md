@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 1.9.2
+
+### Patch Changes
+
+- Fixed settings sync bugs where settings weren't being synced despite showing pending count, sync count wasn't resetting when toggling settings back to original values, and sync count wasn't properly resetting after successful sync. Replaced boolean sync tracking with hash-based comparison to accurately detect actual changes.
+
 ## 1.9.1
 
 ### Patch Changes

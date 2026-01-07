@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react"
 import { useSelector } from "@xstate/store/react"
 import { useStoreContext } from "./store-provider"
-import { selectEffectiveTheme } from "./settings-store"
+import { selectEffectiveTheme, selectHasUnsyncedChanges } from "./settings-store"
 import { Expense } from "../types/expense"
 import {
   ThemePreference,
@@ -110,9 +110,8 @@ export const useSettings = () => {
 
   const settings = useSelector(defaultSettingsStore, (state) => state.context.settings)
   const isLoading = useSelector(defaultSettingsStore, (state) => state.context.isLoading)
-  const hasUnsyncedChanges = useSelector(
-    defaultSettingsStore,
-    (state) => state.context.hasUnsyncedChanges
+  const hasUnsyncedChanges = useSelector(defaultSettingsStore, (state) =>
+    selectHasUnsyncedChanges(state.context)
   )
   const effectiveTheme = useSelector(defaultSettingsStore, (state) =>
     selectEffectiveTheme(state.context)

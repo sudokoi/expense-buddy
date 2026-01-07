@@ -92,13 +92,10 @@ describe("Sync Manager Settings Integration Properties", () => {
   })
 
   /**
-   * Property 5: Conditional settings sync inclusion
    * For any sync operation, settings SHALL be included in the batch commit
    * if and only if syncSettings is enabled.
-   *
-   * **Validates: Requirements 4.2, 4.3, 4.4**
    */
-  describe("Property 5: Conditional settings sync inclusion", () => {
+  describe("Conditional settings sync inclusion", () => {
     it("should include settings in sync only when syncSettings is true", async () => {
       await fc.assert(
         fc.asyncProperty(
@@ -155,13 +152,10 @@ describe("Sync Manager Settings Integration Properties", () => {
   })
 
   /**
-   * Property 6: Hash-based skip for unchanged settings
    * For any settings object, if the computed content hash matches the stored hash
    * from the last sync, the sync operation SHALL skip uploading the settings file.
-   *
-   * **Validates: Requirements 5.3**
    */
-  describe("Property 6: Hash-based skip for unchanged settings", () => {
+  describe("Hash-based skip for unchanged settings", () => {
     it("should skip upload when hash matches stored hash", async () => {
       await fc.assert(
         fc.asyncProperty(settingsArbitrary, async (settings) => {
@@ -255,13 +249,10 @@ describe("Sync Manager Settings Integration Properties", () => {
   })
 
   /**
-   * Property 7: Settings overwrite on download
    * For any settings download operation where remote settings exist,
    * the local settings SHALL be completely replaced with the remote settings.
-   *
-   * **Validates: Requirements 6.2**
    */
-  describe("Property 7: Settings overwrite on download", () => {
+  describe("Settings overwrite on download", () => {
     it("should completely replace local settings with remote settings", async () => {
       await fc.assert(
         fc.asyncProperty(
@@ -493,7 +484,7 @@ describe("Sync Manager Settings Integration Properties", () => {
                 localSettings.autoSyncTiming !== remoteSettings.autoSyncTiming
             )
 
-            // Simulate the replacement logic (same as Property 7)
+            // Simulate the replacement logic
             const replaceSettings = (
               _local: AppSettings,
               remote: AppSettings
@@ -544,14 +535,13 @@ describe("Sync Manager Settings Integration Properties", () => {
   })
 
   /**
-   * Task 12.3: Property 5 - Settings serialization round-trip with new fields
+   * Settings serialization round-trip with new fields
    * For any valid AppSettings object (including autoSyncEnabled and autoSyncTiming),
    * serializing to JSON and deserializing SHALL produce an equivalent object
    * with all fields preserved.
-   *
-   * **Validates: Requirements 3.1**
+
    */
-  describe("Task 12.3: Property 5 - Settings serialization round-trip", () => {
+  describe("Settings serialization round-trip", () => {
     it("should preserve all fields through JSON serialization round-trip", () => {
       fc.assert(
         fc.property(fullSettingsArbitrary, (settings) => {

@@ -1145,6 +1145,12 @@ export interface GitStyleSyncResult {
   error?: string
   /** Timestamp of the commit if one was created */
   commitTimestamp?: string
+  /** Whether settings were included in sync */
+  settingsSynced?: boolean
+  /** Whether settings were skipped (unchanged) */
+  settingsSkipped?: boolean
+  /** Error message if settings sync failed */
+  settingsError?: string
 }
 
 /**
@@ -1159,20 +1165,25 @@ export type OnConflictCallback = (
  * Perform a git-style sync: fetch → merge → resolve conflicts → push
  *
  * This implements the unified sync flow where:
- * 1. All remote expenses are fetched first (Requirement 1.1, 1.2)
- * 2. Local and remote are merged using ID-based merging (Requirement 2.1)
- * 3. Conflicts are auto-resolved by timestamp (Requirement 3.1, 3.2, 3.3)
- * 4. True conflicts are presented to user via callback (Requirement 4.2, 4.3)
- * 5. Merged result is pushed to remote (Requirement 6.1)
- * 6. Local store and sync time are updated (Requirement 6.3, 6.4)
+ * 1. All remote expenses are fetched first
+ * 2. Local and remote are merged using ID-based merging
+ * 3. Conflicts are auto-resolved by timestamp
+ * 4. True conflicts are presented to user via callback
+ * 5. Merged result is pushed to remote
+ * 6. Local store and sync time are updated
+ * 7. Optionally syncs settings if enabled
  *
  * @param localExpenses - Current local expenses (including soft-deleted)
  * @param onConflict - Optional callback to handle true conflicts
+ * @param settings - Optional settings to sync
+ * @param syncSettingsEnabled - Whether to include settings in sync
  * @returns GitStyleSyncResult with sync details
  */
 export async function gitStyleSync(
   localExpenses: Expense[],
-  onConflict?: OnConflictCallback
+  onConflict?: OnConflictCallback,
+  settings?: AppSettings,
+  syncSettingsEnabled?: boolean
 ): Promise<GitStyleSyncResult> {
   try {
     const config = await loadSyncConfig()
@@ -1331,6 +1342,29 @@ export async function gitStyleSync(
       }
     }
 
+    // =========================================================================
+    // Settings sync: Check if settings should be included
+    // =========================================================================
+    let shouldSyncSettings = false
+    let newSettingsHash: string | undefined
+
+    if (syncSettingsEnabled && settings) {
+      // Compute hash of current settings
+      newSettingsHash = computeSettingsHash(settings)
+      const storedSettingsHash = await getSettingsHash()
+
+      // Only sync if settings have changed (hash-based skip)
+      if (storedSettingsHash !== newSettingsHash) {
+        shouldSyncSettings = true
+        const settingsContent = JSON.stringify(settings, null, 2)
+        // Add settings to the batch upload
+        filesToUpload.push({
+          path: "settings.json",
+          content: settingsContent,
+        })
+      }
+    }
+
     // If no changes to make, return success with merge info
     if (filesToUpload.length === 0 && filesToDelete.length === 0) {
       // Still update sync time since we successfully fetched and merged
@@ -1354,6 +1388,8 @@ export async function gitStyleSync(
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
+        settingsSynced: false,
+        settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
       }
     }
 
@@ -1382,7 +1418,7 @@ export async function gitStyleSync(
     }
 
     // =========================================================================
-    // Step 5: Update hashes and sync time (Requirement 6.3)
+    // Step 5: Update hashes and sync time
     // =========================================================================
     const updatedHashes: FileHashMap = {}
 
@@ -1401,7 +1437,13 @@ export async function gitStyleSync(
 
     await saveFileHashes(updatedHashes)
 
-    // Fetch and save the commit timestamp (Requirement 6.3)
+    // Update settings hash if settings were synced
+    if (shouldSyncSettings && newSettingsHash) {
+      await saveSettingsHash(newSettingsHash)
+      await clearSettingsChanged()
+    }
+
+    // Fetch and save the commit timestamp
     let commitTimestamp: string | undefined
     try {
       const timestampResult = await getLatestCommitTimestamp(
@@ -1418,21 +1460,29 @@ export async function gitStyleSync(
     }
 
     // =========================================================================
-    // Step 6: Build result with detailed reporting (Requirement 7.1-7.4)
+    // Step 6: Build result with detailed reporting
     // =========================================================================
+    // Count expense files only (exclude settings.json from file count)
+    const expenseFilesUploaded = filesToUpload.filter(
+      (f) => f.path !== "settings.json"
+    ).length
+
     return {
       success: true,
       message: buildSyncMessage(
         mergeResult,
-        filesToUpload.length,
+        expenseFilesUploaded,
         skippedFiles,
-        filesToDelete.length
+        filesToDelete.length,
+        shouldSyncSettings
       ),
       mergeResult,
-      filesUploaded: filesToUpload.length,
+      filesUploaded: expenseFilesUploaded,
       filesSkipped: skippedFiles,
       filesDeleted: filesToDelete.length,
       commitTimestamp,
+      settingsSynced: shouldSyncSettings,
+      settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
     }
   } catch (error) {
     return {
@@ -1441,19 +1491,20 @@ export async function gitStyleSync(
       error: String(error),
       filesUploaded: 0,
       filesSkipped: 0,
+      settingsSynced: false,
     }
   }
 }
 
 /**
  * Build a human-readable sync message from merge result and file counts
- * (Requirement 7.1, 7.2, 7.3, 7.4)
  */
 function buildSyncMessage(
   mergeResult: MergeResult,
   filesUploaded: number,
   filesSkipped: number,
-  filesDeleted: number
+  filesDeleted: number,
+  settingsSynced?: boolean
 ): string {
   const parts: string[] = []
 
@@ -1488,6 +1539,11 @@ function buildSyncMessage(
   }
   if (filesDeleted > 0) {
     parts.push(`${filesDeleted} file(s) deleted`)
+  }
+
+  // Report settings sync
+  if (settingsSynced) {
+    parts.push("settings synced")
   }
 
   if (parts.length === 0) {

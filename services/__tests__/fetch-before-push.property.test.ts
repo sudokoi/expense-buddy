@@ -119,7 +119,7 @@ function simulateSyncOperation(
 }
 
 describe("Fetch Before Push Property Tests", () => {
-  describe("Property 8: Fetch Before Push", () => {
+  describe("Fetch Before Push", () => {
     it("fetch SHALL be called before any push operation", () => {
       fc.assert(
         fc.property(

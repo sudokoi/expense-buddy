@@ -9,7 +9,6 @@
  * For any notification added to the store, the notification SHALL be present in the notifications array.
  * For any notification id removed from the store, no notification with that id SHALL be present in the array.
  *
- * **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
  */
 
 import fc from "fast-check"
@@ -90,7 +89,6 @@ const notificationEventArb = fc.record({
 describe("Notification Store Properties", () => {
   /**
    * Property 7: Notification Max Limit
-   * **Validates: Requirements 5.1, 5.4**
    */
   describe("Property 7: Notification Max Limit", () => {
     it("store SHALL contain at most 3 notifications regardless of how many are added", () => {
@@ -162,7 +160,6 @@ describe("Notification Store Properties", () => {
 
   /**
    * Property 8: Notification Add/Remove Consistency
-   * **Validates: Requirements 5.2, 5.3**
    */
   describe("Property 8: Notification Add/Remove Consistency", () => {
     it("added notification SHALL be present in the array (when under limit)", () => {

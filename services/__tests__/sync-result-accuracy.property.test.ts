@@ -62,7 +62,7 @@ const uniqueExpensesArb = (minLength: number, maxLength: number) =>
     .map((expenses) => expenses.map((e, i) => ({ ...e, id: `expense-${i}` })))
 
 describe("Sync Result Accuracy Properties", () => {
-  describe("Property 7: Merge Result Accuracy", () => {
+  describe("Merge Result Accuracy", () => {
     it("addedFromRemote count SHALL match actual remote-only expenses", () => {
       fc.assert(
         fc.property(

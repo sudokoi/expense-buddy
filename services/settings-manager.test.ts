@@ -97,13 +97,10 @@ const appSettingsArb = fc.record({
 
 describe("Settings Manager Properties", () => {
   /**
-   * Property 1: Theme persistence round-trip
    * For any valid theme preference (light, dark, system), saving it to storage
    * and then loading it back SHALL produce the same theme preference.
-   *
-   * **Validates: Requirements 2.2, 2.5**
    */
-  describe("Property 1: Theme persistence round-trip", () => {
+  describe("Theme persistence round-trip", () => {
     it("should persist and load theme preferences correctly", async () => {
       await fc.assert(
         fc.asyncProperty(themePreferenceArb, async (theme) => {
@@ -158,13 +155,10 @@ describe("Settings Manager Properties", () => {
   })
 
   /**
-   * Property 3: Settings serialization round-trip
    * For any valid AppSettings object, serializing to JSON and deserializing
    * SHALL produce an equivalent object with all fields preserved.
-   *
-   * **Validates: Requirements 3.1**
    */
-  describe("Property 3: Settings serialization round-trip", () => {
+  describe("Settings serialization round-trip", () => {
     it("should preserve all settings fields through save/load cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
@@ -216,13 +210,10 @@ describe("Settings Manager Properties", () => {
   })
 
   /**
-   * Property 4: Timestamp updates on modification
    * For any settings modification, the updatedAt timestamp SHALL be updated
    * to a value greater than or equal to the previous timestamp.
-   *
-   * **Validates: Requirements 3.2, 3.4**
    */
-  describe("Property 4: Timestamp updates on modification", () => {
+  describe("Timestamp updates on modification", () => {
     it("should update timestamp when saving settings", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
@@ -375,14 +366,10 @@ describe("Settings Manager Properties", () => {
   })
 
   /**
-   * Property 7: Settings Sync Includes Default Payment Method
    * For any settings object with defaultPaymentMethod set, serializing for sync
    * and deserializing SHALL preserve the defaultPaymentMethod value.
-   *
-   * **Feature: payment-method, Property 7: Settings Sync Includes Default Payment Method**
-   * **Validates: Requirements 6.1, 6.2**
    */
-  describe("Property 7: Settings Sync Includes Default Payment Method", () => {
+  describe("Settings Sync Includes Default Payment Method", () => {
     it("should preserve defaultPaymentMethod through serialize/deserialize cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
@@ -455,14 +442,10 @@ describe("Settings Manager Properties", () => {
   })
 
   /**
-   * Property 8: Missing fields use defaults
    * For any settings JSON missing autoSyncEnabled or autoSyncTiming fields (from older version),
    * loading SHALL use default values (false and "on_launch" respectively).
-   *
-   * **Feature: payment-settings-improvements, Property 8: Missing fields use defaults**
-   * **Validates: Requirements 7.3**
    */
-  describe("Property 8: Missing fields use defaults", () => {
+  describe(" Missing fields use defaults", () => {
     // Arbitrary for v2 settings (missing autoSyncEnabled and autoSyncTiming)
     const v2SettingsArb = fc.record({
       theme: themePreferenceArb,

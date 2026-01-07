@@ -84,7 +84,7 @@ const uniqueExpensesWithSoftDeleteArb = (minLength: number, maxLength: number) =
     .map((expenses) => expenses.map((e, i) => ({ ...e, id: `expense-${i}` })))
 
 describe("MergeEngine Properties", () => {
-  describe("Property 1: Merge Completeness", () => {
+  describe("Merge Completeness", () => {
     it("merge result SHALL contain all unique IDs from both local and remote", () => {
       fc.assert(
         fc.property(
@@ -151,7 +151,7 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  describe("Property 2: ID Uniqueness in Merge Result", () => {
+  describe("ID Uniqueness in Merge Result", () => {
     it("each expense ID SHALL appear exactly once in merge result", () => {
       fc.assert(
         fc.property(
@@ -202,7 +202,7 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  describe("Property 3: Timestamp-Based Resolution", () => {
+  describe("Timestamp-Based Resolution", () => {
     it("newer local version SHALL win when timestamps differ significantly", () => {
       fc.assert(
         fc.property(
@@ -314,7 +314,7 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  describe("Property 4: True Conflict Detection", () => {
+  describe("True Conflict Detection", () => {
     it("equal timestamps with different content SHALL be detected as true conflict", () => {
       fc.assert(
         fc.property(
@@ -430,7 +430,7 @@ describe("MergeEngine Properties", () => {
     })
   })
 
-  describe("Property 5: Soft Delete Propagation", () => {
+  describe("Soft Delete Propagation", () => {
     it("soft-deleted expense from remote SHALL be included in merge result", () => {
       fc.assert(
         fc.property(expenseArb, isoDateStringArb, (baseExpense, deletedAt) => {

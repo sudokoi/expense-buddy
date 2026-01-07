@@ -103,15 +103,11 @@ function expensesAreEquivalent(original: Expense, imported: Expense): boolean {
 
 describe("CSV Handler Properties", () => {
   /**
-   * Property 4: CSV Round-Trip Consistency
    * For any list of expenses (with or without payment methods), exporting to CSV
    * and then importing the CSV SHALL produce an equivalent list of expenses with
    * payment method data preserved.
-   *
-   * Feature: payment-method, Property 4: CSV Round-Trip Consistency
-   * Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5
    */
-  describe("Property 4: CSV Round-Trip Consistency", () => {
+  describe("CSV Round-Trip Consistency", () => {
     it("should preserve all expense data through CSV export/import round-trip", () => {
       fc.assert(
         fc.property(

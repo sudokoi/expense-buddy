@@ -14,8 +14,6 @@
  * - If theme is 'light', effectiveTheme SHALL be 'light'
  * - If theme is 'dark', effectiveTheme SHALL be 'dark'
  * - If theme is 'system', effectiveTheme SHALL equal the system color scheme
- *
- * **Validates: Requirements 4.2, 4.3, 4.4, 4.5, 4.6**
  */
 
 import fc from "fast-check"
@@ -161,7 +159,6 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
 describe("Settings Store Properties", () => {
   /**
    * Property 4: Settings Update Persistence
-   * **Validates: Requirements 4.2, 4.3, 4.4**
    */
   describe("Property 4: Settings Update Persistence", () => {
     it("setTheme SHALL update theme and set hasUnsyncedChanges to true", () => {
@@ -237,7 +234,6 @@ describe("Settings Store Properties", () => {
 
   /**
    * Property 5: Settings Replacement Clears Change Flag
-   * **Validates: Requirements 4.5**
    */
   describe("Property 5: Settings Replacement Clears Change Flag", () => {
     it("replaceSettings SHALL set exact settings and clear hasUnsyncedChanges", () => {
@@ -286,7 +282,6 @@ describe("Settings Store Properties", () => {
 
   /**
    * Property 6: Effective Theme Computation
-   * **Validates: Requirements 4.6**
    */
   describe("Property 6: Effective Theme Computation", () => {
     it("effectiveTheme SHALL be light when theme preference is light", () => {

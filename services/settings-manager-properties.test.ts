@@ -292,12 +292,8 @@ describe("Settings Manager Properties", () => {
   })
 
   /**
-   * Property 6: Settings hash includes all fields
    * For any two AppSettings objects that differ only in autoSyncEnabled or autoSyncTiming,
    * the computed hashes SHALL be different.
-   *
-   * Feature: payment-settings-improvements, Property 6: Settings hash includes all fields
-   * Validates: Requirements 4.2
    */
   describe("Settings hash includes all fields", () => {
     it("should produce different hashes when autoSyncEnabled differs", () => {

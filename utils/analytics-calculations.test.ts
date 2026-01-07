@@ -93,9 +93,6 @@ describe("Analytics Calculations Properties", () => {
    * For any set of expenses and any selected time window (7d, 15d, 1m),
    * all expenses in the filtered result should have dates within the specified
    * time range, and no expenses outside that range should be included.
-   *
-   * Feature: expense-analytics, Property 1: Time Window Filtering Correctness
-   * Validates: Requirements 1.2
    */
   describe("Property 1: Time Window Filtering Correctness", () => {
     it("should only include expenses within the time window", () => {
@@ -159,9 +156,6 @@ describe("Analytics Calculations Properties", () => {
    * For any set of filtered expenses, the pie chart data should correctly aggregate
    * amounts by category such that the sum of all pie chart segment values equals
    * the total of all filtered expense amounts.
-   *
-   * Feature: expense-analytics, Property 2: Pie Chart Category Aggregation
-   * Validates: Requirements 2.1
    */
   describe("Property 2: Pie Chart Category Aggregation", () => {
     it("should have pie chart total equal to sum of all expense amounts", () => {
@@ -193,9 +187,6 @@ describe("Analytics Calculations Properties", () => {
    * Property 3: Pie Chart Excludes Zero Categories
    * For any set of filtered expenses, the pie chart data should not contain
    * any segments for categories that have zero total expenses.
-   *
-   * Feature: expense-analytics, Property 3: Pie Chart Excludes Zero Categories
-   * Validates: Requirements 2.3
    */
   describe("Property 3: Pie Chart Excludes Zero Categories", () => {
     it("should not include categories with zero value in pie chart", () => {

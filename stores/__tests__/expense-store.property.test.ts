@@ -20,7 +20,6 @@
  * syncNotification containing that object. Clearing the notification SHALL result
  * in syncNotification being null.
  *
- * **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.6, 3.7**
  */
 
 import fc from "fast-check"
@@ -144,7 +143,6 @@ const syncNotificationArb: fc.Arbitrary<SyncNotification> = fc.record({
 describe("Expense Store Properties", () => {
   /**
    * Property 1: Expense CRUD Round-Trip
-   * **Validates: Requirements 3.2, 3.3, 3.4, 3.5**
    */
   describe("Property 1: Expense CRUD Round-Trip", () => {
     it("added expense SHALL be retrievable with all fields intact", () => {
@@ -201,7 +199,6 @@ describe("Expense Store Properties", () => {
 
   /**
    * Property 2: Expense Edit Preserves Identity
-   * **Validates: Requirements 3.3**
    */
   describe("Property 2: Expense Edit Preserves Identity", () => {
     it("editing expense SHALL preserve id and createdAt while updating other fields", () => {
@@ -279,7 +276,6 @@ describe("Expense Store Properties", () => {
 
   /**
    * Property 3: Expense Delete Removes Entry
-   * **Validates: Requirements 3.4**
    */
   describe("Property 3: Expense Delete Removes Entry", () => {
     it("deleted expense SHALL not be present in the array", () => {
@@ -346,7 +342,6 @@ describe("Expense Store Properties", () => {
 
   /**
    * Property 11: Sync Notification Management
-   * **Validates: Requirements 3.6, 3.7**
    */
   describe("Property 11: Sync Notification Management", () => {
     it("setSyncNotification SHALL set the notification", () => {

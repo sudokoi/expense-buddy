@@ -120,6 +120,8 @@ export const syncMachine = setup({
       UnifiedSyncActorResult,
       {
         localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
         conflictResolver?: ConflictResolver
       }
     >(async ({ input }) => {
@@ -132,8 +134,13 @@ export const syncMachine = setup({
         }
       }
 
-      // Perform git-style sync with optional conflict resolver
-      const result = await gitStyleSync(input.localExpenses, input.conflictResolver)
+      // Perform git-style sync with optional conflict resolver and settings
+      const result = await gitStyleSync(
+        input.localExpenses,
+        input.conflictResolver,
+        input.settings,
+        input.syncSettingsEnabled
+      )
 
       // Check if there are unresolved conflicts
       if (
@@ -155,6 +162,7 @@ export const syncMachine = setup({
         result.success &&
         result.filesUploaded === 0 &&
         result.filesSkipped > 0 &&
+        !result.settingsSynced &&
         result.mergeResult?.addedFromRemote.length === 0 &&
         result.mergeResult?.updatedFromRemote.length === 0
       ) {
@@ -181,13 +189,20 @@ export const syncMachine = setup({
       UnifiedSyncActorResult,
       {
         localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
         resolutions: ConflictResolution[]
       }
     >(async ({ input }) => {
       // Create a resolver that returns the provided resolutions
       const resolver = async () => input.resolutions
 
-      const result = await gitStyleSync(input.localExpenses, resolver)
+      const result = await gitStyleSync(
+        input.localExpenses,
+        resolver,
+        input.settings,
+        input.syncSettingsEnabled
+      )
 
       return {
         success: result.success,
@@ -239,6 +254,8 @@ export const syncMachine = setup({
         src: "unifiedSync",
         input: ({ context }) => ({
           localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
           conflictResolver: context.conflictResolver,
         }),
         onDone: [
@@ -338,6 +355,8 @@ export const syncMachine = setup({
         src: "retryAfterConflict",
         input: ({ context, event }) => ({
           localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
           resolutions:
             event.type === "RESOLVE_CONFLICTS"
               ? event.resolutions
