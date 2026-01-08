@@ -249,6 +249,69 @@ export const expenseStore = createStore({
 
       return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
     },
+
+    updateExpenseCategories: (
+      context,
+      event: { fromCategory: string; toCategory: string },
+      enqueue
+    ) => {
+      // Handle same-name rename as no-op
+      if (event.fromCategory === event.toCategory) {
+        return context
+      }
+
+      const now = new Date().toISOString()
+      const affectedExpenseIds: string[] = []
+
+      // Update all active expenses with the old category to use the new category
+      const newExpenses = context.expenses.map((expense) => {
+        if (expense.category === event.fromCategory && !expense.deletedAt) {
+          affectedExpenseIds.push(expense.id)
+          return {
+            ...expense,
+            category: event.toCategory,
+            updatedAt: now,
+          }
+        }
+        return expense
+      })
+
+      // Calculate new pending changes count (each affected expense counts as an edit)
+      const newPendingChanges = {
+        ...context.pendingChanges,
+        edited: context.pendingChanges.edited + affectedExpenseIds.length,
+      }
+
+      enqueue.effect(async () => {
+        // Persist the updated expenses
+        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+
+        // Track each affected expense as edited for sync
+        for (const id of affectedExpenseIds) {
+          await trackEdit(id)
+        }
+
+        // Trigger auto-sync if enabled for on_change timing
+        if (affectedExpenseIds.length > 0) {
+          const shouldSync = await shouldAutoSyncForTiming("on_change")
+          if (shouldSync) {
+            const result = await performAutoSyncIfEnabled(newExpenses)
+            if (result.synced && result.expenses) {
+              expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
+              await clearPendingChanges()
+              expenseStore.trigger.clearPendingChangesCount()
+              if (result.notification) {
+                expenseStore.trigger.setSyncNotification({
+                  notification: result.notification,
+                })
+              }
+            }
+          }
+        }
+      })
+
+      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+    },
   },
 })
 

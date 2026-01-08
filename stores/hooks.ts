@@ -101,6 +101,12 @@ export const useExpenses = () => {
     [expenseStore]
   )
 
+  const updateExpenseCategories = useCallback(
+    (fromCategory: string, toCategory: string) =>
+      expenseStore.trigger.updateExpenseCategories({ fromCategory, toCategory }),
+    [expenseStore]
+  )
+
   return {
     // state.expenses contains ALL expenses (including soft-deleted) for sync operations
     // state.activeExpenses contains only non-deleted expenses for display
@@ -112,6 +118,7 @@ export const useExpenses = () => {
     clearSyncNotification,
     clearPendingChangesAfterSync,
     reassignExpensesToOther,
+    updateExpenseCategories,
   }
 }
 
@@ -257,7 +264,7 @@ export const useNotifications = () => {
 
 // Category hooks
 export const useCategories = () => {
-  const { settingsStore } = useStoreContext()
+  const { settingsStore, expenseStore } = useStoreContext()
 
   // Use the store from context for useSelector to ensure proper subscription
   const rawCategories = useSelector(
@@ -297,11 +304,19 @@ export const useCategories = () => {
   )
 
   // Update an existing category
+  // If the label is being changed, also update all expenses that reference the old label
   const updateCategory = useCallback(
     (label: string, updates: Partial<Omit<Category, "updatedAt">>) => {
+      // If label is being changed, update expenses first
+      if (updates.label && updates.label !== label) {
+        expenseStore.trigger.updateExpenseCategories({
+          fromCategory: label,
+          toCategory: updates.label,
+        })
+      }
       settingsStore.trigger.updateCategory({ label, updates })
     },
-    [settingsStore]
+    [settingsStore, expenseStore]
   )
 
   // Delete a category
