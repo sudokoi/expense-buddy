@@ -1,5 +1,18 @@
 # expense-buddy
 
+## 1.10.1
+
+### Patch Changes
+
+- refactor: modularize settings UI and enhance service layer
+  - Extract settings into reusable components (AppInfoSection, AutoSyncSection, GitHubConfigSection)
+  - Add error-utils service with classification and ServiceResult<T> pattern
+  - Implement secure-storage service with encryption support
+  - Create store helpers with validation utilities
+  - Add comprehensive property-based testing for new services
+  - Update Tamagui 1.141.5 → 1.144.0 and Expo dependencies
+  - Consolidate component exports and improve import consistency
+
 ## 1.10.0
 
 ### Minor Changes

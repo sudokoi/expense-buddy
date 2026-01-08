@@ -179,17 +179,21 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Framework**: React Native with Expo
 - **Routing**: Expo Router (file-based routing)
-- **UI Library**: Tamagui (universal design system)
+- **UI Library**: Tamagui v1.144.0 (universal design system)
 - **State Management**: XState Store v3 (reactive stores) + XState v5 (sync state machine)
-- **Storage**: AsyncStorage + Expo SecureStore
+- **Storage**: AsyncStorage + Expo SecureStore (with encryption utilities)
 - **Charts**: react-native-gifted-charts
 - **Date Handling**: date-fns
 - **CSV Parsing**: PapaParse
 - **Testing**: Jest + fast-check (property-based testing)
+- **Error Handling**: Centralized error utilities with classification
+- **Type Safety**: Comprehensive TypeScript with ServiceResult pattern
 
 ### UI Component Library
 
-The app includes a set of reusable styled components in `components/ui/`:
+The app includes a comprehensive set of reusable styled components:
+
+**Core UI Components** (`components/ui/`):
 
 | Component                      | Description                                          |
 | ------------------------------ | ---------------------------------------------------- |
@@ -206,6 +210,22 @@ The app includes a set of reusable styled components in `components/ui/`:
 | `CategoryFormModal`            | Modal for creating/editing custom categories         |
 | `ColorPickerSheet`             | Bottom sheet for selecting category colors           |
 | `DynamicCategoryIcon`          | Runtime icon rendering for custom categories         |
+
+**Settings Components** (`components/ui/settings/`):
+
+| Component             | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `AppInfoSection`      | App version and build information display    |
+| `AutoSyncSection`     | Auto-sync configuration with timing controls |
+| `GitHubConfigSection` | GitHub repository and token configuration    |
+
+**Analytics Components** (`components/analytics/`):
+
+| Component               | Description                             |
+| ----------------------- | --------------------------------------- |
+| `PaymentMethodPieChart` | Payment method breakdown visualization  |
+| `CollapsibleSection`    | Collapsible chart wrapper with headers  |
+| `CategoryFilter`        | Category selection filter for analytics |
 
 All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
 
