@@ -1,8 +1,7 @@
-import * as SecureStore from "expo-secure-store"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { Platform } from "react-native"
 import { Expense } from "../types/expense"
+import { secureStorage } from "./secure-storage"
 import { exportToCSV, importFromCSV } from "./csv-handler"
+import { getUserFriendlyMessage } from "./error-utils"
 import {
   downloadCSV,
   validatePAT,
@@ -65,47 +64,22 @@ const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
 const GITHUB_BRANCH_KEY = "github_branch"
 
-// Helper functions for secure storage with platform check
-async function secureSetItem(key: string, value: string): Promise<void> {
-  if (Platform.OS === "web") {
-    await AsyncStorage.setItem(key, value)
-  } else {
-    await SecureStore.setItemAsync(key, value)
-  }
-}
-
-async function secureGetItem(key: string): Promise<string | null> {
-  if (Platform.OS === "web") {
-    return await AsyncStorage.getItem(key)
-  } else {
-    return await SecureStore.getItemAsync(key)
-  }
-}
-
-async function secureDeleteItem(key: string): Promise<void> {
-  if (Platform.OS === "web") {
-    await AsyncStorage.removeItem(key)
-  } else {
-    await SecureStore.deleteItemAsync(key)
-  }
-}
-
 /**
  * Save GitHub sync configuration securely
  */
 export async function saveSyncConfig(config: SyncConfig): Promise<void> {
-  await secureSetItem(GITHUB_TOKEN_KEY, config.token)
-  await secureSetItem(GITHUB_REPO_KEY, config.repo)
-  await secureSetItem(GITHUB_BRANCH_KEY, config.branch)
+  await secureStorage.setItem(GITHUB_TOKEN_KEY, config.token)
+  await secureStorage.setItem(GITHUB_REPO_KEY, config.repo)
+  await secureStorage.setItem(GITHUB_BRANCH_KEY, config.branch)
 }
 
 /**
  * Load GitHub sync configuration
  */
 export async function loadSyncConfig(): Promise<SyncConfig | null> {
-  const token = await secureGetItem(GITHUB_TOKEN_KEY)
-  const repo = await secureGetItem(GITHUB_REPO_KEY)
-  const branch = await secureGetItem(GITHUB_BRANCH_KEY)
+  const token = await secureStorage.getItem(GITHUB_TOKEN_KEY)
+  const repo = await secureStorage.getItem(GITHUB_REPO_KEY)
+  const branch = await secureStorage.getItem(GITHUB_BRANCH_KEY)
 
   if (!token || !repo || !branch) {
     return null
@@ -118,9 +92,9 @@ export async function loadSyncConfig(): Promise<SyncConfig | null> {
  * Clear GitHub sync configuration
  */
 export async function clearSyncConfig(): Promise<void> {
-  await secureDeleteItem(GITHUB_TOKEN_KEY)
-  await secureDeleteItem(GITHUB_REPO_KEY)
-  await secureDeleteItem(GITHUB_BRANCH_KEY)
+  await secureStorage.deleteItem(GITHUB_TOKEN_KEY)
+  await secureStorage.deleteItem(GITHUB_REPO_KEY)
+  await secureStorage.deleteItem(GITHUB_BRANCH_KEY)
 }
 
 /**
@@ -129,6 +103,7 @@ export async function clearSyncConfig(): Promise<void> {
 export async function testConnection(): Promise<SyncResult> {
   const config = await loadSyncConfig()
   if (!config) {
+    console.warn("[SyncManager] testConnection failed: No sync configuration found")
     return {
       success: false,
       message: "No sync configuration found",
@@ -136,14 +111,24 @@ export async function testConnection(): Promise<SyncResult> {
     }
   }
 
-  const result = await validatePAT(config.token, config.repo)
-  if (result.valid) {
-    return { success: true, message: "Connection successful!" }
-  } else {
+  try {
+    const result = await validatePAT(config.token, config.repo)
+    if (result.valid) {
+      return { success: true, message: "Connection successful!" }
+    } else {
+      console.warn("[SyncManager] testConnection failed:", result.error)
+      return {
+        success: false,
+        message: "Connection failed",
+        error: getUserFriendlyMessage(new Error(result.error || "Unknown error")),
+      }
+    }
+  } catch (error) {
+    console.warn("[SyncManager] testConnection failed:", error)
     return {
       success: false,
       message: "Connection failed",
-      error: result.error,
+      error: getUserFriendlyMessage(error),
     }
   }
 }
@@ -163,6 +148,7 @@ export async function determineSyncDirection(
   try {
     const config = await loadSyncConfig()
     if (!config) {
+      console.warn("[SyncManager] determineSyncDirection failed: No sync configuration")
       return {
         direction: "error",
         localTime: null,
@@ -182,11 +168,12 @@ export async function determineSyncDirection(
     )
 
     if ("error" in remoteResult) {
+      console.warn("[SyncManager] determineSyncDirection failed:", remoteResult.error)
       return {
         direction: "error",
         localTime: localLastSync,
         remoteTime: null,
-        error: remoteResult.error,
+        error: getUserFriendlyMessage(new Error(remoteResult.error)),
       }
     }
 
@@ -253,11 +240,12 @@ export async function determineSyncDirection(
       remoteTime: remoteTime,
     }
   } catch (error) {
+    console.warn("[SyncManager] determineSyncDirection failed:", error)
     return {
       direction: "error",
       localTime: null,
       remoteTime: null,
-      error: String(error),
+      error: getUserFriendlyMessage(error),
     }
   }
 }
@@ -511,7 +499,12 @@ export async function syncUp(
       }
     }
   } catch (error) {
-    return { success: false, message: "Sync failed", error: String(error) }
+    console.warn("[SyncManager] syncUp failed:", error)
+    return {
+      success: false,
+      message: "Sync failed",
+      error: getUserFriendlyMessage(error),
+    }
   }
 }
 
@@ -660,7 +653,12 @@ export async function syncDown(
       settingsDownloaded,
     }
   } catch (error) {
-    return { success: false, message: "Download failed", error: String(error) }
+    console.warn("[SyncManager] syncDown failed:", error)
+    return {
+      success: false,
+      message: "Download failed",
+      error: getUserFriendlyMessage(error),
+    }
   }
 }
 
@@ -748,10 +746,11 @@ export async function syncDownMore(
       hasMore,
     }
   } catch (error) {
+    console.warn("[SyncManager] syncDownMore failed:", error)
     return {
       success: false,
       message: "Load more failed",
-      error: String(error),
+      error: getUserFriendlyMessage(error),
     }
   }
 }
@@ -762,7 +761,7 @@ const LAST_SYNC_TIME_KEY = "last_sync_time"
  * Get last sync timestamp
  */
 async function getLastSyncTime(): Promise<string | null> {
-  return await secureGetItem(LAST_SYNC_TIME_KEY)
+  return await secureStorage.getItem(LAST_SYNC_TIME_KEY)
 }
 
 // ============================================================================
@@ -859,21 +858,11 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
       filesDownloaded: downloadedFiles,
     }
   } catch (error) {
-    // Requirement 1.3: Catch network errors during fetch
-    const errorMessage = String(error)
-    if (
-      errorMessage.includes("Failed to fetch") ||
-      errorMessage.includes("Network request failed") ||
-      errorMessage.includes("TypeError")
-    ) {
-      return {
-        success: false,
-        error: "No internet connection. Cannot fetch remote expenses.",
-      }
-    }
+    // Catch network errors during fetch
+    console.warn("[SyncManager] fetchAllRemoteExpenses failed:", error)
     return {
       success: false,
-      error: `Fetch failed: ${errorMessage}`,
+      error: getUserFriendlyMessage(error),
     }
   }
 }
@@ -882,7 +871,7 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
  * Save last sync timestamp
  */
 async function saveLastSyncTime(timestamp: string): Promise<void> {
-  await secureSetItem(LAST_SYNC_TIME_KEY, timestamp)
+  await secureStorage.setItem(LAST_SYNC_TIME_KEY, timestamp)
 }
 
 /**
@@ -1491,10 +1480,11 @@ export async function gitStyleSync(
       mergedCategories,
     }
   } catch (error) {
+    console.warn("[SyncManager] gitStyleSync failed:", error)
     return {
       success: false,
       message: "Sync failed",
-      error: String(error),
+      error: getUserFriendlyMessage(error),
       filesUploaded: 0,
       filesSkipped: 0,
       settingsSynced: false,

@@ -23,32 +23,13 @@ import {
 } from "../services/sync-manager"
 import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
+import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
+
+// Re-export SettingsSyncState for backward compatibility
+export type { SettingsSyncState }
 
 // AsyncStorage key for payment method section expanded state
 const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
-
-/**
- * Settings sync state enum
- * - "synced": Current settings match the last synced version
- * - "modified": Local changes pending sync
- */
-export type SettingsSyncState = "synced" | "modified"
-
-/**
- * Compute sync state by comparing current settings hash against synced hash
- */
-function computeSyncState(
-  currentSettings: AppSettings,
-  syncedHash: string | null
-): SettingsSyncState {
-  const currentHash = computeSettingsHash(currentSettings)
-  if (!syncedHash) {
-    // No previous sync - check if settings differ from defaults
-    const defaultHash = computeSettingsHash(DEFAULT_SETTINGS)
-    return currentHash === defaultHash ? "synced" : "modified"
-  }
-  return currentHash === syncedHash ? "synced" : "modified"
-}
 
 export const settingsStore = createStore({
   context: {
@@ -89,7 +70,10 @@ export const settingsStore = createStore({
 
     setTheme: (context, event: { theme: ThemePreference }, enqueue) => {
       const newSettings = { ...context.settings, theme: event.theme }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -109,7 +93,10 @@ export const settingsStore = createStore({
 
     setSyncSettings: (context, event: { enabled: boolean }, enqueue) => {
       const newSettings = { ...context.settings, syncSettings: event.enabled }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -136,7 +123,10 @@ export const settingsStore = createStore({
         ...context.settings,
         defaultPaymentMethod: event.paymentMethod,
       }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -159,7 +149,10 @@ export const settingsStore = createStore({
         ...context.settings,
         autoSyncEnabled: event.enabled,
       }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -187,7 +180,7 @@ export const settingsStore = createStore({
       // When auto-sync is off, timing changes are not meaningful to sync
       const shouldTrackChange = context.settings.autoSyncEnabled
       const newSyncState = shouldTrackChange
-        ? computeSyncState(newSettings, context.syncedSettingsHash)
+        ? computeSettingsSyncState(newSettings, context.syncedSettingsHash)
         : context.settingsSyncState
 
       enqueue.effect(async () => {
@@ -210,7 +203,10 @@ export const settingsStore = createStore({
 
     updateSettings: (context, event: { updates: Partial<AppSettings> }, enqueue) => {
       const newSettings = { ...context.settings, ...event.updates }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -360,7 +356,10 @@ export const settingsStore = createStore({
       newCategories.push(newCategory)
 
       const newSettings = { ...context.settings, categories: newCategories }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -398,7 +397,10 @@ export const settingsStore = createStore({
       })
 
       const newSettings = { ...context.settings, categories: newCategories }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -442,7 +444,10 @@ export const settingsStore = createStore({
         })
 
       const newSettings = { ...context.settings, categories: newCategories }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -496,7 +501,10 @@ export const settingsStore = createStore({
 
       const finalCategories = [...newCategories, ...missingCategories]
       const newSettings = { ...context.settings, categories: finalCategories }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -519,7 +527,10 @@ export const settingsStore = createStore({
      */
     replaceCategories: (context, event: { categories: Category[] }, enqueue) => {
       const newSettings = { ...context.settings, categories: event.categories }
-      const newSyncState = computeSyncState(newSettings, context.syncedSettingsHash)
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
@@ -598,7 +609,7 @@ export async function initializeSettingsStore(): Promise<void> {
     const paymentMethodSectionExpanded = expandedValue === "true"
 
     // Compute initial sync state by comparing current settings against synced hash
-    const settingsSyncState = computeSyncState(settings, syncedSettingsHash)
+    const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
 
     settingsStore.trigger.loadSettings({
       settings,

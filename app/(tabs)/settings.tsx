@@ -1,20 +1,6 @@
 import { useState, useCallback, useMemo } from "react"
-import {
-  YStack,
-  XStack,
-  Text,
-  Input,
-  Button,
-  Label,
-  Switch,
-  RadioGroup,
-  Accordion,
-} from "tamagui"
-import { Alert, Keyboard, Linking, ViewStyle } from "react-native"
-import { Check, X, Download, ExternalLink, ChevronDown } from "@tamagui/lucide-icons"
-import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
-import { validateGitHubConfig } from "../../utils/github-config-validation"
-import { AutoSyncTiming } from "../../services/settings-manager"
+import { YStack, Text, Button, Label } from "tamagui"
+import { Alert, Linking, ViewStyle } from "react-native"
 import { PaymentMethodType } from "../../types/expense"
 import {
   useExpenses,
@@ -27,7 +13,7 @@ import {
   TrueConflict,
   ConflictResolution,
 } from "../../hooks/use-sync-machine"
-
+import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
 import {
   checkForUpdates,
   UpdateInfo,
@@ -40,7 +26,9 @@ import { SettingsSection } from "../../components/ui/SettingsSection"
 import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPaymentMethodSelector"
 import { CategorySection } from "../../components/ui/CategorySection"
 import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
-import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
+import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
+import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
+import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { Category } from "../../types/category"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -50,57 +38,10 @@ const layoutStyles = {
     alignSelf: "center",
     width: "100%",
   } as ViewStyle,
-  buttonRow: {
-    flexWrap: "wrap",
-  } as ViewStyle,
-  autoSyncRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-  } as ViewStyle,
-  radioRow: {
-    alignItems: "center",
-    marginVertical: 8,
-  } as ViewStyle,
-  versionRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-  } as ViewStyle,
-  helperText: {
-    marginTop: 4,
-  },
-  clearButton: {
-    marginTop: 16,
-  } as ViewStyle,
-  accordionTrigger: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 8,
-  } as ViewStyle,
-  accordionTriggerInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: 8,
-  } as ViewStyle,
-  connectedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  } as ViewStyle,
-  accordionContent: {
-    padding: 8,
-    paddingTop: 12,
-  } as ViewStyle,
   syncButtonsContainer: {
     marginTop: 8,
   } as ViewStyle,
 }
-
-// Memoized theme colors
-const successColor = SEMANTIC_COLORS.success
-const errorColor = SEMANTIC_COLORS.error
-const primaryColor = ACCENT_COLORS.primary
 
 export default function SettingsScreen() {
   const {
@@ -138,10 +79,7 @@ export default function SettingsScreen() {
     clearSyncConfig,
   } = useSettings()
 
-  // Initialize form state from store values (syncConfig loaded during store initialization)
-  const [token, setToken] = useState(syncConfig?.token ?? "")
-  const [repo, setRepo] = useState(syncConfig?.repo ?? "")
-  const [branch, setBranch] = useState(syncConfig?.branch ?? "main")
+  // GitHub config state
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
@@ -158,89 +96,69 @@ export default function SettingsScreen() {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
 
-  // GitHub config validation errors
-  const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
+  // GitHub config handlers
+  const handleSaveConfig = useCallback(
+    async (config: SyncConfig) => {
+      // Check if this is first-time configuration (no previous config existed)
+      const isFirstTimeSetup = syncConfig === null
 
-  // Memoized handlers
-  const handleSaveConfig = useCallback(async () => {
-    // Dismiss keyboard to ensure button press is captured
-    Keyboard.dismiss()
+      saveSyncConfig(config)
+      addNotification("Sync configuration saved", "success")
 
-    // Validate GitHub configuration with Zod
-    const validation = validateGitHubConfig({ token, repo, branch })
+      // Only prompt to download if this is first-time setup AND no local expenses
+      if (isFirstTimeSetup && state.expenses.length === 0) {
+        Alert.alert(
+          "Download Existing Data?",
+          "Would you like to download your expenses from GitHub now?",
+          [
+            { text: "Not Now", style: "cancel" },
+            {
+              text: "Download",
+              onPress: async () => {
+                try {
+                  const result = await syncDown(7, settings.syncSettings)
+                  if (result.success && result.expenses) {
+                    replaceAllExpenses(result.expenses)
+                    addNotification(
+                      `Downloaded ${result.expenses.length} expenses`,
+                      "success"
+                    )
 
-    if (!validation.success) {
-      setConfigErrors(validation.errors)
-      addNotification("Please fix the validation errors", "error")
-      return
-    }
+                    if (result.settings && settings.syncSettings) {
+                      replaceSettings(result.settings)
+                      addNotification("Settings applied from GitHub", "success")
+                    }
 
-    // Clear errors on successful validation
-    setConfigErrors({})
-
-    // Check if this is first-time configuration (no previous config existed)
-    const isFirstTimeSetup = syncConfig === null
-
-    const config: SyncConfig = { token, repo, branch }
-    saveSyncConfig(config)
-    addNotification("Sync configuration saved", "success")
-
-    // Only prompt to download if this is first-time setup AND no local expenses
-    if (isFirstTimeSetup && state.expenses.length === 0) {
-      Alert.alert(
-        "Download Existing Data?",
-        "Would you like to download your expenses from GitHub now?",
-        [
-          { text: "Not Now", style: "cancel" },
-          {
-            text: "Download",
-            onPress: async () => {
-              try {
-                const result = await syncDown(7, settings.syncSettings)
-                if (result.success && result.expenses) {
-                  replaceAllExpenses(result.expenses)
-                  addNotification(
-                    `Downloaded ${result.expenses.length} expenses`,
-                    "success"
-                  )
-
-                  if (result.settings && settings.syncSettings) {
-                    replaceSettings(result.settings)
-                    addNotification("Settings applied from GitHub", "success")
+                    if (!settings.autoSyncEnabled) {
+                      setAutoSyncEnabled(true)
+                      addNotification("Auto-sync enabled", "info")
+                    }
+                  } else {
+                    addNotification(result.error || result.message, "error")
                   }
-
-                  if (!settings.autoSyncEnabled) {
-                    setAutoSyncEnabled(true)
-                    addNotification("Auto-sync enabled", "info")
-                  }
-                } else {
-                  addNotification(result.error || result.message, "error")
+                } catch (error) {
+                  addNotification(String(error), "error")
                 }
-              } catch (error) {
-                addNotification(String(error), "error")
-              }
+              },
             },
-          },
-        ]
-      )
-    }
-  }, [
-    token,
-    repo,
-    branch,
-    syncConfig,
-    state.expenses.length,
-    settings.syncSettings,
-    settings.autoSyncEnabled,
-    saveSyncConfig,
-    setAutoSyncEnabled,
-    replaceAllExpenses,
-    replaceSettings,
-    addNotification,
-  ])
+          ]
+        )
+      }
+    },
+    [
+      syncConfig,
+      state.expenses.length,
+      settings.syncSettings,
+      settings.autoSyncEnabled,
+      saveSyncConfig,
+      setAutoSyncEnabled,
+      replaceAllExpenses,
+      replaceSettings,
+      addNotification,
+    ]
+  )
 
   const handleTestConnection = useCallback(async () => {
-    Keyboard.dismiss()
     setIsTesting(true)
     setConnectionStatus("idle")
 
@@ -264,9 +182,6 @@ export default function SettingsScreen() {
         style: "destructive",
         onPress: () => {
           clearSyncConfig()
-          setToken("")
-          setRepo("")
-          setBranch("main")
           setConnectionStatus("idle")
           addNotification("Configuration cleared", "success")
         },
@@ -274,6 +189,21 @@ export default function SettingsScreen() {
     ])
   }, [clearSyncConfig, addNotification])
 
+  const handleConnectionStatusChange = useCallback(
+    (status: "idle" | "success" | "error") => {
+      setConnectionStatus(status)
+    },
+    []
+  )
+
+  const handleNotification = useCallback(
+    (message: string, type: "success" | "error" | "info") => {
+      addNotification(message, type)
+    },
+    [addNotification]
+  )
+
+  // App info handlers
   const handleCheckForUpdates = useCallback(async () => {
     const fromPlayStore = await isPlayStoreInstall()
     if (fromPlayStore) {
@@ -305,6 +235,7 @@ export default function SettingsScreen() {
     Linking.openURL(APP_CONFIG.github.url)
   }, [])
 
+  // Theme and settings handlers
   const handleThemeChange = useCallback(
     (theme: "light" | "dark" | "system") => {
       setTheme(theme)
@@ -324,13 +255,6 @@ export default function SettingsScreen() {
       setDefaultPaymentMethod(paymentMethod)
     },
     [setDefaultPaymentMethod]
-  )
-
-  const handleAutoSyncTimingChange = useCallback(
-    (value: string) => {
-      setAutoSyncTiming(value as AutoSyncTiming)
-    },
-    [setAutoSyncTiming]
   )
 
   // Category CRUD handlers
@@ -448,18 +372,15 @@ export default function SettingsScreen() {
   const showConflictDialog = useCallback(
     (conflicts: TrueConflict[]): Promise<ConflictResolution[] | undefined> => {
       return new Promise((resolve) => {
-        // For simplicity, show a dialog with options to keep all local or all remote
-        // A more advanced UI could show each conflict individually
         const conflictCount = conflicts.length
         const conflictSummary = conflicts
           .slice(0, 3)
           .map((c) => {
             const localNote = c.localVersion.note || "Unnamed"
             const remoteNote = c.remoteVersion.note || "Unnamed"
-            const localAmount = `$${c.localVersion.amount}`
-            const remoteAmount = `$${c.remoteVersion.amount}`
+            const localAmount = `${c.localVersion.amount}`
+            const remoteAmount = `${c.remoteVersion.amount}`
 
-            // Show both versions side by side
             return `• Local: ${localNote} (${localAmount})\n  Remote: ${remoteNote} (${remoteAmount})`
           })
           .join("\n\n")
@@ -509,18 +430,14 @@ export default function SettingsScreen() {
       syncSettingsEnabled: settings.syncSettings,
       callbacks: {
         onConflict: async (conflicts: TrueConflict[]) => {
-          // Show conflict resolution dialog
           const resolutions = await showConflictDialog(conflicts)
           if (resolutions) {
-            // User chose to resolve - send resolutions to state machine
             syncMachine.resolveConflicts(resolutions)
           } else {
-            // User cancelled
             syncMachine.cancel()
           }
         },
         onSuccess: (result) => {
-          // Build success message from merge result (Requirements 7.1, 7.2, 7.3, 7.4)
           const messageParts: string[] = []
 
           if (result.mergeResult) {
@@ -543,7 +460,6 @@ export default function SettingsScreen() {
             if (updatedFromLocal.length > 0) {
               messageParts.push(`${updatedFromLocal.length} updated from local`)
             }
-            // Include auto-resolved conflicts count (Requirement 7.4)
             if (autoResolved.length > 0) {
               messageParts.push(`${autoResolved.length} auto-resolved`)
             }
@@ -569,12 +485,10 @@ export default function SettingsScreen() {
             clearSettingsChangeFlag()
           }
 
-          // Update local expenses with merged result if available
           if (result.mergeResult && result.mergeResult.merged.length > 0) {
             replaceAllExpenses(result.mergeResult.merged)
           }
 
-          // Apply merged categories from sync if available
           if (result.syncResult?.mergedCategories) {
             replaceCategories(result.syncResult.mergedCategories)
           }
@@ -648,334 +562,48 @@ export default function SettingsScreen() {
             Sync your expenses to a GitHub repository using a Personal Access Token.
           </Text>
 
-          {/* Collapsible GitHub Configuration */}
-          <Accordion type="single" collapsible defaultValue={undefined}>
-            <Accordion.Item value="github-config">
-              <Accordion.Trigger
-                bg="$backgroundHover"
-                style={layoutStyles.accordionTrigger}
-              >
-                {({ open }: { open: boolean }) => (
-                  <>
-                    <XStack style={layoutStyles.accordionTriggerInner}>
-                      <Text fontWeight="500">GitHub Configuration</Text>
-                      {isConfigured && (
-                        <XStack style={layoutStyles.connectedBadge}>
-                          <Check size={14} color={successColor} />
-                          <Text fontSize="$2" color={successColor}>
-                            Connected
-                          </Text>
-                        </XStack>
-                      )}
-                    </XStack>
-                    <ChevronDown
-                      size={18}
-                      style={{
-                        transform: [{ rotate: open ? "180deg" : "0deg" }],
-                      }}
-                    />
-                  </>
-                )}
-              </Accordion.Trigger>
-              <Accordion.Content style={layoutStyles.accordionContent}>
-                <YStack gap="$3">
-                  {/* GitHub PAT */}
-                  <YStack gap="$2">
-                    <Label>GitHub Personal Access Token</Label>
-                    <Input
-                      secureTextEntry
-                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                      value={token}
-                      onChangeText={(text) => {
-                        setToken(text)
-                        // Clear error when user starts typing
-                        if (configErrors.token) {
-                          setConfigErrors((prev) => {
-                            const { token: _, ...rest } = prev
-                            return rest
-                          })
-                        }
-                      }}
-                      size="$4"
-                      borderWidth={2}
-                      borderColor={configErrors.token ? "$red10" : "$borderColor"}
-                    />
-                    {configErrors.token ? (
-                      <Text fontSize="$2" color="$red10">
-                        {configErrors.token}
-                      </Text>
-                    ) : (
-                      <Text fontSize="$2" color="$color" opacity={0.6}>
-                        Create a fine-grained PAT with Contents (read/write) permission
-                      </Text>
-                    )}
-                  </YStack>
+          {/* GitHub Configuration */}
+          <GitHubConfigSection
+            syncConfig={syncConfig}
+            onSaveConfig={handleSaveConfig}
+            onTestConnection={handleTestConnection}
+            onClearConfig={handleClearConfig}
+            isTesting={isTesting}
+            connectionStatus={connectionStatus}
+            onConnectionStatusChange={handleConnectionStatusChange}
+            onNotification={handleNotification}
+          />
 
-                  {/* Repository */}
-                  <YStack gap="$2">
-                    <Label>Repository</Label>
-                    <Input
-                      placeholder="username/repo-name"
-                      value={repo}
-                      onChangeText={(text) => {
-                        setRepo(text)
-                        // Clear error when user starts typing
-                        if (configErrors.repo) {
-                          setConfigErrors((prev) => {
-                            const { repo: _, ...rest } = prev
-                            return rest
-                          })
-                        }
-                      }}
-                      size="$4"
-                      borderWidth={2}
-                      borderColor={configErrors.repo ? "$red10" : "$borderColor"}
-                    />
-                    {configErrors.repo && (
-                      <Text fontSize="$2" color="$red10">
-                        {configErrors.repo}
-                      </Text>
-                    )}
-                  </YStack>
-
-                  {/* Branch */}
-                  <YStack gap="$2">
-                    <Label>Branch</Label>
-                    <Input
-                      placeholder="main"
-                      value={branch}
-                      onChangeText={(text) => {
-                        setBranch(text)
-                        // Clear error when user starts typing
-                        if (configErrors.branch) {
-                          setConfigErrors((prev) => {
-                            const { branch: _, ...rest } = prev
-                            return rest
-                          })
-                        }
-                      }}
-                      size="$4"
-                      borderWidth={2}
-                      borderColor={configErrors.branch ? "$red10" : "$borderColor"}
-                    />
-                    {configErrors.branch && (
-                      <Text fontSize="$2" color="$red10">
-                        {configErrors.branch}
-                      </Text>
-                    )}
-                  </YStack>
-
-                  {/* Action Buttons */}
-                  <XStack gap="$3" style={layoutStyles.buttonRow}>
-                    <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
-                      Save Config
-                    </Button>
-                    <Button
-                      flex={1}
-                      size="$4"
-                      onPress={handleTestConnection}
-                      disabled={isTesting || !token || !repo}
-                      icon={
-                        connectionStatus === "success"
-                          ? Check
-                          : connectionStatus === "error"
-                            ? X
-                            : undefined
-                      }
-                      style={{
-                        backgroundColor:
-                          connectionStatus === "success"
-                            ? successColor
-                            : connectionStatus === "error"
-                              ? errorColor
-                              : primaryColor,
-                      }}
-                      color={connectionStatus === "idle" ? undefined : "white"}
-                    >
-                      {isTesting ? "Testing..." : "Test"}
-                    </Button>
-                  </XStack>
-
-                  {/* Clear Configuration Button */}
-                  {isConfigured && (
-                    <Button
-                      size="$3"
-                      color="white"
-                      onPress={handleClearConfig}
-                      icon={X}
-                      style={{ marginTop: 12, backgroundColor: errorColor }}
-                    >
-                      Clear Configuration
-                    </Button>
-                  )}
-                </YStack>
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion>
-
-          {/* Sync Button - only shown when configured */}
+          {/* Sync Button and Auto-Sync Options - only shown when configured */}
           {isConfigured && (
             <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
               <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
                 {syncButtonText}
               </Button>
 
-              {/* Auto Sync Settings - grouped here as requested */}
-              <YStack
-                gap="$3"
-                borderTopWidth={1}
-                borderTopColor="$borderColor"
-                style={{ paddingTop: 16 }}
-              >
-                <Text fontSize="$4" fontWeight="600">
-                  Auto-Sync & Options
-                </Text>
-
-                {/* Enable Auto-Sync Toggle */}
-                <XStack style={layoutStyles.autoSyncRow}>
-                  <YStack flex={1}>
-                    <Label>Enable Auto-Sync</Label>
-                    <Text
-                      fontSize="$2"
-                      color="$color"
-                      opacity={0.6}
-                      style={layoutStyles.helperText}
-                    >
-                      Automatically sync with GitHub when configured
-                    </Text>
-                  </YStack>
-                  <Switch
-                    size="$4"
-                    checked={settings.autoSyncEnabled}
-                    onCheckedChange={setAutoSyncEnabled}
-                    backgroundColor={
-                      settings.autoSyncEnabled
-                        ? SEMANTIC_COLORS.success
-                        : ("$gray8" as any)
-                    }
-                  >
-                    <Switch.Thumb />
-                  </Switch>
-                </XStack>
-
-                {/* Also sync settings toggle */}
-                <XStack style={layoutStyles.autoSyncRow}>
-                  <YStack flex={1}>
-                    <Label>Also sync settings</Label>
-                    <Text
-                      fontSize="$2"
-                      color="$color"
-                      opacity={0.6}
-                      style={layoutStyles.helperText}
-                    >
-                      Include theme and preferences in sync
-                    </Text>
-                  </YStack>
-                  <Switch
-                    size="$4"
-                    checked={settings.syncSettings}
-                    onCheckedChange={handleSyncSettingsToggle}
-                    backgroundColor={
-                      settings.syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)
-                    }
-                  >
-                    <Switch.Thumb />
-                  </Switch>
-                </XStack>
-
-                {/* When to Sync */}
-                {settings.autoSyncEnabled && (
-                  <YStack gap="$2" style={{ marginTop: 8 }}>
-                    <Label>When to Sync</Label>
-                    <RadioGroup
-                      value={settings.autoSyncTiming}
-                      onValueChange={handleAutoSyncTimingChange}
-                    >
-                      <XStack gap="$2" style={layoutStyles.radioRow}>
-                        <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
-                          <RadioGroup.Indicator />
-                        </RadioGroup.Item>
-                        <YStack flex={1}>
-                          <Label htmlFor="on_launch">On App Launch</Label>
-                          <Text fontSize="$2" color="$color" opacity={0.6}>
-                            Sync when the app starts
-                          </Text>
-                        </YStack>
-                      </XStack>
-
-                      <XStack gap="$2" style={layoutStyles.radioRow}>
-                        <RadioGroup.Item value="on_change" id="on_change" size="$4">
-                          <RadioGroup.Indicator />
-                        </RadioGroup.Item>
-                        <YStack flex={1}>
-                          <Label htmlFor="on_change">On Every Change</Label>
-                          <Text fontSize="$2" color="$color" opacity={0.6}>
-                            Sync immediately after making changes
-                          </Text>
-                        </YStack>
-                      </XStack>
-                    </RadioGroup>
-                  </YStack>
-                )}
-              </YStack>
+              {/* Auto-Sync Section */}
+              <AutoSyncSection
+                autoSyncEnabled={settings.autoSyncEnabled}
+                autoSyncTiming={settings.autoSyncTiming}
+                syncSettings={settings.syncSettings}
+                onAutoSyncEnabledChange={setAutoSyncEnabled}
+                onAutoSyncTimingChange={setAutoSyncTiming}
+                onSyncSettingsChange={handleSyncSettingsToggle}
+              />
             </YStack>
           )}
         </SettingsSection>
 
         {/* APP INFORMATION Section */}
         <SettingsSection title="APP INFORMATION">
-          <YStack gap="$3">
-            {/* Current Version */}
-            <XStack style={layoutStyles.versionRow}>
-              <Text color="$color" opacity={0.8}>
-                Current Version
-              </Text>
-              <Text fontWeight="bold">v{APP_CONFIG.version}</Text>
-            </XStack>
-
-            {/* Update Info */}
-            {updateInfo && !updateInfo.error && (
-              <XStack style={layoutStyles.versionRow}>
-                <Text color="$color" opacity={0.8}>
-                  Latest Version
-                </Text>
-                <Text
-                  fontWeight="bold"
-                  color={updateInfo.hasUpdate ? successColor : "$color"}
-                  opacity={updateInfo.hasUpdate ? 1 : 0.8}
-                >
-                  v{updateInfo.latestVersion}
-                </Text>
-              </XStack>
-            )}
-
-            {/* Check for Updates Button */}
-            <Button
-              size="$4"
-              onPress={handleCheckForUpdates}
-              disabled={isCheckingUpdate}
-              icon={Download}
-            >
-              {isCheckingUpdate ? "Checking..." : "Check for Updates"}
-            </Button>
-
-            {/* Update Available - Open Release */}
-            {updateInfo?.hasUpdate && (
-              <Button
-                size="$4"
-                themeInverse
-                onPress={handleOpenRelease}
-                icon={ExternalLink}
-              >
-                Download v{updateInfo.latestVersion}
-              </Button>
-            )}
-
-            {/* GitHub Link */}
-            <Button size="$3" chromeless onPress={handleOpenGitHub} icon={ExternalLink}>
-              View on GitHub
-            </Button>
-          </YStack>
+          <AppInfoSection
+            currentVersion={APP_CONFIG.version}
+            updateInfo={updateInfo}
+            isCheckingUpdate={isCheckingUpdate}
+            onCheckForUpdates={handleCheckForUpdates}
+            onOpenRelease={handleOpenRelease}
+            onOpenGitHub={handleOpenGitHub}
+          />
         </SettingsSection>
       </YStack>
     </ScreenContainer>

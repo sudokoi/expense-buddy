@@ -9,13 +9,71 @@ import {
   clearPendingChanges,
   loadPendingChanges,
 } from "../services/change-tracker"
-import {
-  performAutoSyncIfEnabled,
-  shouldAutoSyncForTiming,
-} from "../services/auto-sync-service"
 import { AppSettings } from "../services/settings-manager"
+import {
+  performAutoSyncOnChange,
+  performAutoSyncOnLaunch,
+  AutoSyncCallbacks,
+} from "./helpers"
 
 const EXPENSES_KEY = "expenses"
+
+// Store event emitter for cross-store communication
+type SettingsDownloadedListener = (settings: AppSettings) => void
+const settingsDownloadedListeners: SettingsDownloadedListener[] = []
+
+export function onSettingsDownloaded(listener: SettingsDownloadedListener): () => void {
+  settingsDownloadedListeners.push(listener)
+  return () => {
+    const index = settingsDownloadedListeners.indexOf(listener)
+    if (index > -1) {
+      settingsDownloadedListeners.splice(index, 1)
+    }
+  }
+}
+
+export function emitSettingsDownloaded(settings: AppSettings): void {
+  settingsDownloadedListeners.forEach((listener) => listener(settings))
+}
+
+// Sync notification event emitter for cross-store communication
+type SyncNotificationListener = (notification: SyncNotification) => void
+const syncNotificationListeners: SyncNotificationListener[] = []
+
+export function onSyncNotification(listener: SyncNotificationListener): () => void {
+  syncNotificationListeners.push(listener)
+  return () => {
+    const index = syncNotificationListeners.indexOf(listener)
+    if (index > -1) {
+      syncNotificationListeners.splice(index, 1)
+    }
+  }
+}
+
+function emitSyncNotification(notification: SyncNotification): void {
+  syncNotificationListeners.forEach((listener) => listener(notification))
+}
+
+/**
+ * Create auto-sync callbacks for expense store actions
+ * These callbacks update store state based on sync results
+ */
+function createAutoSyncCallbacks(): AutoSyncCallbacks {
+  return {
+    onExpensesReplaced: (expenses: Expense[]) => {
+      expenseStore.trigger.replaceExpenses({ expenses })
+    },
+    onPendingChangesCleared: () => {
+      expenseStore.trigger.clearPendingChangesCount()
+    },
+    onSyncNotification: (notification: SyncNotification) => {
+      expenseStore.trigger.setSyncNotification({ notification })
+    },
+    onSettingsDownloaded: (settings: AppSettings) => {
+      emitSettingsDownloaded(settings)
+    },
+  }
+}
 
 export const expenseStore = createStore({
   context: {
@@ -58,21 +116,7 @@ export const expenseStore = createStore({
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
         await trackAdd(event.expense.id)
-
-        const shouldSync = await shouldAutoSyncForTiming("on_change")
-        if (shouldSync) {
-          const result = await performAutoSyncIfEnabled(newExpenses)
-          if (result.synced && result.expenses) {
-            expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-            await clearPendingChanges()
-            expenseStore.trigger.clearPendingChangesCount()
-            if (result.notification) {
-              expenseStore.trigger.setSyncNotification({
-                notification: result.notification,
-              })
-            }
-          }
-        }
+        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
       return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
@@ -92,21 +136,7 @@ export const expenseStore = createStore({
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
         await trackEdit(event.expense.id)
-
-        const shouldSync = await shouldAutoSyncForTiming("on_change")
-        if (shouldSync) {
-          const result = await performAutoSyncIfEnabled(newExpenses)
-          if (result.synced && result.expenses) {
-            expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-            await clearPendingChanges()
-            expenseStore.trigger.clearPendingChangesCount()
-            if (result.notification) {
-              expenseStore.trigger.setSyncNotification({
-                notification: result.notification,
-              })
-            }
-          }
-        }
+        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
       return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
@@ -126,21 +156,7 @@ export const expenseStore = createStore({
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
         await trackDelete(event.id)
-
-        const shouldSync = await shouldAutoSyncForTiming("on_change")
-        if (shouldSync) {
-          const result = await performAutoSyncIfEnabled(newExpenses)
-          if (result.synced && result.expenses) {
-            expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-            await clearPendingChanges()
-            expenseStore.trigger.clearPendingChangesCount()
-            if (result.notification) {
-              expenseStore.trigger.setSyncNotification({
-                notification: result.notification,
-              })
-            }
-          }
-        }
+        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
       return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
@@ -230,20 +246,7 @@ export const expenseStore = createStore({
 
         // Trigger auto-sync if enabled for on_change timing
         if (affectedExpenseIds.length > 0) {
-          const shouldSync = await shouldAutoSyncForTiming("on_change")
-          if (shouldSync) {
-            const result = await performAutoSyncIfEnabled(newExpenses)
-            if (result.synced && result.expenses) {
-              expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-              await clearPendingChanges()
-              expenseStore.trigger.clearPendingChangesCount()
-              if (result.notification) {
-                expenseStore.trigger.setSyncNotification({
-                  notification: result.notification,
-                })
-              }
-            }
-          }
+          await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
         }
       })
 
@@ -293,20 +296,7 @@ export const expenseStore = createStore({
 
         // Trigger auto-sync if enabled for on_change timing
         if (affectedExpenseIds.length > 0) {
-          const shouldSync = await shouldAutoSyncForTiming("on_change")
-          if (shouldSync) {
-            const result = await performAutoSyncIfEnabled(newExpenses)
-            if (result.synced && result.expenses) {
-              expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-              await clearPendingChanges()
-              expenseStore.trigger.clearPendingChangesCount()
-              if (result.notification) {
-                expenseStore.trigger.setSyncNotification({
-                  notification: result.notification,
-                })
-              }
-            }
-          }
+          await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
         }
       })
 
@@ -314,42 +304,6 @@ export const expenseStore = createStore({
     },
   },
 })
-
-// Store event emitter for cross-store communication
-type SettingsDownloadedListener = (settings: AppSettings) => void
-const settingsDownloadedListeners: SettingsDownloadedListener[] = []
-
-export function onSettingsDownloaded(listener: SettingsDownloadedListener): () => void {
-  settingsDownloadedListeners.push(listener)
-  return () => {
-    const index = settingsDownloadedListeners.indexOf(listener)
-    if (index > -1) {
-      settingsDownloadedListeners.splice(index, 1)
-    }
-  }
-}
-
-export function emitSettingsDownloaded(settings: AppSettings): void {
-  settingsDownloadedListeners.forEach((listener) => listener(settings))
-}
-
-// Sync notification event emitter for cross-store communication
-type SyncNotificationListener = (notification: SyncNotification) => void
-const syncNotificationListeners: SyncNotificationListener[] = []
-
-export function onSyncNotification(listener: SyncNotificationListener): () => void {
-  syncNotificationListeners.push(listener)
-  return () => {
-    const index = syncNotificationListeners.indexOf(listener)
-    if (index > -1) {
-      syncNotificationListeners.splice(index, 1)
-    }
-  }
-}
-
-function emitSyncNotification(notification: SyncNotification): void {
-  syncNotificationListeners.forEach((listener) => listener(notification))
-}
 
 // Exported initialization function - call from React component tree
 export async function initializeExpenseStore(): Promise<void> {
@@ -367,23 +321,8 @@ export async function initializeExpenseStore(): Promise<void> {
 
     expenseStore.trigger.loadExpenses({ expenses, pendingChanges })
 
-    const shouldSync = await shouldAutoSyncForTiming("on_launch")
-    if (shouldSync) {
-      const result = await performAutoSyncIfEnabled(expenses)
-      if (result.synced && result.expenses) {
-        expenseStore.trigger.replaceExpenses({ expenses: result.expenses })
-        await clearPendingChanges()
-        expenseStore.trigger.clearPendingChangesCount()
-        if (result.downloadedSettings) {
-          emitSettingsDownloaded(result.downloadedSettings)
-        }
-        if (result.notification) {
-          expenseStore.trigger.setSyncNotification({ notification: result.notification })
-        }
-      } else if (result.downloadedSettings) {
-        emitSettingsDownloaded(result.downloadedSettings)
-      }
-    }
+    // Perform auto-sync on launch using the helper
+    await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
   } catch (error) {
     console.warn("Failed to initialize expense store:", error)
     expenseStore.trigger.loadExpenses({ expenses: [] })

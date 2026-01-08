@@ -1,5 +1,6 @@
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { useExpenses, useCategories } from "../stores/hooks"
+import { Expense } from "../types/expense"
 import {
   TimeWindow,
   PieChartDataItem,
@@ -27,6 +28,9 @@ export interface AnalyticsData {
   lineChartData: LineChartDataItem[]
   statistics: AnalyticsStatistics
   isLoading: boolean
+  // Memoized filter functions for consumers that need to apply additional filtering
+  filterByTimeWindow: (expenses: Expense[]) => Expense[]
+  filterByCategories: (expenses: Expense[]) => Expense[]
 }
 
 /**
@@ -54,15 +58,31 @@ export function useAnalyticsData(
     return colorMap
   }, [categories])
 
+  // Memoized filter callback: Filter expenses by time window
+  const filterByTimeWindow = useCallback(
+    (expenses: Expense[]): Expense[] => {
+      return filterExpensesByTimeWindow(expenses, timeWindow)
+    },
+    [timeWindow]
+  )
+
+  // Memoized filter callback: Filter expenses by selected categories
+  const filterByCategories = useCallback(
+    (expenses: Expense[]): Expense[] => {
+      return filterExpensesByCategories(expenses, selectedCategories)
+    },
+    [selectedCategories]
+  )
+
   // Memoized: Filter expenses by time window
   const timeFilteredExpenses = useMemo(() => {
-    return filterExpensesByTimeWindow(activeExpenses, timeWindow)
-  }, [activeExpenses, timeWindow])
+    return filterByTimeWindow(activeExpenses)
+  }, [activeExpenses, filterByTimeWindow])
 
   // Memoized: Filter expenses by selected categories
   const filteredExpenses = useMemo(() => {
-    return filterExpensesByCategories(timeFilteredExpenses, selectedCategories)
-  }, [timeFilteredExpenses, selectedCategories])
+    return filterByCategories(timeFilteredExpenses)
+  }, [timeFilteredExpenses, filterByCategories])
 
   // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
@@ -92,12 +112,27 @@ export function useAnalyticsData(
     return calculateStatistics(filteredExpenses, daysInPeriod)
   }, [filteredExpenses, timeWindow])
 
-  return {
-    filteredExpenses,
-    pieChartData,
-    paymentMethodChartData,
-    lineChartData,
-    statistics,
-    isLoading,
-  }
+  // Memoized: Return object to ensure stable reference
+  return useMemo(
+    () => ({
+      filteredExpenses,
+      pieChartData,
+      paymentMethodChartData,
+      lineChartData,
+      statistics,
+      isLoading,
+      filterByTimeWindow,
+      filterByCategories,
+    }),
+    [
+      filteredExpenses,
+      pieChartData,
+      paymentMethodChartData,
+      lineChartData,
+      statistics,
+      isLoading,
+      filterByTimeWindow,
+      filterByCategories,
+    ]
+  )
 }
