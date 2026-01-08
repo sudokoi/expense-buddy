@@ -16,7 +16,12 @@ import { testConnection, SyncConfig, syncDown } from "../../services/sync-manage
 import { validateGitHubConfig } from "../../utils/github-config-validation"
 import { AutoSyncTiming } from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
-import { useExpenses, useNotifications, useSettings, useCategories } from "../../stores"
+import {
+  useExpenses,
+  useNotifications,
+  useSettings,
+  useCategories,
+} from "../../stores/hooks"
 import {
   useSyncMachine,
   TrueConflict,
@@ -29,14 +34,12 @@ import {
   isPlayStoreInstall,
 } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
-import {
-  ScreenContainer,
-  ThemeSelector,
-  SettingsSection,
-  DefaultPaymentMethodSelector,
-  CategorySection,
-  CategoryFormModal,
-} from "../../components/ui"
+import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { ThemeSelector } from "../../components/ui/ThemeSelector"
+import { SettingsSection } from "../../components/ui/SettingsSection"
+import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPaymentMethodSelector"
+import { CategorySection } from "../../components/ui/CategorySection"
+import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../constants/theme-colors"
 import { Category } from "../../types/category"
 

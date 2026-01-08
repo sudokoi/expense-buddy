@@ -25,7 +25,7 @@ import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
-import { useCategories } from "../../stores"
+import { useCategories } from "../../stores/hooks"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {

@@ -1,18 +1,16 @@
 import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
-import { useExpenses, useCategories } from "../../stores"
+import { useExpenses, useCategories } from "../../stores/hooks"
 import { format, parseISO } from "date-fns"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
-import {
-  ExpenseCard,
-  AmountText,
-  CategoryIcon,
-  ScreenContainer,
-  SectionHeader,
-  EditExpenseModal,
-} from "../../components/ui"
+import { ExpenseCard } from "../../components/ui/ExpenseCard"
+import { AmountText } from "../../components/ui/AmountText"
+import { CategoryIcon } from "../../components/ui/CategoryIcon"
+import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { SectionHeader } from "../../components/ui/SectionHeader"
+import { EditExpenseModal } from "../../components/ui/EditExpenseModal"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"

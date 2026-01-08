@@ -1,17 +1,15 @@
 import { format, parseISO, subDays } from "date-fns"
 import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses, useCategories } from "../../stores"
+import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
 import React from "react"
-import {
-  ExpenseCard,
-  AmountText,
-  ScreenContainer,
-  SectionHeader,
-  DynamicCategoryIcon,
-} from "../../components/ui"
+import { ExpenseCard } from "../../components/ui/ExpenseCard"
+import { AmountText } from "../../components/ui/AmountText"
+import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { SectionHeader } from "../../components/ui/SectionHeader"
+import { DynamicCategoryIcon } from "../../components/ui/DynamicCategoryIcon"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import type { Expense } from "../../types/expense"
 

@@ -1,7 +1,8 @@
 import { useColorScheme } from "react-native"
 import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { config } from "../tamagui.config"
-import { StoreProvider, useSettings } from "../stores"
+import { StoreProvider } from "../stores/store-provider"
+import { useSettings } from "../stores/hooks"
 
 /**
  * Inner provider component that uses effectiveTheme from settings store

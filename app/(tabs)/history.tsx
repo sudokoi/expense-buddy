@@ -5,7 +5,12 @@ import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useNotifications, useSettings, useCategories } from "../../stores"
+import {
+  useExpenses,
+  useNotifications,
+  useSettings,
+  useCategories,
+} from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
@@ -23,13 +28,11 @@ import {
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
-import {
-  ExpenseCard,
-  AmountText,
-  CategoryCard,
-  PaymentMethodCard,
-  DynamicCategoryIcon,
-} from "../../components/ui"
+import { ExpenseCard } from "../../components/ui/ExpenseCard"
+import { AmountText } from "../../components/ui/AmountText"
+import { CategoryCard } from "../../components/ui/CategoryCard"
+import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
+import { DynamicCategoryIcon } from "../../components/ui/DynamicCategoryIcon"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {

@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
-import { useCategories } from "../../stores"
+import { useCategories } from "../../stores/hooks"
 import * as LucideIcons from "@tamagui/lucide-icons"
 
 interface CategoryFilterProps {

@@ -2,7 +2,8 @@ import React from "react"
 import { View as RNView, ViewStyle } from "react-native"
 import { Text, YStack, styled } from "tamagui"
 import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
-import { useNotifications, NotificationType } from "../stores"
+import { useNotifications } from "../stores/hooks"
+import { NotificationType } from "../stores/notification-store"
 import { getNotificationColor } from "../constants/theme-colors"
 
 // Kawaii notification styling with softer colors and rounded design

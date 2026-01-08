@@ -41,38 +41,29 @@ import {
 } from "./merge-engine"
 import { mergeCategories } from "./category-merger"
 
+// Import sync types from centralized location
+import type {
+  SyncConfig,
+  SyncResult,
+  SyncNotification,
+  SyncDirection,
+  SyncDirectionResult,
+  FetchAllRemoteResult,
+} from "../types/sync"
+
+// Re-export types for backward compatibility
+export type {
+  SyncConfig,
+  SyncResult,
+  SyncNotification,
+  SyncDirection,
+  SyncDirectionResult,
+  FetchAllRemoteResult,
+}
+
 const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
 const GITHUB_BRANCH_KEY = "github_branch"
-
-export interface SyncConfig {
-  token: string
-  repo: string
-  branch: string
-}
-
-export interface SyncResult {
-  success: boolean
-  message: string
-  error?: string
-  // Differential sync reporting fields
-  filesUploaded?: number
-  filesSkipped?: number
-  filesDeleted?: number
-  // Settings sync reporting fields
-  settingsSynced?: boolean
-  settingsSkipped?: boolean
-  settingsError?: string
-  // Timestamp of the commit if one was created
-  commitTimestamp?: string
-}
-
-export interface SyncNotification {
-  newItemsCount: number
-  updatedItemsCount: number
-  totalCount: number
-  message: string
-}
 
 // Helper functions for secure storage with platform check
 async function secureSetItem(key: string, value: string): Promise<void> {
@@ -155,21 +146,6 @@ export async function testConnection(): Promise<SyncResult> {
       error: result.error,
     }
   }
-}
-
-/**
- * Sync direction types for the unified sync button
- */
-export type SyncDirection = "push" | "pull" | "conflict" | "in_sync" | "error"
-
-/**
- * Result of determining sync direction
- */
-export interface SyncDirectionResult {
-  direction: SyncDirection
-  localTime: string | null
-  remoteTime: string | null
-  error?: string
 }
 
 /**
@@ -794,21 +770,9 @@ async function getLastSyncTime(): Promise<string | null> {
 // ============================================================================
 
 /**
- * Result of fetching all remote expenses
- */
-export interface FetchAllRemoteResult {
-  success: boolean
-  expenses?: Expense[]
-  error?: string
-  filesDownloaded?: number
-}
-
-/**
  * Fetch ALL remote expenses from the repository
  * Unlike syncDown which only fetches recent days, this fetches all expense files
  * to ensure complete data for merge operations.
- *
- * Requirements: 1.1, 1.2
  */
 export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
   try {
@@ -825,7 +789,7 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
     try {
       files = await listFiles(config.token, config.repo, config.branch)
     } catch (listError) {
-      // Requirement 1.3: Catch network errors during fetch
+      // Catch network errors during fetch
       const errorMessage = String(listError)
       if (
         errorMessage.includes("Failed to fetch") ||

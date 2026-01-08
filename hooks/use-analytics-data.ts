@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useExpenses, useCategories } from "../stores"
+import { useExpenses, useCategories } from "../stores/hooks"
 import {
   TimeWindow,
   PieChartDataItem,

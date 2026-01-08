@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useSettings, useCategories } from "../../stores"
+import { useExpenses, useSettings, useCategories } from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
@@ -16,7 +16,8 @@ import {
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { validateExpenseForm } from "../../utils/expense-validation"
-import { CategoryCard, PaymentMethodCard } from "../../components/ui"
+import { CategoryCard } from "../../components/ui/CategoryCard"
+import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
