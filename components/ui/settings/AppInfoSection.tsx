@@ -1,6 +1,6 @@
 import { YStack, XStack, Text, Button } from "tamagui"
 import { ViewStyle } from "react-native"
-import { Download, ExternalLink } from "@tamagui/lucide-icons"
+import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 
@@ -11,6 +11,7 @@ import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
  * - Current version display
  * - Update checking functionality
  * - Links to GitHub and release downloads
+ * - Issue reporting
  */
 export interface AppInfoSectionProps {
   /** Current app version string */
@@ -25,6 +26,8 @@ export interface AppInfoSectionProps {
   onOpenRelease: () => void
   /** Callback to open the GitHub repository */
   onOpenGitHub: () => void
+  /** Callback to open the issue reporting page */
+  onReportIssue: () => void
 }
 
 // Layout styles for the component
@@ -46,6 +49,7 @@ const successColor = SEMANTIC_COLORS.success
  * - Latest version display (when available)
  * - Check for updates button
  * - Download update button (when update available)
+ * - Issue reporting link
  * - GitHub repository link
  */
 export function AppInfoSection({
@@ -55,6 +59,7 @@ export function AppInfoSection({
   onCheckForUpdates,
   onOpenRelease,
   onOpenGitHub,
+  onReportIssue,
 }: AppInfoSectionProps) {
   return (
     <YStack gap="$3">
@@ -98,6 +103,11 @@ export function AppInfoSection({
           Download v{updateInfo.latestVersion}
         </Button>
       )}
+
+      {/* Report an Issue */}
+      <Button size="$3" chromeless onPress={onReportIssue} icon={Bug}>
+        Report an Issue
+      </Button>
 
       {/* GitHub Link */}
       <Button size="$3" chromeless onPress={onOpenGitHub} icon={ExternalLink}>

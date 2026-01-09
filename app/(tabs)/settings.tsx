@@ -235,6 +235,10 @@ export default function SettingsScreen() {
     Linking.openURL(APP_CONFIG.github.url)
   }, [])
 
+  const handleReportIssue = useCallback(() => {
+    Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
+  }, [])
+
   // Theme and settings handlers
   const handleThemeChange = useCallback(
     (theme: "light" | "dark" | "system") => {
@@ -603,6 +607,7 @@ export default function SettingsScreen() {
             onCheckForUpdates={handleCheckForUpdates}
             onOpenRelease={handleOpenRelease}
             onOpenGitHub={handleOpenGitHub}
+            onReportIssue={handleReportIssue}
           />
         </SettingsSection>
       </YStack>

@@ -347,6 +347,23 @@ eas build --platform android --profile internal
 
 See [.github/RELEASE.md](.github/RELEASE.md) for automated APK builds via GitHub Actions.
 
+## 🐛 Reporting Issues
+
+Found a bug or have a feature request? We'd love to hear from you!
+
+**In-App Reporting:**
+
+- Open the app and go to **Settings**
+- Scroll to **APP INFORMATION**
+- Tap **Report an Issue**
+- Choose between Bug Report or Feature Request
+
+**GitHub Issues:**
+
+- Visit [github.com/sudokoi/expense-buddy/issues](https://github.com/sudokoi/expense-buddy/issues/new/choose)
+- Select the appropriate template
+- Fill in the details
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

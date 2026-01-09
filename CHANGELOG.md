@@ -1,5 +1,14 @@
 # expense-buddy
 
+## 1.10.2
+
+### Patch Changes
+
+- Add issue templates and Report an Issue button
+  - Add GitHub issue templates for bug reports and feature requests
+  - Add "Report an Issue" button in settings above "View on GitHub"
+  - Configure issue template chooser to guide users to appropriate forms
+
 ## 1.10.1
 
 ### Patch Changes
