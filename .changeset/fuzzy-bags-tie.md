@@ -10,3 +10,5 @@ Add in-app update notification system
 - Smart URL handling: Play Store for Play Store installs, GitHub releases otherwise
 - Manual update check from settings bypasses dismissal
 - useUpdateCheck hook for centralized update state management
+
+Fix dashboard chart Y-axis label truncation for large expense values (e.g., 27000 → 27K)

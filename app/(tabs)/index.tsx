@@ -147,6 +147,18 @@ export default function DashboardScreen() {
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
 
+  // Format Y-axis labels to handle large numbers (e.g., 27000 → 27K)
+  const formatYLabel = React.useCallback((value: string) => {
+    const num = parseFloat(value)
+    if (num >= 100000) {
+      return `${(num / 100000).toFixed(1)}L`
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(0)}K`
+    }
+    return value
+  }, [])
+
   // Memoized navigation handlers
   const handleAddPress = React.useCallback(() => {
     router.push("/(tabs)/add")
@@ -232,6 +244,8 @@ export default function DashboardScreen() {
                 fontSize: 10,
               }}
               yAxisTextStyle={{ color: chartTextColor }}
+              yAxisLabelWidth={50}
+              formatYLabel={formatYLabel}
               spacing={20}
             />
           </YStack>
