@@ -5,6 +5,9 @@ module.exports = {
     "**/services/**/*.test.ts",
     "**/stores/**/*.test.ts",
     "**/hooks/**/*.test.ts",
+    "**/components/**/*.test.ts",
+    "**/components/**/*.test.tsx",
+    "**/*.property.test.ts",
   ],
   transform: {
     "^.+\\.tsx?$": ["babel-jest", { presets: ["@babel/preset-typescript"] }],

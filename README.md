@@ -61,6 +61,10 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Cross-Platform**: Works on iOS, Android, and Web
 - **Dark Mode**: Automatic theme switching with proper token-based styling
+- **In-App Updates**: Automatic update check on launch with non-intrusive banner notification
+  - Dismissible notifications that remember your choice per version
+  - Manual check available in Settings
+  - Opens Play Store or GitHub releases based on install source
 - **Reusable UI Components**: Consistent styling with `ExpenseCard`, `AmountText`, `CategoryIcon`, `ScreenContainer`, `SectionHeader`, and `CategoryCard`
 - **Notifications**: Toast messages for sync status and actions
 - **Offline First**: Works without internet, syncs when connected
@@ -210,6 +214,7 @@ The app includes a comprehensive set of reusable styled components:
 | `CategoryFormModal`            | Modal for creating/editing custom categories         |
 | `ColorPickerSheet`             | Bottom sheet for selecting category colors           |
 | `DynamicCategoryIcon`          | Runtime icon rendering for custom categories         |
+| `UpdateBanner`                 | Non-intrusive update notification banner             |
 
 **Settings Components** (`components/ui/settings/`):
 
@@ -260,7 +265,8 @@ expense-buddy/
 │   ├── NotificationStack.tsx
 │   └── SyncIndicator.tsx
 ├── hooks/                # React hooks
-│   └── use-sync-machine.ts   # XState sync machine React hook
+│   ├── use-sync-machine.ts   # XState sync machine React hook
+│   └── use-update-check.ts   # In-app update check hook
 ├── stores/               # XState Store state management
 │   ├── expense-store.ts      # Expense data store
 │   ├── settings-store.ts     # App settings store
