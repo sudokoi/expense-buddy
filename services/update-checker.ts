@@ -21,8 +21,13 @@ export interface UpdateInfo {
   latestVersion?: string
   releaseUrl?: string
   releaseNotes?: string
+  publishedAt?: string
   error?: string
 }
+
+// Minimum time (in ms) since release before showing update notification for Play Store installs
+// This gives time for the release to propagate to Play Store
+const PLAY_STORE_DELAY_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * Check if the app was installed from Google Play Store
@@ -77,28 +82,26 @@ function compareVersions(v1: string, v2: string): number {
 }
 
 /**
+ * Check if a release is old enough to be available on Play Store
+ * Returns true if the release was published more than PLAY_STORE_DELAY_MS ago
+ */
+export function isReleaseOldEnough(publishedAt: string, now: Date = new Date()): boolean {
+  const releaseDate = new Date(publishedAt)
+  const timeSinceRelease = now.getTime() - releaseDate.getTime()
+  return timeSinceRelease >= PLAY_STORE_DELAY_MS
+}
+
+/**
  * Check for app updates from GitHub releases
- * In Expo Go, always uses GitHub check (Play Store check not available)
+ * Uses GitHub as the source of truth for version info.
+ * For Play Store installs, applies a delay to ensure the update is available on Play Store.
  */
 export async function checkForUpdates(): Promise<UpdateInfo> {
   const currentVersion = APP_CONFIG.version
 
   try {
-    // In Expo Go, skip Play Store check and go straight to GitHub
-    if (!isExpoGo()) {
-      // Check if installed from Play Store (only works in standalone builds)
-      const fromPlayStore = await isPlayStoreInstall()
-      if (fromPlayStore) {
-        // For Play Store installs, we can't check programmatically
-        // Return info directing user to Play Store
-        return {
-          hasUpdate: false,
-          currentVersion,
-          releaseUrl: APP_CONFIG.playStore?.url,
-          error: "Check Play Store for updates",
-        }
-      }
-    }
+    // Determine if this is a Play Store install (for URL override and delay logic)
+    const fromPlayStore = !isExpoGo() && (await isPlayStoreInstall())
 
     const { owner, repo } = APP_CONFIG.github
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`
@@ -122,10 +125,22 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
 
     const release = await response.json()
     const latestVersion = release.tag_name.replace(/^v/, "")
-    const releaseUrl = release.html_url
     const releaseNotes = release.body || ""
+    const publishedAt = release.published_at || ""
 
-    const hasUpdate = compareVersions(latestVersion, currentVersion) > 0
+    // Determine if there's a newer version
+    const isNewerVersion = compareVersions(latestVersion, currentVersion) > 0
+
+    // For Play Store installs, only show update if release is old enough
+    // This gives time for the release to propagate to Play Store
+    // If publishedAt is missing, be conservative and don't show the update
+    let hasUpdate = isNewerVersion
+    if (fromPlayStore && isNewerVersion) {
+      hasUpdate = publishedAt ? isReleaseOldEnough(publishedAt) : false
+    }
+
+    // Use Play Store URL for Play Store installs, GitHub URL otherwise
+    const releaseUrl = fromPlayStore ? APP_CONFIG.playStore?.url : release.html_url
 
     return {
       hasUpdate,
@@ -133,6 +148,7 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
       latestVersion,
       releaseUrl,
       releaseNotes,
+      publishedAt,
     }
   } catch (error) {
     console.error("Update check failed:", error)

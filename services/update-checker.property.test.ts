@@ -33,6 +33,7 @@ import {
   setDismissedVersion,
   clearDismissedVersion,
   shouldShowUpdateNotification,
+  isReleaseOldEnough,
   UpdateInfo,
 } from "./update-checker"
 
@@ -240,5 +241,69 @@ describe("Update Checker Properties", () => {
       const result = shouldShowUpdateNotification(updateInfoNoLatestVersion, null)
       expect(result).toBe(false)
     })
+  })
+})
+
+/**
+ * Property 5: Release Age Delay for Play Store
+ * For any release timestamp, the release SHALL be considered old enough
+ * only if at least 1 hour has passed since publication.
+ */
+describe("Property 5: Release Age Delay for Play Store", () => {
+  const ONE_HOUR_MS = 60 * 60 * 1000
+
+  it("release published exactly 1 hour ago SHALL be considered old enough", () => {
+    const now = new Date("2026-01-10T12:00:00Z")
+    const publishedAt = new Date(now.getTime() - ONE_HOUR_MS).toISOString()
+
+    expect(isReleaseOldEnough(publishedAt, now)).toBe(true)
+  })
+
+  it("release published more than 1 hour ago SHALL be considered old enough", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: ONE_HOUR_MS, max: ONE_HOUR_MS * 24 * 7 }), // 1 hour to 1 week
+        (msAgo) => {
+          const now = new Date("2026-01-10T12:00:00Z")
+          const publishedAt = new Date(now.getTime() - msAgo).toISOString()
+
+          expect(isReleaseOldEnough(publishedAt, now)).toBe(true)
+          return true
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+
+  it("release published less than 1 hour ago SHALL NOT be considered old enough", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: ONE_HOUR_MS - 1 }), // 0 to just under 1 hour
+        (msAgo) => {
+          const now = new Date("2026-01-10T12:00:00Z")
+          const publishedAt = new Date(now.getTime() - msAgo).toISOString()
+
+          expect(isReleaseOldEnough(publishedAt, now)).toBe(false)
+          return true
+        }
+      ),
+      { numRuns: 100 }
+    )
+  })
+
+  it("release published in the future SHALL NOT be considered old enough", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: ONE_HOUR_MS * 24 }), // 1ms to 24 hours in future
+        (msInFuture) => {
+          const now = new Date("2026-01-10T12:00:00Z")
+          const publishedAt = new Date(now.getTime() + msInFuture).toISOString()
+
+          expect(isReleaseOldEnough(publishedAt, now)).toBe(false)
+          return true
+        }
+      ),
+      { numRuns: 100 }
+    )
   })
 })
