@@ -10,6 +10,8 @@ import { Provider } from "components/Provider"
 import { useTheme } from "tamagui"
 import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
+import { UpdateBanner } from "../components/ui/UpdateBanner"
+import { useUpdateCheck } from "../hooks/use-update-check"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 
 export {
@@ -56,8 +58,29 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         {children}
         <NotificationStack />
         <SyncIndicator />
+        <UpdateBannerContainer />
       </Provider>
     </KeyboardProvider>
+  )
+}
+
+/**
+ * Container component for the UpdateBanner
+ * Uses the useUpdateCheck hook to manage update state and actions
+ */
+function UpdateBannerContainer() {
+  const { showBanner, latestVersion, handleUpdate, handleDismiss } = useUpdateCheck()
+
+  if (!showBanner || !latestVersion) {
+    return null
+  }
+
+  return (
+    <UpdateBanner
+      version={latestVersion}
+      onUpdate={handleUpdate}
+      onDismiss={handleDismiss}
+    />
   )
 }
 

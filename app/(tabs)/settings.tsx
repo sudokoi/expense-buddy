@@ -13,12 +13,9 @@ import {
   TrueConflict,
   ConflictResolution,
 } from "../../hooks/use-sync-machine"
+import { useUpdateCheck } from "../../hooks/use-update-check"
 import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
-import {
-  checkForUpdates,
-  UpdateInfo,
-  isPlayStoreInstall,
-} from "../../services/update-checker"
+import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
@@ -64,6 +61,14 @@ export default function SettingsScreen() {
   const syncMachine = useSyncMachine()
   const isSyncing = syncMachine.isSyncing
 
+  // Update check hook for manual update checks from settings
+  const {
+    updateAvailable,
+    latestVersion,
+    checkForUpdates: manualCheckForUpdates,
+    handleUpdate: openUpdateUrl,
+  } = useUpdateCheck()
+
   const {
     settings,
     hasUnsyncedChanges: hasUnsyncedSettingsChanges,
@@ -88,9 +93,20 @@ export default function SettingsScreen() {
   // Derive isConfigured from syncConfig !== null
   const isConfigured = syncConfig !== null
 
-  // Update check state
+  // Update check state - use hook's state for updateInfo
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
+
+  // Derive updateInfo from hook state for AppInfoSection compatibility
+  const updateInfo: UpdateInfo | null = useMemo(() => {
+    if (latestVersion) {
+      return {
+        hasUpdate: updateAvailable,
+        currentVersion: APP_CONFIG.version,
+        latestVersion,
+      }
+    }
+    return null
+  }, [updateAvailable, latestVersion])
 
   // Category form modal state
   const [categoryFormOpen, setCategoryFormOpen] = useState(false)
@@ -203,33 +219,22 @@ export default function SettingsScreen() {
     [addNotification]
   )
 
-  // App info handlers
+  // App info handlers - use hook's checkForUpdates for manual checks
+  // This bypasses dismissal so users can always check for updates from settings
   const handleCheckForUpdates = useCallback(async () => {
-    const fromPlayStore = await isPlayStoreInstall()
-    if (fromPlayStore) {
-      Linking.openURL(APP_CONFIG.playStore.url)
-      return
-    }
-
     setIsCheckingUpdate(true)
-    const info = await checkForUpdates()
-    setUpdateInfo(info)
-    setIsCheckingUpdate(false)
-
-    if (info.error) {
-      addNotification(info.error, "error")
-    } else if (info.hasUpdate) {
-      addNotification(`Update available: v${info.latestVersion}`, "success")
-    } else {
-      addNotification("You're on the latest version", "success")
+    try {
+      await manualCheckForUpdates()
+    } finally {
+      setIsCheckingUpdate(false)
     }
-  }, [addNotification])
+  }, [manualCheckForUpdates])
 
-  const handleOpenRelease = useCallback(() => {
-    if (updateInfo?.releaseUrl) {
-      Linking.openURL(updateInfo.releaseUrl)
-    }
-  }, [updateInfo])
+  // Use hook's handleUpdate for opening the release page
+  // This correctly handles Play Store vs GitHub based on install source
+  const handleOpenRelease = useCallback(async () => {
+    await openUpdateUrl()
+  }, [openUpdateUrl])
 
   const handleOpenGitHub = useCallback(() => {
     Linking.openURL(APP_CONFIG.github.url)

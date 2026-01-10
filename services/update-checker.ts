@@ -1,5 +1,19 @@
 import { APP_CONFIG } from "../constants/app-config"
 import { Platform } from "react-native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+
+// AsyncStorage key for dismissed update version
+const DISMISSED_VERSION_KEY = "@expense-buddy/dismissed-update-version"
+
+// Session tracking - tracks if update check has been performed this session
+let hasCheckedThisSession = false
+
+/**
+ * Reset session tracking (for testing purposes)
+ */
+export function resetSessionTracking(): void {
+  hasCheckedThisSession = false
+}
 
 export interface UpdateInfo {
   hasUpdate: boolean
@@ -128,4 +142,91 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
       error: error instanceof Error ? error.message : "Failed to check for updates",
     }
   }
+}
+
+/**
+ * Check for updates on app launch
+ * Only checks once per session and skips in development mode
+ * Returns null if check was skipped, otherwise returns UpdateInfo
+ */
+export async function checkForUpdatesOnLaunch(): Promise<UpdateInfo | null> {
+  // Skip in development mode
+  if (__DEV__) {
+    return null
+  }
+
+  // Skip if already checked this session
+  if (hasCheckedThisSession) {
+    return null
+  }
+
+  // Mark as checked for this session
+  hasCheckedThisSession = true
+
+  // Perform the actual update check
+  return checkForUpdates()
+}
+
+/**
+ * Get the dismissed version from AsyncStorage
+ * Returns null if no version has been dismissed
+ */
+export async function getDismissedVersion(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(DISMISSED_VERSION_KEY)
+  } catch (error) {
+    console.warn("Failed to get dismissed version:", error)
+    return null
+  }
+}
+
+/**
+ * Store a dismissed version in AsyncStorage
+ * This version will be skipped in future update notifications
+ */
+export async function setDismissedVersion(version: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(DISMISSED_VERSION_KEY, version)
+  } catch (error) {
+    console.warn("Failed to set dismissed version:", error)
+  }
+}
+
+/**
+ * Clear the dismissed version from AsyncStorage
+ * This allows the notification to show again for any version
+ */
+export async function clearDismissedVersion(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(DISMISSED_VERSION_KEY)
+  } catch (error) {
+    console.warn("Failed to clear dismissed version:", error)
+  }
+}
+
+/**
+ * Determine if the update notification should be shown
+ * Returns true only if an update is available AND the version differs from the dismissed version
+ */
+export function shouldShowUpdateNotification(
+  updateInfo: UpdateInfo,
+  dismissedVersion: string | null
+): boolean {
+  // No update available - don't show notification
+  if (!updateInfo.hasUpdate) {
+    return false
+  }
+
+  // No latest version info - don't show notification
+  if (!updateInfo.latestVersion) {
+    return false
+  }
+
+  // No dismissed version - show notification
+  if (!dismissedVersion) {
+    return true
+  }
+
+  // Show notification only if the available version is different from dismissed
+  return updateInfo.latestVersion !== dismissedVersion
 }
