@@ -615,9 +615,7 @@ export async function syncDown(
           config.branch
         )
         if (settingsResult) {
-          downloadedSettings = hydrateSettingsFromJson(
-            JSON.parse(settingsResult.content)
-          )
+          downloadedSettings = hydrateSettingsFromJson(JSON.parse(settingsResult.content))
           settingsDownloaded = true
         }
       } catch (settingsError) {

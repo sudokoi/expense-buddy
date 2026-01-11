@@ -137,9 +137,7 @@ describe("payment-instruments", () => {
   describe("createMigrationNickname", () => {
     test("uses method-specific base label", () => {
       expect(createMigrationNickname("UPI", "123", [])).toBe("UPI 123")
-      expect(createMigrationNickname("Credit Card", "1234", [])).toBe(
-        "Credit 1234"
-      )
+      expect(createMigrationNickname("Credit Card", "1234", [])).toBe("Credit 1234")
       expect(createMigrationNickname("Debit Card", "1234", [])).toBe("Debit 1234")
     })
 

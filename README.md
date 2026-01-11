@@ -25,7 +25,10 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
 - **Custom Categories**: Create, edit, and reorder expense categories with custom colors and icons
-- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking)
+- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking, etc.)
+- **Saved Payment Instruments**: Save your commonly used cards/UPI IDs with nicknames
+  - Cards store only last **4** digits, UPI stores only last **3** digits
+  - Expenses can reference a saved instrument by ID (CSV stays backward compatible)
 - **Default Payment Method**: Set a preferred payment method for faster entry
 - **Full CRUD**: Create, read, update, and delete expenses with ease
 - **History View**: Browse expenses organized by date with search and filter
@@ -35,11 +38,16 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Visual Charts**: Bar charts showing daily spending patterns
 - **Category Breakdown**: See spending distribution across categories
 - **Payment Method Analysis**: Pie chart showing expense distribution by payment method
+- **Filters**: Filter analytics by category, payment method, and (when applicable) saved instrument
+- **Instrument Breakdown**: See spending per card/UPI nickname for selected payment methods
 - **Time-based Analysis**: Track expenses over days, weeks, and months
 
 ### ☁️ GitHub Sync
 
 - **Secure Backup**: Sync expenses to your private GitHub repository
+- **Optional Settings Sync**: Also sync non-sensitive app settings (like categories and saved payment instruments) via `settings.json`
+  - Off by default; controlled by a toggle in Settings
+  - GitHub token/repo configuration is never synced (stays on-device)
 - **Daily File Organization**: Expenses stored as `expenses-YYYY-MM-DD.csv` files (one file per day)
 - **Git-Style Sync**: Fetch-merge-push workflow prevents accidental data loss
   - Always fetches remote data before pushing
@@ -115,8 +123,17 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 2. Enter the amount
 3. Select a category
 4. Add a note (optional)
-5. Choose the date
-6. Tap **Add Expense**
+5. Choose your payment method
+6. If you selected Credit/Debit/UPI, optionally select a saved instrument (or choose **Others** and enter digits)
+7. Choose the date
+8. Tap **Add Expense**
+
+### Managing Payment Instruments
+
+1. Go to the **Settings** tab
+2. Find **Saved Instruments**
+3. Tap **Add** to create a new card/UPI nickname
+4. Edit or remove instruments as needed (removals are soft-deletes so they sync correctly)
 
 ### Setting Up GitHub Sync
 
@@ -199,38 +216,45 @@ The app includes a comprehensive set of reusable styled components:
 
 **Core UI Components** (`components/ui/`):
 
-| Component                      | Description                                          |
-| ------------------------------ | ---------------------------------------------------- |
-| `AmountText`                   | Displays expense/income amounts with semantic colors |
-| `CategoryCard`                 | Selectable category card with color theming          |
-| `CategoryIcon`                 | Circular icon container with category color          |
-| `ExpenseCard`                  | Card wrapper for expense list items                  |
-| `ScreenContainer`              | Scrollable screen wrapper with consistent padding    |
-| `SectionHeader`                | Styled section title text                            |
-| `SettingsSection`              | Card wrapper for settings groups                     |
-| `ThemeSelector`                | Theme preference selector (light/dark/system)        |
-| `DefaultPaymentMethodSelector` | Payment method preference selector                   |
-| `PaymentMethodCard`            | Selectable payment method display card               |
-| `CategoryFormModal`            | Modal for creating/editing custom categories         |
-| `ColorPickerSheet`             | Bottom sheet for selecting category colors           |
-| `DynamicCategoryIcon`          | Runtime icon rendering for custom categories         |
-| `UpdateBanner`                 | Non-intrusive update notification banner             |
+| Component                         | Description                                                |
+| --------------------------------- | ---------------------------------------------------------- |
+| `AmountText`                      | Displays expense/income amounts with semantic colors       |
+| `CategoryCard`                    | Selectable category card with color theming                |
+| `CategoryIcon`                    | Circular icon container with category color                |
+| `ExpenseCard`                     | Card wrapper for expense list items                        |
+| `ScreenContainer`                 | Scrollable screen wrapper with consistent padding          |
+| `SectionHeader`                   | Styled section title text                                  |
+| `SettingsSection`                 | Card wrapper for settings groups                           |
+| `ThemeSelector`                   | Theme preference selector (light/dark/system)              |
+| `DefaultPaymentMethodSelector`    | Payment method preference selector                         |
+| `PaymentMethodCard`               | Selectable payment method display card                     |
+| `CategoryFormModal`               | Modal for creating/editing custom categories               |
+| `ColorPickerSheet`                | Bottom sheet for selecting category colors                 |
+| `DynamicCategoryIcon`             | Runtime icon rendering for custom categories               |
+| `UpdateBanner`                    | Non-intrusive update notification banner                   |
+| `PaymentInstrumentInlineDropdown` | Inline selector to pick a saved instrument or enter digits |
+| `PaymentInstrumentFormModal`      | Create/edit a saved payment instrument                     |
 
 **Settings Components** (`components/ui/settings/`):
 
-| Component             | Description                                  |
-| --------------------- | -------------------------------------------- |
-| `AppInfoSection`      | App version and build information display    |
-| `AutoSyncSection`     | Auto-sync configuration with timing controls |
-| `GitHubConfigSection` | GitHub repository and token configuration    |
+| Component                   | Description                                  |
+| --------------------------- | -------------------------------------------- |
+| `AppInfoSection`            | App version and build information display    |
+| `AutoSyncSection`           | Auto-sync configuration with timing controls |
+| `GitHubConfigSection`       | GitHub repository and token configuration    |
+| `PaymentInstrumentsSection` | Add/edit/remove saved cards and UPI IDs      |
 
 **Analytics Components** (`components/analytics/`):
 
-| Component               | Description                             |
-| ----------------------- | --------------------------------------- |
-| `PaymentMethodPieChart` | Payment method breakdown visualization  |
-| `CollapsibleSection`    | Collapsible chart wrapper with headers  |
-| `CategoryFilter`        | Category selection filter for analytics |
+| Component                           | Description                               |
+| ----------------------------------- | ----------------------------------------- |
+| `PaymentMethodPieChart`             | Payment method breakdown visualization    |
+| `PaymentMethodFilter`               | Payment method chip filter                |
+| `CollapsibleSection`                | Collapsible chart wrapper with headers    |
+| `CategoryFilter`                    | Category selection filter for analytics   |
+| `PaymentInstrumentFilter`           | Instrument chip filter (contextual)       |
+| `PaymentInstrumentPieChart`         | Instrument breakdown visualization        |
+| `PaymentInstrumentBreakdownSection` | Instrument breakdown section with filters |
 
 All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
 
@@ -271,7 +295,6 @@ expense-buddy/
 │   ├── expense-store.ts      # Expense data store
 │   ├── settings-store.ts     # App settings store
 │   ├── notification-store.ts # Toast notifications store
-│   ├── sync-status-store.ts  # Sync status store
 │   ├── hooks.ts              # Custom hooks (useExpenses, useSettings, etc.)
 │   ├── store-provider.tsx    # Store initialization provider
 │   └── index.ts              # Store exports
@@ -285,6 +308,9 @@ expense-buddy/
 │   ├── daily-file-manager.ts
 │   ├── hash-storage.ts   # Content hashing for differential sync
 │   ├── change-tracker.ts # Record-level change tracking
+│   ├── payment-instruments.ts # Instrument utilities + validation
+│   ├── payment-instruments-migration.ts # One-time linking migration for legacy expenses
+│   ├── payment-instrument-merger.ts # Merge logic for syncing instruments
 │   └── auto-sync-service.ts
 ├── constants/            # App constants
 │   ├── categories.ts
@@ -292,7 +318,8 @@ expense-buddy/
 │   └── payment-method-colors.ts  # Chart colors for payment methods
 ├── tamagui.config.ts     # Tamagui theme configuration with getColorValue helper
 └── types/               # TypeScript types
-    └── expense.ts
+  ├── expense.ts
+  └── payment-instrument.ts
 ```
 
 ## 🧪 Testing
@@ -309,8 +336,8 @@ yarn test:watch
 
 ### Test Coverage
 
-- **Unit Tests**: 52 tests covering all 4 stores
-- **Property-Based Tests**: 11 properties validating store correctness using fast-check
+- **Unit Tests**: Coverage for services, stores, and critical utilities
+- **Property-Based Tests**: fast-check properties validating merge/sync/store correctness
 - **Test Files**: Located in `stores/__tests__/` and `services/`
 
 ## 🔧 Configuration

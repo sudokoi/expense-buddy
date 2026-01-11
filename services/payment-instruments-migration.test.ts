@@ -31,10 +31,8 @@ describe("migratePaymentInstrumentsOnStartup", () => {
   beforeEach(() => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date("2025-01-01T00:00:00.000Z"))
-
     ;(AsyncStorage.getItem as jest.Mock).mockReset()
     ;(AsyncStorage.setItem as jest.Mock).mockReset()
-
     ;(loadSettings as jest.Mock).mockReset()
     ;(saveSettings as jest.Mock).mockReset()
     ;(markSettingsChanged as jest.Mock).mockReset()

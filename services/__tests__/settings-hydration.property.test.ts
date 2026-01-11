@@ -64,12 +64,16 @@ describe("hydrateSettingsFromJson (properties)", () => {
     const rawSettingsArb = fc.record({
       paymentInstruments: fc.array(
         fc.record({
-          id: fc.string({ minLength: 1, maxLength: 24 }).filter((s) => s.trim().length > 0),
+          id: fc
+            .string({ minLength: 1, maxLength: 24 })
+            .filter((s) => s.trim().length > 0),
           method: fc.constantFrom("Credit Card", "Debit Card", "UPI"),
           nickname: fc
             .string({ minLength: 1, maxLength: 30 })
             .filter((s) => s.trim().length > 0),
-          lastDigits: fc.string({ minLength: 1, maxLength: 6 }).filter((s) => /^[0-9]+$/.test(s)),
+          lastDigits: fc
+            .string({ minLength: 1, maxLength: 6 })
+            .filter((s) => /^[0-9]+$/.test(s)),
           createdAt: isoDateArb,
           updatedAt: isoDateArb,
           deletedAt: fc.option(isoDateArb, { nil: undefined }),

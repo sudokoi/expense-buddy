@@ -56,10 +56,13 @@ describe("mergePaymentInstruments (properties)", () => {
         (local, remote) => {
           const result = mergePaymentInstruments(local, remote)
 
-          const union = new Set<string>([...local.map((i) => i.id), ...remote.map((i) => i.id)])
-          expect(result.merged.map((i) => i.id).sort((a, b) => a.localeCompare(b))).toEqual(
-            Array.from(union).sort((a, b) => a.localeCompare(b))
-          )
+          const union = new Set<string>([
+            ...local.map((i) => i.id),
+            ...remote.map((i) => i.id),
+          ])
+          expect(
+            result.merged.map((i) => i.id).sort((a, b) => a.localeCompare(b))
+          ).toEqual(Array.from(union).sort((a, b) => a.localeCompare(b)))
 
           // sorted by id
           const ids = result.merged.map((i) => i.id)
@@ -114,7 +117,8 @@ describe("mergePaymentInstruments (properties)", () => {
             expect(m).toBeDefined()
             if (!l || !r || !m) continue
 
-            const newer = r.updatedAt > l.updatedAt ? r : l.updatedAt > r.updatedAt ? l : r
+            const newer =
+              r.updatedAt > l.updatedAt ? r : l.updatedAt > r.updatedAt ? l : r
             // tie chooses remote
             expect(m.updatedAt).toBe(newer.updatedAt)
             expect(m.nickname).toBe(newer.nickname)
