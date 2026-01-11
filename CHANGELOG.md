@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 1.12.1
+
+### Patch Changes
+
+- Refactored theme management and improved system UI readability
+  - Removed hardcoded UI color literals across the app by centralizing theme colors/tokens and adding a contrast helper so text/icons remain readable in light/dark mode; updated category fallbacks, shadows, and web background behavior; tests stayed green
+  - Improved system UI readability by making the StatusBar follow the app’s effective theme (so time/notification icons are visible in light mode); typecheck + full test suite pass
+
 ## 1.12.0
 
 ### Minor Changes
