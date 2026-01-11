@@ -1,6 +1,6 @@
 import { createActor, waitFor } from "xstate"
 import { Expense } from "../types/expense"
-import { loadSyncConfig, SyncNotification } from "./sync-manager"
+import { loadSyncConfig, SyncNotification, type GitStyleSyncResult } from "./sync-manager"
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
 
@@ -58,10 +58,10 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
 
     actor.stop()
 
-    const state = finalSnapshot.value
     const context = finalSnapshot.context
+    const syncResult = context.syncResult as GitStyleSyncResult | undefined
 
-    if (state === "success") {
+    if (finalSnapshot.matches("success")) {
       // Build notification from merge result
       let notification: SyncNotification | undefined
       const mergeResult = context.mergeResult
@@ -83,7 +83,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           synced: true,
           expenses: mergeResult.merged,
           notification,
-          downloadedSettings: context.syncResult?.mergedSettings,
+          downloadedSettings: syncResult?.mergedSettings,
         }
       } else if (context.syncResult) {
         notification = {
@@ -97,22 +97,22 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           synced: true,
           expenses: localExpenses,
           notification,
-          downloadedSettings: context.syncResult?.mergedSettings,
+          downloadedSettings: syncResult?.mergedSettings,
         }
       }
 
       return {
         synced: true,
         expenses: localExpenses,
-        downloadedSettings: context.syncResult?.mergedSettings,
+        downloadedSettings: syncResult?.mergedSettings,
       }
-    } else if (state === "inSync") {
+    } else if (finalSnapshot.matches("inSync")) {
       return {
         synced: true,
         expenses: localExpenses,
-        downloadedSettings: context.syncResult?.mergedSettings,
+        downloadedSettings: syncResult?.mergedSettings,
       }
-    } else if (state === "conflict") {
+    } else if (finalSnapshot.matches("conflict")) {
       // For auto-sync, we don't show conflict dialogs - just skip
       // User needs to manually sync to resolve conflicts
       return {

@@ -98,7 +98,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
             bg={infoStyles.actionBg}
             borderWidth={1}
             borderColor={infoStyles.actionBorderColor}
-            borderRadius={999}
+            style={{ borderRadius: 999 }}
             pressStyle={{ opacity: 0.8 }}
             onPress={onUpdate}
             testID="update-banner-update-button"

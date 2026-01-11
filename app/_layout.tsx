@@ -13,6 +13,7 @@ import { SyncIndicator } from "../components/SyncIndicator"
 import { UpdateBanner } from "../components/ui/UpdateBanner"
 import { useUpdateCheck } from "../hooks/use-update-check"
 import { KeyboardProvider } from "react-native-keyboard-controller"
+import { useSettings } from "../stores/hooks"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -85,11 +86,25 @@ function UpdateBannerContainer() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme()
+  const systemScheme = useColorScheme()
   const theme = useTheme()
+
+  // Follow the app's effective theme (settings) so StatusBar stays readable
+  // even when the user forces light/dark opposite to the OS scheme.
+  const { effectiveTheme, isLoading } = useSettings()
+  const resolvedScheme = isLoading
+    ? systemScheme === "dark"
+      ? "dark"
+      : "light"
+    : effectiveTheme
+
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+    <ThemeProvider value={resolvedScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <StatusBar
+        style={resolvedScheme === "dark" ? "light" : "dark"}
+        backgroundColor={theme.background.val}
+        translucent={false}
+      />
       <Stack>
         <Stack.Screen
           name="(tabs)"

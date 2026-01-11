@@ -92,7 +92,7 @@ export function CategoryFormModal({
   // Form state - derived from props when modal opens
   const [label, setLabel] = useState("")
   const [icon, setIcon] = useState("Circle")
-  const [color, setColor] = useState(CATEGORY_COLORS.Other)
+  const [color, setColor] = useState<string>(CATEGORY_COLORS.Other)
 
   // Icon picker state
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
