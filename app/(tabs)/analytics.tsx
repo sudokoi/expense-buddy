@@ -7,9 +7,12 @@ import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { TimeWindowSelector } from "../../components/analytics/TimeWindowSelector"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import { CategoryFilter } from "../../components/analytics/CategoryFilter"
+import { PaymentInstrumentFilter } from "../../components/analytics/PaymentInstrumentFilter"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
+import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
 
 const styles = {
   headerRow: {
@@ -77,15 +80,22 @@ export default function AnalyticsScreen() {
   // Local state for selected categories (empty = all categories)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
+  // Local state for selected payment instruments (empty = all instruments)
+  const [selectedPaymentInstruments, setSelectedPaymentInstruments] = useState<
+    PaymentInstrumentSelectionKey[]
+  >([])
+
   // Get analytics data from hook
   const {
     filteredExpenses,
     pieChartData,
     paymentMethodChartData,
+    paymentInstrumentChartData,
     lineChartData,
     statistics,
+    paymentInstruments,
     isLoading,
-  } = useAnalyticsData(timeWindow, selectedCategories)
+  } = useAnalyticsData(timeWindow, selectedCategories, selectedPaymentInstruments)
 
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback((category: string | null) => {
@@ -95,6 +105,20 @@ export default function AnalyticsScreen() {
       )
     }
   }, [])
+
+  const handlePaymentInstrumentSelect = useCallback(
+    (key: PaymentInstrumentSelectionKey | null) => {
+      if (!key) {
+        setSelectedPaymentInstruments([])
+        return
+      }
+
+      setSelectedPaymentInstruments((prev) =>
+        prev.length === 1 && prev[0] === key ? [] : [key]
+      )
+    },
+    []
+  )
 
   // Check if there's any data to display
   const hasData = filteredExpenses.length > 0
@@ -115,6 +139,13 @@ export default function AnalyticsScreen() {
             onChange={setSelectedCategories}
           />
 
+          {/* Always show payment instrument filter so users can reset it */}
+          <PaymentInstrumentFilter
+            instruments={paymentInstruments}
+            selected={selectedPaymentInstruments}
+            onChange={setSelectedPaymentInstruments}
+          />
+
           {!hasAnyExpenses ? (
             <EmptyState
               title="No expenses recorded in this period."
@@ -133,6 +164,15 @@ export default function AnalyticsScreen() {
                 onCategorySelect={handleCategorySelect}
               />
               <PaymentMethodPieChart data={paymentMethodChartData} />
+              <PaymentInstrumentPieChart
+                data={paymentInstrumentChartData}
+                selectedKey={
+                  selectedPaymentInstruments.length === 1
+                    ? selectedPaymentInstruments[0]
+                    : null
+                }
+                onSelect={handlePaymentInstrumentSelect}
+              />
               <LineChartSection data={lineChartData} />
             </>
           )}

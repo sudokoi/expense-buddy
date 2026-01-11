@@ -1,4 +1,8 @@
 import { Expense, PaymentMethodType } from "../types/expense"
+import type {
+  PaymentInstrument,
+  PaymentInstrumentMethod,
+} from "../types/payment-instrument"
 import {
   parseISO,
   subDays,
@@ -10,6 +14,12 @@ import {
 } from "date-fns"
 import { CATEGORY_COLORS } from "../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
+import {
+  PAYMENT_INSTRUMENT_METHODS,
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  isPaymentInstrumentMethod,
+} from "../services/payment-instruments"
 
 // Category color map type for dynamic categories
 export type CategoryColorMap = Record<string, string>
@@ -33,6 +43,152 @@ export interface PaymentMethodChartDataItem {
   text: string
   percentage: number
   paymentMethodType: PaymentMethodType | "Other"
+}
+
+export type PaymentInstrumentSelectionKey = string
+
+const INSTRUMENT_OTHERS_ID = "__others__"
+
+export interface PaymentInstrumentChartDataItem {
+  key: PaymentInstrumentSelectionKey
+  value: number
+  color: string
+  text: string
+  percentage: number
+  method: PaymentInstrumentMethod
+  instrumentId?: string
+  isOther: boolean
+}
+
+export function makePaymentInstrumentSelectionKey(
+  method: PaymentInstrumentMethod,
+  instrumentId?: string
+): PaymentInstrumentSelectionKey {
+  return `${method}::${instrumentId ?? INSTRUMENT_OTHERS_ID}`
+}
+
+function resolveInstrumentKeyForExpense(
+  expense: Expense,
+  instruments: PaymentInstrument[]
+): {
+  method: PaymentInstrumentMethod
+  key: PaymentInstrumentSelectionKey
+  isOther: boolean
+  instrumentId?: string
+} | null {
+  const method = expense.paymentMethod?.type
+  if (!method || !isPaymentInstrumentMethod(method)) return null
+
+  const instrumentId = expense.paymentMethod?.instrumentId
+  const inst = findInstrumentById(instruments, instrumentId)
+  if (!inst || inst.deletedAt) {
+    return {
+      method,
+      key: makePaymentInstrumentSelectionKey(method, undefined),
+      isOther: true,
+      instrumentId: undefined,
+    }
+  }
+
+  return {
+    method,
+    key: makePaymentInstrumentSelectionKey(method, inst.id),
+    isOther: false,
+    instrumentId: inst.id,
+  }
+}
+
+/**
+ * Filter expenses by selected payment instrument keys.
+ * If selection is empty, returns all expenses.
+ * When selection is non-empty, includes ONLY expenses whose payment method is an instrument method
+ * and whose resolved instrument key matches.
+ */
+export function filterExpensesByPaymentInstruments(
+  expenses: Expense[],
+  selectedInstrumentKeys: PaymentInstrumentSelectionKey[],
+  instruments: PaymentInstrument[]
+): Expense[] {
+  if (selectedInstrumentKeys.length === 0) return expenses
+
+  const selection = new Set(selectedInstrumentKeys)
+  return expenses.filter((expense) => {
+    const resolved = resolveInstrumentKeyForExpense(expense, instruments)
+    if (!resolved) return false
+    return selection.has(resolved.key)
+  })
+}
+
+/**
+ * Aggregate expenses by payment instrument (Credit/Debit/UPI).
+ * - If the instrumentId is missing, unknown, or deleted, the expense is grouped under "{method} • Others".
+ * - Only instrument methods are included (Credit Card, Debit Card, UPI).
+ */
+export function aggregateByPaymentInstrument(
+  expenses: Expense[],
+  instruments: PaymentInstrument[]
+): PaymentInstrumentChartDataItem[] {
+  const totals = new Map<
+    PaymentInstrumentSelectionKey,
+    {
+      method: PaymentInstrumentMethod
+      instrumentId?: string
+      isOther: boolean
+      value: number
+    }
+  >()
+
+  for (const expense of expenses) {
+    const resolved = resolveInstrumentKeyForExpense(expense, instruments)
+    if (!resolved) continue
+
+    const current = totals.get(resolved.key)
+    const nextValue = (current?.value ?? 0) + Math.abs(expense.amount)
+    totals.set(resolved.key, {
+      method: resolved.method,
+      instrumentId: resolved.instrumentId,
+      isOther: resolved.isOther,
+      value: nextValue,
+    })
+  }
+
+  const total = Array.from(totals.values()).reduce((sum, v) => sum + v.value, 0)
+  if (total === 0) return []
+
+  const items: PaymentInstrumentChartDataItem[] = []
+  for (const [key, entry] of totals) {
+    if (entry.value <= 0) continue
+
+    let text = `${entry.method} • Others`
+    if (!entry.isOther && entry.instrumentId) {
+      const inst = findInstrumentById(instruments, entry.instrumentId)
+      if (inst && !inst.deletedAt) {
+        text = `${entry.method} • ${formatPaymentInstrumentLabel(inst)}`
+      }
+    }
+
+    items.push({
+      key,
+      value: entry.value,
+      color: PAYMENT_METHOD_COLORS[entry.method],
+      text,
+      percentage: (entry.value / total) * 100,
+      method: entry.method,
+      instrumentId: entry.instrumentId,
+      isOther: entry.isOther,
+    })
+  }
+
+  const methodOrder = new Map<PaymentInstrumentMethod, number>(
+    PAYMENT_INSTRUMENT_METHODS.map((m, idx) => [m, idx])
+  )
+
+  return items.sort((a, b) => {
+    const aOrder = methodOrder.get(a.method) ?? 999
+    const bOrder = methodOrder.get(b.method) ?? 999
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return b.value - a.value
+  })
 }
 
 // Line chart data item

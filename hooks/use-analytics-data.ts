@@ -1,17 +1,22 @@
 import { useMemo, useCallback } from "react"
-import { useExpenses, useCategories } from "../stores/hooks"
+import { useExpenses, useCategories, useSettings } from "../stores/hooks"
 import { Expense } from "../types/expense"
+import type { PaymentInstrument } from "../types/payment-instrument"
 import {
   TimeWindow,
   PieChartDataItem,
   PaymentMethodChartDataItem,
+  PaymentInstrumentChartDataItem,
+  PaymentInstrumentSelectionKey,
   LineChartDataItem,
   AnalyticsStatistics,
   CategoryColorMap,
   filterExpensesByTimeWindow,
   filterExpensesByCategories,
+  filterExpensesByPaymentInstruments,
   aggregateByCategory,
   aggregateByPaymentMethod,
+  aggregateByPaymentInstrument,
   aggregateByDay,
   calculateStatistics,
   getDateRangeForTimeWindow,
@@ -25,12 +30,15 @@ export interface AnalyticsData {
   filteredExpenses: ReturnType<typeof filterExpensesByTimeWindow>
   pieChartData: PieChartDataItem[]
   paymentMethodChartData: PaymentMethodChartDataItem[]
+  paymentInstrumentChartData: PaymentInstrumentChartDataItem[]
   lineChartData: LineChartDataItem[]
   statistics: AnalyticsStatistics
+  paymentInstruments: PaymentInstrument[]
   isLoading: boolean
   // Memoized filter functions for consumers that need to apply additional filtering
   filterByTimeWindow: (expenses: Expense[]) => Expense[]
   filterByCategories: (expenses: Expense[]) => Expense[]
+  filterByPaymentInstruments: (expenses: Expense[]) => Expense[]
 }
 
 /**
@@ -42,12 +50,18 @@ export interface AnalyticsData {
  */
 export function useAnalyticsData(
   timeWindow: TimeWindow,
-  selectedCategories: string[]
+  selectedCategories: string[],
+  selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
 ): AnalyticsData {
   const { state } = useExpenses()
   const { categories } = useCategories()
+  const { settings } = useSettings()
   // Use activeExpenses (excludes soft-deleted) for analytics
   const { activeExpenses, isLoading } = state
+
+  const paymentInstruments = useMemo(() => {
+    return (settings.paymentInstruments ?? []) as PaymentInstrument[]
+  }, [settings.paymentInstruments])
 
   // Memoized: Build category color map from dynamic categories
   const categoryColorMap = useMemo((): CategoryColorMap => {
@@ -74,15 +88,30 @@ export function useAnalyticsData(
     [selectedCategories]
   )
 
+  const filterByPaymentInstruments = useCallback(
+    (expenses: Expense[]): Expense[] => {
+      return filterExpensesByPaymentInstruments(
+        expenses,
+        selectedPaymentInstruments,
+        paymentInstruments
+      )
+    },
+    [selectedPaymentInstruments, paymentInstruments]
+  )
+
   // Memoized: Filter expenses by time window
   const timeFilteredExpenses = useMemo(() => {
     return filterByTimeWindow(activeExpenses)
   }, [activeExpenses, filterByTimeWindow])
 
   // Memoized: Filter expenses by selected categories
-  const filteredExpenses = useMemo(() => {
+  const categoryFilteredExpenses = useMemo(() => {
     return filterByCategories(timeFilteredExpenses)
   }, [timeFilteredExpenses, filterByCategories])
+
+  const filteredExpenses = useMemo(() => {
+    return filterByPaymentInstruments(categoryFilteredExpenses)
+  }, [categoryFilteredExpenses, filterByPaymentInstruments])
 
   // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
@@ -93,6 +122,10 @@ export function useAnalyticsData(
   const paymentMethodChartData = useMemo(() => {
     return aggregateByPaymentMethod(filteredExpenses)
   }, [filteredExpenses])
+
+  const paymentInstrumentChartData = useMemo(() => {
+    return aggregateByPaymentInstrument(filteredExpenses, paymentInstruments)
+  }, [filteredExpenses, paymentInstruments])
 
   // Memoized: Line chart data aggregated by day
   const lineChartData = useMemo(() => {
@@ -118,21 +151,27 @@ export function useAnalyticsData(
       filteredExpenses,
       pieChartData,
       paymentMethodChartData,
+      paymentInstrumentChartData,
       lineChartData,
       statistics,
+      paymentInstruments,
       isLoading,
       filterByTimeWindow,
       filterByCategories,
+      filterByPaymentInstruments,
     }),
     [
       filteredExpenses,
       pieChartData,
       paymentMethodChartData,
+      paymentInstrumentChartData,
       lineChartData,
       statistics,
+      paymentInstruments,
       isLoading,
       filterByTimeWindow,
       filterByCategories,
+      filterByPaymentInstruments,
     ]
   )
 }
