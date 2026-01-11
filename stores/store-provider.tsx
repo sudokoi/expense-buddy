@@ -11,6 +11,7 @@ import {
   expenseStore as defaultExpenseStore,
   ExpenseStore,
   initializeExpenseStore,
+  onSettingsDownloaded,
   onSyncNotification,
 } from "./expense-store"
 import {
@@ -113,6 +114,14 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     const unsubscribe = onSyncNotification(handleSyncNotification)
     return unsubscribe
   }, [handleSyncNotification])
+
+  // Apply downloaded settings from background auto-sync into the settings store.
+  useEffect(() => {
+    const unsubscribe = onSettingsDownloaded((downloaded) => {
+      settingsStore.trigger.replaceSettings({ settings: downloaded })
+    })
+    return unsubscribe
+  }, [settingsStore])
 
   const value = useMemo(
     () => ({

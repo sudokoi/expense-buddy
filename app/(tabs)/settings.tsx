@@ -133,7 +133,9 @@ export default function SettingsScreen() {
               text: "Download",
               onPress: async () => {
                 try {
-                  const result = await syncDown(7, settings.syncSettings)
+                  // In restore flows, always attempt to download settings as well.
+                  // The downloaded settings may include categories/payment instruments.
+                  const result = await syncDown(7, true)
                   if (result.success && result.expenses) {
                     replaceAllExpenses(result.expenses)
                     addNotification(
@@ -141,7 +143,7 @@ export default function SettingsScreen() {
                       "success"
                     )
 
-                    if (result.settings && settings.syncSettings) {
+                    if (result.settings) {
                       replaceSettings(result.settings)
                       addNotification("Settings applied from GitHub", "success")
                     }
@@ -165,7 +167,6 @@ export default function SettingsScreen() {
     [
       syncConfig,
       state.expenses.length,
-      settings.syncSettings,
       settings.autoSyncEnabled,
       saveSyncConfig,
       setAutoSyncEnabled,

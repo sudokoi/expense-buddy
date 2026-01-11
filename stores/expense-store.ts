@@ -18,6 +18,25 @@ import {
 
 const EXPENSES_KEY = "expenses"
 
+function normalizeExpenseForSave(expense: Expense): Expense {
+  const normalizedNote = expense.note.trim()
+  const normalizedCategory = expense.category.trim()
+  const normalizedPaymentMethod = expense.paymentMethod
+    ? {
+        ...expense.paymentMethod,
+        identifier: expense.paymentMethod.identifier?.trim() || undefined,
+        instrumentId: expense.paymentMethod.instrumentId?.trim() || undefined,
+      }
+    : undefined
+
+  return {
+    ...expense,
+    note: normalizedNote,
+    category: normalizedCategory,
+    paymentMethod: normalizedPaymentMethod,
+  }
+}
+
 // Store event emitter for cross-store communication
 type SettingsDownloadedListener = (settings: AppSettings) => void
 const settingsDownloadedListeners: SettingsDownloadedListener[] = []
@@ -107,7 +126,8 @@ export const expenseStore = createStore({
     }),
 
     addExpense: (context, event: { expense: Expense }, enqueue) => {
-      const newExpenses = [event.expense, ...context.expenses]
+      const normalizedExpense = normalizeExpenseForSave(event.expense)
+      const newExpenses = [normalizedExpense, ...context.expenses]
       const newPendingChanges = {
         ...context.pendingChanges,
         added: context.pendingChanges.added + 1,
@@ -115,7 +135,7 @@ export const expenseStore = createStore({
 
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
-        await trackAdd(event.expense.id)
+        await trackAdd(normalizedExpense.id)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
@@ -123,8 +143,9 @@ export const expenseStore = createStore({
     },
 
     editExpense: (context, event: { expense: Expense }, enqueue) => {
+      const normalizedExpense = normalizeExpenseForSave(event.expense)
       const newExpenses = context.expenses.map((e) =>
-        e.id === event.expense.id ? event.expense : e
+        e.id === normalizedExpense.id ? normalizedExpense : e
       )
       // Only increment edited if not already in added set (tracked via change-tracker)
       // For simplicity, we increment here - the actual tracking is in change-tracker
@@ -135,7 +156,7 @@ export const expenseStore = createStore({
 
       enqueue.effect(async () => {
         await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
-        await trackEdit(event.expense.id)
+        await trackEdit(normalizedExpense.id)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
@@ -259,7 +280,9 @@ export const expenseStore = createStore({
       enqueue
     ) => {
       // Handle same-name rename as no-op
-      if (event.fromCategory === event.toCategory) {
+      const fromCategory = event.fromCategory.trim()
+      const toCategory = event.toCategory.trim()
+      if (fromCategory === toCategory) {
         return context
       }
 
@@ -268,11 +291,11 @@ export const expenseStore = createStore({
 
       // Update all active expenses with the old category to use the new category
       const newExpenses = context.expenses.map((expense) => {
-        if (expense.category === event.fromCategory && !expense.deletedAt) {
+        if (expense.category === fromCategory && !expense.deletedAt) {
           affectedExpenseIds.push(expense.id)
           return {
             ...expense,
-            category: event.toCategory,
+            category: toCategory,
             updatedAt: now,
           }
         }

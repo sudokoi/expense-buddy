@@ -16,7 +16,7 @@
  */
 import { setup, assign, fromPromise } from "xstate"
 import { Expense } from "../types/expense"
-import { AppSettings } from "./settings-manager"
+import { AppSettings, computeSettingsHash } from "./settings-manager"
 import {
   gitStyleSync,
   GitStyleSyncResult,
@@ -158,13 +158,19 @@ export const syncMachine = setup({
       }
 
       // Check if already in sync (no changes made)
+      const settingsUnchanged =
+        !input.settings ||
+        !result.mergedSettings ||
+        computeSettingsHash(input.settings) === computeSettingsHash(result.mergedSettings)
+
       if (
         result.success &&
         result.filesUploaded === 0 &&
         result.filesSkipped > 0 &&
         !result.settingsSynced &&
         result.mergeResult?.addedFromRemote.length === 0 &&
-        result.mergeResult?.updatedFromRemote.length === 0
+        result.mergeResult?.updatedFromRemote.length === 0 &&
+        settingsUnchanged
       ) {
         return {
           success: true,

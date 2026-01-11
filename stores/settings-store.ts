@@ -337,6 +337,8 @@ export const settingsStore = createStore({
       // New category gets the order that "Other" currently has
       const newCategory: Category = {
         ...event.category,
+        label: event.category.label.trim(),
+        icon: event.category.icon.trim(),
         color: event.category.color || getRandomCategoryColor(existingColors),
         order: otherOrder,
         updatedAt: new Date().toISOString(),
@@ -385,11 +387,18 @@ export const settingsStore = createStore({
       event: { label: string; updates: Partial<Omit<Category, "updatedAt">> },
       enqueue
     ) => {
+      const normalizedLabel = event.label.trim()
+      const normalizedUpdates: typeof event.updates = {
+        ...event.updates,
+        ...(event.updates.label ? { label: event.updates.label.trim() } : {}),
+        ...(event.updates.icon ? { icon: event.updates.icon.trim() } : {}),
+      }
+
       const newCategories = context.settings.categories.map((cat) => {
-        if (cat.label === event.label) {
+        if (cat.label === normalizedLabel) {
           return {
             ...cat,
-            ...event.updates,
+            ...normalizedUpdates,
             updatedAt: new Date().toISOString(),
           }
         }
@@ -477,7 +486,7 @@ export const settingsStore = createStore({
       // Reorder categories based on the provided labels array
       const newCategories = event.labels
         .map((label, index) => {
-          const cat = categoryMap.get(label)
+          const cat = categoryMap.get(label.trim())
           if (cat) {
             return {
               ...cat,
@@ -526,7 +535,13 @@ export const settingsStore = createStore({
      * Replace all categories (used for sync)
      */
     replaceCategories: (context, event: { categories: Category[] }, enqueue) => {
-      const newSettings = { ...context.settings, categories: event.categories }
+      const sanitizedCategories = event.categories.map((c) => ({
+        ...c,
+        label: c.label.trim(),
+        icon: c.icon.trim(),
+      }))
+
+      const newSettings = { ...context.settings, categories: sanitizedCategories }
       const newSyncState = computeSettingsSyncState(
         newSettings,
         context.syncedSettingsHash

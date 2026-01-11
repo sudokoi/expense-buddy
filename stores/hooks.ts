@@ -308,10 +308,11 @@ export const useCategories = () => {
   const updateCategory = useCallback(
     (label: string, updates: Partial<Omit<Category, "updatedAt">>) => {
       // If label is being changed, update expenses first
-      if (updates.label && updates.label !== label) {
+      const nextLabel = updates.label?.trim()
+      if (nextLabel && nextLabel !== label) {
         expenseStore.trigger.updateExpenseCategories({
           fromCategory: label,
-          toCategory: updates.label,
+          toCategory: nextLabel,
         })
       }
       settingsStore.trigger.updateCategory({ label, updates })

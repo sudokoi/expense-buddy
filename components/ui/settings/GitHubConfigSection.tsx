@@ -103,8 +103,14 @@ export function GitHubConfigSection({
     // Dismiss keyboard to ensure button press is captured
     Keyboard.dismiss()
 
+    const normalized = {
+      token: token.trim(),
+      repo: repo.trim(),
+      branch: branch.trim(),
+    }
+
     // Validate GitHub configuration with Zod
-    const validation = validateGitHubConfig({ token, repo, branch })
+    const validation = validateGitHubConfig(normalized)
 
     if (!validation.success) {
       setConfigErrors(validation.errors)
@@ -115,7 +121,7 @@ export function GitHubConfigSection({
     // Clear errors on successful validation
     setConfigErrors({})
 
-    const config: SyncConfig = { token, repo, branch }
+    const config: SyncConfig = normalized
     onSaveConfig(config)
   }, [token, repo, branch, onSaveConfig, onNotification])
 

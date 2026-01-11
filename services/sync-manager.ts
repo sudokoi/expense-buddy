@@ -70,9 +70,9 @@ const GITHUB_BRANCH_KEY = "github_branch"
  * Save GitHub sync configuration securely
  */
 export async function saveSyncConfig(config: SyncConfig): Promise<void> {
-  await secureStorage.setItem(GITHUB_TOKEN_KEY, config.token)
-  await secureStorage.setItem(GITHUB_REPO_KEY, config.repo)
-  await secureStorage.setItem(GITHUB_BRANCH_KEY, config.branch)
+  await secureStorage.setItem(GITHUB_TOKEN_KEY, config.token.trim())
+  await secureStorage.setItem(GITHUB_REPO_KEY, config.repo.trim())
+  await secureStorage.setItem(GITHUB_BRANCH_KEY, config.branch.trim())
 }
 
 /**

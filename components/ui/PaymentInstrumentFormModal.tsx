@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Sheet, H4 } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
 import { Check, X } from "@tamagui/lucide-icons"
@@ -61,6 +61,54 @@ export function PaymentInstrumentFormModal({
   initialMethod,
   onSave,
 }: PaymentInstrumentFormModalProps) {
+  const handleClose = useCallback(() => {
+    onClose()
+  }, [onClose])
+
+  const formKey = `${instrument?.id ?? "new"}:${initialMethod ?? ""}`
+
+  return (
+    <Sheet
+      modal
+      open={open}
+      onOpenChange={(isOpen: boolean) => {
+        if (!isOpen) handleClose()
+      }}
+      snapPoints={[90]}
+      dismissOnSnapToBottom
+    >
+      <Sheet.Overlay />
+      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
+        <Sheet.Handle />
+
+        {open ? (
+          <PaymentInstrumentForm
+            key={formKey}
+            onClose={handleClose}
+            existingInstruments={existingInstruments}
+            instrument={instrument}
+            initialMethod={initialMethod}
+            onSave={onSave}
+          />
+        ) : null}
+      </Sheet.Frame>
+    </Sheet>
+  )
+}
+
+function PaymentInstrumentForm({
+  onClose,
+  existingInstruments,
+  instrument,
+  initialMethod,
+  onSave,
+}: {
+  onClose: () => void
+  existingInstruments: PaymentInstrument[]
+  instrument?: PaymentInstrument
+  initialMethod?: PaymentInstrumentMethod
+  onSave: (instrument: PaymentInstrument) => void
+}) {
   const isEditMode = !!instrument
 
   const [method, setMethod] = useState<PaymentInstrumentMethod>(
@@ -70,26 +118,7 @@ export function PaymentInstrumentFormModal({
   const [lastDigits, setLastDigits] = useState(instrument?.lastDigits ?? "")
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const prevOpenRef = useRef(open)
-
-  if (open && !prevOpenRef.current) {
-    prevOpenRef.current = open
-    const nextMethod = instrument?.method ?? initialMethod ?? "Credit Card"
-    if (method !== nextMethod) setMethod(nextMethod)
-    const nextNickname = instrument?.nickname ?? ""
-    if (nickname !== nextNickname) setNickname(nextNickname)
-    const nextLastDigits = instrument?.lastDigits ?? ""
-    if (lastDigits !== nextLastDigits) setLastDigits(nextLastDigits)
-    if (Object.keys(errors).length > 0) setErrors({})
-  } else if (!open && prevOpenRef.current) {
-    prevOpenRef.current = open
-  }
-
   const selectedMethodConfig = useMemo(() => getInstrumentMethodConfig(method), [method])
-
-  const handleClose = useCallback(() => {
-    onClose()
-  }, [onClose])
 
   const handleSelectMethod = useCallback(
     (next: PaymentInstrumentMethod) => {
@@ -171,118 +200,97 @@ export function PaymentInstrumentFormModal({
   }, [method, nickname, lastDigits, existingInstruments, instrument, onSave, onClose])
 
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) handleClose()
-      }}
-      snapPoints={[90]}
-      dismissOnSnapToBottom
-    >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
+    <YStack gap="$4" style={layoutStyles.contentContainer}>
+      <XStack style={layoutStyles.headerRow}>
+        <H4>{isEditMode ? "Edit Instrument" : "Add Instrument"}</H4>
+        <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
+      </XStack>
 
-        <YStack gap="$4" style={layoutStyles.contentContainer}>
-          <XStack style={layoutStyles.headerRow}>
-            <H4>{isEditMode ? "Edit Instrument" : "Add Instrument"}</H4>
-            <Button
-              size="$3"
-              chromeless
-              icon={X}
-              onPress={handleClose}
-              aria-label="Close"
-            />
-          </XStack>
+      <YStack gap="$2">
+        <Label color="$color" opacity={0.8}>
+          Payment Method
+        </Label>
+        <XStack style={layoutStyles.methodRow}>
+          {INSTRUMENT_METHODS.map((m) => {
+            const config =
+              selectedMethodConfig && selectedMethodConfig.value === m
+                ? selectedMethodConfig
+                : PAYMENT_METHODS.find((pm) => pm.value === m)
+            if (!config) return null
+            return (
+              <PaymentMethodCard
+                key={m}
+                config={config}
+                isSelected={method === m}
+                onPress={() => handleSelectMethod(m)}
+              />
+            )
+          })}
+        </XStack>
+      </YStack>
 
-          <YStack gap="$2">
-            <Label color="$color" opacity={0.8}>
-              Payment Method
-            </Label>
-            <XStack style={layoutStyles.methodRow}>
-              {INSTRUMENT_METHODS.map((m) => {
-                const config =
-                  selectedMethodConfig && selectedMethodConfig.value === m
-                    ? selectedMethodConfig
-                    : PAYMENT_METHODS.find((pm) => pm.value === m)
-                if (!config) return null
-                return (
-                  <PaymentMethodCard
-                    key={m}
-                    config={config}
-                    isSelected={method === m}
-                    onPress={() => handleSelectMethod(m)}
-                  />
-                )
-              })}
-            </XStack>
-          </YStack>
+      <YStack gap="$2">
+        <Label color="$color" opacity={0.8}>
+          Nickname
+        </Label>
+        <Input
+          size="$4"
+          placeholder="e.g., HDFC Visa"
+          value={nickname}
+          onChangeText={handleNicknameChange}
+          maxLength={30}
+          borderWidth={2}
+          borderColor={errors.nickname ? "$red10" : "$borderColor"}
+          focusStyle={{
+            borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
+          }}
+        />
+        {errors.nickname && (
+          <Text fontSize="$2" color="$red10">
+            {errors.nickname}
+          </Text>
+        )}
+      </YStack>
 
-          <YStack gap="$2">
-            <Label color="$color" opacity={0.8}>
-              Nickname
-            </Label>
-            <Input
-              size="$4"
-              placeholder="e.g., HDFC Visa"
-              value={nickname}
-              onChangeText={handleNicknameChange}
-              maxLength={30}
-              borderWidth={2}
-              borderColor={errors.nickname ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
-              }}
-            />
-            {errors.nickname && (
-              <Text fontSize="$2" color="$red10">
-                {errors.nickname}
-              </Text>
-            )}
-          </YStack>
+      <YStack gap="$2">
+        <Label color="$color" opacity={0.8}>
+          {selectedMethodConfig?.identifierLabel ?? "Last digits"}
+        </Label>
+        <Input
+          size="$4"
+          placeholder={`Enter ${getLastDigitsLength(method)} digits`}
+          keyboardType="numeric"
+          value={lastDigits}
+          onChangeText={handleLastDigitsChange}
+          maxLength={getLastDigitsLength(method)}
+          borderWidth={2}
+          borderColor={errors.lastDigits ? "$red10" : "$borderColor"}
+          focusStyle={{
+            borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
+          }}
+        />
+        {errors.lastDigits && (
+          <Text fontSize="$2" color="$red10">
+            {errors.lastDigits}
+          </Text>
+        )}
+      </YStack>
 
-          <YStack gap="$2">
-            <Label color="$color" opacity={0.8}>
-              {selectedMethodConfig?.identifierLabel ?? "Last digits"}
-            </Label>
-            <Input
-              size="$4"
-              placeholder={`Enter ${getLastDigitsLength(method)} digits`}
-              keyboardType="numeric"
-              value={lastDigits}
-              onChangeText={handleLastDigitsChange}
-              maxLength={getLastDigitsLength(method)}
-              borderWidth={2}
-              borderColor={errors.lastDigits ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
-              }}
-            />
-            {errors.lastDigits && (
-              <Text fontSize="$2" color="$red10">
-                {errors.lastDigits}
-              </Text>
-            )}
-          </YStack>
-
-          <XStack style={layoutStyles.buttonRow}>
-            <Button size="$4" chromeless onPress={handleClose}>
-              Cancel
-            </Button>
-            <Button
-              size="$4"
-              themeInverse
-              onPress={handleSave}
-              icon={<Check size="$1" />}
-              fontWeight="bold"
-            >
-              {isEditMode ? "Save" : "Add"}
-            </Button>
-          </XStack>
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+      <XStack style={layoutStyles.buttonRow}>
+        <Button size="$4" chromeless onPress={onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="$4"
+          themeInverse
+          onPress={handleSave}
+          icon={<Check size="$1" />}
+          fontWeight="bold"
+        >
+          {isEditMode ? "Save" : "Add"}
+        </Button>
+      </XStack>
+    </YStack>
   )
 }
 
