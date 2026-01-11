@@ -20,6 +20,16 @@ import {
  * object SHALL have success: false and a non-empty error string property.
  */
 describe("Property 2: Service Error Result Structure", () => {
+  const originalWarn = console.warn
+
+  beforeEach(() => {
+    console.warn = () => {}
+  })
+
+  afterEach(() => {
+    console.warn = originalWarn
+  })
+
   // Arbitrary for generating various error types
   const errorArb = fc.oneof(
     fc.string().map((msg) => new Error(msg)),
