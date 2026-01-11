@@ -561,7 +561,9 @@ export async function syncDown(
             config.branch
           )
           if (settingsResult) {
-            downloadedSettings = JSON.parse(settingsResult.content) as AppSettings
+            downloadedSettings = hydrateSettingsFromJson(
+              JSON.parse(settingsResult.content)
+            )
             settingsDownloaded = true
           }
         } catch (settingsError) {
@@ -586,7 +588,6 @@ export async function syncDown(
     // Download and merge selected files
     const allExpenses: Expense[] = []
     let downloadedFiles = 0
-    downloadedSettings = hydrateSettingsFromJson(JSON.parse(settingsResult.content))
     for (const file of filesToDownload) {
       const fileData = await downloadCSV(
         config.token,
@@ -614,7 +615,9 @@ export async function syncDown(
           config.branch
         )
         if (settingsResult) {
-          downloadedSettings = JSON.parse(settingsResult.content) as AppSettings
+          downloadedSettings = hydrateSettingsFromJson(
+            JSON.parse(settingsResult.content)
+          )
           settingsDownloaded = true
         }
       } catch (settingsError) {

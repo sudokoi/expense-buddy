@@ -59,9 +59,10 @@ export function mergePaymentInstruments(
 
     if (!localInst || !remoteInst) continue
 
+    // Prefer newer updatedAt; on ties (including both missing), prefer remote.
     const chooseRemote =
       isNewerIso(remoteInst.updatedAt, localInst.updatedAt) ||
-      (!remoteInst.updatedAt && !localInst.updatedAt)
+      !isNewerIso(localInst.updatedAt, remoteInst.updatedAt)
 
     if (chooseRemote) {
       merged.push(remoteInst)

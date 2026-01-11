@@ -96,7 +96,10 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
       migrated.paymentInstrumentsMigrationVersion ??
       DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
     updatedAt: migrated.updatedAt ?? new Date().toISOString(),
-    version: migrated.version ?? DEFAULT_SETTINGS.version,
+    version:
+      typeof migrated.version === "number"
+        ? Math.max(migrated.version, DEFAULT_SETTINGS.version)
+        : DEFAULT_SETTINGS.version,
   }
 }
 
@@ -173,8 +176,8 @@ function migrateV3ToV4(settings: AppSettings): AppSettings {
 function migrateV4ToV5(settings: AppSettings): AppSettings {
   return {
     ...settings,
-    paymentInstruments: [],
-    paymentInstrumentsMigrationVersion: 0,
+    paymentInstruments: settings.paymentInstruments ?? [],
+    paymentInstrumentsMigrationVersion: settings.paymentInstrumentsMigrationVersion ?? 0,
     version: 5,
   }
 }
