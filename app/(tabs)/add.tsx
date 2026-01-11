@@ -462,10 +462,6 @@ export default function AddExpenseScreen() {
           </Button>
         </YStack>
       </KeyboardAwareScrollView>
-
-      {effectivePaymentMethod && isPaymentInstrumentMethod(effectivePaymentMethod) && (
-        <></>
-      )}
     </YStack>
   )
 }

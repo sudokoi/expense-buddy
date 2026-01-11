@@ -732,9 +732,6 @@ export default function HistoryScreen() {
         showsVerticalScrollIndicator={false}
         ListFooterComponent={ListFooterComponent}
       />
-
-      {editingExpense?.paymentMethodType &&
-        isPaymentInstrumentMethod(editingExpense.paymentMethodType) && <></>}
     </YStack>
   )
 }

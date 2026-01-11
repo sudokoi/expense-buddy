@@ -10,10 +10,25 @@
  */
 
 import { createActor } from "xstate"
-import { syncMachine, SyncCallbacks } from "../sync-machine"
+import type { SyncCallbacks } from "../sync-machine"
 import type { Expense } from "../../types/expense"
 import type { TrueConflict, MergeResult } from "../merge-engine"
 import type { GitStyleSyncResult, ConflictResolution } from "../sync-manager"
+
+// expo-secure-store is ESM in node_modules; mock it before importing sync-machine.
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+}))
+
+// settings-manager uses Platform checks; keep it deterministic for tests.
+jest.mock("react-native", () => ({
+  Platform: { OS: "ios" },
+}))
+
+// Import sync-machine after mocks are registered.
+const { syncMachine } = require("../sync-machine") as typeof import("../sync-machine")
 
 // Mock the sync-manager module
 jest.mock("../sync-manager", () => ({

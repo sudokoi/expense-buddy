@@ -420,8 +420,6 @@ export function EditExpenseModal({
           </ScrollView>
         </Sheet.Frame>
       </Sheet>
-
-      {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) && <></>}
     </>
   )
 }
