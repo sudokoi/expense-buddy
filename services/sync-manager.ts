@@ -19,6 +19,7 @@ import {
   getSettingsHash,
   saveSettingsHash,
   clearSettingsChanged,
+  hydrateSettingsFromJson,
 } from "./settings-manager"
 import {
   groupExpensesByDay,
@@ -39,6 +40,7 @@ import {
   TrueConflict,
 } from "./merge-engine"
 import { mergeCategories } from "./category-merger"
+import { mergePaymentInstruments } from "./payment-instrument-merger"
 
 // Import sync types from centralized location
 import type {
@@ -584,7 +586,7 @@ export async function syncDown(
     // Download and merge selected files
     const allExpenses: Expense[] = []
     let downloadedFiles = 0
-
+    downloadedSettings = hydrateSettingsFromJson(JSON.parse(settingsResult.content))
     for (const file of filesToDownload) {
       const fileData = await downloadCSV(
         config.token,
@@ -1107,6 +1109,8 @@ export interface GitStyleSyncResult {
   settingsError?: string
   /** Merged categories from local and remote (caller should apply to store) */
   mergedCategories?: import("../types/category").Category[]
+  /** Merged settings after combining remote and local (caller should apply to store) */
+  mergedSettings?: AppSettings
 }
 
 /**
@@ -1299,12 +1303,13 @@ export async function gitStyleSync(
     }
 
     // =========================================================================
-    // Settings sync: Download remote, merge categories, then push merged result
+    // Settings sync: Download remote, merge categories + payment instruments, then push
     // =========================================================================
     let shouldSyncSettings = false
     let newSettingsHash: string | undefined
     let mergedCategories: import("../types/category").Category[] | undefined
     let settingsToSync: AppSettings | undefined
+    let mergedSettings: AppSettings | undefined
 
     if (syncSettingsEnabled && settings) {
       // Download remote settings to merge categories
@@ -1316,35 +1321,60 @@ export async function gitStyleSync(
           config.branch
         )
         if (remoteSettingsResult) {
-          remoteSettings = JSON.parse(remoteSettingsResult.content) as AppSettings
+          remoteSettings = hydrateSettingsFromJson(
+            JSON.parse(remoteSettingsResult.content)
+          )
         }
       } catch (e) {
         console.warn("Failed to download remote settings for merge:", e)
         // Continue without remote settings - will just push local
       }
 
-      // Merge categories if both local and remote have them
-      if (remoteSettings?.categories && settings.categories) {
-        const categoryMergeResult = mergeCategories(
-          settings.categories,
-          remoteSettings.categories
-        )
-        mergedCategories = categoryMergeResult.merged
-
-        // Create merged settings with merged categories
-        settingsToSync = {
-          ...settings,
-          categories: mergedCategories,
-          updatedAt: new Date().toISOString(),
-        }
-      } else {
-        // No remote categories or no local categories - use local settings as-is
-        settingsToSync = settings
+      const remoteCategories = remoteSettings?.categories
+      const localCategories = settings.categories
+      if (remoteCategories && localCategories) {
+        mergedCategories = mergeCategories(localCategories, remoteCategories).merged
       }
+
+      const instrumentMerge = mergePaymentInstruments(
+        settings.paymentInstruments,
+        remoteSettings?.paymentInstruments
+      )
+
+      mergedSettings = {
+        ...settings,
+        // Keep syncSettings enabled locally since we are in the settings-sync flow.
+        syncSettings: true,
+        categories: mergedCategories ?? settings.categories,
+        // Union/merge instruments so sync-down hydrates and sync-up doesn't lose remote.
+        paymentInstruments: instrumentMerge.merged,
+        paymentInstrumentsMigrationVersion: Math.max(
+          settings.paymentInstrumentsMigrationVersion ?? 0,
+          remoteSettings?.paymentInstrumentsMigrationVersion ?? 0
+        ),
+        categoriesVersion: Math.max(
+          settings.categoriesVersion ?? 0,
+          remoteSettings?.categoriesVersion ?? 0
+        ),
+        version: Math.max(settings.version ?? 0, remoteSettings?.version ?? 0),
+        updatedAt: new Date().toISOString(),
+      }
+
+      settingsToSync = mergedSettings
 
       // Compute hash of settings to sync
       newSettingsHash = computeSettingsHash(settingsToSync)
       const storedSettingsHash = await getSettingsHash()
+
+      // If remote exists and already matches what we'd sync, treat as synced locally
+      // (prevents a redundant commit on first sync-down to a fresh device).
+      if (remoteSettings) {
+        const remoteHash = computeSettingsHash(remoteSettings)
+        if (remoteHash === newSettingsHash) {
+          await saveSettingsHash(newSettingsHash)
+          await clearSettingsChanged()
+        }
+      }
 
       // Only sync if settings have changed (hash-based skip)
       if (storedSettingsHash !== newSettingsHash) {
@@ -1384,6 +1414,7 @@ export async function gitStyleSync(
         settingsSynced: false,
         settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
         mergedCategories,
+        mergedSettings,
       }
     }
 
@@ -1478,6 +1509,7 @@ export async function gitStyleSync(
       settingsSynced: shouldSyncSettings,
       settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
       mergedCategories,
+      mergedSettings,
     }
   } catch (error) {
     console.warn("[SyncManager] gitStyleSync failed:", error)

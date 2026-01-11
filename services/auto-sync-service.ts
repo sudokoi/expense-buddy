@@ -83,6 +83,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           synced: true,
           expenses: mergeResult.merged,
           notification,
+          downloadedSettings: context.syncResult?.mergedSettings,
         }
       } else if (context.syncResult) {
         notification = {
@@ -96,12 +97,21 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           synced: true,
           expenses: localExpenses,
           notification,
+          downloadedSettings: context.syncResult?.mergedSettings,
         }
       }
 
-      return { synced: true, expenses: localExpenses }
+      return {
+        synced: true,
+        expenses: localExpenses,
+        downloadedSettings: context.syncResult?.mergedSettings,
+      }
     } else if (state === "inSync") {
-      return { synced: true, expenses: localExpenses }
+      return {
+        synced: true,
+        expenses: localExpenses,
+        downloadedSettings: context.syncResult?.mergedSettings,
+      }
     } else if (state === "conflict") {
       // For auto-sync, we don't show conflict dialogs - just skip
       // User needs to manually sync to resolve conflicts

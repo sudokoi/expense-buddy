@@ -499,7 +499,10 @@ export default function SettingsScreen() {
             replaceAllExpenses(result.mergeResult.merged)
           }
 
-          if (result.syncResult?.mergedCategories) {
+          if (settings.syncSettings && result.syncResult?.mergedSettings) {
+            replaceSettings(result.syncResult.mergedSettings)
+          } else if (result.syncResult?.mergedCategories) {
+            // Backward-compatible fallback for older sync results
             replaceCategories(result.syncResult.mergedCategories)
           }
         },
@@ -520,6 +523,7 @@ export default function SettingsScreen() {
     clearPendingChangesAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
+    replaceSettings,
     replaceCategories,
   ])
 

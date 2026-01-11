@@ -60,6 +60,46 @@ export const DEFAULT_SETTINGS: AppSettings = {
   version: 5,
 }
 
+/**
+ * Hydrate a settings-like JSON object into a full AppSettings object.
+ *
+ * Used for:
+ * - local AsyncStorage load (after parsing)
+ * - remote settings.json download (older versions may miss newer fields)
+ */
+export function hydrateSettingsFromJson(raw: unknown): AppSettings {
+  const parsed = (raw ?? {}) as Partial<AppSettings>
+
+  // Apply pure migrations that don't rely on device-only storage keys.
+  let migrated: Partial<AppSettings> = parsed
+
+  const version = typeof migrated.version === "number" ? migrated.version : 0
+
+  if (version > 0 && version < 4) {
+    migrated = migrateV3ToV4(migrated as AppSettings)
+  }
+
+  if ((typeof migrated.version === "number" ? migrated.version : version) < 5) {
+    migrated = migrateV4ToV5(migrated as AppSettings)
+  }
+
+  return {
+    theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
+    syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
+    defaultPaymentMethod: (migrated as AppSettings).defaultPaymentMethod,
+    autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
+    autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
+    categories: migrated.categories ?? DEFAULT_CATEGORIES,
+    categoriesVersion: migrated.categoriesVersion ?? DEFAULT_SETTINGS.categoriesVersion,
+    paymentInstruments: migrated.paymentInstruments ?? [],
+    paymentInstrumentsMigrationVersion:
+      migrated.paymentInstrumentsMigrationVersion ??
+      DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
+    updatedAt: migrated.updatedAt ?? new Date().toISOString(),
+    version: migrated.version ?? DEFAULT_SETTINGS.version,
+  }
+}
+
 // Helper functions for secure storage with platform check (same as sync-manager.ts)
 async function secureGetItem(key: string): Promise<string | null> {
   if (Platform.OS === "web") {
@@ -168,24 +208,7 @@ export async function loadSettings(): Promise<AppSettings> {
         await saveSettings(parsed)
       }
 
-      // Ensure all fields have values (for missing fields from older versions)
-      const settings: AppSettings = {
-        theme: parsed.theme ?? DEFAULT_SETTINGS.theme,
-        syncSettings: parsed.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
-        defaultPaymentMethod: parsed.defaultPaymentMethod,
-        autoSyncEnabled: parsed.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
-        autoSyncTiming: parsed.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
-        categories: parsed.categories ?? DEFAULT_CATEGORIES,
-        categoriesVersion: parsed.categoriesVersion ?? DEFAULT_SETTINGS.categoriesVersion,
-        paymentInstruments: parsed.paymentInstruments ?? [],
-        paymentInstrumentsMigrationVersion:
-          parsed.paymentInstrumentsMigrationVersion ??
-          DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
-        updatedAt: parsed.updatedAt ?? new Date().toISOString(),
-        version: parsed.version ?? DEFAULT_SETTINGS.version,
-      }
-
-      return settings
+      return hydrateSettingsFromJson(parsed)
     }
   } catch (error) {
     console.warn("Failed to load settings:", error)
