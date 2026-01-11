@@ -1,6 +1,7 @@
 import { Link, Stack } from "expo-router"
 import { StyleSheet } from "react-native"
 import { View, Text } from "tamagui"
+import { SEMANTIC_COLORS } from "../constants/theme-colors"
 
 export default function NotFoundScreen() {
   return (
@@ -33,6 +34,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: "#2e78b7",
+    color: SEMANTIC_COLORS.info,
   },
 })

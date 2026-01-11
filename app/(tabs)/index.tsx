@@ -11,6 +11,7 @@ import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { DynamicCategoryIcon } from "../../components/ui/DynamicCategoryIcon"
 import { CARD_COLORS } from "../../constants/theme-colors"
+import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -61,7 +62,7 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
         <DynamicCategoryIcon
           name={cat?.icon || "Circle"}
           size={16}
-          color={(cat?.color || "#888") as `#${string}`}
+          color={(cat?.color || CATEGORY_COLORS.Other) as `#${string}`}
         />
         <YStack>
           <SizableText size="$4" fontWeight="bold">
@@ -121,7 +122,7 @@ export default function DashboardScreen() {
           const categoryConfig = getCategoryByLabel(cat)
           return {
             value: dayExpenses[cat],
-            color: categoryConfig?.color || "#888",
+            color: categoryConfig?.color || CATEGORY_COLORS.Other,
             marginBottom: 2,
           }
         })

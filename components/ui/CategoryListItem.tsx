@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { getReadableTextColor } from "../../constants/theme-colors"
 
 // Layout styles
 const layoutStyles = {
@@ -78,6 +79,7 @@ export const CategoryListItem = memo(function CategoryListItem({
 }: CategoryListItemProps) {
   // Resolve color for display
   const resolvedColor = useMemo(() => getColorValue(category.color), [category.color])
+  const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
 
   // Handle edit press
   const handleEdit = useCallback(() => {
@@ -114,7 +116,7 @@ export const CategoryListItem = memo(function CategoryListItem({
       <XStack style={layoutStyles.container} bg="$backgroundHover">
         {/* Icon with color background */}
         <YStack style={[layoutStyles.iconContainer, { backgroundColor: resolvedColor }]}>
-          <DynamicCategoryIcon name={category.icon} size={20} color="#ffffff" />
+          <DynamicCategoryIcon name={category.icon} size={20} color={iconColor} />
         </YStack>
 
         {/* Label and color indicator */}

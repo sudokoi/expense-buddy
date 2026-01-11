@@ -38,7 +38,7 @@ export const SyncIndicator: React.FC = () => {
       backgroundColor: overlayColors.background,
       borderRadius: 20,
       padding: 8,
-      shadowColor: "#000",
+      shadowColor: overlayColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,

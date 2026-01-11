@@ -1,7 +1,7 @@
 import { View as RNView, ViewStyle, Pressable } from "react-native"
 import { Text, Button } from "tamagui"
 import { Download, X } from "@tamagui/lucide-icons"
-import { SEMANTIC_COLORS } from "../../constants/theme-colors"
+import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
 
 interface UpdateBannerProps {
   /** The version number to display */
@@ -24,6 +24,8 @@ interface UpdateBannerProps {
  * at the top of the screen without blocking interaction.
  */
 export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps) {
+  const infoStyles = NOTIFICATION_STYLE_TOKENS.info
+
   const containerStyle: ViewStyle = {
     position: "absolute",
     top: 50,
@@ -33,7 +35,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
     backgroundColor: SEMANTIC_COLORS.info,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: infoStyles.borderColor,
     paddingVertical: 12,
     paddingHorizontal: 14,
     shadowColor: SEMANTIC_COLORS.info,
@@ -58,7 +60,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
   }
 
   const iconContainerStyle: ViewStyle = {
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: infoStyles.iconBg,
     borderRadius: 20,
     padding: 6,
   }
@@ -69,7 +71,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
     gap: 8,
   }
 
-  const textColor = "#1A4A6B" // Dark blue for contrast on info background
+  const textColor = infoStyles.textColor
 
   return (
     <RNView style={containerStyle} testID="update-banner">
@@ -93,8 +95,10 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
         <RNView style={actionsStyle}>
           <Button
             size="$2"
-            background="rgba(255, 255, 255, 0.4)"
-            borderWidth={0}
+            bg={infoStyles.actionBg}
+            borderWidth={1}
+            borderColor={infoStyles.actionBorderColor}
+            borderRadius={999}
             pressStyle={{ opacity: 0.8 }}
             onPress={onUpdate}
             testID="update-banner-update-button"

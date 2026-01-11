@@ -3,7 +3,7 @@ import { YStack, XStack, Text, Button, Sheet, H4, ScrollView } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
 import { X, Check } from "@tamagui/lucide-icons"
 import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 
 // Layout styles
@@ -179,27 +179,24 @@ const IconButton = memo(function IconButton({
     onSelect(iconName)
   }, [onSelect, iconName])
 
+  const selectedBg = ACCENT_COLORS.primary
+  const selectedFg = getReadableTextColor(selectedBg)
+
   return (
     <Pressable onPress={handlePress}>
       <YStack
-        style={[
-          layoutStyles.iconButton,
-          {
-            backgroundColor: isSelected ? ACCENT_COLORS.primary : "transparent",
-            borderColor: isSelected ? ACCENT_COLORS.primary : "$borderColor",
-          },
-        ]}
-        bg={isSelected ? ACCENT_COLORS.primary : "$backgroundHover"}
-        borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
+        style={layoutStyles.iconButton}
+        bg={isSelected ? selectedBg : "$backgroundHover"}
+        borderColor={isSelected ? selectedBg : "$borderColor"}
       >
         <DynamicCategoryIcon
           name={iconName}
           size={24}
-          color={isSelected ? "#ffffff" : undefined}
+          color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (
           <YStack style={layoutStyles.selectedIndicator as ViewStyle}>
-            <Check size={12} color="#ffffff" />
+            <Check size={12} color={selectedFg} />
           </YStack>
         )}
       </YStack>

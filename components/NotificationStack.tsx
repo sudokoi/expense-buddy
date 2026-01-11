@@ -4,37 +4,13 @@ import { Text, YStack, styled } from "tamagui"
 import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
 import { useNotifications } from "../stores/hooks"
 import { NotificationType } from "../stores/notification-store"
-import { getNotificationColor } from "../constants/theme-colors"
-
-// Kawaii notification styling with softer colors and rounded design
-const NOTIFICATION_STYLES: Record<
-  NotificationType,
-  { iconBg: string; textColor: string; borderColor: string }
-> = {
-  success: {
-    iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#1A5A3A", // Dark green for contrast
-    borderColor: "rgba(255, 255, 255, 0.4)",
-  },
-  error: {
-    iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#8B2A2A", // Dark red for contrast
-    borderColor: "rgba(255, 255, 255, 0.4)",
-  },
-  warning: {
-    iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#6B4A1A", // Dark orange for contrast
-    borderColor: "rgba(255, 255, 255, 0.4)",
-  },
-  info: {
-    iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#1A4A6B", // Dark blue for contrast
-    borderColor: "rgba(255, 255, 255, 0.4)",
-  },
-}
+import {
+  getNotificationColor,
+  NOTIFICATION_STYLE_TOKENS,
+} from "../constants/theme-colors"
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  const styles = NOTIFICATION_STYLES[type]
+  const styles = NOTIFICATION_STYLE_TOKENS[type]
   const iconColor = styles.textColor as `#${string}`
   const iconProps = { size: 18, color: iconColor }
 
@@ -88,7 +64,7 @@ export const NotificationStack: React.FC = () => {
     <YStack style={containerStyle} pointerEvents="box-none">
       {notifications.map((notification) => {
         const bgColor = getNotificationColor(notification.type)
-        const styles = NOTIFICATION_STYLES[notification.type]
+        const styles = NOTIFICATION_STYLE_TOKENS[notification.type]
 
         const notificationStyle: ViewStyle = {
           flexDirection: "row",

@@ -11,6 +11,39 @@ export const SEMANTIC_COLORS = {
   info: "#87CEEB", // Soft sky blue
 } as const
 
+// Shared style tokens for notification-like surfaces (toast/banner)
+// Keep these centralized so UI components avoid hardcoded color literals.
+export const NOTIFICATION_STYLE_TOKENS = {
+  success: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#1A5A3A",
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    actionBg: "rgba(255, 255, 255, 0.35)",
+    actionBorderColor: "rgba(255, 255, 255, 0.55)",
+  },
+  error: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#8B2A2A",
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    actionBg: "rgba(255, 255, 255, 0.35)",
+    actionBorderColor: "rgba(255, 255, 255, 0.55)",
+  },
+  warning: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#6B4A1A",
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    actionBg: "rgba(255, 255, 255, 0.35)",
+    actionBorderColor: "rgba(255, 255, 255, 0.55)",
+  },
+  info: {
+    iconBg: "rgba(255, 255, 255, 0.3)",
+    textColor: "#1A4A6B",
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    actionBg: "rgba(255, 255, 255, 0.35)",
+    actionBorderColor: "rgba(255, 255, 255, 0.55)",
+  },
+} as const
+
 // Expense/income colors
 export const FINANCIAL_COLORS = {
   expense: "#FF8A8A", // Soft coral
@@ -83,6 +116,57 @@ export const CARD_COLORS = {
     accent: "#8A6AA8",
   },
 } as const
+
+export const NEUTRAL_COLORS = {
+  white: "#FFFFFF",
+  black: "#000000",
+} as const
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const normalized = hex.trim().toLowerCase()
+  const match = /^#([0-9a-f]{6})$/.exec(normalized)
+  if (!match) return null
+  const value = match[1]
+  const r = parseInt(value.slice(0, 2), 16)
+  const g = parseInt(value.slice(2, 4), 16)
+  const b = parseInt(value.slice(4, 6), 16)
+  return { r, g, b }
+}
+
+function srgbToLinear(channel: number): number {
+  const c = channel / 255
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+}
+
+function relativeLuminance({ r, g, b }: { r: number; g: number; b: number }): number {
+  const R = srgbToLinear(r)
+  const G = srgbToLinear(g)
+  const B = srgbToLinear(b)
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B
+}
+
+function contrastRatio(l1: number, l2: number): number {
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+/**
+ * Returns either black or white text for best contrast on a given hex background.
+ * Uses WCAG contrast ratio (relative luminance), but only compares against black/white.
+ */
+export function getReadableTextColor(backgroundHex: string): `#${string}` {
+  const rgb = hexToRgb(backgroundHex)
+  if (!rgb) return NEUTRAL_COLORS.white
+
+  const bgL = relativeLuminance(rgb)
+  const whiteContrast = contrastRatio(1, bgL)
+  const blackContrast = contrastRatio(0, bgL)
+
+  return (
+    whiteContrast >= blackContrast ? NEUTRAL_COLORS.white : NEUTRAL_COLORS.black
+  ) as `#${string}`
+}
 
 /**
  * Get notification color based on type

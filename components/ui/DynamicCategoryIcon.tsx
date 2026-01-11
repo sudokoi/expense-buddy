@@ -155,7 +155,7 @@ interface DynamicCategoryIconProps {
   name: string
   /** Icon size in pixels */
   size?: number
-  /** Icon color - hex string like "#ffffff" */
+  /** Icon color - hex string like "#RRGGBB" */
   color?: `#${string}`
 }
 

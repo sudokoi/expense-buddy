@@ -3,7 +3,7 @@
  * Soft pastel colors for a cute aesthetic
  * Uses string keys to support dynamic custom categories
  */
-export const CATEGORY_COLORS: Record<string, string> = {
+export const CATEGORY_COLORS: Record<string, `#${string}`> = {
   Food: "#FFB07C", // soft coral/peach
   Groceries: "#7FDBCA", // soft mint/seafoam
   Transport: "#87CEEB", // soft sky blue

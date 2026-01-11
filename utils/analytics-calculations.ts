@@ -351,7 +351,7 @@ export function getCategoryColor(
     return categoryColors[category]
   }
   // Fall back to static CATEGORY_COLORS for backward compatibility
-  return CATEGORY_COLORS[category] ?? "#6b7280"
+  return CATEGORY_COLORS[category] ?? CATEGORY_COLORS.Other
 }
 
 /**

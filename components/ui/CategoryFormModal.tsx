@@ -8,8 +8,9 @@ import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
 import { ColorPickerSheet } from "./ColorPickerSheet"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { getColorValue } from "../../tamagui.config"
+import { CATEGORY_COLORS } from "../../constants/category-colors"
 
 // Layout styles
 const layoutStyles = {
@@ -91,7 +92,7 @@ export function CategoryFormModal({
   // Form state - derived from props when modal opens
   const [label, setLabel] = useState("")
   const [icon, setIcon] = useState("Circle")
-  const [color, setColor] = useState("#C4B7C9")
+  const [color, setColor] = useState(CATEGORY_COLORS.Other)
 
   // Icon picker state
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
@@ -117,8 +118,8 @@ export function CategoryFormModal({
     if (icon !== (category?.icon ?? "Circle")) {
       setIcon(category?.icon ?? "Circle")
     }
-    if (color !== (category?.color ?? "#C4B7C9")) {
-      setColor(category?.color ?? "#C4B7C9")
+    if (color !== (category?.color ?? CATEGORY_COLORS.Other)) {
+      setColor(category?.color ?? CATEGORY_COLORS.Other)
     }
     if (Object.keys(errors).length > 0) {
       setErrors({})
@@ -183,6 +184,7 @@ export function CategoryFormModal({
 
   // Resolved color for display
   const resolvedColor = useMemo(() => getColorValue(color), [color])
+  const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
 
   // Handle opening icon picker
   const handleOpenIconPicker = useCallback(() => {
@@ -282,7 +284,7 @@ export function CategoryFormModal({
                   <YStack
                     style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
                   >
-                    <DynamicCategoryIcon name={icon} size={24} color="#ffffff" />
+                    <DynamicCategoryIcon name={icon} size={24} color={iconColor} />
                   </YStack>
                   <YStack flex={1}>
                     <Text fontWeight="500">{icon}</Text>

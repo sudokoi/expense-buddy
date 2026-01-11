@@ -31,6 +31,9 @@ export type { SettingsSyncState }
 // AsyncStorage key for payment method section expanded state
 const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
 
+// AsyncStorage key for payment instruments section expanded state
+const PAYMENT_INSTRUMENTS_EXPANDED_KEY = "payment_instruments_section_expanded"
+
 export const settingsStore = createStore({
   context: {
     settings: DEFAULT_SETTINGS,
@@ -40,6 +43,7 @@ export const settingsStore = createStore({
     systemColorScheme: (Appearance.getColorScheme() ?? "light") as "light" | "dark",
     syncConfig: null as SyncConfig | null,
     paymentMethodSectionExpanded: false,
+    paymentInstrumentsSectionExpanded: false,
   },
 
   on: {
@@ -51,6 +55,7 @@ export const settingsStore = createStore({
         syncedSettingsHash: string | null
         syncConfig?: SyncConfig | null
         paymentMethodSectionExpanded?: boolean
+        paymentInstrumentsSectionExpanded?: boolean
       }
     ) => ({
       ...context,
@@ -61,6 +66,9 @@ export const settingsStore = createStore({
       syncConfig: event.syncConfig ?? context.syncConfig,
       paymentMethodSectionExpanded:
         event.paymentMethodSectionExpanded ?? context.paymentMethodSectionExpanded,
+      paymentInstrumentsSectionExpanded:
+        event.paymentInstrumentsSectionExpanded ??
+        context.paymentInstrumentsSectionExpanded,
     }),
 
     setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
@@ -314,6 +322,21 @@ export const settingsStore = createStore({
       return {
         ...context,
         paymentMethodSectionExpanded: event.expanded,
+      }
+    },
+
+    // Payment instruments section expanded state
+    setPaymentInstrumentsExpanded: (context, event: { expanded: boolean }, enqueue) => {
+      enqueue.effect(async () => {
+        await AsyncStorage.setItem(
+          PAYMENT_INSTRUMENTS_EXPANDED_KEY,
+          event.expanded ? "true" : "false"
+        )
+      })
+
+      return {
+        ...context,
+        paymentInstrumentsSectionExpanded: event.expanded,
       }
     },
 
@@ -614,14 +637,17 @@ Appearance.addChangeListener(({ colorScheme }) => {
 export async function initializeSettingsStore(): Promise<void> {
   try {
     // Load all settings in parallel
-    const [settings, syncedSettingsHash, syncConfig, expandedValue] = await Promise.all([
-      loadSettings(),
-      getSettingsHash(),
-      loadSyncConfigFromStorage(),
-      AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
-    ])
+    const [settings, syncedSettingsHash, syncConfig, expandedValue, instrumentsExpanded] =
+      await Promise.all([
+        loadSettings(),
+        getSettingsHash(),
+        loadSyncConfigFromStorage(),
+        AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
+        AsyncStorage.getItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY),
+      ])
 
     const paymentMethodSectionExpanded = expandedValue === "true"
+    const paymentInstrumentsSectionExpanded = instrumentsExpanded === "true"
 
     // Compute initial sync state by comparing current settings against synced hash
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
@@ -632,6 +658,7 @@ export async function initializeSettingsStore(): Promise<void> {
       syncedSettingsHash,
       syncConfig,
       paymentMethodSectionExpanded,
+      paymentInstrumentsSectionExpanded,
     })
   } catch (error) {
     console.warn("Failed to initialize settings store:", error)
@@ -641,6 +668,7 @@ export async function initializeSettingsStore(): Promise<void> {
       syncedSettingsHash: null,
       syncConfig: null,
       paymentMethodSectionExpanded: false,
+      paymentInstrumentsSectionExpanded: false,
     })
   }
 }

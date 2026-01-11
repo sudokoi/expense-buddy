@@ -4,7 +4,12 @@ import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { LineChartDataItem } from "../../utils/analytics-calculations"
 import { Dimensions, ScrollView, ViewStyle, useColorScheme } from "react-native"
-import { getChartColors, getOverlayColors } from "../../constants/theme-colors"
+import {
+  ACCENT_COLORS,
+  getChartColors,
+  getOverlayColors,
+} from "../../constants/theme-colors"
+import { getColorValue } from "../../tamagui.config"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -39,7 +44,7 @@ export const LineChartSection = memo(function LineChartSection({
         borderRadius: 4,
         borderWidth: 1,
         borderColor: overlayColors.border,
-        shadowColor: "#000",
+        shadowColor: overlayColors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -60,11 +65,11 @@ export const LineChartSection = memo(function LineChartSection({
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
-      line: theme.pink9?.val ?? "#FFB6C1",
-      area: theme.pink4?.val ?? "#FFD1DC",
-      text: theme.color?.val ?? "#4A4458",
+      line: theme.pink9?.val ?? ACCENT_COLORS.primary,
+      area: theme.pink4?.val ?? ACCENT_COLORS.primaryLight,
+      text: theme.color?.val ?? getColorValue(theme.color),
     }),
-    [theme.pink9?.val, theme.pink4?.val, theme.color?.val]
+    [theme.pink9?.val, theme.pink4?.val, theme.color]
   )
 
   // Memoize chart data transformation

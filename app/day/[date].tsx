@@ -15,6 +15,7 @@ import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import type { PaymentInstrument } from "../../types/payment-instrument"
+import { CATEGORY_COLORS } from "../../constants/category-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -30,9 +31,6 @@ const layoutStyles = {
   } as TextStyle,
 }
 
-// Default color for categories that no longer exist
-const DEFAULT_CATEGORY_COLOR = "#C4B7C9"
-
 // Helper to get category info from categories array
 // Returns the category if found, or a fallback with the label directly
 const getCategoryInfo = (
@@ -44,7 +42,7 @@ const getCategoryInfo = (
     return { color: cat.color, label: cat.label }
   }
   // Category no longer exists - show the label directly with default color
-  return { color: DEFAULT_CATEGORY_COLOR, label: catLabel }
+  return { color: CATEGORY_COLORS.Other, label: catLabel }
 }
 
 // Memoized expense item component

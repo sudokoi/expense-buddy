@@ -10,6 +10,7 @@
 
 import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
+import { CATEGORY_COLORS } from "../constants/category-colors"
 
 /**
  * Result of merging local and remote categories
@@ -41,7 +42,7 @@ function getDefaultOtherCategory(): Category {
   return {
     label: "Other",
     icon: "Circle",
-    color: "#C4B7C9",
+    color: CATEGORY_COLORS.Other,
     order: 999,
     isDefault: true,
     updatedAt: new Date().toISOString(),

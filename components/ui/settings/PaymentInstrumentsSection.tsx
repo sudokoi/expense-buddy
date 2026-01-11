@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
-import { YStack, XStack, Text, Button, Label } from "tamagui"
+import { YStack, XStack, Text, Button, Label, Accordion } from "tamagui"
 import { Alert, ViewStyle } from "react-native"
-import { Plus, Edit3, Trash } from "@tamagui/lucide-icons"
+import { Plus, Edit3, Trash, ChevronDown } from "@tamagui/lucide-icons"
 import { useSettings } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
@@ -17,6 +17,23 @@ const layoutStyles = {
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
+  accordionTrigger: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+  } as ViewStyle,
+  accordionTriggerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 8,
+  } as ViewStyle,
+  accordionContent: {
+    padding: 8,
+    paddingTop: 12,
+  } as ViewStyle,
 }
 
 function upsertInstrument(
@@ -31,7 +48,12 @@ function upsertInstrument(
 }
 
 export function PaymentInstrumentsSection() {
-  const { settings, updateSettings } = useSettings()
+  const {
+    settings,
+    updateSettings,
+    paymentInstrumentsSectionExpanded,
+    setPaymentInstrumentsExpanded,
+  } = useSettings()
 
   const instruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
   const active = useMemo(() => getActivePaymentInstruments(instruments), [instruments])
@@ -118,40 +140,75 @@ export function PaymentInstrumentsSection() {
             No instruments yet.
           </Text>
         ) : (
-          <YStack gap="$4">
-            {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
-              const list = grouped[method] ?? []
-              if (list.length === 0) return null
-              return (
-                <YStack key={method} gap="$2">
-                  <Text fontWeight="700" color="$color" opacity={0.8}>
-                    {method}
-                  </Text>
-                  {list.map((inst) => (
-                    <XStack key={inst.id} gap="$2" style={layoutStyles.row}>
-                      <Text flex={1} numberOfLines={1}>
-                        {formatPaymentInstrumentLabel(inst)}
+          <Accordion
+            type="single"
+            collapsible
+            value={paymentInstrumentsSectionExpanded ? "payment-instruments" : undefined}
+            onValueChange={(value) =>
+              setPaymentInstrumentsExpanded(value === "payment-instruments")
+            }
+          >
+            <Accordion.Item value="payment-instruments">
+              <Accordion.Trigger
+                bg="$backgroundHover"
+                style={layoutStyles.accordionTrigger}
+              >
+                {({ open }: { open: boolean }) => (
+                  <>
+                    <XStack style={layoutStyles.accordionTriggerInner}>
+                      <Text fontWeight="500">Manage Instruments</Text>
+                      <Text fontSize="$2" color="$color" opacity={0.6}>
+                        ({active.length})
                       </Text>
-                      <Button
-                        size="$2"
-                        chromeless
-                        icon={Edit3}
-                        onPress={() => handleEdit(inst)}
-                        aria-label="Edit"
-                      />
-                      <Button
-                        size="$2"
-                        chromeless
-                        icon={Trash}
-                        onPress={() => handleDelete(inst)}
-                        aria-label="Remove"
-                      />
                     </XStack>
-                  ))}
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transform: [{ rotate: open ? "180deg" : "0deg" }],
+                      }}
+                    />
+                  </>
+                )}
+              </Accordion.Trigger>
+
+              <Accordion.Content style={layoutStyles.accordionContent}>
+                <YStack gap="$4">
+                  {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
+                    const list = grouped[method] ?? []
+                    if (list.length === 0) return null
+                    return (
+                      <YStack key={method} gap="$2">
+                        <Text fontWeight="700" color="$color" opacity={0.8}>
+                          {method}
+                        </Text>
+                        {list.map((inst) => (
+                          <XStack key={inst.id} gap="$2" style={layoutStyles.row}>
+                            <Text flex={1} numberOfLines={1}>
+                              {formatPaymentInstrumentLabel(inst)}
+                            </Text>
+                            <Button
+                              size="$2"
+                              chromeless
+                              icon={Edit3}
+                              onPress={() => handleEdit(inst)}
+                              aria-label="Edit"
+                            />
+                            <Button
+                              size="$2"
+                              chromeless
+                              icon={Trash}
+                              onPress={() => handleDelete(inst)}
+                              aria-label="Remove"
+                            />
+                          </XStack>
+                        ))}
+                      </YStack>
+                    )
+                  })}
                 </YStack>
-              )
-            })}
-          </YStack>
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion>
         )}
       </YStack>
 

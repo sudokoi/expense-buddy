@@ -140,6 +140,10 @@ export const useSettings = () => {
     settingsStore,
     (state) => state.context.paymentMethodSectionExpanded
   )
+  const paymentInstrumentsSectionExpanded = useSelector(
+    settingsStore,
+    (state) => state.context.paymentInstrumentsSectionExpanded
+  )
 
   const setTheme = useCallback(
     (theme: ThemePreference) => settingsStore.trigger.setTheme({ theme }),
@@ -188,6 +192,12 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setPaymentInstrumentsExpanded = useCallback(
+    (expanded: boolean) =>
+      settingsStore.trigger.setPaymentInstrumentsExpanded({ expanded }),
+    [settingsStore]
+  )
+
   const saveSyncConfig = useCallback(
     (config: SyncConfig) => settingsStore.trigger.saveSyncConfig({ config }),
     [settingsStore]
@@ -208,6 +218,7 @@ export const useSettings = () => {
     autoSyncTiming: settings.autoSyncTiming,
     syncConfig,
     paymentMethodSectionExpanded,
+    paymentInstrumentsSectionExpanded,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
@@ -217,6 +228,7 @@ export const useSettings = () => {
     replaceSettings,
     clearSettingsChangeFlag,
     setPaymentMethodExpanded,
+    setPaymentInstrumentsExpanded,
     saveSyncConfig,
     clearSyncConfig,
   }

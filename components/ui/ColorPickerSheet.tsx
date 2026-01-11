@@ -1,8 +1,9 @@
 import { useCallback, memo } from "react"
-import { YStack, XStack, Button, Sheet, H4 } from "tamagui"
+import { YStack, XStack, Button, Sheet, H4, useTheme } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
 import { X, Check } from "@tamagui/lucide-icons"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
+import { getColorValue } from "../../tamagui.config"
 
 // Layout styles
 const layoutStyles = {
@@ -122,6 +123,10 @@ const ColorButton = memo(function ColorButton({
   isSelected,
   onSelect,
 }: ColorButtonProps) {
+  const theme = useTheme()
+  const selectedBorderColor = getColorValue(theme.borderColorFocus)
+  const checkColor = getColorValue(theme.color)
+
   const handlePress = useCallback(() => {
     onSelect(color)
   }, [onSelect, color])
@@ -133,12 +138,12 @@ const ColorButton = memo(function ColorButton({
           layoutStyles.colorButton,
           {
             backgroundColor: color,
-            borderColor: isSelected ? "#333333" : "transparent",
+            borderColor: isSelected ? selectedBorderColor : "transparent",
           },
         ]}
       >
         {isSelected && (
-          <Check size={24} color="#333333" style={layoutStyles.selectedIndicator} />
+          <Check size={24} color={checkColor} style={layoutStyles.selectedIndicator} />
         )}
       </YStack>
     </Pressable>

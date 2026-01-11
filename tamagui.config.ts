@@ -1,5 +1,6 @@
 import { defaultConfig } from "@tamagui/config/v4"
 import { createTamagui, Variable } from "tamagui"
+import { NEUTRAL_COLORS } from "./constants/theme-colors"
 
 // Extend default config with custom semantic color tokens and kawaii themes
 export const config = createTamagui({
@@ -92,7 +93,8 @@ declare module "tamagui" {
 export function getColorValue(
   variable: Variable<string> | string | undefined
 ): `#${string}` {
-  if (!variable) return "#000000"
+  // Prefer a centralized neutral rather than an inline literal.
+  if (!variable) return NEUTRAL_COLORS.black
   if (typeof variable === "string") return variable as `#${string}`
   return variable.val as `#${string}`
 }

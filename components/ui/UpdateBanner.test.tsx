@@ -66,6 +66,15 @@ jest.mock("../../constants/theme-colors", () => ({
   SEMANTIC_COLORS: {
     info: "#87CEEB",
   },
+  NOTIFICATION_STYLE_TOKENS: {
+    info: {
+      iconBg: "rgba(255, 255, 255, 0.3)",
+      textColor: "#1A4A6B",
+      borderColor: "rgba(255, 255, 255, 0.4)",
+      actionBg: "rgba(255, 255, 255, 0.35)",
+      actionBorderColor: "rgba(255, 255, 255, 0.55)",
+    },
+  },
 }))
 
 import { UpdateBanner, UpdateBannerProps } from "./UpdateBanner"
