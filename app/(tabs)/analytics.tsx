@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react"
+import { useState, useCallback, memo, useMemo } from "react"
 import { YStack, H4, XStack, Text } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
@@ -7,12 +7,21 @@ import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { TimeWindowSelector } from "../../components/analytics/TimeWindowSelector"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import { CategoryFilter } from "../../components/analytics/CategoryFilter"
+import {
+  PaymentMethodFilter,
+  PaymentMethodSelectionKey,
+} from "../../components/analytics/PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "../../components/analytics/PaymentInstrumentFilter"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
+import type { PaymentMethodType } from "../../types/expense"
+import {
+  PAYMENT_INSTRUMENT_METHODS,
+  getActivePaymentInstruments,
+} from "../../services/payment-instruments"
 
 const styles = {
   headerRow: {
@@ -80,6 +89,11 @@ export default function AnalyticsScreen() {
   // Local state for selected categories (empty = all categories)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
+  // Local state for selected payment methods (empty = all methods)
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<
+    PaymentMethodSelectionKey[]
+  >([])
+
   // Local state for selected payment instruments (empty = all instruments)
   const [selectedPaymentInstruments, setSelectedPaymentInstruments] = useState<
     PaymentInstrumentSelectionKey[]
@@ -95,7 +109,12 @@ export default function AnalyticsScreen() {
     statistics,
     paymentInstruments,
     isLoading,
-  } = useAnalyticsData(timeWindow, selectedCategories, selectedPaymentInstruments)
+  } = useAnalyticsData(
+    timeWindow,
+    selectedCategories,
+    selectedPaymentMethods,
+    selectedPaymentInstruments
+  )
 
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback((category: string | null) => {
@@ -120,6 +139,76 @@ export default function AnalyticsScreen() {
     []
   )
 
+  const selectedPaymentMethodForChart: PaymentMethodType | null =
+    selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
+      ? (selectedPaymentMethods[0] as PaymentMethodType)
+      : null
+
+  const prunePaymentInstrumentSelection = useCallback(
+    (
+      nextSelectedPaymentMethods: PaymentMethodSelectionKey[],
+      currentInstrumentSelection: PaymentInstrumentSelectionKey[]
+    ): PaymentInstrumentSelectionKey[] => {
+      if (currentInstrumentSelection.length === 0) return currentInstrumentSelection
+
+      const active = getActivePaymentInstruments(paymentInstruments)
+      const allowedMethods =
+        nextSelectedPaymentMethods.length === 0
+          ? new Set(PAYMENT_INSTRUMENT_METHODS)
+          : new Set(
+              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+              )
+            )
+
+      const allowedWithConfig = new Set<string>()
+      for (const method of allowedMethods) {
+        if (active.some((i) => i.method === method)) {
+          allowedWithConfig.add(method)
+        }
+      }
+
+      return currentInstrumentSelection.filter((key) => {
+        const method = key.split("::")[0]
+        return allowedWithConfig.has(method)
+      })
+    },
+    [paymentInstruments]
+  )
+
+  const handlePaymentMethodsChange = useCallback(
+    (next: PaymentMethodSelectionKey[]) => {
+      setSelectedPaymentMethods(next)
+      setSelectedPaymentInstruments((prev) => prunePaymentInstrumentSelection(next, prev))
+    },
+    [prunePaymentInstrumentSelection]
+  )
+
+  const handlePaymentMethodSelect = useCallback(
+    (paymentMethodType: PaymentMethodType | null) => {
+      handlePaymentMethodsChange(paymentMethodType ? [paymentMethodType] : [])
+    },
+    [handlePaymentMethodsChange]
+  )
+
+  const showPaymentInstrumentFilter = useMemo(() => {
+    const active = getActivePaymentInstruments(paymentInstruments)
+    const allowedMethods =
+      selectedPaymentMethods.length === 0
+        ? new Set(PAYMENT_INSTRUMENT_METHODS)
+        : new Set(
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            )
+          )
+
+    for (const method of PAYMENT_INSTRUMENT_METHODS) {
+      if (!allowedMethods.has(method)) continue
+      if (active.some((i) => i.method === method)) return true
+    }
+    return false
+  }, [paymentInstruments, selectedPaymentMethods])
+
   // Check if there's any data to display
   const hasData = filteredExpenses.length > 0
   const hasAnyExpenses = pieChartData.length > 0 || lineChartData.some((d) => d.value > 0)
@@ -139,12 +228,20 @@ export default function AnalyticsScreen() {
             onChange={setSelectedCategories}
           />
 
-          {/* Always show payment instrument filter so users can reset it */}
-          <PaymentInstrumentFilter
-            instruments={paymentInstruments}
-            selected={selectedPaymentInstruments}
-            onChange={setSelectedPaymentInstruments}
+          <PaymentMethodFilter
+            selected={selectedPaymentMethods}
+            onChange={handlePaymentMethodsChange}
           />
+
+          {/* Always show payment instrument filter so users can reset it */}
+          {showPaymentInstrumentFilter && (
+            <PaymentInstrumentFilter
+              instruments={paymentInstruments}
+              selectedPaymentMethods={selectedPaymentMethods}
+              selected={selectedPaymentInstruments}
+              onChange={setSelectedPaymentInstruments}
+            />
+          )}
 
           {!hasAnyExpenses ? (
             <EmptyState
@@ -163,7 +260,11 @@ export default function AnalyticsScreen() {
                 data={pieChartData}
                 onCategorySelect={handleCategorySelect}
               />
-              <PaymentMethodPieChart data={paymentMethodChartData} />
+              <PaymentMethodPieChart
+                data={paymentMethodChartData}
+                selectedPaymentMethod={selectedPaymentMethodForChart}
+                onPaymentMethodSelect={handlePaymentMethodSelect}
+              />
               <PaymentInstrumentPieChart
                 data={paymentInstrumentChartData}
                 selectedKey={

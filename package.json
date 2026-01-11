@@ -18,6 +18,7 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watchAll",
+    "typecheck": "tsc --noEmit",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status",

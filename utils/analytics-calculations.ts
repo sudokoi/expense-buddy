@@ -47,6 +47,10 @@ export interface PaymentMethodChartDataItem {
 
 export type PaymentInstrumentSelectionKey = string
 
+export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
+
+const PAYMENT_METHOD_NONE_KEY: PaymentMethodSelectionKey = "__none__"
+
 const INSTRUMENT_OTHERS_ID = "__others__"
 
 export interface PaymentInstrumentChartDataItem {
@@ -307,6 +311,28 @@ export function filterExpensesByCategories(
     return expenses
   }
   return expenses.filter((expense) => selectedCategories.includes(expense.category))
+}
+
+/**
+ * Filter expenses by selected payment methods.
+ * Empty selection means "All".
+ * Supports a "__none__" key to include expenses without a payment method.
+ */
+export function filterExpensesByPaymentMethods(
+  expenses: Expense[],
+  selected: PaymentMethodSelectionKey[]
+): Expense[] {
+  if (selected.length === 0) return expenses
+
+  const selection = new Set(selected)
+
+  return expenses.filter((expense) => {
+    const method = expense.paymentMethod?.type
+    // Note: analytics aggregates missing payment methods under "Other".
+    // So selecting "Other" should include both explicit "Other" and missing-method expenses.
+    if (!method) return selection.has(PAYMENT_METHOD_NONE_KEY) || selection.has("Other")
+    return selection.has(method)
+  })
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from "react"
+import { useMemo, useCallback, memo } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
@@ -9,7 +9,8 @@ import { PaymentMethodType } from "../../types/expense"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
-  onPaymentMethodSelect?: (paymentMethodType: PaymentMethodType | "Other" | null) => void
+  selectedPaymentMethod: PaymentMethodType | null
+  onPaymentMethodSelect: (paymentMethodType: PaymentMethodType | null) => void
 }
 
 const styles = {
@@ -87,22 +88,19 @@ const LegendItem = memo(function LegendItem({
  */
 export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   data,
+  selectedPaymentMethod,
   onPaymentMethodSelect,
 }: PaymentMethodPieChartProps) {
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-    PaymentMethodType | "Other" | null
-  >(null)
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
   const colorScheme = useColorScheme() ?? "light"
   const chartColors = getChartColors(colorScheme)
 
   const handleSegmentPress = useCallback(
-    (paymentMethodType: PaymentMethodType | "Other") => {
+    (paymentMethodType: PaymentMethodType) => {
       const newSelection =
         selectedPaymentMethod === paymentMethodType ? null : paymentMethodType
-      setSelectedPaymentMethod(newSelection)
-      onPaymentMethodSelect?.(newSelection)
+      onPaymentMethodSelect(newSelection)
     },
     [selectedPaymentMethod, onPaymentMethodSelect]
   )
@@ -115,7 +113,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
         color: item.color,
         text: `${item.percentage.toFixed(0)}%`,
         focused: selectedPaymentMethod === item.paymentMethodType,
-        onPress: () => handleSegmentPress(item.paymentMethodType),
+        onPress: () => handleSegmentPress(item.paymentMethodType as PaymentMethodType),
       })),
     [data, selectedPaymentMethod, handleSegmentPress]
   )
@@ -175,7 +173,9 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
               item={item}
               isSelected={selectedPaymentMethod === item.paymentMethodType}
               selectedBgColor={chartColors.selectedBg}
-              onPress={() => handleSegmentPress(item.paymentMethodType)}
+              onPress={() =>
+                handleSegmentPress(item.paymentMethodType as PaymentMethodType)
+              }
             />
           ))}
         </YStack>

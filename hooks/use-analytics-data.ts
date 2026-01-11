@@ -8,11 +8,13 @@ import {
   PaymentMethodChartDataItem,
   PaymentInstrumentChartDataItem,
   PaymentInstrumentSelectionKey,
+  PaymentMethodSelectionKey,
   LineChartDataItem,
   AnalyticsStatistics,
   CategoryColorMap,
   filterExpensesByTimeWindow,
   filterExpensesByCategories,
+  filterExpensesByPaymentMethods,
   filterExpensesByPaymentInstruments,
   aggregateByCategory,
   aggregateByPaymentMethod,
@@ -38,6 +40,7 @@ export interface AnalyticsData {
   // Memoized filter functions for consumers that need to apply additional filtering
   filterByTimeWindow: (expenses: Expense[]) => Expense[]
   filterByCategories: (expenses: Expense[]) => Expense[]
+  filterByPaymentMethods: (expenses: Expense[]) => Expense[]
   filterByPaymentInstruments: (expenses: Expense[]) => Expense[]
 }
 
@@ -51,6 +54,7 @@ export interface AnalyticsData {
 export function useAnalyticsData(
   timeWindow: TimeWindow,
   selectedCategories: string[],
+  selectedPaymentMethods: PaymentMethodSelectionKey[],
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
 ): AnalyticsData {
   const { state } = useExpenses()
@@ -88,6 +92,13 @@ export function useAnalyticsData(
     [selectedCategories]
   )
 
+  const filterByPaymentMethods = useCallback(
+    (expenses: Expense[]): Expense[] => {
+      return filterExpensesByPaymentMethods(expenses, selectedPaymentMethods)
+    },
+    [selectedPaymentMethods]
+  )
+
   const filterByPaymentInstruments = useCallback(
     (expenses: Expense[]): Expense[] => {
       return filterExpensesByPaymentInstruments(
@@ -109,9 +120,13 @@ export function useAnalyticsData(
     return filterByCategories(timeFilteredExpenses)
   }, [timeFilteredExpenses, filterByCategories])
 
+  const paymentMethodFilteredExpenses = useMemo(() => {
+    return filterByPaymentMethods(categoryFilteredExpenses)
+  }, [categoryFilteredExpenses, filterByPaymentMethods])
+
   const filteredExpenses = useMemo(() => {
-    return filterByPaymentInstruments(categoryFilteredExpenses)
-  }, [categoryFilteredExpenses, filterByPaymentInstruments])
+    return filterByPaymentInstruments(paymentMethodFilteredExpenses)
+  }, [paymentMethodFilteredExpenses, filterByPaymentInstruments])
 
   // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
@@ -158,6 +173,7 @@ export function useAnalyticsData(
       isLoading,
       filterByTimeWindow,
       filterByCategories,
+      filterByPaymentMethods,
       filterByPaymentInstruments,
     }),
     [
@@ -171,6 +187,7 @@ export function useAnalyticsData(
       isLoading,
       filterByTimeWindow,
       filterByCategories,
+      filterByPaymentMethods,
       filterByPaymentInstruments,
     ]
   )

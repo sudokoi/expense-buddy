@@ -7,6 +7,7 @@ import {
   formatPaymentInstrumentLabel,
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
+import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
 import {
   PaymentInstrumentSelectionKey,
   makePaymentInstrumentSelectionKey,
@@ -14,6 +15,7 @@ import {
 
 interface PaymentInstrumentFilterProps {
   instruments: PaymentInstrument[]
+  selectedPaymentMethods: PaymentMethodSelectionKey[]
   selected: PaymentInstrumentSelectionKey[]
   onChange: (selected: PaymentInstrumentSelectionKey[]) => void
 }
@@ -46,6 +48,7 @@ function methodShortLabel(method: string): string {
  */
 export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
   instruments,
+  selectedPaymentMethods,
   selected,
   onChange,
 }: PaymentInstrumentFilterProps) {
@@ -53,13 +56,28 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
 
   const active = useMemo(() => getActivePaymentInstruments(instruments), [instruments])
 
+  const allowedMethods = useMemo(() => {
+    // Empty payment-method selection means "All" payment methods.
+    if (selectedPaymentMethods.length === 0) {
+      return new Set(PAYMENT_INSTRUMENT_METHODS)
+    }
+
+    const set = new Set<string>(selectedPaymentMethods)
+    return new Set(PAYMENT_INSTRUMENT_METHODS.filter((m) => set.has(m)))
+  }, [selectedPaymentMethods])
+
   const chipItems = useMemo(() => {
     const items: Array<{ key: PaymentInstrumentSelectionKey; label: string }> = []
 
     for (const method of PAYMENT_INSTRUMENT_METHODS) {
+      if (!allowedMethods.has(method)) continue
+
       const methodActive = active
         .filter((i) => i.method === method)
         .sort((a, b) => a.nickname.localeCompare(b.nickname))
+
+      // Only show instrument chips for a method if there is at least one configured instrument.
+      if (methodActive.length === 0) continue
 
       // Always include an "Others" chip per method (covers missing/deleted/manual)
       items.push({
@@ -76,7 +94,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
     }
 
     return items
-  }, [active])
+  }, [active, allowedMethods])
 
   const handleAllPress = useCallback(() => {
     onChange([])

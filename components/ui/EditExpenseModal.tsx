@@ -26,17 +26,15 @@ import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
-import { PaymentInstrumentPickerSheet } from "./PaymentInstrumentPickerSheet"
-import { PaymentInstrumentFormModal } from "./PaymentInstrumentFormModal"
-import {
-  findInstrumentById,
-  formatPaymentInstrumentLabel,
-  isPaymentInstrumentMethod,
-} from "../../services/payment-instruments"
+import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
+import {
+  InstrumentEntryKind,
+  PaymentInstrumentInlineDropdown,
+} from "./PaymentInstrumentInlineDropdown"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -106,12 +104,12 @@ export function EditExpenseModal({
     expense.paymentMethod?.instrumentId
   )
 
-  const [instrumentPickerOpen, setInstrumentPickerOpen] = useState(false)
-  const [instrumentFormOpen, setInstrumentFormOpen] = useState(false)
-
-  const selectedInstrument = useMemo(
-    () => findInstrumentById(allInstruments, paymentInstrumentId),
-    [allInstruments, paymentInstrumentId]
+  const [instrumentEntryKind, setInstrumentEntryKind] = useState<InstrumentEntryKind>(
+    expense.paymentMethod?.instrumentId
+      ? "saved"
+      : expense.paymentMethod?.identifier
+        ? "manual"
+        : "none"
   )
 
   // Validation errors state
@@ -136,10 +134,12 @@ export function EditExpenseModal({
         setPaymentMethodType(undefined)
         setPaymentMethodId("")
         setPaymentInstrumentId(undefined)
+        setInstrumentEntryKind("none")
       } else {
         setPaymentMethodType(type)
         setPaymentMethodId("") // Clear identifier when changing type
         setPaymentInstrumentId(undefined)
+        setInstrumentEntryKind("none")
       }
     },
     [paymentMethodType]
@@ -157,6 +157,9 @@ export function EditExpenseModal({
         const maxLen = selectedPaymentConfig?.maxLength || 4
         setPaymentMethodId(validateIdentifier(text, maxLen))
         setPaymentInstrumentId(undefined)
+        if (paymentMethodType && isPaymentInstrumentMethod(paymentMethodType)) {
+          setInstrumentEntryKind("manual")
+        }
       }
     },
     [selectedPaymentConfig, paymentMethodType]
@@ -222,6 +225,13 @@ export function EditExpenseModal({
     setPaymentMethodType(expense.paymentMethod?.type)
     setPaymentMethodId(expense.paymentMethod?.identifier || "")
     setPaymentInstrumentId(expense.paymentMethod?.instrumentId)
+    setInstrumentEntryKind(
+      expense.paymentMethod?.instrumentId
+        ? "saved"
+        : expense.paymentMethod?.identifier
+          ? "manual"
+          : "none"
+    )
     setErrors({})
     onClose()
   }, [expense, onClose])
@@ -346,32 +356,31 @@ export function EditExpenseModal({
                     </Label>
 
                     {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) ? (
-                      <YStack gap="$2">
-                        <Button
-                          size="$4"
-                          chromeless
-                          borderWidth={1}
-                          borderColor="$borderColor"
-                          onPress={() => setInstrumentPickerOpen(true)}
-                        >
-                          {selectedInstrument && !selectedInstrument.deletedAt
-                            ? formatPaymentInstrumentLabel(selectedInstrument)
-                            : paymentInstrumentId
-                              ? `${paymentMethodType} • Others`
-                              : "Select saved instrument (optional)"}
-                        </Button>
-
-                        {!paymentInstrumentId && (
-                          <Input
-                            size="$4"
-                            placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
-                            keyboardType="numeric"
-                            value={paymentMethodId}
-                            onChangeText={handleIdentifierChange}
-                            maxLength={selectedPaymentConfig.maxLength}
-                          />
-                        )}
-                      </YStack>
+                      <PaymentInstrumentInlineDropdown
+                        method={paymentMethodType as PaymentInstrumentMethod}
+                        instruments={allInstruments}
+                        kind={
+                          paymentInstrumentId
+                            ? "saved"
+                            : instrumentEntryKind === "manual"
+                              ? "manual"
+                              : "none"
+                        }
+                        selectedInstrumentId={paymentInstrumentId}
+                        manualDigits={paymentMethodId}
+                        identifierLabel={selectedPaymentConfig.identifierLabel}
+                        maxLength={selectedPaymentConfig.maxLength}
+                        onChange={(next) => {
+                          setInstrumentEntryKind(next.kind)
+                          setPaymentInstrumentId(next.selectedInstrumentId)
+                          setPaymentMethodId(next.manualDigits)
+                        }}
+                        onCreateInstrument={(inst) => {
+                          updateSettings({
+                            paymentInstruments: [inst, ...allInstruments],
+                          })
+                        }}
+                      />
                     ) : (
                       <Input
                         size="$4"
@@ -412,43 +421,7 @@ export function EditExpenseModal({
         </Sheet.Frame>
       </Sheet>
 
-      {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) && (
-        <>
-          <PaymentInstrumentPickerSheet
-            open={instrumentPickerOpen}
-            onClose={() => setInstrumentPickerOpen(false)}
-            method={paymentMethodType as PaymentInstrumentMethod}
-            instruments={allInstruments}
-            selectedInstrumentId={paymentInstrumentId}
-            onSelectInstrument={(inst) => {
-              setPaymentInstrumentId(inst.id)
-              setPaymentMethodId(inst.lastDigits)
-              setInstrumentPickerOpen(false)
-            }}
-            onSelectOthers={() => {
-              setPaymentInstrumentId(undefined)
-              setPaymentMethodId("")
-              setInstrumentPickerOpen(false)
-            }}
-            onAddNew={() => {
-              setInstrumentPickerOpen(false)
-              setInstrumentFormOpen(true)
-            }}
-          />
-
-          <PaymentInstrumentFormModal
-            open={instrumentFormOpen}
-            onClose={() => setInstrumentFormOpen(false)}
-            existingInstruments={allInstruments}
-            initialMethod={paymentMethodType as PaymentInstrumentMethod}
-            onSave={(inst) => {
-              updateSettings({ paymentInstruments: [inst, ...allInstruments] })
-              setPaymentInstrumentId(inst.id)
-              setPaymentMethodId(inst.lastDigits)
-            }}
-          />
-        </>
-      )}
+      {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) && <></>}
     </>
   )
 }
