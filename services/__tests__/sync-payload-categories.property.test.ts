@@ -8,6 +8,7 @@
 
 import * as fc from "fast-check"
 import { Category } from "../../types/category"
+import type { PaymentInstrument } from "../../types/payment-instrument"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { ALL_CATEGORY_ICONS } from "../../constants/category-icons"
 
@@ -91,8 +92,10 @@ const appSettingsArb = fc.record({
   >,
   categories: categoryListArb,
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant<PaymentInstrument[]>([]),
+  paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: isoDateArb,
-  version: fc.constant(4),
+  version: fc.constant(5),
 })
 
 // =============================================================================

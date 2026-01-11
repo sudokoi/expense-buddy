@@ -5,6 +5,7 @@ import { computeContentHash } from "./hash-storage"
 import { PaymentMethodType } from "../types/expense"
 import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
+import { PaymentInstrument } from "../types/payment-instrument"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -36,6 +37,8 @@ export interface AppSettings {
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
   categoriesVersion: number // Schema version for category migrations
+  paymentInstruments: PaymentInstrument[] // Saved card/UPI instruments (synced if syncSettings is enabled)
+  paymentInstrumentsMigrationVersion: number // One-time migration state for instrument linking
   updatedAt: string // ISO timestamp
   version: number // Schema version for migrations
 }
@@ -51,8 +54,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
   categoriesVersion: 1,
+  paymentInstruments: [],
+  paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 4,
+  version: 5,
 }
 
 // Helper functions for secure storage with platform check (same as sync-manager.ts)
@@ -122,6 +127,19 @@ function migrateV3ToV4(settings: AppSettings): AppSettings {
 }
 
 /**
+ * Migrate settings from version 4 to version 5
+ * Adds paymentInstruments field
+ */
+function migrateV4ToV5(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    paymentInstruments: [],
+    paymentInstrumentsMigrationVersion: 0,
+    version: 5,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -144,6 +162,12 @@ export async function loadSettings(): Promise<AppSettings> {
         await saveSettings(parsed)
       }
 
+      // Migrate from v4 to v5 (add payment instruments)
+      if (parsed.version < 5) {
+        parsed = migrateV4ToV5(parsed)
+        await saveSettings(parsed)
+      }
+
       // Ensure all fields have values (for missing fields from older versions)
       const settings: AppSettings = {
         theme: parsed.theme ?? DEFAULT_SETTINGS.theme,
@@ -153,6 +177,10 @@ export async function loadSettings(): Promise<AppSettings> {
         autoSyncTiming: parsed.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
         categories: parsed.categories ?? DEFAULT_CATEGORIES,
         categoriesVersion: parsed.categoriesVersion ?? DEFAULT_SETTINGS.categoriesVersion,
+        paymentInstruments: parsed.paymentInstruments ?? [],
+        paymentInstrumentsMigrationVersion:
+          parsed.paymentInstrumentsMigrationVersion ??
+          DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
         updatedAt: parsed.updatedAt ?? new Date().toISOString(),
         version: parsed.version ?? DEFAULT_SETTINGS.version,
       }
@@ -250,6 +278,17 @@ export function computeSettingsHash(settings: AppSettings): string {
   const sortedCategories = [...settings.categories].sort((a, b) =>
     a.label.localeCompare(b.label)
   )
+  const sortedInstruments = [...settings.paymentInstruments]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((inst) => ({
+      id: inst.id,
+      method: inst.method,
+      nickname: inst.nickname,
+      lastDigits: inst.lastDigits,
+      deletedAt: inst.deletedAt,
+      // Note: createdAt/updatedAt intentionally excluded from hash
+    }))
+
   const stableJson = JSON.stringify({
     autoSyncEnabled: settings.autoSyncEnabled,
     autoSyncTiming: settings.autoSyncTiming,
@@ -264,6 +303,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     })),
     categoriesVersion: settings.categoriesVersion,
     defaultPaymentMethod: settings.defaultPaymentMethod,
+    paymentInstruments: sortedInstruments,
     syncSettings: settings.syncSettings,
     theme: settings.theme,
     version: settings.version,

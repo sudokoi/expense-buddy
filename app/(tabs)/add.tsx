@@ -19,6 +19,17 @@ import { validateExpenseForm } from "../../utils/expense-validation"
 import { CategoryCard } from "../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { PaymentInstrumentPickerSheet } from "../../components/ui/PaymentInstrumentPickerSheet"
+import { PaymentInstrumentFormModal } from "../../components/ui/PaymentInstrumentFormModal"
+import {
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  isPaymentInstrumentMethod,
+} from "../../services/payment-instruments"
+import { PaymentInstrumentMethod } from "../../types/payment-instrument"
+import type { PaymentInstrument } from "../../types/payment-instrument"
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -55,6 +66,8 @@ export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
   const {
+    settings,
+    updateSettings,
     defaultPaymentMethod,
     isLoading: isSettingsLoading,
     paymentMethodSectionExpanded,
@@ -87,6 +100,18 @@ export default function AddExpenseScreen() {
     PaymentMethodType | undefined
   >(undefined)
   const [paymentMethodId, setPaymentMethodId] = useState("")
+  const [paymentInstrumentId, setPaymentInstrumentId] = useState<string | undefined>(
+    undefined
+  )
+
+  const [instrumentPickerOpen, setInstrumentPickerOpen] = useState(false)
+  const [instrumentFormOpen, setInstrumentFormOpen] = useState(false)
+
+  const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
+  const selectedInstrument = useMemo(
+    () => findInstrumentById(allInstruments, paymentInstrumentId),
+    [allInstruments, paymentInstrumentId]
+  )
 
   // Validation errors state for field-level error messages
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -131,9 +156,11 @@ export default function AddExpenseScreen() {
       // Deselect if already selected
       setPaymentMethodType(undefined)
       setPaymentMethodId("")
+      setPaymentInstrumentId(undefined)
     } else {
       setPaymentMethodType(type)
       setPaymentMethodId("") // Clear identifier when changing type
+      setPaymentInstrumentId(undefined)
     }
   }
 
@@ -146,6 +173,7 @@ export default function AddExpenseScreen() {
     } else {
       const maxLen = selectedPaymentConfig?.maxLength || 4
       setPaymentMethodId(validateIdentifier(text, maxLen))
+      setPaymentInstrumentId(undefined)
     }
   }
 
@@ -188,6 +216,7 @@ export default function AddExpenseScreen() {
       ? {
           type: effectivePaymentMethod,
           identifier: paymentMethodId.trim() || undefined,
+          instrumentId: paymentInstrumentId,
         }
       : undefined
 
@@ -208,6 +237,7 @@ export default function AddExpenseScreen() {
     hasUserSelectedCategoryRef.current = false
     setPaymentMethodType(undefined)
     setPaymentMethodId("")
+    setPaymentInstrumentId(undefined)
     // Reset category to first in list
     if (categories.length > 0) {
       setCategory(categories[0].label)
@@ -369,20 +399,51 @@ export default function AddExpenseScreen() {
                     <Label color="$color" opacity={0.6} fontSize="$2">
                       {selectedPaymentConfig.identifierLabel} (Optional)
                     </Label>
-                    <Input
-                      size="$4"
-                      placeholder={
-                        effectivePaymentMethod === "Other"
-                          ? "e.g., Venmo, PayPal, Gift Card"
-                          : `Enter ${selectedPaymentConfig.maxLength} digits`
-                      }
-                      keyboardType={
-                        effectivePaymentMethod === "Other" ? "default" : "numeric"
-                      }
-                      value={paymentMethodId}
-                      onChangeText={handleIdentifierChange}
-                      maxLength={selectedPaymentConfig.maxLength}
-                    />
+
+                    {effectivePaymentMethod &&
+                    isPaymentInstrumentMethod(effectivePaymentMethod) ? (
+                      <YStack gap="$2">
+                        <Button
+                          size="$4"
+                          chromeless
+                          borderWidth={1}
+                          borderColor="$borderColor"
+                          onPress={() => setInstrumentPickerOpen(true)}
+                        >
+                          {selectedInstrument && !selectedInstrument.deletedAt
+                            ? formatPaymentInstrumentLabel(selectedInstrument)
+                            : paymentInstrumentId
+                              ? `${effectivePaymentMethod} • Others`
+                              : "Select saved instrument (optional)"}
+                        </Button>
+
+                        {!paymentInstrumentId && (
+                          <Input
+                            size="$4"
+                            placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                            keyboardType="numeric"
+                            value={paymentMethodId}
+                            onChangeText={handleIdentifierChange}
+                            maxLength={selectedPaymentConfig.maxLength}
+                          />
+                        )}
+                      </YStack>
+                    ) : (
+                      <Input
+                        size="$4"
+                        placeholder={
+                          effectivePaymentMethod === "Other"
+                            ? "e.g., Venmo, PayPal, Gift Card"
+                            : `Enter ${selectedPaymentConfig.maxLength} digits`
+                        }
+                        keyboardType={
+                          effectivePaymentMethod === "Other" ? "default" : "numeric"
+                        }
+                        value={paymentMethodId}
+                        onChangeText={handleIdentifierChange}
+                        maxLength={selectedPaymentConfig.maxLength}
+                      />
+                    )}
                   </YStack>
                 )}
               </YStack>
@@ -402,6 +463,44 @@ export default function AddExpenseScreen() {
           </Button>
         </YStack>
       </KeyboardAwareScrollView>
+
+      {effectivePaymentMethod && isPaymentInstrumentMethod(effectivePaymentMethod) && (
+        <>
+          <PaymentInstrumentPickerSheet
+            open={instrumentPickerOpen}
+            onClose={() => setInstrumentPickerOpen(false)}
+            method={effectivePaymentMethod as PaymentInstrumentMethod}
+            instruments={allInstruments}
+            selectedInstrumentId={paymentInstrumentId}
+            onSelectInstrument={(inst) => {
+              setPaymentInstrumentId(inst.id)
+              setPaymentMethodId(inst.lastDigits)
+              setInstrumentPickerOpen(false)
+            }}
+            onSelectOthers={() => {
+              setPaymentInstrumentId(undefined)
+              setPaymentMethodId("")
+              setInstrumentPickerOpen(false)
+            }}
+            onAddNew={() => {
+              setInstrumentPickerOpen(false)
+              setInstrumentFormOpen(true)
+            }}
+          />
+
+          <PaymentInstrumentFormModal
+            open={instrumentFormOpen}
+            onClose={() => setInstrumentFormOpen(false)}
+            existingInstruments={allInstruments}
+            initialMethod={effectivePaymentMethod as PaymentInstrumentMethod}
+            onSave={(inst) => {
+              updateSettings({ paymentInstruments: [inst, ...allInstruments] })
+              setPaymentInstrumentId(inst.id)
+              setPaymentMethodId(inst.lastDigits)
+            }}
+          />
+        </>
+      )}
     </YStack>
   )
 }

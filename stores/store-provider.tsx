@@ -23,6 +23,7 @@ import {
   NotificationStore,
 } from "./notification-store"
 import { syncMachine } from "../services/sync-machine"
+import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -77,8 +78,17 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     initializedRef.current = true
 
     // Initialize stores - AsyncStorage is safe to use here
-    initializeSettingsStore()
-    initializeExpenseStore()
+    // Run startup migrations before stores load so auto-sync/export uses migrated data.
+    ;(async () => {
+      try {
+        await migratePaymentInstrumentsOnStartup()
+      } catch (error) {
+        console.warn("Payment instrument migration failed:", error)
+      }
+
+      initializeSettingsStore()
+      initializeExpenseStore()
+    })()
   }, [skipInitialization])
 
   // Memoize the notification handler to avoid recreating on every render

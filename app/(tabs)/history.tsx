@@ -28,6 +28,17 @@ import {
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
+import { PaymentInstrumentMethod } from "../../types/payment-instrument"
+import { PaymentInstrumentPickerSheet } from "../../components/ui/PaymentInstrumentPickerSheet"
+import { PaymentInstrumentFormModal } from "../../components/ui/PaymentInstrumentFormModal"
+import {
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  isPaymentInstrumentMethod,
+} from "../../services/payment-instruments"
+import type { PaymentInstrument } from "../../types/payment-instrument"
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { ExpenseCard } from "../../components/ui/ExpenseCard"
 import { AmountText } from "../../components/ui/AmountText"
 import { CategoryCard } from "../../components/ui/CategoryCard"
@@ -92,12 +103,14 @@ interface ExpenseListItemProps {
   item: Expense
   onEdit: (expense: Expense) => void
   onDelete: (id: string) => void
+  instruments: PaymentInstrument[]
 }
 
 const ExpenseListItem = React.memo(function ExpenseListItem({
   item,
   onEdit,
   onDelete,
+  instruments,
 }: ExpenseListItemProps) {
   const { getCategoryByLabel } = useCategories()
   const categoryInfo = getCategoryByLabel(item.category)
@@ -107,7 +120,7 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
   }
 
   // Use utility function for consistent payment method display
-  const paymentMethodDisplay = formatPaymentMethodDisplay(item.paymentMethod)
+  const paymentMethodDisplay = formatPaymentMethodDisplay(item.paymentMethod, instruments)
 
   return (
     <ExpenseCard>
@@ -156,7 +169,7 @@ const ExpenseListItem = React.memo(function ExpenseListItem({
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
-  const { syncConfig } = useSettings()
+  const { syncConfig, settings, updateSettings } = useSettings()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
   const [editingExpense, setEditingExpense] = React.useState<{
@@ -167,11 +180,17 @@ export default function HistoryScreen() {
     date: string // ISO date string
     paymentMethodType?: PaymentMethodType
     paymentMethodId: string
+    paymentInstrumentId?: string
   } | null>(null)
   const [showDatePicker, setShowDatePicker] = React.useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = React.useState<string | null>(null)
   const [hasMore, setHasMore] = React.useState(true)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
+
+  const [instrumentPickerOpen, setInstrumentPickerOpen] = React.useState(false)
+  const [instrumentFormOpen, setInstrumentFormOpen] = React.useState(false)
+
+  const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
   // Handle back button to close dialogs instead of navigating
   React.useEffect(() => {
@@ -211,6 +230,10 @@ export default function HistoryScreen() {
     )
   }, [editingExpense?.paymentMethodType])
 
+  const selectedInstrument = React.useMemo(() => {
+    return findInstrumentById(allInstruments, editingExpense?.paymentInstrumentId)
+  }, [allInstruments, editingExpense?.paymentInstrumentId])
+
   // Memoized category selection handler for edit dialog
   const handleCategorySelect = React.useCallback((category: ExpenseCategory) => {
     setEditingExpense((prev) => (prev ? { ...prev, category } : null))
@@ -221,9 +244,19 @@ export default function HistoryScreen() {
       if (!prev) return null
       if (prev.paymentMethodType === type) {
         // Deselect if already selected
-        return { ...prev, paymentMethodType: undefined, paymentMethodId: "" }
+        return {
+          ...prev,
+          paymentMethodType: undefined,
+          paymentMethodId: "",
+          paymentInstrumentId: undefined,
+        }
       } else {
-        return { ...prev, paymentMethodType: type, paymentMethodId: "" }
+        return {
+          ...prev,
+          paymentMethodType: type,
+          paymentMethodId: "",
+          paymentInstrumentId: undefined,
+        }
       }
     })
   }, [])
@@ -239,7 +272,11 @@ export default function HistoryScreen() {
           return { ...prev, paymentMethodId: text.slice(0, maxLen) }
         } else {
           const maxLen = selectedPaymentConfig?.maxLength || 4
-          return { ...prev, paymentMethodId: validateIdentifier(text, maxLen) }
+          return {
+            ...prev,
+            paymentMethodId: validateIdentifier(text, maxLen),
+            paymentInstrumentId: undefined,
+          }
         }
       })
     },
@@ -275,6 +312,7 @@ export default function HistoryScreen() {
       date: expense.date,
       paymentMethodType: expense.paymentMethod?.type,
       paymentMethodId: expense.paymentMethod?.identifier || "",
+      paymentInstrumentId: expense.paymentMethod?.instrumentId,
     })
   }, [])
 
@@ -314,9 +352,14 @@ export default function HistoryScreen() {
   // Memoized renderItem function
   const renderItem = React.useCallback(
     ({ item }: { item: Expense }) => (
-      <ExpenseListItem item={item} onEdit={handleEdit} onDelete={handleDelete} />
+      <ExpenseListItem
+        item={item}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        instruments={allInstruments}
+      />
     ),
-    [handleEdit, handleDelete]
+    [handleEdit, handleDelete, allInstruments]
   )
 
   // Memoized renderSectionHeader function
@@ -381,6 +424,7 @@ export default function HistoryScreen() {
           ? {
               type: editingExpense.paymentMethodType,
               identifier: editingExpense.paymentMethodId.trim() || undefined,
+              instrumentId: editingExpense.paymentInstrumentId,
             }
           : undefined
 
@@ -597,22 +641,53 @@ export default function HistoryScreen() {
                       <Label color="$color" opacity={0.6} fontSize="$2">
                         {selectedPaymentConfig.identifierLabel} (Optional)
                       </Label>
-                      <Input
-                        size="$4"
-                        placeholder={
-                          editingExpense?.paymentMethodType === "Other"
-                            ? "e.g., Venmo, PayPal, Gift Card"
-                            : `Enter ${selectedPaymentConfig.maxLength} digits`
-                        }
-                        keyboardType={
-                          editingExpense?.paymentMethodType === "Other"
-                            ? "default"
-                            : "numeric"
-                        }
-                        value={editingExpense?.paymentMethodId || ""}
-                        onChangeText={handleIdentifierChange}
-                        maxLength={selectedPaymentConfig.maxLength}
-                      />
+
+                      {editingExpense?.paymentMethodType &&
+                      isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
+                        <YStack gap="$2">
+                          <Button
+                            size="$4"
+                            chromeless
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                            onPress={() => setInstrumentPickerOpen(true)}
+                          >
+                            {selectedInstrument && !selectedInstrument.deletedAt
+                              ? formatPaymentInstrumentLabel(selectedInstrument)
+                              : editingExpense.paymentInstrumentId
+                                ? `${editingExpense.paymentMethodType} • Others`
+                                : "Select saved instrument (optional)"}
+                          </Button>
+
+                          {!editingExpense.paymentInstrumentId && (
+                            <Input
+                              size="$4"
+                              keyboardType="numeric"
+                              placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                              value={editingExpense?.paymentMethodId || ""}
+                              onChangeText={handleIdentifierChange}
+                              maxLength={selectedPaymentConfig.maxLength}
+                            />
+                          )}
+                        </YStack>
+                      ) : (
+                        <Input
+                          size="$4"
+                          placeholder={
+                            editingExpense?.paymentMethodType === "Other"
+                              ? "e.g., Venmo, PayPal, Gift Card"
+                              : `Enter ${selectedPaymentConfig.maxLength} digits`
+                          }
+                          keyboardType={
+                            editingExpense?.paymentMethodType === "Other"
+                              ? "default"
+                              : "numeric"
+                          }
+                          value={editingExpense?.paymentMethodId || ""}
+                          onChangeText={handleIdentifierChange}
+                          maxLength={selectedPaymentConfig.maxLength}
+                        />
+                      )}
                     </YStack>
                   )}
                 </YStack>
@@ -640,6 +715,64 @@ export default function HistoryScreen() {
         showsVerticalScrollIndicator={false}
         ListFooterComponent={ListFooterComponent}
       />
+
+      {editingExpense?.paymentMethodType &&
+        isPaymentInstrumentMethod(editingExpense.paymentMethodType) && (
+          <PaymentInstrumentPickerSheet
+            open={instrumentPickerOpen}
+            onClose={() => setInstrumentPickerOpen(false)}
+            method={editingExpense.paymentMethodType as PaymentInstrumentMethod}
+            instruments={allInstruments}
+            selectedInstrumentId={editingExpense.paymentInstrumentId}
+            onSelectInstrument={(inst) => {
+              setEditingExpense((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      paymentInstrumentId: inst.id,
+                      paymentMethodId: inst.lastDigits,
+                    }
+                  : null
+              )
+              setInstrumentPickerOpen(false)
+            }}
+            onSelectOthers={() => {
+              setEditingExpense((prev) =>
+                prev
+                  ? { ...prev, paymentInstrumentId: undefined, paymentMethodId: "" }
+                  : null
+              )
+              setInstrumentPickerOpen(false)
+            }}
+            onAddNew={() => {
+              setInstrumentPickerOpen(false)
+              setInstrumentFormOpen(true)
+            }}
+          />
+        )}
+
+      {editingExpense?.paymentMethodType &&
+        isPaymentInstrumentMethod(editingExpense.paymentMethodType) && (
+          <PaymentInstrumentFormModal
+            open={instrumentFormOpen}
+            onClose={() => setInstrumentFormOpen(false)}
+            existingInstruments={allInstruments}
+            initialMethod={editingExpense.paymentMethodType as PaymentInstrumentMethod}
+            onSave={(inst) => {
+              const nextList = [inst, ...allInstruments]
+              updateSettings({ paymentInstruments: nextList })
+              setEditingExpense((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      paymentInstrumentId: inst.id,
+                      paymentMethodId: inst.lastDigits,
+                    }
+                  : null
+              )
+            }}
+          />
+        )}
     </YStack>
   )
 }

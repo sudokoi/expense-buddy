@@ -97,10 +97,12 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant([]),
+  paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 4, max: 10 }),
+  version: fc.integer({ min: 5, max: 10 }),
 })
 
 // Operation types for change tracking simulation

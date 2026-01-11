@@ -9,6 +9,7 @@ export interface CSVRow {
   note: string
   paymentMethodType: string
   paymentMethodId: string
+  paymentInstrumentId: string
   createdAt: string
   updatedAt: string
   deletedAt: string
@@ -26,6 +27,7 @@ export function exportToCSV(expenses: Expense[]): string {
     note: expense.note || "",
     paymentMethodType: expense.paymentMethod?.type || "",
     paymentMethodId: expense.paymentMethod?.identifier || "",
+    paymentInstrumentId: expense.paymentMethod?.instrumentId || "",
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt,
     deletedAt: expense.deletedAt || "",
@@ -41,6 +43,7 @@ export function exportToCSV(expenses: Expense[]): string {
       "note",
       "paymentMethodType",
       "paymentMethodId",
+      "paymentInstrumentId",
       "createdAt",
       "updatedAt",
       "deletedAt",
@@ -71,6 +74,7 @@ export function importFromCSV(csvString: string): Expense[] {
         ? {
             type: row.paymentMethodType as PaymentMethodType,
             identifier: row.paymentMethodId?.trim() || undefined,
+            instrumentId: row.paymentInstrumentId?.trim() || undefined,
           }
         : undefined
 

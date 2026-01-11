@@ -14,8 +14,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
   categoriesVersion: 1,
+  paymentInstruments: [],
+  paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 4,
+  version: 5,
 }
 
 // Create a fresh store for each test to avoid state pollution
@@ -140,8 +142,10 @@ describe("Settings Store", () => {
         autoSyncTiming: "on_launch",
         categories: DEFAULT_CATEGORIES,
         categoriesVersion: 1,
+        paymentInstruments: [],
+        paymentInstrumentsMigrationVersion: 0,
         updatedAt: new Date().toISOString(),
-        version: 4,
+        version: 5,
       }
 
       store.trigger.loadSettings({ settings: newSettings, hasUnsyncedChanges: true })
@@ -236,8 +240,10 @@ describe("Settings Store", () => {
         autoSyncTiming: "on_change",
         categories: DEFAULT_CATEGORIES,
         categoriesVersion: 1,
+        paymentInstruments: [],
+        paymentInstrumentsMigrationVersion: 0,
         updatedAt: new Date().toISOString(),
-        version: 4,
+        version: 5,
         defaultPaymentMethod: "UPI",
       }
 

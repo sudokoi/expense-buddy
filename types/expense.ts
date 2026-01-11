@@ -11,6 +11,7 @@ export type PaymentMethodType =
 export interface PaymentMethod {
   type: PaymentMethodType
   identifier?: string // Last 4 digits for cards, last 3 for UPI bank account
+  instrumentId?: string // Optional link to a saved payment instrument (nickname + lastDigits)
 }
 
 export interface Expense {

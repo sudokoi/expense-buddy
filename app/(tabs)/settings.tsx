@@ -26,6 +26,7 @@ import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
+import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { Category } from "../../types/category"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -544,6 +545,11 @@ export default function SettingsScreen() {
               onChange={handleDefaultPaymentMethodChange}
             />
           </YStack>
+        </SettingsSection>
+
+        {/* PAYMENT INSTRUMENTS Section */}
+        <SettingsSection title="PAYMENT INSTRUMENTS">
+          <PaymentInstrumentsSection />
         </SettingsSection>
 
         {/* CATEGORIES Section */}

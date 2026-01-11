@@ -62,7 +62,7 @@ const optionalPaymentMethodTypeArbitrary = fc.option(paymentMethodTypeArbitrary,
   nil: undefined,
 })
 
-// Full settings arbitrary (v4 format with all required fields)
+// Full settings arbitrary (latest format with all required fields)
 const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   theme: themeArbitrary,
   syncSettings: fc.boolean(),
@@ -71,11 +71,13 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   autoSyncTiming: autoSyncTimingArbitrary,
   categories: fc.constant(DEFAULT_CATEGORIES),
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant([]),
+  paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   updatedAt: validIsoDateArbitrary,
-  version: fc.integer({ min: 4, max: 10 }),
+  version: fc.integer({ min: 5, max: 10 }),
 })
 
-// Full v4 settings arbitrary (with version fixed to 4)
+// Full settings arbitrary (with version fixed to latest)
 const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   theme: themeArbitrary,
   syncSettings: fc.boolean(),
@@ -84,8 +86,10 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   autoSyncTiming: autoSyncTimingArbitrary,
   categories: fc.constant(DEFAULT_CATEGORIES),
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant([]),
+  paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: validIsoDateArbitrary,
-  version: fc.constant(4),
+  version: fc.constant(5),
 })
 
 describe("Sync Manager Settings Integration Properties", () => {
@@ -339,8 +343,10 @@ describe("Sync Manager Settings Integration Properties", () => {
             autoSyncTiming: "on_launch",
             categories: DEFAULT_CATEGORIES,
             categoriesVersion: 1,
+            paymentInstruments: [],
+            paymentInstrumentsMigrationVersion: 0,
             updatedAt: new Date().toISOString(),
-            version: 4,
+            version: 5,
           }
 
           // Replace local with remote

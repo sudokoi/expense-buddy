@@ -33,8 +33,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
   categoriesVersion: 1,
+  paymentInstruments: [],
+  paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 4,
+  version: 5,
 }
 
 // Create a fresh store for each test
@@ -154,10 +156,12 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant([]),
+  paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 4, max: 10 }),
+  version: fc.integer({ min: 5, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
 })
 

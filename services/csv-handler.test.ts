@@ -43,6 +43,7 @@ const expenseWithPaymentMethodArb = fc.record({
     fc.record({
       type: paymentMethodTypeArb,
       identifier: fc.option(fc.stringMatching(/^\d{3,4}$/), { nil: undefined }),
+      instrumentId: fc.option(fc.uuid(), { nil: undefined }),
     }),
     { nil: undefined }
   ),
@@ -84,6 +85,10 @@ function expensesAreEquivalent(original: Expense, imported: Expense): boolean {
     const originalId = original.paymentMethod.identifier || ""
     const importedId = imported.paymentMethod.identifier || ""
     if (originalId !== importedId) return false
+
+    const originalInstrumentId = original.paymentMethod.instrumentId || ""
+    const importedInstrumentId = imported.paymentMethod.instrumentId || ""
+    if (originalInstrumentId !== importedInstrumentId) return false
   } else {
     // One defined, one not - not equivalent
     return false
@@ -157,6 +162,7 @@ describe("CSV Handler Properties", () => {
               paymentMethod: fc.record({
                 type: paymentMethodTypeArb,
                 identifier: fc.option(fc.stringMatching(/^\d{3,4}$/), { nil: undefined }),
+                instrumentId: fc.option(fc.uuid(), { nil: undefined }),
               }),
               createdAt: fc.constant(new Date().toISOString()),
               updatedAt: fc.constant(new Date().toISOString()),
@@ -187,6 +193,12 @@ describe("CSV Handler Properties", () => {
               const originalId = original.paymentMethod!.identifier || ""
               const importedId = imp.paymentMethod.identifier || ""
               if (originalId !== importedId) {
+                return false
+              }
+
+              const originalInstrumentId = original.paymentMethod!.instrumentId || ""
+              const importedInstrumentId = imp.paymentMethod.instrumentId || ""
+              if (originalInstrumentId !== importedInstrumentId) {
                 return false
               }
             }

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
-import { useExpenses, useCategories } from "../../stores/hooks"
+import { useExpenses, useCategories, useSettings } from "../../stores/hooks"
 import { format, parseISO } from "date-fns"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { Alert, ViewStyle, TextStyle } from "react-native"
@@ -14,6 +14,7 @@ import { EditExpenseModal } from "../../components/ui/EditExpenseModal"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
+import type { PaymentInstrument } from "../../types/payment-instrument"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -52,6 +53,7 @@ interface DayExpenseItemProps {
   categoryInfo: { color: string; label: string }
   onDelete: (id: string) => void
   onEdit: (expense: Expense) => void
+  instruments: PaymentInstrument[]
 }
 
 const DayExpenseItem = React.memo(function DayExpenseItem({
@@ -59,8 +61,12 @@ const DayExpenseItem = React.memo(function DayExpenseItem({
   categoryInfo,
   onDelete,
   onEdit,
+  instruments,
 }: DayExpenseItemProps) {
-  const paymentMethodDisplay = formatPaymentMethodDisplay(expense.paymentMethod)
+  const paymentMethodDisplay = formatPaymentMethodDisplay(
+    expense.paymentMethod,
+    instruments
+  )
 
   return (
     <ExpenseCard>
@@ -108,6 +114,9 @@ export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense, editExpense } = useExpenses()
   const { categories } = useCategories()
+  const { settings } = useSettings()
+
+  const instruments = settings.paymentInstruments ?? []
 
   // Edit modal state
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
@@ -186,6 +195,7 @@ export default function DayExpensesScreen() {
             categoryInfo={getCategoryInfoForExpense(expense.category)}
             onDelete={handleDelete}
             onEdit={handleEdit}
+            instruments={instruments}
           />
         ))
       )}

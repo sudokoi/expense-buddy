@@ -25,7 +25,18 @@ import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
-import { useCategories } from "../../stores/hooks"
+import { useCategories, useSettings } from "../../stores/hooks"
+import { PaymentInstrumentPickerSheet } from "./PaymentInstrumentPickerSheet"
+import { PaymentInstrumentFormModal } from "./PaymentInstrumentFormModal"
+import {
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  isPaymentInstrumentMethod,
+} from "../../services/payment-instruments"
+import type { PaymentInstrument } from "../../types/payment-instrument"
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
+import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -77,6 +88,9 @@ export function EditExpenseModal({
 }: EditExpenseModalProps) {
   // Get categories from store (sorted by order)
   const { categories } = useCategories()
+  const { settings, updateSettings } = useSettings()
+
+  const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
   // Form state - pre-populated from expense
   const [amount, setAmount] = useState(expense.amount.toString())
@@ -87,6 +101,17 @@ export function EditExpenseModal({
   >(expense.paymentMethod?.type)
   const [paymentMethodId, setPaymentMethodId] = useState(
     expense.paymentMethod?.identifier || ""
+  )
+  const [paymentInstrumentId, setPaymentInstrumentId] = useState<string | undefined>(
+    expense.paymentMethod?.instrumentId
+  )
+
+  const [instrumentPickerOpen, setInstrumentPickerOpen] = useState(false)
+  const [instrumentFormOpen, setInstrumentFormOpen] = useState(false)
+
+  const selectedInstrument = useMemo(
+    () => findInstrumentById(allInstruments, paymentInstrumentId),
+    [allInstruments, paymentInstrumentId]
   )
 
   // Validation errors state
@@ -110,9 +135,11 @@ export function EditExpenseModal({
         // Deselect if already selected
         setPaymentMethodType(undefined)
         setPaymentMethodId("")
+        setPaymentInstrumentId(undefined)
       } else {
         setPaymentMethodType(type)
         setPaymentMethodId("") // Clear identifier when changing type
+        setPaymentInstrumentId(undefined)
       }
     },
     [paymentMethodType]
@@ -129,6 +156,7 @@ export function EditExpenseModal({
       } else {
         const maxLen = selectedPaymentConfig?.maxLength || 4
         setPaymentMethodId(validateIdentifier(text, maxLen))
+        setPaymentInstrumentId(undefined)
       }
     },
     [selectedPaymentConfig, paymentMethodType]
@@ -161,6 +189,7 @@ export function EditExpenseModal({
       ? {
           type: paymentMethodType,
           identifier: paymentMethodId.trim() || undefined,
+          instrumentId: paymentInstrumentId,
         }
       : undefined
 
@@ -178,6 +207,7 @@ export function EditExpenseModal({
     note,
     paymentMethodType,
     paymentMethodId,
+    paymentInstrumentId,
     expense.id,
     expense.date,
     onSave,
@@ -191,162 +221,235 @@ export function EditExpenseModal({
     setNote(expense.note || "")
     setPaymentMethodType(expense.paymentMethod?.type)
     setPaymentMethodId(expense.paymentMethod?.identifier || "")
+    setPaymentInstrumentId(expense.paymentMethod?.instrumentId)
     setErrors({})
     onClose()
   }, [expense, onClose])
 
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) handleClose()
-      }}
-      snapPoints={[95]}
-      dismissOnSnapToBottom
-    >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
+    <>
+      <Sheet
+        modal
+        open={open}
+        onOpenChange={(isOpen: boolean) => {
+          if (!isOpen) handleClose()
+        }}
+        snapPoints={[95]}
+        dismissOnSnapToBottom
+      >
+        <Sheet.Overlay />
+        <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
+          <Sheet.Handle />
 
-        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-          <YStack gap="$4" style={layoutStyles.contentContainer}>
-            <XStack style={layoutStyles.headerRow}>
-              <H4>Edit Expense</H4>
-              <Button
-                size="$3"
-                chromeless
-                icon={X}
-                onPress={handleClose}
-                aria-label="Close"
-              />
-            </XStack>
-
-            {/* Amount Input */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Amount
-              </Label>
-              <Input
-                size="$4"
-                placeholder="0.00"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={(text) => {
-                  setAmount(text)
-                  // Clear error when user starts typing
-                  if (errors.amount) {
-                    setErrors((prev) => {
-                      const { amount: _, ...rest } = prev
-                      return rest
-                    })
-                  }
-                }}
-                borderWidth={2}
-                borderColor={errors.amount ? "$red10" : "$borderColor"}
-                focusStyle={{
-                  borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
-                }}
-              />
-              {errors.amount && (
-                <Text fontSize="$2" color="$red10">
-                  {errors.amount}
-                </Text>
-              )}
-            </YStack>
-
-            {/* Category Selection */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Category
-              </Label>
-              <XStack style={layoutStyles.categoryRow}>
-                {categories.map((cat) => {
-                  const isSelected = category === cat.label
-                  return (
-                    <CategoryCard
-                      key={cat.label}
-                      isSelected={isSelected}
-                      categoryColor={cat.color}
-                      label={cat.label}
-                      onPress={() => handleCategorySelect(cat.label)}
-                      compact
-                    />
-                  )
-                })}
-              </XStack>
-            </YStack>
-
-            {/* Note Input */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Note (Optional)
-              </Label>
-              <TextArea
-                placeholder="What was this for?"
-                value={note}
-                onChangeText={setNote}
-                numberOfLines={2}
-              />
-            </YStack>
-
-            {/* Payment Method Selection */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Payment Method (Optional)
-              </Label>
-              <XStack style={layoutStyles.paymentMethodRow}>
-                {PAYMENT_METHODS.map((pm) => (
-                  <PaymentMethodCard
-                    key={pm.value}
-                    config={pm}
-                    isSelected={paymentMethodType === pm.value}
-                    onPress={() => handlePaymentMethodSelect(pm.value)}
-                  />
-                ))}
+          <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+            <YStack gap="$4" style={layoutStyles.contentContainer}>
+              <XStack style={layoutStyles.headerRow}>
+                <H4>Edit Expense</H4>
+                <Button
+                  size="$3"
+                  chromeless
+                  icon={X}
+                  onPress={handleClose}
+                  aria-label="Close"
+                />
               </XStack>
 
-              {/* Identifier input for cards/UPI/Other */}
-              {selectedPaymentConfig?.hasIdentifier && (
-                <YStack gap="$1" style={layoutStyles.identifierContainer}>
-                  <Label color="$color" opacity={0.6} fontSize="$2">
-                    {selectedPaymentConfig.identifierLabel} (Optional)
-                  </Label>
-                  <Input
-                    size="$4"
-                    placeholder={
-                      paymentMethodType === "Other"
-                        ? "e.g., Venmo, PayPal, Gift Card"
-                        : `Enter ${selectedPaymentConfig.maxLength} digits`
+              {/* Amount Input */}
+              <YStack gap="$2">
+                <Label color="$color" opacity={0.8}>
+                  Amount
+                </Label>
+                <Input
+                  size="$4"
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={(text) => {
+                    setAmount(text)
+                    // Clear error when user starts typing
+                    if (errors.amount) {
+                      setErrors((prev) => {
+                        const { amount: _, ...rest } = prev
+                        return rest
+                      })
                     }
-                    keyboardType={paymentMethodType === "Other" ? "default" : "numeric"}
-                    value={paymentMethodId}
-                    onChangeText={handleIdentifierChange}
-                    maxLength={selectedPaymentConfig.maxLength}
-                  />
-                </YStack>
-              )}
-            </YStack>
+                  }}
+                  borderWidth={2}
+                  borderColor={errors.amount ? "$red10" : "$borderColor"}
+                  focusStyle={{
+                    borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
+                  }}
+                />
+                {errors.amount && (
+                  <Text fontSize="$2" color="$red10">
+                    {errors.amount}
+                  </Text>
+                )}
+              </YStack>
 
-            {/* Action Buttons */}
-            <XStack style={layoutStyles.buttonRow}>
-              <Button size="$4" chromeless onPress={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                size="$4"
-                themeInverse
-                onPress={handleSave}
-                icon={<Check size="$1" />}
-                fontWeight="bold"
-              >
-                Save Changes
-              </Button>
-            </XStack>
-          </YStack>
-        </ScrollView>
-      </Sheet.Frame>
-    </Sheet>
+              {/* Category Selection */}
+              <YStack gap="$2">
+                <Label color="$color" opacity={0.8}>
+                  Category
+                </Label>
+                <XStack style={layoutStyles.categoryRow}>
+                  {categories.map((cat) => {
+                    const isSelected = category === cat.label
+                    return (
+                      <CategoryCard
+                        key={cat.label}
+                        isSelected={isSelected}
+                        categoryColor={cat.color}
+                        label={cat.label}
+                        onPress={() => handleCategorySelect(cat.label)}
+                        compact
+                      />
+                    )
+                  })}
+                </XStack>
+              </YStack>
+
+              {/* Note Input */}
+              <YStack gap="$2">
+                <Label color="$color" opacity={0.8}>
+                  Note (Optional)
+                </Label>
+                <TextArea
+                  placeholder="What was this for?"
+                  value={note}
+                  onChangeText={setNote}
+                  numberOfLines={2}
+                />
+              </YStack>
+
+              {/* Payment Method Selection */}
+              <YStack gap="$2">
+                <Label color="$color" opacity={0.8}>
+                  Payment Method (Optional)
+                </Label>
+                <XStack style={layoutStyles.paymentMethodRow}>
+                  {PAYMENT_METHODS.map((pm) => (
+                    <PaymentMethodCard
+                      key={pm.value}
+                      config={pm}
+                      isSelected={paymentMethodType === pm.value}
+                      onPress={() => handlePaymentMethodSelect(pm.value)}
+                    />
+                  ))}
+                </XStack>
+
+                {/* Identifier input for cards/UPI/Other */}
+                {selectedPaymentConfig?.hasIdentifier && (
+                  <YStack gap="$1" style={layoutStyles.identifierContainer}>
+                    <Label color="$color" opacity={0.6} fontSize="$2">
+                      {selectedPaymentConfig.identifierLabel} (Optional)
+                    </Label>
+
+                    {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) ? (
+                      <YStack gap="$2">
+                        <Button
+                          size="$4"
+                          chromeless
+                          borderWidth={1}
+                          borderColor="$borderColor"
+                          onPress={() => setInstrumentPickerOpen(true)}
+                        >
+                          {selectedInstrument && !selectedInstrument.deletedAt
+                            ? formatPaymentInstrumentLabel(selectedInstrument)
+                            : paymentInstrumentId
+                              ? `${paymentMethodType} • Others`
+                              : "Select saved instrument (optional)"}
+                        </Button>
+
+                        {!paymentInstrumentId && (
+                          <Input
+                            size="$4"
+                            placeholder={`Enter ${selectedPaymentConfig.maxLength} digits`}
+                            keyboardType="numeric"
+                            value={paymentMethodId}
+                            onChangeText={handleIdentifierChange}
+                            maxLength={selectedPaymentConfig.maxLength}
+                          />
+                        )}
+                      </YStack>
+                    ) : (
+                      <Input
+                        size="$4"
+                        placeholder={
+                          paymentMethodType === "Other"
+                            ? "e.g., Venmo, PayPal, Gift Card"
+                            : `Enter ${selectedPaymentConfig.maxLength} digits`
+                        }
+                        keyboardType={
+                          paymentMethodType === "Other" ? "default" : "numeric"
+                        }
+                        value={paymentMethodId}
+                        onChangeText={handleIdentifierChange}
+                        maxLength={selectedPaymentConfig.maxLength}
+                      />
+                    )}
+                  </YStack>
+                )}
+              </YStack>
+
+              {/* Action Buttons */}
+              <XStack style={layoutStyles.buttonRow}>
+                <Button size="$4" chromeless onPress={handleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  size="$4"
+                  themeInverse
+                  onPress={handleSave}
+                  icon={<Check size="$1" />}
+                  fontWeight="bold"
+                >
+                  Save Changes
+                </Button>
+              </XStack>
+            </YStack>
+          </ScrollView>
+        </Sheet.Frame>
+      </Sheet>
+
+      {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) && (
+        <>
+          <PaymentInstrumentPickerSheet
+            open={instrumentPickerOpen}
+            onClose={() => setInstrumentPickerOpen(false)}
+            method={paymentMethodType as PaymentInstrumentMethod}
+            instruments={allInstruments}
+            selectedInstrumentId={paymentInstrumentId}
+            onSelectInstrument={(inst) => {
+              setPaymentInstrumentId(inst.id)
+              setPaymentMethodId(inst.lastDigits)
+              setInstrumentPickerOpen(false)
+            }}
+            onSelectOthers={() => {
+              setPaymentInstrumentId(undefined)
+              setPaymentMethodId("")
+              setInstrumentPickerOpen(false)
+            }}
+            onAddNew={() => {
+              setInstrumentPickerOpen(false)
+              setInstrumentFormOpen(true)
+            }}
+          />
+
+          <PaymentInstrumentFormModal
+            open={instrumentFormOpen}
+            onClose={() => setInstrumentFormOpen(false)}
+            existingInstruments={allInstruments}
+            initialMethod={paymentMethodType as PaymentInstrumentMethod}
+            onSave={(inst) => {
+              updateSettings({ paymentInstruments: [inst, ...allInstruments] })
+              setPaymentInstrumentId(inst.id)
+              setPaymentMethodId(inst.lastDigits)
+            }}
+          />
+        </>
+      )}
+    </>
   )
 }
 

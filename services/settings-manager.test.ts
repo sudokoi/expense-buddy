@@ -20,6 +20,7 @@ import {
 } from "./settings-manager"
 import { PaymentMethodType } from "../types/expense"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
+import type { PaymentInstrument } from "../types/payment-instrument"
 
 // Mock AsyncStorage for testing
 const mockStorage: Map<string, string> = new Map()
@@ -92,10 +93,12 @@ const appSettingsArb = fc.record({
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
   categoriesVersion: fc.constant(1),
+  paymentInstruments: fc.constant<PaymentInstrument[]>([]),
+  paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(4), // Always use version 4 to avoid migration in tests
+  version: fc.constant(5), // Always use latest version to avoid migration in tests
 })
 
 describe("Settings Manager Properties", () => {
@@ -180,6 +183,10 @@ describe("Settings Manager Properties", () => {
             loaded.defaultPaymentMethod === settings.defaultPaymentMethod &&
             loaded.autoSyncEnabled === settings.autoSyncEnabled &&
             loaded.autoSyncTiming === settings.autoSyncTiming &&
+            loaded.paymentInstrumentsMigrationVersion ===
+              settings.paymentInstrumentsMigrationVersion &&
+            JSON.stringify(loaded.paymentInstruments) ===
+              JSON.stringify(settings.paymentInstruments) &&
             loaded.version === settings.version
           )
         }),
@@ -203,6 +210,10 @@ describe("Settings Manager Properties", () => {
             parsed.defaultPaymentMethod === settings.defaultPaymentMethod &&
             parsed.autoSyncEnabled === settings.autoSyncEnabled &&
             parsed.autoSyncTiming === settings.autoSyncTiming &&
+            parsed.paymentInstrumentsMigrationVersion ===
+              settings.paymentInstrumentsMigrationVersion &&
+            JSON.stringify(parsed.paymentInstruments) ===
+              JSON.stringify(settings.paymentInstruments) &&
             parsed.updatedAt === settings.updatedAt &&
             parsed.version === settings.version
           )
@@ -364,7 +375,9 @@ describe("Settings Manager Properties", () => {
       expect(loaded.defaultPaymentMethod).toBeUndefined()
       expect(loaded.autoSyncEnabled).toBe(false)
       expect(loaded.autoSyncTiming).toBe("on_launch")
-      expect(loaded.version).toBe(4)
+      expect(loaded.paymentInstruments).toEqual([])
+      expect(loaded.paymentInstrumentsMigrationVersion).toBe(0)
+      expect(loaded.version).toBe(5)
     })
   })
 
@@ -518,8 +531,12 @@ describe("Settings Manager Properties", () => {
             // New fields should have defaults
             loaded.autoSyncEnabled === false &&
             loaded.autoSyncTiming === "on_launch" &&
-            // Version should be upgraded to 4 (v2 -> v3 -> v4)
-            loaded.version === 4
+            // New instrument fields should have defaults
+            Array.isArray(loaded.paymentInstruments) &&
+            loaded.paymentInstruments.length === 0 &&
+            loaded.paymentInstrumentsMigrationVersion === 0 &&
+            // Version should be upgraded to 5 (v2 -> v3 -> v4 -> v5)
+            loaded.version === 5
           )
         }),
         { numRuns: 100 }

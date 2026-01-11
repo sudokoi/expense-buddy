@@ -75,6 +75,22 @@ export async function trackEdit(expenseId: string): Promise<void> {
 }
 
 /**
+ * Track multiple expenses as edited in a single storage read/write.
+ * Useful for migrations or bulk relinking.
+ */
+export async function trackBulkEdit(expenseIds: string[]): Promise<void> {
+  if (expenseIds.length === 0) return
+
+  const changes = await loadPendingChanges()
+  for (const expenseId of expenseIds) {
+    if (!changes.added.has(expenseId)) {
+      changes.edited.add(expenseId)
+    }
+  }
+  await savePendingChanges(changes)
+}
+
+/**
  * Track an expense being deleted
  */
 export async function trackDelete(expenseId: string): Promise<void> {
