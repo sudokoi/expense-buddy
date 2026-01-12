@@ -26,6 +26,9 @@ const styles = {
   } as ViewStyle,
   contentContainer: {
     paddingHorizontal: 4,
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
   } as ViewStyle,
 }
 
