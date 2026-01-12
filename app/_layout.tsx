@@ -139,6 +139,20 @@ function RootLayoutNav() {
         />
 
         <Stack.Screen
+          name="github/repo-picker"
+          options={{
+            title: "GitHub",
+            headerStyle: {
+              backgroundColor: theme.background.val,
+            },
+            headerTintColor: theme.color.val,
+            contentStyle: {
+              backgroundColor: theme.background.val,
+            },
+          }}
+        />
+
+        <Stack.Screen
           name="day/[date]"
           options={{
             headerStyle: {
