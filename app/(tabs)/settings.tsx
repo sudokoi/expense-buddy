@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react"
 import { YStack, Text, Button, Label } from "tamagui"
-import { Alert, Linking, ViewStyle } from "react-native"
+import { Alert, Linking, ViewStyle, Platform } from "react-native"
 import { PaymentMethodType } from "../../types/expense"
 import {
   useExpenses,
@@ -579,7 +579,9 @@ export default function SettingsScreen() {
         {/* GITHUB SYNC Section */}
         <SettingsSection title="GITHUB SYNC">
           <Text color="$color" opacity={0.7} fontSize="$3">
-            Sync your expenses to a GitHub repository using a Personal Access Token.
+            {Platform.OS === "web"
+              ? "Sync your expenses to a GitHub repository using a Personal Access Token."
+              : "Sign in with GitHub to sync your expenses to a personal repository you own (organization repos aren’t supported)."}
           </Text>
 
           {/* GitHub Configuration */}

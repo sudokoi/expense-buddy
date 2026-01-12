@@ -1,16 +1,30 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
-import { Keyboard, ViewStyle } from "react-native"
+import { Keyboard, ViewStyle, Platform } from "react-native"
 import { Check, X, ChevronDown } from "@tamagui/lucide-icons"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../../constants/theme-colors"
+import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
+import * as WebBrowser from "expo-web-browser"
+import { useRouter } from "expo-router"
+import { useFocusEffect } from "@react-navigation/native"
+import {
+  requestGitHubDeviceCode,
+  pollGitHubDeviceAccessTokenOnce,
+  GitHubDeviceCode,
+} from "../../../services/github-device-flow"
+import { secureStorage } from "../../../services/secure-storage"
+
+const TOKEN_KEY = "github_pat"
+const REPO_KEY = "github_repo"
+const BRANCH_KEY = "github_branch"
 
 /**
  * Props for the GitHubConfigSection component
  *
  * This component handles the GitHub configuration form including:
- * - Personal Access Token input
+ * - GitHub login (native) or Personal Access Token input (web)
  * - Repository input
  * - Branch input
  * - Save and Test connection buttons
@@ -51,11 +65,14 @@ const layoutStyles = {
     alignItems: "center",
     flex: 1,
     gap: 8,
+    minWidth: 0,
   } as ViewStyle,
   connectedBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexShrink: 1,
+    minWidth: 0,
   } as ViewStyle,
   accordionContent: {
     padding: 8,
@@ -72,7 +89,7 @@ const primaryColor = ACCENT_COLORS.primary
  * GitHubConfigSection - Collapsible GitHub configuration form
  *
  * Provides a form for configuring GitHub sync with:
- * - Personal Access Token (secure input)
+ * - GitHub login (native) or Personal Access Token (web)
  * - Repository name (owner/repo format)
  * - Branch name
  * - Save and Test buttons
@@ -88,10 +105,59 @@ export function GitHubConfigSection({
   onConnectionStatusChange,
   onNotification,
 }: GitHubConfigSectionProps) {
+  const router = useRouter()
+
   // Form state initialized from syncConfig
   const [token, setToken] = useState(syncConfig?.token ?? "")
   const [repo, setRepo] = useState(syncConfig?.repo ?? "")
   const [branch, setBranch] = useState(syncConfig?.branch ?? "main")
+
+  const isWeb = Platform.OS === "web"
+  const githubOAuthStatus = getGitHubOAuthClientIdStatus()
+
+  const [deviceCode, setDeviceCode] = useState<GitHubDeviceCode | null>(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const deviceFlowExpiresAtRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current)
+        pollTimeoutRef.current = null
+      }
+    }
+  }, [])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === "web") return
+
+      let cancelled = false
+
+      const refreshDraftFromStorage = async () => {
+        try {
+          const [storedRepo, storedBranch] = await Promise.all([
+            secureStorage.getItem(REPO_KEY),
+            secureStorage.getItem(BRANCH_KEY),
+          ])
+
+          if (cancelled) return
+
+          if (storedRepo && storedRepo !== repo) setRepo(storedRepo)
+          if (storedBranch && storedBranch !== branch) setBranch(storedBranch)
+        } catch {
+          // Non-fatal: repo picker might not have written anything.
+        }
+      }
+
+      void refreshDraftFromStorage()
+
+      return () => {
+        cancelled = true
+      }
+    }, [repo, branch])
+  )
 
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
@@ -124,6 +190,96 @@ export function GitHubConfigSection({
     const config: SyncConfig = normalized
     onSaveConfig(config)
   }, [token, repo, branch, onSaveConfig, onNotification])
+
+  const handleStartGitHubLogin = useCallback(async () => {
+    const status = getGitHubOAuthClientIdStatus()
+    if (!status.ok) {
+      onNotification(status.error, "error")
+      return
+    }
+
+    try {
+      setIsSigningIn(true)
+      setDeviceCode(null)
+
+      const code = await requestGitHubDeviceCode({
+        clientId: status.clientId,
+        scope: "repo",
+      })
+
+      setDeviceCode(code)
+      deviceFlowExpiresAtRef.current = Date.now() + code.expires_in * 1000
+
+      const url = code.verification_uri_complete || code.verification_uri
+      await WebBrowser.openBrowserAsync(url)
+
+      const poll = async (pollIntervalSeconds: number) => {
+        const expiresAt = deviceFlowExpiresAtRef.current
+        if (expiresAt && Date.now() > expiresAt) {
+          setIsSigningIn(false)
+          setDeviceCode(null)
+          onNotification("GitHub sign-in expired. Please try again.", "error")
+          return
+        }
+
+        const result = await pollGitHubDeviceAccessTokenOnce({
+          clientId: status.clientId,
+          deviceCode: code.device_code,
+        })
+
+        if (result.type === "success") {
+          const accessToken = result.token.access_token
+          setToken(accessToken)
+          await secureStorage.setItem(TOKEN_KEY, accessToken)
+          setIsSigningIn(false)
+          setDeviceCode(null)
+          onNotification("GitHub sign-in successful", "success")
+
+          // Prompt user to choose a repo right after sign-in.
+          router.push("/github/repo-picker")
+          return
+        }
+
+        if (result.type === "expired") {
+          setIsSigningIn(false)
+          setDeviceCode(null)
+          onNotification("GitHub sign-in expired. Please try again.", "error")
+          return
+        }
+
+        if (result.type === "denied") {
+          setIsSigningIn(false)
+          setDeviceCode(null)
+          onNotification("GitHub sign-in was denied.", "error")
+          return
+        }
+
+        if (result.type === "error") {
+          setIsSigningIn(false)
+          setDeviceCode(null)
+          onNotification(result.message, "error")
+          return
+        }
+
+        const nextIntervalSeconds =
+          result.type === "slow_down" ? pollIntervalSeconds + 5 : pollIntervalSeconds
+
+        pollTimeoutRef.current = setTimeout(() => {
+          poll(nextIntervalSeconds)
+        }, nextIntervalSeconds * 1000)
+      }
+
+      poll(code.interval || 5)
+    } catch (error) {
+      setIsSigningIn(false)
+      setDeviceCode(null)
+      onNotification(String(error), "error")
+    }
+  }, [onNotification, router])
+
+  const handleChooseRepo = useCallback(() => {
+    router.push("/github/repo-picker")
+  }, [router])
 
   const handleTestConnection = useCallback(async () => {
     Keyboard.dismiss()
@@ -189,6 +345,23 @@ export function GitHubConfigSection({
                     <Text fontSize="$2" color={successColor}>
                       Connected
                     </Text>
+                    {repo ? (
+                      <>
+                        <Text fontSize="$2" color="$color" opacity={0.45}>
+                          ·
+                        </Text>
+                        <Text
+                          fontSize="$2"
+                          color="$color"
+                          opacity={0.7}
+                          numberOfLines={1}
+                          ellipsizeMode="middle"
+                          style={{ flexShrink: 1, minWidth: 0 } as ViewStyle}
+                        >
+                          {repo}
+                        </Text>
+                      </>
+                    ) : null}
                   </XStack>
                 )}
               </XStack>
@@ -203,40 +376,91 @@ export function GitHubConfigSection({
         </Accordion.Trigger>
         <Accordion.Content style={layoutStyles.accordionContent}>
           <YStack gap="$3">
-            {/* GitHub PAT */}
-            <YStack gap="$2">
-              <Label>GitHub Personal Access Token</Label>
-              <Input
-                secureTextEntry
-                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                value={token}
-                onChangeText={handleTokenChange}
-                size="$4"
-                borderWidth={2}
-                borderColor={configErrors.token ? "$red10" : "$borderColor"}
-              />
-              {configErrors.token ? (
-                <Text fontSize="$2" color="$red10">
-                  {configErrors.token}
-                </Text>
-              ) : (
+            {/* Auth */}
+            {isWeb ? (
+              <YStack gap="$2">
+                <Label>GitHub Personal Access Token</Label>
+                <Input
+                  secureTextEntry
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  value={token}
+                  onChangeText={handleTokenChange}
+                  size="$4"
+                  borderWidth={2}
+                  borderColor={configErrors.token ? "$red10" : "$borderColor"}
+                />
+                {configErrors.token ? (
+                  <Text fontSize="$2" color="$red10">
+                    {configErrors.token}
+                  </Text>
+                ) : (
+                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                    Create a fine-grained PAT with Contents (read/write) permission
+                  </Text>
+                )}
+              </YStack>
+            ) : (
+              <YStack gap="$2">
+                <Label>GitHub Login</Label>
+                <Button
+                  size="$4"
+                  onPress={handleStartGitHubLogin}
+                  disabled={isSigningIn || !githubOAuthStatus.ok}
+                  themeInverse
+                >
+                  {isSigningIn ? "Signing in..." : "Sign in with GitHub"}
+                </Button>
+                {!githubOAuthStatus.ok && (
+                  <Text fontSize="$2" color="$red10">
+                    {githubOAuthStatus.error}
+                  </Text>
+                )}
+                {deviceCode && (
+                  <YStack gap="$2" paddingTop={4}>
+                    <Text fontSize="$2" color="$color" opacity={0.8}>
+                      Enter this code on GitHub:
+                    </Text>
+                    <Text fontSize="$6" fontWeight="700">
+                      {deviceCode.user_code}
+                    </Text>
+                    <Text fontSize="$2" color="$color" opacity={0.8}>
+                      If the browser didn’t open, visit {deviceCode.verification_uri}
+                    </Text>
+                  </YStack>
+                )}
                 <Text fontSize="$2" color="$color" opacity={0.6}>
-                  Create a fine-grained PAT with Contents (read/write) permission
+                  Personal accounts only. Organization repositories aren’t supported.
                 </Text>
-              )}
-            </YStack>
+              </YStack>
+            )}
 
             {/* Repository */}
             <YStack gap="$2">
               <Label>Repository</Label>
-              <Input
-                placeholder="username/repo-name"
-                value={repo}
-                onChangeText={handleRepoChange}
-                size="$4"
-                borderWidth={2}
-                borderColor={configErrors.repo ? "$red10" : "$borderColor"}
-              />
+              {isWeb ? (
+                <Input
+                  placeholder="username/repo-name"
+                  value={repo}
+                  onChangeText={handleRepoChange}
+                  size="$4"
+                  borderWidth={2}
+                  borderColor={configErrors.repo ? "$red10" : "$borderColor"}
+                />
+              ) : (
+                <YStack gap="$2">
+                  <Input
+                    placeholder="Choose a repository"
+                    value={repo}
+                    editable={false}
+                    size="$4"
+                    borderWidth={2}
+                    borderColor={configErrors.repo ? "$red10" : "$borderColor"}
+                  />
+                  <Button size="$3" onPress={handleChooseRepo} disabled={!token}>
+                    {repo ? "Edit" : "Choose repository"}
+                  </Button>
+                </YStack>
+              )}
               {configErrors.repo && (
                 <Text fontSize="$2" color="$red10">
                   {configErrors.repo}

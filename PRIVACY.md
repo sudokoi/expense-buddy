@@ -26,8 +26,11 @@ Your data never leaves your device unless you explicitly choose to sync it to Gi
 
 If you choose to use the optional GitHub sync feature:
 
-- **You provide your own GitHub Personal Access Token (PAT)**
-- **You choose which repository to sync to**
+- **On Android, you can sign in with GitHub** (device authorization flow) and choose a repository
+- **On web, you can use a GitHub Personal Access Token (PAT)** (fallback/testing)
+- **You choose which repository and branch to sync to**
+- **Only personal repositories you own are supported** (organization repositories are not supported)
+- **Write access is required** (the app verifies you can push to the selected repo)
 - **Your expense data is uploaded directly to your own GitHub repository**
 - **We have no access to your GitHub credentials or synced data**
 

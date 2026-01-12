@@ -671,7 +671,11 @@ export async function getLatestCommitTimestamp(
 }
 
 /**
- * Validate GitHub Personal Access Token and repository access
+ * Validate GitHub token and repository access.
+ *
+ * Requirements enforced:
+ * - Repository must be owned by the authenticated user (personal repos only)
+ * - Authenticated user must have write/push access to the repo
  */
 export async function validatePAT(
   token: string,
@@ -686,17 +690,63 @@ export async function validatePAT(
       }
     }
 
+    const commonHeaders = {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    // 1) Validate token + determine viewer login (used to enforce personal-only repos)
+    const userResponse = await fetch("https://api.github.com/user", {
+      headers: commonHeaders,
+    })
+
+    if (userResponse.status === 401) {
+      return { valid: false, error: "Invalid or expired GitHub token" }
+    }
+
+    if (userResponse.status === 403) {
+      return {
+        valid: false,
+        error: "Access forbidden. Please allow repository access.",
+      }
+    }
+
+    if (!userResponse.ok) {
+      const errorData = await userResponse.json().catch(() => ({}))
+      return {
+        valid: false,
+        error: `GitHub API error (${userResponse.status}): ${
+          errorData.message || userResponse.statusText
+        }`,
+      }
+    }
+
+    const userData = (await userResponse.json().catch(() => null)) as {
+      login?: string
+    } | null
+
+    const viewerLogin = String(userData?.login || "").trim()
+    if (!viewerLogin) {
+      return { valid: false, error: "Could not determine GitHub username" }
+    }
+
+    // Enforce personal-only repos: owner must match the authenticated user
+    if (owner.toLowerCase() !== viewerLogin.toLowerCase()) {
+      return {
+        valid: false,
+        error:
+          "Organization repositories aren’t supported yet. Choose a personal repo you own.",
+      }
+    }
+
     console.log(
       "Testing connection to:",
       `https://api.github.com/repos/${owner}/${repoName}`
     )
 
     const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
+      headers: commonHeaders,
     })
 
     console.log("GitHub API Response status:", response.status)
@@ -712,7 +762,7 @@ export async function validatePAT(
     if (response.status === 401) {
       return {
         valid: false,
-        error: "Invalid or expired Personal Access Token",
+        error: "Invalid or expired GitHub token",
       }
     }
 
@@ -737,8 +787,57 @@ export async function validatePAT(
       }
     }
 
-    const repoData = await response.json()
-    console.log("Repository found:", repoData.full_name)
+    const repoData = (await response.json().catch(() => null)) as {
+      full_name?: string
+      permissions?: {
+        admin?: boolean
+        maintain?: boolean
+        push?: boolean
+      }
+    } | null
+
+    console.log("Repository found:", repoData?.full_name)
+
+    // 2) Verify write/push access
+    const hasPushViaRepo = Boolean(
+      repoData?.permissions?.push ||
+      repoData?.permissions?.admin ||
+      repoData?.permissions?.maintain
+    )
+
+    if (!hasPushViaRepo) {
+      // Fallback: collaborator permission endpoint (more explicit)
+      const permissionResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repoName}/collaborators/${encodeURIComponent(
+          viewerLogin
+        )}/permission`,
+        { headers: commonHeaders }
+      )
+
+      if (permissionResponse.ok) {
+        const permissionData = (await permissionResponse.json().catch(() => null)) as {
+          permission?: string
+        } | null
+        const permission = String(permissionData?.permission || "").toLowerCase()
+        const hasPushViaPermission =
+          permission === "admin" || permission === "maintain" || permission === "write"
+
+        if (!hasPushViaPermission) {
+          return {
+            valid: false,
+            error:
+              "No write access to this repository. Please choose a repo you can push to.",
+          }
+        }
+      } else {
+        return {
+          valid: false,
+          error:
+            "No write access to this repository. Please choose a repo you can push to.",
+        }
+      }
+    }
+
     return { valid: true }
   } catch (error) {
     console.error("Connection test error:", error)

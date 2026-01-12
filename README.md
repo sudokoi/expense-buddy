@@ -137,33 +137,34 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 ### Setting Up GitHub Sync
 
-1. **Create a GitHub Personal Access Token**
+1. **Sign in with GitHub (Android)**
+   - Go to the **Settings** tab → **GitHub Sync**
+   - Tap **Sign in with GitHub**
+   - A browser will open and GitHub will show a short **code**
+   - Confirm the code and authorize access
+   - Back in the app, choose a **personal repository you own**
+     - Organization repositories are not supported
+     - Only repositories where you have **write access** are shown
+   - Enter/select a branch (usually `main`)
+   - Tap **Save Config** and then **Test**
 
-   **Option A: Fine-grained token (Recommended)**
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
-   - Click "Generate new token"
-   - Give it a name (e.g., "Expense Buddy Sync")
-   - Set expiration (recommend 90 days or longer)
-   - Under "Repository access", select "Only select repositories"
-   - Choose your sync repository
-   - Under "Permissions" → "Repository permissions":
-     - Set **Contents** to **Read and write**
-   - Click "Generate token" and copy it
+2. **Use a token instead (Web / fallback)**
+   - Create a GitHub Personal Access Token (PAT)
 
-   **Option B: Classic token**
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Click "Generate new token (classic)"
-   - Give it a name and set expiration
-   - Select the `repo` scope (full control of private repositories)
-   - Click "Generate token" and copy it
+     **Option A: Fine-grained token (Recommended)**
+     - GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
+     - Generate new token, select the sync repository
+     - Permissions → Repository permissions → **Contents: Read and write**
 
-2. **Configure in App**
-   - Go to **Settings** tab
-   - Enter your GitHub token
-   - Enter repository name (format: `username/repo`)
-   - Enter branch name (usually `main`)
-   - Tap **Save Configuration**
-   - Tap **Test Connection** to verify
+     **Option B: Classic token**
+     - GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+     - Select the `repo` scope (required for private repositories)
+
+   - In the app, enter:
+     - Token
+     - Repository in `owner/repo` format
+     - Branch (usually `main`)
+   - Tap **Save Config** and then **Test**
 
 3. **Enable Auto-Sync** (Optional)
    - Toggle **Enable Auto-Sync**
@@ -344,7 +345,9 @@ yarn test:watch
 
 ### Environment Variables
 
-No environment variables needed! All configuration is done in-app.
+The app does not require user-provided environment variables.
+
+For builds, the GitHub OAuth Client ID is configured via EAS build profiles in `eas.json` as `GITHUB_OAUTH_CLIENT_ID`.
 
 ### EAS Build Profiles
 

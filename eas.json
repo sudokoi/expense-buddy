@@ -6,7 +6,10 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GITHUB_OAUTH_CLIENT_ID": "Ov23lihYBxLtgot0H8Nq"
+      }
     },
     "internal": {
       "distribution": "internal",
@@ -14,13 +17,17 @@
         "buildType": "apk"
       },
       "env": {
-        "EAS_BUILD_ANDROID_ABIS": "arm64-v8a"
+        "EAS_BUILD_ANDROID_ABIS": "arm64-v8a",
+        "GITHUB_OAUTH_CLIENT_ID": "Ov23lihYBxLtgot0H8Nq"
       }
     },
     "production": {
       "distribution": "store",
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "GITHUB_OAUTH_CLIENT_ID": "Ov23lihYBxLtgot0H8Nq"
       }
     }
   },

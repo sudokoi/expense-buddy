@@ -176,6 +176,9 @@ export default {
     },
     extra: {
       router: {},
+      auth: {
+        githubOAuthClientId: process.env.GITHUB_OAUTH_CLIENT_ID || null,
+      },
       eas: {
         projectId: "facbe508-0deb-4c1d-9625-b49b672a98f1",
       },
