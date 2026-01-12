@@ -11,7 +11,9 @@ import { useTheme } from "tamagui"
 import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
 import { UpdateBanner } from "../components/ui/UpdateBanner"
+import { ChangelogSheet } from "../components/ui/ChangelogSheet"
 import { useUpdateCheck } from "../hooks/use-update-check"
+import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useSettings } from "../stores/hooks"
 
@@ -59,29 +61,49 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         {children}
         <NotificationStack />
         <SyncIndicator />
-        <UpdateBannerContainer />
+        <UpdateAndChangelogOverlays />
       </Provider>
     </KeyboardProvider>
   )
 }
 
-/**
- * Container component for the UpdateBanner
- * Uses the useUpdateCheck hook to manage update state and actions
- */
-function UpdateBannerContainer() {
-  const { showBanner, latestVersion, handleUpdate, handleDismiss } = useUpdateCheck()
+function UpdateAndChangelogOverlays() {
+  const {
+    updateAvailable,
+    latestVersion,
+    showBanner,
+    updateCheckCompleted,
+    handleUpdate,
+    handleDismiss,
+  } = useUpdateCheck()
 
-  if (!showBanner || !latestVersion) {
-    return null
-  }
+  const changelog = useChangelogOnUpdate({
+    updateAvailable,
+    updateCheckCompleted,
+  })
 
   return (
-    <UpdateBanner
-      version={latestVersion}
-      onUpdate={handleUpdate}
-      onDismiss={handleDismiss}
-    />
+    <>
+      {showBanner && latestVersion ? (
+        <UpdateBanner
+          version={latestVersion}
+          onUpdate={handleUpdate}
+          onDismiss={handleDismiss}
+        />
+      ) : null}
+
+      <ChangelogSheet
+        open={changelog.open}
+        version={changelog.version}
+        releaseNotes={changelog.releaseNotes}
+        onClose={() => {
+          void changelog.close()
+        }}
+        onViewFullReleaseNotes={() => {
+          void changelog.viewFullReleaseNotes()
+        }}
+      />
+    </>
   )
 }
 

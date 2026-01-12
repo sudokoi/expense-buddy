@@ -29,6 +29,8 @@ export interface UseUpdateCheckResult {
   latestVersion: string | null
   /** Whether to show the update banner */
   showBanner: boolean
+  /** Whether the automatic update check has completed at least once this session */
+  updateCheckCompleted: boolean
   /** Handle user tapping the Update button */
   handleUpdate: () => Promise<void>
   /** Handle user dismissing the update notification */
@@ -60,6 +62,7 @@ export function useUpdateCheck(): UseUpdateCheckResult {
   const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const [showBanner, setShowBanner] = useState(false)
   const [releaseUrl, setReleaseUrl] = useState<string | undefined>(undefined)
+  const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false)
 
   // Track if initial check has been performed
   const hasPerformedInitialCheck = useRef(false)
@@ -102,9 +105,13 @@ export function useUpdateCheck(): UseUpdateCheckResult {
     hasPerformedInitialCheck.current = true
 
     const performCheck = async () => {
-      const updateInfo = await checkForUpdatesOnLaunch()
-      if (updateInfo) {
-        await processUpdateInfo(updateInfo, false)
+      try {
+        const updateInfo = await checkForUpdatesOnLaunch()
+        if (updateInfo) {
+          await processUpdateInfo(updateInfo, false)
+        }
+      } finally {
+        setUpdateCheckCompleted(true)
       }
     }
 
@@ -182,6 +189,7 @@ export function useUpdateCheck(): UseUpdateCheckResult {
     updateAvailable,
     latestVersion,
     showBanner,
+    updateCheckCompleted,
     handleUpdate,
     handleDismiss,
     checkForUpdates: manualCheckForUpdates,

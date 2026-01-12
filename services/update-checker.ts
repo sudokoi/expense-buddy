@@ -25,6 +25,15 @@ export interface UpdateInfo {
   error?: string
 }
 
+export interface ReleaseNotesInfo {
+  version: string
+  tag: string
+  releaseUrl?: string
+  releaseNotes: string
+  publishedAt?: string
+  error?: string
+}
+
 // Minimum time (in ms) since release before showing update notification for Play Store installs
 // This gives time for the release to propagate to Play Store
 const PLAY_STORE_DELAY_MS = 60 * 60 * 1000 // 1 hour
@@ -157,6 +166,72 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
       currentVersion,
       error: error instanceof Error ? error.message : "Failed to check for updates",
     }
+  }
+}
+
+async function fetchReleaseByTag(tag: string): Promise<any | null> {
+  const { owner, repo } = APP_CONFIG.github
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(
+    tag
+  )}`
+
+  const response = await fetch(apiUrl, {
+    headers: {
+      Accept: "application/vnd.github.v3+json",
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
+    throw new Error(`GitHub API error: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Fetch release notes for a specific app version.
+ *
+ * Tries tag `v{version}` first, then falls back to `{version}`.
+ * Returns empty releaseNotes if the release/tag is not found or on error.
+ */
+export async function getReleaseForVersion(version: string): Promise<ReleaseNotesInfo> {
+  const normalizedVersion = version.replace(/^v/, "")
+
+  const candidateTags = [`v${normalizedVersion}`, normalizedVersion]
+  for (const tag of candidateTags) {
+    try {
+      const release = await fetchReleaseByTag(tag)
+      if (!release) {
+        continue
+      }
+
+      return {
+        version: normalizedVersion,
+        tag,
+        releaseUrl: release.html_url,
+        releaseNotes: release.body || "",
+        publishedAt: release.published_at || "",
+      }
+    } catch (error) {
+      return {
+        version: normalizedVersion,
+        tag,
+        releaseUrl: `${APP_CONFIG.github.url}/releases/tag/${encodeURIComponent(tag)}`,
+        releaseNotes: "",
+        error: error instanceof Error ? error.message : "Failed to fetch release notes",
+      }
+    }
+  }
+
+  // Not found
+  return {
+    version: normalizedVersion,
+    tag: `v${normalizedVersion}`,
+    releaseUrl: `${APP_CONFIG.github.url}/releases/tag/${encodeURIComponent(`v${normalizedVersion}`)}`,
+    releaseNotes: "",
   }
 }
 

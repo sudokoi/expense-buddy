@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 1.12.2
+
+### Patch Changes
+
+- Show “What’s New” changelog after app updates
+  - Adds a one-time changelog Sheet that appears on first launch after updating, pulling release notes for the currently installed version from GitHub Releases.
+  - Skips showing the changelog when release notes are empty/whitespace, in dev mode, or when a newer update is already available (update CTA takes priority).
+  - Adds “View full release notes” action and persists the last-seen version locally so the changelog only shows once per version.
+  - Includes property-based tests for changelog gating logic.
+
 ## 1.12.1
 
 ### Patch Changes
