@@ -1,5 +1,9 @@
 const { version } = require("./package.json")
 
+// GitHub OAuth App Client ID (not a secret).
+// Used for Android device-flow login. Expo Go can override via EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID.
+const GITHUB_OAUTH_CLIENT_ID = "Ov23lihYBxLtgot0H8Nq"
+
 /**
  * Converts a semantic version string to a numeric version code for app stores.
  *
@@ -177,7 +181,8 @@ export default {
     extra: {
       router: {},
       auth: {
-        githubOAuthClientId: process.env.GITHUB_OAUTH_CLIENT_ID || null,
+        githubOAuthClientId:
+          process.env.EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID || GITHUB_OAUTH_CLIENT_ID,
       },
       eas: {
         projectId: "facbe508-0deb-4c1d-9625-b49b672a98f1",

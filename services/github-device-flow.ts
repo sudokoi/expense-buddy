@@ -36,8 +36,14 @@ export async function requestGitHubDeviceCode(params: {
   clientId: string
   scope: string
 }): Promise<GitHubDeviceCode> {
+  const clientId = String(params.clientId || "").trim()
+  const maskedClientId =
+    clientId.length >= 8
+      ? `${clientId.slice(0, 4)}…${clientId.slice(-4)} (len ${clientId.length})`
+      : `${clientId || "<empty>"} (len ${clientId.length})`
+
   const body = new URLSearchParams({
-    client_id: params.clientId,
+    client_id: clientId,
     scope: params.scope,
   })
 
@@ -47,13 +53,20 @@ export async function requestGitHubDeviceCode(params: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body,
+    // React Native fetch does not reliably serialize URLSearchParams.
+    body: body.toString(),
   })
 
   if (!response.ok) {
     const text = await response.text().catch(() => "")
+
+    // GitHub returns 404 {"error":"Not Found"} when the OAuth client_id is invalid.
+    const clientHint =
+      response.status === 404 ? ` (check OAuth Client ID: ${maskedClientId})` : ""
     throw new Error(
-      `GitHub device code request failed (${response.status}): ${text || response.statusText}`
+      `GitHub device code request failed (${response.status})${clientHint}: ${
+        text || response.statusText
+      }`
     )
   }
 
@@ -69,8 +82,9 @@ export async function pollGitHubDeviceAccessTokenOnce(params: {
   clientId: string
   deviceCode: string
 }): Promise<GitHubDeviceTokenPollResult> {
+  const clientId = String(params.clientId || "").trim()
   const body = new URLSearchParams({
-    client_id: params.clientId,
+    client_id: clientId,
     device_code: params.deviceCode,
     grant_type: "urn:ietf:params:oauth:grant-type:device_code",
   })
@@ -81,7 +95,8 @@ export async function pollGitHubDeviceAccessTokenOnce(params: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body,
+    // React Native fetch does not reliably serialize URLSearchParams.
+    body: body.toString(),
   })
 
   if (!response.ok) {

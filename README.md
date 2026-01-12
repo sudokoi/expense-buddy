@@ -347,7 +347,7 @@ yarn test:watch
 
 The app does not require user-provided environment variables.
 
-For builds, the GitHub OAuth Client ID is configured via EAS build profiles in `eas.json` as `GITHUB_OAUTH_CLIENT_ID`.
+The GitHub OAuth Client ID is configured in `app.config.js` (not a secret). For Expo Go / local dev you can override it via `EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID`.
 
 ### EAS Build Profiles
 

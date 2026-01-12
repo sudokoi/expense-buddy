@@ -1,14 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
-import { Keyboard, ViewStyle, Platform } from "react-native"
+import { Keyboard, ViewStyle, Platform, TextStyle } from "react-native"
 import { Check, X, ChevronDown } from "@tamagui/lucide-icons"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
 import * as WebBrowser from "expo-web-browser"
-import { useRouter } from "expo-router"
-import { useFocusEffect } from "@react-navigation/native"
+import { useRouter, usePathname } from "expo-router"
 import {
   requestGitHubDeviceCode,
   pollGitHubDeviceAccessTokenOnce,
@@ -68,9 +67,9 @@ const layoutStyles = {
     minWidth: 0,
   } as ViewStyle,
   connectedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 2,
     flexShrink: 1,
     minWidth: 0,
   } as ViewStyle,
@@ -106,6 +105,7 @@ export function GitHubConfigSection({
   onNotification,
 }: GitHubConfigSectionProps) {
   const router = useRouter()
+  const pathname = usePathname()
 
   // Form state initialized from syncConfig
   const [token, setToken] = useState(syncConfig?.token ?? "")
@@ -114,6 +114,8 @@ export function GitHubConfigSection({
 
   const isWeb = Platform.OS === "web"
   const githubOAuthStatus = getGitHubOAuthClientIdStatus()
+
+  const isSignedIn = !isWeb && token.trim().length > 0
 
   const [deviceCode, setDeviceCode] = useState<GitHubDeviceCode | null>(null)
   const [isSigningIn, setIsSigningIn] = useState(false)
@@ -129,35 +131,37 @@ export function GitHubConfigSection({
     }
   }, [])
 
-  useFocusEffect(
-    useCallback(() => {
-      if (Platform.OS === "web") return
+  useEffect(() => {
+    if (Platform.OS === "web") return
 
-      let cancelled = false
+    let cancelled = false
 
-      const refreshDraftFromStorage = async () => {
-        try {
-          const [storedRepo, storedBranch] = await Promise.all([
-            secureStorage.getItem(REPO_KEY),
-            secureStorage.getItem(BRANCH_KEY),
-          ])
+    const refreshDraftFromStorage = async () => {
+      try {
+        const [storedRepo, storedBranch] = await Promise.all([
+          secureStorage.getItem(REPO_KEY),
+          secureStorage.getItem(BRANCH_KEY),
+        ])
 
-          if (cancelled) return
+        if (cancelled) return
 
-          if (storedRepo && storedRepo !== repo) setRepo(storedRepo)
-          if (storedBranch && storedBranch !== branch) setBranch(storedBranch)
-        } catch {
-          // Non-fatal: repo picker might not have written anything.
+        if (storedRepo) {
+          setRepo((current) => (current === storedRepo ? current : storedRepo))
         }
+        if (storedBranch) {
+          setBranch((current) => (current === storedBranch ? current : storedBranch))
+        }
+      } catch {
+        // Non-fatal: repo picker might not have written anything.
       }
+    }
 
-      void refreshDraftFromStorage()
+    void refreshDraftFromStorage()
 
-      return () => {
-        cancelled = true
-      }
-    }, [repo, branch])
-  )
+    return () => {
+      cancelled = true
+    }
+  }, [pathname])
 
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
@@ -295,6 +299,32 @@ export function GitHubConfigSection({
     onConnectionStatusChange("idle")
   }, [onClearConfig, onConnectionStatusChange])
 
+  const handleSignOut = useCallback(async () => {
+    // If a full sync config is saved, signing out should fully disconnect.
+    if (syncConfig) {
+      handleClearConfig()
+      return
+    }
+
+    try {
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current)
+        pollTimeoutRef.current = null
+      }
+
+      setIsSigningIn(false)
+      setDeviceCode(null)
+      deviceFlowExpiresAtRef.current = null
+
+      await secureStorage.deleteItem(TOKEN_KEY)
+      setToken("")
+      onConnectionStatusChange("idle")
+      onNotification("Signed out of GitHub", "success")
+    } catch (error) {
+      onNotification(String(error), "error")
+    }
+  }, [handleClearConfig, onConnectionStatusChange, onNotification, syncConfig])
+
   const handleTokenChange = useCallback((text: string) => {
     setToken(text)
     // Clear error when user starts typing
@@ -340,29 +370,28 @@ export function GitHubConfigSection({
               <XStack style={layoutStyles.accordionTriggerInner}>
                 <Text fontWeight="500">GitHub Configuration</Text>
                 {isConfigured && (
-                  <XStack style={layoutStyles.connectedBadge}>
-                    <Check size={14} color={successColor} />
-                    <Text fontSize="$2" color={successColor}>
-                      Connected
-                    </Text>
+                  <YStack style={layoutStyles.connectedBadge}>
+                    <XStack
+                      style={{ minWidth: 0, alignItems: "center", gap: 4 } as ViewStyle}
+                    >
+                      <Check size={14} color={successColor} />
+                      <Text fontSize="$2" color={successColor}>
+                        Connected
+                      </Text>
+                    </XStack>
                     {repo ? (
-                      <>
-                        <Text fontSize="$2" color="$color" opacity={0.45}>
-                          ·
-                        </Text>
-                        <Text
-                          fontSize="$2"
-                          color="$color"
-                          opacity={0.7}
-                          numberOfLines={1}
-                          ellipsizeMode="middle"
-                          style={{ flexShrink: 1, minWidth: 0 } as ViewStyle}
-                        >
-                          {repo}
-                        </Text>
-                      </>
+                      <Text
+                        fontSize="$2"
+                        color="$color"
+                        opacity={0.7}
+                        numberOfLines={1}
+                        ellipsizeMode="middle"
+                        style={{ flexShrink: 1, minWidth: 0 } as TextStyle}
+                      >
+                        {repo}
+                      </Text>
                     ) : null}
-                  </XStack>
+                  </YStack>
                 )}
               </XStack>
               <ChevronDown
@@ -404,11 +433,20 @@ export function GitHubConfigSection({
                 <Label>GitHub Login</Label>
                 <Button
                   size="$4"
-                  onPress={handleStartGitHubLogin}
-                  disabled={isSigningIn || !githubOAuthStatus.ok}
+                  onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
+                  disabled={isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
                   themeInverse
+                  style={
+                    isSignedIn
+                      ? ({ backgroundColor: errorColor } as ViewStyle)
+                      : undefined
+                  }
                 >
-                  {isSigningIn ? "Signing in..." : "Sign in with GitHub"}
+                  {isSigningIn
+                    ? "Signing in..."
+                    : isSignedIn
+                      ? "Sign out"
+                      : "Sign in with GitHub"}
                 </Button>
                 {!githubOAuthStatus.ok && (
                   <Text fontSize="$2" color="$red10">
@@ -416,7 +454,7 @@ export function GitHubConfigSection({
                   </Text>
                 )}
                 {deviceCode && (
-                  <YStack gap="$2" paddingTop={4}>
+                  <YStack gap="$2" style={{ paddingTop: 4 } as ViewStyle}>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
                       Enter this code on GitHub:
                     </Text>
