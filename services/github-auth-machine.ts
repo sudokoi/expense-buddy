@@ -1,7 +1,4 @@
 import { setup, assign, fromPromise } from "xstate"
-import { Platform } from "react-native"
-import * as WebBrowser from "expo-web-browser"
-
 import { secureStorage } from "./secure-storage"
 import { getGitHubOAuthClientIdStatus } from "../constants/runtime-config"
 import {
@@ -188,26 +185,12 @@ export const githubAuthMachine = setup({
         src: "requestDeviceCode",
         onDone: {
           target: "polling",
-          actions: [
-            assign({
-              deviceCode: ({ event }) => event.output,
-              expiresAtMs: ({ event }) => safeNow() + event.output.expires_in * 1000,
-              pollIntervalMs: ({ event }) => (event.output.interval || 5) * 1000,
-              error: () => null,
-            }),
-            ({ event }) => {
-              // Open browser on native; on web this is a no-op.
-              try {
-                const code = event.output
-                const url = code.verification_uri_complete || code.verification_uri
-                if (Platform.OS !== "web") {
-                  void WebBrowser.openBrowserAsync(url)
-                }
-              } catch {
-                // ignore
-              }
-            },
-          ],
+          actions: assign({
+            deviceCode: ({ event }) => event.output,
+            expiresAtMs: ({ event }) => safeNow() + event.output.expires_in * 1000,
+            pollIntervalMs: ({ event }) => (event.output.interval || 5) * 1000,
+            error: () => null,
+          }),
         },
         onError: {
           target: "error",
