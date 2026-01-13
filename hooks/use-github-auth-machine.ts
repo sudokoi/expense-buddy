@@ -1,7 +1,10 @@
 import { useSelector } from "@xstate/react"
 import { useCallback, useMemo } from "react"
 
-import { GitHubAuthMachineState } from "../services/github-auth-machine"
+import {
+  GitHubAuthMachineState,
+  GitHubAuthCallbacks,
+} from "../services/github-auth-machine"
 import { useStoreContext } from "../stores/store-provider"
 
 export interface UseGitHubAuthMachineReturn {
@@ -14,15 +17,12 @@ export interface UseGitHubAuthMachineReturn {
 
   token: string
   deviceCode: import("../services/github-device-flow").GitHubDeviceCode | null
-  justSignedIn: boolean
   error: string | null
 
-  signIn: () => void
+  signIn: (callbacks?: GitHubAuthCallbacks) => void
   cancel: () => void
   signOut: () => void
   refresh: () => void
-  ackJustSignedIn: () => void
-  ackError: () => void
 }
 
 export function useGitHubAuthMachine(): UseGitHubAuthMachineReturn {
@@ -40,9 +40,12 @@ export function useGitHubAuthMachine(): UseGitHubAuthMachineReturn {
   const isAuthenticated = state === "authenticated"
   const isError = state === "error"
 
-  const signIn = useCallback(() => {
-    githubAuthActor.send({ type: "SIGN_IN" })
-  }, [githubAuthActor])
+  const signIn = useCallback(
+    (callbacks?: GitHubAuthCallbacks) => {
+      githubAuthActor.send({ type: "SIGN_IN", callbacks })
+    },
+    [githubAuthActor]
+  )
 
   const cancel = useCallback(() => {
     githubAuthActor.send({ type: "CANCEL" })
@@ -56,19 +59,10 @@ export function useGitHubAuthMachine(): UseGitHubAuthMachineReturn {
     githubAuthActor.send({ type: "REFRESH" })
   }, [githubAuthActor])
 
-  const ackJustSignedIn = useCallback(() => {
-    githubAuthActor.send({ type: "ACK_JUST_SIGNED_IN" })
-  }, [githubAuthActor])
-
-  const ackError = useCallback(() => {
-    githubAuthActor.send({ type: "ACK_ERROR" })
-  }, [githubAuthActor])
-
   const contextData = useMemo(
     () => ({
       token: String(snapshot.context.token || ""),
       deviceCode: snapshot.context.deviceCode ?? null,
-      justSignedIn: Boolean(snapshot.context.justSignedIn),
       error: snapshot.context.error ?? null,
     }),
     [snapshot.context]
@@ -85,7 +79,5 @@ export function useGitHubAuthMachine(): UseGitHubAuthMachineReturn {
     cancel,
     signOut,
     refresh,
-    ackJustSignedIn,
-    ackError,
   }
 }

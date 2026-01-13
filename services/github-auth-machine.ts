@@ -20,23 +20,33 @@ export type GitHubAuthMachineState =
   | "signingOut"
   | "error"
 
+/**
+ * Optional callbacks for UI side-effects.
+ *
+ * Pattern mirrors `syncMachine`: keep the machine pure-ish and have the UI pass
+ * callbacks at the moment it initiates a flow (e.g. SIGN_IN), avoiding
+ * component-level useEffects for one-shot notifications.
+ */
+export interface GitHubAuthCallbacks {
+  onSignedIn?: () => void
+  onError?: (message: string) => void
+}
+
 export interface GitHubAuthContext {
   token: string
   deviceCode: GitHubDeviceCode | null
   pollIntervalMs: number
   expiresAtMs: number | null
-
-  justSignedIn: boolean
   error: string | null
+
+  callbacks: GitHubAuthCallbacks
 }
 
 export type GitHubAuthEvent =
   | { type: "REFRESH" }
-  | { type: "SIGN_IN" }
+  | { type: "SIGN_IN"; callbacks?: GitHubAuthCallbacks }
   | { type: "CANCEL" }
   | { type: "SIGN_OUT" }
-  | { type: "ACK_JUST_SIGNED_IN" }
-  | { type: "ACK_ERROR" }
 
 function safeNow(): number {
   return Date.now()
@@ -121,17 +131,17 @@ export const githubAuthMachine = setup({
     deviceCode: null,
     pollIntervalMs: 5000,
     expiresAtMs: null,
-    justSignedIn: false,
     error: null,
+    callbacks: {},
   },
   on: {
     REFRESH: {
-      target: "initializing",
+      target: ".initializing",
       actions: assign({
         deviceCode: () => null,
         expiresAtMs: () => null,
-        justSignedIn: () => false,
         error: () => null,
+        callbacks: () => ({}),
       }),
     },
   },
@@ -145,7 +155,6 @@ export const githubAuthMachine = setup({
             target: "authenticated",
             actions: assign({
               token: ({ event }) => String(event.output || ""),
-              justSignedIn: () => false,
               error: () => null,
             }),
           },
@@ -153,7 +162,6 @@ export const githubAuthMachine = setup({
             target: "signedOut",
             actions: assign({
               token: () => "",
-              justSignedIn: () => false,
               error: () => null,
             }),
           },
@@ -173,8 +181,8 @@ export const githubAuthMachine = setup({
             error: () => null,
             deviceCode: () => null,
             expiresAtMs: () => null,
-            justSignedIn: () => false,
             pollIntervalMs: () => 5000,
+            callbacks: ({ event }) => event.callbacks || {},
           }),
         },
       },
@@ -230,7 +238,6 @@ export const githubAuthMachine = setup({
             actions: assign({
               token: ({ event }) =>
                 event.output.type === "success" ? event.output.token.access_token : "",
-              justSignedIn: () => true,
               error: () => null,
             }),
           },
@@ -305,10 +312,16 @@ export const githubAuthMachine = setup({
         input: ({ context }) => ({ token: context.token }),
         onDone: {
           target: "authenticated",
-          actions: assign({
-            deviceCode: () => null,
-            expiresAtMs: () => null,
-          }),
+          actions: [
+            assign({
+              deviceCode: () => null,
+              expiresAtMs: () => null,
+            }),
+            ({ context }) => {
+              context.callbacks.onSignedIn?.()
+            },
+            assign({ callbacks: () => ({}) }),
+          ],
         },
         onError: {
           target: "error",
@@ -325,9 +338,6 @@ export const githubAuthMachine = setup({
     authenticated: {
       on: {
         SIGN_OUT: { target: "signingOut" },
-        ACK_JUST_SIGNED_IN: {
-          actions: assign({ justSignedIn: () => false }),
-        },
       },
     },
 
@@ -340,8 +350,8 @@ export const githubAuthMachine = setup({
             token: () => "",
             deviceCode: () => null,
             expiresAtMs: () => null,
-            justSignedIn: () => false,
             error: () => null,
+            callbacks: () => ({}),
           }),
         },
         onError: {
@@ -350,13 +360,20 @@ export const githubAuthMachine = setup({
             token: () => "",
             deviceCode: () => null,
             expiresAtMs: () => null,
-            justSignedIn: () => false,
+            callbacks: () => ({}),
           }),
         },
       },
     },
 
     error: {
+      entry: [
+        ({ context }) => {
+          const message = context.error || "Sign-in failed."
+          context.callbacks.onError?.(message)
+        },
+        assign({ callbacks: () => ({}) }),
+      ],
       on: {
         SIGN_IN: {
           target: "requestingDeviceCode",
@@ -364,14 +381,11 @@ export const githubAuthMachine = setup({
             error: () => null,
             deviceCode: () => null,
             expiresAtMs: () => null,
-            justSignedIn: () => false,
             pollIntervalMs: () => 5000,
+            callbacks: ({ event }) => event.callbacks || {},
           }),
         },
         SIGN_OUT: { target: "signingOut" },
-        ACK_ERROR: {
-          actions: assign({ error: () => null }),
-        },
       },
     },
   },

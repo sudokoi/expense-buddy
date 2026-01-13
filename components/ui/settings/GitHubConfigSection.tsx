@@ -103,13 +103,7 @@ export function GitHubConfigSection({
   const pathname = usePathname()
 
   const auth = useGitHubAuthMachine()
-  const {
-    token: nativeToken,
-    justSignedIn,
-    error: authError,
-    ackJustSignedIn,
-    ackError,
-  } = auth
+  const { token: nativeToken } = auth
 
   // Form state initialized from syncConfig
   // Web keeps manual token entry; native token comes from the auth machine.
@@ -155,26 +149,6 @@ export function GitHubConfigSection({
     }
   }, [pathname])
 
-  // One-shot notifications based on auth machine transitions.
-  useEffect(() => {
-    if (isWeb) return
-
-    if (justSignedIn) {
-      onNotification("GitHub sign-in successful", "success")
-      ackJustSignedIn()
-      router.push("/github/repo-picker")
-    }
-  }, [ackJustSignedIn, isWeb, justSignedIn, onNotification, router])
-
-  useEffect(() => {
-    if (isWeb) return
-
-    if (authError) {
-      onNotification(authError, "error")
-      ackError()
-    }
-  }, [ackError, authError, isWeb, onNotification])
-
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
 
@@ -214,8 +188,16 @@ export function GitHubConfigSection({
       return
     }
 
-    auth.signIn()
-  }, [auth, onNotification])
+    auth.signIn({
+      onSignedIn: () => {
+        onNotification("GitHub sign-in successful", "success")
+        router.push("/github/repo-picker")
+      },
+      onError: (message) => {
+        onNotification(message, "error")
+      },
+    })
+  }, [auth, onNotification, router])
 
   const handleCopyDeviceCode = useCallback(async () => {
     const code = auth.deviceCode?.user_code
