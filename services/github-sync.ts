@@ -13,6 +13,86 @@ interface GitHubCommitRequest {
   sha?: string
 }
 
+export class GitHubApiError extends Error {
+  public readonly status: number
+  public readonly shouldSignOut: boolean
+  public readonly isRateLimit: boolean
+
+  constructor(params: {
+    status: number
+    message: string
+    shouldSignOut: boolean
+    isRateLimit: boolean
+  }) {
+    super(params.message)
+    this.name = "GitHubApiError"
+    this.status = params.status
+    this.shouldSignOut = params.shouldSignOut
+    this.isRateLimit = params.isRateLimit
+  }
+}
+
+async function readGitHubErrorMessage(response: Response): Promise<string> {
+  const data = await response.json().catch(() => null)
+  const message =
+    data && typeof data === "object" && "message" in data
+      ? String((data as any).message || "")
+      : ""
+  return message.trim()
+}
+
+function isRateLimitResponse(response: Response, message: string): boolean {
+  const remaining = response.headers.get("x-ratelimit-remaining")
+  if (remaining === "0") return true
+  return message.toLowerCase().includes("rate limit")
+}
+
+function toFriendlyGitHubAuthMessage(params: {
+  status: 401 | 403
+  isRateLimit: boolean
+  rawMessage?: string
+}): string {
+  if (params.status === 401) {
+    return "Your GitHub session is no longer valid. Please sign in again."
+  }
+
+  if (params.isRateLimit) {
+    return "GitHub rate limit reached. Please wait a bit and try again."
+  }
+
+  // 403 (non-rate-limit) typically means insufficient permissions or access restrictions.
+  // For our UX, treat it as requiring re-auth so the user can re-authorize/select a different repo.
+  return "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again."
+}
+
+async function toGitHubApiError(response: Response): Promise<GitHubApiError> {
+  const rawMessage = await readGitHubErrorMessage(response)
+  const rateLimited = response.status === 403 && isRateLimitResponse(response, rawMessage)
+
+  if (response.status === 401 || response.status === 403) {
+    const status = response.status as 401 | 403
+    return new GitHubApiError({
+      status,
+      isRateLimit: rateLimited,
+      shouldSignOut: status === 401 || (status === 403 && !rateLimited),
+      message: toFriendlyGitHubAuthMessage({
+        status,
+        isRateLimit: rateLimited,
+        rawMessage,
+      }),
+    })
+  }
+
+  return new GitHubApiError({
+    status: response.status,
+    isRateLimit: false,
+    shouldSignOut: false,
+    message: rawMessage
+      ? `GitHub API error (${response.status}): ${rawMessage}`
+      : `GitHub API error (${response.status})`,
+  })
+}
+
 // Batch commit types for atomic multi-file operations
 
 /** File to be uploaded in a batch commit */
@@ -680,7 +760,12 @@ export async function getLatestCommitTimestamp(
 export async function validatePAT(
   token: string,
   repo: string
-): Promise<{ valid: boolean; error?: string }> {
+): Promise<{
+  valid: boolean
+  error?: string
+  authStatus?: 401 | 403
+  shouldSignOut?: boolean
+}> {
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
@@ -701,25 +786,17 @@ export async function validatePAT(
       headers: commonHeaders,
     })
 
-    if (userResponse.status === 401) {
-      return { valid: false, error: "Invalid or expired GitHub token" }
-    }
-
-    if (userResponse.status === 403) {
-      return {
-        valid: false,
-        error: "Access forbidden. Please allow repository access.",
-      }
-    }
-
     if (!userResponse.ok) {
-      const errorData = await userResponse.json().catch(() => ({}))
-      return {
-        valid: false,
-        error: `GitHub API error (${userResponse.status}): ${
-          errorData.message || userResponse.statusText
-        }`,
+      const err = await toGitHubApiError(userResponse)
+      if (err.status === 401 || err.status === 403) {
+        return {
+          valid: false,
+          error: err.message,
+          authStatus: err.status as 401 | 403,
+          shouldSignOut: err.shouldSignOut,
+        }
       }
+      return { valid: false, error: err.message }
     }
 
     const userData = (await userResponse.json().catch(() => null)) as {
@@ -759,32 +836,17 @@ export async function validatePAT(
       }
     }
 
-    if (response.status === 401) {
-      return {
-        valid: false,
-        error: "Invalid or expired GitHub token",
-      }
-    }
-
-    if (response.status === 403) {
-      const errorData = await response.json().catch(() => ({}))
-      console.log("403 Error details:", errorData)
-      return {
-        valid: false,
-        error:
-          "Access forbidden. Token may lack required permissions (Contents: Read and Write)",
-      }
-    }
-
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.log("API Error:", errorData)
-      return {
-        valid: false,
-        error: `GitHub API error (${response.status}): ${
-          errorData.message || response.statusText
-        }`,
+      const err = await toGitHubApiError(response)
+      if (err.status === 401 || err.status === 403) {
+        return {
+          valid: false,
+          error: err.message,
+          authStatus: err.status as 401 | 403,
+          shouldSignOut: err.shouldSignOut,
+        }
       }
+      return { valid: false, error: err.message }
     }
 
     const repoData = (await response.json().catch(() => null)) as {
@@ -937,7 +999,7 @@ export async function downloadCSV(
     }
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
+      throw await toGitHubApiError(response)
     }
 
     const data: GitHubFileResponse = await response.json()
@@ -983,7 +1045,7 @@ export async function listFiles(
     }
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
+      throw await toGitHubApiError(response)
     }
 
     const data = await response.json()
@@ -1002,7 +1064,7 @@ export async function listFiles(
     return []
   } catch (error) {
     console.error("List files error:", error)
-    return []
+    throw error
   }
 }
 
@@ -1167,7 +1229,7 @@ export async function downloadSettingsFile(
     }
 
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
+      throw await toGitHubApiError(response)
     }
 
     const data = await response.json()

@@ -24,6 +24,7 @@ import {
   NotificationStore,
 } from "./notification-store"
 import { syncMachine } from "../services/sync-machine"
+import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 
 interface StoreContextValue {
@@ -31,6 +32,7 @@ interface StoreContextValue {
   settingsStore: SettingsStore
   notificationStore: NotificationStore
   syncActor: ActorRefFrom<typeof syncMachine>
+  githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
@@ -42,6 +44,7 @@ interface StoreProviderProps {
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
   syncActor?: ActorRefFrom<typeof syncMachine>
+  githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
   // Skip initialization (for testing)
   skipInitialization?: boolean
 }
@@ -52,6 +55,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
   syncActor: providedSyncActor,
+  githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
 }) => {
   const initializedRef = useRef(false)
@@ -64,11 +68,22 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   }
   const syncActor = providedSyncActor ?? syncActorRef.current!
 
+  // Create GitHub auth actor once on mount
+  const githubAuthActorRef = useRef<ActorRefFrom<typeof githubAuthMachine> | null>(null)
+  if (!githubAuthActorRef.current && !providedGitHubAuthActor) {
+    githubAuthActorRef.current = createActor(githubAuthMachine)
+    githubAuthActorRef.current.start()
+  }
+  const githubAuthActor = providedGitHubAuthActor ?? githubAuthActorRef.current!
+
   // Cleanup sync actor on unmount
   useEffect(() => {
     return () => {
       if (syncActorRef.current) {
         syncActorRef.current.stop()
+      }
+      if (githubAuthActorRef.current) {
+        githubAuthActorRef.current.stop()
       }
     }
   }, [])
@@ -129,8 +144,9 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       settingsStore,
       notificationStore,
       syncActor,
+      githubAuthActor,
     }),
-    [expenseStore, settingsStore, notificationStore, syncActor]
+    [expenseStore, settingsStore, notificationStore, syncActor, githubAuthActor]
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

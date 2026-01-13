@@ -44,6 +44,13 @@ export interface SyncCallbacks {
   onInSync?: () => void
   /** Called when an error occurs */
   onError?: (error: string) => void
+
+  /** Called specifically when GitHub auth/permission fails (401/403) */
+  onAuthError?: (info: {
+    status: 401 | 403
+    message: string
+    shouldSignOut: boolean
+  }) => void
 }
 
 /**
@@ -424,6 +431,16 @@ export const syncMachine = setup({
 
     error: {
       entry: ({ context }) => {
+        const authStatus = context.syncResult?.authStatus
+        if (authStatus === 401 || authStatus === 403) {
+          const message =
+            context.syncResult?.error || context.error || "GitHub authentication required"
+          context.callbacks.onAuthError?.({
+            status: authStatus,
+            message,
+            shouldSignOut: Boolean(context.syncResult?.shouldSignOut),
+          })
+        }
         context.callbacks.onError?.(context.error || "Unknown error")
       },
       on: {

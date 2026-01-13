@@ -27,6 +27,11 @@ export interface SyncResult {
   message: string
   /** Error message if the operation failed */
   error?: string
+
+  /** HTTP status when auth/permission errors occur (GitHub) */
+  authStatus?: 401 | 403
+  /** Whether the app should clear saved sync config and prompt re-login */
+  shouldSignOut?: boolean
   /** Number of files uploaded during sync */
   filesUploaded?: number
   /** Number of files skipped (unchanged) during sync */
@@ -86,6 +91,11 @@ export interface FetchAllRemoteResult {
   expenses?: import("./expense").Expense[]
   /** Error message if the operation failed */
   error?: string
+
+  /** HTTP status when auth/permission errors occur (GitHub) */
+  authStatus?: 401 | 403
+  /** Whether the app should clear saved sync config and prompt re-login */
+  shouldSignOut?: boolean
   /** Number of files downloaded */
   filesDownloaded?: number
 }

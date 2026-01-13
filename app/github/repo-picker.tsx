@@ -94,10 +94,37 @@ export default function GitHubRepoPickerScreen() {
         "X-GitHub-Api-Version": "2022-11-28",
       }
 
-      const userResponse = await fetch("https://api.github.com/user", { headers })
-      if (userResponse.status === 401) {
-        setError("Session expired. Please sign in again.")
+      const handleAuthFailure = async (status: 401 | 403, message: string) => {
+        const lower = message.toLowerCase()
+        const isRateLimit = lower.includes("rate limit")
+
+        if (status === 401) {
+          setError("Your GitHub session is no longer valid. Please sign in again.")
+        } else if (isRateLimit) {
+          setError("GitHub rate limit reached. Please wait a bit and try again.")
+        } else {
+          setError(
+            "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again."
+          )
+        }
+
+        // Force re-login by clearing saved credentials/config.
+        await Promise.all([
+          secureStorage.deleteItem(TOKEN_KEY),
+          secureStorage.deleteItem(REPO_KEY),
+          secureStorage.deleteItem(BRANCH_KEY),
+        ])
+
         setRepos([])
+      }
+
+      const userResponse = await fetch("https://api.github.com/user", { headers })
+      if (userResponse.status === 401 || userResponse.status === 403) {
+        const data = await userResponse.json().catch(() => ({}))
+        await handleAuthFailure(
+          userResponse.status as 401 | 403,
+          String((data as any).message || userResponse.statusText)
+        )
         return
       }
       if (!userResponse.ok) {
@@ -118,6 +145,14 @@ export default function GitHubRepoPickerScreen() {
       for (let page = 1; page <= 5; page++) {
         const url = `https://api.github.com/user/repos?affiliation=owner&per_page=${perPage}&page=${page}&sort=updated`
         const resp = await fetch(url, { headers })
+        if (resp.status === 401 || resp.status === 403) {
+          const data = await resp.json().catch(() => ({}))
+          await handleAuthFailure(
+            resp.status as 401 | 403,
+            String((data as any).message || resp.statusText)
+          )
+          break
+        }
         if (!resp.ok) {
           const data = await resp.json().catch(() => ({}))
           setError(`GitHub error (${resp.status}): ${data.message || resp.statusText}`)

@@ -12,6 +12,7 @@ import {
   BatchFileDelete,
   downloadSettingsFile,
   getLatestCommitTimestamp,
+  GitHubApiError,
 } from "./github-sync"
 import {
   AppSettings,
@@ -119,6 +120,17 @@ export async function testConnection(): Promise<SyncResult> {
       return { success: true, message: "Connection successful!" }
     } else {
       console.warn("[SyncManager] testConnection failed:", result.error)
+
+      if (result.shouldSignOut && result.authStatus) {
+        return {
+          success: false,
+          message: "Connection failed",
+          error: result.error || "GitHub authentication required",
+          authStatus: result.authStatus,
+          shouldSignOut: true,
+        }
+      }
+
       return {
         success: false,
         message: "Connection failed",
@@ -127,6 +139,20 @@ export async function testConnection(): Promise<SyncResult> {
     }
   } catch (error) {
     console.warn("[SyncManager] testConnection failed:", error)
+
+    if (
+      error instanceof GitHubApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      return {
+        success: false,
+        message: "Connection failed",
+        error: error.message,
+        authStatus: error.status,
+        shouldSignOut: error.shouldSignOut,
+      }
+    }
+
     return {
       success: false,
       message: "Connection failed",
@@ -278,7 +304,33 @@ export async function syncUp(
     const storedHashes = await loadFileHashes()
 
     // Get list of existing files on GitHub
-    const existingFiles = await listFiles(config.token, config.repo, config.branch)
+    let existingFiles: { name: string; path: string; sha: string }[]
+    try {
+      existingFiles = await listFiles(config.token, config.repo, config.branch)
+    } catch (error) {
+      if (
+        error instanceof GitHubApiError &&
+        (error.status === 401 || error.status === 403)
+      ) {
+        return {
+          success: false,
+          message: "Failed to list remote files",
+          error: error.message,
+          authStatus: error.status,
+          shouldSignOut: error.shouldSignOut,
+          filesUploaded: 0,
+          filesSkipped: 0,
+        }
+      }
+
+      return {
+        success: false,
+        message: "Failed to list remote files",
+        error: getUserFriendlyMessage(error),
+        filesUploaded: 0,
+        filesSkipped: 0,
+      }
+    }
     const existingExpenseFiles = existingFiles
       .filter((file) => getDayKeyFromFilename(file.name) !== null)
       .map((file) => ({
@@ -502,6 +554,20 @@ export async function syncUp(
     }
   } catch (error) {
     console.warn("[SyncManager] syncUp failed:", error)
+
+    if (
+      error instanceof GitHubApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      return {
+        success: false,
+        message: "Sync failed",
+        error: error.message,
+        authStatus: error.status,
+        shouldSignOut: error.shouldSignOut,
+      }
+    }
+
     return {
       success: false,
       message: "Sync failed",
@@ -525,6 +591,8 @@ export async function syncDown(
   error?: string
   hasMore?: boolean
   settingsDownloaded?: boolean
+  authStatus?: 401 | 403
+  shouldSignOut?: boolean
 }> {
   try {
     const config = await loadSyncConfig()
@@ -567,6 +635,12 @@ export async function syncDown(
             settingsDownloaded = true
           }
         } catch (settingsError) {
+          if (
+            settingsError instanceof GitHubApiError &&
+            (settingsError.status === 401 || settingsError.status === 403)
+          ) {
+            throw settingsError
+          }
           console.warn("Failed to download settings:", settingsError)
           // Continue without settings - don't fail the whole sync
         }
@@ -619,6 +693,12 @@ export async function syncDown(
           settingsDownloaded = true
         }
       } catch (settingsError) {
+        if (
+          settingsError instanceof GitHubApiError &&
+          (settingsError.status === 401 || settingsError.status === 403)
+        ) {
+          throw settingsError
+        }
         console.warn("Failed to download settings:", settingsError)
         // Continue without settings - don't fail the whole sync
       }
@@ -657,6 +737,20 @@ export async function syncDown(
     }
   } catch (error) {
     console.warn("[SyncManager] syncDown failed:", error)
+
+    if (
+      error instanceof GitHubApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      return {
+        success: false,
+        message: "Download failed",
+        error: error.message,
+        authStatus: error.status,
+        shouldSignOut: error.shouldSignOut,
+      }
+    }
+
     return {
       success: false,
       message: "Download failed",
@@ -677,6 +771,8 @@ export async function syncDownMore(
   expenses?: Expense[]
   error?: string
   hasMore?: boolean
+  authStatus?: 401 | 403
+  shouldSignOut?: boolean
 }> {
   try {
     const config = await loadSyncConfig()
@@ -750,6 +846,20 @@ export async function syncDownMore(
     }
   } catch (error) {
     console.warn("[SyncManager] syncDownMore failed:", error)
+
+    if (
+      error instanceof GitHubApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      return {
+        success: false,
+        message: "Load more failed",
+        error: error.message,
+        authStatus: error.status,
+        shouldSignOut: error.shouldSignOut,
+      }
+    }
+
     return {
       success: false,
       message: "Load more failed",
@@ -791,6 +901,18 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
     try {
       files = await listFiles(config.token, config.repo, config.branch)
     } catch (listError) {
+      if (
+        listError instanceof GitHubApiError &&
+        (listError.status === 401 || listError.status === 403)
+      ) {
+        return {
+          success: false,
+          error: listError.message,
+          authStatus: listError.status,
+          shouldSignOut: listError.shouldSignOut,
+        }
+      }
+
       // Catch network errors during fetch
       const errorMessage = String(listError)
       if (
@@ -841,6 +963,18 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
           downloadedFiles++
         }
       } catch (fileError) {
+        if (
+          fileError instanceof GitHubApiError &&
+          (fileError.status === 401 || fileError.status === 403)
+        ) {
+          return {
+            success: false,
+            error: fileError.message,
+            authStatus: fileError.status,
+            shouldSignOut: fileError.shouldSignOut,
+          }
+        }
+
         // Log but continue with other files - one bad file shouldn't fail entire fetch
         console.warn(`Failed to download ${file.path}:`, fileError)
         downloadErrors.push(file.path)
@@ -1100,6 +1234,11 @@ export interface GitStyleSyncResult {
   filesDeleted?: number
   /** Error message if sync failed */
   error?: string
+
+  /** HTTP status when auth/permission errors occur (GitHub) */
+  authStatus?: 401 | 403
+  /** Whether the app should clear saved sync config and prompt re-login */
+  shouldSignOut?: boolean
   /** Timestamp of the commit if one was created */
   commitTimestamp?: string
   /** Whether settings were included in sync */
@@ -1169,6 +1308,8 @@ export async function gitStyleSync(
         success: false,
         message: "Failed to fetch remote expenses",
         error: fetchResult.error,
+        authStatus: fetchResult.authStatus,
+        shouldSignOut: fetchResult.shouldSignOut,
         filesUploaded: 0,
         filesSkipped: 0,
       }
@@ -1327,6 +1468,18 @@ export async function gitStyleSync(
           )
         }
       } catch (e) {
+        if (e instanceof GitHubApiError && (e.status === 401 || e.status === 403)) {
+          return {
+            success: false,
+            message: "Failed to download settings",
+            error: e.message,
+            authStatus: e.status,
+            shouldSignOut: e.shouldSignOut,
+            mergeResult,
+            filesUploaded: 0,
+            filesSkipped: 0,
+          }
+        }
         console.warn("Failed to download remote settings for merge:", e)
         // Continue without remote settings - will just push local
       }
@@ -1433,6 +1586,22 @@ export async function gitStyleSync(
     })
 
     if (!batchResult.success) {
+      if (batchResult.errorCode === "AUTH" || batchResult.errorCode === "PERMISSION") {
+        return {
+          success: false,
+          message: "Failed to push merged expenses",
+          error:
+            batchResult.errorCode === "AUTH"
+              ? "Your GitHub session is no longer valid. Please sign in again."
+              : "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again.",
+          authStatus: batchResult.errorCode === "AUTH" ? 401 : 403,
+          shouldSignOut: true,
+          mergeResult,
+          filesUploaded: 0,
+          filesSkipped: skippedFiles,
+        }
+      }
+
       return {
         success: false,
         message: "Failed to push merged expenses",
@@ -1514,6 +1683,23 @@ export async function gitStyleSync(
     }
   } catch (error) {
     console.warn("[SyncManager] gitStyleSync failed:", error)
+
+    if (
+      error instanceof GitHubApiError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      return {
+        success: false,
+        message: "Sync failed",
+        error: error.message,
+        authStatus: error.status,
+        shouldSignOut: error.shouldSignOut,
+        filesUploaded: 0,
+        filesSkipped: 0,
+        settingsSynced: false,
+      }
+    }
+
     return {
       success: false,
       message: "Sync failed",

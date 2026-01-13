@@ -187,10 +187,16 @@ export default function SettingsScreen() {
       setConnectionStatus("success")
       addNotification(result.message, "success")
     } else {
-      setConnectionStatus("error")
+      if (result.shouldSignOut) {
+        clearSyncConfig()
+        setConnectionStatus("idle")
+      } else {
+        setConnectionStatus("error")
+      }
+
       addNotification(result.error || result.message, "error")
     }
-  }, [addNotification])
+  }, [addNotification, clearSyncConfig])
 
   const handleClearConfig = useCallback(() => {
     Alert.alert("Confirm Clear", "Remove sync configuration?", [
@@ -440,6 +446,11 @@ export default function SettingsScreen() {
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
       callbacks: {
+        onAuthError: ({ shouldSignOut }) => {
+          if (shouldSignOut) {
+            clearSyncConfig()
+          }
+        },
         onConflict: async (conflicts: TrueConflict[]) => {
           const resolutions = await showConflictDialog(conflicts)
           if (resolutions) {
@@ -521,6 +532,7 @@ export default function SettingsScreen() {
     settings,
     showConflictDialog,
     addNotification,
+    clearSyncConfig,
     clearPendingChangesAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,

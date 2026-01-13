@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
 import { Keyboard, ViewStyle, Platform, TextStyle } from "react-native"
 import { Check, X, ChevronDown } from "@tamagui/lucide-icons"
@@ -6,16 +6,10 @@ import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
 import { SEMANTIC_COLORS, ACCENT_COLORS } from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
-import * as WebBrowser from "expo-web-browser"
 import { useRouter, usePathname } from "expo-router"
-import {
-  requestGitHubDeviceCode,
-  pollGitHubDeviceAccessTokenOnce,
-  GitHubDeviceCode,
-} from "../../../services/github-device-flow"
 import { secureStorage } from "../../../services/secure-storage"
+import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 
-const TOKEN_KEY = "github_pat"
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
 
@@ -107,29 +101,26 @@ export function GitHubConfigSection({
   const router = useRouter()
   const pathname = usePathname()
 
+  const auth = useGitHubAuthMachine()
+  const {
+    token: nativeToken,
+    justSignedIn,
+    error: authError,
+    ackJustSignedIn,
+    ackError,
+  } = auth
+
   // Form state initialized from syncConfig
-  const [token, setToken] = useState(syncConfig?.token ?? "")
+  // Web keeps manual token entry; native token comes from the auth machine.
+  const [webToken, setWebToken] = useState(syncConfig?.token ?? "")
   const [repo, setRepo] = useState(syncConfig?.repo ?? "")
   const [branch, setBranch] = useState(syncConfig?.branch ?? "main")
 
   const isWeb = Platform.OS === "web"
   const githubOAuthStatus = getGitHubOAuthClientIdStatus()
 
+  const token = isWeb ? webToken : nativeToken
   const isSignedIn = !isWeb && token.trim().length > 0
-
-  const [deviceCode, setDeviceCode] = useState<GitHubDeviceCode | null>(null)
-  const [isSigningIn, setIsSigningIn] = useState(false)
-  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const deviceFlowExpiresAtRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (pollTimeoutRef.current) {
-        clearTimeout(pollTimeoutRef.current)
-        pollTimeoutRef.current = null
-      }
-    }
-  }, [])
 
   useEffect(() => {
     if (Platform.OS === "web") return
@@ -163,6 +154,26 @@ export function GitHubConfigSection({
     }
   }, [pathname])
 
+  // One-shot notifications based on auth machine transitions.
+  useEffect(() => {
+    if (isWeb) return
+
+    if (justSignedIn) {
+      onNotification("GitHub sign-in successful", "success")
+      ackJustSignedIn()
+      router.push("/github/repo-picker")
+    }
+  }, [ackJustSignedIn, isWeb, justSignedIn, onNotification, router])
+
+  useEffect(() => {
+    if (isWeb) return
+
+    if (authError) {
+      onNotification(authError, "error")
+      ackError()
+    }
+  }, [ackError, authError, isWeb, onNotification])
+
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
 
@@ -195,91 +206,15 @@ export function GitHubConfigSection({
     onSaveConfig(config)
   }, [token, repo, branch, onSaveConfig, onNotification])
 
-  const handleStartGitHubLogin = useCallback(async () => {
+  const handleStartGitHubLogin = useCallback(() => {
     const status = getGitHubOAuthClientIdStatus()
     if (!status.ok) {
       onNotification(status.error, "error")
       return
     }
 
-    try {
-      setIsSigningIn(true)
-      setDeviceCode(null)
-
-      const code = await requestGitHubDeviceCode({
-        clientId: status.clientId,
-        scope: "repo",
-      })
-
-      setDeviceCode(code)
-      deviceFlowExpiresAtRef.current = Date.now() + code.expires_in * 1000
-
-      const url = code.verification_uri_complete || code.verification_uri
-      await WebBrowser.openBrowserAsync(url)
-
-      const poll = async (pollIntervalSeconds: number) => {
-        const expiresAt = deviceFlowExpiresAtRef.current
-        if (expiresAt && Date.now() > expiresAt) {
-          setIsSigningIn(false)
-          setDeviceCode(null)
-          onNotification("GitHub sign-in expired. Please try again.", "error")
-          return
-        }
-
-        const result = await pollGitHubDeviceAccessTokenOnce({
-          clientId: status.clientId,
-          deviceCode: code.device_code,
-        })
-
-        if (result.type === "success") {
-          const accessToken = result.token.access_token
-          setToken(accessToken)
-          await secureStorage.setItem(TOKEN_KEY, accessToken)
-          setIsSigningIn(false)
-          setDeviceCode(null)
-          onNotification("GitHub sign-in successful", "success")
-
-          // Prompt user to choose a repo right after sign-in.
-          router.push("/github/repo-picker")
-          return
-        }
-
-        if (result.type === "expired") {
-          setIsSigningIn(false)
-          setDeviceCode(null)
-          onNotification("GitHub sign-in expired. Please try again.", "error")
-          return
-        }
-
-        if (result.type === "denied") {
-          setIsSigningIn(false)
-          setDeviceCode(null)
-          onNotification("GitHub sign-in was denied.", "error")
-          return
-        }
-
-        if (result.type === "error") {
-          setIsSigningIn(false)
-          setDeviceCode(null)
-          onNotification(result.message, "error")
-          return
-        }
-
-        const nextIntervalSeconds =
-          result.type === "slow_down" ? pollIntervalSeconds + 5 : pollIntervalSeconds
-
-        pollTimeoutRef.current = setTimeout(() => {
-          poll(nextIntervalSeconds)
-        }, nextIntervalSeconds * 1000)
-      }
-
-      poll(code.interval || 5)
-    } catch (error) {
-      setIsSigningIn(false)
-      setDeviceCode(null)
-      onNotification(String(error), "error")
-    }
-  }, [onNotification, router])
+    auth.signIn()
+  }, [auth, onNotification])
 
   const handleChooseRepo = useCallback(() => {
     router.push("/github/repo-picker")
@@ -293,11 +228,15 @@ export function GitHubConfigSection({
 
   const handleClearConfig = useCallback(() => {
     onClearConfig()
-    setToken("")
+    setWebToken("")
     setRepo("")
     setBranch("main")
     onConnectionStatusChange("idle")
-  }, [onClearConfig, onConnectionStatusChange])
+
+    if (!isWeb) {
+      auth.signOut()
+    }
+  }, [auth, isWeb, onClearConfig, onConnectionStatusChange])
 
   const handleSignOut = useCallback(async () => {
     // If a full sync config is saved, signing out should fully disconnect.
@@ -307,26 +246,16 @@ export function GitHubConfigSection({
     }
 
     try {
-      if (pollTimeoutRef.current) {
-        clearTimeout(pollTimeoutRef.current)
-        pollTimeoutRef.current = null
-      }
-
-      setIsSigningIn(false)
-      setDeviceCode(null)
-      deviceFlowExpiresAtRef.current = null
-
-      await secureStorage.deleteItem(TOKEN_KEY)
-      setToken("")
+      auth.signOut()
       onConnectionStatusChange("idle")
       onNotification("Signed out of GitHub", "success")
     } catch (error) {
       onNotification(String(error), "error")
     }
-  }, [handleClearConfig, onConnectionStatusChange, onNotification, syncConfig])
+  }, [auth, handleClearConfig, onConnectionStatusChange, onNotification, syncConfig])
 
   const handleTokenChange = useCallback((text: string) => {
-    setToken(text)
+    setWebToken(text)
     // Clear error when user starts typing
     setConfigErrors((prev) => {
       if (prev.token) {
@@ -434,7 +363,7 @@ export function GitHubConfigSection({
                 <Button
                   size="$4"
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
-                  disabled={isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
+                  disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
                   themeInverse
                   style={
                     isSignedIn
@@ -442,7 +371,7 @@ export function GitHubConfigSection({
                       : undefined
                   }
                 >
-                  {isSigningIn
+                  {auth.isSigningIn
                     ? "Signing in..."
                     : isSignedIn
                       ? "Sign out"
@@ -453,16 +382,16 @@ export function GitHubConfigSection({
                     {githubOAuthStatus.error}
                   </Text>
                 )}
-                {deviceCode && (
+                {auth.deviceCode && (
                   <YStack gap="$2" style={{ paddingTop: 4 } as ViewStyle}>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
                       Enter this code on GitHub:
                     </Text>
                     <Text fontSize="$6" fontWeight="700">
-                      {deviceCode.user_code}
+                      {auth.deviceCode.user_code}
                     </Text>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
-                      If the browser didn’t open, visit {deviceCode.verification_uri}
+                      If the browser didn’t open, visit {auth.deviceCode.verification_uri}
                     </Text>
                   </YStack>
                 )}
