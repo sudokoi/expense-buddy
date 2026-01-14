@@ -11,13 +11,13 @@ interface CollapsibleSectionProps {
 
 const styles = {
   header: {
-    padding: 12,
+    padding: 10,
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
   content: {
-    padding: 12,
-    paddingTop: 8,
+    padding: 10,
+    paddingTop: 6,
   } as ViewStyle,
 }
 
@@ -38,7 +38,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
   }, [])
 
   return (
-    <Card bordered style={{ marginBottom: 16 }}>
+    <Card bordered>
       <Pressable onPress={toggleExpanded}>
         <XStack
           style={styles.header}
