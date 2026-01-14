@@ -1,6 +1,7 @@
 import { APP_CONFIG } from "../constants/app-config"
 import { Platform } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { extractChangelogSection } from "./changelog-parser"
 
 // AsyncStorage key for dismissed update version
 const DISMISSED_VERSION_KEY = "@expense-buddy/dismissed-update-version"
@@ -191,6 +192,52 @@ async function fetchReleaseByTag(tag: string): Promise<any | null> {
   return response.json()
 }
 
+async function fetchChangelogMarkdownAtRef(ref: string): Promise<string | null> {
+  const { owner, repo } = APP_CONFIG.github
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(
+    ref
+  )}/CHANGELOG.md`
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "text/plain",
+    },
+  })
+
+  if (!response.ok) {
+    return null
+  }
+
+  return response.text()
+}
+
+async function fetchDefaultBranchChangelogMarkdown(): Promise<string | null> {
+  const { owner, repo } = APP_CONFIG.github
+
+  // Fetch default branch name (robust to main/master changes)
+  try {
+    const repoResp = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      headers: { Accept: "application/vnd.github.v3+json" },
+    })
+    if (repoResp.ok) {
+      const data = await repoResp.json()
+      const branch = typeof data?.default_branch === "string" ? data.default_branch : null
+      if (branch) {
+        const md = await fetchChangelogMarkdownAtRef(branch)
+        if (md) return md
+      }
+    }
+  } catch {
+    // fall through
+  }
+
+  // Conservative fallback candidates
+  return (
+    (await fetchChangelogMarkdownAtRef("main")) ??
+    (await fetchChangelogMarkdownAtRef("master"))
+  )
+}
+
 /**
  * Fetch release notes for a specific app version.
  *
@@ -203,27 +250,52 @@ export async function getReleaseForVersion(version: string): Promise<ReleaseNote
   const candidateTags = [`v${normalizedVersion}`, normalizedVersion]
   for (const tag of candidateTags) {
     try {
-      const release = await fetchReleaseByTag(tag)
-      if (!release) {
-        continue
-      }
+      const [release, changelogMarkdown] = await Promise.all([
+        fetchReleaseByTag(tag),
+        fetchChangelogMarkdownAtRef(tag),
+      ])
 
-      return {
-        version: normalizedVersion,
-        tag,
-        releaseUrl: release.html_url,
-        releaseNotes: release.body || "",
-        publishedAt: release.published_at || "",
+      const releaseUrl = release?.html_url
+      const publishedAt = release?.published_at || ""
+      const releaseNotes = changelogMarkdown
+        ? extractChangelogSection(changelogMarkdown, normalizedVersion)
+        : ""
+
+      if (releaseNotes.trim()) {
+        return {
+          version: normalizedVersion,
+          tag,
+          releaseUrl:
+            releaseUrl ||
+            `${APP_CONFIG.github.url}/releases/tag/${encodeURIComponent(tag)}`,
+          releaseNotes,
+          publishedAt,
+        }
       }
-    } catch (error) {
+    } catch {
+      // Never fail hard: missing releases/CHANGELOG, rate limits, network errors, etc.
+      // The UI gates on releaseNotes being non-empty, so returning empty is safe.
+      continue
+    }
+  }
+
+  // Fallback: fetch CHANGELOG.md from the default branch and extract the section.
+  try {
+    const changelogMarkdown = await fetchDefaultBranchChangelogMarkdown()
+    const releaseNotes = changelogMarkdown
+      ? extractChangelogSection(changelogMarkdown, normalizedVersion)
+      : ""
+
+    if (releaseNotes.trim()) {
       return {
         version: normalizedVersion,
-        tag,
-        releaseUrl: `${APP_CONFIG.github.url}/releases/tag/${encodeURIComponent(tag)}`,
-        releaseNotes: "",
-        error: error instanceof Error ? error.message : "Failed to fetch release notes",
+        tag: `v${normalizedVersion}`,
+        releaseUrl: `${APP_CONFIG.github.url}/releases/tag/${encodeURIComponent(`v${normalizedVersion}`)}`,
+        releaseNotes,
       }
     }
+  } catch {
+    // fall through
   }
 
   // Not found
