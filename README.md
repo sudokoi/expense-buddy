@@ -25,7 +25,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
 - **Custom Categories**: Create, edit, and reorder expense categories with custom colors and icons
-- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking, etc.)
+- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking, Amazon Pay, etc.)
 - **Saved Payment Instruments**: Save your commonly used cards/UPI IDs with nicknames
   - Cards store only last **4** digits, UPI stores only last **3** digits
   - Expenses can reference a saved instrument by ID (CSV stays backward compatible)
@@ -40,7 +40,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Payment Method Analysis**: Pie chart showing expense distribution by payment method
 - **Filters**: Filter analytics by category, payment method, and (when applicable) saved instrument
 - **Instrument Breakdown**: See spending per card/UPI nickname for selected payment methods
-- **Time-based Analysis**: Track expenses over days, weeks, and months
+- **Time-based Analysis**: Track expenses over days/weeks/months plus 3m / 6m / 1y windows
 
 ### ☁️ GitHub Sync
 
@@ -73,6 +73,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
   - Dismissible notifications that remember your choice per version
   - Manual check available in Settings
   - Opens Play Store or GitHub releases based on install source
+  - Shows a one-time “What’s New” changelog sheet on first launch after updating (when release notes exist)
 - **Reusable UI Components**: Consistent styling with `ExpenseCard`, `AmountText`, `CategoryIcon`, `ScreenContainer`, `SectionHeader`, and `CategoryCard`
 - **Notifications**: Toast messages for sync status and actions
 - **Offline First**: Works without internet, syncs when connected
@@ -233,6 +234,7 @@ The app includes a comprehensive set of reusable styled components:
 | `ColorPickerSheet`                | Bottom sheet for selecting category colors                 |
 | `DynamicCategoryIcon`             | Runtime icon rendering for custom categories               |
 | `UpdateBanner`                    | Non-intrusive update notification banner                   |
+| `ChangelogSheet`                  | One-time “What’s New” sheet shown after updates            |
 | `PaymentInstrumentInlineDropdown` | Inline selector to pick a saved instrument or enter digits |
 | `PaymentInstrumentFormModal`      | Create/edit a saved payment instrument                     |
 
@@ -251,9 +253,11 @@ The app includes a comprehensive set of reusable styled components:
 | ----------------------------------- | ----------------------------------------- |
 | `PaymentMethodPieChart`             | Payment method breakdown visualization    |
 | `PaymentMethodFilter`               | Payment method chip filter                |
+| `AnalyticsFiltersSheet`             | Analytics filters sheet with Apply action |
 | `CollapsibleSection`                | Collapsible chart wrapper with headers    |
 | `CategoryFilter`                    | Category selection filter for analytics   |
 | `PaymentInstrumentFilter`           | Instrument chip filter (contextual)       |
+| `TimeWindowSelector`                | Time window picker for analytics          |
 | `PaymentInstrumentPieChart`         | Instrument breakdown visualization        |
 | `PaymentInstrumentBreakdownSection` | Instrument breakdown section with filters |
 

@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 2.1.0
+
+### Minor Changes
+
+- Added features and improvements:
+  - Analytics: move filters into a dedicated sheet with an explicit Apply action (improves UX and reduces accidental filter changes).
+  - Payments/Analytics: add Amazon Pay as a payment method and extend analytics time windows to 3 months / 6 months / 1 year.
+
 ## 2.0.0
 
 ### Major Changes
