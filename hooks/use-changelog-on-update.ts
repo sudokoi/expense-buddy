@@ -75,9 +75,21 @@ export function useChangelogOnUpdate({
       return
     }
 
-    // Gate evaluation to after update-check completion and ensure we never show
-    // changelog when an update is available.
-    if (!updateCheckCompleted || __DEV__ || updateAvailable) {
+    // Gate evaluation to after update-check completion.
+    // IMPORTANT: do not mark as evaluated until the update check completes,
+    // otherwise we can permanently suppress the changelog for the whole session.
+    if (!updateCheckCompleted) {
+      return
+    }
+
+    // Never show changelog in dev.
+    if (__DEV__) {
+      hasEvaluatedThisSession.current = true
+      return
+    }
+
+    // Ensure we never show changelog when an update is available (update CTA takes priority).
+    if (updateAvailable) {
       hasEvaluatedThisSession.current = true
       return
     }
