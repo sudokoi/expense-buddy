@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react"
-import { YStack, Text, Button, Label } from "tamagui"
+import { YStack, XStack, Text, Button, Label } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform } from "react-native"
+import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { PaymentMethodType } from "../../types/expense"
 import {
   useExpenses,
@@ -38,6 +39,11 @@ const layoutStyles = {
   } as ViewStyle,
   syncButtonsContainer: {
     marginTop: 8,
+  } as ViewStyle,
+  collapsibleHeader: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 2,
   } as ViewStyle,
 }
 
@@ -112,6 +118,9 @@ export default function SettingsScreen() {
   // Category form modal state
   const [categoryFormOpen, setCategoryFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
+
+  // UI state
+  const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -543,24 +552,42 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
-        {/* APPEARANCE Section */}
-        <SettingsSection title="APPEARANCE">
-          <YStack gap="$2">
-            <Label>Theme</Label>
-            <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
-          </YStack>
-        </SettingsSection>
-
         {/* DEFAULT PAYMENT METHOD Section */}
         <SettingsSection title="DEFAULT PAYMENT METHOD">
           <YStack gap="$2">
-            <Text color="$color" opacity={0.7} fontSize="$3">
-              Pre-select this payment method when adding new expenses.
-            </Text>
-            <DefaultPaymentMethodSelector
-              value={settings.defaultPaymentMethod}
-              onChange={handleDefaultPaymentMethodChange}
-            />
+            <Button
+              chromeless
+              onPress={() => setDefaultPaymentMethodExpanded((prev) => !prev)}
+              style={{ paddingHorizontal: 0, paddingVertical: 0 }}
+            >
+              <XStack flex={1} style={layoutStyles.collapsibleHeader}>
+                <YStack gap="$1" flex={1} pointerEvents="none">
+                  <Label color="$color" opacity={0.8}>
+                    Default
+                  </Label>
+                  <Text color="$color" opacity={0.6} fontSize="$3">
+                    {settings.defaultPaymentMethod ?? "None"}
+                  </Text>
+                </YStack>
+                {defaultPaymentMethodExpanded ? (
+                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                ) : (
+                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                )}
+              </XStack>
+            </Button>
+
+            {defaultPaymentMethodExpanded && (
+              <YStack gap="$2">
+                <Text color="$color" opacity={0.7} fontSize="$3">
+                  Pre-select this payment method when adding new expenses.
+                </Text>
+                <DefaultPaymentMethodSelector
+                  value={settings.defaultPaymentMethod}
+                  onChange={handleDefaultPaymentMethodChange}
+                />
+              </YStack>
+            )}
           </YStack>
         </SettingsSection>
 
@@ -626,6 +653,14 @@ export default function SettingsScreen() {
               />
             </YStack>
           )}
+        </SettingsSection>
+
+        {/* APPEARANCE Section */}
+        <SettingsSection title="APPEARANCE">
+          <YStack gap="$2">
+            <Label>Theme</Label>
+            <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+          </YStack>
         </SettingsSection>
 
         {/* APP INFORMATION Section */}
