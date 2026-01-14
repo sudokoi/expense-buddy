@@ -25,7 +25,7 @@ import {
 export type CategoryColorMap = Record<string, string>
 
 // Time window type
-export type TimeWindow = "7d" | "15d" | "1m" | "all"
+export type TimeWindow = "7d" | "15d" | "1m" | "3m" | "6m" | "1y" | "all"
 
 // Pie chart data item
 export interface PieChartDataItem {
@@ -236,6 +236,12 @@ export function getTimeWindowDays(timeWindow: TimeWindow): number {
       return 15
     case "1m":
       return 30
+    case "3m":
+      return 90
+    case "6m":
+      return 180
+    case "1y":
+      return 365
     case "all":
       return -1 // No limit
     default:

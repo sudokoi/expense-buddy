@@ -72,6 +72,7 @@ export const CategoryFilter = memo(function CategoryFilter({
   return (
     <ScrollView
       horizontal
+      nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}

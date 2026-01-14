@@ -47,6 +47,9 @@ const TIME_WINDOW_LABELS: Record<TimeWindow, string> = {
   "7d": "7 Days",
   "15d": "15 Days",
   "1m": "1 Month",
+  "3m": "3 Months",
+  "6m": "6 Months",
+  "1y": "1 Year",
   all: "All",
 }
 

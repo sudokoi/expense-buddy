@@ -21,6 +21,12 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     hasIdentifier: false,
   },
   {
+    label: "Amazon Pay",
+    value: "Amazon Pay",
+    icon: Smartphone,
+    hasIdentifier: false,
+  },
+  {
     label: "UPI",
     value: "UPI",
     icon: Smartphone,

@@ -4,6 +4,7 @@ import { PaymentMethodType } from "../types/expense"
 // Define payment method values as a tuple for Zod enum
 const PAYMENT_METHOD_VALUES: [PaymentMethodType, ...PaymentMethodType[]] = [
   "Cash",
+  "Amazon Pay",
   "UPI",
   "Credit Card",
   "Debit Card",

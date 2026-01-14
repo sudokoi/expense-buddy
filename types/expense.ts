@@ -2,6 +2,7 @@ export type ExpenseCategory = string
 
 export type PaymentMethodType =
   | "Cash"
+  | "Amazon Pay"
   | "UPI"
   | "Credit Card"
   | "Debit Card"

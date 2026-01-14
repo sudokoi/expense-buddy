@@ -47,7 +47,7 @@ export interface AnalyticsData {
 /**
  * Hook for computing analytics data from expenses
  *
- * @param timeWindow - The time window to filter expenses (7d, 15d, 1m)
+ * @param timeWindow - The time window to filter expenses (7d, 15d, 1m, 3m, 6m, 1y, all)
  * @param selectedCategories - Categories to filter by (empty array = all categories)
  * @returns Analytics data including filtered expenses, chart data, and statistics
  */

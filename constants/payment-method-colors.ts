@@ -6,6 +6,7 @@ import { PaymentMethodType } from "../types/expense"
  */
 export const PAYMENT_METHOD_COLORS: Record<PaymentMethodType | "Other", string> = {
   Cash: "#22c55e", // Green
+  "Amazon Pay": "#ff9900", // Amazon orange
   UPI: "#8b5cf6", // Purple
   "Credit Card": "#f59e0b", // Amber
   "Debit Card": "#3b82f6", // Blue

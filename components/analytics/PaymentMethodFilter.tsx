@@ -87,6 +87,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
   return (
     <ScrollView
       horizontal
+      nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}

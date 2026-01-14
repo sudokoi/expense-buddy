@@ -2,8 +2,6 @@
  * Property-based tests for Analytics Calculations
  * Feature: expense-analytics
  */
-
-import fc from "fast-check"
 import {
   filterExpensesByTimeWindow,
   aggregateByCategory,
@@ -16,6 +14,7 @@ import {
   aggregateByPaymentMethod,
 } from "./analytics-calculations"
 import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
+import fc from "fast-check"
 import { format, parseISO, subDays, isWithinInterval } from "date-fns"
 
 // Helper to generate valid expense categories
@@ -33,6 +32,7 @@ const categoryArb = fc.constantFrom<ExpenseCategory>(
 // Helper to generate valid payment method types
 const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
   "Cash",
+  "Amazon Pay",
   "UPI",
   "Credit Card",
   "Debit Card",
@@ -41,7 +41,7 @@ const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
 )
 
 // Helper to generate time windows
-const timeWindowArb = fc.constantFrom<TimeWindow>("7d", "15d", "1m")
+const timeWindowArb = fc.constantFrom<TimeWindow>("7d", "15d", "1m", "3m", "6m", "1y")
 
 // Helper to generate a valid expense
 const expenseArb = (dateRange?: { minDaysAgo: number; maxDaysAgo: number }) =>
@@ -90,7 +90,7 @@ const expenseWithPaymentMethodArb = (dateRange?: {
 describe("Analytics Calculations Properties", () => {
   /**
    * Property 1: Time Window Filtering Correctness
-   * For any set of expenses and any selected time window (7d, 15d, 1m),
+   * For any set of expenses and any selected time window (7d, 15d, 1m, 3m, 6m, 1y),
    * all expenses in the filtered result should have dates within the specified
    * time range, and no expenses outside that range should be included.
    */

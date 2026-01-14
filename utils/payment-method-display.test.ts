@@ -12,6 +12,7 @@ import { PaymentMethod, PaymentMethodType } from "../types/expense"
 // Arbitrary generators for payment method types
 const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
   "Cash",
+  "Amazon Pay",
   "UPI",
   "Credit Card",
   "Debit Card",
