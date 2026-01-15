@@ -1,8 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
 import { YStack, XStack, Text, Button, Label } from "tamagui"
-import { Alert, Linking, ViewStyle, Platform } from "react-native"
+import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { PaymentMethodType } from "../../types/expense"
+import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useExpenses,
   useNotifications,
@@ -121,6 +122,13 @@ export default function SettingsScreen() {
 
   // UI state
   const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
+
+  const defaultPaymentMethodLabel = useMemo(() => {
+    const value = settings.defaultPaymentMethod
+    if (!value) return "None"
+    const match = PAYMENT_METHODS.find((m) => m.value === value)
+    return match?.label ?? value
+  }, [settings.defaultPaymentMethod])
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -555,10 +563,11 @@ export default function SettingsScreen() {
         {/* DEFAULT PAYMENT METHOD Section */}
         <SettingsSection title="DEFAULT PAYMENT METHOD">
           <YStack gap="$2">
-            <Button
-              chromeless
+            <Pressable
               onPress={() => setDefaultPaymentMethodExpanded((prev) => !prev)}
-              style={{ paddingHorizontal: 0, paddingVertical: 0 }}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: defaultPaymentMethodExpanded }}
+              style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
             >
               <XStack flex={1} style={layoutStyles.collapsibleHeader}>
                 <YStack gap="$1" flex={1} pointerEvents="none">
@@ -566,7 +575,7 @@ export default function SettingsScreen() {
                     Default
                   </Label>
                   <Text color="$color" opacity={0.6} fontSize="$3">
-                    {settings.defaultPaymentMethod ?? "None"}
+                    {defaultPaymentMethodLabel}
                   </Text>
                 </YStack>
                 {defaultPaymentMethodExpanded ? (
@@ -575,7 +584,7 @@ export default function SettingsScreen() {
                   <ChevronDown size={20} color="$color" opacity={0.6} />
                 )}
               </XStack>
-            </Button>
+            </Pressable>
 
             {defaultPaymentMethodExpanded && (
               <YStack gap="$2">

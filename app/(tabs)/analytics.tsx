@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useMemo } from "react"
+import { useState, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
@@ -22,6 +22,10 @@ import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFilte
 import { SlidersHorizontal } from "@tamagui/lucide-icons"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import {
+  loadAnalyticsFilters,
+  saveAnalyticsFilters,
+} from "../../services/analytics-filters-storage"
 
 const styles = {
   headerRow: {
@@ -175,6 +179,8 @@ export default function AnalyticsScreen() {
   // Local state for time window (defaults to 7d per requirement 1.3)
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("7d")
 
+  const [filtersHydrated, setFiltersHydrated] = useState(false)
+
   // Filters sheet open state
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -190,6 +196,29 @@ export default function AnalyticsScreen() {
   const [selectedPaymentInstruments, setSelectedPaymentInstruments] = useState<
     PaymentInstrumentSelectionKey[]
   >([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrate = async () => {
+      try {
+        const stored = await loadAnalyticsFilters()
+        if (cancelled) return
+
+        setTimeWindow(stored.timeWindow)
+        setSelectedCategories(stored.selectedCategories)
+        setSelectedPaymentMethods(stored.selectedPaymentMethods)
+        setSelectedPaymentInstruments(stored.selectedPaymentInstruments)
+      } finally {
+        if (!cancelled) setFiltersHydrated(true)
+      }
+    }
+
+    hydrate()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Get analytics data from hook
   const {
@@ -389,9 +418,17 @@ export default function AnalyticsScreen() {
       setSelectedCategories(next.selectedCategories)
       setSelectedPaymentMethods(next.selectedPaymentMethods)
       // When payment methods are reset to "All", ensure instruments reset too.
-      setSelectedPaymentInstruments(
+      const normalizedPaymentInstruments =
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
-      )
+      setSelectedPaymentInstruments(normalizedPaymentInstruments)
+
+      void saveAnalyticsFilters({
+        timeWindow: next.timeWindow,
+        selectedCategories: next.selectedCategories,
+        selectedPaymentMethods: next.selectedPaymentMethods,
+        selectedPaymentInstruments: normalizedPaymentInstruments,
+      }).catch((error) => console.warn("Failed to persist analytics filters:", error))
+
       setFiltersOpen(false)
     },
     []
@@ -417,6 +454,7 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="$2"
               bordered
+              disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
               style={{ borderRadius: 999 }}
             >
@@ -427,11 +465,16 @@ export default function AnalyticsScreen() {
 
         <Button
           size="$3"
+          disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
           bordered
         >
-          {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+          {!filtersHydrated
+            ? "Filters"
+            : activeFilterCount > 0
+              ? `Filters (${activeFilterCount})`
+              : "Filters"}
         </Button>
       </XStack>
 
@@ -478,6 +521,7 @@ export default function AnalyticsScreen() {
 
       <AnalyticsFiltersSheet
         open={filtersOpen}
+        isHydrating={!filtersHydrated}
         timeWindow={timeWindow}
         selectedCategories={selectedCategories}
         selectedPaymentMethods={selectedPaymentMethods}

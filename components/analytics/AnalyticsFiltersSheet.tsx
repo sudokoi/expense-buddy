@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useRef, useState } from "react"
-import { YStack, XStack, Button, Sheet, H4, ScrollView } from "tamagui"
+import { YStack, XStack, Button, Sheet, H4, ScrollView, Text } from "tamagui"
 import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { X } from "@tamagui/lucide-icons"
@@ -32,6 +32,7 @@ const layoutStyles = {
 
 interface AnalyticsFiltersSheetProps {
   open: boolean
+  isHydrating?: boolean
   timeWindow: TimeWindow
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
@@ -48,6 +49,7 @@ interface AnalyticsFiltersSheetProps {
 
 export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   open,
+  isHydrating,
   timeWindow,
   selectedCategories,
   selectedPaymentMethods,
@@ -215,6 +217,12 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
 
           <ScrollView showsVerticalScrollIndicator={false} flex={1}>
             <YStack gap="$2" pb="$6">
+              {isHydrating ? (
+                <Text color="$color" opacity={0.6} fontSize="$3">
+                  Loading saved filters...
+                </Text>
+              ) : null}
+
               <CollapsibleSection title="Time">
                 <TimeWindowSelector
                   value={draftTimeWindow}

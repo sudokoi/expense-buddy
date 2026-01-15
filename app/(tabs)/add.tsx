@@ -5,7 +5,7 @@ import DateTimePicker from "@react-native-community/datetimepicker"
 import { useExpenses, useSettings, useCategories } from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import { Calendar, Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
 import { ViewStyle, TextStyle, Keyboard } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -181,7 +181,24 @@ export default function AddExpenseScreen() {
     setPaymentMethodExpanded(!paymentMethodSectionExpanded)
   }
 
-  const handleSave = () => {
+  const resetForm = useCallback(() => {
+    setAmount("")
+    setNote("")
+    setErrors({})
+    // Reset user interaction flags so defaults can apply again
+    hasUserInteractedRef.current = false
+    hasUserSelectedCategoryRef.current = false
+    setPaymentMethodType(undefined)
+    setPaymentMethodId("")
+    setPaymentInstrumentId(undefined)
+    setInstrumentEntryKind("none")
+    // Reset category to first in list
+    if (categories.length > 0) {
+      setCategory(categories[0].label)
+    }
+  }, [categories])
+
+  const handleSave = ({ stayOnAdd }: { stayOnAdd: boolean }) => {
     // Dismiss keyboard to ensure button press is captured on first tap
     Keyboard.dismiss()
 
@@ -227,22 +244,10 @@ export default function AddExpenseScreen() {
       paymentMethod,
     })
 
-    // Reset form and navigate to history
-    setAmount("")
-    setNote("")
-    setErrors({})
-    // Reset user interaction flags so defaults can apply again
-    hasUserInteractedRef.current = false
-    hasUserSelectedCategoryRef.current = false
-    setPaymentMethodType(undefined)
-    setPaymentMethodId("")
-    setPaymentInstrumentId(undefined)
-    setInstrumentEntryKind("none")
-    // Reset category to first in list
-    if (categories.length > 0) {
-      setCategory(categories[0].label)
+    resetForm()
+    if (!stayOnAdd) {
+      router.push("/(tabs)/history" as Href)
     }
-    router.push("/(tabs)/history" as Href)
   }
 
   const onChangeDate = (_event: any, selectedDate?: Date) => {
@@ -449,17 +454,29 @@ export default function AddExpenseScreen() {
             )}
           </YStack>
 
-          {/* Save Button */}
-          <Button
-            style={layoutStyles.saveButton}
-            size="$4"
-            themeInverse
-            onPress={handleSave}
-            icon={<Check size="$1" />}
-            fontWeight="bold"
-          >
-            Save Expense
-          </Button>
+          {/* Save Buttons */}
+          <XStack style={layoutStyles.saveButton} gap="$2">
+            <Button
+              flex={1}
+              size="$4"
+              bordered
+              onPress={() => handleSave({ stayOnAdd: true })}
+              icon={<Plus size="$1" />}
+              fontWeight="bold"
+            >
+              Add another
+            </Button>
+            <Button
+              flex={1}
+              size="$4"
+              themeInverse
+              onPress={() => handleSave({ stayOnAdd: false })}
+              icon={<Check size="$1" />}
+              fontWeight="bold"
+            >
+              Save Expense
+            </Button>
+          </XStack>
         </YStack>
       </KeyboardAwareScrollView>
     </YStack>
