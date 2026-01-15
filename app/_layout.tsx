@@ -15,7 +15,7 @@ import { ChangelogSheet } from "../components/ui/ChangelogSheet"
 import { useUpdateCheck } from "../hooks/use-update-check"
 import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { KeyboardProvider } from "react-native-keyboard-controller"
-import { useSettings } from "../stores/hooks"
+import { useThemeSettings } from "../stores/hooks"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -113,7 +113,7 @@ function RootLayoutNav() {
 
   // Follow the app's effective theme (settings) so StatusBar stays readable
   // even when the user forces light/dark opposite to the OS scheme.
-  const { effectiveTheme, isLoading } = useSettings()
+  const { effectiveTheme, isLoading } = useThemeSettings()
   const resolvedScheme = isLoading
     ? systemScheme === "dark"
       ? "dark"

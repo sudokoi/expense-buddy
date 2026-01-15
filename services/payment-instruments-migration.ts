@@ -1,5 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Expense } from "../types/expense"
+import {
+  loadAllExpensesFromStorage,
+  persistExpensesSnapshot,
+  persistExpensesUpdated,
+} from "./expense-storage"
 import {
   loadSettings,
   saveSettings,
@@ -16,8 +20,6 @@ import {
 } from "./payment-instruments"
 import { PaymentInstrument, PaymentInstrumentMethod } from "../types/payment-instrument"
 import { trackBulkEdit } from "./change-tracker"
-
-const EXPENSES_KEY = "expenses"
 
 function shouldConsiderForInstrument(method: PaymentInstrumentMethod): boolean {
   return method === "Credit Card" || method === "Debit Card" || method === "UPI"
@@ -78,8 +80,8 @@ function attachInstrumentIds(
 export async function migratePaymentInstrumentsOnStartup(): Promise<void> {
   const settings = await loadSettings()
 
-  const stored = await AsyncStorage.getItem(EXPENSES_KEY)
-  const expenses: Expense[] = stored ? JSON.parse(stored) : []
+  const loaded = await loadAllExpensesFromStorage()
+  const expenses: Expense[] = loaded.expenses
 
   // Ensure paymentInstruments exists even if settings were partially migrated
   let nextSettings: AppSettings = {
@@ -150,7 +152,7 @@ export async function migratePaymentInstrumentsOnStartup(): Promise<void> {
 
     // Persist migration changes
     await Promise.all([
-      AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(nextExpenses)),
+      persistExpensesSnapshot(nextExpenses),
       saveSettings(nextSettings),
       trackBulkEdit(editedExpenseIds),
       nextSettings.syncSettings ? markSettingsChanged() : Promise.resolve(),
@@ -167,8 +169,10 @@ export async function migratePaymentInstrumentsOnStartup(): Promise<void> {
     )
 
     if (editedIds.length > 0) {
+      const editedSet = new Set(editedIds)
+      const editedExpenses = updated.filter((e) => editedSet.has(e.id))
       await Promise.all([
-        AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updated)),
+        persistExpensesUpdated(editedExpenses),
         trackBulkEdit(editedIds),
       ])
     }

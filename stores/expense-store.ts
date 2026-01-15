@@ -1,7 +1,15 @@
 import { createStore } from "@xstate/store"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Expense } from "../types/expense"
 import { SyncNotification } from "../services/sync-manager"
+import {
+  loadAllExpensesFromStorage,
+  migrateLegacyExpensesToV1,
+  persistExpenseAdded,
+  persistExpenseUpdated,
+  persistExpensesSnapshot,
+  persistExpensesUpdated,
+  removeLegacyExpensesKey,
+} from "../services/expense-storage"
 import {
   trackAdd,
   trackEdit,
@@ -15,8 +23,6 @@ import {
   performAutoSyncOnLaunch,
   AutoSyncCallbacks,
 } from "./helpers"
-
-const EXPENSES_KEY = "expenses"
 
 function normalizeExpenseForSave(expense: Expense): Expense {
   const normalizedNote = expense.note.trim()
@@ -134,7 +140,7 @@ export const expenseStore = createStore({
       }
 
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+        await persistExpenseAdded(normalizedExpense)
         await trackAdd(normalizedExpense.id)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
@@ -155,7 +161,7 @@ export const expenseStore = createStore({
       }
 
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+        await persistExpenseUpdated(normalizedExpense)
         await trackEdit(normalizedExpense.id)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
@@ -166,16 +172,21 @@ export const expenseStore = createStore({
     deleteExpense: (context, event: { id: string }, enqueue) => {
       const now = new Date().toISOString()
       // Soft delete: mark with deletedAt timestamp instead of removing
-      const newExpenses = context.expenses.map((e) =>
-        e.id === event.id ? { ...e, deletedAt: now, updatedAt: now } : e
-      )
+      let updatedExpense: Expense | null = null
+      const newExpenses = context.expenses.map((e) => {
+        if (e.id !== event.id) return e
+        updatedExpense = { ...e, deletedAt: now, updatedAt: now }
+        return updatedExpense
+      })
       const newPendingChanges = {
         ...context.pendingChanges,
         deleted: context.pendingChanges.deleted + 1,
       }
 
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+        if (updatedExpense) {
+          await persistExpenseUpdated(updatedExpense)
+        }
         await trackDelete(event.id)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
@@ -185,7 +196,9 @@ export const expenseStore = createStore({
 
     replaceExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(event.expenses))
+        await persistExpensesSnapshot(event.expenses)
+        // Clean up legacy key after a successful full snapshot write.
+        await removeLegacyExpensesKey()
       })
 
       return { ...context, expenses: event.expenses }
@@ -236,16 +249,19 @@ export const expenseStore = createStore({
     reassignExpensesToOther: (context, event: { fromCategory: string }, enqueue) => {
       const now = new Date().toISOString()
       const affectedExpenseIds: string[] = []
+      const affectedExpenses: Expense[] = []
 
       // Update all expenses with the deleted category to "Other"
       const newExpenses = context.expenses.map((expense) => {
         if (expense.category === event.fromCategory && !expense.deletedAt) {
           affectedExpenseIds.push(expense.id)
-          return {
+          const updated = {
             ...expense,
             category: "Other",
             updatedAt: now,
           }
+          affectedExpenses.push(updated)
+          return updated
         }
         return expense
       })
@@ -257,8 +273,10 @@ export const expenseStore = createStore({
       }
 
       enqueue.effect(async () => {
-        // Persist the updated expenses
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+        // Persist only affected expenses (avoid full-array rewrite)
+        if (affectedExpenses.length > 0) {
+          await persistExpensesUpdated(affectedExpenses)
+        }
 
         // Track each affected expense as edited for sync
         for (const id of affectedExpenseIds) {
@@ -288,16 +306,19 @@ export const expenseStore = createStore({
 
       const now = new Date().toISOString()
       const affectedExpenseIds: string[] = []
+      const affectedExpenses: Expense[] = []
 
       // Update all active expenses with the old category to use the new category
       const newExpenses = context.expenses.map((expense) => {
         if (expense.category === fromCategory && !expense.deletedAt) {
           affectedExpenseIds.push(expense.id)
-          return {
+          const updated = {
             ...expense,
             category: toCategory,
             updatedAt: now,
           }
+          affectedExpenses.push(updated)
+          return updated
         }
         return expense
       })
@@ -309,8 +330,10 @@ export const expenseStore = createStore({
       }
 
       enqueue.effect(async () => {
-        // Persist the updated expenses
-        await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(newExpenses))
+        // Persist only affected expenses (avoid full-array rewrite)
+        if (affectedExpenses.length > 0) {
+          await persistExpensesUpdated(affectedExpenses)
+        }
 
         // Track each affected expense as edited for sync
         for (const id of affectedExpenseIds) {
@@ -331,8 +354,14 @@ export const expenseStore = createStore({
 // Exported initialization function - call from React component tree
 export async function initializeExpenseStore(): Promise<void> {
   try {
-    const stored = await AsyncStorage.getItem(EXPENSES_KEY)
-    const expenses = stored ? JSON.parse(stored) : []
+    const loaded = await loadAllExpensesFromStorage()
+    const expenses = loaded.expenses
+
+    // One-time migration: if we loaded from legacy storage, migrate to v1 and remove legacy key.
+    if (loaded.source === "legacy") {
+      await migrateLegacyExpensesToV1(expenses)
+      await removeLegacyExpensesKey()
+    }
 
     // Load pending changes from storage
     const pendingChangesData = await loadPendingChanges()

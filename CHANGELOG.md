@@ -7,6 +7,7 @@
 - Add "Add another" button to expense form; persist analytics filter settings
   - Added “Add another” button next to “Save Expense”; refactored save handler to support save+reset (stay) vs save+navigate; validation blocks both actions on errors
   - New device-local AsyncStorage persistence for analytics filters (defaults + normalization)
+  - New device-local AsyncStorage persistence for analytics filters (defaults + normalization)
 
 ## 2.1.1
 

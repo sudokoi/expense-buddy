@@ -1,19 +1,11 @@
 import { useMemo } from "react"
 import { Platform, ViewStyle } from "react-native"
-import { Button, H4, ScrollView, Sheet, Text, XStack, YStack } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
+import { Button, Text, YStack } from "tamagui"
+import { AppSheetScaffold } from "./AppSheetScaffold"
 
 const layoutStyles = {
-  sheetFrame: {
-    padding: 16,
-  } as ViewStyle,
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  contentContainer: {
-    marginTop: 8,
-    flex: 1,
+  notesText: {
+    ...(Platform.OS === "web" ? ({ whiteSpace: "pre-wrap" } as any) : undefined),
   } as ViewStyle,
 } as const
 
@@ -37,62 +29,32 @@ export function ChangelogSheet({
     [releaseNotes]
   )
 
-  if (!open) {
-    return null
-  }
-
   return (
-    <Sheet
-      modal
+    <AppSheetScaffold
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) onClose()
-      }}
+      onClose={onClose}
+      title={"What's New"}
+      subtitle={`Version ${version}`}
       snapPoints={[85]}
-      dismissOnSnapToBottom
+      unmountWhenClosed
+      scroll
+      footer={
+        <>
+          <Button size="$4" onPress={onViewFullReleaseNotes} themeInverse>
+            View full release notes
+          </Button>
+          <Button size="$4" onPress={onClose}>
+            Close
+          </Button>
+        </>
+      }
     >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
-
-        <YStack gap="$4" style={layoutStyles.contentContainer}>
-          <XStack style={layoutStyles.headerRow}>
-            <YStack>
-              <H4>What&apos;s New</H4>
-              <Text fontSize="$3" opacity={0.7} color="$color">
-                Version {version}
-              </Text>
-            </YStack>
-
-            <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
-          </XStack>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <YStack pb="$4">
-              <Text
-                fontSize="$4"
-                lineHeight={22}
-                color="$color"
-                style={
-                  Platform.OS === "web" ? ({ whiteSpace: "pre-wrap" } as any) : undefined
-                }
-              >
-                {normalizedNotes}
-              </Text>
-            </YStack>
-          </ScrollView>
-
-          <YStack gap="$2">
-            <Button size="$4" onPress={onViewFullReleaseNotes} themeInverse>
-              View full release notes
-            </Button>
-            <Button size="$4" onPress={onClose}>
-              Close
-            </Button>
-          </YStack>
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+      <YStack pb="$4">
+        <Text fontSize="$4" lineHeight={22} color="$color" style={layoutStyles.notesText}>
+          {normalizedNotes}
+        </Text>
+      </YStack>
+    </AppSheetScaffold>
   )
 }
 

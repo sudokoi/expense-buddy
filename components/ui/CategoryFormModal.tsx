@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo, useRef } from "react"
-import { YStack, XStack, Text, Input, Button, Label, Sheet, H4 } from "tamagui"
+import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard, Pressable } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Check, X } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
@@ -11,19 +11,10 @@ import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { getColorValue } from "../../tamagui.config"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
+import { AppSheetScaffold } from "./AppSheetScaffold"
 
 // Layout styles
 const layoutStyles = {
-  sheetFrame: {
-    padding: 16,
-  } as ViewStyle,
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  contentContainer: {
-    marginTop: 8,
-  } as ViewStyle,
   buttonRow: {
     justifyContent: "flex-end",
     gap: 12,
@@ -217,127 +208,108 @@ export function CategoryFormModal({
 
   return (
     <>
-      <Sheet
-        modal
+      <AppSheetScaffold
         open={open}
-        onOpenChange={(isOpen: boolean) => {
-          if (!isOpen) handleClose()
-        }}
+        onClose={handleClose}
+        title={isEditMode ? "Edit Category" : "Add Category"}
         snapPoints={[90]}
-        dismissOnSnapToBottom
+        frameStyle={frameStyle}
       >
-        <Sheet.Overlay />
-        <Sheet.Frame style={frameStyle} bg="$background">
-          <Sheet.Handle />
-
-          <YStack gap="$4" style={layoutStyles.contentContainer}>
-            {/* Header */}
-            <XStack style={layoutStyles.headerRow}>
-              <H4>{isEditMode ? "Edit Category" : "Add Category"}</H4>
-              <Button
-                size="$3"
-                chromeless
-                icon={X}
-                onPress={handleClose}
-                aria-label="Close"
-              />
-            </XStack>
-
-            {/* Label Input */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Category Name
-              </Label>
-              <Input
-                size="$4"
-                placeholder="e.g., Subscriptions"
-                value={label}
-                onChangeText={handleLabelChange}
-                maxLength={30}
-                borderWidth={2}
-                borderColor={errors.label ? "$red10" : "$borderColor"}
-                focusStyle={{
-                  borderColor: errors.label ? "$red10" : ACCENT_COLORS.primary,
-                }}
-              />
-              {errors.label && (
-                <Text fontSize="$2" color="$red10">
-                  {errors.label}
-                </Text>
-              )}
-              <Text fontSize="$2" color="$color" opacity={0.5}>
-                {label.length}/30 characters
+        <YStack gap="$4">
+          {/* Label Input */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Category Name
+            </Label>
+            <Input
+              size="$4"
+              placeholder="e.g., Subscriptions"
+              value={label}
+              onChangeText={handleLabelChange}
+              maxLength={30}
+              borderWidth={2}
+              borderColor={errors.label ? "$red10" : "$borderColor"}
+              focusStyle={{
+                borderColor: errors.label ? "$red10" : ACCENT_COLORS.primary,
+              }}
+            />
+            {errors.label && (
+              <Text fontSize="$2" color="$red10">
+                {errors.label}
               </Text>
-            </YStack>
-
-            {/* Icon Picker Trigger */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Icon
-              </Label>
-              <Pressable onPress={handleOpenIconPicker}>
-                <XStack
-                  style={layoutStyles.iconPickerTrigger}
-                  bg="$backgroundHover"
-                  borderColor="$borderColor"
-                >
-                  <YStack
-                    style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
-                  >
-                    <DynamicCategoryIcon name={icon} size={24} color={iconColor} />
-                  </YStack>
-                  <YStack flex={1}>
-                    <Text fontWeight="500">{icon}</Text>
-                    <Text fontSize="$2" color="$color" opacity={0.6}>
-                      Tap to change icon
-                    </Text>
-                  </YStack>
-                </XStack>
-              </Pressable>
-            </YStack>
-
-            {/* Color Picker Trigger */}
-            <YStack gap="$2">
-              <Label color="$color" opacity={0.8}>
-                Color
-              </Label>
-              <Pressable onPress={handleOpenColorPicker}>
-                <XStack
-                  style={layoutStyles.colorPreview}
-                  bg="$backgroundHover"
-                  borderColor="$borderColor"
-                >
-                  <YStack
-                    style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
-                  />
-                  <YStack flex={1}>
-                    <Text fontWeight="500">{color}</Text>
-                    <Text fontSize="$2" color="$color" opacity={0.6}>
-                      Tap to change color
-                    </Text>
-                  </YStack>
-                </XStack>
-              </Pressable>
-            </YStack>
-
-            {/* Action Buttons */}
-            <XStack style={layoutStyles.buttonRow}>
-              <Button size="$4" chromeless onPress={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                size="$4"
-                themeInverse
-                onPress={handleSave}
-                icon={<Check size="$1" />}
-                fontWeight="bold"
-              >
-                {isEditMode ? "Save Changes" : "Add Category"}
-              </Button>
-            </XStack>
+            )}
+            <Text fontSize="$2" color="$color" opacity={0.5}>
+              {label.length}/30 characters
+            </Text>
           </YStack>
-        </Sheet.Frame>
-      </Sheet>
+
+          {/* Icon Picker Trigger */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Icon
+            </Label>
+            <Pressable onPress={handleOpenIconPicker}>
+              <XStack
+                style={layoutStyles.iconPickerTrigger}
+                bg="$backgroundHover"
+                borderColor="$borderColor"
+              >
+                <YStack
+                  style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
+                >
+                  <DynamicCategoryIcon name={icon} size={24} color={iconColor} />
+                </YStack>
+                <YStack flex={1}>
+                  <Text fontWeight="500">{icon}</Text>
+                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                    Tap to change icon
+                  </Text>
+                </YStack>
+              </XStack>
+            </Pressable>
+          </YStack>
+
+          {/* Color Picker Trigger */}
+          <YStack gap="$2">
+            <Label color="$color" opacity={0.8}>
+              Color
+            </Label>
+            <Pressable onPress={handleOpenColorPicker}>
+              <XStack
+                style={layoutStyles.colorPreview}
+                bg="$backgroundHover"
+                borderColor="$borderColor"
+              >
+                <YStack
+                  style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
+                />
+                <YStack flex={1}>
+                  <Text fontWeight="500">{color}</Text>
+                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                    Tap to change color
+                  </Text>
+                </YStack>
+              </XStack>
+            </Pressable>
+          </YStack>
+
+          {/* Action Buttons */}
+          <XStack style={layoutStyles.buttonRow}>
+            <Button size="$4" chromeless onPress={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              size="$4"
+              themeInverse
+              onPress={handleSave}
+              icon={<Check size="$1" />}
+              fontWeight="bold"
+            >
+              {isEditMode ? "Save Changes" : "Add Category"}
+            </Button>
+          </XStack>
+        </YStack>
+      </AppSheetScaffold>
 
       {/* Icon Picker Sheet */}
       <IconPickerSheet

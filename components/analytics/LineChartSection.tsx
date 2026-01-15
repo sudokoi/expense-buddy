@@ -15,8 +15,6 @@ interface LineChartSectionProps {
   data: LineChartDataItem[]
 }
 
-const POINT_SPACING = 50
-
 /**
  * LineChartSection - Line chart with bar overlay showing spending trends
  * Wrapped in CollapsibleSection, supports horizontal scrolling and tooltips
@@ -54,11 +52,15 @@ export const LineChartSection = memo(function LineChartSection({
   )
 
   // Memoize chart dimensions
-  const { chartWidth, needsScroll } = useMemo(() => {
-    const width = Math.max(screenWidth - 80, data.length * POINT_SPACING)
+  const { chartWidth, needsScroll, pointSpacing } = useMemo(() => {
+    // Prevent extreme scroll widths for large ranges (e.g. "all" with years of data)
+    const spacing =
+      data.length > 365 ? 12 : data.length > 180 ? 18 : data.length > 90 ? 28 : 50
+    const width = Math.max(screenWidth - 80, data.length * spacing)
     return {
       chartWidth: width,
       needsScroll: width > screenWidth - 60,
+      pointSpacing: spacing,
     }
   }, [screenWidth, data.length])
 
@@ -136,7 +138,7 @@ export const LineChartSection = memo(function LineChartSection({
       data={chartData}
       width={needsScroll ? chartWidth : screenWidth - 100}
       height={200}
-      spacing={POINT_SPACING}
+      spacing={pointSpacing}
       initialSpacing={20}
       endSpacing={20}
       color={colors.line}

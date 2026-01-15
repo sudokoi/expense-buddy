@@ -11,8 +11,8 @@ import {
   useSettings,
   useCategories,
 } from "../../stores/hooks"
+import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
-import { Trash, Edit3 } from "@tamagui/lucide-icons"
 import { format, parseISO } from "date-fns"
 import type {
   ExpenseCategory,
@@ -20,6 +20,7 @@ import type {
   PaymentMethodType,
   PaymentMethod,
 } from "../../types/expense"
+import type { Category } from "../../types/category"
 import { syncDownMore } from "../../services/sync-manager"
 import {
   parseExpression,
@@ -27,7 +28,6 @@ import {
   formatAmount,
 } from "../../utils/expression-parser"
 import { validateIdentifier } from "../../utils/payment-method-validation"
-import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
@@ -37,11 +37,9 @@ import {
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
-import { ExpenseCard } from "../../components/ui/ExpenseCard"
-import { AmountText } from "../../components/ui/AmountText"
+import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CategoryCard } from "../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
-import { DynamicCategoryIcon } from "../../components/ui/DynamicCategoryIcon"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -95,74 +93,6 @@ const layoutStyles = {
     gap: 8,
   } as ViewStyle,
 }
-
-// Memoized expense list item component
-interface ExpenseListItemProps {
-  item: Expense
-  onEdit: (expense: Expense) => void
-  onDelete: (id: string) => void
-  instruments: PaymentInstrument[]
-}
-
-const ExpenseListItem = React.memo(function ExpenseListItem({
-  item,
-  onEdit,
-  onDelete,
-  instruments,
-}: ExpenseListItemProps) {
-  const { getCategoryByLabel } = useCategories()
-  const categoryInfo = getCategoryByLabel(item.category)
-
-  if (!categoryInfo) {
-    return null
-  }
-
-  // Use utility function for consistent payment method display
-  const paymentMethodDisplay = formatPaymentMethodDisplay(item.paymentMethod, instruments)
-
-  return (
-    <ExpenseCard>
-      <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
-        <DynamicCategoryIcon
-          name={categoryInfo.icon}
-          size={20}
-          color={categoryInfo.color as `#${string}`}
-        />
-        <YStack flex={1}>
-          <Text fontWeight="bold" fontSize="$4">
-            {item.note || categoryInfo.label}
-          </Text>
-          <Text color="$color" opacity={0.6} fontSize="$2">
-            {format(parseISO(item.date), "h:mm a")} • {categoryInfo.label}
-          </Text>
-          {paymentMethodDisplay && (
-            <Text color="$color" opacity={0.5} fontSize="$2">
-              {paymentMethodDisplay}
-            </Text>
-          )}
-        </YStack>
-      </XStack>
-
-      <XStack gap="$3" style={layoutStyles.actionButtons}>
-        <AmountText type="expense">-₹{item.amount.toFixed(2)}</AmountText>
-        <Button
-          size="$2"
-          icon={Edit3}
-          chromeless
-          onPress={() => onEdit(item)}
-          aria-label="Edit"
-        />
-        <Button
-          size="$2"
-          icon={Trash}
-          chromeless
-          onPress={() => onDelete(item.id)}
-          aria-label="Delete"
-        />
-      </XStack>
-    </ExpenseCard>
-  )
-})
 
 export default function HistoryScreen() {
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
@@ -286,23 +216,38 @@ export default function HistoryScreen() {
   )
 
   const groupedExpenses = React.useMemo(() => {
-    const grouped: { title: string; data: Expense[] }[] = []
     // Use activeExpenses (excludes soft-deleted) for display
-    const sorted = [...state.activeExpenses].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+    // ISO timestamps sort correctly lexicographically, so avoid Date construction.
+    const sorted = [...state.activeExpenses].sort((a, b) => b.date.localeCompare(a.date))
 
-    sorted.forEach((expense) => {
-      const dateKey = format(parseISO(expense.date), "dd/MM/yyyy")
-      const existing = grouped.find((g) => g.title === dateKey)
-      if (existing) {
-        existing.data.push(expense)
-      } else {
-        grouped.push({ title: dateKey, data: [expense] })
+    const sections: { title: string; data: Expense[] }[] = []
+    let currentIsoDate: string | null = null
+    let currentSection: { title: string; data: Expense[] } | null = null
+
+    for (const expense of sorted) {
+      // Group by YYYY-MM-DD to avoid parsing the full timestamp for every row.
+      const isoDate = expense.date.slice(0, 10)
+      if (isoDate !== currentIsoDate) {
+        currentIsoDate = isoDate
+        currentSection = {
+          title: format(parseISO(isoDate), "dd/MM/yyyy"),
+          data: [],
+        }
+        sections.push(currentSection)
       }
-    })
-    return grouped
+      currentSection!.data.push(expense)
+    }
+
+    return sections
   }, [state.activeExpenses])
+
+  const categoryByLabel = React.useMemo(() => {
+    const map = new Map<string, Category>()
+    for (const category of categories) {
+      map.set(category.label, category)
+    }
+    return map
+  }, [categories])
 
   // Memoized handlers for list item actions
   const handleEdit = React.useCallback((expense: Expense) => {
@@ -360,15 +305,28 @@ export default function HistoryScreen() {
 
   // Memoized renderItem function
   const renderItem = React.useCallback(
-    ({ item }: { item: Expense }) => (
-      <ExpenseListItem
-        item={item}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        instruments={allInstruments}
-      />
-    ),
-    [handleEdit, handleDelete, allInstruments]
+    ({ item }: { item: Expense }) => {
+      const categoryInfo =
+        categoryByLabel.get(item.category) ??
+        ({
+          label: item.category,
+          icon: "Circle",
+          color: CATEGORY_COLORS.Other,
+        } satisfies Pick<Category, "label" | "icon" | "color">)
+
+      return (
+        <ExpenseRow
+          expense={item}
+          categoryInfo={categoryInfo}
+          subtitleMode="time"
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          instruments={allInstruments}
+          showActions
+        />
+      )
+    },
+    [handleEdit, handleDelete, allInstruments, categoryByLabel]
   )
 
   // Memoized renderSectionHeader function

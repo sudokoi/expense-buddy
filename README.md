@@ -78,7 +78,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Notifications**: Toast messages for sync status and actions
 - **Offline First**: Works without internet, syncs when connected
 - **First-Time Setup**: Guided flow to download existing data
-- **Performance Optimized**: Memoized components and handlers for smooth scrolling
+- **Performance Optimized**: Virtualized lists + memoized components/handlers for smooth scrolling with large datasets
 
 ## 🚀 Getting Started
 
@@ -223,6 +223,7 @@ The app includes a comprehensive set of reusable styled components:
 | `AmountText`                      | Displays expense/income amounts with semantic colors       |
 | `CategoryCard`                    | Selectable category card with color theming                |
 | `CategoryIcon`                    | Circular icon container with category color                |
+| `ExpenseRow`                      | Shared, memoized expense row UI (used across lists)        |
 | `ExpenseCard`                     | Card wrapper for expense list items                        |
 | `ScreenContainer`                 | Scrollable screen wrapper with consistent padding          |
 | `SectionHeader`                   | Styled section title text                                  |
@@ -231,12 +232,21 @@ The app includes a comprehensive set of reusable styled components:
 | `DefaultPaymentMethodSelector`    | Payment method preference selector                         |
 | `PaymentMethodCard`               | Selectable payment method display card                     |
 | `CategoryFormModal`               | Modal for creating/editing custom categories               |
+| `AppSheetScaffold`                | Shared layout wrapper for Tamagui `Sheet` screens/modals   |
 | `ColorPickerSheet`                | Bottom sheet for selecting category colors                 |
 | `DynamicCategoryIcon`             | Runtime icon rendering for custom categories               |
 | `UpdateBanner`                    | Non-intrusive update notification banner                   |
 | `ChangelogSheet`                  | One-time “What’s New” sheet shown after updates            |
 | `PaymentInstrumentInlineDropdown` | Inline selector to pick a saved instrument or enter digits |
 | `PaymentInstrumentFormModal`      | Create/edit a saved payment instrument                     |
+
+### Local Expense Storage
+
+Expenses are stored locally using AsyncStorage.
+
+- The app uses an incremental storage layout (index + per-expense keys) to avoid rewriting the entire expense dataset on every add/edit/delete.
+- A one-time automatic migration runs on startup if legacy storage is detected.
+- GitHub sync format is unchanged (still daily CSV files); this is purely on-device storage.
 
 **Settings Components** (`components/ui/settings/`):
 
@@ -313,6 +323,7 @@ expense-buddy/
 │   ├── daily-file-manager.ts
 │   ├── hash-storage.ts   # Content hashing for differential sync
 │   ├── change-tracker.ts # Record-level change tracking
+│   ├── expense-storage.ts # Incremental local expense storage + migration
 │   ├── payment-instruments.ts # Instrument utilities + validation
 │   ├── payment-instruments-migration.ts # One-time linking migration for legacy expenses
 │   ├── payment-instrument-merger.ts # Merge logic for syncing instruments

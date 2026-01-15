@@ -316,7 +316,9 @@ export function filterExpensesByCategories(
   if (selectedCategories.length === 0) {
     return expenses
   }
-  return expenses.filter((expense) => selectedCategories.includes(expense.category))
+
+  const selection = new Set(selectedCategories)
+  return expenses.filter((expense) => selection.has(expense.category))
 }
 
 /**

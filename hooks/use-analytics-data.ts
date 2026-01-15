@@ -128,6 +128,11 @@ export function useAnalyticsData(
     return filterByPaymentInstruments(paymentMethodFilteredExpenses)
   }, [paymentMethodFilteredExpenses, filterByPaymentInstruments])
 
+  // Compute date range once; for "all" this scans the data for the earliest date.
+  const dateRange = useMemo(() => {
+    return getDateRangeForTimeWindow(timeWindow, filteredExpenses)
+  }, [timeWindow, filteredExpenses])
+
   // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
     return aggregateByCategory(filteredExpenses, categoryColorMap)
@@ -144,21 +149,19 @@ export function useAnalyticsData(
 
   // Memoized: Line chart data aggregated by day
   const lineChartData = useMemo(() => {
-    const dateRange = getDateRangeForTimeWindow(timeWindow, filteredExpenses)
     return aggregateByDay(filteredExpenses, dateRange)
-  }, [filteredExpenses, timeWindow])
+  }, [filteredExpenses, dateRange])
 
   // Memoized: Summary statistics
   const statistics = useMemo(() => {
     // For "all", calculate actual days from data range
     let daysInPeriod = getTimeWindowDays(timeWindow)
     if (timeWindow === "all" && filteredExpenses.length > 0) {
-      const dateRange = getDateRangeForTimeWindow(timeWindow, filteredExpenses)
       const diffTime = Math.abs(dateRange.end.getTime() - dateRange.start.getTime())
       daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
     return calculateStatistics(filteredExpenses, daysInPeriod)
-  }, [filteredExpenses, timeWindow])
+  }, [filteredExpenses, timeWindow, dateRange])
 
   // Memoized: Return object to ensure stable reference
   return useMemo(

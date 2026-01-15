@@ -1,20 +1,15 @@
 import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
-import { YStack, Text, XStack, Button } from "tamagui"
+import { YStack, Text } from "tamagui"
 import { useExpenses, useCategories, useSettings } from "../../stores/hooks"
 import { format, parseISO } from "date-fns"
-import { Trash, Edit3 } from "@tamagui/lucide-icons"
-import { Alert, ViewStyle, TextStyle } from "react-native"
-import { ExpenseCard } from "../../components/ui/ExpenseCard"
-import { AmountText } from "../../components/ui/AmountText"
-import { CategoryIcon } from "../../components/ui/CategoryIcon"
-import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { Alert, FlatList, ViewStyle, TextStyle } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { EditExpenseModal } from "../../components/ui/EditExpenseModal"
-import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
+import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
-import type { PaymentInstrument } from "../../types/payment-instrument"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -31,90 +26,17 @@ const layoutStyles = {
   } as TextStyle,
 }
 
-// Helper to get category info from categories array
-// Returns the category if found, or a fallback with the label directly
-const getCategoryInfo = (
-  catLabel: string,
-  categories: Category[]
-): { color: string; label: string } => {
-  const cat = categories.find((c) => c.label === catLabel)
-  if (cat) {
-    return { color: cat.color, label: cat.label }
-  }
-  // Category no longer exists - show the label directly with default color
-  return { color: CATEGORY_COLORS.Other, label: catLabel }
-}
-
-// Memoized expense item component
-interface DayExpenseItemProps {
-  expense: Expense
-  categoryInfo: { color: string; label: string }
-  onDelete: (id: string) => void
-  onEdit: (expense: Expense) => void
-  instruments: PaymentInstrument[]
-}
-
-const DayExpenseItem = React.memo(function DayExpenseItem({
-  expense,
-  categoryInfo,
-  onDelete,
-  onEdit,
-  instruments,
-}: DayExpenseItemProps) {
-  const paymentMethodDisplay = formatPaymentMethodDisplay(
-    expense.paymentMethod,
-    instruments
-  )
-
-  return (
-    <ExpenseCard>
-      <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
-        <CategoryIcon backgroundColor={categoryInfo.color}>
-          <Text fontSize="$6">{categoryInfo.label[0]}</Text>
-        </CategoryIcon>
-        <YStack flex={1}>
-          <Text fontWeight="bold" fontSize="$4">
-            {expense.note || categoryInfo.label}
-          </Text>
-          <Text color="$color" opacity={0.6} fontSize="$2">
-            {format(parseISO(expense.date), "h:mm a")} • {expense.category}
-          </Text>
-          {paymentMethodDisplay && (
-            <Text color="$color" opacity={0.5} fontSize="$2">
-              {paymentMethodDisplay}
-            </Text>
-          )}
-        </YStack>
-      </XStack>
-
-      <XStack gap="$3" style={layoutStyles.actionButtons}>
-        <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
-        <Button
-          size="$2"
-          icon={Edit3}
-          chromeless
-          onPress={() => onEdit(expense)}
-          aria-label="Edit"
-        />
-        <Button
-          size="$2"
-          icon={Trash}
-          chromeless
-          onPress={() => onDelete(expense.id)}
-          aria-label="Delete"
-        />
-      </XStack>
-    </ExpenseCard>
-  )
-})
-
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense, editExpense } = useExpenses()
   const { categories } = useCategories()
   const { settings } = useSettings()
+  const insets = useSafeAreaInsets()
 
-  const instruments = settings.paymentInstruments ?? []
+  const instruments = React.useMemo(
+    () => settings.paymentInstruments ?? [],
+    [settings.paymentInstruments]
+  )
 
   // Edit modal state
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
@@ -130,11 +52,13 @@ export default function DayExpensesScreen() {
     })
   }, [state.activeExpenses, date])
 
-  // Memoize category info lookup for all expenses
-  const getCategoryInfoForExpense = useCallback(
-    (catLabel: string) => getCategoryInfo(catLabel, categories),
-    [categories]
-  )
+  const categoryByLabel = React.useMemo(() => {
+    const map = new Map<string, Category>()
+    for (const category of categories) {
+      map.set(category.label, category)
+    }
+    return map
+  }, [categories])
 
   // Memoized delete handler
   const handleDelete = useCallback(
@@ -175,28 +99,58 @@ export default function DayExpensesScreen() {
     [date]
   )
 
+  const renderItem = useCallback(
+    ({ item }: { item: Expense }) => {
+      const categoryInfo =
+        categoryByLabel.get(item.category) ??
+        ({
+          label: item.category,
+          icon: "Circle",
+          color: CATEGORY_COLORS.Other,
+        } satisfies Pick<Category, "label" | "icon" | "color">)
+
+      return (
+        <ExpenseRow
+          expense={item}
+          categoryInfo={categoryInfo}
+          instruments={instruments}
+          subtitleMode="time"
+          showActions
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+        />
+      )
+    },
+    [categoryByLabel, handleDelete, handleEdit, instruments]
+  )
+
+  const keyExtractor = useCallback((item: Expense) => item.id, [])
+
   return (
-    <ScreenContainer>
+    <YStack flex={1} bg="$background">
       <Stack.Screen options={{ title: formattedDisplayDate, headerBackTitle: "Back" }} />
 
-      <SectionHeader>Transactions for {formattedDisplayDate}</SectionHeader>
-
-      {dayExpenses.length === 0 ? (
-        <Text color="$color" opacity={0.6} style={layoutStyles.emptyText}>
-          No expenses found for this date.
-        </Text>
-      ) : (
-        dayExpenses.map((expense) => (
-          <DayExpenseItem
-            key={expense.id}
-            expense={expense}
-            categoryInfo={getCategoryInfoForExpense(expense.category)}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            instruments={instruments}
-          />
-        ))
-      )}
+      <FlatList
+        data={dayExpenses}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: insets.bottom,
+        }}
+        ListHeaderComponent={
+          <SectionHeader>Transactions for {formattedDisplayDate}</SectionHeader>
+        }
+        ListEmptyComponent={
+          <Text color="$color" opacity={0.6} style={layoutStyles.emptyText}>
+            No expenses found for this date.
+          </Text>
+        }
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={12}
+        windowSize={10}
+        removeClippedSubviews
+      />
 
       {/* Edit Expense Modal */}
       {editingExpense && (
@@ -208,6 +162,6 @@ export default function DayExpensesScreen() {
           onSave={handleSaveEdit}
         />
       )}
-    </ScreenContainer>
+    </YStack>
   )
 }

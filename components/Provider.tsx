@@ -2,14 +2,14 @@ import { useColorScheme } from "react-native"
 import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { config } from "../tamagui.config"
 import { StoreProvider } from "../stores/store-provider"
-import { useSettings } from "../stores/hooks"
+import { useThemeSettings } from "../stores/hooks"
 
 /**
  * Inner provider component that uses effectiveTheme from settings store
  * This must be inside StoreProvider to access the settings
  */
 function ThemedProvider({ children, ...rest }: Omit<TamaguiProviderProps, "config">) {
-  const { effectiveTheme, isLoading } = useSettings()
+  const { effectiveTheme, isLoading } = useThemeSettings()
   const systemColorScheme = useColorScheme()
 
   // Use effectiveTheme from settings store, fallback to system during loading

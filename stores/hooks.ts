@@ -234,6 +234,19 @@ export const useSettings = () => {
   }
 }
 
+// Narrow hook for theme-only consumers (e.g. providers/layout) to avoid rerendering
+// the whole app tree on unrelated settings changes.
+export const useThemeSettings = () => {
+  const { settingsStore } = useStoreContext()
+
+  const isLoading = useSelector(settingsStore, (state) => state.context.isLoading)
+  const effectiveTheme = useSelector(settingsStore, (state) =>
+    selectEffectiveTheme(state.context)
+  )
+
+  return { isLoading, effectiveTheme }
+}
+
 // Notification hooks
 export const useNotifications = () => {
   const { notificationStore } = useStoreContext()

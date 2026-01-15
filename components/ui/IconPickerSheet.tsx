@@ -1,23 +1,14 @@
 import { useCallback, memo } from "react"
-import { YStack, XStack, Text, Button, Sheet, H4, ScrollView } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
-import { X, Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons"
 import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
 import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { AppSheetScaffold } from "./AppSheetScaffold"
 
 // Layout styles
 const layoutStyles = {
-  sheetFrame: {
-    padding: 16,
-  } as ViewStyle,
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  contentContainer: {
-    marginTop: 8,
-  } as ViewStyle,
   groupContainer: {
     marginBottom: 16,
   } as ViewStyle,
@@ -71,49 +62,27 @@ export function IconPickerSheet({
     [onSelect, onClose]
   )
 
-  // Don't render content when closed to improve performance
-  if (!open) {
-    return null
-  }
-
   return (
-    <Sheet
-      modal
+    <AppSheetScaffold
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) onClose()
-      }}
+      onClose={onClose}
+      title="Choose Icon"
       snapPoints={[90]}
-      dismissOnSnapToBottom
+      unmountWhenClosed
+      scroll
     >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
-
-        <YStack gap="$4" style={layoutStyles.contentContainer}>
-          {/* Header */}
-          <XStack style={layoutStyles.headerRow}>
-            <H4>Choose Icon</H4>
-            <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
-          </XStack>
-
-          {/* Scrollable icon groups */}
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <YStack gap="$4" pb="$8">
-              {CATEGORY_ICON_GROUPS.map((group) => (
-                <IconGroup
-                  key={group.name}
-                  name={group.name}
-                  icons={group.icons}
-                  selectedIcon={selectedIcon}
-                  onSelect={handleIconSelect}
-                />
-              ))}
-            </YStack>
-          </ScrollView>
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+      <YStack gap="$4" pb="$8">
+        {CATEGORY_ICON_GROUPS.map((group) => (
+          <IconGroup
+            key={group.name}
+            name={group.name}
+            icons={group.icons}
+            selectedIcon={selectedIcon}
+            onSelect={handleIconSelect}
+          />
+        ))}
+      </YStack>
+    </AppSheetScaffold>
   )
 }
 

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
+  removeItem: jest.fn(),
 }))
 
 jest.mock("./settings-manager", () => ({
@@ -33,6 +34,7 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     jest.setSystemTime(new Date("2025-01-01T00:00:00.000Z"))
     ;(AsyncStorage.getItem as jest.Mock).mockReset()
     ;(AsyncStorage.setItem as jest.Mock).mockReset()
+    ;(AsyncStorage.removeItem as jest.Mock).mockReset()
     ;(loadSettings as jest.Mock).mockReset()
     ;(saveSettings as jest.Mock).mockReset()
     ;(markSettingsChanged as jest.Mock).mockReset()
@@ -78,7 +80,11 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(expenses))
+    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
+      if (key === "expenses:index:v1") return Promise.resolve(null)
+      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
+      return Promise.resolve(null)
+    })
 
     await migratePaymentInstrumentsOnStartup()
 
@@ -92,12 +98,24 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     })
     expect(savedSettings.paymentInstrumentsMigrationVersion).toBe(1)
 
-    expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1)
-    const [, updatedExpensesJson] = (AsyncStorage.setItem as jest.Mock).mock.calls[0]
-    const updatedExpenses = JSON.parse(updatedExpensesJson)
-    expect(updatedExpenses).toHaveLength(2)
+    // Persisted as v1: index + per-item keys
+    const setItemCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
 
-    for (const e of updatedExpenses) {
+    // index write
+    const indexCall = setItemCalls.find((c) => c[0] === "expenses:index:v1")
+    expect(indexCall).toBeTruthy()
+    const updatedIds = JSON.parse(indexCall![1])
+    expect(updatedIds).toEqual(["e1", "e2"])
+
+    const e1Call = setItemCalls.find((c) => c[0] === "expenses:item:v1:e1")
+    const e2Call = setItemCalls.find((c) => c[0] === "expenses:item:v1:e2")
+    expect(e1Call).toBeTruthy()
+    expect(e2Call).toBeTruthy()
+
+    const updatedE1 = JSON.parse(e1Call![1])
+    const updatedE2 = JSON.parse(e2Call![1])
+
+    for (const e of [updatedE1, updatedE2]) {
       expect(e.paymentMethod.instrumentId).toBe("inst_1")
       expect(e.paymentMethod.identifier).toBe("1234")
     }
@@ -129,7 +147,11 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(expenses))
+    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
+      if (key === "expenses:index:v1") return Promise.resolve(null)
+      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
+      return Promise.resolve(null)
+    })
 
     await migratePaymentInstrumentsOnStartup()
 
@@ -169,17 +191,22 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(expenses))
+    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
+      if (key === "expenses:index:v1") return Promise.resolve(null)
+      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
+      return Promise.resolve(null)
+    })
 
     await migratePaymentInstrumentsOnStartup()
 
     // In relink pass it should only write expenses and track bulk edit
     expect(saveSettings).not.toHaveBeenCalled()
 
-    expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1)
-    const [, updatedExpensesJson] = (AsyncStorage.setItem as jest.Mock).mock.calls[0]
-    const updated = JSON.parse(updatedExpensesJson)
-    expect(updated[0].paymentMethod.instrumentId).toBe("inst_1")
+    const setItemCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
+    const updatedExpenseCall = setItemCalls.find((c) => c[0] === "expenses:item:v1:e1")
+    expect(updatedExpenseCall).toBeTruthy()
+    const updated = JSON.parse(updatedExpenseCall![1])
+    expect(updated.paymentMethod.instrumentId).toBe("inst_1")
 
     expect(trackBulkEdit).toHaveBeenCalledTimes(1)
     expect(markSettingsChanged).not.toHaveBeenCalled()

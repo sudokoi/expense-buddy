@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Platform, ViewStyle } from "react-native"
+import { FlatList, Platform, ViewStyle } from "react-native"
 import { useRouter } from "expo-router"
 import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
-
-import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 
 type GitHubUser = { login: string }
@@ -57,6 +56,7 @@ function hasWriteAccess(repo: GitHubRepo): boolean {
 
 export default function GitHubRepoPickerScreen() {
   const router = useRouter()
+  const insets = useSafeAreaInsets()
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -207,68 +207,90 @@ export default function GitHubRepoPickerScreen() {
     [router]
   )
 
-  return (
-    <ScreenContainer>
-      <YStack gap="$4" style={layoutStyles.container}>
-        <XStack style={layoutStyles.headerRow}>
-          <Text fontSize="$7" fontWeight="700">
-            Choose a repository
-          </Text>
-          <Button size="$3" onPress={() => router.back()}>
-            Close
-          </Button>
+  const keyExtractor = useCallback((item: GitHubRepo) => item.full_name, [])
+
+  const renderItem = useCallback(
+    ({ item }: { item: GitHubRepo }) => (
+      <Button
+        size="$4"
+        onPress={() => void handleSelect(item)}
+        style={layoutStyles.repoButton}
+      >
+        <XStack style={layoutStyles.repoButtonInner}>
+          <Text>{item.full_name}</Text>
+          <Text opacity={0.6}>{item.private ? "Private" : "Public"}</Text>
         </XStack>
+      </Button>
+    ),
+    [handleSelect]
+  )
 
-        <Text opacity={0.7}>
-          Personal repositories you own (organization repos aren’t supported). Only repos
-          with write access are shown.
-        </Text>
+  return (
+    <YStack flex={1} bg="$background">
+      <FlatList
+        data={!isLoading && !error ? filtered : []}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: insets.bottom,
+          maxWidth: 700,
+          alignSelf: "center",
+          width: "100%",
+        }}
+        ListHeaderComponent={
+          <YStack gap="$4">
+            <XStack style={layoutStyles.headerRow}>
+              <Text fontSize="$7" fontWeight="700">
+                Choose a repository
+              </Text>
+              <Button size="$3" onPress={() => router.back()}>
+                Close
+              </Button>
+            </XStack>
 
-        {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
+            <Text opacity={0.7}>
+              Personal repositories you own (organization repos aren’t supported). Only
+              repos with write access are shown.
+            </Text>
 
-        {isLoading ? (
-          <XStack gap="$3" style={layoutStyles.loadingRow}>
-            <Spinner />
-            <Text>Loading repositories…</Text>
-          </XStack>
-        ) : null}
+            {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
 
-        {error ? (
-          <YStack gap="$2">
-            <Text color="$red10">{error}</Text>
-            <Button size="$3" onPress={load}>
-              Retry
-            </Button>
-          </YStack>
-        ) : null}
-
-        <Input
-          placeholder="Search owner/repo"
-          value={query}
-          onChangeText={setQuery}
-          disabled={isLoading || !!error}
-        />
-
-        {!isLoading && !error && filtered.length === 0 ? (
-          <Text opacity={0.7}>No writable personal repositories found.</Text>
-        ) : null}
-
-        <YStack gap="$2">
-          {filtered.map((r) => (
-            <Button
-              key={r.full_name}
-              size="$4"
-              onPress={() => void handleSelect(r)}
-              style={layoutStyles.repoButton}
-            >
-              <XStack style={layoutStyles.repoButtonInner}>
-                <Text>{r.full_name}</Text>
-                <Text opacity={0.6}>{r.private ? "Private" : "Public"}</Text>
+            {isLoading ? (
+              <XStack gap="$3" style={layoutStyles.loadingRow}>
+                <Spinner />
+                <Text>Loading repositories…</Text>
               </XStack>
-            </Button>
-          ))}
-        </YStack>
-      </YStack>
-    </ScreenContainer>
+            ) : null}
+
+            {error ? (
+              <YStack gap="$2">
+                <Text color="$red10">{error}</Text>
+                <Button size="$3" onPress={load}>
+                  Retry
+                </Button>
+              </YStack>
+            ) : null}
+
+            <Input
+              placeholder="Search owner/repo"
+              value={query}
+              onChangeText={setQuery}
+              disabled={isLoading || !!error}
+            />
+          </YStack>
+        }
+        ListEmptyComponent={
+          !isLoading && !error ? (
+            <Text opacity={0.7}>No writable personal repositories found.</Text>
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={12}
+        windowSize={10}
+        removeClippedSubviews
+      />
+    </YStack>
   )
 }

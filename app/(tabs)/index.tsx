@@ -1,18 +1,17 @@
 import { format, parseISO, subDays } from "date-fns"
-import { YStack, H4, XStack, Card, Text, Button, SizableText, useTheme } from "tamagui"
+import { YStack, H4, XStack, Card, Text, Button, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
 import React from "react"
-import { ExpenseCard } from "../../components/ui/ExpenseCard"
-import { AmountText } from "../../components/ui/AmountText"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
-import { DynamicCategoryIcon } from "../../components/ui/DynamicCategoryIcon"
+import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
+import type { Category } from "../../types/category"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -48,39 +47,28 @@ const layoutStyles = {
 // Memoized recent expense item component
 interface RecentExpenseItemProps {
   expense: Expense
+  categoryInfo: Pick<Category, "label" | "icon" | "color">
 }
 
 const RecentExpenseItem = React.memo(function RecentExpenseItem({
   expense,
+  categoryInfo,
 }: RecentExpenseItemProps) {
-  const { getCategoryByLabel } = useCategories()
-  const cat = getCategoryByLabel(expense.category)
-
   return (
-    <ExpenseCard>
-      <XStack style={layoutStyles.transactionDetails}>
-        <DynamicCategoryIcon
-          name={cat?.icon || "Circle"}
-          size={16}
-          color={(cat?.color || CATEGORY_COLORS.Other) as `#${string}`}
-        />
-        <YStack>
-          <SizableText size="$4" fontWeight="bold">
-            {expense.note || cat?.label}
-          </SizableText>
-          <Text fontSize="$2" color="$color" opacity={0.6}>
-            {format(parseISO(expense.date), "dd/MM/yyyy")} • {cat?.label}
-          </Text>
-        </YStack>
-      </XStack>
-      <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
-    </ExpenseCard>
+    <ExpenseRow
+      expense={expense}
+      categoryInfo={categoryInfo}
+      instruments={[]}
+      subtitleMode="date"
+      showPaymentMethod={false}
+      showActions={false}
+    />
   )
 })
 
 export default function DashboardScreen() {
   const { state } = useExpenses()
-  const { getCategoryByLabel } = useCategories()
+  const { categories, getCategoryByLabel } = useCategories()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -95,6 +83,14 @@ export default function DashboardScreen() {
     () => state.activeExpenses.slice(0, 5),
     [state.activeExpenses]
   )
+
+  const categoryByLabel = React.useMemo(() => {
+    const map = new Map<string, Category>()
+    for (const category of categories) {
+      map.set(category.label, category)
+    }
+    return map
+  }, [categories])
 
   const chartData = React.useMemo(() => {
     const grouped: Record<string, Record<string, number>> = {}
@@ -281,7 +277,18 @@ export default function DashboardScreen() {
         )}
 
         {recentExpenses.map((expense) => (
-          <RecentExpenseItem key={expense.id} expense={expense} />
+          <RecentExpenseItem
+            key={expense.id}
+            expense={expense}
+            categoryInfo={
+              categoryByLabel.get(expense.category) ??
+              ({
+                label: expense.category,
+                icon: "Circle",
+                color: CATEGORY_COLORS.Other,
+              } satisfies Pick<Category, "label" | "icon" | "color">)
+            }
+          />
         ))}
       </YStack>
     </ScreenContainer>

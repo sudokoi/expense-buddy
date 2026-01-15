@@ -1,22 +1,13 @@
 import { useCallback, memo } from "react"
-import { YStack, XStack, Button, Sheet, H4, useTheme } from "tamagui"
+import { YStack, XStack, useTheme } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
-import { X, Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
+import { AppSheetScaffold } from "./AppSheetScaffold"
 
 // Layout styles
 const layoutStyles = {
-  sheetFrame: {
-    padding: 16,
-  } as ViewStyle,
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  contentContainer: {
-    marginTop: 8,
-  } as ViewStyle,
   colorGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -66,46 +57,25 @@ export function ColorPickerSheet({
     [onSelect, onClose]
   )
 
-  // Don't render content when closed
-  if (!open) {
-    return null
-  }
-
   return (
-    <Sheet
-      modal
+    <AppSheetScaffold
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) onClose()
-      }}
+      onClose={onClose}
+      title="Choose Color"
       snapPoints={[50]}
-      dismissOnSnapToBottom
+      unmountWhenClosed
     >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
-
-        <YStack gap="$4" style={layoutStyles.contentContainer}>
-          {/* Header */}
-          <XStack style={layoutStyles.headerRow}>
-            <H4>Choose Color</H4>
-            <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
-          </XStack>
-
-          {/* Color grid */}
-          <XStack style={layoutStyles.colorGrid}>
-            {CATEGORY_COLOR_PALETTE.map((color) => (
-              <ColorButton
-                key={color}
-                color={color}
-                isSelected={selectedColor === color}
-                onSelect={handleColorSelect}
-              />
-            ))}
-          </XStack>
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+      <XStack style={layoutStyles.colorGrid}>
+        {CATEGORY_COLOR_PALETTE.map((color) => (
+          <ColorButton
+            key={color}
+            color={color}
+            isSelected={selectedColor === color}
+            onSelect={handleColorSelect}
+          />
+        ))}
+      </XStack>
+    </AppSheetScaffold>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
-import { YStack, XStack, Text, Input, Button, Label, Sheet, H4 } from "tamagui"
+import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
-import { Check, X } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import type {
@@ -15,18 +15,9 @@ import {
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { AppSheetScaffold } from "./AppSheetScaffold"
 
 const layoutStyles = {
-  sheetFrame: {
-    padding: 16,
-  } as ViewStyle,
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  contentContainer: {
-    marginTop: 8,
-  } as ViewStyle,
   methodRow: {
     flexWrap: "wrap",
     gap: 8,
@@ -61,6 +52,8 @@ export function PaymentInstrumentFormModal({
   initialMethod,
   onSave,
 }: PaymentInstrumentFormModalProps) {
+  const isEditMode = !!instrument
+
   const handleClose = useCallback(() => {
     onClose()
   }, [onClose])
@@ -68,31 +61,23 @@ export function PaymentInstrumentFormModal({
   const formKey = `${instrument?.id ?? "new"}:${initialMethod ?? ""}`
 
   return (
-    <Sheet
-      modal
+    <AppSheetScaffold
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) handleClose()
-      }}
+      onClose={handleClose}
+      title={isEditMode ? "Edit Instrument" : "Add Instrument"}
       snapPoints={[90]}
-      dismissOnSnapToBottom
     >
-      <Sheet.Overlay />
-      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
-        <Sheet.Handle />
-
-        {open ? (
-          <PaymentInstrumentForm
-            key={formKey}
-            onClose={handleClose}
-            existingInstruments={existingInstruments}
-            instrument={instrument}
-            initialMethod={initialMethod}
-            onSave={onSave}
-          />
-        ) : null}
-      </Sheet.Frame>
-    </Sheet>
+      {open ? (
+        <PaymentInstrumentForm
+          key={formKey}
+          onClose={handleClose}
+          existingInstruments={existingInstruments}
+          instrument={instrument}
+          initialMethod={initialMethod}
+          onSave={onSave}
+        />
+      ) : null}
+    </AppSheetScaffold>
   )
 }
 
@@ -200,12 +185,7 @@ function PaymentInstrumentForm({
   }, [method, nickname, lastDigits, existingInstruments, instrument, onSave, onClose])
 
   return (
-    <YStack gap="$4" style={layoutStyles.contentContainer}>
-      <XStack style={layoutStyles.headerRow}>
-        <H4>{isEditMode ? "Edit Instrument" : "Add Instrument"}</H4>
-        <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
-      </XStack>
-
+    <YStack gap="$4">
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
           Payment Method
