@@ -8,6 +8,7 @@ import {
   useNotifications,
 } from "../../stores/hooks"
 import { format, parseISO } from "date-fns"
+import { getLocalDayKey } from "../../utils/date"
 import { Alert, FlatList, ViewStyle, TextStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SectionHeader } from "../../components/ui/SectionHeader"
@@ -52,9 +53,8 @@ export default function DayExpensesScreen() {
   const dayExpenses = React.useMemo(() => {
     if (!date) return []
     return state.activeExpenses.filter((expense) => {
-      // Assuming date param is YYYY-MM-DD
-      const expenseDate = expense.date.split("T")[0]
-      return expenseDate === date
+      // Match local day (YYYY-MM-DD) to avoid UTC offset shifts.
+      return getLocalDayKey(expense.date) === date
     })
   }, [state.activeExpenses, date])
 

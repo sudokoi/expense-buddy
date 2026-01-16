@@ -12,6 +12,7 @@ import {
   eachDayOfInterval,
   isWithinInterval,
 } from "date-fns"
+import { getLocalDayKey } from "./date"
 import { CATEGORY_COLORS } from "../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 import {
@@ -93,7 +94,6 @@ function resolveInstrumentKeyForExpense(
       instrumentId: undefined,
     }
   }
-
   return {
     method,
     key: makePaymentInstrumentSelectionKey(method, inst.id),
@@ -472,8 +472,7 @@ export function aggregateByDay(
 
   for (const expense of expenses) {
     try {
-      const expenseDate = parseISO(expense.date)
-      const dayKey = format(expenseDate, "yyyy-MM-dd")
+      const dayKey = getLocalDayKey(expense.date)
       const current = dailyTotals.get(dayKey) ?? 0
       dailyTotals.set(dayKey, current + Math.abs(expense.amount))
     } catch {
@@ -529,7 +528,7 @@ export function calculateStatistics(
   const dailyTotals = new Map<string, number>()
   for (const expense of expenses) {
     try {
-      const dayKey = format(parseISO(expense.date), "yyyy-MM-dd")
+      const dayKey = getLocalDayKey(expense.date)
       const current = dailyTotals.get(dayKey) ?? 0
       dailyTotals.set(dayKey, current + Math.abs(expense.amount))
     } catch {

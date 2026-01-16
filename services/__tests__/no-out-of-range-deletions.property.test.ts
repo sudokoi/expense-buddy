@@ -1,5 +1,6 @@
 import fc from "fast-check"
 import { Expense, ExpenseCategory } from "../../types/expense"
+import { getLocalDayKey } from "../../utils/date"
 import { groupExpensesByDay, getFilenameForDay } from "../daily-file-manager"
 
 // =============================================================================
@@ -12,7 +13,7 @@ const dateStringArb = fc
   .map((daysOffset) => {
     const baseDate = new Date("2023-01-01")
     baseDate.setDate(baseDate.getDate() + daysOffset)
-    return baseDate.toISOString().split("T")[0]
+    return getLocalDayKey(baseDate.toISOString())
   })
 
 // =============================================================================
@@ -167,7 +168,7 @@ describe("No Out-of-Range Deletions", () => {
           for (let i = 0; i < rangeSize; i++) {
             const date = new Date(baseDate)
             date.setDate(date.getDate() + startOffset + i)
-            localDates.push(date.toISOString().split("T")[0])
+            localDates.push(getLocalDayKey(date.toISOString()))
           }
 
           // Create local expenses
@@ -186,7 +187,7 @@ describe("No Out-of-Range Deletions", () => {
           for (let i = 0; i < numRemoteFilesBefore; i++) {
             const date = new Date(baseDate)
             date.setDate(date.getDate() + startOffset - 1 - i) // Before the range
-            remoteDates.push(date.toISOString().split("T")[0])
+            remoteDates.push(getLocalDayKey(date.toISOString()))
           }
 
           const remoteFiles: RemoteFile[] = remoteDates.map((date) => ({
@@ -228,7 +229,7 @@ describe("No Out-of-Range Deletions", () => {
           for (let i = 0; i < rangeSize; i++) {
             const date = new Date(baseDate)
             date.setDate(date.getDate() + startOffset + i)
-            localDates.push(date.toISOString().split("T")[0])
+            localDates.push(getLocalDayKey(date.toISOString()))
           }
 
           // Create local expenses
@@ -247,7 +248,7 @@ describe("No Out-of-Range Deletions", () => {
           for (let i = 0; i < numRemoteFilesAfter; i++) {
             const date = new Date(baseDate)
             date.setDate(date.getDate() + startOffset + rangeSize + i) // After the range
-            remoteDates.push(date.toISOString().split("T")[0])
+            remoteDates.push(getLocalDayKey(date.toISOString()))
           }
 
           const remoteFiles: RemoteFile[] = remoteDates.map((date) => ({
@@ -281,7 +282,7 @@ describe("No Out-of-Range Deletions", () => {
           const localDates = localOffsets.map((offset) => {
             const date = new Date(baseDate)
             date.setDate(date.getDate() + offset)
-            return date.toISOString().split("T")[0]
+            return getLocalDayKey(date.toISOString())
           })
 
           // Create local expenses
@@ -310,18 +311,18 @@ describe("No Out-of-Range Deletions", () => {
             if (!localOffsets.includes(offset)) {
               const date = new Date(baseDate)
               date.setDate(date.getDate() + offset)
-              remoteDates.push(date.toISOString().split("T")[0])
+              remoteDates.push(getLocalDayKey(date.toISOString()))
             }
           }
 
           // Add dates outside the range
           const beforeDate = new Date(baseDate)
           beforeDate.setDate(beforeDate.getDate() + minOffset - 5)
-          remoteDates.push(beforeDate.toISOString().split("T")[0])
+          remoteDates.push(getLocalDayKey(beforeDate.toISOString()))
 
           const afterDate = new Date(baseDate)
           afterDate.setDate(afterDate.getDate() + maxOffset + 5)
-          remoteDates.push(afterDate.toISOString().split("T")[0])
+          remoteDates.push(getLocalDayKey(afterDate.toISOString()))
 
           const remoteFiles: RemoteFile[] = remoteDates.map((date) => ({
             name: getFilenameForDay(date),

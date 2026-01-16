@@ -1,4 +1,5 @@
 import { format, parseISO, subDays } from "date-fns"
+import { getLocalDayKey } from "../../utils/date"
 import { YStack, H4, XStack, Card, Text, Button, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
@@ -104,7 +105,7 @@ export default function DashboardScreen() {
 
     // Aggregate using activeExpenses (excludes soft-deleted)
     state.activeExpenses.forEach((e) => {
-      const dateKey = e.date.split("T")[0]
+      const dateKey = getLocalDayKey(e.date)
       if (!grouped[dateKey]) grouped[dateKey] = {}
       if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
       grouped[dateKey][e.category] += e.amount

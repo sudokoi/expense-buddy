@@ -1,5 +1,5 @@
 import { Expense } from "../types/expense"
-import { format, parseISO } from "date-fns"
+import { getLocalDayKey } from "../utils/date"
 
 /**
  * Group expenses by day based on their date field
@@ -8,7 +8,7 @@ export function groupExpensesByDay(expenses: Expense[]): Map<string, Expense[]> 
   const grouped = new Map<string, Expense[]>()
 
   for (const expense of expenses) {
-    const dayKey = format(parseISO(expense.date), "yyyy-MM-dd")
+    const dayKey = getLocalDayKey(expense.date)
     const existing = grouped.get(dayKey)
     if (existing) {
       existing.push(expense)
@@ -42,7 +42,7 @@ export function getDayKeyFromFilename(filename: string): string | null {
 export function getUniqueDays(expenses: Expense[]): string[] {
   const days = new Set<string>()
   for (const expense of expenses) {
-    days.add(format(parseISO(expense.date), "yyyy-MM-dd"))
+    days.add(getLocalDayKey(expense.date))
   }
   return Array.from(days).sort()
 }

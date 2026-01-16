@@ -5,6 +5,7 @@
 import { createStore } from "@xstate/store"
 import { Expense, ExpenseCategory, PaymentMethod } from "../../types/expense"
 import { SyncNotification } from "../../services/sync-manager"
+import { getLocalDayKey } from "../../utils/date"
 
 // Create a fresh store for each test to avoid state pollution
 function createTestExpenseStore(initialExpenses: Expense[] = []) {
@@ -73,7 +74,7 @@ function createTestExpense(overrides: Partial<Expense> = {}): Expense {
     amount: 100,
     category: "Food" as ExpenseCategory,
     note: "Test expense",
-    date: now.split("T")[0],
+    date: getLocalDayKey(now),
     paymentMethod: { type: "Cash" } as PaymentMethod,
     createdAt: now,
     updatedAt: now,

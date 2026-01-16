@@ -14,6 +14,7 @@ import {
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { format, parseISO } from "date-fns"
+import { getLocalDayKey } from "../../utils/date"
 import type {
   ExpenseCategory,
   Expense,
@@ -225,12 +226,13 @@ export default function HistoryScreen() {
     let currentSection: { title: string; data: Expense[] } | null = null
 
     for (const expense of sorted) {
-      // Group by YYYY-MM-DD to avoid parsing the full timestamp for every row.
-      const isoDate = expense.date.slice(0, 10)
-      if (isoDate !== currentIsoDate) {
-        currentIsoDate = isoDate
+      // Group by local day to avoid UTC offset shifts.
+      const expenseDate = parseISO(expense.date)
+      const dayKey = getLocalDayKey(expense.date)
+      if (dayKey !== currentIsoDate) {
+        currentIsoDate = dayKey
         currentSection = {
-          title: format(parseISO(isoDate), "dd/MM/yyyy"),
+          title: format(expenseDate, "dd/MM/yyyy"),
           data: [],
         }
         sections.push(currentSection)

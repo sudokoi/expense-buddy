@@ -6,6 +6,7 @@ import {
   PaymentMethod,
   PaymentMethodType,
 } from "../../types/expense"
+import { getLocalDayKey } from "../../utils/date"
 
 // Extended Expense type with soft delete support (will be added in Task 2)
 type ExpenseWithSoftDelete = Expense & { deletedAt?: string }
@@ -40,7 +41,7 @@ const optionalPaymentMethodArb = fc.option(paymentMethodArb, { nil: undefined })
 
 const dateStringArb = fc
   .integer({ min: 1577836800000, max: 1924905600000 })
-  .map((ms) => new Date(ms).toISOString().split("T")[0])
+  .map((ms) => getLocalDayKey(new Date(ms).toISOString()))
 
 const isoDateStringArb = fc
   .integer({ min: 1577836800000, max: 1924905600000 })

@@ -1,5 +1,14 @@
 # expense-buddy
 
+## 2.1.4
+
+### Patch Changes
+
+- Fix local day grouping across the app
+  - Added a shared local day key helper in `date.ts` and used it for grouping/filtering in history, day view, dashboard, analytics, and daily file logic
+  - Updated property/unit tests to use the local day helper and added boundary checks for midnight/day transitions in date.test.ts and daily-file-manager.test.ts
+  - Aligned date generation in sync-related tests to avoid UTC day shifts.
+
 ## 2.1.3
 
 ### Patch Changes
@@ -14,7 +23,6 @@
 
 - Add "Add another" button to expense form; persist analytics filter settings
   - Added “Add another” button next to “Save Expense”; refactored save handler to support save+reset (stay) vs save+navigate; validation blocks both actions on errors
-  - New device-local AsyncStorage persistence for analytics filters (defaults + normalization)
   - New device-local AsyncStorage persistence for analytics filters (defaults + normalization)
 
 ## 2.1.1
