@@ -12,10 +12,16 @@ permissions:
   contents: write
 
 jobs:
+  ci:
+    name: ✅ Lint, Format & Test
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   build:
     name: 🔨 Build APK (${{ matrix.profile }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    needs: ci
     strategy:
       fail-fast: false
       matrix:
@@ -129,7 +135,7 @@ jobs:
 
             // Tags are returned latest first
             const currentTagIndex = tags.findIndex(t => t.name === tag);
-            
+
             // If tag not found, it might be a manual build for a future tag
             if (currentTagIndex === -1) {
                console.log(`Tag ${tag} not found in repository. Skipping comments.`);
