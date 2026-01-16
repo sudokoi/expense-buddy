@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Label, Accordion } from "tamagui"
 import { Alert, ViewStyle } from "react-native"
-import { Plus, Edit3, Trash, ChevronDown } from "@tamagui/lucide-icons"
+import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { useSettings } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
@@ -161,12 +161,11 @@ export function PaymentInstrumentsSection() {
                         ({active.length})
                       </Text>
                     </XStack>
-                    <ChevronDown
-                      size={18}
-                      style={{
-                        transform: [{ rotate: open ? "180deg" : "0deg" }],
-                      }}
-                    />
+                    {open ? (
+                      <ChevronUp size={20} color="$color" opacity={0.6} />
+                    ) : (
+                      <ChevronDown size={20} color="$color" opacity={0.6} />
+                    )}
                   </>
                 )}
               </Accordion.Trigger>

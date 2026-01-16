@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
 import { Keyboard, ViewStyle, Platform, TextStyle, Linking } from "react-native"
-import { Check, X, ChevronDown } from "@tamagui/lucide-icons"
+import { Check, X, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
@@ -318,12 +318,11 @@ export function GitHubConfigSection({
                   </YStack>
                 )}
               </XStack>
-              <ChevronDown
-                size={18}
-                style={{
-                  transform: [{ rotate: open ? "180deg" : "0deg" }],
-                }}
-              />
+              {open ? (
+                <ChevronUp size={20} color="$color" opacity={0.6} />
+              ) : (
+                <ChevronDown size={20} color="$color" opacity={0.6} />
+              )}
             </>
           )}
         </Accordion.Trigger>

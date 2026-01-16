@@ -135,12 +135,11 @@ export const CategorySection = memo(function CategorySection({
                     ({categories.length})
                   </Text>
                 </XStack>
-                <ChevronDown
-                  size={18}
-                  style={{
-                    transform: [{ rotate: open ? "180deg" : "0deg" }],
-                  }}
-                />
+                {open ? (
+                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                ) : (
+                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                )}
               </>
             )}
           </Accordion.Trigger>

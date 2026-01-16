@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 2.1.3
+
+### Patch Changes
+
+- Fix chevrons; add notifications
+  - Fixed chevron icons in various settings sections to correctly indicate expanded/collapsed state
+  - Added user notifications for added and edited expenses
+
 ## 2.1.2
 
 ### Patch Changes

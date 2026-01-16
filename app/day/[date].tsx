@@ -1,7 +1,12 @@
 import React, { useState, useCallback } from "react"
 import { useLocalSearchParams, Stack } from "expo-router"
 import { YStack, Text } from "tamagui"
-import { useExpenses, useCategories, useSettings } from "../../stores/hooks"
+import {
+  useExpenses,
+  useCategories,
+  useSettings,
+  useNotifications,
+} from "../../stores/hooks"
 import { format, parseISO } from "date-fns"
 import { Alert, FlatList, ViewStyle, TextStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -29,6 +34,7 @@ const layoutStyles = {
 export default function DayExpensesScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const { state, deleteExpense, editExpense } = useExpenses()
+  const { addNotification } = useNotifications()
   const { categories } = useCategories()
   const { settings } = useSettings()
   const insets = useSafeAreaInsets()
@@ -81,10 +87,11 @@ export default function DayExpensesScreen() {
   const handleSaveEdit = useCallback(
     (id: string, updates: Omit<Expense, "id" | "createdAt" | "updatedAt">) => {
       editExpense(id, updates)
+      addNotification("Expense updated", "success")
       setIsEditModalOpen(false)
       setEditingExpense(null)
     },
-    [editExpense]
+    [editExpense, addNotification]
   )
 
   // Handle close edit modal

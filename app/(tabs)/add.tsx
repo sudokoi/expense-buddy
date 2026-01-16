@@ -2,7 +2,12 @@ import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { useExpenses, useSettings, useCategories } from "../../stores/hooks"
+import {
+  useExpenses,
+  useSettings,
+  useCategories,
+  useNotifications,
+} from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
@@ -63,6 +68,7 @@ const layoutStyles = {
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
+  const { addNotification } = useNotifications()
   const {
     settings,
     updateSettings,
@@ -243,6 +249,12 @@ export default function AddExpenseScreen() {
       note,
       paymentMethod,
     })
+
+    if (stayOnAdd) {
+      addNotification("Expense added. Add another.", "success")
+    } else {
+      addNotification("Expense added", "success")
+    }
 
     resetForm()
     if (!stayOnAdd) {
