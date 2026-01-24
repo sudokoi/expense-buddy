@@ -34,6 +34,7 @@ export interface AppSettings {
   syncSettings: boolean // Whether to sync settings to GitHub
   defaultPaymentMethod?: PaymentMethodType // Optional default payment method
   defaultCurrency: string // Default currency code (e.g., "INR")
+  language: string // App language (e.g., "en-US", "system")
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
@@ -52,6 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   syncSettings: false,
   defaultPaymentMethod: undefined,
   defaultCurrency: "INR",
+  language: "system",
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -59,7 +61,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 5,
+  version: 6,
 }
 
 /**
@@ -85,12 +87,18 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     migrated = migrateV4ToV5(migrated as AppSettings)
   }
 
+  if ((typeof migrated.version === "number" ? migrated.version : version) < 6) {
+    // Pure hydration fallback (loadSettings handles async migration from storage)
+    migrated = { ...migrated, language: migrated.language ?? "system", version: 6 }
+  }
+
   return {
     theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
     syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
     defaultPaymentMethod: (migrated as AppSettings).defaultPaymentMethod,
     defaultCurrency:
       (migrated as AppSettings).defaultCurrency ?? DEFAULT_SETTINGS.defaultCurrency,
+    language: (migrated as AppSettings).language ?? DEFAULT_SETTINGS.language,
     autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
     autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
     categories: migrated.categories ?? DEFAULT_CATEGORIES,
@@ -187,6 +195,28 @@ function migrateV4ToV5(settings: AppSettings): AppSettings {
 }
 
 /**
+ * Migrate settings from version 5 to version 6
+ * Adds language field, importing from "user-language" if available
+ */
+async function migrateV5ToV6(settings: AppSettings): Promise<AppSettings> {
+  let language = "system"
+  try {
+    const saved = await AsyncStorage.getItem("user-language")
+    if (saved) {
+      language = saved
+    }
+  } catch (e) {
+    console.warn("Failed to migrate language setting:", e)
+  }
+
+  return {
+    ...settings,
+    language,
+    version: 6,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -212,6 +242,12 @@ export async function loadSettings(): Promise<AppSettings> {
       // Migrate from v4 to v5 (add payment instruments)
       if (parsed.version < 5) {
         parsed = migrateV4ToV5(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Migrate from v5 to v6 (add language)
+      if (parsed.version < 6) {
+        parsed = await migrateV5ToV6(parsed)
         await saveSettings(parsed)
       }
 
@@ -334,6 +370,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     categoriesVersion: settings.categoriesVersion,
     defaultPaymentMethod: settings.defaultPaymentMethod,
     defaultCurrency: settings.defaultCurrency,
+    language: settings.language,
     paymentInstruments: sortedInstruments,
     syncSettings: settings.syncSettings,
     theme: settings.theme,

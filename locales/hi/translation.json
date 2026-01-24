@@ -16,6 +16,7 @@
   "common": {
     "add": "+ जोड़ें",
     "seeAll": "सभी देखें",
+    "edit": "संपादित करें",
     "cancel": "रद्द करें",
     "delete": "हटाएं",
     "save": "सहेजें",
@@ -82,6 +83,16 @@
       "payment": "भुगतान: {{method}}",
       "instrument": "साधन: {{instrument}}"
     },
+    "filtersModal": {
+      "title": "फिल्टर",
+      "reset": "रीसेट",
+      "apply": "लागू करें",
+      "loading": "सहेजे गए फिल्टर लोड हो रहे हैं...",
+      "time": "समय",
+      "category": "श्रेणी",
+      "paymentMethod": "भुगतान विधि",
+      "paymentInstrument": "भुगतान साधन"
+    },
     "timeWindow": {
       "7d": "7 दिन",
       "15d": "15 दिन",
@@ -134,10 +145,13 @@
       "paymentInstruments": "भुगतान साधन",
       "categories": "श्रेणियाँ",
       "github": "गिटहब सिंक",
-      "language": "भाषा",
-      "currency": "मुद्रा",
+      "localization": "स्थानीयकरण",
       "appearance": "दिखावट",
       "about": "ऐप जानकारी"
+    },
+    "localization": {
+      "language": "भाषा",
+      "currency": "मुद्रा"
     },
     "conflicts": {
       "title": "{{count}} Conflict{{s}} Found",
@@ -201,7 +215,8 @@
       "openBrowser": "ब्राउज़र में गिटहब खोलें",
       "browserHelp": "यदि ब्राउज़र नहीं खुला, तो {{url}} पर जाएं",
       "successConfig": "सिंक कॉन्फ़िगरेशन सहेजा गया",
-      "successSignIn": "गिटहब साइन-इन सफल"
+      "successSignIn": "गिटहब साइन-इन सफल",
+      "validationError": "कृपया सत्यापन त्रुटियों को ठीक करें"
     },
     "autoSync": {
       "title": "ऑटो-सिंक और विकल्प",

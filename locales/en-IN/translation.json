@@ -16,6 +16,7 @@
   "common": {
     "add": "+ Add",
     "seeAll": "See All",
+    "edit": "Edit",
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
@@ -81,6 +82,16 @@
       "payment": "Payment: {{method}}",
       "instrument": "Instrument: {{instrument}}"
     },
+    "filtersModal": {
+      "title": "Filters",
+      "reset": "Reset",
+      "apply": "Apply",
+      "loading": "Loading saved filters...",
+      "time": "Time",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "paymentInstrument": "Payment Instrument"
+    },
     "timeWindow": {
       "7d": "7 Days",
       "15d": "15 Days",
@@ -133,10 +144,13 @@
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
-      "language": "LANGUAGE",
-      "currency": "CURRENCY",
+      "localization": "LOCALIZATION",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
+    },
+    "localization": {
+      "language": "Language",
+      "currency": "Currency"
     },
     "conflicts": {
       "title": "{{count}} Conflict{{s}} Found",
@@ -200,7 +214,8 @@
       "openBrowser": "Open GitHub in browser",
       "browserHelp": "If the browser didn’t open, visit {{url}}",
       "successConfig": "Sync configuration saved",
-      "successSignIn": "GitHub sign-in successful"
+      "successSignIn": "GitHub sign-in successful",
+      "validationError": "Please fix the validation errors"
     },
     "autoSync": {
       "title": "Auto-Sync & Options",

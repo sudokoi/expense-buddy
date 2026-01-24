@@ -16,6 +16,7 @@ import { TimeWindowSelector } from "./TimeWindowSelector"
 import { CategoryFilter } from "./CategoryFilter"
 import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
+import { useTranslation } from "react-i18next"
 
 const layoutStyles = {
   sheetFrame: {
@@ -57,6 +58,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   selectedPaymentInstruments,
   onApply,
 }: AnalyticsFiltersSheetProps) {
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
 
   const [draftTimeWindow, setDraftTimeWindow] = useState<TimeWindow>(timeWindow)
@@ -200,10 +202,10 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
           style={{ ...layoutStyles.contentContainer, flex: 1 } as ViewStyle}
         >
           <XStack style={layoutStyles.headerRow}>
-            <H4>Filters</H4>
+            <H4>{t("analytics.filtersModal.title")}</H4>
             <XStack gap="$2" style={{ alignItems: "center" } as ViewStyle}>
               <Button size="$3" chromeless onPress={handleResetDraft}>
-                Reset
+                {t("analytics.filtersModal.reset")}
               </Button>
               <Button
                 size="$3"
@@ -219,25 +221,25 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
             <YStack gap="$2" pb="$6">
               {isHydrating ? (
                 <Text color="$color" opacity={0.6} fontSize="$3">
-                  Loading saved filters...
+                  {t("analytics.filtersModal.loading")}
                 </Text>
               ) : null}
 
-              <CollapsibleSection title="Time">
+              <CollapsibleSection title={t("analytics.filtersModal.time")}>
                 <TimeWindowSelector
                   value={draftTimeWindow}
                   onChange={setDraftTimeWindow}
                 />
               </CollapsibleSection>
 
-              <CollapsibleSection title="Category">
+              <CollapsibleSection title={t("analytics.filtersModal.category")}>
                 <CategoryFilter
                   selectedCategories={draftCategories}
                   onChange={setDraftCategories}
                 />
               </CollapsibleSection>
 
-              <CollapsibleSection title="Payment Method">
+              <CollapsibleSection title={t("analytics.filtersModal.paymentMethod")}>
                 <PaymentMethodFilter
                   selected={draftPaymentMethods}
                   onChange={handlePaymentMethodsChange}
@@ -245,7 +247,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               </CollapsibleSection>
 
               {showPaymentInstrumentFilter && (
-                <CollapsibleSection title="Payment Instrument">
+                <CollapsibleSection title={t("analytics.filtersModal.paymentInstrument")}>
                   <PaymentInstrumentFilter
                     instruments={paymentInstruments}
                     selectedPaymentMethods={draftPaymentMethods}
@@ -268,7 +270,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
             }
           >
             <Button size="$4" themeInverse onPress={handleApply}>
-              Apply
+              {t("analytics.filtersModal.apply")}
             </Button>
           </XStack>
         </YStack>

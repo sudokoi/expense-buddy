@@ -13,6 +13,7 @@ import { AmountText } from "./AmountText"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
+import { useTranslation } from "react-i18next"
 
 const layoutStyles = {
   expenseDetails: {
@@ -46,6 +47,7 @@ export const ExpenseRow = memo(function ExpenseRow({
   onEdit,
   onDelete,
 }: ExpenseRowProps) {
+  const { t } = useTranslation()
   const paymentMethodDisplay = showPaymentMethod
     ? formatPaymentMethodDisplay(expense.paymentMethod, instruments)
     : null
@@ -87,14 +89,14 @@ export const ExpenseRow = memo(function ExpenseRow({
               icon={Edit3}
               chromeless
               onPress={() => onEdit?.(expense)}
-              aria-label="Edit"
+              aria-label={t("common.edit")}
             />
             <Button
               size="$2"
               icon={Trash}
               chromeless
               onPress={() => onDelete?.(expense.id)}
-              aria-label="Delete"
+              aria-label={t("common.delete")}
             />
           </>
         ) : null}

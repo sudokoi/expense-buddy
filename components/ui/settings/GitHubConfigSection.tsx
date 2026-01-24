@@ -173,7 +173,7 @@ export function GitHubConfigSection({
 
     if (!validation.success) {
       setConfigErrors(validation.errors)
-      onNotification("Please fix the validation errors", "error")
+      onNotification(t("settings.github.validationError"), "error")
       return
     }
 
@@ -182,7 +182,7 @@ export function GitHubConfigSection({
 
     const config: SyncConfig = normalized
     onSaveConfig(config)
-  }, [token, repo, branch, onSaveConfig, onNotification])
+  }, [token, repo, branch, onSaveConfig, onNotification, t])
 
   const handleStartGitHubLogin = useCallback(() => {
     const status = getGitHubOAuthClientIdStatus()

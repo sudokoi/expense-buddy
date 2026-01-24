@@ -24,6 +24,7 @@ import {
 import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
 import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
+import { changeLanguage } from "../i18n"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -56,20 +57,30 @@ export const settingsStore = createStore({
         syncConfig?: SyncConfig | null
         paymentMethodSectionExpanded?: boolean
         paymentInstrumentsSectionExpanded?: boolean
+      },
+      enqueue
+    ) => {
+      // Sync i18n language when settings are loaded
+      enqueue.effect(async () => {
+        if (event.settings.language) {
+          await changeLanguage(event.settings.language)
+        }
+      })
+
+      return {
+        ...context,
+        settings: event.settings,
+        settingsSyncState: event.settingsSyncState,
+        syncedSettingsHash: event.syncedSettingsHash,
+        isLoading: false,
+        syncConfig: event.syncConfig ?? context.syncConfig,
+        paymentMethodSectionExpanded:
+          event.paymentMethodSectionExpanded ?? context.paymentMethodSectionExpanded,
+        paymentInstrumentsSectionExpanded:
+          event.paymentInstrumentsSectionExpanded ??
+          context.paymentInstrumentsSectionExpanded,
       }
-    ) => ({
-      ...context,
-      settings: event.settings,
-      settingsSyncState: event.settingsSyncState,
-      syncedSettingsHash: event.syncedSettingsHash,
-      isLoading: false,
-      syncConfig: event.syncConfig ?? context.syncConfig,
-      paymentMethodSectionExpanded:
-        event.paymentMethodSectionExpanded ?? context.paymentMethodSectionExpanded,
-      paymentInstrumentsSectionExpanded:
-        event.paymentInstrumentsSectionExpanded ??
-        context.paymentInstrumentsSectionExpanded,
-    }),
+    },
 
     setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
       ...context,
@@ -163,6 +174,33 @@ export const settingsStore = createStore({
       )
 
       enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    setLanguage: (context, event: { language: string }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        language: event.language,
+      }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await changeLanguage(event.language)
         await saveSettings(newSettings)
         if (newSyncState === "modified") {
           await markSettingsChanged()

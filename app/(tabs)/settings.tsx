@@ -29,12 +29,9 @@ import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSe
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
+import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { Category } from "../../types/category"
-import { LanguageSelector } from "../../components/ui/LanguageSelector"
-import { changeLanguage, getLanguagePreference } from "../../i18n"
 import { useTranslation } from "react-i18next"
-import { CurrencySelector } from "../../components/ui/CurrencySelector"
-import { useFocusEffect } from "expo-router"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -55,13 +52,6 @@ const layoutStyles = {
 
 export default function SettingsScreen() {
   const { t } = useTranslation()
-  const [languagePreference, setLanguagePreference] = useState<string>("system")
-
-  useFocusEffect(
-    useCallback(() => {
-      getLanguagePreference().then(setLanguagePreference)
-    }, [])
-  )
 
   const {
     state,
@@ -99,6 +89,7 @@ export default function SettingsScreen() {
     setSyncSettings,
     setDefaultPaymentMethod,
     setDefaultCurrency,
+    setLanguage,
     setAutoSyncEnabled,
     setAutoSyncTiming,
     replaceSettings,
@@ -298,11 +289,12 @@ export default function SettingsScreen() {
     [setTheme]
   )
 
-  const handleLanguageChange = useCallback((lang: string) => {
-    changeLanguage(lang).then(() => {
-      setLanguagePreference(lang)
-    })
-  }, [])
+  const handleLanguageChange = useCallback(
+    (lang: string) => {
+      setLanguage(lang)
+    },
+    [setLanguage]
+  )
 
   const handleCurrencyChange = useCallback(
     (currency: string) => {
@@ -682,16 +674,12 @@ export default function SettingsScreen() {
           )}
         </SettingsSection>
 
-        {/* LANGUAGE Section */}
-        <SettingsSection title={t("settings.sections.language")}>
-          <LanguageSelector value={languagePreference} onChange={handleLanguageChange} />
-        </SettingsSection>
-
-        {/* CURRENCY Section */}
-        <SettingsSection title={t("settings.sections.currency")}>
-          <CurrencySelector
-            value={settings.defaultCurrency}
-            onChange={handleCurrencyChange}
+        <SettingsSection title={t("settings.sections.localization")}>
+          <LocalizationSection
+            languagePreference={settings.language}
+            onLanguageChange={handleLanguageChange}
+            defaultCurrency={settings.defaultCurrency}
+            onCurrencyChange={handleCurrencyChange}
           />
         </SettingsSection>
 

@@ -242,7 +242,9 @@ export default function DashboardScreen() {
       {/* Chart Section */}
       <YStack gap="$4" style={layoutStyles.chartSection}>
         <XStack style={layoutStyles.transactionsHeader}>
-          <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
+          <YStack flex={1} mr="$2">
+            <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
+          </YStack>
           <Button chromeless size="$2" onPress={handleAnalyticsPress}>
             {t("dashboard.viewAnalytics")}
           </Button>
@@ -289,7 +291,9 @@ export default function DashboardScreen() {
       {/* Recent Transactions List (Mini) */}
       <YStack>
         <XStack style={layoutStyles.transactionsHeader}>
-          <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
+          <YStack flex={1} mr="$2">
+            <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
+          </YStack>
           <Button chromeless size="$2" onPress={handleHistoryPress}>
             {t("common.seeAll")}
           </Button>

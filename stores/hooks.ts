@@ -214,6 +214,11 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setLanguage = useCallback(
+    (language: string) => settingsStore.trigger.setLanguage({ language }),
+    [settingsStore]
+  )
+
   return {
     settings,
     isLoading,
@@ -238,6 +243,7 @@ export const useSettings = () => {
     saveSyncConfig,
     clearSyncConfig,
     setDefaultCurrency,
+    setLanguage,
   }
 }
 

@@ -1,5 +1,4 @@
 import "../tamagui-web.css"
-import "../i18n"
 
 import { useEffect } from "react"
 import { useColorScheme } from "react-native"
@@ -115,6 +114,7 @@ function RootLayoutNav() {
   // Follow the app's effective theme (settings) so StatusBar stays readable
   // even when the user forces light/dark opposite to the OS scheme.
   const { effectiveTheme, isLoading } = useThemeSettings()
+
   const resolvedScheme = isLoading
     ? systemScheme === "dark"
       ? "dark"

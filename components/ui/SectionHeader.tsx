@@ -24,7 +24,7 @@ export function SectionHeader({ children }: SectionHeaderProps) {
       marginBottom="$4"
       numberOfLines={1}
       adjustsFontSizeToFit
-      minimumFontScale={0.7}
+      minimumFontScale={0.4}
     >
       {children}
     </H4Component>
