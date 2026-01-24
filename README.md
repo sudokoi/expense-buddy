@@ -61,6 +61,15 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Load More**: Download older expenses 7 days at a time
 - **Migration Support**: Automatically migrates from old single-file format to daily files
 
+### 🌍 Internationalization (i18n)
+
+- **Multiple Languages**: Full support for **English (US, UK, IN)** and **Hindi (हिंदी)**
+- **Locale Awareness**:
+  - Currency symbols adapt to your choice ($, £, ₹)
+  - Date formats match your region
+- **Per-Transaction Currency**: Track expenses in any currency (useful for travel)
+- **Persistent Preferences**: Remembers your language and default currency settings
+
 ### 🎨 User Experience
 
 - **Cross-Platform**: Works on iOS, Android, and Web

@@ -1,5 +1,18 @@
 # expense-buddy
 
+## 2.2.0
+
+### Minor Changes
+
+- Implement full app internationalization (i18n)
+  - Add support for English (US, UK, IN) and Hindi locales
+  - Configure i18next with persistent language preference
+  - Localize all major screens: Dashboard, History, Add Expense, Analytics, Settings
+  - Add Language and Currency selectors in Settings
+  - Update currency formatting to adhere to locale (legacy fallback to INR)
+  - Update date formatting to use localized strings
+  - Refactor ExpenseRow and input fields to support localized amounts
+
 ## 2.1.4
 
 ### Patch Changes
