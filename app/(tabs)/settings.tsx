@@ -157,12 +157,12 @@ export default function SettingsScreen() {
       // Only prompt to download if this is first-time setup AND no local expenses
       if (isFirstTimeSetup && state.expenses.length === 0) {
         Alert.alert(
-          "Download Existing Data?",
-          "Would you like to download your expenses from GitHub now?",
+          t("settings.downloadPrompt.title"),
+          t("settings.downloadPrompt.message"),
           [
-            { text: "Not Now", style: "cancel" },
+            { text: t("settings.downloadPrompt.notNow"), style: "cancel" },
             {
-              text: "Download",
+              text: t("settings.downloadPrompt.download"),
               onPress: async () => {
                 try {
                   // In restore flows, always attempt to download settings as well.
@@ -171,18 +171,26 @@ export default function SettingsScreen() {
                   if (result.success && result.expenses) {
                     replaceAllExpenses(result.expenses)
                     addNotification(
-                      `Downloaded ${result.expenses.length} expenses`,
+                      t("settings.notifications.downloaded", {
+                        count: result.expenses.length,
+                      }),
                       "success"
                     )
 
                     if (result.settings) {
                       replaceSettings(result.settings)
-                      addNotification("Settings applied from GitHub", "success")
+                      addNotification(
+                        t("settings.notifications.settingsApplied"),
+                        "success"
+                      )
                     }
 
                     if (!settings.autoSyncEnabled) {
                       setAutoSyncEnabled(true)
-                      addNotification("Auto-sync enabled", "info")
+                      addNotification(
+                        t("settings.notifications.autoSyncEnabled"),
+                        "info"
+                      )
                     }
                   } else {
                     addNotification(result.error || result.message, "error")
@@ -232,15 +240,15 @@ export default function SettingsScreen() {
   }, [addNotification, clearSyncConfig])
 
   const handleClearConfig = useCallback(() => {
-    Alert.alert("Confirm Clear", "Remove sync configuration?", [
+    Alert.alert(t("settings.clearDialog.title"), t("settings.clearDialog.message"), [
       { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Clear",
+        text: t("settings.clearDialog.clear"),
         style: "destructive",
         onPress: () => {
           clearSyncConfig()
           setConnectionStatus("idle")
-          addNotification("Configuration cleared", "success")
+          addNotification(t("settings.notifications.configCleared"), "success")
         },
       },
     ])
@@ -346,14 +354,20 @@ export default function SettingsScreen() {
           color: categoryData.color,
           isDefault: categoryData.isDefault,
         })
-        addNotification(`Category "${categoryData.label}" updated`, "success")
+        addNotification(
+          t("settings.notifications.categoryUpdated", { label: categoryData.label }),
+          "success"
+        )
       } else {
         // Add mode - create new category
         addCategory(categoryData)
-        addNotification(`Category "${categoryData.label}" added`, "success")
+        addNotification(
+          t("settings.notifications.categoryAdded", { label: categoryData.label }),
+          "success"
+        )
       }
     },
-    [editingCategory, updateCategory, addCategory, addNotification]
+    [editingCategory, updateCategory, addCategory, addNotification, t]
   )
 
   const handleCategoryReorder = useCallback(
@@ -382,7 +396,7 @@ export default function SettingsScreen() {
     (label: string) => {
       // Prevent deletion of "Other" category
       if (label === "Other") {
-        addNotification('The "Other" category cannot be deleted', "error")
+        addNotification(t("settings.notifications.otherDeleteError"), "error")
         return
       }
 
@@ -390,9 +404,9 @@ export default function SettingsScreen() {
       const message =
         expenseCount > 0
           ? t("settings.categories.deleteDialog.messageReassign", {
-              label,
-              count: expenseCount,
-            })
+            label,
+            count: expenseCount,
+          })
           : t("settings.categories.deleteDialog.messageSimple", { label })
 
       Alert.alert(t("settings.categories.deleteDialog.title"), message, [
@@ -406,7 +420,10 @@ export default function SettingsScreen() {
               reassignExpensesToOther(label)
             }
             deleteCategory(label)
-            addNotification(`Category "${label}" deleted`, "success")
+            addNotification(
+              t("settings.notifications.categoryDeleted", { label }),
+              "success"
+            )
           },
         },
       ])
@@ -459,8 +476,14 @@ export default function SettingsScreen() {
         const moreText = conflictCount > 3 ? `\n\n...and ${conflictCount - 3} more` : ""
 
         Alert.alert(
-          `${conflictCount} Conflict${conflictCount > 1 ? "s" : ""} Found`,
-          `Both local and remote have changes to the same expense${conflictCount > 1 ? "s" : ""}:\n\n${conflictSummary}${moreText}\n\nWhich version would you like to keep?`,
+          t("settings.conflicts.title", {
+            count: conflictCount,
+            s: conflictCount > 1 ? "s" : "",
+          }),
+          t("settings.conflicts.message", {
+            s: conflictCount > 1 ? "s" : "",
+            summary: `${conflictSummary}${moreText}`,
+          }),
           [
             {
               text: t("common.cancel"),
@@ -468,7 +491,7 @@ export default function SettingsScreen() {
               onPress: () => resolve(undefined),
             },
             {
-              text: "Keep Local",
+              text: t("settings.conflicts.keepLocal"),
               onPress: () => {
                 const resolutions: ConflictResolution[] = conflicts.map((c) => ({
                   expenseId: c.expenseId,
@@ -478,7 +501,7 @@ export default function SettingsScreen() {
               },
             },
             {
-              text: "Keep Remote",
+              text: t("settings.conflicts.keepRemote"),
               onPress: () => {
                 const resolutions: ConflictResolution[] = conflicts.map((c) => ({
                   expenseId: c.expenseId,
@@ -516,7 +539,7 @@ export default function SettingsScreen() {
         },
         onSuccess: (result) => {
           // ... (simplified success handler logic for brevity, or reuse)
-          addNotification("Sync complete", "success")
+          addNotification(t("settings.notifications.syncComplete"), "success")
           clearPendingChangesAfterSync()
           if (settings.syncSettings) {
             clearSettingsChangeFlag()
@@ -533,7 +556,7 @@ export default function SettingsScreen() {
           }
         },
         onInSync: () => {
-          addNotification("Already in sync - no changes needed", "success")
+          addNotification(t("settings.notifications.alreadyInSync"), "success")
         },
         onError: (error) => {
           addNotification(error, "error")
@@ -552,6 +575,7 @@ export default function SettingsScreen() {
     replaceAllExpenses,
     replaceSettings,
     replaceCategories,
+    t,
   ])
 
   return (

@@ -2,6 +2,7 @@ import { Text, Card, View, useTheme } from "tamagui"
 import { Globe, Languages } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
+import { useTranslation } from "react-i18next"
 
 interface LanguageSelectorProps {
   value: string
@@ -56,10 +57,17 @@ const languageOptions: LanguageOption[] = [
  */
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const theme = useTheme()
+  const { t } = useTranslation()
+
+  const options = languageOptions.map((opt) => ({
+    ...opt,
+    label:
+      opt.key === "system" ? t("settings.appearance.options.system") : opt.label,
+  }))
 
   return (
     <Card bordered padding="$1" borderRadius="$4" style={styles.container}>
-      {languageOptions.map(({ key, label, Icon }) => {
+      {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
           <Pressable

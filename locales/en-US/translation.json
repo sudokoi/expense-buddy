@@ -113,6 +113,35 @@
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
     },
+    "conflicts": {
+      "title": "{{count}} Conflict{{s}} Found",
+      "message": "Both local and remote have changes to the same expense{{s}}:\n\n{{summary}}\n\nWhich version would you like to keep?",
+      "keepLocal": "Keep Local",
+      "keepRemote": "Keep Remote"
+    },
+    "downloadPrompt": {
+      "title": "Download Existing Data?",
+      "message": "Would you like to download your expenses from GitHub now?",
+      "notNow": "Not Now",
+      "download": "Download"
+    },
+    "clearDialog": {
+      "title": "Confirm Clear",
+      "message": "Remove sync configuration?",
+      "clear": "Clear"
+    },
+    "notifications": {
+      "downloaded": "Downloaded {{count}} expenses",
+      "settingsApplied": "Settings applied from GitHub",
+      "autoSyncEnabled": "Auto-sync enabled",
+      "syncComplete": "Sync complete",
+      "alreadyInSync": "Already in sync - no changes needed",
+      "configCleared": "Configuration cleared",
+      "categoryUpdated": "Category \"{{label}}\" updated",
+      "categoryAdded": "Category \"{{label}}\" added",
+      "categoryDeleted": "Category \"{{label}}\" deleted",
+      "otherDeleteError": "The \"Other\" category cannot be deleted"
+    },
     "defaultPayment": {
       "label": "Default",
       "none": "None",
@@ -218,6 +247,35 @@
     "loading": "Loading...",
     "empty": "No repositories found.",
     "error": "Failed to load repositories",
-    "createPrivate": "Create a new private repository: {{name}}"
+    "createPrivate": "Create a new private repository: {{name}}",
+    "webAuthError": "Repo picker is not available on web. Use a token and enter owner/repo.",
+    "sessionExpired": "Your GitHub session is no longer valid. Please sign in again.",
+    "rateLimit": "GitHub rate limit reached. Please wait a bit and try again.",
+    "accessDenied": "GitHub denied access (403)."
+  },
+  "githubSync": {
+    "errors": {
+      "invalidToken": "Invalid or expired token",
+      "rateLimit": "Rate limit exceeded - try again later",
+      "permission": "Token lacks required permissions",
+      "notFound": "Repository or branch not found",
+      "conflict": "Conflict - branch may have been updated",
+      "invalidRequest": "Invalid request - check file paths",
+      "unknown": "GitHub API error ({{status}})",
+      "network": "Network error: {{error}}",
+      "sessionExpired": "Your GitHub session is no longer valid. Please sign in again.",
+      "accessDenied": "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again.",
+      "repoFormat": "Invalid repository format. Use: username/repo",
+      "noInternet": "No internet connection. Sync will retry when online.",
+      "unavailable": "GitHub is temporarily unavailable. Try again later.",
+      "general": "GitHub sync failed ({{status}})",
+      "timestamp": "Could not extract timestamp from commit",
+      "blob": "Failed to create blob for {{path}}: {{error}}"
+    }
+  },
+  "changelog": {
+    "title": "What's New",
+    "subtitle": "Version {{version}}",
+    "viewFull": "View full release notes"
   }
 }

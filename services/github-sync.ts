@@ -2,6 +2,8 @@
  * GitHub API client for syncing expense data
  */
 
+import i18next from "../i18n"
+
 interface GitHubFileResponse {
   content: string
   sha: string
@@ -53,16 +55,16 @@ function toFriendlyGitHubAuthMessage(params: {
   rawMessage?: string
 }): string {
   if (params.status === 401) {
-    return "Your GitHub session is no longer valid. Please sign in again."
+    return i18next.t("githubSync.errors.sessionExpired")
   }
 
   if (params.isRateLimit) {
-    return "GitHub rate limit reached. Please wait a bit and try again."
+    return i18next.t("githubSync.errors.rateLimit")
   }
 
   // 403 (non-rate-limit) typically means insufficient permissions or access restrictions.
   // For our UX, treat it as requiring re-auth so the user can re-authorize/select a different repo.
-  return "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again."
+  return i18next.t("githubSync.errors.accessDenied")
 }
 
 async function toGitHubApiError(response: Response): Promise<GitHubApiError> {
@@ -89,7 +91,7 @@ async function toGitHubApiError(response: Response): Promise<GitHubApiError> {
     shouldSignOut: false,
     message: rawMessage
       ? `GitHub API error (${response.status}): ${rawMessage}`
-      : `GitHub API error (${response.status})`,
+      : i18next.t("githubSync.errors.unknown", { status: response.status }),
   })
 }
 
@@ -204,39 +206,39 @@ function mapHttpError(
 ): { error: string; errorCode: BatchCommitResult["errorCode"] } {
   switch (status) {
     case 401:
-      return { error: "Invalid or expired token", errorCode: "AUTH" }
+      return { error: i18next.t("githubSync.errors.invalidToken"), errorCode: "AUTH" }
     case 403:
       return {
         error: message?.includes("rate limit")
-          ? "Rate limit exceeded - try again later"
-          : "Token lacks required permissions",
+          ? i18next.t("githubSync.errors.rateLimit")
+          : i18next.t("githubSync.errors.permission"),
         errorCode: message?.includes("rate limit") ? "RATE_LIMIT" : "PERMISSION",
       }
     case 404:
       return {
-        error: "Repository or branch not found",
+        error: i18next.t("githubSync.errors.notFound"),
         errorCode: "NOT_FOUND",
       }
     case 409:
       return {
-        error: "Conflict - branch may have been updated",
+        error: i18next.t("githubSync.errors.conflict"),
         errorCode: "CONFLICT",
       }
     case 422:
       return {
         error: message
-          ? `Invalid request: ${message}`
-          : "Invalid request - check file paths",
+          ? `${i18next.t("githubSync.errors.invalidRequest")}: ${message}`
+          : i18next.t("githubSync.errors.invalidRequest"),
         errorCode: "UNKNOWN",
       }
     case 429:
       return {
-        error: "Rate limit exceeded - try again later",
+        error: i18next.t("githubSync.errors.rateLimit"),
         errorCode: "RATE_LIMIT",
       }
     default:
       return {
-        error: message || `GitHub API error (${status})`,
+        error: message || i18next.t("githubSync.errors.unknown", { status }),
         errorCode: "UNKNOWN",
       }
   }
@@ -261,7 +263,10 @@ export async function getBranchRef(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     const response = await fetch(
@@ -283,7 +288,10 @@ export async function getBranchRef(
     const data: GitRefResponse = await response.json()
     return { sha: data.object.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -306,7 +314,10 @@ export async function getCommitTree(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     const response = await fetch(
@@ -328,7 +339,10 @@ export async function getCommitTree(
     const data: GitCommitResponse = await response.json()
     return { treeSha: data.tree.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -351,7 +365,10 @@ export async function createBlob(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     // Base64 encode the content
@@ -382,7 +399,10 @@ export async function createBlob(
     const data: GitBlobResponse = await response.json()
     return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -407,7 +427,10 @@ export async function createTree(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     // Build tree entries - for deletions, sha is null; for uploads, sha is the blob SHA
@@ -443,7 +466,10 @@ export async function createTree(
     const data: GitTreeResponse = await response.json()
     return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -470,7 +496,10 @@ export async function createCommit(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     const response = await fetch(
@@ -499,7 +528,10 @@ export async function createCommit(
     const data: GitNewCommitResponse = await response.json()
     return { sha: data.sha }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -524,7 +556,10 @@ export async function updateRef(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format", errorCode: "UNKNOWN" }
+      return {
+        error: i18next.t("githubSync.errors.repoFormat"),
+        errorCode: "UNKNOWN",
+      }
     }
 
     const response = await fetch(
@@ -550,7 +585,10 @@ export async function updateRef(
 
     return { success: true }
   } catch (error) {
-    return { error: `Network error: ${error}`, errorCode: "UNKNOWN" }
+    return {
+      error: i18next.t("githubSync.errors.network", { error }),
+      errorCode: "UNKNOWN",
+    }
   }
 }
 
@@ -615,7 +653,10 @@ export async function batchCommit(
     if ("error" in blobResult) {
       return {
         success: false,
-        error: `Failed to create blob for ${upload.path}: ${blobResult.error}`,
+        error: i18next.t("githubSync.errors.blob", {
+          path: upload.path,
+          error: blobResult.error,
+        }),
         errorCode: blobResult.errorCode,
       }
     }
@@ -686,7 +727,7 @@ export async function getLatestCommitTimestamp(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { error: "Invalid repository format" }
+      return { error: i18next.t("githubSync.errors.repoFormat") }
     }
 
     // Get the latest commit on the branch
@@ -705,17 +746,19 @@ export async function getLatestCommitTimestamp(
       // Provide user-friendly error messages for common scenarios
       switch (response.status) {
         case 401:
-          return { error: "Invalid or expired GitHub token" }
+          return { error: i18next.t("githubSync.errors.invalidToken") }
         case 403:
-          return { error: "GitHub rate limit exceeded or access denied" }
+          return { error: i18next.t("githubSync.errors.rateLimit") }
         case 404:
-          return { error: "Repository or branch not found" }
+          return { error: i18next.t("githubSync.errors.notFound") }
         case 500:
         case 502:
         case 503:
-          return { error: "GitHub is temporarily unavailable. Try again later." }
+          return { error: i18next.t("githubSync.errors.unavailable") }
         default:
-          return { error: `GitHub sync failed (${response.status})` }
+          return {
+            error: i18next.t("githubSync.errors.general", { status: response.status }),
+          }
       }
     }
 
@@ -732,7 +775,7 @@ export async function getLatestCommitTimestamp(
       latestCommit.commit?.author?.date || latestCommit.commit?.committer?.date
 
     if (!timestamp) {
-      return { error: "Could not extract timestamp from commit" }
+      return { error: i18next.t("githubSync.errors.timestamp") }
     }
 
     return { timestamp }
@@ -744,9 +787,9 @@ export async function getLatestCommitTimestamp(
       errorMessage.includes("Network request failed") ||
       errorMessage.includes("TypeError")
     ) {
-      return { error: "No internet connection. Sync will retry when online." }
+      return { error: i18next.t("githubSync.errors.noInternet") }
     }
-    return { error: `Sync failed: ${error}` }
+    return { error: i18next.t("githubSync.errors.network", { error }) }
   }
 }
 
@@ -771,7 +814,7 @@ export async function validatePAT(
     if (!owner || !repoName) {
       return {
         valid: false,
-        error: "Invalid repository format. Use: username/repo",
+        error: i18next.t("githubSync.errors.repoFormat"),
       }
     }
 

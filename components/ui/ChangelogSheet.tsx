@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { Platform, TextStyle } from "react-native"
 import { Button, Text, YStack } from "tamagui"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { useTranslation } from "react-i18next"
 
 const layoutStyles = {
   notesText: {
@@ -24,6 +25,7 @@ export function ChangelogSheet({
   onClose,
   onViewFullReleaseNotes,
 }: ChangelogSheetProps) {
+  const { t } = useTranslation()
   const normalizedNotes = useMemo(
     () => releaseNotes.replace(/\r\n/g, "\n"),
     [releaseNotes]
@@ -33,18 +35,18 @@ export function ChangelogSheet({
     <AppSheetScaffold
       open={open}
       onClose={onClose}
-      title={"What's New"}
-      subtitle={`Version ${version}`}
+      title={t("changelog.title")}
+      subtitle={t("changelog.subtitle", { version })}
       snapPoints={[85]}
       unmountWhenClosed
       scroll
       footer={
         <>
           <Button size="$4" onPress={onViewFullReleaseNotes} themeInverse>
-            View full release notes
+            {t("changelog.viewFull")}
           </Button>
           <Button size="$4" onPress={onClose}>
-            Close
+            {t("common.close") || "Close"}
           </Button>
         </>
       }
