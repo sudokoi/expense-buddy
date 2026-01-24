@@ -61,8 +61,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
 
   const options = languageOptions.map((opt) => ({
     ...opt,
-    label:
-      opt.key === "system" ? t("settings.appearance.options.system") : opt.label,
+    label: opt.key === "system" ? t("settings.appearance.options.system") : opt.label,
   }))
 
   return (

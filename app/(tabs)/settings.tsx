@@ -187,10 +187,7 @@ export default function SettingsScreen() {
 
                     if (!settings.autoSyncEnabled) {
                       setAutoSyncEnabled(true)
-                      addNotification(
-                        t("settings.notifications.autoSyncEnabled"),
-                        "info"
-                      )
+                      addNotification(t("settings.notifications.autoSyncEnabled"), "info")
                     }
                   } else {
                     addNotification(result.error || result.message, "error")
@@ -404,9 +401,9 @@ export default function SettingsScreen() {
       const message =
         expenseCount > 0
           ? t("settings.categories.deleteDialog.messageReassign", {
-            label,
-            count: expenseCount,
-          })
+              label,
+              count: expenseCount,
+            })
           : t("settings.categories.deleteDialog.messageSimple", { label })
 
       Alert.alert(t("settings.categories.deleteDialog.title"), message, [
