@@ -2,6 +2,7 @@ import { memo, useMemo } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { ViewStyle } from "react-native"
 import { CollapsibleSection } from "./CollapsibleSection"
+import { useTranslation } from "react-i18next"
 import type { PaymentInstrumentChartDataItem } from "../../utils/analytics-calculations"
 
 interface PaymentInstrumentBreakdownSectionProps {
@@ -43,14 +44,15 @@ export const PaymentInstrumentBreakdownSection = memo(
   function PaymentInstrumentBreakdownSection({
     data,
   }: PaymentInstrumentBreakdownSectionProps) {
+    const { t } = useTranslation()
     const total = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 
     if (data.length === 0) {
       return (
-        <CollapsibleSection title="Spending by Payment Instrument">
+        <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
           <YStack style={styles.emptyContainer}>
             <Text color="$color" opacity={0.6}>
-              No card/UPI expenses for this period
+              {t("analytics.charts.paymentInstrument.noData")}
             </Text>
           </YStack>
         </CollapsibleSection>
@@ -58,11 +60,11 @@ export const PaymentInstrumentBreakdownSection = memo(
     }
 
     return (
-      <CollapsibleSection title="Spending by Payment Instrument">
+      <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
         <YStack gap="$2">
           <XStack style={styles.row}>
             <Text color="$color" opacity={0.6}>
-              Total
+              {t("analytics.charts.common.total")}
             </Text>
             <Text fontWeight="bold">₹{total.toFixed(0)}</Text>
           </XStack>

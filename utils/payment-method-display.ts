@@ -1,6 +1,7 @@
 import { PaymentMethod } from "../types/expense"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { formatPaymentInstrumentLabel } from "../services/payment-instruments"
+import i18next from "i18next"
 
 /**
  * Format payment method for display
@@ -18,17 +19,20 @@ export function formatPaymentMethodDisplay(
     return undefined
   }
 
+  const methodLabel = i18next.t(`paymentMethods.${paymentMethod.type}`)
+
   if (paymentMethod.instrumentId && instruments && instruments.length > 0) {
     const inst = instruments.find((i) => i.id === paymentMethod.instrumentId)
     if (inst && !inst.deletedAt) {
-      return `${paymentMethod.type} • ${formatPaymentInstrumentLabel(inst)}`
+      return `${methodLabel} • ${formatPaymentInstrumentLabel(inst)}`
     }
-    return `${paymentMethod.type} • Others`
+    const othersLabel = i18next.t("instruments.dropdown.others").split(" / ")[0]
+    return `${methodLabel} • ${othersLabel}`
   }
 
   if (paymentMethod.identifier) {
-    return `${paymentMethod.type} (${paymentMethod.identifier})`
+    return `${methodLabel} (${paymentMethod.identifier})`
   }
 
-  return paymentMethod.type
+  return methodLabel
 }

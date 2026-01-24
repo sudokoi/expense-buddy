@@ -24,6 +24,7 @@ import {
   loadSyncConfig,
 } from "./sync-manager"
 import { TrueConflict, MergeResult } from "./merge-engine"
+import i18next from "i18next"
 
 // =============================================================================
 // Types
@@ -137,7 +138,7 @@ export const syncMachine = setup({
       if (!config) {
         return {
           success: false,
-          error: "No sync configuration found",
+          error: i18next.t("githubSync.manager.noConfigFound"),
         }
       }
 
@@ -325,7 +326,8 @@ export const syncMachine = setup({
             actions: assign({
               syncResult: ({ event }) => event.output.syncResult,
               mergeResult: ({ event }) => event.output.mergeResult,
-              error: ({ event }) => event.output.error || "Sync failed",
+              error: ({ event }) =>
+                event.output.error || i18next.t("githubSync.manager.syncFailed"),
             }),
           },
         ],
@@ -398,7 +400,7 @@ export const syncMachine = setup({
             actions: assign({
               syncResult: ({ event }) => event.output.syncResult,
               error: ({ event }) =>
-                event.output.error || "Push failed after conflict resolution",
+                event.output.error || i18next.t("githubSync.manager.syncFailed"),
             }),
           },
         ],
@@ -434,14 +436,18 @@ export const syncMachine = setup({
         const authStatus = context.syncResult?.authStatus
         if (authStatus === 401 || authStatus === 403) {
           const message =
-            context.syncResult?.error || context.error || "GitHub authentication required"
+            context.syncResult?.error ||
+            context.error ||
+            i18next.t("githubSync.manager.authRequired")
           context.callbacks.onAuthError?.({
             status: authStatus,
             message,
             shouldSignOut: Boolean(context.syncResult?.shouldSignOut),
           })
         }
-        context.callbacks.onError?.(context.error || "Unknown error")
+        context.callbacks.onError?.(
+          context.error || i18next.t("githubSync.errors.unknown", { status: "unknown" })
+        )
       },
       on: {
         RESET: "idle",

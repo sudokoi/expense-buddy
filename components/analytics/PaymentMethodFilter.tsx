@@ -2,6 +2,7 @@ import React, { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
 
@@ -44,6 +45,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
   selected,
   onChange,
 }: PaymentMethodFilterProps) {
+  const { t } = useTranslation()
   const isAllSelected = selected.length === 0
 
   const chipItems = useMemo(() => {
@@ -106,6 +108,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           const isSelected = selected.includes(item.key)
           const color = getColorForKey(item.key)
           const Icon = item.Icon
+          const label = item.key === NONE_KEY ? "None" : t(`paymentMethods.${item.label}`)
 
           return (
             <Button
@@ -120,9 +123,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
                 ) : undefined
               }
             >
-              <Button.Text color={isSelected ? "white" : "$color"}>
-                {item.label}
-              </Button.Text>
+              <Button.Text color={isSelected ? "white" : "$color"}>{label}</Button.Text>
             </Button>
           )
         })}

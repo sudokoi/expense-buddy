@@ -1,6 +1,8 @@
 import { memo } from "react"
 import { XStack, YStack, Card, Text, H4 } from "tamagui"
-import { format, parseISO } from "date-fns"
+
+import { parseISO } from "date-fns"
+import { formatDate } from "../../utils/date"
 import { ViewStyle, TextStyle } from "react-native"
 import { AnalyticsStatistics } from "../../utils/analytics-calculations"
 import { CARD_COLORS } from "../../constants/theme-colors"
@@ -31,9 +33,12 @@ export const StatisticsCards = memo(function StatisticsCards({
   statistics,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
-  const formatDate = (dateStr: string): string => {
+
+  // ...
+
+  const formatDateStr = (dateStr: string): string => {
     try {
-      return format(parseISO(dateStr), "MMM d")
+      return formatDate(parseISO(dateStr), "MMM d")
     } catch {
       return dateStr
     }
@@ -139,7 +144,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            {statistics.highestDay ? formatDate(statistics.highestDay.date) : "—"}
+            {statistics.highestDay ? formatDateStr(statistics.highestDay.date) : "—"}
           </H4>
           {statistics.highestDay && (
             <Text fontSize="$2" color={CARD_COLORS.purple.text}>

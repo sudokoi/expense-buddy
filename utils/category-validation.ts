@@ -1,10 +1,45 @@
 import { z } from "zod"
+import { TFunction } from "i18next"
 import { ALL_CATEGORY_ICONS } from "../constants/category-icons"
 import { CATEGORY_COLOR_PALETTE } from "../constants/category-colors"
 
 /**
- * Zod schema for category label validation
- * Validates length (1-30 chars), non-whitespace, and alphanumeric content
+ * Creates a Zod schema for category label validation with localized messages.
+ * Validates length (1-30 chars), non-whitespace, and alphanumeric content.
+ *
+ * @param t - Translation function from i18next
+ * @returns Zod schema for category label validation
+ */
+export function getCategoryLabelSchema(t: TFunction) {
+  return z
+    .string()
+    .min(1, t("validation.category.nameRequired"))
+    .max(30, t("validation.category.nameMaxLength"))
+    .refine((val) => val.trim().length > 0, {
+      message: t("validation.category.nameWhitespace"),
+    })
+    .refine((val) => /[a-zA-Z0-9]/.test(val), {
+      message: t("validation.category.nameAlphanumeric"),
+    })
+}
+
+/**
+ * Creates a Zod schema for full category validation with localized messages.
+ * Validates label, icon (from curated list), and color (hex format).
+ *
+ * @param t - Translation function from i18next
+ * @returns Zod schema for category validation
+ */
+export function getCategorySchema(t: TFunction) {
+  return z.object({
+    label: getCategoryLabelSchema(t),
+    icon: z.string().min(1, t("validation.category.iconRequired")),
+    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, t("validation.category.colorInvalid")),
+  })
+}
+
+/**
+ * Default schema with English messages (for tests and backward compatibility)
  */
 export const categoryLabelSchema = z
   .string()
@@ -18,8 +53,7 @@ export const categoryLabelSchema = z
   })
 
 /**
- * Zod schema for full category validation
- * Validates label, icon (from curated list), and color (hex format)
+ * Default schema with English messages (for tests and backward compatibility)
  */
 export const categorySchema = z.object({
   label: categoryLabelSchema,
@@ -37,19 +71,22 @@ export type CategoryValidationResult =
   | { success: false; errors: Record<string, string> }
 
 /**
- * Validate category form data with uniqueness check
+ * Validate category form data with uniqueness check and optional localization.
  * @param data - The form data to validate (label, icon, color)
  * @param existingLabels - Array of existing category labels for uniqueness check
  * @param currentLabel - Optional current label (for edit mode - excludes self from uniqueness check)
+ * @param t - Optional translation function for localized messages
  * @returns Validation result with success/data or errors
  */
 export function validateCategoryForm(
   data: { label: string; icon: string; color: string },
   existingLabels: string[],
-  currentLabel?: string
+  currentLabel?: string,
+  t?: TFunction
 ): CategoryValidationResult {
-  // First validate the schema
-  const result = categorySchema.safeParse(data)
+  // Use localized schema if t is provided
+  const schema = t ? getCategorySchema(t) : categorySchema
+  const result = schema.safeParse(data)
 
   const errors: Record<string, string> = {}
 
@@ -75,7 +112,9 @@ export function validateCategoryForm(
   })
 
   if (isDuplicate && !errors["label"]) {
-    errors["label"] = "A category with this name already exists"
+    errors["label"] = t
+      ? t("validation.category.nameDuplicate")
+      : "A category with this name already exists"
   }
 
   if (Object.keys(errors).length > 0) {

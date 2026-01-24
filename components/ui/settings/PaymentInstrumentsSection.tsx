@@ -196,14 +196,18 @@ export function PaymentInstrumentsSection() {
                               chromeless
                               icon={Edit3}
                               onPress={() => handleEdit(inst)}
-                              aria-label="Edit"
+                              aria-label={t("common.editLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
                             />
                             <Button
                               size="$2"
                               chromeless
                               icon={Trash}
                               onPress={() => handleDelete(inst)}
-                              aria-label="Remove"
+                              aria-label={t("common.removeLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
                             />
                           </XStack>
                         ))}

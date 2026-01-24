@@ -3,6 +3,7 @@ import { Pressable, ViewStyle } from "react-native"
 import { Ban } from "@tamagui/lucide-icons"
 import { PaymentMethodType } from "../../types/expense"
 import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
+import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 
 interface DefaultPaymentMethodSelectorProps {
@@ -43,6 +44,7 @@ export function DefaultPaymentMethodSelector({
   value,
   onChange,
 }: DefaultPaymentMethodSelectorProps) {
+  const { t } = useTranslation()
   const theme = useTheme()
 
   const renderOption = (
@@ -50,37 +52,42 @@ export function DefaultPaymentMethodSelector({
     label: string,
     Icon: PaymentMethodConfig["icon"] | typeof Ban,
     isSelected: boolean
-  ) => (
-    <Pressable
-      key={key}
-      onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
-      accessibilityRole="button"
-      accessibilityState={{ selected: isSelected }}
-      accessibilityLabel={`${label} payment method`}
-      style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
-    >
-      <View
-        borderWidth={2}
-        bg={isSelected ? "$backgroundFocus" : "transparent"}
-        borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
-        style={styles.optionInner}
+  ) => {
+    const displayLabel =
+      key === "none" ? t("settings.defaultPayment.none") : t(`paymentMethods.${key}`)
+
+    return (
+      <Pressable
+        key={key}
+        onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isSelected }}
+        accessibilityLabel={`${displayLabel} payment method`}
+        style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
       >
-        <Icon
-          size={ICON_SIZE}
-          color={getColorValue(theme.color)}
-          opacity={isSelected ? 1 : 0.7}
-        />
-        <Text
-          fontSize="$2"
-          fontWeight={isSelected ? "600" : "400"}
-          color="$color"
-          opacity={isSelected ? 1 : 0.7}
+        <View
+          borderWidth={2}
+          bg={isSelected ? "$backgroundFocus" : "transparent"}
+          borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
+          style={styles.optionInner}
         >
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  )
+          <Icon
+            size={ICON_SIZE}
+            color={getColorValue(theme.color)}
+            opacity={isSelected ? 1 : 0.7}
+          />
+          <Text
+            fontSize="$2"
+            fontWeight={isSelected ? "600" : "400"}
+            color="$color"
+            opacity={isSelected ? 1 : 0.7}
+          >
+            {displayLabel}
+          </Text>
+        </View>
+      </Pressable>
+    )
+  }
 
   return (
     <Card bordered padding="$2" borderRadius="$4" gap="$2">

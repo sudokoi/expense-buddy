@@ -3,6 +3,7 @@ import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
 import { Check } from "@tamagui/lucide-icons"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { useTranslation } from "react-i18next"
 import { PaymentMethodCard } from "./PaymentMethodCard"
 import type {
   PaymentInstrument,
@@ -52,6 +53,7 @@ export function PaymentInstrumentFormModal({
   initialMethod,
   onSave,
 }: PaymentInstrumentFormModalProps) {
+  const { t } = useTranslation()
   const isEditMode = !!instrument
 
   const handleClose = useCallback(() => {
@@ -64,7 +66,11 @@ export function PaymentInstrumentFormModal({
     <AppSheetScaffold
       open={open}
       onClose={handleClose}
-      title={isEditMode ? "Edit Instrument" : "Add Instrument"}
+      title={
+        isEditMode
+          ? t("settings.instruments.form.editTitle")
+          : t("settings.instruments.form.addTitle")
+      }
       snapPoints={[90]}
     >
       {open ? (
@@ -102,6 +108,7 @@ function PaymentInstrumentForm({
   const [nickname, setNickname] = useState(instrument?.nickname ?? "")
   const [lastDigits, setLastDigits] = useState(instrument?.lastDigits ?? "")
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { t } = useTranslation()
 
   const selectedMethodConfig = useMemo(() => getInstrumentMethodConfig(method), [method])
 
@@ -188,7 +195,7 @@ function PaymentInstrumentForm({
     <YStack gap="$4">
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          Payment Method
+          {t("settings.instruments.form.paymentMethod")}
         </Label>
         <XStack style={layoutStyles.methodRow}>
           {INSTRUMENT_METHODS.map((m) => {
@@ -211,11 +218,11 @@ function PaymentInstrumentForm({
 
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          Nickname
+          {t("settings.instruments.form.nickname")}
         </Label>
         <Input
           size="$4"
-          placeholder="e.g., HDFC Visa"
+          placeholder={t("settings.instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
           maxLength={30}
@@ -234,11 +241,14 @@ function PaymentInstrumentForm({
 
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          {selectedMethodConfig?.identifierLabel ?? "Last digits"}
+          {selectedMethodConfig?.identifierLabel ??
+            t("settings.instruments.form.lastDigits")}
         </Label>
         <Input
           size="$4"
-          placeholder={`Enter ${getLastDigitsLength(method)} digits`}
+          placeholder={t("settings.instruments.form.identifierPlaceholder", {
+            count: getLastDigitsLength(method),
+          })}
           keyboardType="numeric"
           value={lastDigits}
           onChangeText={handleLastDigitsChange}
@@ -258,7 +268,7 @@ function PaymentInstrumentForm({
 
       <XStack style={layoutStyles.buttonRow}>
         <Button size="$4" chromeless onPress={onClose}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           size="$4"
@@ -267,7 +277,7 @@ function PaymentInstrumentForm({
           icon={<Check size="$1" />}
           fontWeight="bold"
         >
-          {isEditMode ? "Save" : "Add"}
+          {isEditMode ? t("common.save") : t("common.add")}
         </Button>
       </XStack>
     </YStack>

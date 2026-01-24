@@ -1,4 +1,5 @@
 import { Expense, PaymentMethodType } from "../types/expense"
+import i18next from "i18next"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
@@ -163,11 +164,14 @@ export function aggregateByPaymentInstrument(
   for (const [key, entry] of totals) {
     if (entry.value <= 0) continue
 
-    let text = `${entry.method} • Others`
+    // ... existing imports
+
+    // ... inside aggregateByPaymentInstrument function
+    let text = `${i18next.t(`paymentMethods.${entry.method}`)} • ${i18next.t("instruments.dropdown.others").split(" / ")[0]}`
     if (!entry.isOther && entry.instrumentId) {
       const inst = findInstrumentById(instruments, entry.instrumentId)
       if (inst && !inst.deletedAt) {
-        text = `${entry.method} • ${formatPaymentInstrumentLabel(inst)}`
+        text = `${i18next.t(`paymentMethods.${entry.method}`)} • ${formatPaymentInstrumentLabel(inst)}`
       }
     }
 
@@ -445,7 +449,7 @@ export function aggregateByPaymentMethod(
       pieData.push({
         value: amount,
         color: PAYMENT_METHOD_COLORS[paymentMethodType],
-        text: paymentMethodType,
+        text: i18next.t(`paymentMethods.${paymentMethodType}`),
         percentage: (amount / total) * 100,
         paymentMethodType,
       })

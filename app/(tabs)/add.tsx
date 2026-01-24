@@ -211,13 +211,16 @@ export default function AddExpenseScreen() {
     Keyboard.dismiss()
 
     // Validate with Zod schema
-    const validation = validateExpenseForm({
-      amount,
-      category,
-      note,
-      paymentMethodType: effectivePaymentMethod,
-      paymentMethodId,
-    })
+    const validation = validateExpenseForm(
+      {
+        amount,
+        category,
+        note,
+        paymentMethodType: effectivePaymentMethod,
+        paymentMethodId,
+      },
+      t
+    )
 
     if (!validation.success) {
       setErrors(validation.errors)
@@ -419,7 +422,7 @@ export default function AddExpenseScreen() {
                     <Label color="$color" opacity={0.6} fontSize="$2">
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
-                      (Optional)
+                      {t("common.optional")}
                     </Label>
 
                     {effectivePaymentMethod &&

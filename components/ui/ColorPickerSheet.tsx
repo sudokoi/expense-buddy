@@ -5,6 +5,7 @@ import { Check } from "@tamagui/lucide-icons"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { useTranslation } from "react-i18next"
 
 // Layout styles
 const layoutStyles = {
@@ -48,6 +49,7 @@ export function ColorPickerSheet({
   selectedColor,
   onSelect,
 }: ColorPickerSheetProps) {
+  const { t } = useTranslation()
   // Handle color selection - select and close
   const handleColorSelect = useCallback(
     (color: string) => {
@@ -61,7 +63,7 @@ export function ColorPickerSheet({
     <AppSheetScaffold
       open={open}
       onClose={onClose}
-      title="Choose Color"
+      title={t("settings.categories.form.chooseColor")}
       snapPoints={[50]}
       unmountWhenClosed
     >

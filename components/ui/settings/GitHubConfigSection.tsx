@@ -169,7 +169,7 @@ export function GitHubConfigSection({
     }
 
     // Validate GitHub configuration with Zod
-    const validation = validateGitHubConfig(normalized)
+    const validation = validateGitHubConfig(normalized, t)
 
     if (!validation.success) {
       setConfigErrors(validation.errors)

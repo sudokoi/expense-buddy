@@ -20,7 +20,14 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
-    "done": "Done"
+    "done": "Done",
+    "close": "Close",
+    "madeBy": "Made by",
+    "giveStar": "give it a ⭐️",
+    "editLabel": "Edit {{label}}",
+    "deleteLabel": "Delete {{label}}",
+    "removeLabel": "Remove {{label}}",
+    "optional": "(Optional)"
   },
   "history": {
     "title": "Expense History",
@@ -40,6 +47,7 @@
         "amountPlaceholder": "Enter amount or expression (e.g., 100+50)",
         "amountError": "Please enter a valid amount",
         "expressionError": "Please enter a valid expression",
+        "preview": "= {{amount}}",
         "category": "Category",
         "note": "Note",
         "notePlaceholder": "Enter note (optional)",
@@ -240,7 +248,36 @@
       "removeDialog": {
         "title": "Remove Instrument",
         "message": "Remove \"{{nickname}}\"?"
+      },
+      "form": {
+        "editTitle": "Edit Instrument",
+        "addTitle": "Add Instrument",
+        "paymentMethod": "Payment Method",
+        "nickname": "Nickname",
+        "nicknamePlaceholder": "e.g., HDFC Visa",
+        "lastDigits": "Last digits",
+        "identifierPlaceholder": "Enter {{count}} digits"
+      },
+      "dropdown": {
+        "none": "None",
+        "others": "Others / Enter digits",
+        "othersLabel": "{{method}} • Others",
+        "othersLabelWithDigits": "{{method}} • Others ({{digits}})",
+        "selectSaved": "Select saved instrument (optional)",
+        "addSaved": "Add saved",
+        "cancelAdd": "Cancel Add",
+        "selected": "Selected",
+        "saved": "Saved instrument"
       }
+    },
+    "paymentMethods": {
+      "Cash": "Cash",
+      "Amazon Pay": "Amazon Pay",
+      "UPI": "UPI",
+      "Credit Card": "Credit Card",
+      "Debit Card": "Debit Card",
+      "Net Banking": "Net Banking",
+      "Other": "Other"
     },
     "categories": {
       "description": "Customize expense categories to match your spending habits.",
@@ -251,6 +288,19 @@
         "title": "Delete Category",
         "messageSimple": "Delete \"{{label}}\"?",
         "messageReassign": "Delete \"{{label}}\"? {{count}} expenses will be reassigned to \"Other\"."
+      },
+      "form": {
+        "editTitle": "Edit Category",
+        "addTitle": "Add Category",
+        "nameLabel": "Category Name",
+        "namePlaceholder": "e.g., Subscriptions",
+        "characterCount": "{{count}}/{{max}} characters",
+        "iconLabel": "Icon",
+        "iconHelp": "Tap to change icon",
+        "colorLabel": "Color",
+        "colorHelp": "Tap to change color",
+        "chooseIcon": "Choose Icon",
+        "chooseColor": "Choose Color"
       }
     },
     "appearance": {
@@ -311,11 +361,52 @@
       "general": "GitHub sync failed ({{status}})",
       "timestamp": "Could not extract timestamp from commit",
       "blob": "Failed to create blob for {{path}}: {{error}}"
+    },
+    "manager": {
+      "notConfigured": "Sync not configured",
+      "noConfigFound": "No sync configuration found",
+      "connectionSuccess": "Connection successful!",
+      "connectionFailed": "Connection failed",
+      "authRequired": "GitHub authentication required",
+      "downloadFailed": "Download failed",
+      "syncFailed": "Sync failed",
+      "noFilesFound": "No files found",
+      "noExpenseFiles": "No expense files found in repository",
+      "failedToListRemote": "Failed to list remote files",
+      "noChanges": "No changes to sync: {{skipped}} file(s) unchanged",
+      "syncedExpenses": "Synced {{count}} expenses: {{details}}",
+      "downloadedExpenses": "Downloaded {{count}} expenses from {{files}} file(s)",
+      "batchCommitFailed": "Batch commit failed"
     }
   },
   "changelog": {
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "validation": {
+    "expense": {
+      "amountRequired": "Amount is required",
+      "amountInvalid": "Amount must be a valid number",
+      "amountPositive": "Amount must be positive",
+      "categoryRequired": "Category is required"
+    },
+    "category": {
+      "nameRequired": "Category name is required",
+      "nameMaxLength": "Category name must be 30 characters or less",
+      "nameWhitespace": "Category name cannot be only whitespace",
+      "nameAlphanumeric": "Category name must contain at least one letter or number",
+      "nameDuplicate": "A category with this name already exists",
+      "iconRequired": "Icon is required",
+      "colorInvalid": "Color must be a valid hex code"
+    },
+    "github": {
+      "tokenRequired": "Token is required",
+      "tokenInvalid": "Invalid token format",
+      "repoRequired": "Repository is required",
+      "repoFormat": "Repository must be in format: owner/repo",
+      "branchRequired": "Branch is required",
+      "branchInvalid": "Invalid branch name"
+    }
   }
 }

@@ -212,7 +212,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
                 chromeless
                 icon={X}
                 onPress={handleApply}
-                aria-label="Close"
+                aria-label={t("common.close")}
               />
             </XStack>
           </XStack>

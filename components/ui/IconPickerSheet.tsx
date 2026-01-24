@@ -6,6 +6,7 @@ import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
 import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { useTranslation } from "react-i18next"
 
 // Layout styles
 const layoutStyles = {
@@ -53,6 +54,7 @@ export function IconPickerSheet({
   selectedIcon,
   onSelect,
 }: IconPickerSheetProps) {
+  const { t } = useTranslation()
   // Handle icon selection - select and close
   const handleIconSelect = useCallback(
     (iconName: string) => {
@@ -66,7 +68,7 @@ export function IconPickerSheet({
     <AppSheetScaffold
       open={open}
       onClose={onClose}
-      title="Choose Icon"
+      title={t("settings.categories.form.chooseIcon")}
       snapPoints={[90]}
       unmountWhenClosed
       scroll

@@ -42,6 +42,7 @@ import {
 } from "./merge-engine"
 import { mergeCategories } from "./category-merger"
 import { mergePaymentInstruments } from "./payment-instrument-merger"
+import i18next from "i18next"
 
 // Import sync types from centralized location
 import type {
@@ -109,15 +110,15 @@ export async function testConnection(): Promise<SyncResult> {
     console.warn("[SyncManager] testConnection failed: No sync configuration found")
     return {
       success: false,
-      message: "No sync configuration found",
-      error: "Configuration missing",
+      message: i18next.t("githubSync.manager.noConfigFound"),
+      error: i18next.t("githubSync.manager.notConfigured"),
     }
   }
 
   try {
     const result = await validatePAT(config.token, config.repo)
     if (result.valid) {
-      return { success: true, message: "Connection successful!" }
+      return { success: true, message: i18next.t("githubSync.manager.connectionSuccess") }
     } else {
       console.warn("[SyncManager] testConnection failed:", result.error)
 
@@ -155,7 +156,7 @@ export async function testConnection(): Promise<SyncResult> {
 
     return {
       success: false,
-      message: "Connection failed",
+      message: i18next.t("githubSync.manager.connectionFailed"),
       error: getUserFriendlyMessage(error),
     }
   }
@@ -181,7 +182,7 @@ export async function determineSyncDirection(
         direction: "error",
         localTime: null,
         remoteTime: null,
-        error: "No sync configuration",
+        error: i18next.t("githubSync.manager.noConfigFound"),
       }
     }
 
@@ -295,8 +296,8 @@ export async function syncUp(
     if (!config) {
       return {
         success: false,
-        message: "Sync not configured",
-        error: "No configuration",
+        message: i18next.t("githubSync.manager.notConfigured"),
+        error: i18next.t("githubSync.manager.notConfigured"),
       }
     }
 
@@ -325,7 +326,7 @@ export async function syncUp(
 
       return {
         success: false,
-        message: "Failed to list remote files",
+        message: i18next.t("githubSync.manager.failedToListRemote"),
         error: getUserFriendlyMessage(error),
         filesUploaded: 0,
         filesSkipped: 0,
@@ -443,7 +444,7 @@ export async function syncUp(
     if (filesToUpload.length === 0 && filesToDelete.length === 0) {
       return {
         success: true,
-        message: `No changes to sync: ${skippedFiles} file(s) unchanged`,
+        message: i18next.t("githubSync.manager.noChanges", { skipped: skippedFiles }),
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
@@ -532,7 +533,10 @@ export async function syncUp(
 
       return {
         success: true,
-        message: `Synced ${expenses.length} expenses: ${message.join(", ")}`,
+        message: i18next.t("githubSync.manager.syncedExpenses", {
+          count: expenses.length,
+          details: message.join(", "),
+        }),
         filesUploaded: expenseFilesUploaded,
         filesSkipped: skippedFiles,
         filesDeleted: filesToDelete.length,
@@ -544,7 +548,7 @@ export async function syncUp(
       // On failure: preserve existing hashes (don't update anything)
       return {
         success: false,
-        message: "Batch commit failed",
+        message: i18next.t("githubSync.manager.batchCommitFailed"),
         error: batchResult.error,
         filesUploaded: 0,
         filesSkipped: skippedFiles,
@@ -570,7 +574,7 @@ export async function syncUp(
 
     return {
       success: false,
-      message: "Sync failed",
+      message: i18next.t("githubSync.manager.syncFailed"),
       error: getUserFriendlyMessage(error),
     }
   }
@@ -599,8 +603,8 @@ export async function syncDown(
     if (!config) {
       return {
         success: false,
-        message: "Sync not configured",
-        error: "No configuration",
+        message: i18next.t("githubSync.manager.notConfigured"),
+        error: i18next.t("githubSync.manager.notConfigured"),
       }
     }
 
@@ -648,8 +652,8 @@ export async function syncDown(
 
       return {
         success: false,
-        message: "No expense files found in repository",
-        error: "No files found",
+        message: i18next.t("githubSync.manager.noExpenseFiles"),
+        error: i18next.t("githubSync.manager.noFilesFound"),
         settings: downloadedSettings,
         settingsDownloaded,
       }
@@ -705,7 +709,10 @@ export async function syncDown(
     }
 
     const messageParts = [
-      `Downloaded ${allExpenses.length} expenses from ${downloadedFiles} file(s)`,
+      i18next.t("githubSync.manager.downloadedExpenses", {
+        count: allExpenses.length,
+        files: downloadedFiles,
+      }),
     ]
     if (settingsDownloaded) {
       messageParts.push("settings downloaded")
@@ -753,7 +760,7 @@ export async function syncDown(
 
     return {
       success: false,
-      message: "Download failed",
+      message: i18next.t("githubSync.manager.downloadFailed"),
       error: getUserFriendlyMessage(error),
     }
   }
@@ -779,8 +786,8 @@ export async function syncDownMore(
     if (!config) {
       return {
         success: false,
-        message: "Sync not configured",
-        error: "No configuration",
+        message: i18next.t("githubSync.manager.notConfigured"),
+        error: i18next.t("githubSync.manager.notConfigured"),
       }
     }
 

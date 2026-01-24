@@ -22,6 +22,11 @@ jest.mock("expo-secure-store", () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }))
 
+// Mock i18next
+jest.mock("i18next", () => ({
+  t: (key: string) => key,
+}))
+
 // settings-manager uses Platform checks; keep it deterministic for tests.
 jest.mock("react-native", () => ({
   Platform: { OS: "ios" },
@@ -199,7 +204,7 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       expect(actor.getSnapshot().value).toBe("error")
-      expect(onError).toHaveBeenCalledWith("No sync configuration found")
+      expect(onError).toHaveBeenCalledWith("githubSync.manager.noConfigFound")
 
       actor.stop()
     })

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TFunction } from "i18next"
 
 /**
  * Valid GitHub token prefixes
@@ -9,8 +10,37 @@ import { z } from "zod"
 const GITHUB_TOKEN_PREFIXES = ["ghp_", "github_pat_", "gho_"]
 
 /**
- * Zod schema for GitHub configuration validation
- * Validates token format, repository format, and branch name
+ * Creates a Zod schema for GitHub configuration validation with localized messages.
+ * Validates token format, repository format, and branch name.
+ *
+ * @param t - Translation function from i18next
+ * @returns Zod schema for GitHub config validation
+ */
+export function getGithubConfigSchema(t: TFunction) {
+  return z.object({
+    token: z
+      .string()
+      .min(1, t("validation.github.tokenRequired"))
+      .refine((val) => GITHUB_TOKEN_PREFIXES.some((prefix) => val.startsWith(prefix)), {
+        message: t("validation.github.tokenInvalid"),
+      }),
+    repo: z
+      .string()
+      .min(1, t("validation.github.repoRequired"))
+      .regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, {
+        message: t("validation.github.repoFormat"),
+      }),
+    branch: z
+      .string()
+      .min(1, t("validation.github.branchRequired"))
+      .regex(/^[a-zA-Z0-9_./-]+$/, {
+        message: t("validation.github.branchInvalid"),
+      }),
+  })
+}
+
+/**
+ * Default schema with English messages (for tests and backward compatibility)
  */
 export const githubConfigSchema = z.object({
   token: z
@@ -43,11 +73,17 @@ export type GitHubConfigValidationResult =
   | { success: false; errors: Record<string, string> }
 
 /**
- * Validate GitHub configuration
- * Returns { success: true, data } or { success: false, errors }
+ * Validate GitHub configuration with optional localization.
+ * @param data - Form data to validate
+ * @param t - Optional translation function for localized messages
+ * @returns Validation result with success/data or errors
  */
-export function validateGitHubConfig(data: unknown): GitHubConfigValidationResult {
-  const result = githubConfigSchema.safeParse(data)
+export function validateGitHubConfig(
+  data: unknown,
+  t?: TFunction
+): GitHubConfigValidationResult {
+  const schema = t ? getGithubConfigSchema(t) : githubConfigSchema
+  const result = schema.safeParse(data)
 
   if (result.success) {
     return { success: true, data: result.data }

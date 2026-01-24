@@ -1,11 +1,13 @@
 import { Anchor, Paragraph, View, XStack } from "tamagui"
 import { ACCENT_COLORS } from "../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 export default function ModalScreen() {
+  const { t } = useTranslation()
   return (
     <View flex={1} items="center" justify="center">
       <XStack gap="$2">
-        <Paragraph text="center">Made by</Paragraph>
+        <Paragraph text="center">{t("common.madeBy")}</Paragraph>
         <Anchor
           color={ACCENT_COLORS.primary}
           href="https://twitter.com/natebirdman"
@@ -19,7 +21,7 @@ export default function ModalScreen() {
           target="_blank"
           rel="noreferrer"
         >
-          give it a ⭐️
+          {t("common.giveStar")}
         </Anchor>
       </XStack>
     </View>

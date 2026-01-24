@@ -20,7 +20,14 @@
     "cancel": "キャンセル",
     "delete": "削除",
     "save": "保存",
-    "done": "完了"
+    "done": "完了",
+    "close": "閉じる",
+    "madeBy": "作成者",
+    "giveStar": "スターを付ける ⭐️",
+    "editLabel": "{{label}}を編集",
+    "deleteLabel": "{{label}}を削除",
+    "removeLabel": "{{label}}を削除",
+    "optional": "(任意)"
   },
   "history": {
     "title": "支出履歴",
@@ -241,7 +248,36 @@
       "removeDialog": {
         "title": "手段を削除",
         "message": "「{{nickname}}」を削除しますか？"
+      },
+      "form": {
+        "editTitle": "手段を編集",
+        "addTitle": "手段を追加",
+        "paymentMethod": "支払い方法",
+        "nickname": "ニックネーム",
+        "nicknamePlaceholder": "例: HDFC Visa",
+        "lastDigits": "末尾の数字",
+        "identifierPlaceholder": "{{count}}桁を入力"
+      },
+      "dropdown": {
+        "none": "なし",
+        "others": "その他 / 数字を入力",
+        "othersLabel": "{{method}} • その他",
+        "othersLabelWithDigits": "{{method}} • その他 ({{digits}})",
+        "selectSaved": "保存された手段を選択 (任意)",
+        "addSaved": "保存済みを追加",
+        "cancelAdd": "追加をキャンセル",
+        "selected": "選択中",
+        "saved": "保存された手段"
       }
+    },
+    "paymentMethods": {
+      "Cash": "現金",
+      "Amazon Pay": "Amazon Pay",
+      "UPI": "UPI",
+      "Credit Card": "クレジットカード",
+      "Debit Card": "デビットカード",
+      "Net Banking": "ネットバンキング",
+      "Other": "その他"
     },
     "categories": {
       "description": "支出カテゴリーを習慣に合わせてカスタマイズします。",
@@ -252,6 +288,19 @@
         "title": "カテゴリーを削除",
         "messageSimple": "「{{label}}」を削除しますか？",
         "messageReassign": "「{{label}}」を削除しますか？ {{count}}件の支出が「その他」に割り当てられます。"
+      },
+      "form": {
+        "editTitle": "カテゴリーを編集",
+        "addTitle": "カテゴリーを追加",
+        "nameLabel": "カテゴリー名",
+        "namePlaceholder": "例: サブスクリプション",
+        "characterCount": "{{count}}/{{max}} 文字",
+        "iconLabel": "アイコン",
+        "iconHelp": "タップしてアイコンを変更",
+        "colorLabel": "色",
+        "colorHelp": "タップして色を変更",
+        "chooseIcon": "アイコンを選択",
+        "chooseColor": "色を選択"
       }
     },
     "appearance": {
@@ -312,11 +361,52 @@
       "general": "GitHub同期に失敗しました ({{status}})",
       "timestamp": "コミットからタイムスタンプを抽出できませんでした",
       "blob": "{{path}} のblob作成に失敗しました: {{error}}"
+    },
+    "manager": {
+      "notConfigured": "同期が設定されていません",
+      "noConfigFound": "同期設定が見つかりません",
+      "connectionSuccess": "接続に成功しました！",
+      "connectionFailed": "接続に失敗しました",
+      "authRequired": "GitHub認証が必要です",
+      "downloadFailed": "ダウンロードに失敗しました",
+      "syncFailed": "同期に失敗しました",
+      "noFilesFound": "ファイルが見つかりません",
+      "noExpenseFiles": "リポジトリに支出ファイルが見つかりません",
+      "failedToListRemote": "リモートファイルのリスト取得に失敗しました",
+      "noChanges": "同期する変更はありません: {{skipped}} ファイルが変更なし",
+      "syncedExpenses": "{{count}}件の支出を同期しました: {{details}}",
+      "downloadedExpenses": "{{files}}ファイルから{{count}}件の支出をダウンロードしました",
+      "batchCommitFailed": "バッチコミットに失敗しました"
     }
   },
   "changelog": {
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "validation": {
+    "expense": {
+      "amountRequired": "金額を入力してください",
+      "amountInvalid": "有効な数値を入力してください",
+      "amountPositive": "金額は正の数でなければなりません",
+      "categoryRequired": "カテゴリーを選択してください"
+    },
+    "category": {
+      "nameRequired": "カテゴリー名を入力してください",
+      "nameMaxLength": "カテゴリー名は30文字以内でなければなりません",
+      "nameWhitespace": "カテゴリー名にはスペースだけを使用できません",
+      "nameAlphanumeric": "カテゴリー名には少なくとも1つの文字または数字が必要です",
+      "nameDuplicate": "この名前のカテゴリーは既に存在します",
+      "iconRequired": "アイコンを選択してください",
+      "colorInvalid": "色は有効な16進コードでなければなりません"
+    },
+    "github": {
+      "tokenRequired": "トークンを入力してください",
+      "tokenInvalid": "トークンの形式が無効です",
+      "repoRequired": "リポジトリを入力してください",
+      "repoFormat": "リポジトリはowner/repo形式でなければなりません",
+      "branchRequired": "ブランチを入力してください",
+      "branchInvalid": "ブランチ名が無効です"
+    }
   }
 }

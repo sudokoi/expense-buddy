@@ -2,7 +2,6 @@ const fs = require("fs")
 const path = require("path")
 
 const LOCALES_DIR = path.join(__dirname, "../locales")
-const BASE_LOCALE = "en-IN"
 
 function flattenKeys(obj, prefix = "") {
   let keys = []
@@ -36,41 +35,45 @@ function getLocales() {
 
 function checkTranslations() {
   const locales = getLocales()
-  if (!locales.includes(BASE_LOCALE)) {
-    console.error(`Base locale ${BASE_LOCALE} not found in ${LOCALES_DIR}`)
-    process.exit(1)
-  }
 
-  console.log(`Base locale: ${BASE_LOCALE}`)
-  const baseTranslation = loadTranslation(BASE_LOCALE)
-  const baseKeys = new Set(flattenKeys(baseTranslation))
+  // 1. Collect all unique keys from all locales
+  const allKeys = new Set()
+  const localeKeys = {}
+
+  locales.forEach((locale) => {
+    try {
+      const translation = loadTranslation(locale)
+      const keys = flattenKeys(translation)
+      localeKeys[locale] = new Set(keys)
+      keys.forEach((key) => allKeys.add(key))
+    } catch (error) {
+      console.error(`\n❌ Error processing ${locale}:`, error.message)
+      process.exit(1)
+    }
+  })
+
+  console.log(`Found ${allKeys.size} unique keys across ${locales.length} locales.`)
+
+  // 2. Check each locale against the superset of all keys
   let hasErrors = false
 
   locales.forEach((locale) => {
-    if (locale === BASE_LOCALE) return
+    const keys = localeKeys[locale]
+    const missingKeys = [...allKeys].filter((key) => !keys.has(key))
 
-    try {
-      const translation = loadTranslation(locale)
-      const keys = new Set(flattenKeys(translation))
-      const missingKeys = [...baseKeys].filter((key) => !keys.has(key))
-
-      if (missingKeys.length > 0) {
-        console.error(`\n❌ Error: Missing ${missingKeys.length} keys in ${locale}:`)
-        missingKeys.forEach((key) => console.error(`  - ${key}`))
-        hasErrors = true
-      } else {
-        console.log(`✅ ${locale} matches base keys.`)
-      }
-    } catch (error) {
-      console.error(`\n❌ Error processing ${locale}:`, error.message)
+    if (missingKeys.length > 0) {
+      console.error(`\n❌ Error: Missing ${missingKeys.length} keys in ${locale}:`)
+      missingKeys.forEach((key) => console.error(`  - ${key}`))
       hasErrors = true
+    } else {
+      console.log(`✅ ${locale} covers all known keys.`)
     }
   })
 
   if (hasErrors) {
     process.exit(1)
   }
-  console.log("\nAll translations valid!")
+  console.log("\nAll translations valid and synced!")
 }
 
 checkTranslations()

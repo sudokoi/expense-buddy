@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, Card, Input, Label, Text, View, XStack, YStack, useTheme } from "tamagui"
 import { ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
 import { Pressable, TextStyle, ViewStyle } from "react-native"
@@ -71,6 +72,7 @@ export function PaymentInstrumentInlineDropdown({
   onChange,
   onCreateInstrument,
 }: PaymentInstrumentInlineDropdownProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -100,15 +102,18 @@ export function PaymentInstrumentInlineDropdown({
       if (selectedInstrument && !selectedInstrument.deletedAt) {
         return formatPaymentInstrumentLabel(selectedInstrument)
       }
-      return `${method} • Saved instrument`
+      return `${method} • ${t("settings.instruments.dropdown.saved")}`
     }
     if (kind === "manual") {
       return manualDigits.trim()
-        ? `${method} • Others (${manualDigits.trim()})`
-        : `${method} • Others`
+        ? t("settings.instruments.dropdown.othersLabelWithDigits", {
+            method,
+            digits: manualDigits.trim(),
+          })
+        : t("settings.instruments.dropdown.othersLabel", { method })
     }
-    return "Select saved instrument (optional)"
-  }, [kind, manualDigits, method, selectedInstrument])
+    return t("settings.instruments.dropdown.selectSaved")
+  }, [kind, manualDigits, method, selectedInstrument, t])
 
   const closeDropdown = useCallback(() => setOpen(false), [])
 
@@ -256,16 +261,16 @@ export function PaymentInstrumentInlineDropdown({
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
-                None
+                {t("settings.instruments.dropdown.none")}
               </Text>
               {kind === "none" && (
                 <Text color={focusBorderColor} fontWeight="700">
-                  Selected
+                  {t("settings.instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "none" && (
                 <Text opacity={0} fontWeight="700">
-                  Selected
+                  {t("settings.instruments.dropdown.selected")}
                 </Text>
               )}
             </View>
@@ -288,16 +293,16 @@ export function PaymentInstrumentInlineDropdown({
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
-                Others / Enter digits
+                {t("settings.instruments.dropdown.others")}
               </Text>
               {kind === "manual" && (
                 <Text color={focusBorderColor} fontWeight="700">
-                  Selected
+                  {t("settings.instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "manual" && (
                 <Text opacity={0} fontWeight="700">
-                  Selected
+                  {t("settings.instruments.dropdown.selected")}
                 </Text>
               )}
             </View>
@@ -328,12 +333,12 @@ export function PaymentInstrumentInlineDropdown({
                   </Text>
                   {isSelected && (
                     <Text color={focusBorderColor} fontWeight="700">
-                      Selected
+                      {t("settings.instruments.dropdown.selected")}
                     </Text>
                   )}
                   {!isSelected && (
                     <Text opacity={0} fontWeight="700">
-                      Selected
+                      {t("settings.instruments.dropdown.selected")}
                     </Text>
                   )}
                 </View>
@@ -350,7 +355,9 @@ export function PaymentInstrumentInlineDropdown({
               borderWidth={1}
               borderColor="$borderColor"
             >
-              {showAdd ? "Cancel Add" : "Add saved"}
+              {showAdd
+                ? t("settings.instruments.dropdown.cancelAdd")
+                : t("settings.instruments.dropdown.addSaved")}
             </Button>
           )}
         </Card>
@@ -363,7 +370,9 @@ export function PaymentInstrumentInlineDropdown({
           </Label>
           <Input
             size="$4"
-            placeholder={`Enter ${effectiveMaxLength} digits`}
+            placeholder={t("settings.instruments.form.identifierPlaceholder", {
+              count: effectiveMaxLength,
+            })}
             keyboardType="numeric"
             value={manualDigits}
             onChangeText={handleManualDigitsChange}
@@ -381,11 +390,11 @@ export function PaymentInstrumentInlineDropdown({
         >
           <YStack gap="$1">
             <Label color="$color" opacity={0.8}>
-              Nickname
+              {t("settings.instruments.form.nickname")}
             </Label>
             <Input
               size="$4"
-              placeholder="e.g., HDFC Visa"
+              placeholder={t("settings.instruments.form.nicknamePlaceholder")}
               value={nickname}
               onChangeText={(t) => {
                 setNickname(t)
@@ -416,7 +425,9 @@ export function PaymentInstrumentInlineDropdown({
             </Label>
             <Input
               size="$4"
-              placeholder={`Enter ${getLastDigitsLength(method)} digits`}
+              placeholder={t("settings.instruments.form.identifierPlaceholder", {
+                count: getLastDigitsLength(method),
+              })}
               keyboardType="numeric"
               value={newLastDigits}
               onChangeText={(t) => {
@@ -445,10 +456,10 @@ export function PaymentInstrumentInlineDropdown({
 
           <XStack gap="$2" style={{ justifyContent: "flex-end" }}>
             <Button size="$4" chromeless onPress={handleStartAdd}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button size="$4" themeInverse onPress={handleSaveNew}>
-              Save
+              {t("common.save")}
             </Button>
           </XStack>
         </YStack>

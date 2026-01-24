@@ -12,6 +12,7 @@ import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-color
 import { getColorValue } from "../../tamagui.config"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { useTranslation } from "react-i18next"
 
 // Layout styles
 const layoutStyles = {
@@ -79,6 +80,7 @@ export function CategoryFormModal({
 }: CategoryFormModalProps) {
   // Get safe area insets
   const insets = useSafeAreaInsets()
+  const { t } = useTranslation()
 
   // Determine if we're in edit mode
   const isEditMode = !!category
@@ -153,7 +155,8 @@ export function CategoryFormModal({
     const validation = validateCategoryForm(
       { label, icon, color },
       existingLabels,
-      isEditMode ? category?.label : undefined
+      isEditMode ? category?.label : undefined,
+      t
     )
 
     if (!validation.success) {
@@ -169,7 +172,7 @@ export function CategoryFormModal({
       isDefault: category?.isDefault ?? false,
     })
     onClose()
-  }, [label, icon, color, existingLabels, isEditMode, category, onSave, onClose])
+  }, [label, icon, color, existingLabels, isEditMode, category, onSave, onClose, t])
 
   // Handle close
   const handleClose = useCallback(() => {
@@ -214,7 +217,11 @@ export function CategoryFormModal({
       <AppSheetScaffold
         open={open}
         onClose={handleClose}
-        title={isEditMode ? "Edit Category" : "Add Category"}
+        title={
+          isEditMode
+            ? t("settings.categories.form.editTitle")
+            : t("settings.categories.form.addTitle")
+        }
         snapPoints={[90]}
         frameStyle={frameStyle}
       >
@@ -222,11 +229,11 @@ export function CategoryFormModal({
           {/* Label Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Category Name
+              {t("settings.categories.form.nameLabel")}
             </Label>
             <Input
               size="$4"
-              placeholder="e.g., Subscriptions"
+              placeholder={t("settings.categories.form.namePlaceholder")}
               value={label}
               onChangeText={handleLabelChange}
               maxLength={30}
@@ -242,14 +249,17 @@ export function CategoryFormModal({
               </Text>
             )}
             <Text fontSize="$2" color="$color" opacity={0.5}>
-              {label.length}/30 characters
+              {t("settings.categories.form.characterCount", {
+                count: label.length,
+                max: 30,
+              })}
             </Text>
           </YStack>
 
           {/* Icon Picker Trigger */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Icon
+              {t("settings.categories.form.iconLabel")}
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
               <XStack
@@ -265,7 +275,7 @@ export function CategoryFormModal({
                 <YStack flex={1}>
                   <Text fontWeight="500">{icon}</Text>
                   <Text fontSize="$2" color="$color" opacity={0.6}>
-                    Tap to change icon
+                    {t("settings.categories.form.iconHelp")}
                   </Text>
                 </YStack>
               </XStack>
@@ -275,7 +285,7 @@ export function CategoryFormModal({
           {/* Color Picker Trigger */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Color
+              {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable onPress={handleOpenColorPicker}>
               <XStack
@@ -289,7 +299,7 @@ export function CategoryFormModal({
                 <YStack flex={1}>
                   <Text fontWeight="500">{color}</Text>
                   <Text fontSize="$2" color="$color" opacity={0.6}>
-                    Tap to change color
+                    {t("settings.categories.form.colorHelp")}
                   </Text>
                 </YStack>
               </XStack>
@@ -299,7 +309,7 @@ export function CategoryFormModal({
           {/* Action Buttons */}
           <XStack style={layoutStyles.buttonRow}>
             <Button size="$4" chromeless onPress={handleClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               size="$4"
@@ -308,7 +318,7 @@ export function CategoryFormModal({
               icon={<Check size="$1" />}
               fontWeight="bold"
             >
-              {isEditMode ? "Save Changes" : "Add Category"}
+              {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
             </Button>
           </XStack>
         </YStack>

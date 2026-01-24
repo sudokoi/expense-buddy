@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TFunction } from "i18next"
 import { PaymentMethodType } from "../types/expense"
 
 // Define payment method values as a tuple for Zod enum
@@ -13,9 +14,32 @@ const PAYMENT_METHOD_VALUES: [PaymentMethodType, ...PaymentMethodType[]] = [
 ]
 
 /**
- * Zod schema for expense form validation
- * Used by both add and edit flows for consistent validation
- * Category is now a string to support custom categories
+ * Creates a Zod schema for expense form validation with localized messages.
+ * Pass t from useTranslation() to get translated error messages.
+ *
+ * @param t - Translation function from i18next
+ * @returns Zod schema for expense form validation
+ */
+export function getExpenseFormSchema(t: TFunction) {
+  return z.object({
+    amount: z
+      .string()
+      .min(1, t("validation.expense.amountRequired"))
+      .refine((val) => !isNaN(parseFloat(val)), {
+        message: t("validation.expense.amountInvalid"),
+      })
+      .refine((val) => parseFloat(val) > 0, {
+        message: t("validation.expense.amountPositive"),
+      }),
+    category: z.string().min(1, t("validation.expense.categoryRequired")),
+    note: z.string().optional(),
+    paymentMethodType: z.enum(PAYMENT_METHOD_VALUES).optional(),
+    paymentMethodId: z.string().optional(),
+  })
+}
+
+/**
+ * Default schema with English messages (for tests and backward compatibility)
  */
 export const expenseFormSchema = z.object({
   amount: z
@@ -43,11 +67,14 @@ export type ValidationResult =
   | { success: false; errors: Record<string, string> }
 
 /**
- * Validate expense form data (used by both add and edit flows)
- * Returns { success: true, data } or { success: false, errors }
+ * Validate expense form data with localized messages.
+ * @param data - Form data to validate
+ * @param t - Translation function from i18next
+ * @returns Validation result with success/data or errors
  */
-export function validateExpenseForm(data: unknown): ValidationResult {
-  const result = expenseFormSchema.safeParse(data)
+export function validateExpenseForm(data: unknown, t?: TFunction): ValidationResult {
+  const schema = t ? getExpenseFormSchema(t) : expenseFormSchema
+  const result = schema.safeParse(data)
 
   if (result.success) {
     return { success: true, data: result.data }

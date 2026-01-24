@@ -1,4 +1,5 @@
 import { memo, useMemo, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { YStack, XStack, Text, Button } from "tamagui"
 import { ViewStyle, Pressable, Alert } from "react-native"
 import { Pencil, Trash2 } from "@tamagui/lucide-icons"
@@ -77,6 +78,7 @@ export const CategoryListItem = memo(function CategoryListItem({
   expenseCount = 0,
   canDelete = true,
 }: CategoryListItemProps) {
+  const { t } = useTranslation()
   // Resolve color for display
   const resolvedColor = useMemo(() => getColorValue(category.color), [category.color])
   const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
@@ -90,18 +92,23 @@ export const CategoryListItem = memo(function CategoryListItem({
   const handleDelete = useCallback(() => {
     const message =
       expenseCount > 0
-        ? `This will reassign ${expenseCount} expense${expenseCount > 1 ? "s" : ""} to "Other". Are you sure?`
-        : `Delete "${category.label}" category?`
+        ? t("settings.categories.deleteDialog.messageReassign", {
+            label: category.label,
+            count: expenseCount,
+          })
+        : t("settings.categories.deleteDialog.messageSimple", {
+            label: category.label,
+          })
 
-    Alert.alert("Delete Category", message, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("settings.categories.deleteDialog.title"), message, [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => onDelete(category.label),
       },
     ])
-  }, [category.label, expenseCount, onDelete])
+  }, [category.label, expenseCount, onDelete, t])
 
   // Calculate font size based on label length to fit text
   const labelFontSize = useMemo(() => {
@@ -154,7 +161,7 @@ export const CategoryListItem = memo(function CategoryListItem({
             chromeless
             icon={<Pencil size={16} />}
             onPress={handleEdit}
-            aria-label={`Edit ${category.label}`}
+            aria-label={t("common.editLabel", { label: category.label })}
           />
           {canDelete && (
             <Button
@@ -162,7 +169,7 @@ export const CategoryListItem = memo(function CategoryListItem({
               chromeless
               icon={<Trash2 size={16} />}
               onPress={handleDelete}
-              aria-label={`Delete ${category.label}`}
+              aria-label={t("common.deleteLabel", { label: category.label })}
             />
           )}
         </XStack>

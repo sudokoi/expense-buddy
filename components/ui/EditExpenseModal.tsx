@@ -9,6 +9,7 @@ import {
   PaymentMethod,
 } from "../../types/expense"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { useTranslation } from "react-i18next"
 import { validateExpenseForm } from "../../utils/expense-validation"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
@@ -66,6 +67,7 @@ export function EditExpenseModal({
 }: EditExpenseModalProps) {
   // Get categories from store (sorted by order)
   const { categories } = useCategories()
+  const { t } = useTranslation()
   const { settings, updateSettings } = useSettings()
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -151,13 +153,16 @@ export function EditExpenseModal({
     Keyboard.dismiss()
 
     // Validate with Zod schema (same validation as add flow)
-    const validation = validateExpenseForm({
-      amount,
-      category,
-      note,
-      paymentMethodType,
-      paymentMethodId,
-    })
+    const validation = validateExpenseForm(
+      {
+        amount,
+        category,
+        note,
+        paymentMethodType,
+        paymentMethodId,
+      },
+      t
+    )
 
     if (!validation.success) {
       setErrors(validation.errors)
@@ -195,6 +200,7 @@ export function EditExpenseModal({
     expense.date,
     onSave,
     onClose,
+    t,
   ])
 
   // Handle close - reset form to original values
@@ -221,7 +227,7 @@ export function EditExpenseModal({
       <AppSheetScaffold
         open={open}
         onClose={handleClose}
-        title="Edit Expense"
+        title={t("history.editDialog.title")}
         snapPoints={[95]}
         scroll
       >
@@ -229,11 +235,11 @@ export function EditExpenseModal({
           {/* Amount Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Amount
+              {t("history.editDialog.fields.amount")}
             </Label>
             <Input
               size="$4"
-              placeholder="0.00"
+              placeholder={t("add.amountPlaceholder")}
               keyboardType="numeric"
               value={amount}
               onChangeText={(text) => {
@@ -262,7 +268,7 @@ export function EditExpenseModal({
           {/* Category Selection */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Category
+              {t("history.editDialog.fields.category")}
             </Label>
             <XStack style={layoutStyles.categoryRow}>
               {categories.map((cat) => {
@@ -284,10 +290,10 @@ export function EditExpenseModal({
           {/* Note Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Note (Optional)
+              {t("history.editDialog.fields.note")}
             </Label>
             <TextArea
-              placeholder="What was this for?"
+              placeholder={t("history.editDialog.fields.notePlaceholder")}
               value={note}
               onChangeText={setNote}
               numberOfLines={2}
@@ -297,7 +303,7 @@ export function EditExpenseModal({
           {/* Payment Method Selection */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Payment Method (Optional)
+              {t("history.editDialog.fields.paymentMethod")}
             </Label>
             <XStack style={layoutStyles.paymentMethodRow}>
               {PAYMENT_METHODS.map((pm) => (
@@ -314,7 +320,7 @@ export function EditExpenseModal({
             {selectedPaymentConfig?.hasIdentifier && (
               <YStack gap="$1" style={layoutStyles.identifierContainer}>
                 <Label color="$color" opacity={0.6} fontSize="$2">
-                  {selectedPaymentConfig.identifierLabel} (Optional)
+                  {selectedPaymentConfig.identifierLabel} {t("common.optional")}
                 </Label>
 
                 {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) ? (
@@ -348,8 +354,10 @@ export function EditExpenseModal({
                     size="$4"
                     placeholder={
                       paymentMethodType === "Other"
-                        ? "e.g., Venmo, PayPal, Gift Card"
-                        : `Enter ${selectedPaymentConfig.maxLength} digits`
+                        ? t("history.editDialog.fields.otherPlaceholder")
+                        : t("history.editDialog.fields.identifierPlaceholder", {
+                            max: selectedPaymentConfig.maxLength,
+                          })
                     }
                     keyboardType={paymentMethodType === "Other" ? "default" : "numeric"}
                     value={paymentMethodId}
@@ -364,7 +372,7 @@ export function EditExpenseModal({
           {/* Action Buttons */}
           <XStack style={layoutStyles.buttonRow}>
             <Button size="$4" chromeless onPress={handleClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               size="$4"
@@ -373,7 +381,7 @@ export function EditExpenseModal({
               icon={<Check size="$1" />}
               fontWeight="bold"
             >
-              Save Changes
+              {t("common.save")}
             </Button>
           </XStack>
         </YStack>

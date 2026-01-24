@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { ViewStyle } from "react-native"
+import { useTranslation } from "react-i18next"
 import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons"
 
@@ -48,6 +49,8 @@ export function AppSheetScaffold({
   frameStyle,
   children,
 }: AppSheetScaffoldProps) {
+  const { t } = useTranslation()
+
   if (!open && unmountWhenClosed) {
     return null
   }
@@ -77,7 +80,13 @@ export function AppSheetScaffold({
               ) : null}
             </YStack>
 
-            <Button size="$3" chromeless icon={X} onPress={onClose} aria-label="Close" />
+            <Button
+              size="$3"
+              chromeless
+              icon={X}
+              onPress={onClose}
+              aria-label={t("common.close")}
+            />
           </XStack>
 
           {scroll ? (

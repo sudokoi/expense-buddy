@@ -2,6 +2,7 @@ import { Card, XStack, Text } from "tamagui"
 import { memo } from "react"
 import { PaymentMethodConfig } from "../../constants/payment-methods"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 interface PaymentMethodCardProps {
   config: PaymentMethodConfig
@@ -19,6 +20,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   isSelected,
   onPress,
 }: PaymentMethodCardProps) {
+  const { t } = useTranslation()
   const Icon = config.icon
   return (
     <Card
@@ -33,7 +35,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       <XStack gap="$2" style={{ alignItems: "center" }}>
         <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
         <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
-          {config.label}
+          {t(`paymentMethods.${config.value}`)}
         </Text>
       </XStack>
     </Card>

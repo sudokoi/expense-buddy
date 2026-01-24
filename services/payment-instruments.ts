@@ -1,5 +1,6 @@
 import { PaymentMethodType } from "../types/expense"
 import { PaymentInstrument, PaymentInstrumentMethod } from "../types/payment-instrument"
+import i18next from "i18next"
 
 export const PAYMENT_INSTRUMENT_METHODS: PaymentInstrumentMethod[] = [
   "Credit Card",
@@ -81,6 +82,8 @@ export type PaymentInstrumentValidationResult =
   | { success: true }
   | { success: false; errors: Record<string, string> }
 
+// ...
+
 export function validatePaymentInstrumentInput(
   input: { method: PaymentInstrumentMethod; nickname: string; lastDigits: string },
   existing: PaymentInstrument[],
@@ -90,14 +93,19 @@ export function validatePaymentInstrumentInput(
 
   const nickname = input.nickname.trim()
   if (!nickname) {
-    errors.nickname = "Nickname is required"
+    errors.nickname =
+      i18next.t("settings.instruments.form.nicknameRequired") ?? "Nickname is required"
   } else if (nickname.length > 30) {
-    errors.nickname = "Nickname must be 30 characters or less"
+    errors.nickname =
+      i18next.t("settings.instruments.form.nicknameTooLong") ??
+      "Nickname must be 30 characters or less"
   }
 
   const expectedLen = getLastDigitsLength(input.method)
   if (input.lastDigits.length !== expectedLen) {
-    errors.lastDigits = `Enter exactly ${expectedLen} digits`
+    errors.lastDigits =
+      i18next.t("settings.instruments.form.digitsError", { count: expectedLen }) ??
+      `Enter exactly ${expectedLen} digits`
   }
 
   const normalized = normalizeNickname(nickname)
@@ -109,7 +117,9 @@ export function validatePaymentInstrumentInput(
   })
 
   if (nicknameTaken) {
-    errors.nickname = "Nickname already exists for this payment method"
+    errors.nickname =
+      i18next.t("settings.instruments.form.nicknameTaken") ??
+      "Nickname already exists for this payment method"
   }
 
   if (Object.keys(errors).length > 0) {
