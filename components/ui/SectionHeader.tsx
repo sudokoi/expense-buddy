@@ -14,9 +14,18 @@ export function SectionHeader({ children }: SectionHeaderProps) {
     fontSize: string
     marginBottom: string
     children?: ReactNode
+    numberOfLines?: number
+    adjustsFontSizeToFit?: boolean
+    minimumFontScale?: number
   }>
   return (
-    <H4Component fontSize="$5" marginBottom="$4">
+    <H4Component
+      fontSize="$5"
+      marginBottom="$4"
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.7}
+    >
       {children}
     </H4Component>
   )

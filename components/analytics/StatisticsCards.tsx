@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns"
 import { ViewStyle, TextStyle } from "react-native"
 import { AnalyticsStatistics } from "../../utils/analytics-calculations"
 import { CARD_COLORS } from "../../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -29,6 +30,7 @@ const styles = {
 export const StatisticsCards = memo(function StatisticsCards({
   statistics,
 }: StatisticsCardsProps) {
+  const { t } = useTranslation()
   const formatDate = (dateStr: string): string => {
     try {
       return format(parseISO(dateStr), "MMM d")
@@ -47,10 +49,19 @@ export const StatisticsCards = memo(function StatisticsCards({
             textTransform="uppercase"
             fontSize="$2"
             color={CARD_COLORS.blue.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
-            Total Spent
+            {t("analytics.stats.totalSpent")}
           </Text>
-          <H4 style={styles.cardValue} color={CARD_COLORS.blue.accent}>
+          <H4
+            style={styles.cardValue}
+            color={CARD_COLORS.blue.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             ₹{statistics.totalSpending.toFixed(2)}
           </H4>
         </Card>
@@ -61,10 +72,19 @@ export const StatisticsCards = memo(function StatisticsCards({
             textTransform="uppercase"
             fontSize="$2"
             color={CARD_COLORS.green.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
-            Daily Avg
+            {t("analytics.stats.dailyAvg")}
           </Text>
-          <H4 style={styles.cardValue} color={CARD_COLORS.green.accent}>
+          <H4
+            style={styles.cardValue}
+            color={CARD_COLORS.green.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             ₹{statistics.averageDaily.toFixed(2)}
           </H4>
         </Card>
@@ -78,8 +98,11 @@ export const StatisticsCards = memo(function StatisticsCards({
             textTransform="uppercase"
             fontSize="$2"
             color={CARD_COLORS.orange.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
-            Top Category
+            {t("analytics.stats.topCategory")}
           </Text>
           <H4
             style={styles.cardValue}
@@ -103,10 +126,19 @@ export const StatisticsCards = memo(function StatisticsCards({
             textTransform="uppercase"
             fontSize="$2"
             color={CARD_COLORS.purple.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
-            Peak Day
+            {t("analytics.stats.peakDay")}
           </Text>
-          <H4 style={styles.cardValue} color={CARD_COLORS.purple.accent}>
+          <H4
+            style={styles.cardValue}
+            color={CARD_COLORS.purple.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             {statistics.highestDay ? formatDate(statistics.highestDay.date) : "—"}
           </H4>
           {statistics.highestDay && (

@@ -5,6 +5,7 @@ import { CollapsibleSection } from "./CollapsibleSection"
 import { PieChartDataItem } from "../../utils/analytics-calculations"
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 interface PieChartSectionProps {
   data: PieChartDataItem[]
@@ -88,6 +89,7 @@ export const PieChartSection = memo(function PieChartSection({
   data,
   onCategorySelect,
 }: PieChartSectionProps) {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
@@ -124,22 +126,22 @@ export const PieChartSection = memo(function PieChartSection({
     () => (
       <YStack style={styles.centerLabel}>
         <Text fontSize="$2" color="$color" opacity={0.6}>
-          Total
+          {t("analytics.charts.common.total")}
         </Text>
         <Text fontWeight="bold" fontSize="$4">
           ₹{total.toFixed(0)}
         </Text>
       </YStack>
     ),
-    [total]
+    [total, t]
   )
 
   if (data.length === 0) {
     return (
-      <CollapsibleSection title="Spending by Category">
+      <CollapsibleSection title={t("analytics.charts.category.title")}>
         <YStack style={styles.emptyContainer}>
           <Text color="$color" opacity={0.6}>
-            No expense data for this period
+            {t("analytics.charts.common.noData")}
           </Text>
         </YStack>
       </CollapsibleSection>
@@ -147,7 +149,7 @@ export const PieChartSection = memo(function PieChartSection({
   }
 
   return (
-    <CollapsibleSection title="Spending by Category">
+    <CollapsibleSection title={t("analytics.charts.category.title")}>
       <YStack style={styles.chartContainer}>
         <View>
           <PieChart

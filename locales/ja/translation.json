@@ -101,6 +101,31 @@
     "chart": {
       "none": "なし",
       "others": "その他"
+    },
+    "stats": {
+      "totalSpent": "総支出",
+      "dailyAvg": "一日平均",
+      "topCategory": "最多カテゴリー",
+      "peakDay": "ピーク日"
+    },
+    "charts": {
+      "common": {
+        "total": "合計",
+        "noData": "この期間のデータはありません"
+      },
+      "category": {
+        "title": "カテゴリー別支出"
+      },
+      "paymentMethod": {
+        "title": "支払方法別支出"
+      },
+      "paymentInstrument": {
+        "title": "支払手段別支出",
+        "noData": "カード/UPIの支出はありません"
+      },
+      "trend": {
+        "title": "支出傾向"
+      }
     }
   },
   "settings": {
@@ -113,6 +138,35 @@
       "currency": "通貨",
       "appearance": "外観",
       "about": "アプリ情報"
+    },
+    "conflicts": {
+      "title": "{{count}} Conflict{{s}} Found",
+      "message": "Both local and remote have changes to the same expense{{s}}:\n\n{{summary}}\n\nWhich version would you like to keep?",
+      "keepLocal": "Keep Local",
+      "keepRemote": "Keep Remote"
+    },
+    "downloadPrompt": {
+      "title": "Download Existing Data?",
+      "message": "Would you like to download your expenses from GitHub now?",
+      "notNow": "Not Now",
+      "download": "Download"
+    },
+    "clearDialog": {
+      "title": "Confirm Clear",
+      "message": "Remove sync configuration?",
+      "clear": "Clear"
+    },
+    "notifications": {
+      "downloaded": "Downloaded {{count}} expenses",
+      "settingsApplied": "Settings applied from GitHub",
+      "autoSyncEnabled": "Auto-sync enabled",
+      "syncComplete": "Sync complete",
+      "alreadyInSync": "Already in sync - no changes needed",
+      "configCleared": "Configuration cleared",
+      "categoryUpdated": "Category \"{{label}}\" updated",
+      "categoryAdded": "Category \"{{label}}\" added",
+      "categoryDeleted": "Category \"{{label}}\" deleted",
+      "otherDeleteError": "The \"Other\" category cannot be deleted"
     },
     "defaultPayment": {
       "label": "デフォルト",
@@ -244,5 +298,10 @@
       "timestamp": "コミットからタイムスタンプを抽出できませんでした",
       "blob": "{{path}} のblob作成に失敗しました: {{error}}"
     }
+  },
+  "changelog": {
+    "title": "What's New",
+    "subtitle": "Version {{version}}",
+    "viewFull": "View full release notes"
   }
 }

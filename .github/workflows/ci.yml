@@ -55,3 +55,6 @@ jobs:
 
       - name: 🧪 Test
         run: yarn test
+
+      - name: 🌐 Check Translations
+        run: yarn check:translations

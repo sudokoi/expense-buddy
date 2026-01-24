@@ -6,6 +6,7 @@ import { PaymentMethodChartDataItem } from "../../utils/analytics-calculations"
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { PaymentMethodType } from "../../types/expense"
+import { useTranslation } from "react-i18next"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
@@ -91,6 +92,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   selectedPaymentMethod,
   onPaymentMethodSelect,
 }: PaymentMethodPieChartProps) {
+  const { t } = useTranslation()
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
   const colorScheme = useColorScheme() ?? "light"
@@ -126,22 +128,22 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
     () => (
       <YStack style={styles.centerLabel}>
         <Text fontSize="$2" color="$color" opacity={0.6}>
-          Total
+          {t("analytics.charts.common.total")}
         </Text>
         <Text fontWeight="bold" fontSize="$4">
           ₹{total.toFixed(0)}
         </Text>
       </YStack>
     ),
-    [total]
+    [total, t]
   )
 
   if (data.length === 0) {
     return (
-      <CollapsibleSection title="Spending by Payment Method">
+      <CollapsibleSection title={t("analytics.charts.paymentMethod.title")}>
         <YStack style={styles.emptyContainer}>
           <Text color="$color" opacity={0.6}>
-            No expense data for this period
+            {t("analytics.charts.common.noData")}
           </Text>
         </YStack>
       </CollapsibleSection>
@@ -149,7 +151,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   }
 
   return (
-    <CollapsibleSection title="Spending by Payment Method">
+    <CollapsibleSection title={t("analytics.charts.paymentMethod.title")}>
       <YStack style={styles.chartContainer}>
         <View>
           <PieChart

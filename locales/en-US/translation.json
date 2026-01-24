@@ -100,6 +100,31 @@
     "chart": {
       "none": "None",
       "others": "Others"
+    },
+    "stats": {
+      "totalSpent": "Total Spent",
+      "dailyAvg": "Daily Avg",
+      "topCategory": "Top Category",
+      "peakDay": "Peak Day"
+    },
+    "charts": {
+      "common": {
+        "total": "Total",
+        "noData": "No expense data for this period"
+      },
+      "category": {
+        "title": "Spending by Category"
+      },
+      "paymentMethod": {
+        "title": "Spending by Payment Method"
+      },
+      "paymentInstrument": {
+        "title": "Spending by Payment Instrument",
+        "noData": "No card/UPI expenses for this period"
+      },
+      "trend": {
+        "title": "Spending Trend"
+      }
     }
   },
   "settings": {

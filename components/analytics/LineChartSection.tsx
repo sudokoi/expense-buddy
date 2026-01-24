@@ -10,6 +10,7 @@ import {
   getOverlayColors,
 } from "../../constants/theme-colors"
 import { getColorValue } from "../../tamagui.config"
+import { useTranslation } from "react-i18next"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -22,6 +23,7 @@ interface LineChartSectionProps {
 export const LineChartSection = memo(function LineChartSection({
   data,
 }: LineChartSectionProps) {
+  const { t } = useTranslation()
   const theme = useTheme()
   const colorScheme = useColorScheme() ?? "light"
   const chartColors = getChartColors(colorScheme)
@@ -123,10 +125,10 @@ export const LineChartSection = memo(function LineChartSection({
 
   if (data.length === 0) {
     return (
-      <CollapsibleSection title="Spending Trend">
+      <CollapsibleSection title={t("analytics.charts.trend.title")}>
         <YStack style={styles.emptyContainer}>
           <Text color="$color" opacity={0.6}>
-            No expense data for this period
+            {t("analytics.charts.common.noData")}
           </Text>
         </YStack>
       </CollapsibleSection>
@@ -167,7 +169,7 @@ export const LineChartSection = memo(function LineChartSection({
   )
 
   return (
-    <CollapsibleSection title="Spending Trend">
+    <CollapsibleSection title={t("analytics.charts.trend.title")}>
       <YStack>
         {needsScroll ? (
           <ScrollView horizontal showsHorizontalScrollIndicator>

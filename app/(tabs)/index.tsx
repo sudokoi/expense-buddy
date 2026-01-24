@@ -179,7 +179,9 @@ export default function DashboardScreen() {
       {/* Header */}
       <XStack style={layoutStyles.headerRow}>
         <YStack>
-          <H4>{t("dashboard.title")}</H4>
+          <H4 numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t("dashboard.title")}
+          </H4>
           <Text color="$color" opacity={0.6}>
             {t("dashboard.welcome")}
           </Text>
@@ -197,10 +199,19 @@ export default function DashboardScreen() {
             textTransform="uppercase"
             fontSize="$3"
             color={CARD_COLORS.blue.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
             {t("dashboard.totalSpent")}
           </Text>
-          <H4 style={layoutStyles.cardValue} color={CARD_COLORS.blue.accent}>
+          <H4
+            style={layoutStyles.cardValue}
+            color={CARD_COLORS.blue.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             {formatCurrency(totalExpenses)}
           </H4>
         </Card>
@@ -210,10 +221,19 @@ export default function DashboardScreen() {
             textTransform="uppercase"
             fontSize="$3"
             color={CARD_COLORS.green.text}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
           >
             {t("dashboard.entries")}
           </Text>
-          <H4 style={layoutStyles.cardValue} color={CARD_COLORS.green.accent}>
+          <H4
+            style={layoutStyles.cardValue}
+            color={CARD_COLORS.green.accent}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
             {state.activeExpenses.length}
           </H4>
         </Card>

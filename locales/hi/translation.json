@@ -101,6 +101,31 @@
     "chart": {
       "none": "कोई नहीं",
       "others": "अन्य"
+    },
+    "stats": {
+      "totalSpent": "कुल व्यय",
+      "dailyAvg": "दैनिक औसत",
+      "topCategory": "शीर्ष श्रेणी",
+      "peakDay": "अधिकतम व्यय दिन"
+    },
+    "charts": {
+      "common": {
+        "total": "कुल",
+        "noData": "इस अवधि के लिए कोई डेटा नहीं"
+      },
+      "category": {
+        "title": "श्रेणी के अनुसार व्यय"
+      },
+      "paymentMethod": {
+        "title": "भुगतान विधि के अनुसार व्यय"
+      },
+      "paymentInstrument": {
+        "title": "भुगतान साधन के अनुसार व्यय",
+        "noData": "कोई कार्ड/UPI व्यय नहीं"
+      },
+      "trend": {
+        "title": "व्यय प्रवृत्ति"
+      }
     }
   },
   "settings": {
@@ -113,6 +138,35 @@
       "currency": "मुद्रा",
       "appearance": "दिखावट",
       "about": "ऐप जानकारी"
+    },
+    "conflicts": {
+      "title": "{{count}} Conflict{{s}} Found",
+      "message": "Both local and remote have changes to the same expense{{s}}:\n\n{{summary}}\n\nWhich version would you like to keep?",
+      "keepLocal": "Keep Local",
+      "keepRemote": "Keep Remote"
+    },
+    "downloadPrompt": {
+      "title": "Download Existing Data?",
+      "message": "Would you like to download your expenses from GitHub now?",
+      "notNow": "Not Now",
+      "download": "Download"
+    },
+    "clearDialog": {
+      "title": "Confirm Clear",
+      "message": "Remove sync configuration?",
+      "clear": "Clear"
+    },
+    "notifications": {
+      "downloaded": "Downloaded {{count}} expenses",
+      "settingsApplied": "Settings applied from GitHub",
+      "autoSyncEnabled": "Auto-sync enabled",
+      "syncComplete": "Sync complete",
+      "alreadyInSync": "Already in sync - no changes needed",
+      "configCleared": "Configuration cleared",
+      "categoryUpdated": "Category \"{{label}}\" updated",
+      "categoryAdded": "Category \"{{label}}\" added",
+      "categoryDeleted": "Category \"{{label}}\" deleted",
+      "otherDeleteError": "The \"Other\" category cannot be deleted"
     },
     "defaultPayment": {
       "label": "डिफ़ॉल्ट",
@@ -244,5 +298,10 @@
       "timestamp": "कमिट से टाइमस्टैम्प निकालने में असमर्थ",
       "blob": "{{path}} के लिए blob बनाने में विफल: {{error}}"
     }
+  },
+  "changelog": {
+    "title": "What's New",
+    "subtitle": "Version {{version}}",
+    "viewFull": "View full release notes"
   }
 }
