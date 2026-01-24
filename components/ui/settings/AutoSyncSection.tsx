@@ -2,6 +2,7 @@ import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
 import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 /**
  * Props for the AutoSyncSection component
@@ -57,6 +58,8 @@ export function AutoSyncSection({
   onAutoSyncTimingChange,
   onSyncSettingsChange,
 }: AutoSyncSectionProps) {
+  const { t } = useTranslation()
+
   const handleAutoSyncTimingChange = (value: string) => {
     onAutoSyncTimingChange(value as AutoSyncTiming)
   }
@@ -69,20 +72,20 @@ export function AutoSyncSection({
       style={{ paddingTop: 16 }}
     >
       <Text fontSize="$4" fontWeight="600">
-        Auto-Sync & Options
+        {t("settings.autoSync.title")}
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
       <XStack style={layoutStyles.autoSyncRow}>
         <YStack flex={1}>
-          <Label>Enable Auto-Sync</Label>
+          <Label>{t("settings.autoSync.enable")}</Label>
           <Text
             fontSize="$2"
             color="$color"
             opacity={0.6}
             style={layoutStyles.helperText}
           >
-            Automatically sync with GitHub when configured
+            {t("settings.autoSync.enableHelp")}
           </Text>
         </YStack>
         <Switch
@@ -98,14 +101,14 @@ export function AutoSyncSection({
       {/* Also sync settings toggle */}
       <XStack style={layoutStyles.autoSyncRow}>
         <YStack flex={1}>
-          <Label>Also sync settings</Label>
+          <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text
             fontSize="$2"
             color="$color"
             opacity={0.6}
             style={layoutStyles.helperText}
           >
-            Include theme and preferences in sync
+            {t("settings.autoSync.syncSettingsHelp")}
           </Text>
         </YStack>
         <Switch
@@ -121,16 +124,16 @@ export function AutoSyncSection({
       {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
         <YStack gap="$2" style={{ marginTop: 8 }}>
-          <Label>When to Sync</Label>
+          <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
             <XStack gap="$2" style={layoutStyles.radioRow}>
               <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
                 <RadioGroup.Indicator />
               </RadioGroup.Item>
               <YStack flex={1}>
-                <Label htmlFor="on_launch">On App Launch</Label>
+                <Label htmlFor="on_launch">{t("settings.autoSync.onLaunch")}</Label>
                 <Text fontSize="$2" color="$color" opacity={0.6}>
-                  Sync when the app starts
+                  {t("settings.autoSync.onLaunchHelp")}
                 </Text>
               </YStack>
             </XStack>
@@ -140,9 +143,9 @@ export function AutoSyncSection({
                 <RadioGroup.Indicator />
               </RadioGroup.Item>
               <YStack flex={1}>
-                <Label htmlFor="on_change">On Every Change</Label>
+                <Label htmlFor="on_change">{t("settings.autoSync.onChange")}</Label>
                 <Text fontSize="$2" color="$color" opacity={0.6}>
-                  Sync immediately after making changes
+                  {t("settings.autoSync.onChangeHelp")}
                 </Text>
               </YStack>
             </XStack>

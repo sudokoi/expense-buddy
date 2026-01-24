@@ -31,6 +31,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
+import { useTranslation } from "react-i18next"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -69,6 +70,7 @@ export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
   const { addNotification } = useNotifications()
+  const { t } = useTranslation()
   const {
     settings,
     updateSettings,
@@ -229,21 +231,22 @@ export default function AddExpenseScreen() {
     const result = parseExpression(amount)
 
     if (!result.success) {
-      setErrors({ amount: result.error || "Please enter a valid expression" })
+      setErrors({ amount: result.error || t("add.expressionError") })
       return
     }
 
     // Build payment method object if type is selected
     const paymentMethod: PaymentMethod | undefined = effectivePaymentMethod
       ? {
-          type: effectivePaymentMethod,
-          identifier: paymentMethodId.trim() || undefined,
-          instrumentId: paymentInstrumentId,
-        }
+        type: effectivePaymentMethod,
+        identifier: paymentMethodId.trim() || undefined,
+        instrumentId: paymentInstrumentId,
+      }
       : undefined
 
     addExpense({
       amount: result.value!,
+      currency: settings.defaultCurrency,
       category,
       date: date.toISOString(),
       note,
@@ -251,9 +254,9 @@ export default function AddExpenseScreen() {
     })
 
     if (stayOnAdd) {
-      addNotification("Expense added. Add another.", "success")
+      addNotification(t("add.successAddAnother"), "success")
     } else {
-      addNotification("Expense added", "success")
+      addNotification(t("add.success"), "success")
     }
 
     resetForm()
@@ -275,18 +278,18 @@ export default function AddExpenseScreen() {
         bottomOffset={50}
       >
         <YStack gap="$3" style={layoutStyles.container}>
-          <H4 style={layoutStyles.header}>Add New Expense</H4>
+          <H4 style={layoutStyles.header}>{t("add.title")}</H4>
 
           {/* Amount Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Amount
+              {t("add.amount")} ({settings.defaultCurrency})
             </Label>
             <XStack style={layoutStyles.amountRow}>
               <Input
                 flex={1}
                 size="$5"
-                placeholder="0.00 or 100+50"
+                placeholder={t("add.amountPlaceholder")}
                 keyboardType="default"
                 value={amount}
                 onChangeText={(text) => {
@@ -313,7 +316,7 @@ export default function AddExpenseScreen() {
             )}
             {expressionPreview && !errors.amount && (
               <Text fontSize="$3" color="$color" opacity={0.7}>
-                = ₹{expressionPreview}
+                {t("add.preview", { amount: expressionPreview })}
               </Text>
             )}
           </YStack>
@@ -321,7 +324,7 @@ export default function AddExpenseScreen() {
           {/* Category Selection */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Category
+              {t("add.category")}
             </Label>
             <XStack style={layoutStyles.categoryRow}>
               {categories.map((cat) => {
@@ -343,7 +346,7 @@ export default function AddExpenseScreen() {
           {/* Date Picker */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Date
+              {t("add.date")}
             </Label>
             <Button
               icon={<Calendar size="$1" />}
@@ -368,10 +371,10 @@ export default function AddExpenseScreen() {
           {/* Note Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              Note (Optional)
+              {t("add.note")}
             </Label>
             <TextArea
-              placeholder="What was this for?"
+              placeholder={t("add.notePlaceholder")}
               value={note}
               onChangeText={setNote}
               numberOfLines={2}
@@ -387,7 +390,7 @@ export default function AddExpenseScreen() {
             >
               <XStack flex={1} style={layoutStyles.expandHeader}>
                 <Label color="$color" opacity={0.8} pointerEvents="none">
-                  Payment Method (Optional)
+                  {t("add.paymentMethod")}
                 </Label>
                 {paymentMethodSectionExpanded ? (
                   <ChevronUp size={20} color="$color" opacity={0.6} />
@@ -414,11 +417,11 @@ export default function AddExpenseScreen() {
                 {selectedPaymentConfig?.hasIdentifier && (
                   <YStack gap="$1" style={{ marginTop: 8 }}>
                     <Label color="$color" opacity={0.6} fontSize="$2">
-                      {selectedPaymentConfig.identifierLabel} (Optional)
+                      {selectedPaymentConfig.identifierLabel || t("history.editDialog.fields.identifier")} (Optional)
                     </Label>
 
                     {effectivePaymentMethod &&
-                    isPaymentInstrumentMethod(effectivePaymentMethod) ? (
+                      isPaymentInstrumentMethod(effectivePaymentMethod) ? (
                       <PaymentInstrumentInlineDropdown
                         method={effectivePaymentMethod as PaymentInstrumentMethod}
                         instruments={allInstruments}
@@ -449,8 +452,8 @@ export default function AddExpenseScreen() {
                         size="$4"
                         placeholder={
                           effectivePaymentMethod === "Other"
-                            ? "e.g., Venmo, PayPal, Gift Card"
-                            : `Enter ${selectedPaymentConfig.maxLength} digits`
+                            ? t("history.editDialog.fields.otherPlaceholder")
+                            : t("history.editDialog.fields.identifierPlaceholder", { max: selectedPaymentConfig.maxLength })
                         }
                         keyboardType={
                           effectivePaymentMethod === "Other" ? "default" : "numeric"
@@ -476,7 +479,7 @@ export default function AddExpenseScreen() {
               icon={<Plus size="$1" />}
               fontWeight="bold"
             >
-              Add another
+              {t("add.addAnother")}
             </Button>
             <Button
               flex={1}
@@ -486,7 +489,7 @@ export default function AddExpenseScreen() {
               icon={<Check size="$1" />}
               fontWeight="bold"
             >
-              Save Expense
+              {t("add.save")}
             </Button>
           </XStack>
         </YStack>

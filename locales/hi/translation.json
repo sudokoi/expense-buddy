@@ -1,0 +1,224 @@
+{
+  "currency": {
+    "symbol": "₹"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "welcome": "वापसी पर स्वागत है!",
+    "totalSpent": "कुल व्यय",
+    "entries": "प्रविष्टियाँ",
+    "last7Days": "पिछले 7 दिन",
+    "viewAnalytics": "विश्लेषण देखें",
+    "noData": "अभी तक कोई डेटा नहीं।",
+    "recentTransactions": "हाल ही के लेन-देन",
+    "noRecent": "कोई हालिया लेन-देन नहीं।"
+  },
+  "common": {
+    "add": "+ जोड़ें",
+    "seeAll": "सभी देखें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "save": "सहेजें",
+    "done": "हो गया"
+  },
+  "history": {
+    "title": "व्यय इतिहास",
+    "emptyTitle": "अभी तक कोई खर्च नहीं।",
+    "emptySubtitle": "खर्च जोड़ें टैब से एक जोड़ें।",
+    "deleteDialog": {
+      "title": "व्यय हटाएं",
+      "description": "क्या आप वाकई इस व्यय को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
+    },
+    "editDialog": {
+      "title": "व्यय संपादित करें",
+      "description": "व्यय विवरण अपडेट करें",
+      "fields": {
+        "date": "दिनांक",
+        "datePlaceholder": "दिनांक चुनें",
+        "amount": "राशि",
+        "amountPlaceholder": "राशि या अभिव्यक्ति दर्ज करें (उदा. 100+50)",
+        "amountError": "कृपया एक मान्य राशि दर्ज करें",
+        "expressionError": "कृपया एक मान्य अभिव्यक्ति दर्ज करें",
+        "preview": "= {{amount}}",
+        "category": "श्रेणी",
+        "note": "नोट",
+        "notePlaceholder": "नोट दर्ज करें (वैकल्पिक)",
+        "paymentMethod": "भुगतान विधि (वैकल्पिक)",
+        "identifier": "पहचानकर्ता (वैकल्पिक)",
+        "identifierPlaceholder": "{{max}} अंक दर्ज करें",
+        "otherPlaceholder": "उदा., UPI, नकद, कार्ड"
+      }
+    },
+    "loadMore": "और लोड करें",
+    "loading": "लोड हो रहा है...",
+    "updated": "व्यय अपडेट किया गया",
+    "deleted": "व्यय हटाया गया",
+    "loadError": "अधिक खर्च लोड करने में विफल"
+  },
+  "add": {
+    "title": "नया व्यय जोड़ें",
+    "amount": "राशि",
+    "amountPlaceholder": "0.00 या 100+50",
+    "amountError": "कृपया एक मान्य राशि दर्ज करें",
+    "expressionError": "कृपया एक मान्य अभिव्यक्ति दर्ज करें",
+    "preview": "= {{amount}}",
+    "category": "श्रेणी",
+    "date": "दिनांक",
+    "note": "नोट (वैकल्पिक)",
+    "notePlaceholder": "यह किस लिए था?",
+    "paymentMethod": "भुगतान विधि (वैकल्पिक)",
+    "addAnother": "एक और जोड़ें",
+    "save": "व्यय सहेजें",
+    "success": "व्यय जोड़ा गया",
+    "successAddAnother": "व्यय जोड़ा गया। एक और जोड़ें।"
+  },
+  "analytics": {
+    "title": "विश्लेषण",
+    "subtitle": "अपने खर्च के पैटर्न को ट्रैक करें",
+    "filters": {
+      "button": "फिल्टर",
+      "time": "समय: {{window}}",
+      "category": "श्रेणी: {{category}}",
+      "payment": "भुगतान: {{method}}",
+      "instrument": "साधन: {{instrument}}"
+    },
+    "timeWindow": {
+      "7d": "7 दिन",
+      "15d": "15 दिन",
+      "1m": "1 महीना",
+      "3m": "3 महीने",
+      "6m": "6 महीने",
+      "1y": "1 साल",
+      "all": "सभी"
+    },
+    "empty": {
+      "loading": "विश्लेषण लोड हो रहा है...",
+      "noData": "इस अवधि में कोई खर्च दर्ज नहीं किया गया।",
+      "noDataSubtitle": "एक अलग समय अवधि चुनें या कुछ खर्च जोड़ें।",
+      "noMatch": "चयनित श्रेणियों में कोई खर्च नहीं।",
+      "noMatchSubtitle": "विभिन्न श्रेणियों का चयन करें या रीसेट करने के लिए 'सभी' पर टैप करें।"
+    },
+    "chart": {
+      "none": "कोई नहीं",
+      "others": "अन्य"
+    }
+  },
+  "settings": {
+    "sections": {
+      "defaultPayment": "डिफ़ॉल्ट भुगतान विधि",
+      "paymentInstruments": "भुगतान साधन",
+      "categories": "श्रेणियाँ",
+      "github": "गिटहब सिंक",
+      "language": "भाषा",
+      "currency": "मुद्रा",
+      "appearance": "दिखावट",
+      "about": "ऐप जानकारी"
+    },
+    "defaultPayment": {
+      "label": "डिफ़ॉल्ट",
+      "none": "कोई नहीं",
+      "description": "नए खर्च जोड़ते समय इस भुगतान विधि को पहले से चुनें।"
+    },
+    "github": {
+      "descriptionWeb": "पर्सनल एक्सेस टोकन का उपयोग करके अपने खर्चों को गिटहब रिपोजिटरी में सिंक करें।",
+      "descriptionNative": "अपने खर्चों को अपनी निजी रिपोजिटरी में सिंक करने के लिए गिटहब के साथ साइन इन करें।",
+      "configTitle": "गिटहब कॉन्फ़िगरेशन",
+      "connected": "कनेक्टेड",
+      "tokenLabel": "गिटहब पर्सनल एक्सेस टोकन",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHelp": "Contents (read/write) अनुमति के साथ एक फाइन-ग्रेन्ड टोकन बनाएं",
+      "loginLabel": "गिटहब लॉगिन",
+      "signIn": "गिटहब के साथ साइन इन करें",
+      "signOut": "साइन आउट",
+      "signingIn": "साइन इन हो रहा है...",
+      "loginHelp": "केवल व्यक्तिगत खाते। संगठन रिपोजिटरी समर्थित नहीं हैं।",
+      "repoLabel": "रिपोजिटरी",
+      "repoPlaceholderWeb": "username/repo-name",
+      "repoPlaceholderNative": "एक रिपोजिटरी चुनें",
+      "chooseRepo": "रिपोजिटरी चुनें",
+      "editRepo": "संपादित करें",
+      "branchLabel": "ब्रांच",
+      "saveConfig": "कॉन्फ़िगरेशन सहेजें",
+      "test": "टेस्ट",
+      "testing": "टेस्ट हो रहा है...",
+      "clearConfig": "कॉन्फ़िगरेशन साफ़ करें",
+      "deviceCode": "गिटहब पर यह कोड दर्ज करें:",
+      "copyCode": "कोड कॉपी करें",
+      "openBrowser": "ब्राउज़र में गिटहब खोलें",
+      "browserHelp": "यदि ब्राउज़र नहीं खुला, तो {{url}} पर जाएं",
+      "successConfig": "सिंक कॉन्फ़िगरेशन सहेजा गया",
+      "successSignIn": "गिटहब साइन-इन सफल"
+    },
+    "autoSync": {
+      "title": "ऑटो-सिंक और विकल्प",
+      "enable": "ऑटो-सिंक सक्षम करें",
+      "enableHelp": "कॉन्फ़िगर होने पर गिटहब के साथ स्वचालित रूप से सिंक करें",
+      "syncSettings": "सेटिंग्स भी सिंक करें",
+      "syncSettingsHelp": "सिंक में थीम और प्राथमिकताएं शामिल करें",
+      "whenToSync": "कब सिंक करें",
+      "onLaunch": "ऐप लॉन्च पर",
+      "onLaunchHelp": "ऐप शुरू होने पर सिंक करें",
+      "onChange": "हर बदलाव पर",
+      "onChangeHelp": "बदलाव करने के तुरंत बाद सिंक करें",
+      "syncNow": "अभी सिंक करें",
+      "syncing": "सिंक हो रहा है..."
+    },
+    "instruments": {
+      "title": "सहेजे गए साधन",
+      "description": "अपने क्रेडिट/डेबिट कार्ड और UPI आईडी के लिए उपनाम जोड़ें।",
+      "add": "जोड़ें",
+      "empty": "अभी तक कोई साधन नहीं।",
+      "manage": "साधन प्रबंधित करें",
+      "removeDialog": {
+        "title": "साधन हटाएं",
+        "message": "\"{{nickname}}\" हटाएं?"
+      }
+    },
+    "categories": {
+      "description": "अपनी खर्च करने की आदतों से मेल खाने के लिए व्यय श्रेणियों को अनुकूलित करें।",
+      "manage": "श्रेणियाँ प्रबंधित करें",
+      "add": "श्रेणी जोड़ें",
+      "otherHelp": "\"अन्य\" हमेशा सबसे नीचे रहता है",
+      "deleteDialog": {
+        "title": "श्रेणी हटाएं",
+        "messageSimple": "\"{{label}}\" हटाएं?",
+        "messageReassign": "\"{{label}}\" हटाएं? {{count}} खर्च \"अन्य\" को सौंपे जाएंगे।"
+      }
+    },
+    "appearance": {
+      "theme": "थीम",
+      "options": {
+        "system": "सिस्टम",
+        "light": "लाइट",
+        "dark": "डार्क"
+      }
+    },
+    "about": {
+      "currentVersion": "वर्तमान संस्करण",
+      "latestVersion": "नवीनतम संस्करण",
+      "checkForUpdates": "अपडेट के लिए जांचें",
+      "checking": "जांच हो रही है...",
+      "download": "v{{version}} डाउनलोड करें",
+      "reportIssue": "समस्या की रिपोर्ट करें",
+      "viewGitHub": "गिटहब पर देखें"
+    }
+  },
+  "dayView": {
+    "title": "{{date}} के लिए खर्च",
+    "today": "आज",
+    "yesterday": "कल",
+    "tomorrow": "कल (आने वाला)",
+    "totalSpent": "कुल व्यय",
+    "empty": "इस दिन के लिए कोई खर्च नहीं"
+  },
+  "repoPicker": {
+    "title": "रिपोजिटरी चुनें",
+    "subtitle": "अपने खर्चों को सिंक करने के लिए एक रिपोजिटरी चुनें।",
+    "searchPlaceholder": "रिपोजिटरी खोजें...",
+    "loadMore": "और रिपोजिटरीज लोड करें",
+    "loading": "लोड हो रहा है...",
+    "empty": "कोई रिपोजिटरी नहीं मिली।",
+    "error": "रिपोजिटरीज लोड करने में विफल",
+    "createPrivate": "एक नई निजी रिपोजिटरी बनाएं: {{name}}"
+  }
+}

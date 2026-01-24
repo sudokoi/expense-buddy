@@ -9,6 +9,7 @@ import {
   getActivePaymentInstruments,
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
+import { useTranslation } from "react-i18next"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -48,6 +49,7 @@ function upsertInstrument(
 }
 
 export function PaymentInstrumentsSection() {
+  const { t } = useTranslation()
   const {
     settings,
     updateSettings,
@@ -88,28 +90,32 @@ export function PaymentInstrumentsSection() {
 
   const handleDelete = useCallback(
     (inst: PaymentInstrument) => {
-      Alert.alert("Remove Instrument", `Remove "${inst.nickname}"?`, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            const now = new Date().toISOString()
-            const nextList = instruments.map((i) =>
-              i.id === inst.id
-                ? {
+      Alert.alert(
+        t("settings.instruments.removeDialog.title"),
+        t("settings.instruments.removeDialog.message", { nickname: inst.nickname }),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("settings.instruments.remove"),
+            style: "destructive",
+            onPress: () => {
+              const now = new Date().toISOString()
+              const nextList = instruments.map((i) =>
+                i.id === inst.id
+                  ? {
                     ...i,
                     deletedAt: now,
                     updatedAt: now,
                   }
-                : i
-            )
-            updateSettings({ paymentInstruments: nextList })
+                  : i
+              )
+              updateSettings({ paymentInstruments: nextList })
+            },
           },
-        },
-      ])
+        ]
+      )
     },
-    [instruments, updateSettings]
+    [instruments, updateSettings, t]
   )
 
   const handleSave = useCallback(
@@ -125,19 +131,19 @@ export function PaymentInstrumentsSection() {
       <YStack gap="$3">
         <XStack style={layoutStyles.row}>
           <YStack flex={1} gap="$1">
-            <Label>Saved Instruments</Label>
+            <Label>{t("settings.instruments.title")}</Label>
             <Text color="$color" opacity={0.7} fontSize="$3">
-              Add nicknames for your Credit/Debit cards and UPI IDs.
+              {t("settings.instruments.description")}
             </Text>
           </YStack>
           <Button size="$4" themeInverse icon={Plus} onPress={handleAdd}>
-            Add
+            {t("settings.instruments.add")}
           </Button>
         </XStack>
 
         {active.length === 0 ? (
           <Text color="$color" opacity={0.6}>
-            No instruments yet.
+            {t("settings.instruments.empty")}
           </Text>
         ) : (
           <Accordion
@@ -156,7 +162,7 @@ export function PaymentInstrumentsSection() {
                 {({ open }: { open: boolean }) => (
                   <>
                     <XStack style={layoutStyles.accordionTriggerInner}>
-                      <Text fontWeight="500">Manage Instruments</Text>
+                      <Text fontWeight="500">{t("settings.instruments.manage")}</Text>
                       <Text fontSize="$2" color="$color" opacity={0.6}>
                         ({active.length})
                       </Text>

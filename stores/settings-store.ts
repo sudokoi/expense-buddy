@@ -152,6 +152,32 @@ export const settingsStore = createStore({
       }
     },
 
+    setDefaultCurrency: (context, event: { currency: string }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        defaultCurrency: event.currency,
+      }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
     setAutoSyncEnabled: (context, event: { enabled: boolean }, enqueue) => {
       const newSettings = {
         ...context.settings,

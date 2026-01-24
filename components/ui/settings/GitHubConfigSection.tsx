@@ -10,6 +10,7 @@ import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
 import { useRouter, usePathname } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
+import { useTranslation } from "react-i18next"
 
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
@@ -60,6 +61,7 @@ const layoutStyles = {
     flex: 1,
     gap: 8,
     minWidth: 0,
+    maxWidth: "85%", // prevent overlapping chevron
   } as ViewStyle,
   connectedBadge: {
     flexDirection: "column",
@@ -99,6 +101,7 @@ export function GitHubConfigSection({
   onConnectionStatusChange,
   onNotification,
 }: GitHubConfigSectionProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -190,14 +193,14 @@ export function GitHubConfigSection({
 
     auth.signIn({
       onSignedIn: () => {
-        onNotification("GitHub sign-in successful", "success")
+        onNotification(t("settings.github.successSignIn"), "success")
         router.push("/github/repo-picker")
       },
       onError: (message) => {
         onNotification(message, "error")
       },
     })
-  }, [auth, onNotification, router])
+  }, [auth, onNotification, router, t])
 
   const handleCopyDeviceCode = useCallback(async () => {
     const code = auth.deviceCode?.user_code
@@ -205,11 +208,11 @@ export function GitHubConfigSection({
 
     try {
       await Clipboard.setStringAsync(code)
-      onNotification("Code copied to clipboard", "success")
+      onNotification(t("settings.github.copyCode"), "success")
     } catch (error) {
       onNotification(String(error), "error")
     }
-  }, [auth.deviceCode?.user_code, onNotification])
+  }, [auth.deviceCode?.user_code, onNotification, t])
 
   const handleChooseRepo = useCallback(() => {
     router.push("/github/repo-picker")
@@ -243,11 +246,11 @@ export function GitHubConfigSection({
     try {
       auth.signOut()
       onConnectionStatusChange("idle")
-      onNotification("Signed out of GitHub", "success")
+      onNotification(t("settings.github.signOut"), "success")
     } catch (error) {
       onNotification(String(error), "error")
     }
-  }, [auth, handleClearConfig, onConnectionStatusChange, onNotification, syncConfig])
+  }, [auth, handleClearConfig, onConnectionStatusChange, onNotification, syncConfig, t])
 
   const handleTokenChange = useCallback((text: string) => {
     setWebToken(text)
@@ -292,7 +295,7 @@ export function GitHubConfigSection({
           {({ open }: { open: boolean }) => (
             <>
               <XStack style={layoutStyles.accordionTriggerInner}>
-                <Text fontWeight="500">GitHub Configuration</Text>
+                <Text fontWeight="500">{t("settings.github.configTitle")}</Text>
                 {isConfigured && (
                   <YStack style={layoutStyles.connectedBadge}>
                     <XStack
@@ -300,7 +303,7 @@ export function GitHubConfigSection({
                     >
                       <Check size={14} color={successColor} />
                       <Text fontSize="$2" color={successColor}>
-                        Connected
+                        {t("settings.github.connected")}
                       </Text>
                     </XStack>
                     {repo ? (
@@ -331,10 +334,10 @@ export function GitHubConfigSection({
             {/* Auth */}
             {isWeb ? (
               <YStack gap="$2">
-                <Label>GitHub Personal Access Token</Label>
+                <Label>{t("settings.github.tokenLabel")}</Label>
                 <Input
                   secureTextEntry
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  placeholder={t("settings.github.tokenPlaceholder")}
                   value={token}
                   onChangeText={handleTokenChange}
                   size="$4"
@@ -347,13 +350,13 @@ export function GitHubConfigSection({
                   </Text>
                 ) : (
                   <Text fontSize="$2" color="$color" opacity={0.6}>
-                    Create a fine-grained PAT with Contents (read/write) permission
+                    {t("settings.github.tokenHelp")}
                   </Text>
                 )}
               </YStack>
             ) : (
               <YStack gap="$2">
-                <Label>GitHub Login</Label>
+                <Label>{t("settings.github.loginLabel")}</Label>
                 <Button
                   size="$4"
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
@@ -366,10 +369,10 @@ export function GitHubConfigSection({
                   }
                 >
                   {auth.isSigningIn
-                    ? "Signing in..."
+                    ? t("settings.github.signingIn")
                     : isSignedIn
-                      ? "Sign out"
-                      : "Sign in with GitHub"}
+                      ? t("settings.github.signOut")
+                      : t("settings.github.signIn")}
                 </Button>
                 {!githubOAuthStatus.ok && (
                   <Text fontSize="$2" color="$red10">
@@ -379,7 +382,7 @@ export function GitHubConfigSection({
                 {auth.deviceCode && (
                   <YStack gap="$2" style={{ paddingTop: 4 } as ViewStyle}>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
-                      Enter this code on GitHub:
+                      {t("settings.github.deviceCode")}
                     </Text>
                     <XStack
                       gap="$2"
@@ -389,7 +392,7 @@ export function GitHubConfigSection({
                         {auth.deviceCode.user_code}
                       </Text>
                       <Button size="$3" onPress={() => void handleCopyDeviceCode()}>
-                        Copy code
+                        {t("settings.github.copyCode")}
                       </Button>
                     </XStack>
                     <Button
@@ -403,25 +406,25 @@ export function GitHubConfigSection({
                         }
                       }}
                     >
-                      Open GitHub in browser
+                      {t("settings.github.openBrowser")}
                     </Button>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
-                      If the browser didn’t open, visit {auth.deviceCode.verification_uri}
+                      {t("settings.github.browserHelp", { url: auth.deviceCode.verification_uri })}
                     </Text>
                   </YStack>
                 )}
                 <Text fontSize="$2" color="$color" opacity={0.6}>
-                  Personal accounts only. Organization repositories aren’t supported.
+                  {t("settings.github.loginHelp")}
                 </Text>
               </YStack>
             )}
 
             {/* Repository */}
             <YStack gap="$2">
-              <Label>Repository</Label>
+              <Label>{t("settings.github.repoLabel")}</Label>
               {isWeb ? (
                 <Input
-                  placeholder="username/repo-name"
+                  placeholder={t("settings.github.repoPlaceholderWeb")}
                   value={repo}
                   onChangeText={handleRepoChange}
                   size="$4"
@@ -431,7 +434,7 @@ export function GitHubConfigSection({
               ) : (
                 <YStack gap="$2">
                   <Input
-                    placeholder="Choose a repository"
+                    placeholder={t("settings.github.repoPlaceholderNative")}
                     value={repo}
                     editable={false}
                     size="$4"
@@ -439,7 +442,7 @@ export function GitHubConfigSection({
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                   />
                   <Button size="$3" onPress={handleChooseRepo} disabled={!token}>
-                    {repo ? "Edit" : "Choose repository"}
+                    {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
                   </Button>
                 </YStack>
               )}
@@ -452,7 +455,7 @@ export function GitHubConfigSection({
 
             {/* Branch */}
             <YStack gap="$2">
-              <Label>Branch</Label>
+              <Label>{t("settings.github.branchLabel")}</Label>
               <Input
                 placeholder="main"
                 value={branch}
@@ -471,7 +474,7 @@ export function GitHubConfigSection({
             {/* Action Buttons */}
             <XStack gap="$3" style={layoutStyles.buttonRow}>
               <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
-                Save Config
+                {t("settings.github.saveConfig")}
               </Button>
               <Button
                 flex={1}
@@ -495,7 +498,7 @@ export function GitHubConfigSection({
                 }}
                 color={connectionStatus === "idle" ? undefined : "white"}
               >
-                {isTesting ? "Testing..." : "Test"}
+                {isTesting ? t("settings.github.testing") : t("settings.github.test")}
               </Button>
             </XStack>
 
@@ -508,7 +511,7 @@ export function GitHubConfigSection({
                 icon={X}
                 style={{ marginTop: 12, backgroundColor: errorColor }}
               >
-                Clear Configuration
+                {t("settings.github.clearConfig")}
               </Button>
             )}
           </YStack>

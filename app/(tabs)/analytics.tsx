@@ -26,6 +26,7 @@ import {
   loadAnalyticsFilters,
   saveAnalyticsFilters,
 } from "../../services/analytics-filters-storage"
+import { useTranslation } from "react-i18next"
 
 const styles = {
   headerRow: {
@@ -47,17 +48,11 @@ const styles = {
   } as TextStyle,
 }
 
-const TIME_WINDOW_LABELS: Record<TimeWindow, string> = {
-  "7d": "7 Days",
-  "15d": "15 Days",
-  "1m": "1 Month",
-  "3m": "3 Months",
-  "6m": "6 Months",
-  "1y": "1 Year",
-  all: "All",
-}
-
 const INSTRUMENT_OTHERS_ID = "__others__"
+
+// Moved helper functions outside component or use hooks/t inside
+// To use translations in helpers, we need to pass t or return keys?
+// Easier to refactor helpers to component scope or pass t.
 
 function methodShortLabel(method: string): string {
   switch (method) {
@@ -70,70 +65,6 @@ function methodShortLabel(method: string): string {
     default:
       return method
   }
-}
-
-function formatSelectedPaymentInstrumentLabel(
-  key: PaymentInstrumentSelectionKey,
-  instruments: PaymentInstrument[]
-): string {
-  const [method, instrumentId] = key.split("::")
-  const shortMethod = methodShortLabel(method)
-
-  if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
-    return `${shortMethod} • Others`
-  }
-
-  const inst = findInstrumentById(instruments, instrumentId)
-  if (!inst || inst.deletedAt) {
-    return `${shortMethod} • Others`
-  }
-
-  return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
-}
-
-function formatSelectedPaymentInstrumentsSummary(
-  keys: PaymentInstrumentSelectionKey[]
-): string {
-  if (keys.length === 0) return "All"
-  if (keys.length === 1) return "1"
-
-  const countsByMethod = new Map<string, number>()
-  for (const key of keys) {
-    const [method] = key.split("::")
-    const short = methodShortLabel(method)
-    countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
-  }
-
-  const parts = Array.from(countsByMethod.entries())
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([method, count]) => `${method} ${count}`)
-
-  const MAX_GROUPS = 3
-  const visible = parts.slice(0, MAX_GROUPS)
-  const remaining = parts.length - visible.length
-  const breakdown =
-    remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
-
-  return `${keys.length} (${breakdown})`
-}
-
-function formatListBreakdown(items: string[]): string {
-  const MAX_ITEMS = 3
-
-  const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
-  const visible = unique.slice(0, MAX_ITEMS)
-  const remaining = unique.length - visible.length
-
-  if (unique.length === 0) return "All"
-  if (unique.length === 1) return unique[0]
-
-  return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
-}
-
-function paymentMethodLabel(key: PaymentMethodSelectionKey): string {
-  if (key === "__none__") return "None"
-  const match = PAYMENT_METHODS.find((m) => m.value === key)
-  return match?.label ?? key
 }
 
 // Memoized empty state component
@@ -158,12 +89,13 @@ const EmptyState = memo(function EmptyState({
 
 // Memoized header component
 const Header = memo(function Header() {
+  const { t } = useTranslation()
   return (
     <XStack style={styles.headerRow}>
       <YStack>
-        <H4>Analytics</H4>
+        <H4>{t("analytics.title")}</H4>
         <Text color="$color" opacity={0.6}>
-          Track your spending patterns
+          {t("analytics.subtitle")}
         </Text>
       </YStack>
     </XStack>
@@ -176,6 +108,7 @@ const Header = memo(function Header() {
  * Supports time window selection and category filtering
  */
 export default function AnalyticsScreen() {
+  const { t } = useTranslation()
   // Local state for time window (defaults to 7d per requirement 1.3)
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("7d")
 
@@ -277,10 +210,10 @@ export default function AnalyticsScreen() {
         nextSelectedPaymentMethods.length === 0
           ? new Set(PAYMENT_INSTRUMENT_METHODS)
           : new Set(
-              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
-              )
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
             )
+          )
 
       const allowedWithConfig = new Set<string>()
       for (const method of allowedMethods) {
@@ -322,10 +255,10 @@ export default function AnalyticsScreen() {
       selectedPaymentMethods.length === 0
         ? new Set(PAYMENT_INSTRUMENT_METHODS)
         : new Set(
-            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-              selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
-            )
+          PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+            selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
           )
+        )
 
     for (const method of PAYMENT_INSTRUMENT_METHODS) {
       if (!allowedMethods.has(method)) continue
@@ -344,55 +277,118 @@ export default function AnalyticsScreen() {
     (selectedPaymentMethods.length > 0 ? 1 : 0) +
     (selectedPaymentInstruments.length > 0 ? 1 : 0)
 
+  // Helpers inside component to use translation hook
+  const formatSelectedPaymentInstrumentLabel = (
+    key: PaymentInstrumentSelectionKey,
+    instruments: PaymentInstrument[]
+  ): string => {
+    const [method, instrumentId] = key.split("::")
+    const shortMethod = methodShortLabel(method)
+
+    if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
+      return `${shortMethod} • ${t("analytics.chart.others")}`
+    }
+
+    const inst = findInstrumentById(instruments, instrumentId)
+    if (!inst || inst.deletedAt) {
+      return `${shortMethod} • ${t("analytics.chart.others")}`
+    }
+
+    return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
+  }
+
+  const formatSelectedPaymentInstrumentsSummary = (
+    keys: PaymentInstrumentSelectionKey[]
+  ): string => {
+    if (keys.length === 0) return t("analytics.timeWindow.all")
+    if (keys.length === 1) return "1"
+
+    const countsByMethod = new Map<string, number>()
+    for (const key of keys) {
+      const [method] = key.split("::")
+      const short = methodShortLabel(method)
+      countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
+    }
+
+    const parts = Array.from(countsByMethod.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([method, count]) => `${method} ${count}`)
+
+    const MAX_GROUPS = 3
+    const visible = parts.slice(0, MAX_GROUPS)
+    const remaining = parts.length - visible.length
+    const breakdown =
+      remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+
+    return `${keys.length} (${breakdown})`
+  }
+
+  const formatListBreakdown = (items: string[]): string => {
+    const MAX_ITEMS = 3
+
+    const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
+    const visible = unique.slice(0, MAX_ITEMS)
+    const remaining = unique.length - visible.length
+
+    if (unique.length === 0) return t("analytics.timeWindow.all")
+    if (unique.length === 1) return unique[0]
+
+    return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+  }
+
+  const paymentMethodLabel = (key: PaymentMethodSelectionKey): string => {
+    if (key === "__none__") return t("analytics.chart.none")
+    const match = PAYMENT_METHODS.find((m) => m.value === key)
+    return match?.label ?? key
+  }
+
   const appliedChips = useMemo(() => {
     const chips: Array<{ key: string; label: string }> = []
 
-    chips.push({ key: "time", label: `Time: ${TIME_WINDOW_LABELS[timeWindow]}` })
+    chips.push({ key: "time", label: t("analytics.filters.time", { window: t(`analytics.timeWindow.${timeWindow}`) }) })
 
     if (selectedCategories.length === 0) {
-      chips.push({ key: "category", label: "Category: All" })
+      chips.push({ key: "category", label: t("analytics.filters.category", { category: t("analytics.timeWindow.all") }) })
     } else if (selectedCategories.length === 1) {
-      chips.push({ key: "category", label: `Category: ${selectedCategories[0]}` })
+      chips.push({ key: "category", label: t("analytics.filters.category", { category: selectedCategories[0] }) })
     } else {
       chips.push({
         key: "category",
-        label: `Categories: ${selectedCategories.length} (${formatListBreakdown(
-          selectedCategories
-        )})`,
+        label: t("analytics.filters.category", { category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories)})` }),
       })
     }
 
     if (selectedPaymentMethods.length === 0) {
-      chips.push({ key: "payment-method", label: "Payment: All" })
+      chips.push({ key: "payment-method", label: t("analytics.filters.payment", { method: t("analytics.timeWindow.all") }) })
     } else if (selectedPaymentMethods.length === 1) {
       const only = selectedPaymentMethods[0]
-      chips.push({ key: "payment-method", label: `Payment: ${paymentMethodLabel(only)}` })
+      chips.push({ key: "payment-method", label: t("analytics.filters.payment", { method: paymentMethodLabel(only) }) })
     } else {
       chips.push({
         key: "payment-method",
-        label: `Payment methods: ${selectedPaymentMethods.length} (${formatListBreakdown(
-          selectedPaymentMethods.map(paymentMethodLabel)
-        )})`,
+        label: t("analytics.filters.payment", { method: `${selectedPaymentMethods.length} (${formatListBreakdown(selectedPaymentMethods.map(paymentMethodLabel))})` }),
       })
     }
 
     if (showPaymentInstrumentFilter) {
       if (selectedPaymentInstruments.length === 0) {
-        chips.push({ key: "payment-instrument", label: "Instrument: All" })
+        chips.push({ key: "payment-instrument", label: t("analytics.filters.instrument", { instrument: t("analytics.timeWindow.all") }) })
       } else if (selectedPaymentInstruments.length === 1) {
         chips.push({
           key: "payment-instrument",
-          label: `Instrument: ${formatSelectedPaymentInstrumentLabel(
-            selectedPaymentInstruments[0],
-            paymentInstruments
-          )}`,
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentLabel(
+              selectedPaymentInstruments[0],
+              paymentInstruments
+            ),
+          }),
         })
       } else {
         chips.push({
           key: "payment-instrument",
-          label: `Instruments: ${formatSelectedPaymentInstrumentsSummary(
-            selectedPaymentInstruments
-          )}`,
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentsSummary(selectedPaymentInstruments),
+          }),
         })
       }
     }
@@ -405,6 +401,7 @@ export default function AnalyticsScreen() {
     selectedPaymentInstruments,
     paymentInstruments,
     showPaymentInstrumentFilter,
+    t,
   ])
 
   const handleApplyFilters = useCallback(
@@ -471,26 +468,26 @@ export default function AnalyticsScreen() {
           bordered
         >
           {!filtersHydrated
-            ? "Filters"
+            ? t("analytics.filters.button")
             : activeFilterCount > 0
-              ? `Filters (${activeFilterCount})`
-              : "Filters"}
+              ? `${t("analytics.filters.button")} (${activeFilterCount})`
+              : t("analytics.filters.button")}
         </Button>
       </XStack>
 
       {isLoading ? (
-        <EmptyState title="Loading analytics..." subtitle="" />
+        <EmptyState title={t("analytics.empty.loading")} subtitle="" />
       ) : (
         <>
           {!hasAnyExpenses ? (
             <EmptyState
-              title="No expenses recorded in this period."
-              subtitle="Try selecting a different time window or add some expenses."
+              title={t("analytics.empty.noData")}
+              subtitle={t("analytics.empty.noDataSubtitle")}
             />
           ) : !hasData && selectedCategories.length > 0 ? (
             <EmptyState
-              title="No expenses in selected categories."
-              subtitle="Try selecting different categories or tap 'All' to reset."
+              title={t("analytics.empty.noMatch")}
+              subtitle={t("analytics.empty.noMatchSubtitle")}
             />
           ) : (
             <>

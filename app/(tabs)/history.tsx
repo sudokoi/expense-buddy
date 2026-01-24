@@ -14,7 +14,7 @@ import {
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { format, parseISO } from "date-fns"
-import { getLocalDayKey } from "../../utils/date"
+import { getLocalDayKey, formatDate } from "../../utils/date"
 import type {
   ExpenseCategory,
   Expense,
@@ -41,6 +41,7 @@ const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CategoryCard } from "../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
+import { useTranslation } from "react-i18next"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -96,6 +97,7 @@ const layoutStyles = {
 }
 
 export default function HistoryScreen() {
+  const { t } = useTranslation()
   const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const { syncConfig, settings, updateSettings } = useSettings()
@@ -227,12 +229,12 @@ export default function HistoryScreen() {
 
     for (const expense of sorted) {
       // Group by local day to avoid UTC offset shifts.
-      const expenseDate = parseISO(expense.date)
+      // Use formatDate for section title if possible
       const dayKey = getLocalDayKey(expense.date)
       if (dayKey !== currentIsoDate) {
         currentIsoDate = dayKey
         currentSection = {
-          title: format(expenseDate, "dd/MM/yyyy"),
+          title: formatDate(expense.date, "dd/MM/yyyy"), // Already localized in date.ts? Yes mostly
           data: [],
         }
         sections.push(currentSection)
@@ -279,10 +281,10 @@ export default function HistoryScreen() {
   const confirmDelete = React.useCallback(() => {
     if (deletingExpenseId) {
       deleteExpense(deletingExpenseId)
-      addNotification("Expense deleted", "success")
+      addNotification(t("history.deleted"), "success")
       setDeletingExpenseId(null)
     }
-  }, [deletingExpenseId, deleteExpense, addNotification])
+  }, [deletingExpenseId, deleteExpense, addNotification, t])
 
   const handleLoadMore = React.useCallback(async () => {
     if (isLoadingMore || !hasMore) return
@@ -299,11 +301,11 @@ export default function HistoryScreen() {
         addNotification(result.error || result.message, "error")
       }
     } catch {
-      addNotification("Failed to load more expenses", "error")
+      addNotification(t("history.loadError"), "error")
     } finally {
       setIsLoadingMore(false)
     }
-  }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification])
+  }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification, t])
 
   // Memoized renderItem function
   const renderItem = React.useCallback(
@@ -357,11 +359,11 @@ export default function HistoryScreen() {
             onPress={handleLoadMore}
             disabled={isLoadingMore}
           >
-            {isLoadingMore ? "Loading..." : "Load More"}
+            {isLoadingMore ? t("history.loading") : t("history.loadMore")}
           </Button>
         </YStack>
       ) : null,
-    [hasMore, syncConfig, handleLoadMore, isLoadingMore]
+    [hasMore, syncConfig, handleLoadMore, isLoadingMore, t]
   )
 
   // Memoized content container style
@@ -377,24 +379,24 @@ export default function HistoryScreen() {
       const expense = state.activeExpenses.find((e) => e.id === editingExpense.id)
       if (expense) {
         if (!editingExpense.amount.trim()) {
-          addNotification("Please enter a valid amount", "error")
+          addNotification(t("history.editDialog.fields.amountError"), "error")
           return
         }
 
         const result = parseExpression(editingExpense.amount)
 
         if (!result.success) {
-          addNotification(result.error || "Please enter a valid expression", "error")
+          addNotification(result.error || t("history.editDialog.fields.expressionError"), "error")
           return
         }
 
         // Build payment method object if type is selected
         const paymentMethod: PaymentMethod | undefined = editingExpense.paymentMethodType
           ? {
-              type: editingExpense.paymentMethodType,
-              identifier: editingExpense.paymentMethodId.trim() || undefined,
-              instrumentId: editingExpense.paymentInstrumentId,
-            }
+            type: editingExpense.paymentMethodType,
+            identifier: editingExpense.paymentMethodId.trim() || undefined,
+            instrumentId: editingExpense.paymentInstrumentId,
+          }
           : undefined
 
         editExpense(editingExpense.id, {
@@ -404,21 +406,21 @@ export default function HistoryScreen() {
           note: editingExpense.note,
           paymentMethod,
         })
-        addNotification("Expense updated", "success")
+        addNotification(t("history.updated"), "success")
         setEditingExpense(null)
         setShowDatePicker(false)
       }
     }
-  }, [editingExpense, state.activeExpenses, editExpense, addNotification])
+  }, [editingExpense, state.activeExpenses, editExpense, addNotification, t])
 
   if (state.activeExpenses.length === 0) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
         <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
-          No expenses yet.
+          {t("history.emptyTitle")}
         </Text>
         <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
-          Add one from the Add Expense tab.
+          {t("history.emptySubtitle")}
         </Text>
       </YStack>
     )
@@ -426,7 +428,7 @@ export default function HistoryScreen() {
 
   return (
     <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
-      <H4 style={layoutStyles.header}>Expense History</H4>
+      <H4 style={layoutStyles.header}>{t("history.title")}</H4>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -436,16 +438,16 @@ export default function HistoryScreen() {
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
           <Dialog.Content bordered elevate key="content" gap="$4">
-            <Dialog.Title size="$6">Delete Expense</Dialog.Title>
+            <Dialog.Title size="$6">{t("history.deleteDialog.title")}</Dialog.Title>
             <Dialog.Description>
-              Are you sure you want to delete this expense? This action cannot be undone.
+              {t("history.deleteDialog.description")}
             </Dialog.Description>
             <XStack gap="$3" style={layoutStyles.dialogButtonRow}>
               <Dialog.Close asChild>
-                <Button size="$4">Cancel</Button>
+                <Button size="$4">{t("common.cancel")}</Button>
               </Dialog.Close>
               <Button size="$4" theme="red" onPress={confirmDelete}>
-                Delete
+                {t("common.delete")}
               </Button>
             </XStack>
           </Dialog.Content>
@@ -472,8 +474,8 @@ export default function HistoryScreen() {
             maxHeight="80%"
             gap="$4"
           >
-            <Dialog.Title size="$6">Edit Expense</Dialog.Title>
-            <Dialog.Description>Update the expense details</Dialog.Description>
+            <Dialog.Title size="$6">{t("history.editDialog.title")}</Dialog.Title>
+            <Dialog.Description>{t("history.editDialog.description")}</Dialog.Description>
 
             <KeyboardAwareScrollView
               bottomOffset={20}
@@ -482,7 +484,7 @@ export default function HistoryScreen() {
               <YStack gap="$3">
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8} htmlFor="date">
-                    Date
+                    {t("history.editDialog.fields.date")}
                   </Label>
                   <Button
                     size="$4"
@@ -490,8 +492,8 @@ export default function HistoryScreen() {
                     icon={Calendar}
                   >
                     {editingExpense?.date
-                      ? format(parseISO(editingExpense.date), "dd/MM/yyyy")
-                      : "Select date"}
+                      ? formatDate(editingExpense.date, "dd/MM/yyyy")
+                      : t("history.editDialog.fields.datePlaceholder")}
                   </Button>
                   {showDatePicker && (
                     <DateTimePicker
@@ -515,9 +517,9 @@ export default function HistoryScreen() {
                           setEditingExpense((prev) =>
                             prev
                               ? {
-                                  ...prev,
-                                  date: selectedDate.toISOString(),
-                                }
+                                ...prev,
+                                date: selectedDate.toISOString(),
+                              }
                               : null
                           )
                         }
@@ -526,14 +528,14 @@ export default function HistoryScreen() {
                   )}
                   {showDatePicker && Platform.OS === "ios" && (
                     <Button size="$4" onPress={() => setShowDatePicker(false)}>
-                      Done
+                      {t("common.done")}
                     </Button>
                   )}
                 </YStack>
 
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8} htmlFor="amount">
-                    Amount (₹)
+                    {t("history.editDialog.fields.amount")} ({settings.defaultCurrency})
                   </Label>
                   <Input
                     id="amount"
@@ -543,19 +545,19 @@ export default function HistoryScreen() {
                         prev ? { ...prev, amount: text } : null
                       )
                     }
-                    placeholder="Enter amount or expression (e.g., 100+50)"
+                    placeholder={t("history.editDialog.fields.amountPlaceholder")}
                     keyboardType="default"
                   />
                   {expressionPreview && (
                     <Text fontSize="$3" color="$color" opacity={0.7}>
-                      = ₹{expressionPreview}
+                      {t("history.editDialog.fields.preview", { amount: expressionPreview })}
                     </Text>
                   )}
                 </YStack>
 
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8}>
-                    Category
+                    {t("history.editDialog.fields.category")}
                   </Label>
                   <XStack style={layoutStyles.categoryRow}>
                     {categories.map((cat) => {
@@ -576,7 +578,7 @@ export default function HistoryScreen() {
 
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8} htmlFor="note">
-                    Note
+                    {t("history.editDialog.fields.note")}
                   </Label>
                   <Input
                     id="note"
@@ -584,14 +586,14 @@ export default function HistoryScreen() {
                     onChangeText={(text) =>
                       setEditingExpense((prev) => (prev ? { ...prev, note: text } : null))
                     }
-                    placeholder="Enter note (optional)"
+                    placeholder={t("history.editDialog.fields.notePlaceholder")}
                   />
                 </YStack>
 
                 {/* Payment Method Selection */}
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8}>
-                    Payment Method (Optional)
+                    {t("history.editDialog.fields.paymentMethod")}
                   </Label>
                   <XStack style={layoutStyles.paymentMethodRow}>
                     {PAYMENT_METHODS.map((pm) => (
@@ -608,11 +610,11 @@ export default function HistoryScreen() {
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$1" style={{ marginTop: 8 }}>
                       <Label color="$color" opacity={0.6} fontSize="$2">
-                        {selectedPaymentConfig.identifierLabel} (Optional)
+                        {selectedPaymentConfig.identifierLabel || t("history.editDialog.fields.identifier")}
                       </Label>
 
                       {editingExpense?.paymentMethodType &&
-                      isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
+                        isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
                         <PaymentInstrumentInlineDropdown
                           method={
                             editingExpense.paymentMethodType as PaymentInstrumentMethod
@@ -634,10 +636,10 @@ export default function HistoryScreen() {
                             setEditingExpense((prev) =>
                               prev
                                 ? {
-                                    ...prev,
-                                    paymentInstrumentId: next.selectedInstrumentId,
-                                    paymentMethodId: next.manualDigits,
-                                  }
+                                  ...prev,
+                                  paymentInstrumentId: next.selectedInstrumentId,
+                                  paymentMethodId: next.manualDigits,
+                                }
                                 : null
                             )
                           }}
@@ -652,8 +654,8 @@ export default function HistoryScreen() {
                           size="$4"
                           placeholder={
                             editingExpense?.paymentMethodType === "Other"
-                              ? "e.g., Venmo, PayPal, Gift Card"
-                              : `Enter ${selectedPaymentConfig.maxLength} digits`
+                              ? t("history.editDialog.fields.otherPlaceholder")
+                              : t("history.editDialog.fields.identifierPlaceholder", { max: selectedPaymentConfig.maxLength })
                           }
                           keyboardType={
                             editingExpense?.paymentMethodType === "Other"
@@ -672,10 +674,10 @@ export default function HistoryScreen() {
 
               <XStack gap="$3" style={layoutStyles.editDialogButtonRow}>
                 <Dialog.Close asChild>
-                  <Button size="$4">Cancel</Button>
+                  <Button size="$4">{t("common.cancel")}</Button>
                 </Dialog.Close>
                 <Button size="$4" themeInverse onPress={handleSaveEdit}>
-                  Save
+                  {t("common.save")}
                 </Button>
               </XStack>
             </KeyboardAwareScrollView>

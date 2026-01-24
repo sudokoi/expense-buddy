@@ -5,6 +5,7 @@ import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
 import { SettingsSection } from "./SettingsSection"
+import { useTranslation } from "react-i18next"
 
 // Layout styles
 const layoutStyles = {
@@ -35,6 +36,7 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 0,
+    width: 24, // Fix width for alignment
   } as ViewStyle,
   addButtonContainer: {
     marginTop: 16,
@@ -74,6 +76,8 @@ export const CategorySection = memo(function CategorySection({
   onReorder,
   getExpenseCount,
 }: CategorySectionProps) {
+  const { t } = useTranslation()
+
   // Separate "Other" category from reorderable categories
   // Categories are already sorted by order in useCategories hook
   const { reorderableCategories, otherCategory } = useMemo(() => {
@@ -119,9 +123,9 @@ export const CategorySection = memo(function CategorySection({
   )
 
   return (
-    <SettingsSection title="CATEGORIES">
+    <SettingsSection title={t("settings.sections.categories")}>
       <Text color="$color" opacity={0.7} fontSize="$3">
-        Customize expense categories to match your spending habits.
+        {t("settings.categories.description")}
       </Text>
 
       <Accordion type="single" collapsible defaultValue={undefined}>
@@ -130,7 +134,7 @@ export const CategorySection = memo(function CategorySection({
             {({ open }: { open: boolean }) => (
               <>
                 <XStack style={layoutStyles.accordionTriggerInner}>
-                  <Text fontWeight="500">Manage Categories</Text>
+                  <Text fontWeight="500">{t("settings.categories.manage")}</Text>
                   <Text fontSize="$2" color="$color" opacity={0.6}>
                     ({categories.length})
                   </Text>
@@ -210,7 +214,7 @@ export const CategorySection = memo(function CategorySection({
                     </YStack>
                   </XStack>
                   <Text fontSize="$1" color="$color" opacity={0.4} pl="$8">
-                    &quot;Other&quot; always stays at the bottom
+                    {t("settings.categories.otherHelp")}
                   </Text>
                 </YStack>
               )}
@@ -224,7 +228,7 @@ export const CategorySection = memo(function CategorySection({
                   themeInverse
                   pressStyle={{ opacity: 0.7 }}
                 >
-                  Add Category
+                  {t("settings.categories.add")}
                 </Button>
               </YStack>
             </YStack>

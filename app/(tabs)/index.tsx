@@ -1,5 +1,5 @@
-import { format, parseISO, subDays } from "date-fns"
-import { getLocalDayKey } from "../../utils/date"
+import { format, subDays } from "date-fns"
+import { getLocalDayKey, formatDate } from "../../utils/date"
 import { YStack, H4, XStack, Card, Text, Button, useTheme } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
@@ -13,6 +13,8 @@ import { CARD_COLORS } from "../../constants/theme-colors"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
+import { useTranslation } from "react-i18next"
+import { formatCurrency } from "../../utils/currency"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -31,6 +33,7 @@ const layoutStyles = {
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 20,
   } as ViewStyle,
   transactionsHeader: {
     justifyContent: "space-between",
@@ -74,6 +77,7 @@ export default function DashboardScreen() {
   const theme = useTheme()
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
+  const { t } = useTranslation()
 
   // Use activeExpenses (excludes soft-deleted) for display
   const totalExpenses = React.useMemo(
@@ -126,7 +130,7 @@ export default function DashboardScreen() {
 
         return {
           stacks: stacks,
-          label: format(parseISO(dateKey), "dd/MM"),
+          label: formatDate(dateKey, "dd/MM"), // Use formatDate for localized month if needed eventually, though dd/MM is numeric
           onPress: () => router.push(`/day/${dateKey}`),
           dateKey, // Keep for filtering
         }
@@ -175,13 +179,13 @@ export default function DashboardScreen() {
       {/* Header */}
       <XStack style={layoutStyles.headerRow}>
         <YStack>
-          <H4>Dashboard</H4>
+          <H4>{t("dashboard.title")}</H4>
           <Text color="$color" opacity={0.6}>
-            Welcome back!
+            {t("dashboard.welcome")}
           </Text>
         </YStack>
         <Button size="$4" themeInverse onPress={handleAddPress}>
-          + Add
+          {t("common.add")}
         </Button>
       </XStack>
 
@@ -194,10 +198,10 @@ export default function DashboardScreen() {
             fontSize="$3"
             color={CARD_COLORS.blue.text}
           >
-            Total Spent
+            {t("dashboard.totalSpent")}
           </Text>
           <H4 style={layoutStyles.cardValue} color={CARD_COLORS.blue.accent}>
-            ₹{totalExpenses.toFixed(2)}
+            {formatCurrency(totalExpenses)}
           </H4>
         </Card>
         <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.green.bg}>
@@ -207,7 +211,7 @@ export default function DashboardScreen() {
             fontSize="$3"
             color={CARD_COLORS.green.text}
           >
-            Entries
+            {t("dashboard.entries")}
           </Text>
           <H4 style={layoutStyles.cardValue} color={CARD_COLORS.green.accent}>
             {state.activeExpenses.length}
@@ -218,9 +222,9 @@ export default function DashboardScreen() {
       {/* Chart Section */}
       <YStack gap="$4" style={layoutStyles.chartSection}>
         <XStack style={layoutStyles.transactionsHeader}>
-          <SectionHeader>Last 7 Days</SectionHeader>
+          <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
           <Button chromeless size="$2" onPress={handleAnalyticsPress}>
-            View Analytics
+            {t("dashboard.viewAnalytics")}
           </Button>
         </XStack>
         {hasData ? (
@@ -256,7 +260,7 @@ export default function DashboardScreen() {
             height={150}
           >
             <Text color="$color" opacity={0.6}>
-              No data to display yet.
+              {t("dashboard.noData")}
             </Text>
           </Card>
         )}
@@ -265,15 +269,15 @@ export default function DashboardScreen() {
       {/* Recent Transactions List (Mini) */}
       <YStack>
         <XStack style={layoutStyles.transactionsHeader}>
-          <SectionHeader>Recent Transactions</SectionHeader>
+          <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
           <Button chromeless size="$2" onPress={handleHistoryPress}>
-            See All
+            {t("common.seeAll")}
           </Button>
         </XStack>
 
         {recentExpenses.length === 0 && (
           <Text color="$color" opacity={0.6}>
-            No recent transactions.
+            {t("dashboard.noRecent")}
           </Text>
         )}
 

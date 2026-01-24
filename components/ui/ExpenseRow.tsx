@@ -1,6 +1,6 @@
 import React, { memo } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
-import { format, parseISO } from "date-fns"
+
 import type { ViewStyle } from "react-native"
 import { Trash, Edit3 } from "@tamagui/lucide-icons"
 
@@ -11,6 +11,8 @@ import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import { ExpenseCard } from "./ExpenseCard"
 import { AmountText } from "./AmountText"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { formatDate } from "../../utils/date"
+import { formatCurrency } from "../../utils/currency"
 
 const layoutStyles = {
   expenseDetails: {
@@ -63,7 +65,7 @@ export const ExpenseRow = memo(function ExpenseRow({
             {expense.note || categoryInfo.label}
           </Text>
           <Text color="$color" opacity={0.6} fontSize="$2">
-            {format(parseISO(expense.date), subtitleDate)} • {categoryInfo.label}
+            {formatDate(expense.date, subtitleDate)} • {categoryInfo.label}
           </Text>
           {paymentMethodDisplay ? (
             <Text color="$color" opacity={0.5} fontSize="$2">
@@ -74,7 +76,9 @@ export const ExpenseRow = memo(function ExpenseRow({
       </XStack>
 
       <XStack gap="$3" style={layoutStyles.actionButtons}>
-        <AmountText type="expense">-₹{expense.amount.toFixed(2)}</AmountText>
+        <AmountText type="expense">
+          -{formatCurrency(expense.amount, expense.currency)}
+        </AmountText>
 
         {showActions ? (
           <>

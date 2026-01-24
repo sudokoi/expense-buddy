@@ -3,6 +3,7 @@ import { ViewStyle } from "react-native"
 import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
+import { useTranslation } from "react-i18next"
 
 /**
  * Props for the AppInfoSection component
@@ -61,12 +62,14 @@ export function AppInfoSection({
   onOpenGitHub,
   onReportIssue,
 }: AppInfoSectionProps) {
+  const { t } = useTranslation()
+
   return (
     <YStack gap="$3">
       {/* Current Version */}
       <XStack style={layoutStyles.versionRow}>
         <Text color="$color" opacity={0.8}>
-          Current Version
+          {t("settings.about.currentVersion")}
         </Text>
         <Text fontWeight="bold">v{currentVersion}</Text>
       </XStack>
@@ -75,7 +78,7 @@ export function AppInfoSection({
       {updateInfo && !updateInfo.error && (
         <XStack style={layoutStyles.versionRow}>
           <Text color="$color" opacity={0.8}>
-            Latest Version
+            {t("settings.about.latestVersion")}
           </Text>
           <Text
             fontWeight="bold"
@@ -94,24 +97,24 @@ export function AppInfoSection({
         disabled={isCheckingUpdate}
         icon={Download}
       >
-        {isCheckingUpdate ? "Checking..." : "Check for Updates"}
+        {isCheckingUpdate ? t("settings.about.checking") : t("settings.about.checkForUpdates")}
       </Button>
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
         <Button size="$4" themeInverse onPress={onOpenRelease} icon={ExternalLink}>
-          Download v{updateInfo.latestVersion}
+          {t("settings.about.download", { version: updateInfo.latestVersion })}
         </Button>
       )}
 
       {/* Report an Issue */}
       <Button size="$3" chromeless onPress={onReportIssue} icon={Bug}>
-        Report an Issue
+        {t("settings.about.reportIssue")}
       </Button>
 
       {/* GitHub Link */}
       <Button size="$3" chromeless onPress={onOpenGitHub} icon={ExternalLink}>
-        View on GitHub
+        {t("settings.about.viewGitHub")}
       </Button>
     </YStack>
   )

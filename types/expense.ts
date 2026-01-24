@@ -18,6 +18,7 @@ export interface PaymentMethod {
 export interface Expense {
   id: string
   amount: number
+  currency?: string // ISO 4217 currency code (e.g., "INR", "USD")
   category: ExpenseCategory
   date: string // ISO string
   note: string

@@ -33,6 +33,7 @@ export interface AppSettings {
   theme: ThemePreference
   syncSettings: boolean // Whether to sync settings to GitHub
   defaultPaymentMethod?: PaymentMethodType // Optional default payment method
+  defaultCurrency: string // Default currency code (e.g., "INR")
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
@@ -50,6 +51,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   syncSettings: false,
   defaultPaymentMethod: undefined,
+  defaultCurrency: "INR",
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -87,6 +89,8 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
     syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
     defaultPaymentMethod: (migrated as AppSettings).defaultPaymentMethod,
+    defaultCurrency:
+      (migrated as AppSettings).defaultCurrency ?? DEFAULT_SETTINGS.defaultCurrency,
     autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
     autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
     categories: migrated.categories ?? DEFAULT_CATEGORIES,
@@ -329,6 +333,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     })),
     categoriesVersion: settings.categoriesVersion,
     defaultPaymentMethod: settings.defaultPaymentMethod,
+    defaultCurrency: settings.defaultCurrency,
     paymentInstruments: sortedInstruments,
     syncSettings: settings.syncSettings,
     theme: settings.theme,

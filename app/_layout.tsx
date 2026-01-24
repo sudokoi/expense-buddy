@@ -1,4 +1,5 @@
 import "../tamagui-web.css"
+import "../i18n"
 
 import { useEffect } from "react"
 import { useColorScheme } from "react-native"
