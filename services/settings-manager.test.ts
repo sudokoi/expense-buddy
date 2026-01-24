@@ -89,6 +89,7 @@ const appSettingsArb = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArb,
+  defaultCurrency: fc.constant("INR"), // Added missing field
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),

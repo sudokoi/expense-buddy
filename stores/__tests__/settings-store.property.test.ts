@@ -37,6 +37,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
   version: 5,
+  defaultCurrency: "INR",
 }
 
 // Create a fresh store for each test
@@ -163,6 +164,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
     .map((ms) => new Date(ms).toISOString()),
   version: fc.integer({ min: 5, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
+  defaultCurrency: fc.constant("INR"),
 })
 
 describe("Settings Store Properties", () => {

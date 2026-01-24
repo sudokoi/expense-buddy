@@ -208,6 +208,12 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setDefaultCurrency = useCallback(
+    ({ currency }: { currency: string }) =>
+      settingsStore.trigger.setDefaultCurrency({ currency }),
+    [settingsStore]
+  )
+
   return {
     settings,
     isLoading,
@@ -231,6 +237,7 @@ export const useSettings = () => {
     setPaymentInstrumentsExpanded,
     saveSyncConfig,
     clearSyncConfig,
+    setDefaultCurrency,
   }
 }
 

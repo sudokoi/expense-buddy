@@ -48,6 +48,9 @@ const layoutStyles = {
     height: 32,
     borderRadius: 8,
   } as ViewStyle,
+  sheetFrame: {
+    paddingHorizontal: 16,
+  } as ViewStyle,
 }
 
 interface CategoryFormModalProps {

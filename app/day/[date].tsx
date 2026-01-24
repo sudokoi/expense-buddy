@@ -1,12 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { YStack, Text, XStack, Button, H4 } from "tamagui"
+import { YStack, Text, XStack, Button } from "tamagui"
 import { useExpenses } from "../../stores/hooks"
 import { useMemo, useCallback } from "react"
-import { parseISO, format, isSameDay, addDays, subDays } from "date-fns"
+import { parseISO, isSameDay, addDays, subDays } from "date-fns"
 import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons"
-import { SectionList, ViewStyle, TextStyle } from "react-native"
+import { SectionList, ViewStyle } from "react-native"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
-import { Expense } from "../../types/expense"
 import { Category } from "../../types/category"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
@@ -128,7 +127,7 @@ export default function DayViewScreen() {
           onPress={() => router.back()}
           color="$color"
         />
-        <YStack alignItems="center">
+        <YStack style={{ alignItems: "center" }}>
           <Text fontSize="$5" fontWeight="bold">
             {dayTitle}
           </Text>
@@ -149,11 +148,10 @@ export default function DayViewScreen() {
       </XStack>
 
       <Text
-        textAlign="center"
+        style={{ textAlign: "center", marginBottom: 16 }}
         fontSize="$2"
         color="$color"
         opacity={0.6}
-        marginBottom="$4"
       >
         {t("dayView.totalSpent")}
       </Text>

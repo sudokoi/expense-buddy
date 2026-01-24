@@ -1,12 +1,12 @@
 import { useMemo } from "react"
-import { Platform, ViewStyle } from "react-native"
+import { Platform, TextStyle } from "react-native"
 import { Button, Text, YStack } from "tamagui"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 
 const layoutStyles = {
   notesText: {
     ...(Platform.OS === "web" ? ({ whiteSpace: "pre-wrap" } as any) : undefined),
-  } as ViewStyle,
+  } as TextStyle,
 } as const
 
 interface ChangelogSheetProps {

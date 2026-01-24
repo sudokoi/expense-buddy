@@ -1,5 +1,11 @@
 import { Text, Card, View, useTheme } from "tamagui"
-import { DollarSign, IndianRupee, PoundSterling, Euro, JapaneseYen } from "@tamagui/lucide-icons"
+import {
+  DollarSign,
+  IndianRupee,
+  PoundSterling,
+  Euro,
+  JapaneseYen,
+} from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 

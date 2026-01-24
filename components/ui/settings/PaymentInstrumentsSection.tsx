@@ -103,10 +103,10 @@ export function PaymentInstrumentsSection() {
               const nextList = instruments.map((i) =>
                 i.id === inst.id
                   ? {
-                    ...i,
-                    deletedAt: now,
-                    updatedAt: now,
-                  }
+                      ...i,
+                      deletedAt: now,
+                      updatedAt: now,
+                    }
                   : i
               )
               updateSettings({ paymentInstruments: nextList })

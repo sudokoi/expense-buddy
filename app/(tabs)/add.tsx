@@ -238,10 +238,10 @@ export default function AddExpenseScreen() {
     // Build payment method object if type is selected
     const paymentMethod: PaymentMethod | undefined = effectivePaymentMethod
       ? {
-        type: effectivePaymentMethod,
-        identifier: paymentMethodId.trim() || undefined,
-        instrumentId: paymentInstrumentId,
-      }
+          type: effectivePaymentMethod,
+          identifier: paymentMethodId.trim() || undefined,
+          instrumentId: paymentInstrumentId,
+        }
       : undefined
 
     addExpense({
@@ -417,11 +417,13 @@ export default function AddExpenseScreen() {
                 {selectedPaymentConfig?.hasIdentifier && (
                   <YStack gap="$1" style={{ marginTop: 8 }}>
                     <Label color="$color" opacity={0.6} fontSize="$2">
-                      {selectedPaymentConfig.identifierLabel || t("history.editDialog.fields.identifier")} (Optional)
+                      {selectedPaymentConfig.identifierLabel ||
+                        t("history.editDialog.fields.identifier")}{" "}
+                      (Optional)
                     </Label>
 
                     {effectivePaymentMethod &&
-                      isPaymentInstrumentMethod(effectivePaymentMethod) ? (
+                    isPaymentInstrumentMethod(effectivePaymentMethod) ? (
                       <PaymentInstrumentInlineDropdown
                         method={effectivePaymentMethod as PaymentInstrumentMethod}
                         instruments={allInstruments}
@@ -453,7 +455,9 @@ export default function AddExpenseScreen() {
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
-                            : t("history.editDialog.fields.identifierPlaceholder", { max: selectedPaymentConfig.maxLength })
+                            : t("history.editDialog.fields.identifierPlaceholder", {
+                                max: selectedPaymentConfig.maxLength,
+                              })
                         }
                         keyboardType={
                           effectivePaymentMethod === "Other" ? "default" : "numeric"

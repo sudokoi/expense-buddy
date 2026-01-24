@@ -54,7 +54,7 @@ const layoutStyles = {
 }
 
 export default function SettingsScreen() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [languagePreference, setLanguagePreference] = useState<string>("system")
 
   useFocusEffect(
@@ -389,7 +389,10 @@ export default function SettingsScreen() {
       const expenseCount = getExpenseCountForCategory(label)
       const message =
         expenseCount > 0
-          ? t("settings.categories.deleteDialog.messageReassign", { label, count: expenseCount })
+          ? t("settings.categories.deleteDialog.messageReassign", {
+              label,
+              count: expenseCount,
+            })
           : t("settings.categories.deleteDialog.messageSimple", { label })
 
       Alert.alert(t("settings.categories.deleteDialog.title"), message, [
@@ -408,7 +411,13 @@ export default function SettingsScreen() {
         },
       ])
     },
-    [getExpenseCountForCategory, reassignExpensesToOther, deleteCategory, addNotification, t]
+    [
+      getExpenseCountForCategory,
+      reassignExpensesToOther,
+      deleteCategory,
+      addNotification,
+      t,
+    ]
   )
 
   // Calculate pending count for display on sync button

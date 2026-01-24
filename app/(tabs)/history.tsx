@@ -13,7 +13,7 @@ import {
 } from "../../stores/hooks"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
-import { format, parseISO } from "date-fns"
+import { parseISO } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import type {
   ExpenseCategory,
@@ -386,17 +386,20 @@ export default function HistoryScreen() {
         const result = parseExpression(editingExpense.amount)
 
         if (!result.success) {
-          addNotification(result.error || t("history.editDialog.fields.expressionError"), "error")
+          addNotification(
+            result.error || t("history.editDialog.fields.expressionError"),
+            "error"
+          )
           return
         }
 
         // Build payment method object if type is selected
         const paymentMethod: PaymentMethod | undefined = editingExpense.paymentMethodType
           ? {
-            type: editingExpense.paymentMethodType,
-            identifier: editingExpense.paymentMethodId.trim() || undefined,
-            instrumentId: editingExpense.paymentInstrumentId,
-          }
+              type: editingExpense.paymentMethodType,
+              identifier: editingExpense.paymentMethodId.trim() || undefined,
+              instrumentId: editingExpense.paymentInstrumentId,
+            }
           : undefined
 
         editExpense(editingExpense.id, {
@@ -517,9 +520,9 @@ export default function HistoryScreen() {
                           setEditingExpense((prev) =>
                             prev
                               ? {
-                                ...prev,
-                                date: selectedDate.toISOString(),
-                              }
+                                  ...prev,
+                                  date: selectedDate.toISOString(),
+                                }
                               : null
                           )
                         }
@@ -550,7 +553,9 @@ export default function HistoryScreen() {
                   />
                   {expressionPreview && (
                     <Text fontSize="$3" color="$color" opacity={0.7}>
-                      {t("history.editDialog.fields.preview", { amount: expressionPreview })}
+                      {t("history.editDialog.fields.preview", {
+                        amount: expressionPreview,
+                      })}
                     </Text>
                   )}
                 </YStack>
@@ -610,11 +615,12 @@ export default function HistoryScreen() {
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$1" style={{ marginTop: 8 }}>
                       <Label color="$color" opacity={0.6} fontSize="$2">
-                        {selectedPaymentConfig.identifierLabel || t("history.editDialog.fields.identifier")}
+                        {selectedPaymentConfig.identifierLabel ||
+                          t("history.editDialog.fields.identifier")}
                       </Label>
 
                       {editingExpense?.paymentMethodType &&
-                        isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
+                      isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
                         <PaymentInstrumentInlineDropdown
                           method={
                             editingExpense.paymentMethodType as PaymentInstrumentMethod
@@ -636,10 +642,10 @@ export default function HistoryScreen() {
                             setEditingExpense((prev) =>
                               prev
                                 ? {
-                                  ...prev,
-                                  paymentInstrumentId: next.selectedInstrumentId,
-                                  paymentMethodId: next.manualDigits,
-                                }
+                                    ...prev,
+                                    paymentInstrumentId: next.selectedInstrumentId,
+                                    paymentMethodId: next.manualDigits,
+                                  }
                                 : null
                             )
                           }}
@@ -655,7 +661,9 @@ export default function HistoryScreen() {
                           placeholder={
                             editingExpense?.paymentMethodType === "Other"
                               ? t("history.editDialog.fields.otherPlaceholder")
-                              : t("history.editDialog.fields.identifierPlaceholder", { max: selectedPaymentConfig.maxLength })
+                              : t("history.editDialog.fields.identifierPlaceholder", {
+                                  max: selectedPaymentConfig.maxLength,
+                                })
                           }
                           keyboardType={
                             editingExpense?.paymentMethodType === "Other"

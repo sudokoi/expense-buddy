@@ -409,7 +409,9 @@ export function GitHubConfigSection({
                       {t("settings.github.openBrowser")}
                     </Button>
                     <Text fontSize="$2" color="$color" opacity={0.8}>
-                      {t("settings.github.browserHelp", { url: auth.deviceCode.verification_uri })}
+                      {t("settings.github.browserHelp", {
+                        url: auth.deviceCode.verification_uri,
+                      })}
                     </Text>
                   </YStack>
                 )}
@@ -442,7 +444,9 @@ export function GitHubConfigSection({
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                   />
                   <Button size="$3" onPress={handleChooseRepo} disabled={!token}>
-                    {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
+                    {repo
+                      ? t("settings.github.editRepo")
+                      : t("settings.github.chooseRepo")}
                   </Button>
                 </YStack>
               )}

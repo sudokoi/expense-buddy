@@ -1,212 +1,301 @@
-import { useState, useCallback, useMemo, useEffect } from "react"
-import { YStack, Text, Input, Button, ScrollView, Spinner } from "tamagui"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { FlatList, Platform, ViewStyle } from "react-native"
 import { useRouter } from "expo-router"
-import { Search, GitBranch, Lock, Unlock, Plus } from "@tamagui/lucide-icons"
-import { ViewStyle, Alert } from "react-native"
-import { ScreenContainer } from "../../components/ui/ScreenContainer"
-import { useGitHubAuthMachine } from "../../hooks/use-github-auth-machine"
-import { useSettings } from "../../stores/hooks"
-import { Octokit } from "@octokit/rest"
+import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
 
-const layoutStyles = {
-  repoItem: {
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 8,
-  } as ViewStyle,
-  searchContainer: {
-    marginBottom: 16,
-  } as ViewStyle,
-}
+type GitHubUser = { login: string }
 
-interface GitHubRepo {
-  id: number
-  name: string
+type GitHubRepo = {
   full_name: string
+  name: string
   private: boolean
-  default_branch: string
-  owner: {
-    login: string
+  default_branch?: string
+  owner?: { login?: string }
+  permissions?: {
+    admin?: boolean
+    maintain?: boolean
+    push?: boolean
   }
 }
 
-export default function RepoPickerScreen() {
+const TOKEN_KEY = "github_pat"
+const REPO_KEY = "github_repo"
+const BRANCH_KEY = "github_branch"
+
+const layoutStyles = {
+  container: {
+    padding: 16,
+    maxWidth: 700,
+    alignSelf: "center",
+    width: "100%",
+  } as ViewStyle,
+  headerRow: {
+    justifyContent: "space-between",
+    alignItems: "center",
+  } as ViewStyle,
+  loadingRow: {
+    alignItems: "center",
+  } as ViewStyle,
+  repoButton: {
+    justifyContent: "space-between",
+    marginBottom: 8,
+  } as ViewStyle,
+  repoButtonInner: {
+    flex: 1,
+    justifyContent: "space-between",
+    alignItems: "center",
+  } as ViewStyle,
+}
+
+function hasWriteAccess(repo: GitHubRepo): boolean {
+  return Boolean(
+    repo.permissions?.push || repo.permissions?.admin || repo.permissions?.maintain
+  )
+}
+
+export default function GitHubRepoPickerScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
-  const { setSyncConfig } = useSettings()
-  const auth = useGitHubAuthMachine()
-  const { token } = auth
 
-  const [loading, setLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [viewerLogin, setViewerLogin] = useState<string | null>(null)
   const [repos, setRepos] = useState<GitHubRepo[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [query, setQuery] = useState("")
 
-  const octokit = useMemo(() => {
-    if (!token) return null
-    return new Octokit({ auth: token })
-  }, [token])
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return repos
+    return repos.filter((r) => r.full_name.toLowerCase().includes(q))
+  }, [repos, query])
 
-  const fetchRepos = useCallback(
-    async (pageNum: number, search: string) => {
-      if (!octokit) return
+  const load = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-      try {
-        setLoading(true)
-        let results: GitHubRepo[] = []
-
-        if (search.trim()) {
-          const response = await octokit.search.repos({
-            q: `${search} in:name user:${(await octokit.users.getAuthenticated()).data.login}`,
-            per_page: 20,
-            page: pageNum,
-          })
-          results = response.data.items as GitHubRepo[]
-        } else {
-          const response = await octokit.repos.listForAuthenticatedUser({
-            sort: "updated",
-            per_page: 20,
-            page: pageNum,
-            affiliation: "owner",
-          })
-          results = response.data as GitHubRepo[]
-        }
-
-        if (pageNum === 1) {
-          setRepos(results)
-        } else {
-          setRepos((prev) => [...prev, ...results])
-        }
-
-        setHasMore(results.length === 20)
-      } catch (error) {
-        console.error("Failed to fetch repos:", error)
-        Alert.alert("Error", t("repoPicker.error"))
-      } finally {
-        setLoading(false)
+      if (Platform.OS === "web") {
+        setError(
+          t("repoPicker.webAuthError") ||
+            "Repo picker is not available on web. Use a token and enter owner/repo."
+        )
+        setRepos([])
+        return
       }
-    },
-    [octokit, t]
-  )
+
+      const token = await secureStorage.getItem(TOKEN_KEY)
+      if (!token) {
+        setError(t("settings.github.signIn") + " " + t("common.required"))
+        setRepos([])
+        return
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      }
+
+      const handleAuthFailure = async (status: 401 | 403, message: string) => {
+        const lower = message.toLowerCase()
+        const isRateLimit = lower.includes("rate limit")
+
+        if (status === 401) {
+          setError(
+            t("repoPicker.sessionExpired") ||
+              "Your GitHub session is no longer valid. Please sign in again."
+          )
+        } else if (isRateLimit) {
+          setError(
+            t("repoPicker.rateLimit") ||
+              "GitHub rate limit reached. Please wait a bit and try again."
+          )
+        } else {
+          setError(t("repoPicker.accessDenied") || "GitHub denied access (403).")
+        }
+
+        // Force re-login by clearing saved credentials/config.
+        await Promise.all([
+          secureStorage.deleteItem(TOKEN_KEY),
+          secureStorage.deleteItem(REPO_KEY),
+          secureStorage.deleteItem(BRANCH_KEY),
+        ])
+
+        setRepos([])
+      }
+
+      const userResponse = await fetch("https://api.github.com/user", { headers })
+      if (userResponse.status === 401 || userResponse.status === 403) {
+        const data = await userResponse.json().catch(() => ({}))
+        await handleAuthFailure(
+          userResponse.status as 401 | 403,
+          String((data as any).message || userResponse.statusText)
+        )
+        return
+      }
+      if (!userResponse.ok) {
+        const data = await userResponse.json().catch(() => ({}))
+        setError(
+          `GitHub error (${userResponse.status}): ${data.message || userResponse.statusText}`
+        )
+        setRepos([])
+        return
+      }
+
+      const user = (await userResponse.json()) as GitHubUser
+      setViewerLogin(user.login)
+
+      const collected: GitHubRepo[] = []
+      const perPage = 100
+
+      for (let page = 1; page <= 5; page++) {
+        const url = `https://api.github.com/user/repos?affiliation=owner&per_page=${perPage}&page=${page}&sort=updated`
+        const resp = await fetch(url, { headers })
+        if (resp.status === 401 || resp.status === 403) {
+          const data = await resp.json().catch(() => ({}))
+          await handleAuthFailure(
+            resp.status as 401 | 403,
+            String((data as any).message || resp.statusText)
+          )
+          break
+        }
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}))
+          setError(`GitHub error (${resp.status}): ${data.message || resp.statusText}`)
+          break
+        }
+
+        const items = (await resp.json()) as GitHubRepo[]
+        collected.push(...items)
+
+        if (items.length < perPage) break
+      }
+
+      // Personal-only: owned by the authenticated user (no org repos)
+      const personal = collected.filter(
+        (r) => String(r.owner?.login || "").toLowerCase() === user.login.toLowerCase()
+      )
+
+      // Must have push/write access
+      const writable = personal.filter(hasWriteAccess)
+
+      // Stable sort: private first, then alphabetical
+      writable.sort((a, b) => {
+        if (a.private !== b.private) return a.private ? -1 : 1
+        return a.full_name.localeCompare(b.full_name)
+      })
+
+      setRepos(writable)
+    } catch (e) {
+      setError(String(e))
+      setRepos([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [t])
 
   useEffect(() => {
-    fetchRepos(1, searchQuery)
-  }, [fetchRepos, searchQuery])
+    void load()
+  }, [load])
 
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      const nextPage = page + 1
-      setPage(nextPage)
-      fetchRepos(nextPage, searchQuery)
-    }
-  }
+  const handleSelect = useCallback(
+    async (repo: GitHubRepo) => {
+      await secureStorage.setItem(REPO_KEY, repo.full_name)
 
-  const handleSelectRepo = (repo: GitHubRepo) => {
-    setSyncConfig({
-      token,
-      repo: repo.full_name,
-      branch: repo.default_branch,
-    })
-    router.back()
-  }
+      // Only set branch if not already set
+      const existingBranch = await secureStorage.getItem(BRANCH_KEY)
+      if (!existingBranch && repo.default_branch) {
+        await secureStorage.setItem(BRANCH_KEY, repo.default_branch)
+      }
 
-  const handleSearch = (text: string) => {
-    setSearchQuery(text)
-    setPage(1)
-  }
+      router.back()
+    },
+    [router]
+  )
+
+  const keyExtractor = useCallback((item: GitHubRepo) => item.full_name, [])
+
+  const renderItem = useCallback(
+    ({ item }: { item: GitHubRepo }) => (
+      <Button
+        size="$4"
+        onPress={() => void handleSelect(item)}
+        style={layoutStyles.repoButton}
+      >
+        <XStack style={layoutStyles.repoButtonInner}>
+          <Text>{item.full_name}</Text>
+          <Text opacity={0.6}>{item.private ? "Private" : "Public"}</Text>
+        </XStack>
+      </Button>
+    ),
+    [handleSelect]
+  )
 
   return (
-    <ScreenContainer>
-      <YStack gap="$4" style={{ paddingBottom: insets.bottom }}>
-        <YStack>
-          <Text fontSize="$6" fontWeight="bold">
-            {t("repoPicker.title")}
-          </Text>
-          <Text fontSize="$3" color="$color" opacity={0.6}>
-            {t("repoPicker.subtitle")}
-          </Text>
-        </YStack>
-
-        <YStack style={layoutStyles.searchContainer}>
-          <Input
-            value={searchQuery}
-            onChangeText={handleSearch}
-            placeholder={t("repoPicker.searchPlaceholder")}
-            size="$4"
-            icon={Search}
-          />
-        </YStack>
-
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack gap="$2" paddingBottom="$8">
-            {repos.map((repo) => (
-              <Button
-                key={repo.id}
-                onPress={() => handleSelectRepo(repo)}
-                chromeless
-                bordered
-                style={layoutStyles.repoItem}
-                themeInverse={false}
-              >
-                <YStack flex={1} gap="$1">
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontWeight="bold" fontSize="$4">
-                      {repo.name}
-                    </Text>
-                    {repo.private ? (
-                      <Lock size={16} color="$color" opacity={0.6} />
-                    ) : (
-                      <Unlock size={16} color="$color" opacity={0.6} />
-                    )}
-                  </XStack>
-                  <XStack gap="$2" alignItems="center">
-                    <GitBranch size={14} color="$color" opacity={0.6} />
-                    <Text fontSize="$2" color="$color" opacity={0.6}>
-                      {repo.default_branch}
-                    </Text>
-                  </XStack>
-                </YStack>
+    <YStack flex={1} bg="$background">
+      <FlatList
+        data={!isLoading && !error ? filtered : []}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: insets.bottom,
+          maxWidth: 700,
+          alignSelf: "center",
+          width: "100%",
+        }}
+        ListHeaderComponent={
+          <YStack gap="$4">
+            <XStack style={layoutStyles.headerRow}>
+              <Text fontSize="$7" fontWeight="700">
+                {t("repoPicker.title")}
+              </Text>
+              <Button size="$3" onPress={() => router.back()}>
+                {t("common.cancel")}
               </Button>
-            ))}
+            </XStack>
 
-            {!loading && repos.length === 0 && (
-              <YStack padding="$4" alignItems="center">
-                <Text color="$color" opacity={0.6}>
-                  {t("repoPicker.empty")}
-                </Text>
-                {searchQuery.length > 0 && (
-                  <Button
-                    marginTop="$4"
-                    icon={Plus}
-                    onPress={() => {
-                      // Logic to create new repo handled elsewhere?
-                      // Or just show alert not implemented
-                      Alert.alert("Coming Soon", "Create repo functionality")
-                    }}
-                  >
-                    {t("repoPicker.createPrivate", { name: searchQuery })}
-                  </Button>
-                )}
+            <Text opacity={0.7}>{t("repoPicker.subtitle")}</Text>
+
+            {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
+
+            {isLoading ? (
+              <XStack gap="$3" style={layoutStyles.loadingRow}>
+                <Spinner />
+                <Text>{t("repoPicker.loading")}</Text>
+              </XStack>
+            ) : null}
+
+            {error ? (
+              <YStack gap="$2">
+                <Text color="$red10">{error}</Text>
+                <Button size="$3" onPress={load}>
+                  {t("common.save")}
+                </Button>
               </YStack>
-            )}
+            ) : null}
 
-            {hasMore && (
-              <Button
-                onPress={handleLoadMore}
-                disabled={loading}
-                icon={loading ? <Spinner /> : undefined}
-              >
-                {loading ? t("repoPicker.loading") : t("repoPicker.loadMore")}
-              </Button>
-            )}
+            <Input
+              placeholder={t("repoPicker.searchPlaceholder")}
+              value={query}
+              onChangeText={setQuery}
+              disabled={isLoading || !!error}
+            />
           </YStack>
-        </ScrollView>
-      </YStack>
-    </ScreenContainer>
+        }
+        ListEmptyComponent={
+          !isLoading && !error ? <Text opacity={0.7}>{t("repoPicker.empty")}</Text> : null
+        }
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={12}
+        windowSize={10}
+        removeClippedSubviews
+      />
+    </YStack>
   )
 }

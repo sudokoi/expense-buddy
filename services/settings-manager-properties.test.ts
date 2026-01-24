@@ -93,6 +93,7 @@ const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_chang
 const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  defaultCurrency: fc.constant("INR"), // Added missing field
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),

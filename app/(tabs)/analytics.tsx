@@ -210,10 +210,10 @@ export default function AnalyticsScreen() {
         nextSelectedPaymentMethods.length === 0
           ? new Set(PAYMENT_INSTRUMENT_METHODS)
           : new Set(
-            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-              nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+              )
             )
-          )
 
       const allowedWithConfig = new Set<string>()
       for (const method of allowedMethods) {
@@ -255,10 +255,10 @@ export default function AnalyticsScreen() {
       selectedPaymentMethods.length === 0
         ? new Set(PAYMENT_INSTRUMENT_METHODS)
         : new Set(
-          PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-            selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            )
           )
-        )
 
     for (const method of PAYMENT_INSTRUMENT_METHODS) {
       if (!allowedMethods.has(method)) continue
@@ -278,101 +278,136 @@ export default function AnalyticsScreen() {
     (selectedPaymentInstruments.length > 0 ? 1 : 0)
 
   // Helpers inside component to use translation hook
-  const formatSelectedPaymentInstrumentLabel = (
-    key: PaymentInstrumentSelectionKey,
-    instruments: PaymentInstrument[]
-  ): string => {
-    const [method, instrumentId] = key.split("::")
-    const shortMethod = methodShortLabel(method)
+  const formatSelectedPaymentInstrumentLabel = useCallback(
+    (key: PaymentInstrumentSelectionKey, instruments: PaymentInstrument[]): string => {
+      const [method, instrumentId] = key.split("::")
+      const shortMethod = methodShortLabel(method)
 
-    if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
-      return `${shortMethod} • ${t("analytics.chart.others")}`
-    }
+      if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
 
-    const inst = findInstrumentById(instruments, instrumentId)
-    if (!inst || inst.deletedAt) {
-      return `${shortMethod} • ${t("analytics.chart.others")}`
-    }
+      const inst = findInstrumentById(instruments, instrumentId)
+      if (!inst || inst.deletedAt) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
 
-    return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
-  }
+      return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
+    },
+    [t]
+  )
 
-  const formatSelectedPaymentInstrumentsSummary = (
-    keys: PaymentInstrumentSelectionKey[]
-  ): string => {
-    if (keys.length === 0) return t("analytics.timeWindow.all")
-    if (keys.length === 1) return "1"
+  const formatSelectedPaymentInstrumentsSummary = useCallback(
+    (keys: PaymentInstrumentSelectionKey[]): string => {
+      if (keys.length === 0) return t("analytics.timeWindow.all")
+      if (keys.length === 1) return "1"
 
-    const countsByMethod = new Map<string, number>()
-    for (const key of keys) {
-      const [method] = key.split("::")
-      const short = methodShortLabel(method)
-      countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
-    }
+      const countsByMethod = new Map<string, number>()
+      for (const key of keys) {
+        const [method] = key.split("::")
+        const short = methodShortLabel(method)
+        countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
+      }
 
-    const parts = Array.from(countsByMethod.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      .map(([method, count]) => `${method} ${count}`)
+      const parts = Array.from(countsByMethod.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([method, count]) => `${method} ${count}`)
 
-    const MAX_GROUPS = 3
-    const visible = parts.slice(0, MAX_GROUPS)
-    const remaining = parts.length - visible.length
-    const breakdown =
-      remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+      const MAX_GROUPS = 3
+      const visible = parts.slice(0, MAX_GROUPS)
+      const remaining = parts.length - visible.length
+      const breakdown =
+        remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
 
-    return `${keys.length} (${breakdown})`
-  }
+      return `${keys.length} (${breakdown})`
+    },
+    [t]
+  )
 
-  const formatListBreakdown = (items: string[]): string => {
-    const MAX_ITEMS = 3
+  const formatListBreakdown = useCallback(
+    (items: string[]): string => {
+      const MAX_ITEMS = 3
 
-    const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
-    const visible = unique.slice(0, MAX_ITEMS)
-    const remaining = unique.length - visible.length
+      const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
+      const visible = unique.slice(0, MAX_ITEMS)
+      const remaining = unique.length - visible.length
 
-    if (unique.length === 0) return t("analytics.timeWindow.all")
-    if (unique.length === 1) return unique[0]
+      if (unique.length === 0) return t("analytics.timeWindow.all")
+      if (unique.length === 1) return unique[0]
 
-    return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
-  }
+      return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+    },
+    [t]
+  )
 
-  const paymentMethodLabel = (key: PaymentMethodSelectionKey): string => {
-    if (key === "__none__") return t("analytics.chart.none")
-    const match = PAYMENT_METHODS.find((m) => m.value === key)
-    return match?.label ?? key
-  }
+  const paymentMethodLabel = useCallback(
+    (key: PaymentMethodSelectionKey): string => {
+      if (key === "__none__") return t("analytics.chart.none")
+      const match = PAYMENT_METHODS.find((m) => m.value === key)
+      return match?.label ?? key
+    },
+    [t]
+  )
 
   const appliedChips = useMemo(() => {
     const chips: Array<{ key: string; label: string }> = []
 
-    chips.push({ key: "time", label: t("analytics.filters.time", { window: t(`analytics.timeWindow.${timeWindow}`) }) })
+    chips.push({
+      key: "time",
+      label: t("analytics.filters.time", {
+        window: t(`analytics.timeWindow.${timeWindow}`),
+      }),
+    })
 
     if (selectedCategories.length === 0) {
-      chips.push({ key: "category", label: t("analytics.filters.category", { category: t("analytics.timeWindow.all") }) })
+      chips.push({
+        key: "category",
+        label: t("analytics.filters.category", {
+          category: t("analytics.timeWindow.all"),
+        }),
+      })
     } else if (selectedCategories.length === 1) {
-      chips.push({ key: "category", label: t("analytics.filters.category", { category: selectedCategories[0] }) })
+      chips.push({
+        key: "category",
+        label: t("analytics.filters.category", { category: selectedCategories[0] }),
+      })
     } else {
       chips.push({
         key: "category",
-        label: t("analytics.filters.category", { category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories)})` }),
+        label: t("analytics.filters.category", {
+          category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories)})`,
+        }),
       })
     }
 
     if (selectedPaymentMethods.length === 0) {
-      chips.push({ key: "payment-method", label: t("analytics.filters.payment", { method: t("analytics.timeWindow.all") }) })
+      chips.push({
+        key: "payment-method",
+        label: t("analytics.filters.payment", { method: t("analytics.timeWindow.all") }),
+      })
     } else if (selectedPaymentMethods.length === 1) {
       const only = selectedPaymentMethods[0]
-      chips.push({ key: "payment-method", label: t("analytics.filters.payment", { method: paymentMethodLabel(only) }) })
+      chips.push({
+        key: "payment-method",
+        label: t("analytics.filters.payment", { method: paymentMethodLabel(only) }),
+      })
     } else {
       chips.push({
         key: "payment-method",
-        label: t("analytics.filters.payment", { method: `${selectedPaymentMethods.length} (${formatListBreakdown(selectedPaymentMethods.map(paymentMethodLabel))})` }),
+        label: t("analytics.filters.payment", {
+          method: `${selectedPaymentMethods.length} (${formatListBreakdown(selectedPaymentMethods.map(paymentMethodLabel))})`,
+        }),
       })
     }
 
     if (showPaymentInstrumentFilter) {
       if (selectedPaymentInstruments.length === 0) {
-        chips.push({ key: "payment-instrument", label: t("analytics.filters.instrument", { instrument: t("analytics.timeWindow.all") }) })
+        chips.push({
+          key: "payment-instrument",
+          label: t("analytics.filters.instrument", {
+            instrument: t("analytics.timeWindow.all"),
+          }),
+        })
       } else if (selectedPaymentInstruments.length === 1) {
         chips.push({
           key: "payment-instrument",
@@ -387,7 +422,9 @@ export default function AnalyticsScreen() {
         chips.push({
           key: "payment-instrument",
           label: t("analytics.filters.instrument", {
-            instrument: formatSelectedPaymentInstrumentsSummary(selectedPaymentInstruments),
+            instrument: formatSelectedPaymentInstrumentsSummary(
+              selectedPaymentInstruments
+            ),
           }),
         })
       }
@@ -395,13 +432,17 @@ export default function AnalyticsScreen() {
 
     return chips
   }, [
+    t,
     timeWindow,
     selectedCategories,
     selectedPaymentMethods,
-    selectedPaymentInstruments,
-    paymentInstruments,
     showPaymentInstrumentFilter,
-    t,
+    formatListBreakdown,
+    paymentMethodLabel,
+    selectedPaymentInstruments,
+    formatSelectedPaymentInstrumentLabel,
+    paymentInstruments,
+    formatSelectedPaymentInstrumentsSummary,
   ])
 
   const handleApplyFilters = useCallback(

@@ -10,6 +10,7 @@ import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
+  defaultCurrency: "INR", // Added
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -146,6 +147,7 @@ describe("Settings Store", () => {
         paymentInstrumentsMigrationVersion: 0,
         updatedAt: new Date().toISOString(),
         version: 5,
+        defaultCurrency: "INR", // Added
       }
 
       store.trigger.loadSettings({ settings: newSettings, hasUnsyncedChanges: true })
@@ -245,6 +247,7 @@ describe("Settings Store", () => {
         updatedAt: new Date().toISOString(),
         version: 5,
         defaultPaymentMethod: "UPI",
+        defaultCurrency: "INR", // Added
       }
 
       store.trigger.replaceSettings({ settings: newSettings })

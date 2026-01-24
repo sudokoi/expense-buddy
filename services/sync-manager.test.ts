@@ -75,6 +75,7 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   updatedAt: validIsoDateArbitrary,
   version: fc.integer({ min: 5, max: 10 }),
+  defaultCurrency: fc.constant("INR"),
 })
 
 // Full settings arbitrary (with version fixed to latest)
@@ -90,6 +91,7 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: validIsoDateArbitrary,
   version: fc.constant(5),
+  defaultCurrency: fc.constant("INR"),
 })
 
 describe("Sync Manager Settings Integration Properties", () => {
@@ -347,6 +349,7 @@ describe("Sync Manager Settings Integration Properties", () => {
             paymentInstrumentsMigrationVersion: 0,
             updatedAt: new Date().toISOString(),
             version: 5,
+            defaultCurrency: "INR",
           }
 
           // Replace local with remote

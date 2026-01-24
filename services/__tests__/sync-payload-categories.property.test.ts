@@ -96,6 +96,7 @@ const appSettingsArb = fc.record({
   paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: isoDateArb,
   version: fc.constant(5),
+  defaultCurrency: fc.constant("INR"),
 })
 
 // =============================================================================

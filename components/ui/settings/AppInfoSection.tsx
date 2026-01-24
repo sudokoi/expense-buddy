@@ -97,7 +97,9 @@ export function AppInfoSection({
         disabled={isCheckingUpdate}
         icon={Download}
       >
-        {isCheckingUpdate ? t("settings.about.checking") : t("settings.about.checkForUpdates")}
+        {isCheckingUpdate
+          ? t("settings.about.checking")
+          : t("settings.about.checkForUpdates")}
       </Button>
 
       {/* Update Available - Open Release */}
