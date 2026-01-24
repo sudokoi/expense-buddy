@@ -31,9 +31,10 @@ import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { Category } from "../../types/category"
 import { LanguageSelector } from "../../components/ui/LanguageSelector"
-import { changeLanguage } from "../../i18n"
+import { changeLanguage, getLanguagePreference } from "../../i18n"
 import { useTranslation } from "react-i18next"
 import { CurrencySelector } from "../../components/ui/CurrencySelector"
+import { useFocusEffect } from "expo-router"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -54,6 +55,14 @@ const layoutStyles = {
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation()
+  const [languagePreference, setLanguagePreference] = useState<string>("system")
+
+  useFocusEffect(
+    useCallback(() => {
+      getLanguagePreference().then(setLanguagePreference)
+    }, [])
+  )
+
   const {
     state,
     replaceAllExpenses,
@@ -285,7 +294,9 @@ export default function SettingsScreen() {
   )
 
   const handleLanguageChange = useCallback((lang: string) => {
-    changeLanguage(lang)
+    changeLanguage(lang).then(() => {
+      setLanguagePreference(lang)
+    })
   }, [])
 
   const handleCurrencyChange = useCallback(
@@ -643,7 +654,7 @@ export default function SettingsScreen() {
 
         {/* LANGUAGE Section */}
         <SettingsSection title={t("settings.sections.language")}>
-          <LanguageSelector value={i18n.language} onChange={handleLanguageChange} />
+          <LanguageSelector value={languagePreference} onChange={handleLanguageChange} />
         </SettingsSection>
 
         {/* CURRENCY Section */}

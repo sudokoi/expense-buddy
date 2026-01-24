@@ -38,10 +38,12 @@ interface LanguageOption {
 }
 
 const languageOptions: LanguageOption[] = [
+  { key: "system", label: "System Default", Icon: Globe },
   { key: "en-US", label: "English (US)", Icon: Globe },
   { key: "en-GB", label: "English (UK)", Icon: Globe },
   { key: "en-IN", label: "English (IN)", Icon: Globe },
   { key: "hi", label: "Hindi (हिंदी)", Icon: Languages },
+  { key: "ja", label: "Japanese (日本語)", Icon: Languages },
 ]
 
 /**

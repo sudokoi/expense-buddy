@@ -1,0 +1,224 @@
+{
+  "currency": {
+    "symbol": "¥"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "お帰りなさい！",
+    "totalSpent": "総支出",
+    "entries": "件数",
+    "last7Days": "過去7日間",
+    "viewAnalytics": "分析を見る",
+    "noData": "データがまだありません。",
+    "recentTransactions": "最近の取引",
+    "noRecent": "最近の取引はありません。"
+  },
+  "common": {
+    "add": "+ 追加",
+    "seeAll": "すべて見る",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "save": "保存",
+    "done": "完了"
+  },
+  "history": {
+    "title": "支出履歴",
+    "emptyTitle": "支出がまだありません。",
+    "emptySubtitle": "「支出を追加」タブから追加してください。",
+    "deleteDialog": {
+      "title": "支出を削除",
+      "description": "本当にこの支出を削除しますか？この操作は取り消せません。"
+    },
+    "editDialog": {
+      "title": "支出を編集",
+      "description": "支出の詳細を更新",
+      "fields": {
+        "date": "日付",
+        "datePlaceholder": "日付を選択",
+        "amount": "金額",
+        "amountPlaceholder": "金額または式を入力 (例: 100+50)",
+        "amountError": "有効な金額を入力してください",
+        "expressionError": "有効な式を入力してください",
+        "preview": "= {{amount}}",
+        "category": "カテゴリー",
+        "note": "メモ",
+        "notePlaceholder": "メモを入力 (任意)",
+        "paymentMethod": "支払方法 (任意)",
+        "identifier": "識別子 (任意)",
+        "identifierPlaceholder": "{{max}}桁を入力",
+        "otherPlaceholder": "例: PayPay, Suica, 現金"
+      }
+    },
+    "loadMore": "さらに読み込む",
+    "loading": "読み込み中...",
+    "updated": "支出を更新しました",
+    "deleted": "支出を削除しました",
+    "loadError": "支出の読み込みに失敗しました"
+  },
+  "add": {
+    "title": "新しい支出を追加",
+    "amount": "金額",
+    "amountPlaceholder": "0 または 100+50",
+    "amountError": "有効な金額を入力してください",
+    "expressionError": "有効な式を入力してください",
+    "preview": "= {{amount}}",
+    "category": "カテゴリー",
+    "date": "日付",
+    "note": "メモ (任意)",
+    "notePlaceholder": "何に使いましたか？",
+    "paymentMethod": "支払方法 (任意)",
+    "addAnother": "続けて追加",
+    "save": "支出を保存",
+    "success": "支出を追加しました",
+    "successAddAnother": "支出を追加しました。続けて追加します。"
+  },
+  "analytics": {
+    "title": "分析",
+    "subtitle": "支出パターンを追跡",
+    "filters": {
+      "button": "フィルター",
+      "time": "期間: {{window}}",
+      "category": "カテゴリー: {{category}}",
+      "payment": "支払: {{method}}",
+      "instrument": "手段: {{instrument}}"
+    },
+    "timeWindow": {
+      "7d": "7日間",
+      "15d": "15日間",
+      "1m": "1ヶ月",
+      "3m": "3ヶ月",
+      "6m": "6ヶ月",
+      "1y": "1年",
+      "all": "全期間"
+    },
+    "empty": {
+      "loading": "分析を読み込み中...",
+      "noData": "この期間の支出記録はありません。",
+      "noDataSubtitle": "別の期間を選択するか、支出を追加してください。",
+      "noMatch": "選択したカテゴリーの支出はありません。",
+      "noMatchSubtitle": "別のカテゴリーを選択するか、「すべて」をタップしてリセットしてください。"
+    },
+    "chart": {
+      "none": "なし",
+      "others": "その他"
+    }
+  },
+  "settings": {
+    "sections": {
+      "defaultPayment": "デフォルトの支払方法",
+      "paymentInstruments": "支払手段",
+      "categories": "カテゴリー",
+      "github": "GitHub 同期",
+      "language": "言語 (Language)",
+      "currency": "通貨",
+      "appearance": "外観",
+      "about": "アプリ情報"
+    },
+    "defaultPayment": {
+      "label": "デフォルト",
+      "none": "なし",
+      "description": "新しい支出を追加する際に、この支払方法を事前に選択します。"
+    },
+    "github": {
+      "descriptionWeb": "パーソナルアクセストークンを使用して、支出をGitHubリポジトリに同期します。",
+      "descriptionNative": "GitHubでサインインして、支出を個人のリポジトリ（組織のリポジトリはサポートされていません）に同期します。",
+      "configTitle": "GitHub 設定",
+      "connected": "接続済み",
+      "tokenLabel": "GitHub パーソナルアクセストークン",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHelp": "Contents (read/write) 権限を持つFine-grainedトークンを作成してください",
+      "loginLabel": "GitHub ログイン",
+      "signIn": "GitHubでサインイン",
+      "signOut": "サインアウト",
+      "signingIn": "サインイン中...",
+      "loginHelp": "個人のアカウントのみ。組織のリポジトリはサポートされていません。",
+      "repoLabel": "リポジトリ",
+      "repoPlaceholderWeb": "username/repo-name",
+      "repoPlaceholderNative": "リポジトリを選択",
+      "chooseRepo": "リポジトリを選択",
+      "editRepo": "編集",
+      "branchLabel": "ブランチ",
+      "saveConfig": "設定を保存",
+      "test": "テスト",
+      "testing": "テスト中...",
+      "clearConfig": "設定をクリア",
+      "deviceCode": "GitHubでこのコードを入力してください:",
+      "copyCode": "コードをコピー",
+      "openBrowser": "ブラウザでGitHubを開く",
+      "browserHelp": "ブラウザが開かない場合は、{{url}} にアクセスしてください",
+      "successConfig": "同期設定を保存しました",
+      "successSignIn": "GitHubサインインに成功しました"
+    },
+    "autoSync": {
+      "title": "自動同期とオプション",
+      "enable": "自動同期を有効にする",
+      "enableHelp": "設定されている場合、GitHubと自動的に同期します",
+      "syncSettings": "設定も同期する",
+      "syncSettingsHelp": "テーマや設定も同期に含めます",
+      "whenToSync": "同期のタイミング",
+      "onLaunch": "アプリ起動時",
+      "onLaunchHelp": "アプリ開始時に同期",
+      "onChange": "変更ごと",
+      "onChangeHelp": "変更を加えた直後に同期",
+      "syncNow": "今すぐ同期",
+      "syncing": "同期中..."
+    },
+    "instruments": {
+      "title": "保存された手段",
+      "description": "クレジットカード/デビットカードや電子マネーのニックネームを追加します。",
+      "add": "追加",
+      "empty": "保存された手段はまだありません。",
+      "manage": "手段を管理",
+      "removeDialog": {
+        "title": "手段を削除",
+        "message": "「{{nickname}}」を削除しますか？"
+      }
+    },
+    "categories": {
+      "description": "支出カテゴリーを習慣に合わせてカスタマイズします。",
+      "manage": "カテゴリーを管理",
+      "add": "カテゴリーを追加",
+      "otherHelp": "「その他」は常に一番下に表示されます",
+      "deleteDialog": {
+        "title": "カテゴリーを削除",
+        "messageSimple": "「{{label}}」を削除しますか？",
+        "messageReassign": "「{{label}}」を削除しますか？ {{count}}件の支出が「その他」に割り当てられます。"
+      }
+    },
+    "appearance": {
+      "theme": "テーマ",
+      "options": {
+        "system": "システム",
+        "light": "ライト",
+        "dark": "ダーク"
+      }
+    },
+    "about": {
+      "currentVersion": "現在のバージョン",
+      "latestVersion": "最新バージョン",
+      "checkForUpdates": "アップデートを確認",
+      "checking": "確認中...",
+      "download": "v{{version}} をダウンロード",
+      "reportIssue": "問題を報告",
+      "viewGitHub": "GitHubで見る"
+    }
+  },
+  "dayView": {
+    "title": "{{date}} の支出",
+    "today": "今日",
+    "yesterday": "昨日",
+    "tomorrow": "明日",
+    "totalSpent": "総支出",
+    "empty": "この日の支出はありません"
+  },
+  "repoPicker": {
+    "title": "リポジトリを選択",
+    "subtitle": "支出を同期するリポジトリを選択してください。",
+    "searchPlaceholder": "リポジトリを検索...",
+    "loadMore": "さらに読み込む",
+    "loading": "読み込み中...",
+    "empty": "リポジトリが見つかりませんでした。",
+    "error": "リポジトリの読み込みに失敗しました",
+    "createPrivate": "新しいプライベートリポジトリを作成: {{name}}"
+  }
+}

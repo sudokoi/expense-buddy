@@ -9,15 +9,20 @@ import i18next from "i18next"
 export function formatCurrency(amount: number, currencyCode?: string): string {
   // Legacy expenses (undefined currency) are implicitly INR
   const effectiveCurrency = currencyCode || "INR"
+  const language = i18next.language || "en-IN"
 
   try {
-    return new Intl.NumberFormat(i18next.language || "en-IN", {
+    return new Intl.NumberFormat(language, {
       style: "currency",
       currency: effectiveCurrency,
     }).format(amount)
   } catch (error) {
     // Fallback if Intl fails
     console.warn(`Failed to format currency ${effectiveCurrency}:`, error)
-    return `₹${amount.toFixed(2)}`
+
+    // Use the symbol from the current locale's translation file
+    // This respects the user's language choice for the fallback display
+    const symbol = i18next.t("currency.symbol")
+    return `${symbol}${amount.toFixed(2)}`
   }
 }
