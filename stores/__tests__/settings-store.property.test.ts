@@ -115,6 +115,24 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
         hasUnsyncedChanges: false,
       }),
 
+      setLanguage: (context, event: { language: string }) => {
+        const newSettings = { ...context.settings, language: event.language }
+        return {
+          ...context,
+          settings: newSettings,
+          hasUnsyncedChanges: true,
+        }
+      },
+
+      setDefaultCurrency: (context, event: { currency: string }) => {
+        const newSettings = { ...context.settings, defaultCurrency: event.currency }
+        return {
+          ...context,
+          settings: newSettings,
+          hasUnsyncedChanges: true,
+        }
+      },
+
       clearSettingsChangeFlag: (context) => ({
         ...context,
         hasUnsyncedChanges: false,
@@ -240,6 +258,36 @@ describe("Settings Store Properties", () => {
             )
           }
         ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("setLanguage SHALL update language and set hasUnsyncedChanges to true", () => {
+      const languageArb = fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja")
+      fc.assert(
+        fc.property(languageArb, (language) => {
+          const store = createTestSettingsStore()
+
+          store.trigger.setLanguage({ language })
+
+          const { settings, hasUnsyncedChanges } = store.getSnapshot().context
+          return settings.language === language && hasUnsyncedChanges === true
+        }),
+        { numRuns: 100 }
+      )
+    })
+
+    it("setDefaultCurrency SHALL update currency and set hasUnsyncedChanges to true", () => {
+      const currencyArb = fc.constantFrom("INR", "USD", "EUR", "GBP", "JPY")
+      fc.assert(
+        fc.property(currencyArb, (currency) => {
+          const store = createTestSettingsStore()
+
+          store.trigger.setDefaultCurrency({ currency })
+
+          const { settings, hasUnsyncedChanges } = store.getSnapshot().context
+          return settings.defaultCurrency === currency && hasUnsyncedChanges === true
+        }),
         { numRuns: 100 }
       )
     })

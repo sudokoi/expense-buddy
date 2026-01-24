@@ -40,21 +40,19 @@ const initI18n = async () => {
   })
 }
 
+/**
+ * Change the active i18next language.
+ * Note: Persistence is handled by the settings store (settings.language field).
+ * This function only updates the i18next instance.
+ */
 export const changeLanguage = async (lang: string) => {
   if (lang === "system") {
-    await AsyncStorage.setItem(LANGUAGE_KEY, "system")
     const locales = getLocales()
     const systemLang = locales[0]?.languageTag || "en-IN"
     await i18next.changeLanguage(systemLang)
   } else {
     await i18next.changeLanguage(lang)
-    await AsyncStorage.setItem(LANGUAGE_KEY, lang)
   }
-}
-
-export const getLanguagePreference = async (): Promise<string> => {
-  const saved = await AsyncStorage.getItem(LANGUAGE_KEY)
-  return saved || "system"
 }
 
 // Export initialization promise so we can wait for it if needed, or just fire and forget in _layout
