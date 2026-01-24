@@ -1,5 +1,4 @@
 import { Expense, PaymentMethodType } from "../types/expense"
-import i18next from "i18next"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
@@ -22,6 +21,7 @@ import {
   formatPaymentInstrumentLabel,
   isPaymentInstrumentMethod,
 } from "../services/payment-instruments"
+import { getPaymentMethodI18nKey } from "../constants/payment-methods"
 
 // Category color map type for dynamic categories
 export type CategoryColorMap = Record<string, string>
@@ -131,7 +131,8 @@ export function filterExpensesByPaymentInstruments(
  */
 export function aggregateByPaymentInstrument(
   expenses: Expense[],
-  instruments: PaymentInstrument[]
+  instruments: PaymentInstrument[],
+  t: (key: string) => string
 ): PaymentInstrumentChartDataItem[] {
   const totals = new Map<
     PaymentInstrumentSelectionKey,
@@ -167,11 +168,11 @@ export function aggregateByPaymentInstrument(
     // ... existing imports
 
     // ... inside aggregateByPaymentInstrument function
-    let text = `${i18next.t(`paymentMethods.${entry.method}`)} • ${i18next.t("instruments.dropdown.others").split(" / ")[0]}`
+    let text = `${t(`paymentMethods.${getPaymentMethodI18nKey(entry.method)}`)} • ${t("instruments.dropdown.others").split(" / ")[0]}`
     if (!entry.isOther && entry.instrumentId) {
       const inst = findInstrumentById(instruments, entry.instrumentId)
       if (inst && !inst.deletedAt) {
-        text = `${i18next.t(`paymentMethods.${entry.method}`)} • ${formatPaymentInstrumentLabel(inst)}`
+        text = `${t(`paymentMethods.${getPaymentMethodI18nKey(entry.method)}`)} • ${formatPaymentInstrumentLabel(inst)}`
       }
     }
 
@@ -375,7 +376,8 @@ export function getCategoryColor(
  */
 export function aggregateByCategory(
   expenses: Expense[],
-  categoryColors?: CategoryColorMap
+  categoryColors: CategoryColorMap | undefined,
+  t: (key: string) => string
 ): PieChartDataItem[] {
   // Group and sum by category
   const categoryTotals = new Map<string, number>()
@@ -400,7 +402,7 @@ export function aggregateByCategory(
       pieData.push({
         value: amount,
         color: getCategoryColor(category, categoryColors),
-        text: category,
+        text: category === "Other" ? t("categories.other") : category,
         percentage: (amount / total) * 100,
         category,
       })
@@ -418,7 +420,8 @@ export function aggregateByCategory(
  * Excludes payment method types with zero total amount
  */
 export function aggregateByPaymentMethod(
-  expenses: Expense[]
+  expenses: Expense[],
+  t: (key: string) => string
 ): PaymentMethodChartDataItem[] {
   // Group and sum by payment method type
   // Expenses without paymentMethod are grouped under "Other"
@@ -449,7 +452,7 @@ export function aggregateByPaymentMethod(
       pieData.push({
         value: amount,
         color: PAYMENT_METHOD_COLORS[paymentMethodType],
-        text: i18next.t(`paymentMethods.${paymentMethodType}`),
+        text: t(`paymentMethods.${getPaymentMethodI18nKey(paymentMethodType)}`),
         percentage: (amount / total) * 100,
         paymentMethodType,
       })
@@ -466,7 +469,8 @@ export function aggregateByPaymentMethod(
  */
 export function aggregateByDay(
   expenses: Expense[],
-  dateRange: DateRange
+  dateRange: DateRange,
+  locale?: any
 ): LineChartDataItem[] {
   // Get all days in the range
   const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end })
@@ -492,7 +496,7 @@ export function aggregateByDay(
     return {
       value,
       date: dayKey,
-      label: format(day, "MMM d"),
+      label: format(day, "MMM d", { locale }),
       dataPointText: value > 0 ? `₹${value.toFixed(0)}` : undefined,
     }
   })

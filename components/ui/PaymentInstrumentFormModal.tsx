@@ -67,9 +67,7 @@ export function PaymentInstrumentFormModal({
       open={open}
       onClose={handleClose}
       title={
-        isEditMode
-          ? t("settings.instruments.form.editTitle")
-          : t("settings.instruments.form.addTitle")
+        isEditMode ? t("instruments.form.editTitle") : t("instruments.form.addTitle")
       }
       snapPoints={[90]}
     >
@@ -195,7 +193,7 @@ function PaymentInstrumentForm({
     <YStack gap="$4">
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          {t("settings.instruments.form.paymentMethod")}
+          {t("instruments.form.paymentMethod")}
         </Label>
         <XStack style={layoutStyles.methodRow}>
           {INSTRUMENT_METHODS.map((m) => {
@@ -218,11 +216,11 @@ function PaymentInstrumentForm({
 
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          {t("settings.instruments.form.nickname")}
+          {t("instruments.form.nickname")}
         </Label>
         <Input
           size="$4"
-          placeholder={t("settings.instruments.form.nicknamePlaceholder")}
+          placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
           maxLength={30}
@@ -241,12 +239,11 @@ function PaymentInstrumentForm({
 
       <YStack gap="$2">
         <Label color="$color" opacity={0.8}>
-          {selectedMethodConfig?.identifierLabel ??
-            t("settings.instruments.form.lastDigits")}
+          {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
         </Label>
         <Input
           size="$4"
-          placeholder={t("settings.instruments.form.identifierPlaceholder", {
+          placeholder={t("instruments.form.identifierPlaceholder", {
             count: getLastDigitsLength(method),
           })}
           keyboardType="numeric"

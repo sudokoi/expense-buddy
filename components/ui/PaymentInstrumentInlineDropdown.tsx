@@ -102,17 +102,17 @@ export function PaymentInstrumentInlineDropdown({
       if (selectedInstrument && !selectedInstrument.deletedAt) {
         return formatPaymentInstrumentLabel(selectedInstrument)
       }
-      return `${method} • ${t("settings.instruments.dropdown.saved")}`
+      return `${method} • ${t("instruments.dropdown.saved")}`
     }
     if (kind === "manual") {
       return manualDigits.trim()
-        ? t("settings.instruments.dropdown.othersLabelWithDigits", {
+        ? t("instruments.dropdown.othersLabelWithDigits", {
             method,
             digits: manualDigits.trim(),
           })
-        : t("settings.instruments.dropdown.othersLabel", { method })
+        : t("instruments.dropdown.othersLabel", { method })
     }
-    return t("settings.instruments.dropdown.selectSaved")
+    return t("instruments.dropdown.selectSaved")
   }, [kind, manualDigits, method, selectedInstrument, t])
 
   const closeDropdown = useCallback(() => setOpen(false), [])
@@ -261,16 +261,16 @@ export function PaymentInstrumentInlineDropdown({
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
-                {t("settings.instruments.dropdown.none")}
+                {t("instruments.dropdown.none")}
               </Text>
               {kind === "none" && (
                 <Text color={focusBorderColor} fontWeight="700">
-                  {t("settings.instruments.dropdown.selected")}
+                  {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "none" && (
                 <Text opacity={0} fontWeight="700">
-                  {t("settings.instruments.dropdown.selected")}
+                  {t("instruments.dropdown.selected")}
                 </Text>
               )}
             </View>
@@ -293,16 +293,16 @@ export function PaymentInstrumentInlineDropdown({
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
-                {t("settings.instruments.dropdown.others")}
+                {t("instruments.dropdown.others")}
               </Text>
               {kind === "manual" && (
                 <Text color={focusBorderColor} fontWeight="700">
-                  {t("settings.instruments.dropdown.selected")}
+                  {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "manual" && (
                 <Text opacity={0} fontWeight="700">
-                  {t("settings.instruments.dropdown.selected")}
+                  {t("instruments.dropdown.selected")}
                 </Text>
               )}
             </View>
@@ -333,12 +333,12 @@ export function PaymentInstrumentInlineDropdown({
                   </Text>
                   {isSelected && (
                     <Text color={focusBorderColor} fontWeight="700">
-                      {t("settings.instruments.dropdown.selected")}
+                      {t("instruments.dropdown.selected")}
                     </Text>
                   )}
                   {!isSelected && (
                     <Text opacity={0} fontWeight="700">
-                      {t("settings.instruments.dropdown.selected")}
+                      {t("instruments.dropdown.selected")}
                     </Text>
                   )}
                 </View>
@@ -356,8 +356,8 @@ export function PaymentInstrumentInlineDropdown({
               borderColor="$borderColor"
             >
               {showAdd
-                ? t("settings.instruments.dropdown.cancelAdd")
-                : t("settings.instruments.dropdown.addSaved")}
+                ? t("instruments.dropdown.cancelAdd")
+                : t("instruments.dropdown.addSaved")}
             </Button>
           )}
         </Card>
@@ -390,11 +390,11 @@ export function PaymentInstrumentInlineDropdown({
         >
           <YStack gap="$1">
             <Label color="$color" opacity={0.8}>
-              {t("settings.instruments.form.nickname")}
+              {t("instruments.form.nickname")}
             </Label>
             <Input
               size="$4"
-              placeholder={t("settings.instruments.form.nicknamePlaceholder")}
+              placeholder={t("instruments.form.nicknamePlaceholder")}
               value={nickname}
               onChangeText={(t) => {
                 setNickname(t)

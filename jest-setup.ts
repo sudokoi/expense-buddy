@@ -24,11 +24,29 @@ jest.mock("expo-secure-store", () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }))
 
-// Mock React Native Platform if needed
+// Mock React Native
 jest.mock("react-native", () => ({
   Platform: {
     OS: "ios",
     select: jest.fn((obj) => obj.ios),
   },
   NativeModules: {},
+  Touchable: {
+    Mixin: {},
+  },
+  View: "View",
+  Text: "Text",
 }))
+
+// Mock @tamagui/lucide-icons
+jest.mock("@tamagui/lucide-icons", () => {
+  const React = require("react")
+  const MockIcon = (props: any) => React.createElement("View", props)
+  return {
+    Banknote: MockIcon,
+    Smartphone: MockIcon,
+    CreditCard: MockIcon,
+    Building: MockIcon,
+    Circle: MockIcon,
+  }
+})

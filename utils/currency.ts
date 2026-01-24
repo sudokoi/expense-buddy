@@ -1,4 +1,17 @@
 import i18next from "i18next"
+import { getLocales } from "expo-localization"
+
+/**
+ * Gets the system's default currency code
+ * @returns ISO 4217 currency code (e.g. "INR", "USD") or "INR" fallback
+ */
+export function getSystemCurrency(): string {
+  const locales = getLocales()
+  if (locales && locales.length > 0) {
+    return locales[0].currencyCode ?? "INR"
+  }
+  return "INR"
+}
 
 /**
  * Formats a number as a currency string.

@@ -7,7 +7,32 @@
 
 import fc from "fast-check"
 import { formatPaymentMethodDisplay } from "./payment-method-display"
+// Mock constants/payment-methods to avoid importing Tamagui icons which fail in Jest
+jest.mock("../constants/payment-methods", () => ({
+  getPaymentMethodI18nKey: (type: string) => {
+    switch (type) {
+      case "Cash":
+        return "cash"
+      case "Amazon Pay":
+        return "amazonPay"
+      case "UPI":
+        return "upi"
+      case "Credit Card":
+        return "creditCard"
+      case "Debit Card":
+        return "debitCard"
+      case "Net Banking":
+        return "netBanking"
+      case "Other":
+        return "other"
+      default:
+        return type
+    }
+  },
+}))
+
 import { PaymentMethod, PaymentMethodType } from "../types/expense"
+import { getPaymentMethodI18nKey } from "../constants/payment-methods"
 
 // Mock i18next
 jest.mock("i18next", () => ({
@@ -16,8 +41,9 @@ jest.mock("i18next", () => ({
     // or just return the key.
     // The test checks if result.includes(paymentMethod.type).
     // If we return just the type, it passes coverage.
-    // If input is "paymentMethods.Credit Card", output "Credit Card"
+    // If input is "paymentMethods.creditCard", output "Credit Card" (simulated)
     if (key.startsWith("paymentMethods.")) {
+      // Just return the part after dot for simplicity in checking logic
       return key.split(".")[1]
     }
     // For instruments.dropdown.others
@@ -98,7 +124,9 @@ describe("Payment Method Display Properties", () => {
           // Result should always contain the type KEY
           return (
             result !== undefined &&
-            result.includes(`paymentMethods.${paymentMethod.type}`)
+            result.includes(
+              `paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)}`
+            )
           )
         }),
         { numRuns: 100 }
@@ -109,7 +137,7 @@ describe("Payment Method Display Properties", () => {
       fc.assert(
         fc.property(paymentMethodWithIdentifierArb, (paymentMethod) => {
           const result = formatPaymentMethodDisplay(paymentMethod)
-          const expected = `paymentMethods.${paymentMethod.type} (${paymentMethod.identifier})`
+          const expected = `paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)} (${paymentMethod.identifier})`
           return result === expected
         }),
         { numRuns: 100 }
@@ -120,7 +148,9 @@ describe("Payment Method Display Properties", () => {
       fc.assert(
         fc.property(paymentMethodWithoutIdentifierArb, (paymentMethod) => {
           const result = formatPaymentMethodDisplay(paymentMethod)
-          return result === `paymentMethods.${paymentMethod.type}`
+          return (
+            result === `paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)}`
+          )
         }),
         { numRuns: 100 }
       )
@@ -133,7 +163,7 @@ describe("Payment Method Display Properties", () => {
           if (!result || !paymentMethod.identifier) return false
 
           // Check that identifier appears in brackets after the type key
-          const expectedPattern = `paymentMethods.${paymentMethod.type} (${paymentMethod.identifier})`
+          const expectedPattern = `paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)} (${paymentMethod.identifier})`
           return result === expectedPattern
         }),
         { numRuns: 100 }

@@ -24,6 +24,8 @@ import {
   getDateRangeForTimeWindow,
   getTimeWindowDays,
 } from "../utils/analytics-calculations"
+import { getLocale } from "../utils/date"
+import { useTranslation } from "react-i18next"
 
 /**
  * Analytics data returned by the hook
@@ -60,6 +62,7 @@ export function useAnalyticsData(
   const { state } = useExpenses()
   const { categories } = useCategories()
   const { settings } = useSettings()
+  const { t } = useTranslation()
   // Use activeExpenses (excludes soft-deleted) for analytics
   const { activeExpenses, isLoading } = state
 
@@ -75,6 +78,8 @@ export function useAnalyticsData(
     }
     return colorMap
   }, [categories])
+
+  const locale = getLocale()
 
   // Memoized filter callback: Filter expenses by time window
   const filterByTimeWindow = useCallback(
@@ -135,22 +140,22 @@ export function useAnalyticsData(
 
   // Memoized: Pie chart data aggregated by category with dynamic colors
   const pieChartData = useMemo(() => {
-    return aggregateByCategory(filteredExpenses, categoryColorMap)
-  }, [filteredExpenses, categoryColorMap])
+    return aggregateByCategory(filteredExpenses, categoryColorMap, t)
+  }, [filteredExpenses, categoryColorMap, t])
 
   // Memoized: Payment method chart data aggregated by payment method
   const paymentMethodChartData = useMemo(() => {
-    return aggregateByPaymentMethod(filteredExpenses)
-  }, [filteredExpenses])
+    return aggregateByPaymentMethod(filteredExpenses, t)
+  }, [filteredExpenses, t])
 
   const paymentInstrumentChartData = useMemo(() => {
-    return aggregateByPaymentInstrument(filteredExpenses, paymentInstruments)
-  }, [filteredExpenses, paymentInstruments])
+    return aggregateByPaymentInstrument(filteredExpenses, paymentInstruments, t)
+  }, [filteredExpenses, paymentInstruments, t])
 
   // Memoized: Line chart data aggregated by day
   const lineChartData = useMemo(() => {
-    return aggregateByDay(filteredExpenses, dateRange)
-  }, [filteredExpenses, dateRange])
+    return aggregateByDay(filteredExpenses, dateRange, locale)
+  }, [filteredExpenses, dateRange, locale])
 
   // Memoized: Summary statistics
   const statistics = useMemo(() => {

@@ -32,11 +32,6 @@ function getColorForKey(key: PaymentMethodSelectionKey): string {
   return PAYMENT_METHOD_COLORS[key] ?? PAYMENT_METHOD_COLORS.Other
 }
 
-function getLabelForKey(key: PaymentMethodSelectionKey): string {
-  if (key === NONE_KEY) return "None"
-  return key
-}
-
 /**
  * PaymentMethodFilter - Multi-select chips for filtering analytics by payment method.
  * Empty selection means "All".
@@ -52,15 +47,17 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
     const items: Array<{
       key: PaymentMethodSelectionKey
       label: string
+      i18nKey?: string
       Icon?: React.ComponentType<{ size?: number; color?: string }>
     }> = []
 
-    items.push({ key: NONE_KEY, label: getLabelForKey(NONE_KEY) })
+    items.push({ key: NONE_KEY, label: "None" }) // Label handled in render or getLabelForKey if used elsewhere, but here logic differs
 
     for (const method of PAYMENT_METHODS) {
       items.push({
         key: method.value,
         label: method.label,
+        i18nKey: method.i18nKey,
         Icon: method.icon as unknown as React.ComponentType<{
           size?: number
           color?: string
@@ -101,14 +98,15 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           bordered={!isAllSelected}
           onPress={handleAllPress}
         >
-          All
+          {t("common.all")}
         </Button>
 
         {chipItems.map((item) => {
           const isSelected = selected.includes(item.key)
           const color = getColorForKey(item.key)
           const Icon = item.Icon
-          const label = item.key === NONE_KEY ? "None" : t(`paymentMethods.${item.label}`)
+          const label =
+            item.key === NONE_KEY ? t("common.none") : t(`paymentMethods.${item.i18nKey}`)
 
           return (
             <Button

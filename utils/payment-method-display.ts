@@ -2,6 +2,7 @@ import { PaymentMethod } from "../types/expense"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { formatPaymentInstrumentLabel } from "../services/payment-instruments"
 import i18next from "i18next"
+import { getPaymentMethodI18nKey } from "../constants/payment-methods"
 
 /**
  * Format payment method for display
@@ -19,7 +20,9 @@ export function formatPaymentMethodDisplay(
     return undefined
   }
 
-  const methodLabel = i18next.t(`paymentMethods.${paymentMethod.type}`)
+  const methodLabel = i18next.t(
+    `paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)}`
+  )
 
   if (paymentMethod.instrumentId && instruments && instruments.length > 0) {
     const inst = instruments.find((i) => i.id === paymentMethod.instrumentId)

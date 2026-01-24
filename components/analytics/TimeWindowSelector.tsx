@@ -2,6 +2,7 @@ import { XStack, Button } from "tamagui"
 import { memo, useCallback } from "react"
 import { ScrollView, ViewStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
+import { useTranslation } from "react-i18next"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -36,6 +37,8 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
   value,
   onChange,
 }: TimeWindowSelectorProps) {
+  const { t } = useTranslation()
+
   const handlePress = useCallback(
     (windowValue: TimeWindow) => {
       onChange(windowValue)
@@ -61,7 +64,7 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               bordered={!isSelected}
               onPress={() => handlePress(window.value)}
             >
-              {window.label}
+              {t(`analytics.timeWindow.${window.value}`)}
             </Button>
           )
         })}

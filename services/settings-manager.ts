@@ -6,6 +6,7 @@ import { PaymentMethodType } from "../types/expense"
 import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import { PaymentInstrument } from "../types/payment-instrument"
+import { getSystemCurrency } from "../utils/currency"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -52,7 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   syncSettings: false,
   defaultPaymentMethod: undefined,
-  defaultCurrency: "INR",
+  defaultCurrency: getSystemCurrency(),
   language: "system",
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",

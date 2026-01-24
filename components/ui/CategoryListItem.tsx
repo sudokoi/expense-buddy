@@ -136,7 +136,9 @@ export const CategoryListItem = memo(function CategoryListItem({
               ellipsizeMode="tail"
               style={{ flexShrink: 1 }}
             >
-              {category.label}
+              {category.label === "Other"
+                ? t("settings.categories.other")
+                : category.label}
             </Text>
             {category.isDefault && (
               <Text fontSize="$1" color="$color" opacity={0.5} style={{ flexShrink: 0 }}>

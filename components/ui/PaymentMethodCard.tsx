@@ -35,7 +35,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       <XStack gap="$2" style={{ alignItems: "center" }}>
         <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
         <Text fontSize="$2" fontWeight={isSelected ? "bold" : "normal"}>
-          {t(`paymentMethods.${config.value}`)}
+          {t(`paymentMethods.${config.i18nKey}`)}
         </Text>
       </XStack>
     </Card>

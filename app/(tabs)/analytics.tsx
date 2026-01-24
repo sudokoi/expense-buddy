@@ -21,7 +21,7 @@ import {
 import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFiltersSheet"
 import { SlidersHorizontal } from "@tamagui/lucide-icons"
 import type { PaymentInstrument } from "../../types/payment-instrument"
-import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import {
   loadAnalyticsFilters,
   saveAnalyticsFilters,
@@ -343,8 +343,8 @@ export default function AnalyticsScreen() {
   const paymentMethodLabel = useCallback(
     (key: PaymentMethodSelectionKey): string => {
       if (key === "__none__") return t("analytics.chart.none")
-      const match = PAYMENT_METHODS.find((m) => m.value === key)
-      return match?.label ?? key
+      // Use helper to get the i18n key instead of the hardcoded label
+      return t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
     },
     [t]
   )

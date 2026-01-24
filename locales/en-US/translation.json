@@ -13,6 +13,46 @@
     "recentTransactions": "Recent Transactions",
     "noRecent": "No recent transactions."
   },
+  "paymentMethods": {
+    "cash": "Cash",
+    "amazonPay": "Amazon Pay",
+    "upi": "UPI",
+    "creditCard": "Credit Card",
+    "debitCard": "Debit Card",
+    "netBanking": "Net Banking",
+    "other": "Other"
+  },
+  "instruments": {
+    "title": "Saved Instruments",
+    "description": "Add nicknames for your Credit/Debit cards and UPI IDs.",
+    "add": "Add",
+    "empty": "No instruments yet.",
+    "manage": "Manage Instruments",
+    "removeDialog": {
+      "title": "Remove Instrument",
+      "message": "Remove \"{{nickname}}\"?"
+    },
+    "form": {
+      "editTitle": "Edit Instrument",
+      "addTitle": "Add Instrument",
+      "paymentMethod": "Payment Method",
+      "nickname": "Nickname",
+      "nicknamePlaceholder": "e.g., HDFC Visa",
+      "lastDigits": "Last digits",
+      "identifierPlaceholder": "Enter {{count}} digits"
+    },
+    "dropdown": {
+      "none": "None",
+      "others": "Others / Enter digits",
+      "othersLabel": "{{method}} • Others",
+      "othersLabelWithDigits": "{{method}} • Others ({{digits}})",
+      "selectSaved": "Select saved instrument (optional)",
+      "addSaved": "Add saved",
+      "cancelAdd": "Cancel Add",
+      "selected": "Selected",
+      "saved": "Saved instrument"
+    }
+  },
   "common": {
     "add": "+ Add",
     "seeAll": "See All",
@@ -27,7 +67,16 @@
     "editLabel": "Edit {{label}}",
     "deleteLabel": "Delete {{label}}",
     "removeLabel": "Remove {{label}}",
-    "optional": "(Optional)"
+    "optional": "(Optional)",
+    "all": "All",
+    "none": "None"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "add": "Add Expense",
+    "analytics": "Analytics",
+    "history": "History",
+    "settings": "Settings"
   },
   "history": {
     "title": "Expense History",
@@ -239,47 +288,8 @@
       "syncNow": "Sync Now",
       "syncing": "Syncing..."
     },
-    "instruments": {
-      "title": "Saved Instruments",
-      "description": "Add nicknames for your Credit/Debit cards and UPI IDs.",
-      "add": "Add",
-      "empty": "No instruments yet.",
-      "manage": "Manage Instruments",
-      "removeDialog": {
-        "title": "Remove Instrument",
-        "message": "Remove \"{{nickname}}\"?"
-      },
-      "form": {
-        "editTitle": "Edit Instrument",
-        "addTitle": "Add Instrument",
-        "paymentMethod": "Payment Method",
-        "nickname": "Nickname",
-        "nicknamePlaceholder": "e.g., HDFC Visa",
-        "lastDigits": "Last digits",
-        "identifierPlaceholder": "Enter {{count}} digits"
-      },
-      "dropdown": {
-        "none": "None",
-        "others": "Others / Enter digits",
-        "othersLabel": "{{method}} • Others",
-        "othersLabelWithDigits": "{{method}} • Others ({{digits}})",
-        "selectSaved": "Select saved instrument (optional)",
-        "addSaved": "Add saved",
-        "cancelAdd": "Cancel Add",
-        "selected": "Selected",
-        "saved": "Saved instrument"
-      }
-    },
-    "paymentMethods": {
-      "Cash": "Cash",
-      "Amazon Pay": "Amazon Pay",
-      "UPI": "UPI",
-      "Credit Card": "Credit Card",
-      "Debit Card": "Debit Card",
-      "Net Banking": "Net Banking",
-      "Other": "Other"
-    },
     "categories": {
+      "other": "Other",
       "description": "Customize expense categories to match your spending habits.",
       "manage": "Manage Categories",
       "add": "Add Category",

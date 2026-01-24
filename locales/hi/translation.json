@@ -13,6 +13,46 @@
     "recentTransactions": "हाल ही के लेन-देन",
     "noRecent": "कोई हालिया लेन-देन नहीं।"
   },
+  "paymentMethods": {
+    "cash": "नकद",
+    "amazonPay": "अमेज़न पे",
+    "upi": "यूपीआई",
+    "creditCard": "क्रेडिट कार्ड",
+    "debitCard": "डेबिट कार्ड",
+    "netBanking": "नेट बैंकिंग",
+    "other": "अन्य"
+  },
+  "instruments": {
+    "title": "सहेजे गए साधन",
+    "description": "अपने क्रेडिट/डेबिट कार्ड और UPI आईडी के लिए उपनाम जोड़ें।",
+    "add": "जोड़ें",
+    "empty": "अभी तक कोई साधन नहीं।",
+    "manage": "साधन प्रबंधित करें",
+    "removeDialog": {
+      "title": "इंस्ट्रूमेंट हटाएं",
+      "message": "\"{{nickname}}\" हटाएं?"
+    },
+    "form": {
+      "editTitle": "इंस्ट्रूमेंट संपादित करें",
+      "addTitle": "इंस्ट्रूमेंट जोड़ें",
+      "paymentMethod": "भुगतान का तरीका",
+      "nickname": "उपनाम",
+      "nicknamePlaceholder": "उदा. HDFC Visa",
+      "lastDigits": "अंतिम अंक",
+      "identifierPlaceholder": "{{count}} अंक दर्ज करें"
+    },
+    "dropdown": {
+      "none": "कोई नहीं",
+      "others": "अन्य / अंक दर्ज करें",
+      "othersLabel": "{{method}} • अन्य",
+      "othersLabelWithDigits": "{{method}} • अन्य ({{digits}})",
+      "selectSaved": "सहेजा गया साधन चुनें (वैकल्पिक)",
+      "addSaved": "सहेजा गया जोड़ें",
+      "cancelAdd": "जोड़ना रद्द करें",
+      "selected": "चयनित",
+      "saved": "सहेजा गया साधन"
+    }
+  },
   "common": {
     "add": "+ जोड़ें",
     "seeAll": "सभी देखें",
@@ -27,7 +67,16 @@
     "editLabel": "{{label}} संपादित करें",
     "deleteLabel": "{{label}} हटाएं",
     "removeLabel": "{{label}} हटाएं",
-    "optional": "(वैकल्पिक)"
+    "optional": "(वैकल्पिक)",
+    "all": "सभी",
+    "none": "कोई नहीं"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "add": "व्यय जोड़ें",
+    "analytics": "विश्लेषण",
+    "history": "इतिहास",
+    "settings": "सेटिंग्स"
   },
   "history": {
     "title": "व्यय इतिहास",
@@ -239,47 +288,8 @@
       "syncNow": "अभी सिंक करें",
       "syncing": "सिंक हो रहा है..."
     },
-    "instruments": {
-      "title": "सहेजे गए साधन",
-      "description": "अपने क्रेडिट/डेबिट कार्ड और UPI आईडी के लिए उपनाम जोड़ें।",
-      "add": "जोड़ें",
-      "empty": "अभी तक कोई साधन नहीं।",
-      "manage": "साधन प्रबंधित करें",
-      "removeDialog": {
-        "title": "इंस्ट्रूमेंट हटाएं",
-        "message": "\"{{nickname}}\" हटाएं?"
-      },
-      "form": {
-        "editTitle": "इंस्ट्रूमेंट संपादित करें",
-        "addTitle": "इंस्ट्रूमेंट जोड़ें",
-        "paymentMethod": "भुगतान का तरीका",
-        "nickname": "उपनाम",
-        "nicknamePlaceholder": "उदा. HDFC Visa",
-        "lastDigits": "अंतिम अंक",
-        "identifierPlaceholder": "{{count}} अंक दर्ज करें"
-      },
-      "dropdown": {
-        "none": "कोई नहीं",
-        "others": "अन्य / अंक दर्ज करें",
-        "othersLabel": "{{method}} • अन्य",
-        "othersLabelWithDigits": "{{method}} • अन्य ({{digits}})",
-        "selectSaved": "सहेजा गया साधन चुनें (वैकल्पिक)",
-        "addSaved": "सहेजा गया जोड़ें",
-        "cancelAdd": "जोड़ना रद्द करें",
-        "selected": "चयनित",
-        "saved": "सहेजा गया साधन"
-      }
-    },
-    "paymentMethods": {
-      "Cash": "नकद",
-      "Amazon Pay": "Amazon Pay",
-      "UPI": "UPI",
-      "Credit Card": "क्रेडिट कार्ड",
-      "Debit Card": "डेबिट कार्ड",
-      "Net Banking": "नेट बैंकिंग",
-      "Other": "अन्य"
-    },
     "categories": {
+      "other": "अन्य",
       "description": "अपनी खर्च करने की आदतों से मेल खाने के लिए व्यय श्रेणियों को अनुकूलित करें।",
       "manage": "श्रेणियाँ प्रबंधित करें",
       "add": "श्रेणी जोड़ें",

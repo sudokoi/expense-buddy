@@ -2,7 +2,11 @@ import { Text, Card, View, XStack, useTheme } from "tamagui"
 import { Pressable, ViewStyle } from "react-native"
 import { Ban } from "@tamagui/lucide-icons"
 import { PaymentMethodType } from "../../types/expense"
-import { PAYMENT_METHODS, PaymentMethodConfig } from "../../constants/payment-methods"
+import {
+  PAYMENT_METHODS,
+  PaymentMethodConfig,
+  getPaymentMethodI18nKey,
+} from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 
@@ -54,7 +58,9 @@ export function DefaultPaymentMethodSelector({
     isSelected: boolean
   ) => {
     const displayLabel =
-      key === "none" ? t("settings.defaultPayment.none") : t(`paymentMethods.${key}`)
+      key === "none"
+        ? t("settings.defaultPayment.none")
+        : t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
 
     return (
       <Pressable

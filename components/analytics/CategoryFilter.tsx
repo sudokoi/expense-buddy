@@ -3,6 +3,7 @@ import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import * as LucideIcons from "@tamagui/lucide-icons"
+import { useTranslation } from "react-i18next"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -30,6 +31,7 @@ export const CategoryFilter = memo(function CategoryFilter({
   onChange,
 }: CategoryFilterProps) {
   const { categories } = useCategories()
+  const { t } = useTranslation()
   const isAllSelected = selectedCategories.length === 0
 
   // Memoize category items with icons
@@ -85,7 +87,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           bordered={!isAllSelected}
           onPress={handleAllPress}
         >
-          All
+          {t("common.all")}
         </Button>
 
         {/* Category chips */}
@@ -102,7 +104,7 @@ export const CategoryFilter = memo(function CategoryFilter({
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >
               <Button.Text color={isSelected ? "white" : "$color"}>
-                {cat.label}
+                {cat.label === "Other" ? t("settings.categories.other") : cat.label}
               </Button.Text>
             </Button>
           )

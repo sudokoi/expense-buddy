@@ -166,7 +166,7 @@ describe("Analytics Calculations Properties", () => {
             maxLength: 50,
           }),
           (expenses) => {
-            const pieData = aggregateByCategory(expenses)
+            const pieData = aggregateByCategory(expenses, undefined, (k) => k)
 
             // Sum of pie chart values
             const pieTotal = pieData.reduce((sum, item) => sum + item.value, 0)
@@ -197,7 +197,7 @@ describe("Analytics Calculations Properties", () => {
             maxLength: 50,
           }),
           (expenses) => {
-            const pieData = aggregateByCategory(expenses)
+            const pieData = aggregateByCategory(expenses, undefined, (k) => k)
 
             // All pie chart items should have value > 0
             return pieData.every((item) => item.value > 0)
@@ -225,7 +225,7 @@ describe("Analytics Calculations Properties", () => {
             maxLength: 50,
           }),
           (expenses) => {
-            const pieData = aggregateByCategory(expenses)
+            const pieData = aggregateByCategory(expenses, undefined, (k) => k)
 
             if (pieData.length === 0) {
               return true // Empty data is valid
@@ -492,7 +492,7 @@ describe("Property 10: Category Filter Consistency", () => {
           const filteredExpenses = filterExpensesByCategories(expenses, uniqueCategories)
 
           // Get pie chart data from filtered expenses
-          const pieData = aggregateByCategory(filteredExpenses)
+          const pieData = aggregateByCategory(filteredExpenses, undefined, (k) => k)
 
           // Get line chart data from filtered expenses
           const dateRange = getDateRangeForTimeWindow("7d")
@@ -653,7 +653,7 @@ describe("Property 12: Payment Method Aggregation", () => {
           maxLength: 50,
         }),
         (expenses) => {
-          const pieData = aggregateByPaymentMethod(expenses)
+          const pieData = aggregateByPaymentMethod(expenses, (k) => k)
 
           if (pieData.length === 0) {
             return true // Empty data is valid
@@ -677,7 +677,7 @@ describe("Property 12: Payment Method Aggregation", () => {
           maxLength: 50,
         }),
         (expenses) => {
-          const pieData = aggregateByPaymentMethod(expenses)
+          const pieData = aggregateByPaymentMethod(expenses, (k) => k)
 
           // All pie chart items should have value > 0
           return pieData.every((item) => item.value > 0)
@@ -695,7 +695,7 @@ describe("Property 12: Payment Method Aggregation", () => {
           maxLength: 50,
         }),
         (expenses) => {
-          const pieData = aggregateByPaymentMethod(expenses)
+          const pieData = aggregateByPaymentMethod(expenses, (k) => k)
 
           // Calculate expected "Other" total:
           // - Expenses without payment method (undefined)
@@ -731,7 +731,7 @@ describe("Property 12: Payment Method Aggregation", () => {
           maxLength: 50,
         }),
         (expenses) => {
-          const pieData = aggregateByPaymentMethod(expenses)
+          const pieData = aggregateByPaymentMethod(expenses, (k) => k)
 
           // Sum of pie chart values
           const pieTotal = pieData.reduce((sum, item) => sum + item.value, 0)

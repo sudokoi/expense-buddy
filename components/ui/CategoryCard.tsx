@@ -1,5 +1,6 @@
 import { Card, Text } from "tamagui"
 import { memo, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 import { getReadableTextColor } from "../../constants/theme-colors"
 
@@ -23,12 +24,14 @@ export const CategoryCard = memo(function CategoryCard({
   onPress,
   compact = false,
 }: CategoryCardProps) {
-  // Memoize color computation to avoid recalculating on every render
+  const { t } = useTranslation()
   const resolvedColor = useMemo(() => getColorValue(categoryColor), [categoryColor])
   const selectedTextColor = useMemo(
     () => getReadableTextColor(resolvedColor),
     [resolvedColor]
   )
+
+  const displayLabel = label === "Other" ? t("categories.other") : label
 
   return (
     <Card
@@ -48,7 +51,7 @@ export const CategoryCard = memo(function CategoryCard({
         fontSize={compact ? "$1" : "$3"}
         numberOfLines={1}
       >
-        {label}
+        {displayLabel}
       </Text>
     </Card>
   )

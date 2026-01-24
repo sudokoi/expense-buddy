@@ -91,12 +91,12 @@ export function PaymentInstrumentsSection() {
   const handleDelete = useCallback(
     (inst: PaymentInstrument) => {
       Alert.alert(
-        t("settings.instruments.removeDialog.title"),
-        t("settings.instruments.removeDialog.message", { nickname: inst.nickname }),
+        t("instruments.removeDialog.title"),
+        t("instruments.removeDialog.message", { nickname: inst.nickname }),
         [
           { text: t("common.cancel"), style: "cancel" },
           {
-            text: t("settings.instruments.remove"),
+            text: t("instruments.remove"),
             style: "destructive",
             onPress: () => {
               const now = new Date().toISOString()
@@ -131,19 +131,19 @@ export function PaymentInstrumentsSection() {
       <YStack gap="$3">
         <XStack style={layoutStyles.row}>
           <YStack flex={1} gap="$1">
-            <Label>{t("settings.instruments.title")}</Label>
+            <Label>{t("instruments.title")}</Label>
             <Text color="$color" opacity={0.7} fontSize="$3">
-              {t("settings.instruments.description")}
+              {t("instruments.description")}
             </Text>
           </YStack>
           <Button size="$4" themeInverse icon={Plus} onPress={handleAdd}>
-            {t("settings.instruments.add")}
+            {t("instruments.add")}
           </Button>
         </XStack>
 
         {active.length === 0 ? (
           <Text color="$color" opacity={0.6}>
-            {t("settings.instruments.empty")}
+            {t("instruments.empty")}
           </Text>
         ) : (
           <Accordion
@@ -162,7 +162,7 @@ export function PaymentInstrumentsSection() {
                 {({ open }: { open: boolean }) => (
                   <>
                     <XStack style={layoutStyles.accordionTriggerInner}>
-                      <Text fontWeight="500">{t("settings.instruments.manage")}</Text>
+                      <Text fontWeight="500">{t("instruments.manage")}</Text>
                       <Text fontSize="$2" color="$color" opacity={0.6}>
                         ({active.length})
                       </Text>

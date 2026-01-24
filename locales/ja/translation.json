@@ -13,6 +13,46 @@
     "recentTransactions": "最近の取引",
     "noRecent": "最近の取引はありません。"
   },
+  "paymentMethods": {
+    "cash": "現金",
+    "amazonPay": "Amazon Pay",
+    "upi": "UPI",
+    "creditCard": "クレジットカード",
+    "debitCard": "デビットカード",
+    "netBanking": "ネットバンキング",
+    "other": "その他"
+  },
+  "instruments": {
+    "title": "保存された手段",
+    "description": "クレジットカード/デビットカードや電子マネーのニックネームを追加します。",
+    "add": "追加",
+    "empty": "保存された手段はまだありません。",
+    "manage": "手段を管理",
+    "removeDialog": {
+      "title": "手段を削除",
+      "message": "「{{nickname}}」を削除しますか？"
+    },
+    "form": {
+      "editTitle": "手段を編集",
+      "addTitle": "手段を追加",
+      "paymentMethod": "支払い方法",
+      "nickname": "ニックネーム",
+      "nicknamePlaceholder": "例: HDFC Visa",
+      "lastDigits": "末尾の数字",
+      "identifierPlaceholder": "{{count}}桁を入力"
+    },
+    "dropdown": {
+      "none": "なし",
+      "others": "その他 / 数字を入力",
+      "othersLabel": "{{method}} • その他",
+      "othersLabelWithDigits": "{{method}} • その他 ({{digits}})",
+      "selectSaved": "保存された手段を選択 (任意)",
+      "addSaved": "保存済みを追加",
+      "cancelAdd": "追加をキャンセル",
+      "selected": "選択中",
+      "saved": "保存された手段"
+    }
+  },
   "common": {
     "add": "+ 追加",
     "seeAll": "すべて見る",
@@ -27,7 +67,16 @@
     "editLabel": "{{label}}を編集",
     "deleteLabel": "{{label}}を削除",
     "removeLabel": "{{label}}を削除",
-    "optional": "(任意)"
+    "optional": "(任意)",
+    "all": "すべて",
+    "none": "なし"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "add": "支出を追加",
+    "analytics": "分析",
+    "history": "履歴",
+    "settings": "設定"
   },
   "history": {
     "title": "支出履歴",
@@ -239,47 +288,8 @@
       "syncNow": "今すぐ同期",
       "syncing": "同期中..."
     },
-    "instruments": {
-      "title": "保存された手段",
-      "description": "クレジットカード/デビットカードや電子マネーのニックネームを追加します。",
-      "add": "追加",
-      "empty": "保存された手段はまだありません。",
-      "manage": "手段を管理",
-      "removeDialog": {
-        "title": "手段を削除",
-        "message": "「{{nickname}}」を削除しますか？"
-      },
-      "form": {
-        "editTitle": "手段を編集",
-        "addTitle": "手段を追加",
-        "paymentMethod": "支払い方法",
-        "nickname": "ニックネーム",
-        "nicknamePlaceholder": "例: HDFC Visa",
-        "lastDigits": "末尾の数字",
-        "identifierPlaceholder": "{{count}}桁を入力"
-      },
-      "dropdown": {
-        "none": "なし",
-        "others": "その他 / 数字を入力",
-        "othersLabel": "{{method}} • その他",
-        "othersLabelWithDigits": "{{method}} • その他 ({{digits}})",
-        "selectSaved": "保存された手段を選択 (任意)",
-        "addSaved": "保存済みを追加",
-        "cancelAdd": "追加をキャンセル",
-        "selected": "選択中",
-        "saved": "保存された手段"
-      }
-    },
-    "paymentMethods": {
-      "Cash": "現金",
-      "Amazon Pay": "Amazon Pay",
-      "UPI": "UPI",
-      "Credit Card": "クレジットカード",
-      "Debit Card": "デビットカード",
-      "Net Banking": "ネットバンキング",
-      "Other": "その他"
-    },
     "categories": {
+      "other": "その他",
       "description": "支出カテゴリーを習慣に合わせてカスタマイズします。",
       "manage": "カテゴリーを管理",
       "add": "カテゴリーを追加",

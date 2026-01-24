@@ -53,6 +53,8 @@ export const ExpenseRow = memo(function ExpenseRow({
     : null
 
   const subtitleDate = subtitleMode === "time" ? "h:mm a" : "dd/MM/yyyy"
+  const categoryLabel =
+    categoryInfo.label === "Other" ? t("categories.other") : categoryInfo.label
 
   return (
     <ExpenseCard>
@@ -64,10 +66,10 @@ export const ExpenseRow = memo(function ExpenseRow({
         />
         <YStack flex={1}>
           <Text fontWeight="bold" fontSize="$4">
-            {expense.note || categoryInfo.label}
+            {expense.note || categoryLabel}
           </Text>
           <Text color="$color" opacity={0.6} fontSize="$2">
-            {formatDate(expense.date, subtitleDate)} • {categoryInfo.label}
+            {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
             <Text color="$color" opacity={0.5} fontSize="$2">

@@ -94,17 +94,17 @@ export function validatePaymentInstrumentInput(
   const nickname = input.nickname.trim()
   if (!nickname) {
     errors.nickname =
-      i18next.t("settings.instruments.form.nicknameRequired") ?? "Nickname is required"
+      i18next.t("instruments.form.nicknameRequired") ?? "Nickname is required"
   } else if (nickname.length > 30) {
     errors.nickname =
-      i18next.t("settings.instruments.form.nicknameTooLong") ??
+      i18next.t("instruments.form.nicknameTooLong") ??
       "Nickname must be 30 characters or less"
   }
 
   const expectedLen = getLastDigitsLength(input.method)
   if (input.lastDigits.length !== expectedLen) {
     errors.lastDigits =
-      i18next.t("settings.instruments.form.digitsError", { count: expectedLen }) ??
+      i18next.t("instruments.form.digitsError", { count: expectedLen }) ??
       `Enter exactly ${expectedLen} digits`
   }
 
@@ -118,7 +118,7 @@ export function validatePaymentInstrumentInput(
 
   if (nicknameTaken) {
     errors.nickname =
-      i18next.t("settings.instruments.form.nicknameTaken") ??
+      i18next.t("instruments.form.nicknameTaken") ??
       "Nickname already exists for this payment method"
   }
 
