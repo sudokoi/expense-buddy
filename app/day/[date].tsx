@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter, Stack } from "expo-router"
 import { YStack, Text, XStack, Button } from "tamagui"
 import { useExpenses } from "../../stores/hooks"
 import { useMemo, useCallback } from "react"
@@ -118,6 +118,7 @@ export default function DayViewScreen() {
 
   return (
     <YStack flex={1} bg="$background" style={{ paddingTop: insets.top }}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <XStack style={layoutStyles.header}>
         <Button

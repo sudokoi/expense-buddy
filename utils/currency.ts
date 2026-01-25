@@ -2,6 +2,14 @@ import i18next from "i18next"
 import { getLocales } from "expo-localization"
 
 /**
+ * Gets the static fallback currency code for legacy expenses.
+ * Currently hardcoded to "INR" but can be extended for migration logic.
+ */
+export function getFallbackCurrency(): string {
+  return "INR"
+}
+
+/**
  * Gets the system's default currency code
  * @returns ISO 4217 currency code (e.g. "INR", "USD") or "INR" fallback
  */

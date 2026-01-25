@@ -15,6 +15,7 @@ import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { parseISO } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
+import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
 import type {
   ExpenseCategory,
   Expense,
@@ -109,6 +110,7 @@ export default function HistoryScreen() {
     category: ExpenseCategory
     note: string
     date: string // ISO date string
+    currency?: string
     paymentMethodType?: PaymentMethodType
     paymentMethodId: string
     paymentInstrumentId?: string
@@ -268,6 +270,7 @@ export default function HistoryScreen() {
       category: expense.category,
       note: expense.note || "",
       date: expense.date,
+      currency: expense.currency,
       paymentMethodType: expense.paymentMethod?.type,
       paymentMethodId: expense.paymentMethod?.identifier || "",
       paymentInstrumentId: expense.paymentMethod?.instrumentId,
@@ -538,19 +541,28 @@ export default function HistoryScreen() {
 
                 <YStack gap="$2">
                   <Label color="$color" opacity={0.8} htmlFor="amount">
-                    {t("history.editDialog.fields.amount")} ({settings.defaultCurrency})
+                    {t("history.editDialog.fields.amount")}
                   </Label>
-                  <Input
-                    id="amount"
-                    value={editingExpense?.amount || ""}
-                    onChangeText={(text) =>
-                      setEditingExpense((prev) =>
-                        prev ? { ...prev, amount: text } : null
-                      )
-                    }
-                    placeholder={t("history.editDialog.fields.amountPlaceholder")}
-                    keyboardType="default"
-                  />
+                  <XStack style={{ alignItems: "center" }} gap="$2">
+                    <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
+                      {getCurrencySymbol(
+                        editingExpense?.currency || getFallbackCurrency()
+                      )}
+                    </Text>
+                    <Input
+                      flex={1}
+                      size="$4"
+                      id="amount"
+                      value={editingExpense?.amount || ""}
+                      onChangeText={(text) =>
+                        setEditingExpense((prev) =>
+                          prev ? { ...prev, amount: text } : null
+                        )
+                      }
+                      placeholder={t("history.editDialog.fields.amountPlaceholder")}
+                      keyboardType="numeric"
+                    />
+                  </XStack>
                   {expressionPreview && (
                     <Text fontSize="$3" color="$color" opacity={0.7}>
                       {t("history.editDialog.fields.preview", {

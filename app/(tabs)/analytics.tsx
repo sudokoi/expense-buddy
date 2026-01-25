@@ -366,6 +366,15 @@ export default function AnalyticsScreen() {
       }),
     })
 
+    // Show Currency Chip if multiple available or purely informational if simplistic
+    // User requested: "show applied currency in the applied filters"
+    if (availableCurrencies.length > 0) {
+      chips.push({
+        key: "currency",
+        label: `${t("settings.localization.currency")}: ${effectiveCurrency} (${getCurrencySymbol(effectiveCurrency)})`,
+      })
+    }
+
     if (selectedCategories.length === 0) {
       chips.push({
         key: "category",
@@ -450,6 +459,8 @@ export default function AnalyticsScreen() {
     formatSelectedPaymentInstrumentLabel,
     paymentInstruments,
     formatSelectedPaymentInstrumentsSummary,
+    availableCurrencies,
+    effectiveCurrency,
   ])
 
   const handleApplyFilters = useCallback(
@@ -458,10 +469,13 @@ export default function AnalyticsScreen() {
       selectedCategories: string[]
       selectedPaymentMethods: PaymentMethodSelectionKey[]
       selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
+      selectedCurrency: string | null
     }) => {
       setTimeWindow(next.timeWindow)
       setSelectedCategories(next.selectedCategories)
       setSelectedPaymentMethods(next.selectedPaymentMethods)
+      setSelectedCurrency(next.selectedCurrency)
+
       // When payment methods are reset to "All", ensure instruments reset too.
       const normalizedPaymentInstruments =
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
@@ -594,6 +608,10 @@ export default function AnalyticsScreen() {
         selectedPaymentMethods={selectedPaymentMethods}
         paymentInstruments={paymentInstruments}
         selectedPaymentInstruments={selectedPaymentInstruments}
+        selectedPaymentInstruments={selectedPaymentInstruments}
+        availableCurrencies={availableCurrencies}
+        selectedCurrency={selectedCurrency}
+        effectiveCurrency={effectiveCurrency}
         onApply={handleApplyFilters}
       />
     </ScreenContainer>

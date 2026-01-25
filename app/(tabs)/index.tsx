@@ -14,7 +14,11 @@ import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
-import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
+import {
+  formatCurrency,
+  getCurrencySymbol,
+  getFallbackCurrency,
+} from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
 import { useSettings } from "../../stores/hooks"
 
@@ -47,6 +51,8 @@ const layoutStyles = {
   } as ViewStyle,
   cardValue: {
     marginTop: 8,
+    height: 40, // Fixed height to ensure alignment across cards
+    justifyContent: "center", // Center content vertically within the fixed height
   } as TextStyle,
 }
 
@@ -86,13 +92,10 @@ export default function DashboardScreen() {
 
   // Singleton pass to group expenses by currency
   const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
-    const grouped = groupExpensesByCurrency(
-      state.activeExpenses,
-      settings.defaultCurrency
-    )
+    const grouped = groupExpensesByCurrency(state.activeExpenses, getFallbackCurrency())
     const available = Array.from(grouped.keys()).sort()
     return { availableCurrencies: available, expensesByCurrency: grouped }
-  }, [state.activeExpenses, settings.defaultCurrency])
+  }, [state.activeExpenses])
 
   // Determine effective currency
   const effectiveCurrency = React.useMemo(() => {

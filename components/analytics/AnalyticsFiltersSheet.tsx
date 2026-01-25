@@ -16,6 +16,7 @@ import { TimeWindowSelector } from "./TimeWindowSelector"
 import { CategoryFilter } from "./CategoryFilter"
 import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
+import { CurrencyFilter } from "./CurrencyFilter"
 import { useTranslation } from "react-i18next"
 
 const layoutStyles = {
@@ -45,7 +46,11 @@ interface AnalyticsFiltersSheetProps {
     selectedCategories: string[]
     selectedPaymentMethods: PaymentMethodSelectionKey[]
     selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
+    selectedCurrency: string | null
   }) => void
+  availableCurrencies: string[]
+  selectedCurrency: string | null
+  effectiveCurrency: string
 }
 
 export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
@@ -57,6 +62,9 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   paymentInstruments,
   selectedPaymentInstruments,
   onApply,
+  availableCurrencies,
+  selectedCurrency,
+  effectiveCurrency,
 }: AnalyticsFiltersSheetProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
@@ -68,6 +76,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   const [draftPaymentInstruments, setDraftPaymentInstruments] = useState<
     PaymentInstrumentSelectionKey[]
   >(selectedPaymentInstruments)
+  const [draftCurrency, setDraftCurrency] = useState<string | null>(selectedCurrency)
 
   const prevOpenRef = useRef(open)
   if (open && !prevOpenRef.current) {
@@ -84,6 +93,9 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
     }
     if (draftPaymentInstruments !== selectedPaymentInstruments) {
       setDraftPaymentInstruments(selectedPaymentInstruments)
+    }
+    if (draftCurrency !== selectedCurrency) {
+      setDraftCurrency(selectedCurrency)
     }
   } else if (!open && prevOpenRef.current) {
     prevOpenRef.current = open
@@ -165,6 +177,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
       selectedCategories: draftCategories,
       selectedPaymentMethods: draftPaymentMethods,
       selectedPaymentInstruments: draftPaymentInstruments,
+      selectedCurrency: draftCurrency,
     })
   }, [
     onApply,
@@ -172,6 +185,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
     draftCategories,
     draftPaymentMethods,
     draftPaymentInstruments,
+    draftCurrency,
   ])
 
   const handleResetDraft = useCallback(() => {
@@ -179,6 +193,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
     setDraftCategories([])
     setDraftPaymentMethods([])
     setDraftPaymentInstruments([])
+    setDraftCurrency(null) // Reset to auto
   }, [])
 
   if (!open) return null
@@ -231,6 +246,17 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
                   onChange={setDraftTimeWindow}
                 />
               </CollapsibleSection>
+
+              {availableCurrencies.length > 1 && (
+                <CollapsibleSection title={t("settings.localization.currency")}>
+                  <CurrencyFilter
+                    availableCurrencies={availableCurrencies}
+                    selectedCurrency={draftCurrency}
+                    effectiveCurrency={effectiveCurrency}
+                    onChange={setDraftCurrency}
+                  />
+                </CollapsibleSection>
+              )}
 
               <CollapsibleSection title={t("analytics.filtersModal.category")}>
                 <CategoryFilter

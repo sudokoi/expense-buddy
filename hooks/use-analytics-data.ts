@@ -26,6 +26,7 @@ import {
   getTimeWindowDays,
 } from "../utils/analytics-calculations"
 import { getLocale } from "../utils/date"
+import { getFallbackCurrency } from "../utils/currency"
 import { useTranslation } from "react-i18next"
 
 /**
@@ -93,22 +94,14 @@ export function useAnalyticsData(
     [timeWindow]
   )
 
-  // 1. First, filter all active expenses by time window
-  const timeFilteredExpenses = useMemo(() => {
-    return filterByTimeWindow(activeExpenses)
-  }, [activeExpenses, filterByTimeWindow])
-
-  // 2. Group time-filtered expenses by currency to determine available currencies
+  // 1. Group ALL active expenses by currency to determine available currencies
   const { availableCurrencies, expensesByCurrency } = useMemo(() => {
-    const grouped = groupExpensesByCurrency(
-      timeFilteredExpenses,
-      settings.defaultCurrency
-    )
+    const grouped = groupExpensesByCurrency(activeExpenses, getFallbackCurrency())
     const available = Array.from(grouped.keys()).sort()
     return { availableCurrencies: available, expensesByCurrency: grouped }
-  }, [timeFilteredExpenses, settings.defaultCurrency])
+  }, [activeExpenses])
 
-  // 3. Determine effective currency
+  // 2. Determine effective currency
   const effectiveCurrency = useMemo(() => {
     // If user explicitly selected a currency and it's available, use it
     if (selectedCurrency && expensesByCurrency.has(selectedCurrency)) {
@@ -131,10 +124,15 @@ export function useAnalyticsData(
     settings.defaultCurrency,
   ])
 
-  // 4. Get expenses for the effective currency
-  const currencyFilteredExpenses = useMemo(() => {
+  // 3. Get expenses for the effective currency (ALL TIME)
+  const currencyExpenses = useMemo(() => {
     return expensesByCurrency.get(effectiveCurrency) || []
   }, [expensesByCurrency, effectiveCurrency])
+
+  // 4. Filter by Time Window
+  const timeFilteredExpenses = useMemo(() => {
+    return filterByTimeWindow(currencyExpenses)
+  }, [currencyExpenses, filterByTimeWindow])
 
   // Memoized filter callback: Filter expenses by selected categories
   const filterByCategories = useCallback(
@@ -163,10 +161,10 @@ export function useAnalyticsData(
   )
 
   // Memoized: Filter expenses by selected categories
-  // We use currencyFilteredExpenses as the base now
+  // We use timeFilteredExpenses as the base now (which is currency filtered + time filtered)
   const categoryFilteredExpenses = useMemo(() => {
-    return filterByCategories(currencyFilteredExpenses)
-  }, [currencyFilteredExpenses, filterByCategories])
+    return filterByCategories(timeFilteredExpenses)
+  }, [timeFilteredExpenses, filterByCategories])
 
   const paymentMethodFilteredExpenses = useMemo(() => {
     return filterByPaymentMethods(categoryFilteredExpenses)

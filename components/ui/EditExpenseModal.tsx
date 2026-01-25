@@ -18,7 +18,7 @@ import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
-import { getCurrencySymbol } from "../../utils/currency"
+import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -240,7 +240,7 @@ export function EditExpenseModal({
             </Label>
             <XStack style={{ alignItems: "center" }} gap="$2">
               <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
-                {getCurrencySymbol(expense.currency || settings.defaultCurrency)}
+                {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
                 flex={1}

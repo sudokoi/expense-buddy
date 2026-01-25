@@ -31,7 +31,7 @@ export const CategoryCard = memo(function CategoryCard({
     [resolvedColor]
   )
 
-  const displayLabel = label === "Other" ? t("categories.other") : label
+  const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
   return (
     <Card

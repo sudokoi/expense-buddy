@@ -289,8 +289,8 @@ export default function AddExpenseScreen() {
             <Label color="$color" opacity={0.8}>
               {t("add.amount")}
             </Label>
-            <XStack style={layoutStyles.amountRow} gap="$2">
-              <Text fontSize="$5" fontWeight="bold" color="$color" opacity={0.8}>
+            <XStack style={{ alignItems: "center" }} gap="$2">
+              <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
