@@ -39,3 +39,21 @@ export function formatCurrency(amount: number, currencyCode?: string): string {
     return `${symbol}${amount.toFixed(2)}`
   }
 }
+
+/**
+ * Gets the currency symbol for a given currency code.
+ * @param currencyCode ISO 4217 currency code.
+ * @returns The currency symbol (e.g., "₹", "$") or the code itself if symbol not found.
+ */
+export function getCurrencySymbol(currencyCode: string): string {
+  try {
+    const parts = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyCode,
+    }).formatToParts(0)
+    const symbolPart = parts.find((part) => part.type === "currency")
+    return symbolPart ? symbolPart.value : currencyCode
+  } catch {
+    return currencyCode
+  }
+}

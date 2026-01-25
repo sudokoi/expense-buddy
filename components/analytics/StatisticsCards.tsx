@@ -3,6 +3,7 @@ import { XStack, YStack, Card, Text, H4 } from "tamagui"
 
 import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
+import { getCurrencySymbol } from "../../utils/currency"
 import { ViewStyle, TextStyle } from "react-native"
 import { AnalyticsStatistics } from "../../utils/analytics-calculations"
 import { CARD_COLORS } from "../../constants/theme-colors"
@@ -10,6 +11,7 @@ import { useTranslation } from "react-i18next"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
+  currencyCode?: string
 }
 
 const styles = {
@@ -31,8 +33,10 @@ const styles = {
  */
 export const StatisticsCards = memo(function StatisticsCards({
   statistics,
+  currencyCode = "INR",
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
+  const symbol = getCurrencySymbol(currencyCode)
 
   // ...
 
@@ -67,7 +71,8 @@ export const StatisticsCards = memo(function StatisticsCards({
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            ₹{statistics.totalSpending.toFixed(2)}
+            {symbol}
+            {statistics.totalSpending.toFixed(2)}
           </H4>
         </Card>
 
@@ -90,7 +95,8 @@ export const StatisticsCards = memo(function StatisticsCards({
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            ₹{statistics.averageDaily.toFixed(2)}
+            {symbol}
+            {statistics.averageDaily.toFixed(2)}
           </H4>
         </Card>
       </XStack>
@@ -120,7 +126,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
           {statistics.highestCategory && (
             <Text fontSize="$2" color={CARD_COLORS.orange.text}>
-              ₹{statistics.highestCategory.amount.toFixed(2)}
+              {symbol}
+              {statistics.highestCategory.amount.toFixed(2)}
             </Text>
           )}
         </Card>
@@ -148,7 +155,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
           {statistics.highestDay && (
             <Text fontSize="$2" color={CARD_COLORS.purple.text}>
-              ₹{statistics.highestDay.amount.toFixed(2)}
+              {symbol}
+              {statistics.highestDay.amount.toFixed(2)}
             </Text>
           )}
         </Card>

@@ -16,6 +16,7 @@ import {
   filterExpensesByCategories,
   filterExpensesByPaymentMethods,
   filterExpensesByPaymentInstruments,
+  groupExpensesByCurrency,
   aggregateByCategory,
   aggregateByPaymentMethod,
   aggregateByPaymentInstrument,
@@ -44,6 +45,8 @@ export interface AnalyticsData {
   filterByCategories: (expenses: Expense[]) => Expense[]
   filterByPaymentMethods: (expenses: Expense[]) => Expense[]
   filterByPaymentInstruments: (expenses: Expense[]) => Expense[]
+  availableCurrencies: string[]
+  effectiveCurrency: string
 }
 
 /**
@@ -57,7 +60,8 @@ export function useAnalyticsData(
   timeWindow: TimeWindow,
   selectedCategories: string[],
   selectedPaymentMethods: PaymentMethodSelectionKey[],
-  selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
+  selectedPaymentInstruments: PaymentInstrumentSelectionKey[],
+  selectedCurrency: string | null = null
 ): AnalyticsData {
   const { state } = useExpenses()
   const { categories } = useCategories()
@@ -89,6 +93,49 @@ export function useAnalyticsData(
     [timeWindow]
   )
 
+  // 1. First, filter all active expenses by time window
+  const timeFilteredExpenses = useMemo(() => {
+    return filterByTimeWindow(activeExpenses)
+  }, [activeExpenses, filterByTimeWindow])
+
+  // 2. Group time-filtered expenses by currency to determine available currencies
+  const { availableCurrencies, expensesByCurrency } = useMemo(() => {
+    const grouped = groupExpensesByCurrency(
+      timeFilteredExpenses,
+      settings.defaultCurrency
+    )
+    const available = Array.from(grouped.keys()).sort()
+    return { availableCurrencies: available, expensesByCurrency: grouped }
+  }, [timeFilteredExpenses, settings.defaultCurrency])
+
+  // 3. Determine effective currency
+  const effectiveCurrency = useMemo(() => {
+    // If user explicitly selected a currency and it's available, use it
+    if (selectedCurrency && expensesByCurrency.has(selectedCurrency)) {
+      return selectedCurrency
+    }
+    // If only one currency is available, use it (auto-select)
+    if (availableCurrencies.length === 1) {
+      return availableCurrencies[0]
+    }
+    // Default to settings default currency if available in the data
+    if (expensesByCurrency.has(settings.defaultCurrency)) {
+      return settings.defaultCurrency
+    }
+    // Fallback to the first available currency, or default if no data
+    return availableCurrencies[0] || settings.defaultCurrency
+  }, [
+    selectedCurrency,
+    expensesByCurrency,
+    availableCurrencies,
+    settings.defaultCurrency,
+  ])
+
+  // 4. Get expenses for the effective currency
+  const currencyFilteredExpenses = useMemo(() => {
+    return expensesByCurrency.get(effectiveCurrency) || []
+  }, [expensesByCurrency, effectiveCurrency])
+
   // Memoized filter callback: Filter expenses by selected categories
   const filterByCategories = useCallback(
     (expenses: Expense[]): Expense[] => {
@@ -115,15 +162,11 @@ export function useAnalyticsData(
     [selectedPaymentInstruments, paymentInstruments]
   )
 
-  // Memoized: Filter expenses by time window
-  const timeFilteredExpenses = useMemo(() => {
-    return filterByTimeWindow(activeExpenses)
-  }, [activeExpenses, filterByTimeWindow])
-
   // Memoized: Filter expenses by selected categories
+  // We use currencyFilteredExpenses as the base now
   const categoryFilteredExpenses = useMemo(() => {
-    return filterByCategories(timeFilteredExpenses)
-  }, [timeFilteredExpenses, filterByCategories])
+    return filterByCategories(currencyFilteredExpenses)
+  }, [currencyFilteredExpenses, filterByCategories])
 
   const paymentMethodFilteredExpenses = useMemo(() => {
     return filterByPaymentMethods(categoryFilteredExpenses)
@@ -183,6 +226,8 @@ export function useAnalyticsData(
       filterByCategories,
       filterByPaymentMethods,
       filterByPaymentInstruments,
+      availableCurrencies,
+      effectiveCurrency,
     }),
     [
       filteredExpenses,
@@ -197,6 +242,8 @@ export function useAnalyticsData(
       filterByCategories,
       filterByPaymentMethods,
       filterByPaymentInstruments,
+      availableCurrencies,
+      effectiveCurrency,
     ]
   )
 }

@@ -11,6 +11,12 @@
   - Add Language and Currency selectors in Settings
   - Update currency formatting to adhere to locale (legacy fallback to INR)
   - Update date formatting to use localized strings
+  - Implement **Multi-Currency Support** in Dashboard and Analytics
+    - Expenses are grouped by currency, allowing correct aggregation without mixing currencies
+    - Added currency filter chips to Dashboard and Analytics screens when multiple currencies are present
+    - Updated specific charts (Total Spent, Daily Trend, Statistics) to reflect the selected currency
+    - Amount input in Add/Edit screens explicitly shows the active currency symbol
+    - Charts and statistics automatically default to the most relevant currency
 
 ## 2.1.4
 

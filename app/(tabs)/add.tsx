@@ -32,6 +32,7 @@ import {
   PaymentInstrumentInlineDropdown,
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
 import { useTranslation } from "react-i18next"
+import { getCurrencySymbol } from "../../utils/currency"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -286,9 +287,12 @@ export default function AddExpenseScreen() {
           {/* Amount Input */}
           <YStack gap="$2">
             <Label color="$color" opacity={0.8}>
-              {t("add.amount")} ({settings.defaultCurrency})
+              {t("add.amount")}
             </Label>
-            <XStack style={layoutStyles.amountRow}>
+            <XStack style={layoutStyles.amountRow} gap="$2">
+              <Text fontSize="$5" fontWeight="bold" color="$color" opacity={0.8}>
+                {getCurrencySymbol(settings.defaultCurrency)}
+              </Text>
               <Input
                 flex={1}
                 size="$5"

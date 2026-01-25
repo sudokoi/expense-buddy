@@ -1,6 +1,6 @@
 import { format, subDays } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
-import { YStack, H4, XStack, Card, Text, Button, useTheme } from "tamagui"
+import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
@@ -14,7 +14,9 @@ import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
-import { formatCurrency } from "../../utils/currency"
+import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
+import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
+import { useSettings } from "../../stores/hooks"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -73,20 +75,60 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 export default function DashboardScreen() {
   const { state } = useExpenses()
   const { categories, getCategoryByLabel } = useCategories()
+  const { settings } = useSettings()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
   const { t } = useTranslation()
 
-  // Use activeExpenses (excludes soft-deleted) for display
+  const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
+
+  // Singleton pass to group expenses by currency
+  const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
+    const grouped = groupExpensesByCurrency(
+      state.activeExpenses,
+      settings.defaultCurrency
+    )
+    const available = Array.from(grouped.keys()).sort()
+    return { availableCurrencies: available, expensesByCurrency: grouped }
+  }, [state.activeExpenses, settings.defaultCurrency])
+
+  // Determine effective currency
+  const effectiveCurrency = React.useMemo(() => {
+    // If user explicitly selected a currency and it's available, use it
+    if (selectedCurrency && expensesByCurrency.has(selectedCurrency)) {
+      return selectedCurrency
+    }
+    // If only one currency is available, use it (auto-select)
+    if (availableCurrencies.length === 1) {
+      return availableCurrencies[0]
+    }
+    // Default to settings default currency if available in the data
+    if (expensesByCurrency.has(settings.defaultCurrency)) {
+      return settings.defaultCurrency
+    }
+    // Fallback to the first available currency, or default if no data
+    return availableCurrencies[0] || settings.defaultCurrency
+  }, [
+    selectedCurrency,
+    expensesByCurrency,
+    availableCurrencies,
+    settings.defaultCurrency,
+  ])
+
+  const currencyExpenses = React.useMemo(() => {
+    return expensesByCurrency.get(effectiveCurrency) || []
+  }, [expensesByCurrency, effectiveCurrency])
+
+  // Use currencyExpenses for calculations
   const totalExpenses = React.useMemo(
-    () => state.activeExpenses.reduce((sum, item) => sum + item.amount, 0),
-    [state.activeExpenses]
+    () => currencyExpenses.reduce((sum, item) => sum + item.amount, 0),
+    [currencyExpenses]
   )
   const recentExpenses = React.useMemo(
-    () => state.activeExpenses.slice(0, 5),
-    [state.activeExpenses]
+    () => currencyExpenses.slice(0, 5),
+    [currencyExpenses]
   )
 
   const categoryByLabel = React.useMemo(() => {
@@ -107,8 +149,8 @@ export default function DashboardScreen() {
       last7Days.push(format(d, "yyyy-MM-dd"))
     }
 
-    // Aggregate using activeExpenses (excludes soft-deleted)
-    state.activeExpenses.forEach((e) => {
+    // Aggregate using currencyExpenses (excludes soft-deleted)
+    currencyExpenses.forEach((e) => {
       const dateKey = getLocalDayKey(e.date)
       if (!grouped[dateKey]) grouped[dateKey] = {}
       if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
@@ -136,15 +178,15 @@ export default function DashboardScreen() {
         }
       })
       .filter((item) => item.stacks.length > 0) // Only show days with data
-  }, [state.activeExpenses, router, getCategoryByLabel])
+  }, [currencyExpenses, router, getCategoryByLabel])
 
   const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0)
 
   // Generate a unique key for the chart based on data to force re-render
   const chartKey = React.useMemo(() => {
-    const total = state.activeExpenses.reduce((sum, e) => sum + e.amount, 0)
-    return `chart-${state.activeExpenses.length}-${total}`
-  }, [state.activeExpenses])
+    const total = currencyExpenses.reduce((sum, e) => sum + e.amount, 0)
+    return `chart-${currencyExpenses.length}-${total}`
+  }, [currencyExpenses])
 
   // Get theme colors for BarChart which requires raw color values (third-party component)
   const chartTextColor = theme.color.val as string
@@ -191,6 +233,28 @@ export default function DashboardScreen() {
         </Button>
       </XStack>
 
+      {/* Currency Filter - Show only if multiple currencies exist */}
+      {availableCurrencies.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingBottom: 16 } as any}
+        >
+          {availableCurrencies.map((c) => (
+            <Button
+              key={c}
+              size="$2"
+              onPress={() => setSelectedCurrency(c)}
+              themeInverse={effectiveCurrency === c}
+              bordered={effectiveCurrency !== c}
+              style={{ borderRadius: 999 }}
+            >
+              {c} ({getCurrencySymbol(c)})
+            </Button>
+          ))}
+        </ScrollView>
+      )}
+
       {/* Summary Cards */}
       <XStack style={layoutStyles.summaryCardsRow}>
         <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.blue.bg}>
@@ -212,7 +276,7 @@ export default function DashboardScreen() {
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            {formatCurrency(totalExpenses)}
+            {formatCurrency(totalExpenses, effectiveCurrency)}
           </H4>
         </Card>
         <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.green.bg}>
@@ -234,7 +298,7 @@ export default function DashboardScreen() {
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            {state.activeExpenses.length}
+            {currencyExpenses.length}
           </H4>
         </Card>
       </XStack>

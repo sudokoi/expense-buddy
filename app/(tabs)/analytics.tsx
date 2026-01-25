@@ -27,6 +27,7 @@ import {
   saveAnalyticsFilters,
 } from "../../services/analytics-filters-storage"
 import { useTranslation } from "react-i18next"
+import { getCurrencySymbol } from "../../utils/currency"
 
 const styles = {
   headerRow: {
@@ -130,6 +131,9 @@ export default function AnalyticsScreen() {
     PaymentInstrumentSelectionKey[]
   >([])
 
+  // Local state for selected currency
+  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null)
+
   useEffect(() => {
     let cancelled = false
 
@@ -163,11 +167,14 @@ export default function AnalyticsScreen() {
     statistics,
     paymentInstruments,
     isLoading,
+    availableCurrencies,
+    effectiveCurrency,
   } = useAnalyticsData(
     timeWindow,
     selectedCategories,
     selectedPaymentMethods,
-    selectedPaymentInstruments
+    selectedPaymentInstruments,
+    selectedCurrency
   )
 
   // Handle category selection from pie chart segment tap - memoized
@@ -532,7 +539,29 @@ export default function AnalyticsScreen() {
             />
           ) : (
             <>
-              <StatisticsCards statistics={statistics} />
+              <StatisticsCards statistics={statistics} currencyCode={effectiveCurrency} />
+              {/* Currency Filter - Show only if multiple currencies exist */}
+              {availableCurrencies.length > 1 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8, paddingBottom: 16 } as any}
+                  style={{ marginBottom: 4 }}
+                >
+                  {availableCurrencies.map((c) => (
+                    <Button
+                      key={c}
+                      size="$2"
+                      onPress={() => setSelectedCurrency(c)}
+                      themeInverse={effectiveCurrency === c}
+                      bordered={effectiveCurrency !== c}
+                      style={{ borderRadius: 999 }}
+                    >
+                      {c} ({getCurrencySymbol(c)})
+                    </Button>
+                  ))}
+                </ScrollView>
+              )}
               <PieChartSection
                 data={pieChartData}
                 onCategorySelect={handleCategorySelect}
@@ -551,7 +580,7 @@ export default function AnalyticsScreen() {
                 }
                 onSelect={handlePaymentInstrumentSelect}
               />
-              <LineChartSection data={lineChartData} />
+              <LineChartSection data={lineChartData} currencyCode={effectiveCurrency} />
             </>
           )}
         </>

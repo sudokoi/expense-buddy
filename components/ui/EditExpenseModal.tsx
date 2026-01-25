@@ -18,6 +18,7 @@ import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
+import { getCurrencySymbol } from "../../utils/currency"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -237,27 +238,33 @@ export function EditExpenseModal({
             <Label color="$color" opacity={0.8}>
               {t("history.editDialog.fields.amount")}
             </Label>
-            <Input
-              size="$4"
-              placeholder={t("add.amountPlaceholder")}
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={(text) => {
-                setAmount(text)
-                // Clear error when user starts typing
-                if (errors.amount) {
-                  setErrors((prev) => {
-                    const { amount: _, ...rest } = prev
-                    return rest
-                  })
-                }
-              }}
-              borderWidth={2}
-              borderColor={errors.amount ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
-              }}
-            />
+            <XStack style={{ alignItems: "center" }} gap="$2">
+              <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
+                {getCurrencySymbol(expense.currency || settings.defaultCurrency)}
+              </Text>
+              <Input
+                flex={1}
+                size="$4"
+                placeholder={t("add.amountPlaceholder")}
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={(text) => {
+                  setAmount(text)
+                  // Clear error when user starts typing
+                  if (errors.amount) {
+                    setErrors((prev) => {
+                      const { amount: _, ...rest } = prev
+                      return rest
+                    })
+                  }
+                }}
+                borderWidth={2}
+                borderColor={errors.amount ? "$red10" : "$borderColor"}
+                focusStyle={{
+                  borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
+                }}
+              />
+            </XStack>
             {errors.amount && (
               <Text fontSize="$2" color="$red10">
                 {errors.amount}

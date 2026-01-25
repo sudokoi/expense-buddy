@@ -11,9 +11,11 @@ import {
 } from "../../constants/theme-colors"
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
+import { getCurrencySymbol } from "../../utils/currency"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
+  currencyCode?: string
 }
 
 /**
@@ -22,8 +24,10 @@ interface LineChartSectionProps {
  */
 export const LineChartSection = memo(function LineChartSection({
   data,
+  currencyCode = "INR",
 }: LineChartSectionProps) {
   const { t } = useTranslation()
+  const symbol = getCurrencySymbol(currencyCode)
   const theme = useTheme()
   const colorScheme = useColorScheme() ?? "light"
   const chartColors = getChartColors(colorScheme)
@@ -98,12 +102,13 @@ export const LineChartSection = memo(function LineChartSection({
       return (
         <Card style={styles.tooltipContainer}>
           <Text fontWeight="bold" fontSize="$3">
-            ₹{item.value.toFixed(2)}
+            {symbol}
+            {item.value.toFixed(2)}
           </Text>
         </Card>
       )
     },
-    [styles.tooltipContainer]
+    [styles.tooltipContainer, symbol]
   )
 
   // Memoize pointer config

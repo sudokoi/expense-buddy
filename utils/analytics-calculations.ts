@@ -22,6 +22,7 @@ import {
   isPaymentInstrumentMethod,
 } from "../services/payment-instruments"
 import { getPaymentMethodI18nKey } from "../constants/payment-methods"
+import { getCurrencySymbol } from "./currency"
 
 // Category color map type for dynamic categories
 export type CategoryColorMap = Record<string, string>
@@ -327,6 +328,26 @@ export function filterExpensesByCategories(
 }
 
 /**
+ * Group expenses by currency (single pass).
+ * @returns Map of currency code -> expenses array.
+ */
+export function groupExpensesByCurrency(
+  expenses: Expense[],
+  defaultCurrency: string = "INR"
+): Map<string, Expense[]> {
+  const groups = new Map<string, Expense[]>()
+  for (const expense of expenses) {
+    // Fallback to defaultCurrency if expense.currency is undefined
+    const currency = expense.currency || defaultCurrency
+    if (!groups.has(currency)) {
+      groups.set(currency, [])
+    }
+    groups.get(currency)!.push(expense)
+  }
+  return groups
+}
+
+/**
  * Filter expenses by selected payment methods.
  * Empty selection means "All".
  * Supports a "__none__" key to include expenses without a payment method.
@@ -470,10 +491,12 @@ export function aggregateByPaymentMethod(
 export function aggregateByDay(
   expenses: Expense[],
   dateRange: DateRange,
-  locale?: any
+  locale?: any,
+  currencyCode: string = "INR"
 ): LineChartDataItem[] {
   // Get all days in the range
   const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end })
+  const symbol = getCurrencySymbol(currencyCode)
 
   // Group expenses by day
   const dailyTotals = new Map<string, number>()
@@ -497,7 +520,7 @@ export function aggregateByDay(
       value,
       date: dayKey,
       label: format(day, "MMM d", { locale }),
-      dataPointText: value > 0 ? `₹${value.toFixed(0)}` : undefined,
+      dataPointText: value > 0 ? `${symbol}${value.toFixed(0)}` : undefined,
     }
   })
 }
