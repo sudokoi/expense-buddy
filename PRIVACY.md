@@ -1,11 +1,11 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** December 28, 2025
+**Last Updated:** January 28, 2026
 
 ## Overview
 
-Expense Buddy is a free, open-source expense tracking application licensed under the MIT License. This privacy policy explains how the app handles your data.
+Expense Buddy is a free, open-source expense tracking application licensed under the AGPL-3.0 License. This privacy policy explains how the app handles your data.
 
 ## Data Collection
 

@@ -6,10 +6,6 @@
 
 <p align="center">
   <a href="https://play.google.com/store/apps/details?id=com.sudokoi.expensebuddy"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80" /></a>
-  <br/>
-  <em>📱 Currently in internal testing - enroll by <a href="https://x.com/sudokaii">DM on Twitter</a> or send a <a href="mailto:perfectsudh@gmail.com">mail</a></em>.
-  <br/>
-  <a href="https://x.com/sudokaii/status/2006999492051218919?s=20">📣 Announcement Tweet</a>
 </p>
 
 <p align="center">
@@ -457,7 +453,7 @@ Expense Buddy does not collect any data. All your expense data is stored locally
 
 ## 📝 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available under the [AGPL-3.0 License](LICENSE).
 
 ## 🙏 Acknowledgments
 
