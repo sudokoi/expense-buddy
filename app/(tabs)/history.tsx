@@ -12,7 +12,7 @@ import {
   Sheet,
   ScrollView,
 } from "tamagui"
-import { Calendar, Filter, X, Search } from "@tamagui/lucide-icons"
+import { Calendar, Filter, X } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -797,7 +797,7 @@ export default function HistoryScreen() {
           onPaymentInstrumentsChange={setSelectedPaymentInstruments}
           onSearchChange={setSearchQuery}
           onAmountRangeChange={setAmountRange}
-          onReset={handleResetFilters}
+          _onReset={handleResetFilters}
         />
       </YStack>
     )
@@ -1164,7 +1164,7 @@ interface FilterSheetProps {
   onPaymentInstrumentsChange: (instruments: PaymentInstrumentSelectionKey[]) => void
   onSearchChange: (query: string) => void
   onAmountRangeChange: (min: number | null, max: number | null) => void
-  onReset: () => void
+  _onReset: () => void
 }
 
 const FilterSheet = React.memo(function FilterSheet({
@@ -1179,7 +1179,7 @@ const FilterSheet = React.memo(function FilterSheet({
   onPaymentInstrumentsChange,
   onSearchChange,
   onAmountRangeChange,
-  onReset,
+  _onReset,
 }: FilterSheetProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()

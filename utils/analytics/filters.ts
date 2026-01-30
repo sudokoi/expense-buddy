@@ -115,7 +115,6 @@ export function filterExpensesByPaymentMethods(
 // Optimized Single-Pass Filter Application
 // ============================================================================
 
-import { Category } from "../../types/category"
 import { parseISO, isWithinInterval, startOfDay, endOfDay, subDays } from "date-fns"
 import type { TimeWindow } from "./time"
 
