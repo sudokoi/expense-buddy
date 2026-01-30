@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from "tamagui"
 import { Calendar, Filter, X } from "@tamagui/lucide-icons"
-import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
+import { Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
@@ -683,50 +683,14 @@ export default function HistoryScreen() {
     [handleEdit, handleDelete, allInstruments, categoryByLabel]
   )
 
-  // Render item for SectionList
-  const renderItem = useCallback(
-    ({ item }: { item: Expense }) => {
-      const categoryInfo =
-        categoryByLabel.get(item.category) ??
-        ({
-          label: item.category,
-          icon: "Circle",
-          color: CATEGORY_COLORS.Other,
-        } satisfies Pick<Category, "label" | "icon" | "color">)
-
-      return (
-        <ExpenseRow
-          expense={item}
-          categoryInfo={categoryInfo}
-          subtitleMode="time"
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          instruments={allInstruments}
-          showActions
-        />
-      )
-    },
-    [handleEdit, handleDelete, allInstruments, categoryByLabel]
-  )
-
-  // Render section header for SectionList
-  const renderSectionHeader = useCallback(
-    ({ section: { title } }: { section: { title: string } }) => (
-      <YStack background="$background" style={layoutStyles.sectionHeader}>
-        <H6 color="$color" opacity={0.8}>
-          {title}
-        </H6>
-      </YStack>
-    ),
-    []
-  )
-
-  // Key extractors
-  const keyExtractor = useCallback((item: Expense) => item.id, [])
-  const flashListKeyExtractor = useCallback(
+  // Key extractor for FlashList
+  const keyExtractor = useCallback(
     (item: { type: "header" | "expense"; id: string }) => item.id,
     []
   )
+
+  // Get item type for FlashList to optimize recycling
+  const getItemType = useCallback((item: { type: "header" | "expense" }) => item.type, [])
 
   // List footer component
   const ListFooterComponent = useMemo(
@@ -861,9 +825,6 @@ export default function HistoryScreen() {
     },
     [selectedPaymentConfig?.maxLength]
   )
-
-  // Determine if we should use FlashList
-  const useFlashList = filteredExpenses.length > 100
 
   // Empty state
   if (state.activeExpenses.length === 0) {
@@ -1262,28 +1223,17 @@ export default function HistoryScreen() {
         _onReset={handleResetFilters}
       />
 
-      {/* List - FlashList for large datasets, SectionList for smaller ones */}
-      {useFlashList ? (
-        <FlashList
-          data={flattenedExpenses}
-          renderItem={renderFlashListItem}
-          keyExtractor={flashListKeyExtractor}
-          // Note: FlashList doesn't have estimatedItemSize prop, using getItemType instead
-          contentContainerStyle={contentContainerStyle}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={ListFooterComponent}
-        />
-      ) : (
-        <SectionList
-          sections={groupedExpenses}
-          keyExtractor={keyExtractor}
-          renderSectionHeader={renderSectionHeader}
-          renderItem={renderItem}
-          contentContainerStyle={contentContainerStyle}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={ListFooterComponent}
-        />
-      )}
+      {/* List - FlashList for optimal performance with large datasets */}
+      <FlashList
+        data={flattenedExpenses}
+        renderItem={renderFlashListItem}
+        keyExtractor={keyExtractor}
+        getItemType={getItemType}
+        estimatedItemSize={80}
+        contentContainerStyle={contentContainerStyle}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={ListFooterComponent}
+      />
     </YStack>
   )
 }

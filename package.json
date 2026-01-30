@@ -33,7 +33,7 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/native": "^7.1.28",
-    "@shopify/flash-list": "^2.2.0",
+    "@shopify/flash-list": "2.0.2",
     "@tamagui/config": "^1.144.3",
     "@tamagui/lucide-icons": "^1.144.3",
     "@tamagui/toast": "^1.144.3",
