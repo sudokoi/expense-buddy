@@ -7,7 +7,6 @@ import {
   TimeWindow,
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
-  CategoryColorMap,
   filterExpensesByTimeWindow,
   filterExpensesByCategories,
   filterExpensesByPaymentMethods,

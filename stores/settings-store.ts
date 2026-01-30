@@ -1,10 +1,8 @@
 import { createStore } from "@xstate/store"
 import { Appearance } from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
   AppSettings,
   ThemePreference,
-  AutoSyncTiming,
   DEFAULT_SETTINGS,
   loadSettings,
   saveSettings,
@@ -14,7 +12,6 @@ import {
   getSettingsHash,
   saveSettingsHash,
 } from "../services/settings-manager"
-import { PaymentMethodType } from "../types/expense"
 import {
   SyncConfig,
   saveSyncConfig as saveSyncConfigToStorage,
