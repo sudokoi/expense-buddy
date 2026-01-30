@@ -34,7 +34,8 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Visual Charts**: Bar charts showing daily spending patterns
 - **Category Breakdown**: See spending distribution across categories
 - **Payment Method Analysis**: Pie chart showing expense distribution by payment method
-- **Filters**: Filter analytics by category, payment method, and (when applicable) saved instrument
+- **Multi-Currency Support**: Analytics automatically groups expenses by currency; filter chips appear when multiple currencies are present
+- **Filters**: Filter analytics by category, payment method, currency, and (when applicable) saved instrument
 - **Instrument Breakdown**: See spending per card/UPI nickname for selected payment methods
 - **Time-based Analysis**: Track expenses over days/weeks/months plus 3m / 6m / 1y windows
 
@@ -63,7 +64,8 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 ### 🌍 Internationalization (i18n)
 
-- **Multiple Languages**: Full support for **English (US, UK, IN)** and **Hindi (हिंदी)**
+- **Multiple Languages**: Full support for **English (US, UK, IN)**, **Hindi (हिंदी)**, and **Japanese (日本語)**
+- **Dynamic Locale Loading**: Only the active locale is bundled at startup for faster app launch; other locales load on-demand when selected
 - **Locale Awareness**:
   - Currency symbols adapt to your choice ($, £, ₹)
   - Date formats match your region

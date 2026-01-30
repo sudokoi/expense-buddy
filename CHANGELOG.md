@@ -17,6 +17,36 @@
     - Updated specific charts (Total Spent, Daily Trend, Statistics) to reflect the selected currency
     - Amount input in Add/Edit screens explicitly shows the active currency symbol
     - Charts and statistics automatically default to the most relevant currency
+  - **Dynamic Locale Loading**: Only the active locale is bundled at startup (~60KB bundle size reduction), with other locales loaded on-demand when selected
+
+### Patch Changes
+
+- Major architecture improvements and code quality enhancements:
+  - **State Management Refactoring**
+    - Extracted UI state (section expansion states) into dedicated `ui-state-store.ts` for device-specific preferences
+    - Added `createSettingUpdater()` factory function to eliminate ~120 lines of repetitive boilerplate in settings store
+    - Reduced settings store complexity while maintaining full functionality
+  - **Analytics System Refactoring**
+    - Split `useAnalyticsData` hook (240 lines) into 3 focused hooks: `useAnalyticsBase`, `useAnalyticsCharts`, `useAnalyticsStatistics`
+    - Split `analytics-calculations.ts` (579 lines) into 5 domain-specific modules: time utilities, filters, currency grouping, aggregations, and statistics
+    - Each module now has clear single responsibility and is independently testable
+  - **Developer Experience Improvements**
+    - Added barrel exports (`index.ts`) to `hooks/`, `services/`, and `utils/` directories for cleaner imports
+    - Consolidated duplicate `DateRange` type definitions into shared `types/analytics.ts`
+    - Created `test-utils/` module with factory functions for creating mock expenses, categories, and settings
+    - Improved code organization and maintainability
+  - **Bug Fixes**
+    - Fixed duplicate `selectedPaymentInstruments` prop in analytics screen
+    - Fixed keyboard type regression in history edit (reverted to `default` to support expression input)
+    - Fixed layer violation: moved `PaymentMethodSelectionKey` import from components to utils
+    - Fixed TypeScript errors in test files after adding new interfaces
+  - **Persistence Improvements**
+    - Added `selectedCurrency` to analytics filters persistence (now survives app restarts)
+    - Removed duplicate i18n storage (now solely managed by settings store)
+  - **Testing**
+    - Added comprehensive tests for `computeEffectiveCurrency` utility covering all edge cases
+    - All 572 tests passing, no breaking changes
+    - Full backward compatibility maintained
 
 ## 2.1.4
 
