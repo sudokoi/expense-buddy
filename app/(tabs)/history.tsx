@@ -107,7 +107,7 @@ const layoutStyles = {
     marginTop: 16,
   } as ViewStyle,
   sectionHeader: {
-    paddingBottom: 8,
+    paddingVertical: 0,
   } as ViewStyle,
   expenseDetails: {
     alignItems: "center",
