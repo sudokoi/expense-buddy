@@ -379,13 +379,13 @@ export default function HistoryScreen() {
 
     if (filters.timeWindow !== "all") {
       const timeLabels: Record<TimeWindow, string> = {
-        "7d": t("analytics.filters.time.7d"),
-        "15d": t("analytics.filters.time.15d"),
-        "1m": t("analytics.filters.time.1m"),
-        "3m": t("analytics.filters.time.3m"),
-        "6m": t("analytics.filters.time.6m"),
-        "1y": t("analytics.filters.time.1y"),
-        all: t("analytics.filters.time.all"),
+        "7d": t("analytics.timeWindow.7d"),
+        "15d": t("analytics.timeWindow.15d"),
+        "1m": t("analytics.timeWindow.1m"),
+        "3m": t("analytics.timeWindow.3m"),
+        "6m": t("analytics.timeWindow.6m"),
+        "1y": t("analytics.timeWindow.1y"),
+        all: t("analytics.timeWindow.all"),
       }
       chips.push({
         label: timeLabels[filters.timeWindow],
@@ -395,21 +395,21 @@ export default function HistoryScreen() {
 
     if (filters.selectedCategories.length > 0) {
       chips.push({
-        label: `${filters.selectedCategories.length} ${t("analytics.filters.categories")}`,
+        label: `${filters.selectedCategories.length} ${t("settings.sections.categories")}`,
         onRemove: () => setSelectedCategories([]),
       })
     }
 
     if (filters.selectedPaymentMethods.length > 0) {
       chips.push({
-        label: `${filters.selectedPaymentMethods.length} ${t("analytics.filters.paymentMethods")}`,
+        label: `${filters.selectedPaymentMethods.length} ${t("settings.sections.defaultPayment")}`,
         onRemove: () => setSelectedPaymentMethods([]),
       })
     }
 
     if (filters.selectedPaymentInstruments.length > 0) {
       chips.push({
-        label: `${filters.selectedPaymentInstruments.length} ${t("analytics.filters.paymentInstruments")}`,
+        label: `${filters.selectedPaymentInstruments.length} ${t("instruments.title")}`,
         onRemove: () => setSelectedPaymentInstruments([]),
       })
     }
