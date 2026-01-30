@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { z } from "zod"
 import type { TimeWindow } from "../utils/analytics-calculations"
 import type { PaymentInstrumentSelectionKey } from "../utils/analytics-calculations"
 import type { PaymentMethodSelectionKey } from "../utils/analytics-calculations"
@@ -6,12 +7,41 @@ import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
 const ANALYTICS_FILTERS_KEY = "analytics_filters_v1"
 
+// Zod schema for validation
+export const AnalyticsFiltersStateSchema = z
+  .object({
+    timeWindow: z.enum(["7d", "15d", "1m", "3m", "6m", "1y", "all"]),
+    selectedCategories: z.array(z.string()),
+    selectedPaymentMethods: z.array(z.string()),
+    selectedPaymentInstruments: z.array(z.string()),
+    selectedCurrency: z.string().nullable(),
+    searchQuery: z.string().default(""),
+    minAmount: z.number().min(0).nullable(),
+    maxAmount: z.number().min(0).nullable(),
+  })
+  .refine(
+    (data) => {
+      // Validate min ≤ max only when both are present
+      if (data.minAmount !== null && data.maxAmount !== null) {
+        return data.minAmount <= data.maxAmount
+      }
+      return true
+    },
+    {
+      message: "Min amount must be less than or equal to max amount",
+      path: ["minAmount"],
+    }
+  )
+
 export interface AnalyticsFiltersState {
   timeWindow: TimeWindow
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
   selectedCurrency: string | null
+  searchQuery: string
+  minAmount: number | null
+  maxAmount: number | null
 }
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
@@ -20,6 +50,9 @@ export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
   selectedPaymentMethods: [],
   selectedPaymentInstruments: [],
   selectedCurrency: null,
+  searchQuery: "",
+  minAmount: null,
+  maxAmount: null,
 }
 
 const ALLOWED_TIME_WINDOWS: TimeWindow[] = ["7d", "15d", "1m", "3m", "6m", "1y", "all"]
@@ -47,6 +80,11 @@ function asPaymentMethodKeys(value: unknown): PaymentMethodSelectionKey[] {
     .map((k) => k as PaymentMethodSelectionKey)
 }
 
+function asNumberOrNull(value: unknown): number | null {
+  if (typeof value !== "number") return null
+  return isNaN(value) ? null : value
+}
+
 export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
   try {
     const stored = await AsyncStorage.getItem(ANALYTICS_FILTERS_KEY)
@@ -63,6 +101,9 @@ export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
       ) as PaymentInstrumentSelectionKey[],
       selectedCurrency:
         typeof parsed.selectedCurrency === "string" ? parsed.selectedCurrency : null,
+      searchQuery: typeof parsed.searchQuery === "string" ? parsed.searchQuery : "",
+      minAmount: asNumberOrNull(parsed.minAmount),
+      maxAmount: asNumberOrNull(parsed.maxAmount),
     }
 
     // Normalize: if payment methods are "All", instruments must also be "All".
