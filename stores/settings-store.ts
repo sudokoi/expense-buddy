@@ -29,6 +29,43 @@ import { changeLanguage } from "../i18n"
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
 
+/**
+ * Factory function to create setting updater actions.
+ * Eliminates repetitive boilerplate for simple settings updates.
+ */
+function createSettingUpdater<K extends keyof AppSettings>(key: K) {
+  return (
+    context: {
+      settings: AppSettings
+      isLoading: boolean
+      settingsSyncState: SettingsSyncState
+      syncedSettingsHash: string | null
+      systemColorScheme: "light" | "dark"
+      syncConfig: SyncConfig | null
+    },
+    event: { [P in K]: AppSettings[K] },
+    enqueue: { effect: (fn: () => Promise<void>) => void }
+  ) => {
+    const newSettings = { ...context.settings, [key]: event[key] }
+    const newSyncState = computeSettingsSyncState(newSettings, context.syncedSettingsHash)
+
+    enqueue.effect(async () => {
+      await saveSettings(newSettings)
+      if (newSyncState === "modified") {
+        await markSettingsChanged()
+      } else {
+        await clearSettingsChanged()
+      }
+    })
+
+    return {
+      ...context,
+      settings: newSettings,
+      settingsSyncState: newSyncState,
+    }
+  }
+}
+
 export const settingsStore = createStore({
   context: {
     settings: DEFAULT_SETTINGS,
@@ -95,168 +132,17 @@ export const settingsStore = createStore({
       }
     },
 
-    setSyncSettings: (context, event: { enabled: boolean }, enqueue) => {
-      const newSettings = { ...context.settings, syncSettings: event.enabled }
-      const newSyncState = computeSettingsSyncState(
-        newSettings,
-        context.syncedSettingsHash
-      )
+    setSyncSettings: createSettingUpdater("syncSettings"),
 
-      enqueue.effect(async () => {
-        await saveSettings(newSettings)
-        if (newSyncState === "modified") {
-          await markSettingsChanged()
-        } else {
-          await clearSettingsChanged()
-        }
-      })
+    setDefaultPaymentMethod: createSettingUpdater("defaultPaymentMethod"),
 
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
+    setDefaultCurrency: createSettingUpdater("defaultCurrency"),
 
-    setDefaultPaymentMethod: (
-      context,
-      event: { paymentMethod: PaymentMethodType | undefined },
-      enqueue
-    ) => {
-      const newSettings = {
-        ...context.settings,
-        defaultPaymentMethod: event.paymentMethod,
-      }
-      const newSyncState = computeSettingsSyncState(
-        newSettings,
-        context.syncedSettingsHash
-      )
+    setLanguage: createSettingUpdater("language"),
 
-      enqueue.effect(async () => {
-        await saveSettings(newSettings)
-        if (newSyncState === "modified") {
-          await markSettingsChanged()
-        } else {
-          await clearSettingsChanged()
-        }
-      })
+    setAutoSyncEnabled: createSettingUpdater("autoSyncEnabled"),
 
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
-
-    setDefaultCurrency: (context, event: { currency: string }, enqueue) => {
-      const newSettings = {
-        ...context.settings,
-        defaultCurrency: event.currency,
-      }
-      const newSyncState = computeSettingsSyncState(
-        newSettings,
-        context.syncedSettingsHash
-      )
-
-      enqueue.effect(async () => {
-        await saveSettings(newSettings)
-        if (newSyncState === "modified") {
-          await markSettingsChanged()
-        } else {
-          await clearSettingsChanged()
-        }
-      })
-
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
-
-    setLanguage: (context, event: { language: string }, enqueue) => {
-      const newSettings = {
-        ...context.settings,
-        language: event.language,
-      }
-      const newSyncState = computeSettingsSyncState(
-        newSettings,
-        context.syncedSettingsHash
-      )
-
-      enqueue.effect(async () => {
-        await changeLanguage(event.language)
-        await saveSettings(newSettings)
-        if (newSyncState === "modified") {
-          await markSettingsChanged()
-        } else {
-          await clearSettingsChanged()
-        }
-      })
-
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
-
-    setAutoSyncEnabled: (context, event: { enabled: boolean }, enqueue) => {
-      const newSettings = {
-        ...context.settings,
-        autoSyncEnabled: event.enabled,
-      }
-      const newSyncState = computeSettingsSyncState(
-        newSettings,
-        context.syncedSettingsHash
-      )
-
-      enqueue.effect(async () => {
-        await saveSettings(newSettings)
-        if (newSyncState === "modified") {
-          await markSettingsChanged()
-        } else {
-          await clearSettingsChanged()
-        }
-      })
-
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
-
-    setAutoSyncTiming: (context, event: { timing: AutoSyncTiming }, enqueue) => {
-      const newSettings = {
-        ...context.settings,
-        autoSyncTiming: event.timing,
-      }
-
-      // Only mark as needing sync if auto-sync is enabled
-      // When auto-sync is off, timing changes are not meaningful to sync
-      const shouldTrackChange = context.settings.autoSyncEnabled
-      const newSyncState = shouldTrackChange
-        ? computeSettingsSyncState(newSettings, context.syncedSettingsHash)
-        : context.settingsSyncState
-
-      enqueue.effect(async () => {
-        await saveSettings(newSettings)
-        if (shouldTrackChange) {
-          if (newSyncState === "modified") {
-            await markSettingsChanged()
-          } else {
-            await clearSettingsChanged()
-          }
-        }
-      })
-
-      return {
-        ...context,
-        settings: newSettings,
-        settingsSyncState: newSyncState,
-      }
-    },
+    setAutoSyncTiming: createSettingUpdater("autoSyncTiming"),
 
     updateSettings: (context, event: { updates: Partial<AppSettings> }, enqueue) => {
       const newSettings = { ...context.settings, ...event.updates }

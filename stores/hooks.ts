@@ -143,23 +143,25 @@ export const useSettings = () => {
   )
 
   const setSyncSettings = useCallback(
-    (enabled: boolean) => settingsStore.trigger.setSyncSettings({ enabled }),
+    (syncSettings: boolean) => settingsStore.trigger.setSyncSettings({ syncSettings }),
     [settingsStore]
   )
 
   const setDefaultPaymentMethod = useCallback(
-    (paymentMethod: PaymentMethodType | undefined) =>
-      settingsStore.trigger.setDefaultPaymentMethod({ paymentMethod }),
+    (defaultPaymentMethod: PaymentMethodType | undefined) =>
+      settingsStore.trigger.setDefaultPaymentMethod({ defaultPaymentMethod }),
     [settingsStore]
   )
 
   const setAutoSyncEnabled = useCallback(
-    (enabled: boolean) => settingsStore.trigger.setAutoSyncEnabled({ enabled }),
+    (autoSyncEnabled: boolean) =>
+      settingsStore.trigger.setAutoSyncEnabled({ autoSyncEnabled }),
     [settingsStore]
   )
 
   const setAutoSyncTiming = useCallback(
-    (timing: AutoSyncTiming) => settingsStore.trigger.setAutoSyncTiming({ timing }),
+    (autoSyncTiming: AutoSyncTiming) =>
+      settingsStore.trigger.setAutoSyncTiming({ autoSyncTiming }),
     [settingsStore]
   )
 
@@ -190,8 +192,8 @@ export const useSettings = () => {
   )
 
   const setDefaultCurrency = useCallback(
-    ({ currency }: { currency: string }) =>
-      settingsStore.trigger.setDefaultCurrency({ currency }),
+    (defaultCurrency: string) =>
+      settingsStore.trigger.setDefaultCurrency({ defaultCurrency }),
     [settingsStore]
   )
 

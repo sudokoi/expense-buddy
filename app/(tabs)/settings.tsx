@@ -298,7 +298,7 @@ export default function SettingsScreen() {
 
   const handleCurrencyChange = useCallback(
     (currency: string) => {
-      setDefaultCurrency({ currency })
+      setDefaultCurrency(currency)
     },
     [setDefaultCurrency]
   )
