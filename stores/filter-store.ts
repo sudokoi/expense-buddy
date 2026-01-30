@@ -1,6 +1,6 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
-import { useEffect, useCallback } from "react"
+import React, { useEffect, useCallback, useMemo } from "react"
 import {
   AnalyticsFiltersState,
   DEFAULT_ANALYTICS_FILTERS,
@@ -98,49 +98,72 @@ export const filterStore = createStore({
 })
 
 // ============================================================================
-// Selectors (optimized for minimal re-renders)
-// ============================================================================
-
-import type { StoreSnapshot } from "@xstate/store"
-
-export const selectFilters = (
-  snapshot: StoreSnapshot<FilterContext>
-): AnalyticsFiltersState => ({
-  timeWindow: snapshot.context.timeWindow,
-  selectedCategories: snapshot.context.selectedCategories,
-  selectedPaymentMethods: snapshot.context.selectedPaymentMethods,
-  selectedPaymentInstruments: snapshot.context.selectedPaymentInstruments,
-  selectedCurrency: snapshot.context.selectedCurrency,
-  searchQuery: snapshot.context.searchQuery,
-  minAmount: snapshot.context.minAmount,
-  maxAmount: snapshot.context.maxAmount,
-})
-
-export const selectActiveFilterCount = (
-  snapshot: StoreSnapshot<FilterContext>
-): number => {
-  let count = 0
-  if (snapshot.context.timeWindow !== "all") count++
-  if (snapshot.context.selectedCategories.length > 0) count++
-  if (snapshot.context.selectedPaymentMethods.length > 0) count++
-  if (snapshot.context.selectedPaymentInstruments.length > 0) count++
-  if (snapshot.context.searchQuery.trim()) count++
-  if (snapshot.context.minAmount !== null || snapshot.context.maxAmount !== null) count++
-  return count
-}
-
-export const selectHasActiveFilters = (snapshot: StoreSnapshot<FilterContext>): boolean =>
-  selectActiveFilterCount(snapshot) > 0
-
-// ============================================================================
 // Hook for components
 // ============================================================================
 
 export function useFilters() {
-  const filters = useSelector(filterStore, selectFilters)
-  const activeCount = useSelector(filterStore, selectActiveFilterCount)
-  const hasActive = useSelector(filterStore, selectHasActiveFilters)
-  const isHydrated = useSelector(filterStore, (snapshot) => snapshot.context.isHydrated)
+  // Use individual selectors for each filter property to avoid object creation
+  const timeWindow = useSelector(filterStore, (s) => s.context.timeWindow)
+  const selectedCategories = useSelector(filterStore, (s) => s.context.selectedCategories)
+  const selectedPaymentMethods = useSelector(
+    filterStore,
+    (s) => s.context.selectedPaymentMethods
+  )
+  const selectedPaymentInstruments = useSelector(
+    filterStore,
+    (s) => s.context.selectedPaymentInstruments
+  )
+  const selectedCurrency = useSelector(filterStore, (s) => s.context.selectedCurrency)
+  const searchQuery = useSelector(filterStore, (s) => s.context.searchQuery)
+  const minAmount = useSelector(filterStore, (s) => s.context.minAmount)
+  const maxAmount = useSelector(filterStore, (s) => s.context.maxAmount)
+  const isHydrated = useSelector(filterStore, (s) => s.context.isHydrated)
+
+  // Memoize the filters object to maintain stable reference
+  const filters = useMemo(
+    () => ({
+      timeWindow,
+      selectedCategories,
+      selectedPaymentMethods,
+      selectedPaymentInstruments,
+      selectedCurrency,
+      searchQuery,
+      minAmount,
+      maxAmount,
+    }),
+    [
+      timeWindow,
+      selectedCategories,
+      selectedPaymentMethods,
+      selectedPaymentInstruments,
+      selectedCurrency,
+      searchQuery,
+      minAmount,
+      maxAmount,
+    ]
+  )
+
+  // Calculate active count (primitive value, safe to calculate inline)
+  const activeCount = useMemo(() => {
+    let count = 0
+    if (timeWindow !== "all") count++
+    if (selectedCategories.length > 0) count++
+    if (selectedPaymentMethods.length > 0) count++
+    if (selectedPaymentInstruments.length > 0) count++
+    if (searchQuery.trim()) count++
+    if (minAmount !== null || maxAmount !== null) count++
+    return count
+  }, [
+    timeWindow,
+    selectedCategories,
+    selectedPaymentMethods,
+    selectedPaymentInstruments,
+    searchQuery,
+    minAmount,
+    maxAmount,
+  ])
+
+  const hasActive = activeCount > 0
 
   // Actions
   const applyFilters = useCallback((newFilters: AnalyticsFiltersState) => {
