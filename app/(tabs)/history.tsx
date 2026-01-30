@@ -1,16 +1,30 @@
-import React from "react"
-import { YStack, Text, XStack, H4, Button, H6, Input, Dialog, Label } from "tamagui"
-import { Calendar } from "@tamagui/lucide-icons"
+import React, { useCallback, useMemo, useState } from "react"
+import {
+  YStack,
+  Text,
+  XStack,
+  H4,
+  Button,
+  H6,
+  Input,
+  Dialog,
+  Label,
+  Sheet,
+  ScrollView,
+} from "tamagui"
+import { Calendar, Filter, X, Search } from "@tamagui/lucide-icons"
 import { SectionList, Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import { FlashList } from "@shopify/flash-list"
 import {
   useExpenses,
   useNotifications,
   useSettings,
   useCategories,
 } from "../../stores/hooks"
+import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { parseISO } from "date-fns"
@@ -37,12 +51,27 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
-
-const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CategoryCard } from "../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
 import { useTranslation } from "react-i18next"
+import { TimeWindowSelector } from "../../components/analytics/TimeWindowSelector"
+import { CategoryFilter } from "../../components/analytics/CategoryFilter"
+import { PaymentMethodFilter } from "../../components/analytics/PaymentMethodFilter"
+import { PaymentInstrumentFilter } from "../../components/analytics/PaymentInstrumentFilter"
+import { AmountRangeFilter } from "../../components/analytics/AmountRangeFilter"
+import { SearchFilter } from "../../components/analytics/SearchFilter"
+import { CollapsibleSection } from "../../components/analytics/CollapsibleSection"
+import type { TimeWindow } from "../../utils/analytics/time"
+import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import {
+  PAYMENT_INSTRUMENT_METHODS,
+  getActivePaymentInstruments,
+} from "../../services/payment-instruments"
+import { filterExpensesByTimeWindow } from "../../utils/analytics/time"
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -95,7 +124,64 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: 8,
   } as ViewStyle,
+  filterButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  } as ViewStyle,
+  chipsContainer: {
+    flexDirection: "row",
+    marginBottom: 12,
+  } as ViewStyle,
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  } as ViewStyle,
+  chipText: {
+    fontSize: 13,
+    marginRight: 4,
+  } as TextStyle,
+  sheetFrame: {
+    padding: 16,
+  } as ViewStyle,
+  headerRow: {
+    justifyContent: "space-between",
+    alignItems: "center",
+  } as ViewStyle,
+  contentContainer: {
+    marginTop: 8,
+  } as ViewStyle,
 }
+
+// Filter chip component
+const FilterChip = React.memo(function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string
+  onRemove: () => void
+}) {
+  return (
+    <XStack style={layoutStyles.chip}>
+      <Text style={layoutStyles.chipText} color="$color" opacity={0.8}>
+        {label}
+      </Text>
+      <Button
+        size="$2"
+        chromeless
+        icon={X}
+        onPress={onRemove}
+        aria-label="Remove filter"
+      />
+    </XStack>
+  )
+})
 
 export default function HistoryScreen() {
   const { t } = useTranslation()
@@ -104,24 +190,44 @@ export default function HistoryScreen() {
   const { syncConfig, settings, updateSettings } = useSettings()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
-  const [editingExpense, setEditingExpense] = React.useState<{
+
+  // Filter state from store
+  const {
+    filters,
+    activeCount,
+    hasActive,
+    isHydrated,
+    setTimeWindow,
+    setSelectedCategories,
+    setSelectedPaymentMethods,
+    setSelectedPaymentInstruments,
+    setSearchQuery,
+    setAmountRange,
+    reset,
+  } = useFilters()
+
+  // Filter persistence
+  const { save: saveFilters } = useFilterPersistence()
+
+  // Local UI state
+  const [editingExpense, setEditingExpense] = useState<{
     id: string
     amount: string
     category: ExpenseCategory
     note: string
-    date: string // ISO date string
+    date: string
     currency?: string
     paymentMethodType?: PaymentMethodType
     paymentMethodId: string
     paymentInstrumentId?: string
   } | null>(null)
-  const [showDatePicker, setShowDatePicker] = React.useState(false)
-  const [deletingExpenseId, setDeletingExpenseId] = React.useState<string | null>(null)
-  const [hasMore, setHasMore] = React.useState(true)
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false)
-
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [showFilterSheet, setShowFilterSheet] = useState(false)
   const [instrumentEntryKind, setInstrumentEntryKind] =
-    React.useState<InstrumentEntryKind>("none")
+    useState<InstrumentEntryKind>("none")
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
@@ -131,20 +237,24 @@ export default function HistoryScreen() {
       if (editingExpense) {
         setEditingExpense(null)
         setShowDatePicker(false)
-        return true // Prevent default back behavior
+        return true
       }
       if (deletingExpenseId) {
         setDeletingExpenseId(null)
-        return true // Prevent default back behavior
+        return true
       }
-      return false // Let default back behavior happen
+      if (showFilterSheet) {
+        setShowFilterSheet(false)
+        return true
+      }
+      return false
     })
 
     return () => backHandler.remove()
-  }, [editingExpense, deletingExpenseId])
+  }, [editingExpense, deletingExpenseId, showFilterSheet])
 
   // Compute preview when expression contains operators
-  const expressionPreview = React.useMemo(() => {
+  const expressionPreview = useMemo(() => {
     if (!editingExpense?.amount.trim() || !hasOperators(editingExpense.amount)) {
       return null
     }
@@ -156,87 +266,78 @@ export default function HistoryScreen() {
   }, [editingExpense?.amount])
 
   // Get current payment method config for identifier input in edit dialog
-  const selectedPaymentConfig = React.useMemo(() => {
+  const selectedPaymentConfig = useMemo(() => {
     if (!editingExpense?.paymentMethodType) return null
     return (
       PAYMENT_METHODS.find((pm) => pm.value === editingExpense.paymentMethodType) || null
     )
   }, [editingExpense?.paymentMethodType])
 
-  // Memoized category selection handler for edit dialog
-  const handleCategorySelect = React.useCallback((category: ExpenseCategory) => {
-    setEditingExpense((prev) => (prev ? { ...prev, category } : null))
-  }, [])
+  // Apply filters to expenses
+  const filteredExpenses = useMemo(() => {
+    let result = [...state.activeExpenses]
 
-  const handlePaymentMethodSelect = React.useCallback((type: PaymentMethodType) => {
-    setEditingExpense((prev) => {
-      if (!prev) return null
-      if (prev.paymentMethodType === type) {
-        setInstrumentEntryKind("none")
-        // Deselect if already selected
-        return {
-          ...prev,
-          paymentMethodType: undefined,
-          paymentMethodId: "",
-          paymentInstrumentId: undefined,
-        }
-      } else {
-        setInstrumentEntryKind("none")
-        return {
-          ...prev,
-          paymentMethodType: type,
-          paymentMethodId: "",
-          paymentInstrumentId: undefined,
-        }
-      }
-    })
-  }, [])
+    // Apply time window filter
+    result = filterExpensesByTimeWindow(result, filters.timeWindow)
 
-  const handleIdentifierChange = React.useCallback(
-    (text: string) => {
-      setEditingExpense((prev) => {
-        if (!prev) return null
-        // For "Other" payment method, allow any text (description)
-        // For other payment methods, use the validated identifier utility function
-        if (prev.paymentMethodType === "Other") {
-          const maxLen = selectedPaymentConfig?.maxLength || 50
-          return { ...prev, paymentMethodId: text.slice(0, maxLen) }
-        } else {
-          const maxLen = selectedPaymentConfig?.maxLength || 4
-          if (
-            prev.paymentMethodType &&
-            isPaymentInstrumentMethod(prev.paymentMethodType)
-          ) {
-            setInstrumentEntryKind("manual")
-          }
-          return {
-            ...prev,
-            paymentMethodId: validateIdentifier(text, maxLen),
-            paymentInstrumentId: undefined,
-          }
-        }
+    // Apply category filter
+    if (filters.selectedCategories.length > 0) {
+      result = result.filter((e) => filters.selectedCategories.includes(e.category))
+    }
+
+    // Apply payment method filter
+    if (filters.selectedPaymentMethods.length > 0) {
+      result = result.filter((e) => {
+        if (!e.paymentMethod) return filters.selectedPaymentMethods.includes("__none__")
+        return filters.selectedPaymentMethods.includes(e.paymentMethod.type)
       })
-    },
-    [selectedPaymentConfig?.maxLength]
-  )
+    }
 
-  const groupedExpenses = React.useMemo(() => {
-    // Use activeExpenses (excludes soft-deleted) for display
-    // ISO timestamps sort correctly lexicographically, so avoid Date construction.
-    const sorted = [...state.activeExpenses].sort((a, b) => b.date.localeCompare(a.date))
+    // Apply payment instrument filter
+    if (filters.selectedPaymentInstruments.length > 0) {
+      result = result.filter((e) => {
+        if (!e.paymentMethod?.instrumentId) return false
+        const key = `${e.paymentMethod.type}::${e.paymentMethod.instrumentId}`
+        return filters.selectedPaymentInstruments.includes(key)
+      })
+    }
+
+    // Apply search filter
+    if (filters.searchQuery.trim()) {
+      const query = filters.searchQuery.toLowerCase().trim()
+      result = result.filter(
+        (e) =>
+          e.category.toLowerCase().includes(query) ||
+          (e.note && e.note.toLowerCase().includes(query)) ||
+          e.amount.toString().includes(query)
+      )
+    }
+
+    // Apply amount range filter
+    if (filters.minAmount !== null) {
+      result = result.filter((e) => e.amount >= filters.minAmount!)
+    }
+    if (filters.maxAmount !== null) {
+      result = result.filter((e) => e.amount <= filters.maxAmount!)
+    }
+
+    return result
+  }, [state.activeExpenses, filters])
+
+  // Group filtered expenses by date
+  const groupedExpenses = useMemo(() => {
+    const sorted = [...filteredExpenses].sort((a, b) => b.date.localeCompare(a.date))
 
     const sections: { title: string; data: Expense[] }[] = []
     let currentIsoDate: string | null = null
     let currentSection: { title: string; data: Expense[] } | null = null
 
     for (const expense of sorted) {
-      // Group by local day to avoid UTC offset shifts.
-      // Use formatDate for section title if possible
       const dayKey = getLocalDayKey(expense.date)
       if (dayKey !== currentIsoDate) {
         currentIsoDate = dayKey
         currentSection = {
-          title: formatDate(expense.date, "dd/MM/yyyy"), // Already localized in date.ts? Yes mostly
+          title: formatDate(expense.date, "dd/MM/yyyy"),
           data: [],
         }
         sections.push(currentSection)
@@ -245,9 +346,26 @@ export default function HistoryScreen() {
     }
 
     return sections
-  }, [state.activeExpenses])
+  }, [filteredExpenses])
 
-  const categoryByLabel = React.useMemo(() => {
+  // Flatten for FlashList
+  const flattenedExpenses = useMemo(() => {
+    const items: Array<
+      | { type: "header"; title: string; id: string }
+      | { type: "expense"; expense: Expense; id: string }
+    > = []
+
+    for (const section of groupedExpenses) {
+      items.push({ type: "header", title: section.title, id: `header-${section.title}` })
+      for (const expense of section.data) {
+        items.push({ type: "expense", expense, id: expense.id })
+      }
+    }
+
+    return items
+  }, [groupedExpenses])
+
+  const categoryByLabel = useMemo(() => {
     const map = new Map<string, Category>()
     for (const category of categories) {
       map.set(category.label, category)
@@ -255,8 +373,77 @@ export default function HistoryScreen() {
     return map
   }, [categories])
 
+  // Generate filter chips
+  const filterChips = useMemo(() => {
+    const chips: Array<{ label: string; onRemove: () => void }> = []
+
+    if (filters.timeWindow !== "all") {
+      const timeLabels: Record<TimeWindow, string> = {
+        "7d": t("analytics.filters.time.7d"),
+        "15d": t("analytics.filters.time.15d"),
+        "1m": t("analytics.filters.time.1m"),
+        "3m": t("analytics.filters.time.3m"),
+        "6m": t("analytics.filters.time.6m"),
+        "1y": t("analytics.filters.time.1y"),
+        all: t("analytics.filters.time.all"),
+      }
+      chips.push({
+        label: timeLabels[filters.timeWindow],
+        onRemove: () => setTimeWindow("all"),
+      })
+    }
+
+    if (filters.selectedCategories.length > 0) {
+      chips.push({
+        label: `${filters.selectedCategories.length} ${t("analytics.filters.categories")}`,
+        onRemove: () => setSelectedCategories([]),
+      })
+    }
+
+    if (filters.selectedPaymentMethods.length > 0) {
+      chips.push({
+        label: `${filters.selectedPaymentMethods.length} ${t("analytics.filters.paymentMethods")}`,
+        onRemove: () => setSelectedPaymentMethods([]),
+      })
+    }
+
+    if (filters.selectedPaymentInstruments.length > 0) {
+      chips.push({
+        label: `${filters.selectedPaymentInstruments.length} ${t("analytics.filters.paymentInstruments")}`,
+        onRemove: () => setSelectedPaymentInstruments([]),
+      })
+    }
+
+    if (filters.searchQuery.trim()) {
+      chips.push({
+        label: `"${filters.searchQuery}"`,
+        onRemove: () => setSearchQuery(""),
+      })
+    }
+
+    if (filters.minAmount !== null || filters.maxAmount !== null) {
+      const min = filters.minAmount !== null ? filters.minAmount : ""
+      const max = filters.maxAmount !== null ? filters.maxAmount : ""
+      chips.push({
+        label: `${min}-${max}`,
+        onRemove: () => setAmountRange(null, null),
+      })
+    }
+
+    return chips
+  }, [
+    filters,
+    t,
+    setTimeWindow,
+    setSelectedCategories,
+    setSelectedPaymentMethods,
+    setSelectedPaymentInstruments,
+    setSearchQuery,
+    setAmountRange,
+  ])
+
   // Memoized handlers for list item actions
-  const handleEdit = React.useCallback((expense: Expense) => {
+  const handleEdit = useCallback((expense: Expense) => {
     setInstrumentEntryKind(
       expense.paymentMethod?.instrumentId
         ? "saved"
@@ -277,11 +464,11 @@ export default function HistoryScreen() {
     })
   }, [])
 
-  const handleDelete = React.useCallback((id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setDeletingExpenseId(id)
   }, [])
 
-  const confirmDelete = React.useCallback(() => {
+  const confirmDelete = useCallback(() => {
     if (deletingExpenseId) {
       deleteExpense(deletingExpenseId)
       addNotification(t("history.deleted"), "success")
@@ -289,7 +476,7 @@ export default function HistoryScreen() {
     }
   }, [deletingExpenseId, deleteExpense, addNotification, t])
 
-  const handleLoadMore = React.useCallback(async () => {
+  const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return
 
     setIsLoadingMore(true)
@@ -310,8 +497,50 @@ export default function HistoryScreen() {
     }
   }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification, t])
 
-  // Memoized renderItem function
-  const renderItem = React.useCallback(
+  // Render item for FlashList
+  const renderFlashListItem = useCallback(
+    ({
+      item,
+    }: {
+      item:
+        | { type: "header"; title: string; id: string }
+        | { type: "expense"; expense: Expense; id: string }
+    }) => {
+      if (item.type === "header") {
+        return (
+          <YStack background="$background" style={layoutStyles.sectionHeader}>
+            <H6 color="$color" opacity={0.8}>
+              {item.title}
+            </H6>
+          </YStack>
+        )
+      }
+
+      const categoryInfo =
+        categoryByLabel.get(item.expense.category) ??
+        ({
+          label: item.expense.category,
+          icon: "Circle",
+          color: CATEGORY_COLORS.Other,
+        } satisfies Pick<Category, "label" | "icon" | "color">)
+
+      return (
+        <ExpenseRow
+          expense={item.expense}
+          categoryInfo={categoryInfo}
+          subtitleMode="time"
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          instruments={allInstruments}
+          showActions
+        />
+      )
+    },
+    [handleEdit, handleDelete, allInstruments, categoryByLabel]
+  )
+
+  // Render item for SectionList
+  const renderItem = useCallback(
     ({ item }: { item: Expense }) => {
       const categoryInfo =
         categoryByLabel.get(item.category) ??
@@ -336,8 +565,8 @@ export default function HistoryScreen() {
     [handleEdit, handleDelete, allInstruments, categoryByLabel]
   )
 
-  // Memoized renderSectionHeader function
-  const renderSectionHeader = React.useCallback(
+  // Render section header for SectionList
+  const renderSectionHeader = useCallback(
     ({ section: { title } }: { section: { title: string } }) => (
       <YStack background="$background" style={layoutStyles.sectionHeader}>
         <H6 color="$color" opacity={0.8}>
@@ -348,11 +577,15 @@ export default function HistoryScreen() {
     []
   )
 
-  // Memoized keyExtractor
-  const keyExtractor = React.useCallback((item: Expense) => item.id, [])
+  // Key extractors
+  const keyExtractor = useCallback((item: Expense) => item.id, [])
+  const flashListKeyExtractor = useCallback(
+    (item: { type: "header" | "expense"; id: string }) => item.id,
+    []
+  )
 
-  // Memoized ListFooterComponent - only show if GitHub is configured and there's more data
-  const ListFooterComponent = React.useMemo(
+  // List footer component
+  const ListFooterComponent = useMemo(
     () =>
       hasMore && syncConfig ? (
         <YStack style={layoutStyles.loadMoreContainer}>
@@ -369,16 +602,15 @@ export default function HistoryScreen() {
     [hasMore, syncConfig, handleLoadMore, isLoadingMore, t]
   )
 
-  // Memoized content container style
-  const contentContainerStyle = React.useMemo(
+  // Content container style
+  const contentContainerStyle = useMemo(
     () => ({ paddingBottom: insets.bottom }),
     [insets.bottom]
   )
 
-  // Memoized save handler for edit dialog
-  const handleSaveEdit = React.useCallback(() => {
+  // Save handler for edit dialog
+  const handleSaveEdit = useCallback(() => {
     if (editingExpense) {
-      // Use activeExpenses for finding the expense to edit (soft-deleted expenses shouldn't be editable)
       const expense = state.activeExpenses.find((e) => e.id === editingExpense.id)
       if (expense) {
         if (!editingExpense.amount.trim()) {
@@ -396,7 +628,6 @@ export default function HistoryScreen() {
           return
         }
 
-        // Build payment method object if type is selected
         const paymentMethod: PaymentMethod | undefined = editingExpense.paymentMethodType
           ? {
               type: editingExpense.paymentMethodType,
@@ -419,6 +650,78 @@ export default function HistoryScreen() {
     }
   }, [editingExpense, state.activeExpenses, editExpense, addNotification, t])
 
+  // Filter sheet handlers
+  const handleOpenFilterSheet = useCallback(() => {
+    setShowFilterSheet(true)
+  }, [])
+
+  const handleCloseFilterSheet = useCallback(() => {
+    setShowFilterSheet(false)
+    saveFilters()
+  }, [saveFilters])
+
+  const handleResetFilters = useCallback(() => {
+    reset()
+  }, [reset])
+
+  // Category selection handler for edit dialog
+  const handleCategorySelect = useCallback((category: ExpenseCategory) => {
+    setEditingExpense((prev) => (prev ? { ...prev, category } : null))
+  }, [])
+
+  const handlePaymentMethodSelect = useCallback((type: PaymentMethodType) => {
+    setEditingExpense((prev) => {
+      if (!prev) return null
+      if (prev.paymentMethodType === type) {
+        setInstrumentEntryKind("none")
+        return {
+          ...prev,
+          paymentMethodType: undefined,
+          paymentMethodId: "",
+          paymentInstrumentId: undefined,
+        }
+      } else {
+        setInstrumentEntryKind("none")
+        return {
+          ...prev,
+          paymentMethodType: type,
+          paymentMethodId: "",
+          paymentInstrumentId: undefined,
+        }
+      }
+    })
+  }, [])
+
+  const handleIdentifierChange = useCallback(
+    (text: string) => {
+      setEditingExpense((prev) => {
+        if (!prev) return null
+        if (prev.paymentMethodType === "Other") {
+          const maxLen = selectedPaymentConfig?.maxLength || 50
+          return { ...prev, paymentMethodId: text.slice(0, maxLen) }
+        } else {
+          const maxLen = selectedPaymentConfig?.maxLength || 4
+          if (
+            prev.paymentMethodType &&
+            isPaymentInstrumentMethod(prev.paymentMethodType)
+          ) {
+            setInstrumentEntryKind("manual")
+          }
+          return {
+            ...prev,
+            paymentMethodId: validateIdentifier(text, maxLen),
+            paymentInstrumentId: undefined,
+          }
+        }
+      })
+    },
+    [selectedPaymentConfig?.maxLength]
+  )
+
+  // Determine if we should use FlashList
+  const useFlashList = filteredExpenses.length > 100
+
+  // Empty state
   if (state.activeExpenses.length === 0) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
@@ -432,9 +735,107 @@ export default function HistoryScreen() {
     )
   }
 
+  // Filtered empty state
+  if (filteredExpenses.length === 0 && hasActive) {
+    return (
+      <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
+        <H4 style={layoutStyles.header}>{t("history.title")}</H4>
+
+        {/* Filter Button */}
+        <XStack style={layoutStyles.filterButtonContainer}>
+          <Button
+            size="$3"
+            icon={Filter}
+            onPress={handleOpenFilterSheet}
+            themeInverse={activeCount > 0}
+          >
+            {t("common.filters")}
+            {activeCount > 0 && (
+              <Text fontSize="$2" fontWeight="bold" marginLeft="$1">
+                ({activeCount})
+              </Text>
+            )}
+          </Button>
+        </XStack>
+
+        {/* Filter Chips */}
+        {filterChips.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={layoutStyles.chipsContainer}
+          >
+            {filterChips.map((chip, index) => (
+              <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+            ))}
+          </ScrollView>
+        )}
+
+        <YStack flex={1} style={layoutStyles.emptyContainer}>
+          <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
+            {t("history.noResultsTitle")}
+          </Text>
+          <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
+            {t("history.noResultsSubtitle")}
+          </Text>
+          <Button size="$4" onPress={handleResetFilters} marginTop="$4">
+            {t("common.clearFilters")}
+          </Button>
+        </YStack>
+
+        {/* Filter Sheet */}
+        <FilterSheet
+          open={showFilterSheet}
+          onClose={handleCloseFilterSheet}
+          filters={filters}
+          isHydrated={isHydrated}
+          allInstruments={allInstruments}
+          categories={categories}
+          onTimeWindowChange={setTimeWindow}
+          onCategoriesChange={setSelectedCategories}
+          onPaymentMethodsChange={setSelectedPaymentMethods}
+          onPaymentInstrumentsChange={setSelectedPaymentInstruments}
+          onSearchChange={setSearchQuery}
+          onAmountRangeChange={setAmountRange}
+          onReset={handleResetFilters}
+        />
+      </YStack>
+    )
+  }
+
   return (
     <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
       <H4 style={layoutStyles.header}>{t("history.title")}</H4>
+
+      {/* Filter Button */}
+      <XStack style={layoutStyles.filterButtonContainer}>
+        <Button
+          size="$3"
+          icon={Filter}
+          onPress={handleOpenFilterSheet}
+          themeInverse={activeCount > 0}
+        >
+          {t("common.filters")}
+          {activeCount > 0 && (
+            <Text fontSize="$2" fontWeight="bold" marginLeft="$1">
+              ({activeCount})
+            </Text>
+          )}
+        </Button>
+      </XStack>
+
+      {/* Filter Chips */}
+      {filterChips.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={layoutStyles.chipsContainer}
+        >
+          {filterChips.map((chip, index) => (
+            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+          ))}
+        </ScrollView>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -472,14 +873,7 @@ export default function HistoryScreen() {
       >
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
-          <Dialog.Content
-            bordered
-            elevate
-            key="content"
-            // @ts-expect-error maxHeight works at runtime but isn't in Dialog.Content types
-            maxHeight="80%"
-            gap="$4"
-          >
+          <Dialog.Content bordered elevate key="content" maxHeight="80%" gap="$4">
             <Dialog.Title size="$6">{t("history.editDialog.title")}</Dialog.Title>
             <Dialog.Description>{t("history.editDialog.description")}</Dialog.Description>
 
@@ -705,15 +1099,326 @@ export default function HistoryScreen() {
         </Dialog.Portal>
       </Dialog>
 
-      <SectionList
-        sections={groupedExpenses}
-        keyExtractor={keyExtractor}
-        renderSectionHeader={renderSectionHeader}
-        renderItem={renderItem}
-        contentContainerStyle={contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={ListFooterComponent}
+      {/* Filter Sheet */}
+      <FilterSheet
+        open={showFilterSheet}
+        onClose={handleCloseFilterSheet}
+        filters={filters}
+        isHydrated={isHydrated}
+        allInstruments={allInstruments}
+        categories={categories}
+        onTimeWindowChange={setTimeWindow}
+        onCategoriesChange={setSelectedCategories}
+        onPaymentMethodsChange={setSelectedPaymentMethods}
+        onPaymentInstrumentsChange={setSelectedPaymentInstruments}
+        onSearchChange={setSearchQuery}
+        onAmountRangeChange={setAmountRange}
+        onReset={handleResetFilters}
       />
+
+      {/* List - FlashList for large datasets, SectionList for smaller ones */}
+      {useFlashList ? (
+        <FlashList
+          data={flattenedExpenses}
+          renderItem={renderFlashListItem}
+          keyExtractor={flashListKeyExtractor}
+          estimatedItemSize={80}
+          contentContainerStyle={contentContainerStyle}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={ListFooterComponent}
+        />
+      ) : (
+        <SectionList
+          sections={groupedExpenses}
+          keyExtractor={keyExtractor}
+          renderSectionHeader={renderSectionHeader}
+          renderItem={renderItem}
+          contentContainerStyle={contentContainerStyle}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={ListFooterComponent}
+        />
+      )}
     </YStack>
   )
 }
+
+// Filter Sheet Component
+interface FilterSheetProps {
+  open: boolean
+  onClose: () => void
+  filters: {
+    timeWindow: TimeWindow
+    selectedCategories: string[]
+    selectedPaymentMethods: PaymentMethodSelectionKey[]
+    selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
+    searchQuery: string
+    minAmount: number | null
+    maxAmount: number | null
+  }
+  isHydrated: boolean
+  allInstruments: PaymentInstrument[]
+  categories: Category[]
+  onTimeWindowChange: (window: TimeWindow) => void
+  onCategoriesChange: (categories: string[]) => void
+  onPaymentMethodsChange: (methods: PaymentMethodSelectionKey[]) => void
+  onPaymentInstrumentsChange: (instruments: PaymentInstrumentSelectionKey[]) => void
+  onSearchChange: (query: string) => void
+  onAmountRangeChange: (min: number | null, max: number | null) => void
+  onReset: () => void
+}
+
+const FilterSheet = React.memo(function FilterSheet({
+  open,
+  onClose,
+  filters,
+  isHydrated,
+  allInstruments,
+  onTimeWindowChange,
+  onCategoriesChange,
+  onPaymentMethodsChange,
+  onPaymentInstrumentsChange,
+  onSearchChange,
+  onAmountRangeChange,
+  onReset,
+}: FilterSheetProps) {
+  const { t } = useTranslation()
+  const insets = useSafeAreaInsets()
+
+  // Local draft state
+  const [draftTimeWindow, setDraftTimeWindow] = useState<TimeWindow>(filters.timeWindow)
+  const [draftCategories, setDraftCategories] = useState<string[]>(
+    filters.selectedCategories
+  )
+  const [draftPaymentMethods, setDraftPaymentMethods] = useState<
+    PaymentMethodSelectionKey[]
+  >(filters.selectedPaymentMethods)
+  const [draftPaymentInstruments, setDraftPaymentInstruments] = useState<
+    PaymentInstrumentSelectionKey[]
+  >(filters.selectedPaymentInstruments)
+  const [draftSearchQuery, setDraftSearchQuery] = useState(filters.searchQuery)
+  const [draftMinAmount, setDraftMinAmount] = useState<number | null>(filters.minAmount)
+  const [draftMaxAmount, setDraftMaxAmount] = useState<number | null>(filters.maxAmount)
+
+  // Sync draft with props when opening
+  React.useEffect(() => {
+    if (open) {
+      setDraftTimeWindow(filters.timeWindow)
+      setDraftCategories(filters.selectedCategories)
+      setDraftPaymentMethods(filters.selectedPaymentMethods)
+      setDraftPaymentInstruments(filters.selectedPaymentInstruments)
+      setDraftSearchQuery(filters.searchQuery)
+      setDraftMinAmount(filters.minAmount)
+      setDraftMaxAmount(filters.maxAmount)
+    }
+  }, [open, filters])
+
+  // Check if payment instrument filter should be shown
+  const showPaymentInstrumentFilter = useMemo(() => {
+    const active = getActivePaymentInstruments(allInstruments)
+    const allowedMethods =
+      draftPaymentMethods.length === 0
+        ? new Set(PAYMENT_INSTRUMENT_METHODS)
+        : new Set(
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              draftPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            )
+          )
+
+    for (const method of PAYMENT_INSTRUMENT_METHODS) {
+      if (!allowedMethods.has(method)) continue
+      if (active.some((i) => i.method === method)) return true
+    }
+    return false
+  }, [allInstruments, draftPaymentMethods])
+
+  // Prune instrument selection when payment methods change
+  const prunePaymentInstrumentSelection = useCallback(
+    (
+      nextSelectedPaymentMethods: PaymentMethodSelectionKey[],
+      currentInstrumentSelection: PaymentInstrumentSelectionKey[]
+    ): PaymentInstrumentSelectionKey[] => {
+      if (currentInstrumentSelection.length === 0) return currentInstrumentSelection
+
+      const active = getActivePaymentInstruments(allInstruments)
+      const allowedMethods =
+        nextSelectedPaymentMethods.length === 0
+          ? new Set(PAYMENT_INSTRUMENT_METHODS)
+          : new Set(
+              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+              )
+            )
+
+      const allowedWithConfig = new Set<string>()
+      for (const method of allowedMethods) {
+        if (active.some((i) => i.method === method)) {
+          allowedWithConfig.add(method)
+        }
+      }
+
+      return currentInstrumentSelection.filter((key) => {
+        const method = key.split("::")[0]
+        return allowedWithConfig.has(method)
+      })
+    },
+    [allInstruments]
+  )
+
+  const handlePaymentMethodsChange = useCallback(
+    (next: PaymentMethodSelectionKey[]) => {
+      setDraftPaymentMethods(next)
+      setDraftPaymentInstruments((prev) => {
+        if (next.length === 0) return []
+        return prunePaymentInstrumentSelection(next, prev)
+      })
+    },
+    [prunePaymentInstrumentSelection]
+  )
+
+  const handleApply = useCallback(() => {
+    onTimeWindowChange(draftTimeWindow)
+    onCategoriesChange(draftCategories)
+    onPaymentMethodsChange(draftPaymentMethods)
+    onPaymentInstrumentsChange(draftPaymentInstruments)
+    onSearchChange(draftSearchQuery)
+    onAmountRangeChange(draftMinAmount, draftMaxAmount)
+    onClose()
+  }, [
+    draftTimeWindow,
+    draftCategories,
+    draftPaymentMethods,
+    draftPaymentInstruments,
+    draftSearchQuery,
+    draftMinAmount,
+    draftMaxAmount,
+    onTimeWindowChange,
+    onCategoriesChange,
+    onPaymentMethodsChange,
+    onPaymentInstrumentsChange,
+    onSearchChange,
+    onAmountRangeChange,
+    onClose,
+  ])
+
+  const handleResetDraft = useCallback(() => {
+    setDraftTimeWindow("all")
+    setDraftCategories([])
+    setDraftPaymentMethods([])
+    setDraftPaymentInstruments([])
+    setDraftSearchQuery("")
+    setDraftMinAmount(null)
+    setDraftMaxAmount(null)
+  }, [])
+
+  if (!open) return null
+
+  return (
+    <Sheet
+      modal
+      open={open}
+      onOpenChange={(isOpen: boolean) => {
+        if (!isOpen) handleApply()
+      }}
+      snapPoints={[90]}
+      dismissOnSnapToBottom
+    >
+      <Sheet.Overlay />
+      <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
+        <Sheet.Handle />
+
+        <YStack
+          gap="$3"
+          style={{ ...layoutStyles.contentContainer, flex: 1 } as ViewStyle}
+        >
+          <XStack style={layoutStyles.headerRow}>
+            <H4>{t("history.filterSheet.title")}</H4>
+            <XStack gap="$2" style={{ alignItems: "center" } as ViewStyle}>
+              <Button size="$3" chromeless onPress={handleResetDraft}>
+                {t("common.reset")}
+              </Button>
+              <Button
+                size="$3"
+                chromeless
+                icon={X}
+                onPress={handleApply}
+                aria-label={t("common.close")}
+              />
+            </XStack>
+          </XStack>
+
+          <ScrollView showsVerticalScrollIndicator={false} flex={1}>
+            <YStack gap="$2" pb="$6">
+              {!isHydrated && (
+                <Text color="$color" opacity={0.6} fontSize="$3">
+                  {t("history.filterSheet.loading")}
+                </Text>
+              )}
+
+              <CollapsibleSection title={t("history.filterSheet.time")} defaultOpen>
+                <TimeWindowSelector
+                  value={draftTimeWindow}
+                  onChange={setDraftTimeWindow}
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("history.filterSheet.search")}>
+                <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("history.filterSheet.amountRange")}>
+                <AmountRangeFilter
+                  minAmount={draftMinAmount}
+                  maxAmount={draftMaxAmount}
+                  onChange={(min, max) => {
+                    setDraftMinAmount(min)
+                    setDraftMaxAmount(max)
+                  }}
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("history.filterSheet.category")}>
+                <CategoryFilter
+                  selectedCategories={draftCategories}
+                  onChange={setDraftCategories}
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("history.filterSheet.paymentMethod")}>
+                <PaymentMethodFilter
+                  selected={draftPaymentMethods}
+                  onChange={handlePaymentMethodsChange}
+                />
+              </CollapsibleSection>
+
+              {showPaymentInstrumentFilter && (
+                <CollapsibleSection title={t("history.filterSheet.paymentInstrument")}>
+                  <PaymentInstrumentFilter
+                    instruments={allInstruments}
+                    selectedPaymentMethods={draftPaymentMethods}
+                    selected={draftPaymentInstruments}
+                    onChange={setDraftPaymentInstruments}
+                  />
+                </CollapsibleSection>
+              )}
+            </YStack>
+          </ScrollView>
+
+          <XStack
+            gap="$2"
+            style={
+              {
+                justifyContent: "flex-end",
+                paddingBottom: Math.max(insets.bottom, 8),
+                paddingTop: 8,
+              } as ViewStyle
+            }
+          >
+            <Button size="$4" themeInverse onPress={handleApply}>
+              {t("common.apply")}
+            </Button>
+          </XStack>
+        </YStack>
+      </Sheet.Frame>
+    </Sheet>
+  )
+})
