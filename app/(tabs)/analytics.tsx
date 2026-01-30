@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useMemo, useEffect } from "react"
+import { useState, useCallback, memo, useMemo } from "react"
 import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
@@ -26,10 +26,7 @@ import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFilte
 import { SlidersHorizontal } from "@tamagui/lucide-icons"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
-import {
-  loadAnalyticsFilters,
-  saveAnalyticsFilters,
-} from "../../services/analytics-filters-storage"
+import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 
@@ -114,53 +111,33 @@ const Header = memo(function Header() {
  */
 export default function AnalyticsScreen() {
   const { t } = useTranslation()
-  // Local state for time window (defaults to 7d per requirement 1.3)
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>("7d")
 
-  const [filtersHydrated, setFiltersHydrated] = useState(false)
+  // Use shared filter store
+  const {
+    filters,
+    activeCount,
+    isHydrated: filtersHydrated,
+    applyFilters,
+    setSelectedCategories,
+    setSelectedPaymentMethods,
+    setSelectedPaymentInstruments,
+    setSelectedCurrency,
+  } = useFilters()
+
+  // Initialize filter persistence (loads from storage on mount, provides save function)
+  const { save } = useFilterPersistence()
 
   // Filters sheet open state
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  // Local state for selected categories (empty = all categories)
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-
-  // Local state for selected payment methods (empty = all methods)
-  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<
-    PaymentMethodSelectionKey[]
-  >([])
-
-  // Local state for selected payment instruments (empty = all instruments)
-  const [selectedPaymentInstruments, setSelectedPaymentInstruments] = useState<
-    PaymentInstrumentSelectionKey[]
-  >([])
-
-  // Local state for selected currency
-  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    const hydrate = async () => {
-      try {
-        const stored = await loadAnalyticsFilters()
-        if (cancelled) return
-
-        setTimeWindow(stored.timeWindow)
-        setSelectedCategories(stored.selectedCategories)
-        setSelectedPaymentMethods(stored.selectedPaymentMethods)
-        setSelectedPaymentInstruments(stored.selectedPaymentInstruments)
-        setSelectedCurrency(stored.selectedCurrency)
-      } finally {
-        if (!cancelled) setFiltersHydrated(true)
-      }
-    }
-
-    hydrate()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  // Destructure filter values for convenience
+  const {
+    timeWindow,
+    selectedCategories,
+    selectedPaymentMethods,
+    selectedPaymentInstruments,
+    selectedCurrency,
+  } = filters
 
   // Get analytics data from focused hooks
   const {
@@ -188,13 +165,17 @@ export default function AnalyticsScreen() {
   const { statistics } = useAnalyticsStatistics(filteredExpenses, timeWindow, dateRange)
 
   // Handle category selection from pie chart segment tap - memoized
-  const handleCategorySelect = useCallback((category: string | null) => {
-    if (category) {
-      setSelectedCategories((prev) =>
-        prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-      )
-    }
-  }, [])
+  const handleCategorySelect = useCallback(
+    (category: string | null) => {
+      if (category) {
+        const newCategories = selectedCategories.includes(category)
+          ? selectedCategories.filter((c) => c !== category)
+          : [...selectedCategories, category]
+        setSelectedCategories(newCategories)
+      }
+    },
+    [selectedCategories, setSelectedCategories]
+  )
 
   const handlePaymentInstrumentSelect = useCallback(
     (key: PaymentInstrumentSelectionKey | null) => {
@@ -203,11 +184,13 @@ export default function AnalyticsScreen() {
         return
       }
 
-      setSelectedPaymentInstruments((prev) =>
-        prev.length === 1 && prev[0] === key ? [] : [key]
-      )
+      const newInstruments =
+        selectedPaymentInstruments.length === 1 && selectedPaymentInstruments[0] === key
+          ? []
+          : [key]
+      setSelectedPaymentInstruments(newInstruments)
     },
-    []
+    [selectedPaymentInstruments, setSelectedPaymentInstruments]
   )
 
   const selectedPaymentMethodForChart: PaymentMethodType | null =
@@ -250,13 +233,23 @@ export default function AnalyticsScreen() {
   const handlePaymentMethodsChange = useCallback(
     (next: PaymentMethodSelectionKey[]) => {
       setSelectedPaymentMethods(next)
-      setSelectedPaymentInstruments((prev) => {
-        // When payment methods are reset to "All", reset instruments to "All" too.
-        if (next.length === 0) return []
-        return prunePaymentInstrumentSelection(next, prev)
-      })
+      // When payment methods are reset to "All", reset instruments to "All" too.
+      if (next.length === 0) {
+        setSelectedPaymentInstruments([])
+      } else {
+        const newInstruments = prunePaymentInstrumentSelection(
+          next,
+          selectedPaymentInstruments
+        )
+        setSelectedPaymentInstruments(newInstruments)
+      }
     },
-    [prunePaymentInstrumentSelection]
+    [
+      prunePaymentInstrumentSelection,
+      selectedPaymentInstruments,
+      setSelectedPaymentMethods,
+      setSelectedPaymentInstruments,
+    ]
   )
 
   const handlePaymentMethodSelect = useCallback(
@@ -287,12 +280,6 @@ export default function AnalyticsScreen() {
   // Check if there's any data to display
   const hasData = filteredExpenses.length > 0
   const hasAnyExpenses = pieChartData.length > 0 || lineChartData.some((d) => d.value > 0)
-
-  const activeFilterCount =
-    (timeWindow !== "7d" ? 1 : 0) +
-    (selectedCategories.length > 0 ? 1 : 0) +
-    (selectedPaymentMethods.length > 0 ? 1 : 0) +
-    (selectedPaymentInstruments.length > 0 ? 1 : 0)
 
   // Helpers inside component to use translation hook
   const formatSelectedPaymentInstrumentLabel = useCallback(
@@ -481,27 +468,30 @@ export default function AnalyticsScreen() {
       selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
       selectedCurrency: string | null
     }) => {
-      setTimeWindow(next.timeWindow)
-      setSelectedCategories(next.selectedCategories)
-      setSelectedPaymentMethods(next.selectedPaymentMethods)
-      setSelectedCurrency(next.selectedCurrency)
-
       // When payment methods are reset to "All", ensure instruments reset too.
       const normalizedPaymentInstruments =
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
-      setSelectedPaymentInstruments(normalizedPaymentInstruments)
 
-      void saveAnalyticsFilters({
+      // Apply all filters at once to the store
+      applyFilters({
         timeWindow: next.timeWindow,
         selectedCategories: next.selectedCategories,
         selectedPaymentMethods: next.selectedPaymentMethods,
         selectedPaymentInstruments: normalizedPaymentInstruments,
         selectedCurrency: next.selectedCurrency,
-      }).catch((error) => console.warn("Failed to persist analytics filters:", error))
+        searchQuery: filters.searchQuery,
+        minAmount: filters.minAmount,
+        maxAmount: filters.maxAmount,
+      })
+
+      // Persist to storage
+      void save().catch((error) =>
+        console.warn("Failed to persist analytics filters:", error)
+      )
 
       setFiltersOpen(false)
     },
-    []
+    [applyFilters, save, filters.searchQuery, filters.minAmount, filters.maxAmount]
   )
 
   return (
@@ -542,8 +532,8 @@ export default function AnalyticsScreen() {
         >
           {!filtersHydrated
             ? t("analytics.filters.button")
-            : activeFilterCount > 0
-              ? `${t("analytics.filters.button")} (${activeFilterCount})`
+            : activeCount > 0
+              ? `${t("analytics.filters.button")} (${activeCount})`
               : t("analytics.filters.button")}
         </Button>
       </XStack>
