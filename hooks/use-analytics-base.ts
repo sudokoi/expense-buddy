@@ -2,6 +2,7 @@ import { useMemo, useCallback } from "react"
 import { useExpenses, useSettings } from "../stores/hooks"
 import { Expense } from "../types/expense"
 import type { PaymentInstrument } from "../types/payment-instrument"
+import type { DateRange } from "../types/analytics"
 import {
   TimeWindow,
   PaymentInstrumentSelectionKey,
@@ -15,11 +16,6 @@ import {
   getDateRangeForTimeWindow,
 } from "../utils/analytics-calculations"
 import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
-
-export interface DateRange {
-  start: Date
-  end: Date
-}
 
 export interface AnalyticsBaseResult {
   filteredExpenses: Expense[]

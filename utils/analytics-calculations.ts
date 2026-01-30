@@ -1,4 +1,5 @@
 import { Expense, PaymentMethodType } from "../types/expense"
+import type { DateRange } from "../types/analytics"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
@@ -222,12 +223,6 @@ export interface AnalyticsStatistics {
     amount: number
   } | null
   daysInPeriod: number
-}
-
-// Date range interface
-export interface DateRange {
-  start: Date
-  end: Date
 }
 
 /**

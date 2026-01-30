@@ -1,16 +1,12 @@
 import { useMemo } from "react"
 import { Expense } from "../types/expense"
+import type { DateRange } from "../types/analytics"
 import {
   AnalyticsStatistics,
   TimeWindow,
   calculateStatistics,
   getTimeWindowDays,
 } from "../utils/analytics-calculations"
-
-export interface DateRange {
-  start: Date
-  end: Date
-}
 
 export interface AnalyticsStatisticsResult {
   statistics: AnalyticsStatistics

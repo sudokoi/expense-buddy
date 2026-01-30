@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { useCategories } from "../stores/hooks"
 import { Expense } from "../types/expense"
 import type { PaymentInstrument } from "../types/payment-instrument"
+import type { DateRange } from "../types/analytics"
 import {
   PieChartDataItem,
   PaymentMethodChartDataItem,
@@ -15,11 +16,6 @@ import {
 } from "../utils/analytics-calculations"
 import { getLocale } from "../utils/date"
 import { TFunction } from "i18next"
-
-export interface DateRange {
-  start: Date
-  end: Date
-}
 
 export interface AnalyticsChartsResult {
   pieChartData: PieChartDataItem[]
