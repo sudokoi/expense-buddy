@@ -19,6 +19,20 @@
     - Charts and statistics automatically default to the most relevant currency
   - **Dynamic Locale Loading**: Only the active locale is bundled at startup (~60KB bundle size reduction), with other locales loaded on-demand when selected
 
+- **History Tab Filters** - Comprehensive filtering system with cross-tab synchronization
+  - **Search Filter**: Search across expense notes, categories, payment methods, and instrument nicknames
+  - **Amount Range Filter**: Filter expenses by minimum and maximum amounts
+  - **Time Window Filter**: Filter by 7d, 15d, 1m, 3m, 6m, 1y, or all time periods
+  - **Category Filter**: Multi-select expense categories
+  - **Payment Method Filter**: Multi-select payment methods (Cash, UPI, Cards, etc.)
+  - **Payment Instrument Filter**: Filter by saved cards/UPI IDs with nicknames
+  - **Cross-Tab Sync**: Filters applied in History automatically apply to Analytics and vice versa
+  - **Shared Persistence**: Filter state persisted across app restarts and shared between tabs
+  - **FlashList Virtualization**: Automatic virtualization for >100 expenses (better performance with large datasets)
+  - **Optimized Filtering**: Single-pass O(n) algorithm with O(1) Set lookups for instant results
+  - **Debounced Search**: 300ms debounce for responsive search without excessive re-filters
+  - **Zod Validation**: Schema validation with min ≤ max amount checking
+
 ### Patch Changes
 
 - Major architecture improvements and code quality enhancements:

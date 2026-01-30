@@ -27,7 +27,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
   - Expenses can reference a saved instrument by ID (CSV stays backward compatible)
 - **Default Payment Method**: Set a preferred payment method for faster entry
 - **Full CRUD**: Create, read, update, and delete expenses with ease
-- **History View**: Browse expenses organized by date with search and filter
+- **History View**: Browse expenses organized by date with comprehensive filters (time, amount, search, categories, methods, instruments) and cross-tab synchronization with Analytics
 
 ### 📈 Analytics & Insights
 
@@ -35,9 +35,12 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Category Breakdown**: See spending distribution across categories
 - **Payment Method Analysis**: Pie chart showing expense distribution by payment method
 - **Multi-Currency Support**: Analytics automatically groups expenses by currency; filter chips appear when multiple currencies are present
-- **Filters**: Filter analytics by category, payment method, currency, and (when applicable) saved instrument
+- **Advanced Filters**: Filter by time period, categories, payment methods, saved instruments, amount range, and search text
+- **Cross-Tab Filter Sync**: Filters applied in History automatically apply to Analytics and vice versa
 - **Instrument Breakdown**: See spending per card/UPI nickname for selected payment methods
 - **Time-based Analysis**: Track expenses over days/weeks/months plus 3m / 6m / 1y windows
+- **Amount Range Filtering**: Filter expenses by minimum and maximum amounts
+- **Search**: Search across expense notes, categories, payment methods, and instrument nicknames
 
 ### ☁️ GitHub Sync
 
