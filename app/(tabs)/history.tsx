@@ -48,6 +48,13 @@ import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
+  PAYMENT_INSTRUMENT_METHODS,
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  getActivePaymentInstruments,
+} from "../../services/payment-instruments"
+import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
+import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
@@ -65,10 +72,6 @@ import { CollapsibleSection } from "../../components/analytics/CollapsibleSectio
 import type { TimeWindow } from "../../utils/analytics/time"
 import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
-import {
-  PAYMENT_INSTRUMENT_METHODS,
-  getActivePaymentInstruments,
-} from "../../services/payment-instruments"
 import { filterExpensesByTimeWindow } from "../../utils/analytics/time"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -104,7 +107,7 @@ const layoutStyles = {
     marginTop: 16,
   } as ViewStyle,
   sectionHeader: {
-    paddingVertical: 8,
+    paddingBottom: 8,
   } as ViewStyle,
   expenseDetails: {
     alignItems: "center",
@@ -168,20 +171,32 @@ const FilterChip = React.memo(function FilterChip({
   onRemove: () => void
 }) {
   return (
-    <XStack style={layoutStyles.chip}>
-      <Text style={layoutStyles.chipText} color="$color" opacity={0.8}>
-        {label}
-      </Text>
-      <Button
-        size="$2"
-        chromeless
-        icon={X}
-        onPress={onRemove}
-        aria-label="Remove filter"
-      />
-    </XStack>
+    <Button
+      size="$2"
+      bordered
+      onPress={onRemove}
+      style={{ borderRadius: 999 }}
+      iconAfter={X}
+    >
+      <Button.Text numberOfLines={1}>{label}</Button.Text>
+    </Button>
   )
 })
+
+const INSTRUMENT_OTHERS_ID = "__others__"
+
+function methodShortLabel(method: string): string {
+  switch (method) {
+    case "Credit Card":
+      return "CC"
+    case "Debit Card":
+      return "DC"
+    case "UPI":
+      return "UPI"
+    default:
+      return method
+  }
+}
 
 export default function HistoryScreen() {
   const { t } = useTranslation()
@@ -373,61 +388,186 @@ export default function HistoryScreen() {
     return map
   }, [categories])
 
-  // Generate filter chips
+  // Helper functions for filter chips (matching analytics tab)
+  const formatListBreakdown = useCallback(
+    (items: string[]): string => {
+      const MAX_ITEMS = 3
+
+      const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
+      const visible = unique.slice(0, MAX_ITEMS)
+      const remaining = unique.length - visible.length
+
+      if (unique.length === 0) return t("analytics.timeWindow.all")
+      if (unique.length === 1) return unique[0]
+
+      return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+    },
+    [t]
+  )
+
+  const paymentMethodLabel = useCallback(
+    (key: PaymentMethodSelectionKey): string => {
+      if (key === "__none__") return t("analytics.chart.none")
+      return t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
+    },
+    [t]
+  )
+
+  const formatSelectedPaymentInstrumentLabel = useCallback(
+    (key: PaymentInstrumentSelectionKey, instruments: PaymentInstrument[]): string => {
+      const [method, instrumentId] = key.split("::")
+      const shortMethod = methodShortLabel(method)
+
+      if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
+
+      const inst = findInstrumentById(instruments, instrumentId)
+      if (!inst || inst.deletedAt) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
+
+      return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
+    },
+    [t]
+  )
+
+  const formatSelectedPaymentInstrumentsSummary = useCallback(
+    (keys: PaymentInstrumentSelectionKey[]): string => {
+      if (keys.length === 0) return t("analytics.timeWindow.all")
+      if (keys.length === 1) return "1"
+
+      const countsByMethod = new Map<string, number>()
+      for (const key of keys) {
+        const [method] = key.split("::")
+        const short = methodShortLabel(method)
+        countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
+      }
+
+      const parts = Array.from(countsByMethod.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([method, count]) => `${method} ${count}`)
+
+      const MAX_GROUPS = 3
+      const visible = parts.slice(0, MAX_GROUPS)
+      const remaining = parts.length - visible.length
+      const breakdown =
+        remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+
+      return `${keys.length} (${breakdown})`
+    },
+    [t]
+  )
+
+  // Check if payment instrument filter should be shown
+  const showPaymentInstrumentFilter = useMemo(() => {
+    const active = getActivePaymentInstruments(allInstruments)
+    const allowedMethods =
+      filters.selectedPaymentMethods.length === 0
+        ? new Set(PAYMENT_INSTRUMENT_METHODS)
+        : new Set(
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              filters.selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            )
+          )
+
+    for (const method of PAYMENT_INSTRUMENT_METHODS) {
+      if (!allowedMethods.has(method)) continue
+      if (active.some((i) => i.method === method)) return true
+    }
+    return false
+  }, [allInstruments, filters.selectedPaymentMethods])
+
+  // Generate filter chips (matching analytics tab style)
   const filterChips = useMemo(() => {
     const chips: Array<{ label: string; onRemove: () => void }> = []
 
-    if (filters.timeWindow !== "all") {
-      const timeLabels: Record<TimeWindow, string> = {
-        "7d": t("analytics.timeWindow.7d"),
-        "15d": t("analytics.timeWindow.15d"),
-        "1m": t("analytics.timeWindow.1m"),
-        "3m": t("analytics.timeWindow.3m"),
-        "6m": t("analytics.timeWindow.6m"),
-        "1y": t("analytics.timeWindow.1y"),
-        all: t("analytics.timeWindow.all"),
-      }
-      chips.push({
-        label: timeLabels[filters.timeWindow],
-        onRemove: () => setTimeWindow("all"),
-      })
-    }
+    // Time chip - always show
+    chips.push({
+      label: t("analytics.filters.time", {
+        window: t(`analytics.timeWindow.${filters.timeWindow}`),
+      }),
+      onRemove: () => setTimeWindow("all"),
+    })
 
-    if (filters.selectedCategories.length > 0) {
+    // Category chip - always show
+    if (filters.selectedCategories.length === 0) {
       chips.push({
-        label: `${filters.selectedCategories.length} ${t("settings.sections.categories")}`,
+        label: t("analytics.filters.category", {
+          category: t("analytics.timeWindow.all"),
+        }),
+        onRemove: () => setSelectedCategories([]),
+      })
+    } else if (filters.selectedCategories.length === 1) {
+      chips.push({
+        label: t("analytics.filters.category", {
+          category: filters.selectedCategories[0],
+        }),
+        onRemove: () => setSelectedCategories([]),
+      })
+    } else {
+      chips.push({
+        label: t("analytics.filters.category", {
+          category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories)})`,
+        }),
         onRemove: () => setSelectedCategories([]),
       })
     }
 
-    if (filters.selectedPaymentMethods.length > 0) {
+    // Payment method chip - always show
+    if (filters.selectedPaymentMethods.length === 0) {
       chips.push({
-        label: `${filters.selectedPaymentMethods.length} ${t("settings.sections.defaultPayment")}`,
+        label: t("analytics.filters.payment", {
+          method: t("analytics.timeWindow.all"),
+        }),
+        onRemove: () => setSelectedPaymentMethods([]),
+      })
+    } else if (filters.selectedPaymentMethods.length === 1) {
+      const only = filters.selectedPaymentMethods[0]
+      chips.push({
+        label: t("analytics.filters.payment", {
+          method: paymentMethodLabel(only),
+        }),
+        onRemove: () => setSelectedPaymentMethods([]),
+      })
+    } else {
+      chips.push({
+        label: t("analytics.filters.payment", {
+          method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map(paymentMethodLabel))})`,
+        }),
         onRemove: () => setSelectedPaymentMethods([]),
       })
     }
 
-    if (filters.selectedPaymentInstruments.length > 0) {
-      chips.push({
-        label: `${filters.selectedPaymentInstruments.length} ${t("instruments.title")}`,
-        onRemove: () => setSelectedPaymentInstruments([]),
-      })
-    }
-
-    if (filters.searchQuery.trim()) {
-      chips.push({
-        label: `"${filters.searchQuery}"`,
-        onRemove: () => setSearchQuery(""),
-      })
-    }
-
-    if (filters.minAmount !== null || filters.maxAmount !== null) {
-      const min = filters.minAmount !== null ? filters.minAmount : ""
-      const max = filters.maxAmount !== null ? filters.maxAmount : ""
-      chips.push({
-        label: `${min}-${max}`,
-        onRemove: () => setAmountRange(null, null),
-      })
+    // Payment instrument chip - only show when applicable
+    if (showPaymentInstrumentFilter) {
+      if (filters.selectedPaymentInstruments.length === 0) {
+        chips.push({
+          label: t("analytics.filters.instrument", {
+            instrument: t("analytics.timeWindow.all"),
+          }),
+          onRemove: () => setSelectedPaymentInstruments([]),
+        })
+      } else if (filters.selectedPaymentInstruments.length === 1) {
+        chips.push({
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentLabel(
+              filters.selectedPaymentInstruments[0],
+              allInstruments
+            ),
+          }),
+          onRemove: () => setSelectedPaymentInstruments([]),
+        })
+      } else {
+        chips.push({
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentsSummary(
+              filters.selectedPaymentInstruments
+            ),
+          }),
+          onRemove: () => setSelectedPaymentInstruments([]),
+        })
+      }
     }
 
     return chips
@@ -438,8 +578,12 @@ export default function HistoryScreen() {
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
-    setSearchQuery,
-    setAmountRange,
+    formatListBreakdown,
+    paymentMethodLabel,
+    formatSelectedPaymentInstrumentLabel,
+    formatSelectedPaymentInstrumentsSummary,
+    showPaymentInstrumentFilter,
+    allInstruments,
   ])
 
   // Memoized handlers for list item actions
@@ -759,17 +903,15 @@ export default function HistoryScreen() {
         </XStack>
 
         {/* Filter Chips */}
-        {filterChips.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={layoutStyles.chipsContainer}
-          >
-            {filterChips.map((chip, index) => (
-              <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
-            ))}
-          </ScrollView>
-        )}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8 } as any}
+        >
+          {filterChips.map((chip, index) => (
+            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+          ))}
+        </ScrollView>
 
         <YStack flex={1} style={layoutStyles.emptyContainer}>
           <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
@@ -825,17 +967,15 @@ export default function HistoryScreen() {
       </XStack>
 
       {/* Filter Chips */}
-      {filterChips.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={layoutStyles.chipsContainer}
-        >
-          {filterChips.map((chip, index) => (
-            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
-          ))}
-        </ScrollView>
-      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8 } as any}
+      >
+        {filterChips.map((chip, index) => (
+          <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+        ))}
+      </ScrollView>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
