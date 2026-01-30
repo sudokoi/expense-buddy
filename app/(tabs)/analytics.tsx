@@ -2,7 +2,11 @@ import { useState, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
-import { useAnalyticsData } from "../../hooks/use-analytics-data"
+import {
+  useAnalyticsBase,
+  useAnalyticsCharts,
+  useAnalyticsStatistics,
+} from "../../hooks/use-analytics-data"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import type { PaymentMethodSelectionKey } from "../../utils/analytics-calculations"
@@ -158,25 +162,30 @@ export default function AnalyticsScreen() {
     }
   }, [])
 
-  // Get analytics data from hook
+  // Get analytics data from focused hooks
   const {
     filteredExpenses,
-    pieChartData,
-    paymentMethodChartData,
-    paymentInstrumentChartData,
-    lineChartData,
-    statistics,
-    paymentInstruments,
-    isLoading,
     availableCurrencies,
     effectiveCurrency,
-  } = useAnalyticsData(
+    dateRange,
+    isLoading,
+    paymentInstruments,
+  } = useAnalyticsBase(
     timeWindow,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
     selectedCurrency
   )
+
+  const {
+    pieChartData,
+    paymentMethodChartData,
+    paymentInstrumentChartData,
+    lineChartData,
+  } = useAnalyticsCharts(filteredExpenses, dateRange, paymentInstruments, t)
+
+  const { statistics } = useAnalyticsStatistics(filteredExpenses, timeWindow, dateRange)
 
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback((category: string | null) => {
