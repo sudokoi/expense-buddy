@@ -18,10 +18,7 @@ function ProductItem({ product }: { product: Product }) {
   return (
     <View>
       {/* 4000x3000 image loaded for a 100x100 thumbnail */}
-      <Image
-        source={{ uri: product.imageUrl }}
-        style={{ width: 100, height: 100 }}
-      />
+      <Image source={{ uri: product.imageUrl }} style={{ width: 100, height: 100 }} />
       <Text>{product.name}</Text>
     </View>
   )
@@ -40,7 +37,7 @@ function ProductItem({ product }: { product: Product }) {
       <Image
         source={{ uri: thumbnailUrl }}
         style={{ width: 100, height: 100 }}
-        contentFit='cover'
+        contentFit="cover"
       />
       <Text>{product.name}</Text>
     </View>

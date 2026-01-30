@@ -185,11 +185,7 @@ function Composer({
 const ComposerContext = createContext<ComposerContextValue | null>(null)
 
 function ComposerProvider({ children, state, actions, meta }: ProviderProps) {
-  return (
-    <ComposerContext value={{ state, actions, meta }}>
-      {children}
-    </ComposerContext>
-  )
+  return <ComposerContext value={{ state, actions, meta }}>{children}</ComposerContext>
 }
 
 function ComposerFrame({ children }: { children: React.ReactNode }) {
@@ -282,10 +278,7 @@ function ChannelComposer({ channelId }: { channelId: string }) {
 
   return (
     <Composer.Frame>
-      <Composer.Input
-        value={state.input}
-        onChange={(text) => sync.updateInput(text)}
-      />
+      <Composer.Input value={state.input} onChange={(text) => sync.updateInput(text)} />
       <Composer.Submit onPress={() => sync.submit()} />
     </Composer.Frame>
   )
@@ -307,11 +300,7 @@ function ChannelProvider({
   const inputRef = useRef(null)
 
   return (
-    <Composer.Provider
-      state={state}
-      actions={{ update, submit }}
-      meta={{ inputRef }}
-    >
+    <Composer.Provider state={state} actions={{ update, submit }} meta={{ inputRef }}>
       {children}
     </Composer.Provider>
   )
@@ -613,7 +602,7 @@ function ForwardMessageDialog() {
 
 ```tsx
 function ForwardMessageDialog() {
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState("")
   return (
     <Dialog>
       <ForwardMessageComposer onInputChange={setInput} />
@@ -722,7 +711,7 @@ itself.
 <Composer
   isThread
   isEditing={false}
-  channelId='abc'
+  channelId="abc"
   showAttachments
   showFormatting={false}
 />
@@ -880,10 +869,7 @@ return (
 
 ```tsx
 // Render props work well when you need to pass data back
-<List
-  data={items}
-  renderItem={({ item, index }) => <Item item={item} index={index} />}
-/>
+<List data={items} renderItem={({ item, index }) => <Item item={item} index={index} />} />
 ```
 
 Use render props when the parent needs to provide data or state to the child.

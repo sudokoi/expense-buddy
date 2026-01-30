@@ -106,7 +106,12 @@ export default function DashboardScreen() {
       expensesByCurrency,
       settings.defaultCurrency
     )
-  }, [selectedCurrency, availableCurrencies, expensesByCurrency, settings.defaultCurrency])
+  }, [
+    selectedCurrency,
+    availableCurrencies,
+    expensesByCurrency,
+    settings.defaultCurrency,
+  ])
 
   const currencyExpenses = React.useMemo(() => {
     return expensesByCurrency.get(effectiveCurrency) || []
