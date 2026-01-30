@@ -1,6 +1,6 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
-import React, { useEffect, useCallback, useMemo } from "react"
+import { useEffect, useCallback, useMemo } from "react"
 import {
   AnalyticsFiltersState,
   DEFAULT_ANALYTICS_FILTERS,

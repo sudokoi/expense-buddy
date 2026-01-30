@@ -751,7 +751,7 @@ export default function HistoryScreen() {
           >
             {t("common.filters")}
             {activeCount > 0 && (
-              <Text fontSize="$2" fontWeight="bold" marginLeft="$1">
+              <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: 4 }}>
                 ({activeCount})
               </Text>
             )}
@@ -778,7 +778,7 @@ export default function HistoryScreen() {
           <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
             {t("history.noResultsSubtitle")}
           </Text>
-          <Button size="$4" onPress={handleResetFilters} marginTop="$4">
+          <Button size="$4" onPress={handleResetFilters} style={{ marginTop: 16 }}>
             {t("common.clearFilters")}
           </Button>
         </YStack>
@@ -817,7 +817,7 @@ export default function HistoryScreen() {
         >
           {t("common.filters")}
           {activeCount > 0 && (
-            <Text fontSize="$2" fontWeight="bold" marginLeft="$1">
+            <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: 4 }}>
               ({activeCount})
             </Text>
           )}
@@ -873,7 +873,13 @@ export default function HistoryScreen() {
       >
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
-          <Dialog.Content bordered elevate key="content" maxHeight="80%" gap="$4">
+          <Dialog.Content
+            bordered
+            elevate
+            key="content"
+            style={{ maxHeight: "80%" }}
+            gap="$4"
+          >
             <Dialog.Title size="$6">{t("history.editDialog.title")}</Dialog.Title>
             <Dialog.Description>{t("history.editDialog.description")}</Dialog.Description>
 
@@ -1113,7 +1119,7 @@ export default function HistoryScreen() {
         onPaymentInstrumentsChange={setSelectedPaymentInstruments}
         onSearchChange={setSearchQuery}
         onAmountRangeChange={setAmountRange}
-        onReset={handleResetFilters}
+        _onReset={handleResetFilters}
       />
 
       {/* List - FlashList for large datasets, SectionList for smaller ones */}
@@ -1122,7 +1128,7 @@ export default function HistoryScreen() {
           data={flattenedExpenses}
           renderItem={renderFlashListItem}
           keyExtractor={flashListKeyExtractor}
-          estimatedItemSize={80}
+          // Note: FlashList doesn't have estimatedItemSize prop, using getItemType instead
           contentContainerStyle={contentContainerStyle}
           showsVerticalScrollIndicator={false}
           ListFooterComponent={ListFooterComponent}
@@ -1354,7 +1360,7 @@ const FilterSheet = React.memo(function FilterSheet({
                 </Text>
               )}
 
-              <CollapsibleSection title={t("history.filterSheet.time")} defaultOpen>
+              <CollapsibleSection title={t("history.filterSheet.time")}>
                 <TimeWindowSelector
                   value={draftTimeWindow}
                   onChange={setDraftTimeWindow}
