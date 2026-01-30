@@ -136,14 +136,6 @@ export const useSettings = () => {
     selectEffectiveTheme(state.context)
   )
   const syncConfig = useSelector(settingsStore, (state) => state.context.syncConfig)
-  const paymentMethodSectionExpanded = useSelector(
-    settingsStore,
-    (state) => state.context.paymentMethodSectionExpanded
-  )
-  const paymentInstrumentsSectionExpanded = useSelector(
-    settingsStore,
-    (state) => state.context.paymentInstrumentsSectionExpanded
-  )
 
   const setTheme = useCallback(
     (theme: ThemePreference) => settingsStore.trigger.setTheme({ theme }),
@@ -187,17 +179,6 @@ export const useSettings = () => {
     [settingsStore]
   )
 
-  const setPaymentMethodExpanded = useCallback(
-    (expanded: boolean) => settingsStore.trigger.setPaymentMethodExpanded({ expanded }),
-    [settingsStore]
-  )
-
-  const setPaymentInstrumentsExpanded = useCallback(
-    (expanded: boolean) =>
-      settingsStore.trigger.setPaymentInstrumentsExpanded({ expanded }),
-    [settingsStore]
-  )
-
   const saveSyncConfig = useCallback(
     (config: SyncConfig) => settingsStore.trigger.saveSyncConfig({ config }),
     [settingsStore]
@@ -228,8 +209,6 @@ export const useSettings = () => {
     autoSyncEnabled: settings.autoSyncEnabled,
     autoSyncTiming: settings.autoSyncTiming,
     syncConfig,
-    paymentMethodSectionExpanded,
-    paymentInstrumentsSectionExpanded,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
@@ -238,8 +217,6 @@ export const useSettings = () => {
     updateSettings,
     replaceSettings,
     clearSettingsChangeFlag,
-    setPaymentMethodExpanded,
-    setPaymentInstrumentsExpanded,
     saveSyncConfig,
     clearSyncConfig,
     setDefaultCurrency,
@@ -390,5 +367,37 @@ export const useCategories = () => {
     deleteCategory,
     reorderCategories,
     replaceCategories,
+  }
+}
+
+// UI State hooks
+export const useUIState = () => {
+  const { uiStateStore } = useStoreContext()
+
+  const paymentMethodSectionExpanded = useSelector(
+    uiStateStore,
+    (state) => state.context.paymentMethodSectionExpanded
+  )
+  const paymentInstrumentsSectionExpanded = useSelector(
+    uiStateStore,
+    (state) => state.context.paymentInstrumentsSectionExpanded
+  )
+
+  const setPaymentMethodExpanded = useCallback(
+    (expanded: boolean) => uiStateStore.trigger.setPaymentMethodExpanded({ expanded }),
+    [uiStateStore]
+  )
+
+  const setPaymentInstrumentsExpanded = useCallback(
+    (expanded: boolean) =>
+      uiStateStore.trigger.setPaymentInstrumentsExpanded({ expanded }),
+    [uiStateStore]
+  )
+
+  return {
+    paymentMethodSectionExpanded,
+    paymentInstrumentsSectionExpanded,
+    setPaymentMethodExpanded,
+    setPaymentInstrumentsExpanded,
   }
 }

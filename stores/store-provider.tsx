@@ -20,6 +20,11 @@ import {
   initializeSettingsStore,
 } from "./settings-store"
 import {
+  uiStateStore as defaultUIStateStore,
+  UIStateStore,
+  initializeUIStateStore,
+} from "./ui-state-store"
+import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
 } from "./notification-store"
@@ -31,6 +36,7 @@ interface StoreContextValue {
   expenseStore: ExpenseStore
   settingsStore: SettingsStore
   notificationStore: NotificationStore
+  uiStateStore: UIStateStore
   syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
@@ -43,6 +49,7 @@ interface StoreProviderProps {
   expenseStore?: ExpenseStore
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
+  uiStateStore?: UIStateStore
   syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
   // Skip initialization (for testing)
@@ -54,6 +61,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   expenseStore = defaultExpenseStore,
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
+  uiStateStore = defaultUIStateStore,
   syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
@@ -104,6 +112,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
 
       initializeSettingsStore()
       initializeExpenseStore()
+      initializeUIStateStore()
     })()
   }, [skipInitialization])
 
@@ -143,10 +152,18 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       expenseStore,
       settingsStore,
       notificationStore,
+      uiStateStore,
       syncActor,
       githubAuthActor,
     }),
-    [expenseStore, settingsStore, notificationStore, syncActor, githubAuthActor]
+    [
+      expenseStore,
+      settingsStore,
+      notificationStore,
+      uiStateStore,
+      syncActor,
+      githubAuthActor,
+    ]
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

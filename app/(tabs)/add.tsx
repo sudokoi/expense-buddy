@@ -7,6 +7,7 @@ import {
   useSettings,
   useCategories,
   useNotifications,
+  useUIState,
 } from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
@@ -77,9 +78,8 @@ export default function AddExpenseScreen() {
     updateSettings,
     defaultPaymentMethod,
     isLoading: isSettingsLoading,
-    paymentMethodSectionExpanded,
-    setPaymentMethodExpanded,
   } = useSettings()
+  const { paymentMethodSectionExpanded, setPaymentMethodExpanded } = useUIState()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 

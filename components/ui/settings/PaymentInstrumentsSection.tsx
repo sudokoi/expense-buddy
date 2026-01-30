@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Label, Accordion } from "tamagui"
 import { Alert, ViewStyle } from "react-native"
 import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
-import { useSettings } from "../../../stores/hooks"
+import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
   formatPaymentInstrumentLabel,
@@ -50,12 +50,9 @@ function upsertInstrument(
 
 export function PaymentInstrumentsSection() {
   const { t } = useTranslation()
-  const {
-    settings,
-    updateSettings,
-    paymentInstrumentsSectionExpanded,
-    setPaymentInstrumentsExpanded,
-  } = useSettings()
+  const { settings, updateSettings } = useSettings()
+  const { paymentInstrumentsSectionExpanded, setPaymentInstrumentsExpanded } =
+    useUIState()
 
   const instruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
   const active = useMemo(() => getActivePaymentInstruments(instruments), [instruments])

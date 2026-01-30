@@ -29,12 +29,6 @@ import { changeLanguage } from "../i18n"
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
 
-// AsyncStorage key for payment method section expanded state
-const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
-
-// AsyncStorage key for payment instruments section expanded state
-const PAYMENT_INSTRUMENTS_EXPANDED_KEY = "payment_instruments_section_expanded"
-
 export const settingsStore = createStore({
   context: {
     settings: DEFAULT_SETTINGS,
@@ -43,8 +37,6 @@ export const settingsStore = createStore({
     syncedSettingsHash: null as string | null,
     systemColorScheme: (Appearance.getColorScheme() ?? "light") as "light" | "dark",
     syncConfig: null as SyncConfig | null,
-    paymentMethodSectionExpanded: false,
-    paymentInstrumentsSectionExpanded: false,
   },
 
   on: {
@@ -55,8 +47,6 @@ export const settingsStore = createStore({
         settingsSyncState: SettingsSyncState
         syncedSettingsHash: string | null
         syncConfig?: SyncConfig | null
-        paymentMethodSectionExpanded?: boolean
-        paymentInstrumentsSectionExpanded?: boolean
       },
       enqueue
     ) => {
@@ -74,11 +64,6 @@ export const settingsStore = createStore({
         syncedSettingsHash: event.syncedSettingsHash,
         isLoading: false,
         syncConfig: event.syncConfig ?? context.syncConfig,
-        paymentMethodSectionExpanded:
-          event.paymentMethodSectionExpanded ?? context.paymentMethodSectionExpanded,
-        paymentInstrumentsSectionExpanded:
-          event.paymentInstrumentsSectionExpanded ??
-          context.paymentInstrumentsSectionExpanded,
       }
     },
 
@@ -371,36 +356,6 @@ export const settingsStore = createStore({
       return {
         ...context,
         syncConfig: null,
-      }
-    },
-
-    // Payment method section expanded state
-    setPaymentMethodExpanded: (context, event: { expanded: boolean }, enqueue) => {
-      enqueue.effect(async () => {
-        await AsyncStorage.setItem(
-          PAYMENT_METHOD_EXPANDED_KEY,
-          event.expanded ? "true" : "false"
-        )
-      })
-
-      return {
-        ...context,
-        paymentMethodSectionExpanded: event.expanded,
-      }
-    },
-
-    // Payment instruments section expanded state
-    setPaymentInstrumentsExpanded: (context, event: { expanded: boolean }, enqueue) => {
-      enqueue.effect(async () => {
-        await AsyncStorage.setItem(
-          PAYMENT_INSTRUMENTS_EXPANDED_KEY,
-          event.expanded ? "true" : "false"
-        )
-      })
-
-      return {
-        ...context,
-        paymentInstrumentsSectionExpanded: event.expanded,
       }
     },
 
@@ -701,17 +656,11 @@ Appearance.addChangeListener(({ colorScheme }) => {
 export async function initializeSettingsStore(): Promise<void> {
   try {
     // Load all settings in parallel
-    const [settings, syncedSettingsHash, syncConfig, expandedValue, instrumentsExpanded] =
-      await Promise.all([
-        loadSettings(),
-        getSettingsHash(),
-        loadSyncConfigFromStorage(),
-        AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
-        AsyncStorage.getItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY),
-      ])
-
-    const paymentMethodSectionExpanded = expandedValue === "true"
-    const paymentInstrumentsSectionExpanded = instrumentsExpanded === "true"
+    const [settings, syncedSettingsHash, syncConfig] = await Promise.all([
+      loadSettings(),
+      getSettingsHash(),
+      loadSyncConfigFromStorage(),
+    ])
 
     // Compute initial sync state by comparing current settings against synced hash
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
@@ -721,8 +670,6 @@ export async function initializeSettingsStore(): Promise<void> {
       settingsSyncState,
       syncedSettingsHash,
       syncConfig,
-      paymentMethodSectionExpanded,
-      paymentInstrumentsSectionExpanded,
     })
   } catch (error) {
     console.warn("Failed to initialize settings store:", error)
@@ -731,8 +678,6 @@ export async function initializeSettingsStore(): Promise<void> {
       settingsSyncState: "synced",
       syncedSettingsHash: null,
       syncConfig: null,
-      paymentMethodSectionExpanded: false,
-      paymentInstrumentsSectionExpanded: false,
     })
   }
 }
