@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { TimeWindow } from "../utils/analytics-calculations"
 import type { PaymentInstrumentSelectionKey } from "../utils/analytics-calculations"
-import type { PaymentMethodSelectionKey } from "../components/analytics/PaymentMethodFilter"
+import type { PaymentMethodSelectionKey } from "../utils/analytics-calculations"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
 const ANALYTICS_FILTERS_KEY = "analytics_filters_v1"
@@ -11,6 +11,7 @@ export interface AnalyticsFiltersState {
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
+  selectedCurrency: string | null
 }
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
@@ -18,6 +19,7 @@ export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
   selectedCategories: [],
   selectedPaymentMethods: [],
   selectedPaymentInstruments: [],
+  selectedCurrency: null,
 }
 
 const ALLOWED_TIME_WINDOWS: TimeWindow[] = ["7d", "15d", "1m", "3m", "6m", "1y", "all"]
@@ -59,6 +61,8 @@ export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
       selectedPaymentInstruments: asStringArray(
         parsed.selectedPaymentInstruments
       ) as PaymentInstrumentSelectionKey[],
+      selectedCurrency:
+        typeof parsed.selectedCurrency === "string" ? parsed.selectedCurrency : null,
     }
 
     // Normalize: if payment methods are "All", instruments must also be "All".

@@ -560,7 +560,7 @@ export default function HistoryScreen() {
                         )
                       }
                       placeholder={t("history.editDialog.fields.amountPlaceholder")}
-                      keyboardType="numeric"
+                      keyboardType="default"
                     />
                   </XStack>
                   {expressionPreview && (

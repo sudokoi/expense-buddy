@@ -65,3 +65,42 @@ export function getCurrencySymbol(currencyCode: string): string {
     return currencyCode
   }
 }
+
+/**
+ * Computes the effective currency based on user selection and available data.
+ * Priority order:
+ * 1. User's selected currency (if available in expenses)
+ * 2. Only available currency (if exactly one)
+ * 3. Settings default currency (if available in expenses)
+ * 4. First available currency, or settings default as final fallback
+ *
+ * @param selectedCurrency - User's explicit currency selection (null = auto)
+ * @param availableCurrencies - Array of available currency codes from expenses
+ * @param expensesByCurrency - Map of currency code to expenses
+ * @param settingsDefaultCurrency - Default currency from settings
+ * @returns The effective currency code to use
+ */
+export function computeEffectiveCurrency(
+  selectedCurrency: string | null,
+  availableCurrencies: string[],
+  expensesByCurrency: Map<string, unknown>,
+  settingsDefaultCurrency: string
+): string {
+  // If user explicitly selected a currency and it's available, use it
+  if (selectedCurrency && expensesByCurrency.has(selectedCurrency)) {
+    return selectedCurrency
+  }
+
+  // If only one currency is available, use it (auto-select)
+  if (availableCurrencies.length === 1) {
+    return availableCurrencies[0]
+  }
+
+  // Default to settings default currency if available in the data
+  if (expensesByCurrency.has(settingsDefaultCurrency)) {
+    return settingsDefaultCurrency
+  }
+
+  // Fallback to the first available currency, or default if no data
+  return availableCurrencies[0] || settingsDefaultCurrency
+}

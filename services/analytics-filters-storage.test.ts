@@ -49,6 +49,7 @@ describe("analytics-filters-storage", () => {
       selectedPaymentMethods: [],
       // Should be normalized to [] when payment methods are "All"
       selectedPaymentInstruments: ["UPI::__others__"],
+      selectedCurrency: "USD",
     })
 
     const key = analyticsFiltersStorageKeyForTests()
@@ -61,6 +62,7 @@ describe("analytics-filters-storage", () => {
       selectedCategories: ["Food"],
       selectedPaymentMethods: [],
       selectedPaymentInstruments: [],
+      selectedCurrency: "USD",
     })
   })
 
@@ -70,6 +72,7 @@ describe("analytics-filters-storage", () => {
       selectedCategories: ["Food", "Travel"],
       selectedPaymentMethods: ["Cash"],
       selectedPaymentInstruments: ["Credit Card::__others__"],
+      selectedCurrency: "EUR",
     }
 
     mockStorage.set(analyticsFiltersStorageKeyForTests(), JSON.stringify(stored))

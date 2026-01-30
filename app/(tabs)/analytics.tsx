@@ -5,7 +5,7 @@ import { TimeWindow } from "../../utils/analytics-calculations"
 import { useAnalyticsData } from "../../hooks/use-analytics-data"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
-import type { PaymentMethodSelectionKey } from "../../components/analytics/PaymentMethodFilter"
+import type { PaymentMethodSelectionKey } from "../../utils/analytics-calculations"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
@@ -146,6 +146,7 @@ export default function AnalyticsScreen() {
         setSelectedCategories(stored.selectedCategories)
         setSelectedPaymentMethods(stored.selectedPaymentMethods)
         setSelectedPaymentInstruments(stored.selectedPaymentInstruments)
+        setSelectedCurrency(stored.selectedCurrency)
       } finally {
         if (!cancelled) setFiltersHydrated(true)
       }
@@ -486,6 +487,7 @@ export default function AnalyticsScreen() {
         selectedCategories: next.selectedCategories,
         selectedPaymentMethods: next.selectedPaymentMethods,
         selectedPaymentInstruments: normalizedPaymentInstruments,
+        selectedCurrency: next.selectedCurrency,
       }).catch((error) => console.warn("Failed to persist analytics filters:", error))
 
       setFiltersOpen(false)
@@ -607,7 +609,6 @@ export default function AnalyticsScreen() {
         selectedCategories={selectedCategories}
         selectedPaymentMethods={selectedPaymentMethods}
         paymentInstruments={paymentInstruments}
-        selectedPaymentInstruments={selectedPaymentInstruments}
         selectedPaymentInstruments={selectedPaymentInstruments}
         availableCurrencies={availableCurrencies}
         selectedCurrency={selectedCurrency}

@@ -18,6 +18,7 @@ import {
   formatCurrency,
   getCurrencySymbol,
   getFallbackCurrency,
+  computeEffectiveCurrency,
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
 import { useSettings } from "../../stores/hooks"
@@ -99,26 +100,13 @@ export default function DashboardScreen() {
 
   // Determine effective currency
   const effectiveCurrency = React.useMemo(() => {
-    // If user explicitly selected a currency and it's available, use it
-    if (selectedCurrency && expensesByCurrency.has(selectedCurrency)) {
-      return selectedCurrency
-    }
-    // If only one currency is available, use it (auto-select)
-    if (availableCurrencies.length === 1) {
-      return availableCurrencies[0]
-    }
-    // Default to settings default currency if available in the data
-    if (expensesByCurrency.has(settings.defaultCurrency)) {
-      return settings.defaultCurrency
-    }
-    // Fallback to the first available currency, or default if no data
-    return availableCurrencies[0] || settings.defaultCurrency
-  }, [
-    selectedCurrency,
-    expensesByCurrency,
-    availableCurrencies,
-    settings.defaultCurrency,
-  ])
+    return computeEffectiveCurrency(
+      selectedCurrency,
+      availableCurrencies,
+      expensesByCurrency,
+      settings.defaultCurrency
+    )
+  }, [selectedCurrency, availableCurrencies, expensesByCurrency, settings.defaultCurrency])
 
   const currencyExpenses = React.useMemo(() => {
     return expensesByCurrency.get(effectiveCurrency) || []
