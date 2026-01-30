@@ -69,7 +69,11 @@
     "removeLabel": "{{label}}を削除",
     "optional": "(任意)",
     "all": "すべて",
-    "none": "なし"
+    "none": "なし",
+    "filters": "フィルター",
+    "clearFilters": "フィルターをクリア",
+    "reset": "リセット",
+    "apply": "適用"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
@@ -110,7 +114,19 @@
     "loading": "読み込み中...",
     "updated": "支出を更新しました",
     "deleted": "支出を削除しました",
-    "loadError": "支出の読み込みに失敗しました"
+    "loadError": "支出の読み込みに失敗しました",
+    "noResultsTitle": "一致する支出がありません",
+    "noResultsSubtitle": "フィルターを調整してみてください",
+    "filterSheet": {
+      "title": "フィルター",
+      "loading": "読み込み中...",
+      "time": "期間",
+      "search": "検索",
+      "amountRange": "金額範囲",
+      "category": "カテゴリー",
+      "paymentMethod": "支払方法",
+      "paymentInstrument": "支払手段"
+    }
   },
   "add": {
     "title": "新しい支出を追加",

@@ -69,7 +69,11 @@
     "removeLabel": "Remove {{label}}",
     "optional": "(Optional)",
     "all": "All",
-    "none": "None"
+    "none": "None",
+    "filters": "Filters",
+    "clearFilters": "Clear Filters",
+    "reset": "Reset",
+    "apply": "Apply"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -110,7 +114,19 @@
     "loading": "Loading...",
     "updated": "Expense updated",
     "deleted": "Expense deleted",
-    "loadError": "Failed to load more expenses"
+    "loadError": "Failed to load more expenses",
+    "noResultsTitle": "No matching expenses",
+    "noResultsSubtitle": "Try adjusting your filters",
+    "filterSheet": {
+      "title": "Filters",
+      "loading": "Loading...",
+      "time": "Time Period",
+      "search": "Search",
+      "amountRange": "Amount Range",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "paymentInstrument": "Payment Instrument"
+    }
   },
   "add": {
     "title": "Add New Expense",

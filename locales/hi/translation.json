@@ -69,7 +69,11 @@
     "removeLabel": "{{label}} हटाएं",
     "optional": "(वैकल्पिक)",
     "all": "सभी",
-    "none": "कोई नहीं"
+    "none": "कोई नहीं",
+    "filters": "फिल्टर",
+    "clearFilters": "फिल्टर साफ़ करें",
+    "reset": "रीसेट",
+    "apply": "लागू करें"
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",
@@ -110,7 +114,19 @@
     "loading": "लोड हो रहा है...",
     "updated": "व्यय अपडेट किया गया",
     "deleted": "व्यय हटाया गया",
-    "loadError": "अधिक खर्च लोड करने में विफल"
+    "loadError": "अधिक खर्च लोड करने में विफल",
+    "noResultsTitle": "कोई मिलान खर्च नहीं",
+    "noResultsSubtitle": "अपने फिल्टर समायोजित करने का प्रयास करें",
+    "filterSheet": {
+      "title": "फिल्टर",
+      "loading": "लोड हो रहा है...",
+      "time": "समय अवधि",
+      "search": "खोज",
+      "amountRange": "राशि सीमा",
+      "category": "श्रेणी",
+      "paymentMethod": "भुगतान विधि",
+      "paymentInstrument": "भुगतान साधन"
+    }
   },
   "add": {
     "title": "नया व्यय जोड़ें",
