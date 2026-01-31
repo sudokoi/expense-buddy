@@ -1,17 +1,20 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store/react"
-import { useEffect, useCallback, useMemo } from "react"
+import { useEffect, useCallback, useMemo, useRef } from "react"
 import {
   AnalyticsFiltersState,
   DEFAULT_ANALYTICS_FILTERS,
   loadAnalyticsFilters,
   saveAnalyticsFilters,
 } from "../services/analytics-filters-storage"
-import type { TimeWindow } from "../utils/analytics/time"
 import type {
+  TimeWindow,
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
-} from "../utils/analytics/filters"
+} from "../types/analytics"
+
+// Debounce delay for search queries (ms)
+const SEARCH_DEBOUNCE_MS = 300
 
 interface FilterContext extends AnalyticsFiltersState {
   isHydrated: boolean
@@ -196,8 +199,26 @@ export function useFilters() {
     filterStore.trigger.setSelectedCurrency({ currency })
   }, [])
 
+  // Debounced search query to reduce re-renders while typing
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const setSearchQuery = useCallback((query: string) => {
-    filterStore.trigger.setSearchQuery({ query })
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    // Set new timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      filterStore.trigger.setSearchQuery({ query })
+    }, SEARCH_DEBOUNCE_MS)
+  }, [])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
   }, [])
 
   const setAmountRange = useCallback((min: number | null, max: number | null) => {

@@ -36,6 +36,19 @@
 ### Patch Changes
 
 - Major architecture improvements and code quality enhancements:
+  - **Architecture Documentation**
+    - Created comprehensive [ARCHITECTURE.md](./ARCHITECTURE.md) documenting store patterns, hook decomposition, and performance optimizations
+    - Added mermaid diagrams for store relationships and data flow
+    - Documented when to use each store type (Filter, UI State, Settings)
+    - Added migration guide for transitioning from composite hooks to focused hooks
+  - **Performance Optimizations**
+    - **Single-Pass Filtering**: Replaced sequential filtering (O(n×m)) with optimized `applyAllFilters()` (O(n)) in both history and analytics
+    - **Debounced Search**: Added 300ms debounce to search queries in filter store to reduce re-renders while typing
+    - **Eliminated Code Duplication**: Removed duplicate `resolveInstrumentKeyForExpense` function (~30 lines), now shared between filters and aggregations
+  - **Code Organization**
+    - **Extracted FilterSheet Component**: Moved 280-line inline component from `history.tsx` to dedicated `components/history/FilterSheet.tsx`
+    - **Type Consolidation**: Centralized all analytics types in `types/analytics.ts` (single source of truth)
+    - **Import Updates**: Updated all imports to use consolidated type barrel exports
   - **State Management Refactoring**
     - Extracted UI state (section expansion states) into dedicated `ui-state-store.ts` for device-specific preferences
     - Added `createSettingUpdater()` factory function to eliminate ~120 lines of repetitive boilerplate in settings store
@@ -58,8 +71,10 @@
     - Added `selectedCurrency` to analytics filters persistence (now survives app restarts)
     - Removed duplicate i18n storage (now solely managed by settings store)
   - **Testing**
-    - Added comprehensive tests for `computeEffectiveCurrency` utility covering all edge cases
-    - All 572 tests passing, no breaking changes
+    - Added property-based tests for filter functions (`applyAllFilters`, `resolveInstrumentKeyForExpense`)
+    - Added property-based tests for currency utilities (`getFallbackCurrency`, `getCurrencySymbol`, `computeEffectiveCurrency`)
+    - Added property-based tests for analytics calculations (`groupExpensesByCurrency`, `getDateRangeForTimeWindow`)
+    - All tests passing, no breaking changes
     - Full backward compatibility maintained
 
 ## 2.1.4

@@ -122,7 +122,9 @@ export const StatisticsCards = memo(function StatisticsCards({
             adjustsFontSizeToFit
             minimumFontScale={0.7}
           >
-            {statistics.highestCategory?.category ?? "—"}
+            {statistics.highestCategory?.category === "Other"
+              ? t("settings.categories.other")
+              : (statistics.highestCategory?.category ?? "—")}
           </H4>
           {statistics.highestCategory && (
             <Text fontSize="$2" color={CARD_COLORS.orange.text}>

@@ -23,7 +23,7 @@ export function makePaymentInstrumentSelectionKey(
   return `${method}::${instrumentId ?? INSTRUMENT_OTHERS_ID}`
 }
 
-function resolveInstrumentKeyForExpense(
+export function resolveInstrumentKeyForExpense(
   expense: Expense,
   instruments: PaymentInstrument[]
 ): {

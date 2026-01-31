@@ -208,6 +208,8 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 ## 🏗️ Architecture
 
+Expense Buddy follows a modular architecture with clear separation of concerns:
+
 ### Tech Stack
 
 - **Framework**: React Native with Expo
@@ -222,66 +224,17 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Error Handling**: Centralized error utilities with classification
 - **Type Safety**: Comprehensive TypeScript with ServiceResult pattern
 
-### UI Component Library
+### 📚 Architecture Documentation
 
-The app includes a comprehensive set of reusable styled components:
+For detailed architecture documentation including:
 
-**Core UI Components** (`components/ui/`):
+- Store patterns and when to use each store type
+- Hook decomposition strategy
+- Performance optimization rationale
+- Single-pass filtering algorithm
+- Migration guides
 
-| Component                         | Description                                                |
-| --------------------------------- | ---------------------------------------------------------- |
-| `AmountText`                      | Displays expense/income amounts with semantic colors       |
-| `CategoryCard`                    | Selectable category card with color theming                |
-| `CategoryIcon`                    | Circular icon container with category color                |
-| `ExpenseRow`                      | Shared, memoized expense row UI (used across lists)        |
-| `ExpenseCard`                     | Card wrapper for expense list items                        |
-| `ScreenContainer`                 | Scrollable screen wrapper with consistent padding          |
-| `SectionHeader`                   | Styled section title text                                  |
-| `SettingsSection`                 | Card wrapper for settings groups                           |
-| `ThemeSelector`                   | Theme preference selector (light/dark/system)              |
-| `DefaultPaymentMethodSelector`    | Payment method preference selector                         |
-| `PaymentMethodCard`               | Selectable payment method display card                     |
-| `CategoryFormModal`               | Modal for creating/editing custom categories               |
-| `AppSheetScaffold`                | Shared layout wrapper for Tamagui `Sheet` screens/modals   |
-| `ColorPickerSheet`                | Bottom sheet for selecting category colors                 |
-| `DynamicCategoryIcon`             | Runtime icon rendering for custom categories               |
-| `UpdateBanner`                    | Non-intrusive update notification banner                   |
-| `ChangelogSheet`                  | One-time “What’s New” sheet shown after updates            |
-| `PaymentInstrumentInlineDropdown` | Inline selector to pick a saved instrument or enter digits |
-| `PaymentInstrumentFormModal`      | Create/edit a saved payment instrument                     |
-
-### Local Expense Storage
-
-Expenses are stored locally using AsyncStorage.
-
-- The app uses an incremental storage layout (index + per-expense keys) to avoid rewriting the entire expense dataset on every add/edit/delete.
-- A one-time automatic migration runs on startup if legacy storage is detected.
-- GitHub sync format is unchanged (still daily CSV files); this is purely on-device storage.
-
-**Settings Components** (`components/ui/settings/`):
-
-| Component                   | Description                                  |
-| --------------------------- | -------------------------------------------- |
-| `AppInfoSection`            | App version and build information display    |
-| `AutoSyncSection`           | Auto-sync configuration with timing controls |
-| `GitHubConfigSection`       | GitHub repository and token configuration    |
-| `PaymentInstrumentsSection` | Add/edit/remove saved cards and UPI IDs      |
-
-**Analytics Components** (`components/analytics/`):
-
-| Component                           | Description                               |
-| ----------------------------------- | ----------------------------------------- |
-| `PaymentMethodPieChart`             | Payment method breakdown visualization    |
-| `PaymentMethodFilter`               | Payment method chip filter                |
-| `AnalyticsFiltersSheet`             | Analytics filters sheet with Apply action |
-| `CollapsibleSection`                | Collapsible chart wrapper with headers    |
-| `CategoryFilter`                    | Category selection filter for analytics   |
-| `PaymentInstrumentFilter`           | Instrument chip filter (contextual)       |
-| `TimeWindowSelector`                | Time window picker for analytics          |
-| `PaymentInstrumentPieChart`         | Instrument breakdown visualization        |
-| `PaymentInstrumentBreakdownSection` | Instrument breakdown section with filters |
-
-All components use Tamagui's token-based styling system with the `getColorValue()` helper for type-safe theme color extraction.
+**See [ARCHITECTURE.md](./ARCHITECTURE.md)**
 
 ### Project Structure
 
@@ -289,64 +242,84 @@ All components use Tamagui's token-based styling system with the `getColorValue(
 expense-buddy/
 ├── app/                    # Expo Router pages
 │   ├── (tabs)/            # Tab navigation screens
-│   │   ├── index.tsx      # Dashboard with charts
-│   │   ├── add.tsx        # Add expense screen
-│   │   ├── history.tsx    # Expense history with edit/delete
-│   │   ├── settings.tsx   # Sync settings
-│   │   └── _layout.tsx    # Tab layout
 │   ├── day/[date].tsx     # Day detail view
 │   └── _layout.tsx        # Root layout
 ├── components/            # Reusable components
 │   ├── analytics/        # Analytics chart components
-│   │   ├── PaymentMethodPieChart.tsx  # Payment method breakdown
-│   │   └── CollapsibleSection.tsx     # Collapsible chart wrapper
 │   ├── ui/               # Styled UI components
-│   │   ├── AmountText.tsx     # Styled amount display
-│   │   ├── CategoryCard.tsx   # Category selection card
-│   │   ├── CategoryIcon.tsx   # Category icon with background
-│   │   ├── ExpenseCard.tsx    # Expense list item card
-│   │   ├── ScreenContainer.tsx # Screen wrapper with padding
-│   │   ├── SectionHeader.tsx  # Section title component
-│   │   ├── DefaultPaymentMethodSelector.tsx # Payment method preference
-│   │   ├── PaymentMethodCard.tsx  # Payment method display card
-│   │   └── index.ts           # Component exports
-│   ├── Provider.tsx       # App providers
-│   ├── NotificationStack.tsx
-│   └── SyncIndicator.tsx
+│   └── history/          # History-specific components
 ├── hooks/                # React hooks
-│   ├── use-sync-machine.ts   # XState sync machine React hook
-│   └── use-update-check.ts   # In-app update check hook
 ├── stores/               # XState Store state management
-│   ├── expense-store.ts      # Expense data store
-│   ├── settings-store.ts     # App settings store
-│   ├── notification-store.ts # Toast notifications store
-│   ├── hooks.ts              # Custom hooks (useExpenses, useSettings, etc.)
-│   ├── store-provider.tsx    # Store initialization provider
-│   └── index.ts              # Store exports
-│   └── __tests__/            # Unit and property-based tests
 ├── services/             # Business logic
-│   ├── sync-machine.ts   # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
-│   ├── sync-manager.ts   # Sync orchestration
-│   ├── merge-engine.ts   # Git-style merge logic (ID-based merge, timestamp resolution)
-│   ├── github-sync.ts    # GitHub API client (includes batch commit via Git Data API)
-│   ├── csv-handler.ts    # CSV import/export
-│   ├── daily-file-manager.ts
-│   ├── hash-storage.ts   # Content hashing for differential sync
-│   ├── change-tracker.ts # Record-level change tracking
-│   ├── expense-storage.ts # Incremental local expense storage + migration
-│   ├── payment-instruments.ts # Instrument utilities + validation
-│   ├── payment-instruments-migration.ts # One-time linking migration for legacy expenses
-│   ├── payment-instrument-merger.ts # Merge logic for syncing instruments
-│   └── auto-sync-service.ts
+├── utils/                # Utility functions
 ├── constants/            # App constants
-│   ├── categories.ts
-│   ├── payment-methods.ts    # Payment method definitions
-│   └── payment-method-colors.ts  # Chart colors for payment methods
-├── tamagui.config.ts     # Tamagui theme configuration with getColorValue helper
-└── types/               # TypeScript types
-  ├── expense.ts
-  └── payment-instrument.ts
+├── types/               # TypeScript types
+└── locales/             # i18n translation files
 ```
+
+For a complete component and service reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+expense-buddy/
+├── app/ # Expo Router pages
+│ ├── (tabs)/ # Tab navigation screens
+│ │ ├── index.tsx # Dashboard with charts
+│ │ ├── add.tsx # Add expense screen
+│ │ ├── history.tsx # Expense history with edit/delete
+│ │ ├── settings.tsx # Sync settings
+│ │ └── \_layout.tsx # Tab layout
+│ ├── day/[date].tsx # Day detail view
+│ └── \_layout.tsx # Root layout
+├── components/ # Reusable components
+│ ├── analytics/ # Analytics chart components
+│ │ ├── PaymentMethodPieChart.tsx # Payment method breakdown
+│ │ └── CollapsibleSection.tsx # Collapsible chart wrapper
+│ ├── ui/ # Styled UI components
+│ │ ├── AmountText.tsx # Styled amount display
+│ │ ├── CategoryCard.tsx # Category selection card
+│ │ ├── CategoryIcon.tsx # Category icon with background
+│ │ ├── ExpenseCard.tsx # Expense list item card
+│ │ ├── ScreenContainer.tsx # Screen wrapper with padding
+│ │ ├── SectionHeader.tsx # Section title component
+│ │ ├── DefaultPaymentMethodSelector.tsx # Payment method preference
+│ │ ├── PaymentMethodCard.tsx # Payment method display card
+│ │ └── index.ts # Component exports
+│ ├── Provider.tsx # App providers
+│ ├── NotificationStack.tsx
+│ └── SyncIndicator.tsx
+├── hooks/ # React hooks
+│ ├── use-sync-machine.ts # XState sync machine React hook
+│ └── use-update-check.ts # In-app update check hook
+├── stores/ # XState Store state management
+│ ├── expense-store.ts # Expense data store
+│ ├── settings-store.ts # App settings store
+│ ├── notification-store.ts # Toast notifications store
+│ ├── hooks.ts # Custom hooks (useExpenses, useSettings, etc.)
+│ ├── store-provider.tsx # Store initialization provider
+│ └── index.ts # Store exports
+│ └── **tests**/ # Unit and property-based tests
+├── services/ # Business logic
+│ ├── sync-machine.ts # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
+│ ├── sync-manager.ts # Sync orchestration
+│ ├── merge-engine.ts # Git-style merge logic (ID-based merge, timestamp resolution)
+│ ├── github-sync.ts # GitHub API client (includes batch commit via Git Data API)
+│ ├── csv-handler.ts # CSV import/export
+│ ├── daily-file-manager.ts
+│ ├── hash-storage.ts # Content hashing for differential sync
+│ ├── change-tracker.ts # Record-level change tracking
+│ ├── expense-storage.ts # Incremental local expense storage + migration
+│ ├── payment-instruments.ts # Instrument utilities + validation
+│ ├── payment-instruments-migration.ts # One-time linking migration for legacy expenses
+│ ├── payment-instrument-merger.ts # Merge logic for syncing instruments
+│ └── auto-sync-service.ts
+├── constants/ # App constants
+│ ├── categories.ts
+│ ├── payment-methods.ts # Payment method definitions
+│ └── payment-method-colors.ts # Chart colors for payment methods
+├── tamagui.config.ts # Tamagui theme configuration with getColorValue helper
+└── types/ # TypeScript types
+├── expense.ts
+└── payment-instrument.ts
+
+````
 
 ## 🧪 Testing
 
@@ -358,7 +331,7 @@ yarn test
 
 # Run tests in watch mode
 yarn test:watch
-```
+````
 
 ### Test Coverage
 

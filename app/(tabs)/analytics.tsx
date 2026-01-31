@@ -328,6 +328,14 @@ export default function AnalyticsScreen() {
     [t]
   )
 
+  // Helper to format category labels (translate "Other" category)
+  const formatCategoryLabel = useCallback(
+    (category: string): string => {
+      return category === "Other" ? t("settings.categories.other") : category
+    },
+    [t]
+  )
+
   const formatListBreakdown = useCallback(
     (items: string[]): string => {
       const MAX_ITEMS = 3
@@ -337,7 +345,7 @@ export default function AnalyticsScreen() {
       const remaining = unique.length - visible.length
 
       if (unique.length === 0) return t("analytics.timeWindow.all")
-      if (unique.length === 1) return unique[0]
+      if (unique.length === 1) return visible[0]
 
       return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
     },
@@ -382,13 +390,15 @@ export default function AnalyticsScreen() {
     } else if (selectedCategories.length === 1) {
       chips.push({
         key: "category",
-        label: t("analytics.filters.category", { category: selectedCategories[0] }),
+        label: t("analytics.filters.category", {
+          category: formatCategoryLabel(selectedCategories[0]),
+        }),
       })
     } else {
       chips.push({
         key: "category",
         label: t("analytics.filters.category", {
-          category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories)})`,
+          category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories.map(formatCategoryLabel))})`,
         }),
       })
     }
@@ -451,6 +461,7 @@ export default function AnalyticsScreen() {
     selectedPaymentMethods,
     showPaymentInstrumentFilter,
     formatListBreakdown,
+    formatCategoryLabel,
     paymentMethodLabel,
     selectedPaymentInstruments,
     formatSelectedPaymentInstrumentLabel,

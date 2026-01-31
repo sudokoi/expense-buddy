@@ -54,7 +54,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 
   const subtitleDate = subtitleMode === "time" ? "h:mm a" : "dd/MM/yyyy"
   const categoryLabel =
-    categoryInfo.label === "Other" ? t("categories.other") : categoryInfo.label
+    categoryInfo.label === "Other" ? t("settings.categories.other") : categoryInfo.label
 
   return (
     <ExpenseCard>

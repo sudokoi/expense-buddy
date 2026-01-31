@@ -14,6 +14,7 @@ import {
   groupExpensesByCurrency,
   getDateRangeForTimeWindow,
 } from "../utils/analytics-calculations"
+import { applyAllFilters } from "../utils/analytics/filters"
 import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
 
 export interface AnalyticsBaseResult {
@@ -110,25 +111,23 @@ export function useAnalyticsBase(
     [selectedPaymentInstruments, paymentInstruments]
   )
 
-  // 4. Filter by Time Window
-  const timeFilteredExpenses = useMemo(() => {
-    return filterByTimeWindow(currencyExpenses)
-  }, [currencyExpenses, filterByTimeWindow])
+  // 4. Apply all filters in single pass for optimal performance
+  const filterState = useMemo(
+    () => ({
+      timeWindow,
+      selectedCategories,
+      selectedPaymentMethods,
+      selectedPaymentInstruments,
+      searchQuery: "", // Search is not used in analytics base hook
+      minAmount: null,
+      maxAmount: null,
+    }),
+    [timeWindow, selectedCategories, selectedPaymentMethods, selectedPaymentInstruments]
+  )
 
-  // 5. Filter by Categories
-  const categoryFilteredExpenses = useMemo(() => {
-    return filterByCategories(timeFilteredExpenses)
-  }, [timeFilteredExpenses, filterByCategories])
-
-  // 6. Filter by Payment Methods
-  const paymentMethodFilteredExpenses = useMemo(() => {
-    return filterByPaymentMethods(categoryFilteredExpenses)
-  }, [categoryFilteredExpenses, filterByPaymentMethods])
-
-  // 7. Filter by Payment Instruments (final filtered list)
   const filteredExpenses = useMemo(() => {
-    return filterByPaymentInstruments(paymentMethodFilteredExpenses)
-  }, [paymentMethodFilteredExpenses, filterByPaymentInstruments])
+    return applyAllFilters(currencyExpenses, filterState, paymentInstruments)
+  }, [currencyExpenses, filterState, paymentInstruments])
 
   // Compute date range
   const dateRange = useMemo(() => {

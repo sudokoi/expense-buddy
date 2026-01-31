@@ -12,14 +12,10 @@ import {
   PAYMENT_INSTRUMENT_METHODS,
   findInstrumentById,
   formatPaymentInstrumentLabel,
-  isPaymentInstrumentMethod,
 } from "../../services/payment-instruments"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { getCurrencySymbol } from "../currency"
-import {
-  PaymentInstrumentSelectionKey,
-  makePaymentInstrumentSelectionKey,
-} from "./filters"
+import { PaymentInstrumentSelectionKey, resolveInstrumentKeyForExpense } from "./filters"
 
 // Category color map type for dynamic categories
 export type CategoryColorMap = Record<string, string>
@@ -59,36 +55,6 @@ export interface LineChartDataItem {
   date: string
   label: string
   dataPointText?: string
-}
-
-function resolveInstrumentKeyForExpense(
-  expense: Expense,
-  instruments: PaymentInstrument[]
-): {
-  method: PaymentInstrumentMethod
-  key: PaymentInstrumentSelectionKey
-  isOther: boolean
-  instrumentId?: string
-} | null {
-  const method = expense.paymentMethod?.type
-  if (!method || !isPaymentInstrumentMethod(method)) return null
-
-  const instrumentId = expense.paymentMethod?.instrumentId
-  const inst = findInstrumentById(instruments, instrumentId)
-  if (!inst || inst.deletedAt) {
-    return {
-      method,
-      key: makePaymentInstrumentSelectionKey(method, undefined),
-      isOther: true,
-      instrumentId: undefined,
-    }
-  }
-  return {
-    method,
-    key: makePaymentInstrumentSelectionKey(method, inst.id),
-    isOther: false,
-    instrumentId: inst.id,
-  }
 }
 
 /**
@@ -145,7 +111,7 @@ export function aggregateByCategory(
       pieData.push({
         value: amount,
         color: getCategoryColor(category, categoryColors),
-        text: category === "Other" ? t("categories.other") : category,
+        text: category === "Other" ? t("settings.categories.other") : category,
         percentage: (amount / total) * 100,
         category,
       })
