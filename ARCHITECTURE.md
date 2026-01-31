@@ -300,9 +300,9 @@ const result = applyAllFilters(expenses, filterState, instruments)
 flowchart TD
     Start([Start]) --> CheckActive{Any filters<br/>active?}
     CheckActive -->|No| ReturnAll[Return all expenses]
-    CheckActive -->|Yes| BuildSets[Build lookup Sets<br/>for categories, methods,<br/>instruments]
+    CheckActive -->|Yes| BuildSets["Build lookup Sets<br/>for categories, methods,<br/>instruments"]
 
-    BuildSets --> BuildMap[Build instrument<br/>Map for O(1) lookup]
+    BuildSets --> BuildMap["Build instrument<br/>lookup table for O#40;1#41;"]
     BuildMap --> Loop[For each expense]
 
     Loop --> CheckTime{Time window<br/>matches?}
@@ -326,7 +326,7 @@ flowchart TD
 
     Next --> More{More<br/>expenses?}
     More -->|Yes| Loop
-    More -->|No| ReturnResult[Return filtered<br/>results]
+    More -->|No| ReturnResult["Return filtered<br/>results"]
 
     ReturnAll --> End([End])
     ReturnResult --> End

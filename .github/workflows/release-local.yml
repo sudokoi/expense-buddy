@@ -124,11 +124,11 @@ jobs:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
           path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
-      - name: 🚀 Submit to Google Play Store (Alpha)
+      - name: 🚀 Submit to Google Play Store (Production)
         if: matrix.profile == 'production'
         continue-on-error: true
         run: |
-          eas submit --platform android --profile production --track alpha --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
+          eas submit --platform android --profile production --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
 
       - name: 💬 Comment on merged PRs
         if: matrix.profile == 'production'
@@ -218,7 +218,7 @@ jobs:
       - name: 🏗️ Checkout
         uses: actions/checkout@v4
 
-      - name: � Detenrmine version name
+      - name: � Determine version name
         id: version
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
