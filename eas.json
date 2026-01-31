@@ -29,11 +29,6 @@
   "submit": {
     "production": {
       "android": {
-        "track": "internal"
-      }
-    },
-    "alpha": {
-      "android": {
         "track": "alpha"
       }
     }
