@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from "tamagui"
 import { Calendar, Filter, X } from "@tamagui/lucide-icons"
-import { Platform, ViewStyle, TextStyle, BackHandler } from "react-native"
+import { Platform, ViewStyle, TextStyle, BackHandler, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
@@ -107,7 +107,7 @@ const layoutStyles = {
     marginTop: 16,
   } as ViewStyle,
   sectionHeader: {
-    paddingVertical: 0,
+    paddingVertical: 8,
   } as ViewStyle,
   expenseDetails: {
     alignItems: "center",
@@ -692,6 +692,16 @@ export default function HistoryScreen() {
   // Get item type for FlashList to optimize recycling
   const getItemType = useCallback((item: { type: "header" | "expense" }) => item.type, [])
 
+  // Override item layout for different item types (headers are smaller than expenses)
+  const overrideItemLayout = useCallback(
+    (layout: { span?: number; size?: number }, item: { type: "header" | "expense" }) => {
+      // Headers are approximately 32px (H6 with paddingVertical: 8)
+      // Expense cards are approximately 90px (card with content and margin)
+      layout.size = item.type === "header" ? 32 : 90
+    },
+    []
+  )
+
   // List footer component
   const ListFooterComponent = useMemo(
     () =>
@@ -932,11 +942,26 @@ export default function HistoryScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8 } as any}
+        style={{ marginBottom: 12, flexGrow: 0 }}
       >
         {filterChips.map((chip, index) => (
           <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
         ))}
       </ScrollView>
+
+      {/* List - FlashList for optimal performance with large datasets */}
+      <View style={{ flex: 1 }}>
+        <FlashList
+          data={flattenedExpenses}
+          renderItem={renderFlashListItem}
+          keyExtractor={keyExtractor}
+          getItemType={getItemType}
+          overrideItemLayout={overrideItemLayout}
+          contentContainerStyle={contentContainerStyle}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={ListFooterComponent}
+        />
+      </View>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -1221,18 +1246,6 @@ export default function HistoryScreen() {
         onSearchChange={setSearchQuery}
         onAmountRangeChange={setAmountRange}
         _onReset={handleResetFilters}
-      />
-
-      {/* List - FlashList for optimal performance with large datasets */}
-      <FlashList
-        data={flattenedExpenses}
-        renderItem={renderFlashListItem}
-        keyExtractor={keyExtractor}
-        getItemType={getItemType}
-        estimatedItemSize={80}
-        contentContainerStyle={contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={ListFooterComponent}
       />
     </YStack>
   )
