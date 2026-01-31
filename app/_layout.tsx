@@ -16,6 +16,7 @@ import { useUpdateCheck } from "../hooks/use-update-check"
 import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useThemeSettings } from "../stores/hooks"
+import { useSettings } from "../stores/hooks"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -110,6 +111,7 @@ function UpdateAndChangelogOverlays() {
 function RootLayoutNav() {
   const systemScheme = useColorScheme()
   const theme = useTheme()
+  const { settings } = useSettings()
 
   // Follow the app's effective theme (settings) so StatusBar stays readable
   // even when the user forces light/dark opposite to the OS scheme.
@@ -128,7 +130,7 @@ function RootLayoutNav() {
         backgroundColor={theme.background.val}
         translucent={false}
       />
-      <Stack>
+      <Stack key={settings.language}>
         <Stack.Screen
           name="(tabs)"
           options={{

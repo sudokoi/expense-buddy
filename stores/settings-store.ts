@@ -135,7 +135,29 @@ export const settingsStore = createStore({
 
     setDefaultCurrency: createSettingUpdater("defaultCurrency"),
 
-    setLanguage: createSettingUpdater("language"),
+    setLanguage: (context, event: { language: string }, enqueue) => {
+      const newSettings = { ...context.settings, language: event.language }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await changeLanguage(event.language)
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
 
     setAutoSyncEnabled: createSettingUpdater("autoSyncEnabled"),
 
