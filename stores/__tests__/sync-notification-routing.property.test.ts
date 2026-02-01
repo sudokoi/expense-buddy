@@ -126,8 +126,9 @@ const syncNotificationWithAtLeastOneChangeArb: fc.Arbitrary<SyncNotification> = 
     fc.integer({ min: 0, max: 100 }),
     fc.string({ minLength: 1, maxLength: 100 })
   )
-  .filter(([localFilesUpdated, remoteFilesUpdated]) =>
-    localFilesUpdated > 0 || remoteFilesUpdated > 0
+  .filter(
+    ([localFilesUpdated, remoteFilesUpdated]) =>
+      localFilesUpdated > 0 || remoteFilesUpdated > 0
   )
   .map(([localFilesUpdated, remoteFilesUpdated, message]) => ({
     localFilesUpdated,

@@ -457,6 +457,9 @@ export async function syncUp(
 
     // If no changes to make, return early with success
     if (filesToUpload.length === 0 && filesToDelete.length === 0) {
+      if (useDirtyDays) {
+        await clearDirtyDays()
+      }
       return {
         success: true,
         message: i18next.t("githubSync.manager.noChanges", { skipped: skippedFiles }),
@@ -1158,12 +1161,22 @@ export async function getPendingSyncCount(expenses: Expense[]): Promise<{
   try {
     const storedHashes = await loadFileHashes()
     const groupedByDay = groupExpensesByDay(expenses)
+    const dirtyDaysResult = await loadDirtyDays()
+    const useDirtyDays = dirtyDaysResult.isTrusted
+    const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
+    const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
+    const localDayKeys = new Set(groupedByDay.keys())
+    const dayKeysToProcess = useDirtyDays
+      ? new Set([...dirtyDaySet].filter((dayKey) => localDayKeys.has(dayKey)))
+      : localDayKeys
 
     let filesChanged = 0
     let filesUnchanged = 0
 
     // Check each day's expenses against stored hashes
-    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+    for (const dayKey of dayKeysToProcess) {
+      const dayExpenses = groupedByDay.get(dayKey)
+      if (!dayExpenses) continue
       const filename = getFilenameForDay(dayKey)
       const csvContent = exportToCSV(dayExpenses)
       const contentHash = computeContentHash(csvContent)
@@ -1176,10 +1189,22 @@ export async function getPendingSyncCount(expenses: Expense[]): Promise<{
     }
 
     // Count files to delete (exist in stored hashes but not in local data)
-    const localFilenames = new Set(Array.from(groupedByDay.keys()).map(getFilenameForDay))
-    const filesToDelete = Object.keys(storedHashes).filter(
-      (filename) => !localFilenames.has(filename)
-    ).length
+    let filesToDelete = 0
+    if (useDirtyDays) {
+      for (const dayKey of deletedDaySet) {
+        const filename = getFilenameForDay(dayKey)
+        if (storedHashes[filename] && !localDayKeys.has(dayKey)) {
+          filesToDelete++
+        }
+      }
+    } else {
+      const localFilenames = new Set(
+        Array.from(groupedByDay.keys()).map(getFilenameForDay)
+      )
+      filesToDelete = Object.keys(storedHashes).filter(
+        (filename) => !localFilenames.has(filename)
+      ).length
+    }
 
     return { filesChanged, filesUnchanged, filesToDelete }
   } catch (error) {
