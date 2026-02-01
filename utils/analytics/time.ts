@@ -1,4 +1,11 @@
-import { parseISO, subDays, startOfDay, endOfDay, isWithinInterval } from "date-fns"
+import {
+  parseISO,
+  subDays,
+  startOfDay,
+  endOfDay,
+  isWithinInterval,
+  isValid,
+} from "date-fns"
 import { Expense } from "../../types/expense"
 import type { DateRange } from "../../types/analytics"
 
@@ -85,4 +92,38 @@ export function filterExpensesByTimeWindow(
       return false
     }
   })
+}
+
+/**
+ * Determines whether the current expenses fully cover the selected time window.
+ */
+export function isTimeWindowCovered(
+  expenses: Expense[],
+  timeWindow: TimeWindow
+): boolean {
+  if (timeWindow === "all") {
+    return false
+  }
+
+  if (expenses.length === 0) {
+    return false
+  }
+
+  let oldestDate: Date | null = null
+
+  for (const expense of expenses) {
+    const expenseDate = parseISO(expense.date)
+    if (!isValid(expenseDate)) continue
+
+    if (!oldestDate || expenseDate < oldestDate) {
+      oldestDate = expenseDate
+    }
+  }
+
+  if (!oldestDate) {
+    return false
+  }
+
+  const { start } = getDateRangeForTimeWindow(timeWindow)
+  return startOfDay(oldestDate) <= start
 }

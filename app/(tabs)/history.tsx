@@ -67,6 +67,7 @@ import type {
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
+import { isTimeWindowCovered } from "../../utils/analytics/time"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -310,6 +311,12 @@ export default function HistoryScreen() {
 
     return sections
   }, [filteredExpenses])
+
+  const shouldShowLoadMore = useMemo(() => {
+    if (!hasMore || !syncConfig) return false
+
+    return !isTimeWindowCovered(state.expenses, filters.timeWindow)
+  }, [filters.timeWindow, hasMore, syncConfig, state.expenses])
 
   // Flatten for FlashList
   const flattenedExpenses = useMemo(() => {
@@ -653,7 +660,7 @@ export default function HistoryScreen() {
   // List footer component
   const ListFooterComponent = useMemo(
     () =>
-      hasMore && syncConfig ? (
+      shouldShowLoadMore ? (
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
             size="$4"
@@ -665,7 +672,7 @@ export default function HistoryScreen() {
           </Button>
         </YStack>
       ) : null,
-    [hasMore, syncConfig, handleLoadMore, isLoadingMore, t]
+    [handleLoadMore, isLoadingMore, shouldShowLoadMore, t]
   )
 
   // Content container style
