@@ -1,6 +1,8 @@
 // Mock Expo Localization
 jest.mock("expo-localization", () => ({
-  getLocales: () => [{ languageTag: "en-US", textDirection: "ltr" }],
+  getLocales: jest.fn(() => [
+    { languageTag: "en-US", textDirection: "ltr", currencyCode: "USD" },
+  ]),
   locale: "en-US",
   isRTL: false,
 }))

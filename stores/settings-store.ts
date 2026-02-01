@@ -22,6 +22,7 @@ import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
 import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
 import { changeLanguage } from "../i18n"
+import { getDefaultCurrencyForLanguage } from "../utils/currency"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -136,7 +137,11 @@ export const settingsStore = createStore({
     setDefaultCurrency: createSettingUpdater("defaultCurrency"),
 
     setLanguage: (context, event: { language: string }, enqueue) => {
-      const newSettings = { ...context.settings, language: event.language }
+      const newSettings = {
+        ...context.settings,
+        language: event.language,
+        defaultCurrency: getDefaultCurrencyForLanguage(event.language),
+      }
       const newSyncState = computeSettingsSyncState(
         newSettings,
         context.syncedSettingsHash

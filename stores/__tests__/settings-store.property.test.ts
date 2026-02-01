@@ -25,6 +25,7 @@ import {
 } from "../../services/settings-manager"
 import { PaymentMethodType } from "../../types/expense"
 import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
+import { getDefaultCurrencyForLanguage } from "../../utils/currency"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
@@ -116,7 +117,11 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
       }),
 
       setLanguage: (context, event: { language: string }) => {
-        const newSettings = { ...context.settings, language: event.language }
+        const newSettings = {
+          ...context.settings,
+          language: event.language,
+          defaultCurrency: getDefaultCurrencyForLanguage(event.language),
+        }
         return {
           ...context,
           settings: newSettings,
@@ -271,7 +276,11 @@ describe("Settings Store Properties", () => {
           store.trigger.setLanguage({ language })
 
           const { settings, hasUnsyncedChanges } = store.getSnapshot().context
-          return settings.language === language && hasUnsyncedChanges === true
+          return (
+            settings.language === language &&
+            settings.defaultCurrency === getDefaultCurrencyForLanguage(language) &&
+            hasUnsyncedChanges === true
+          )
         }),
         { numRuns: 100 }
       )

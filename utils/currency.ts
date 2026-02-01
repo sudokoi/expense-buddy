@@ -1,12 +1,24 @@
 import i18next from "i18next"
 import { getLocales } from "expo-localization"
 
+const DEFAULT_CURRENCY = "INR"
+
+const SUPPORTED_CURRENCIES = new Set(["INR", "USD", "GBP", "EUR", "JPY"])
+
+const LANGUAGE_CURRENCY_MAP: Record<string, string> = {
+  "en-US": "USD",
+  "en-GB": "GBP",
+  "en-IN": "INR",
+  hi: "INR",
+  ja: "JPY",
+}
+
 /**
  * Gets the static fallback currency code for legacy expenses.
  * Currently hardcoded to "INR" but can be extended for migration logic.
  */
 export function getFallbackCurrency(): string {
-  return "INR"
+  return DEFAULT_CURRENCY
 }
 
 /**
@@ -16,9 +28,34 @@ export function getFallbackCurrency(): string {
 export function getSystemCurrency(): string {
   const locales = getLocales()
   if (locales && locales.length > 0) {
-    return locales[0].currencyCode ?? "INR"
+    return locales[0].currencyCode ?? DEFAULT_CURRENCY
   }
-  return "INR"
+  return DEFAULT_CURRENCY
+}
+
+/**
+ * Gets the system currency only if it is supported.
+ * Falls back to INR if the system currency is unsupported or missing.
+ */
+export function getSupportedSystemCurrency(): string {
+  const locales = getLocales()
+  const currency = locales?.[0]?.currencyCode
+  if (currency && SUPPORTED_CURRENCIES.has(currency)) {
+    return currency
+  }
+  return DEFAULT_CURRENCY
+}
+
+/**
+ * Gets the default currency for a given language preference.
+ * Uses system currency for "system" and falls back to INR when unsupported.
+ */
+export function getDefaultCurrencyForLanguage(language: string): string {
+  if (language === "system") {
+    return getSupportedSystemCurrency()
+  }
+
+  return LANGUAGE_CURRENCY_MAP[language] ?? DEFAULT_CURRENCY
 }
 
 /**
@@ -29,7 +66,7 @@ export function getSystemCurrency(): string {
  */
 export function formatCurrency(amount: number, currencyCode?: string): string {
   // Legacy expenses (undefined currency) are implicitly INR
-  const effectiveCurrency = currencyCode || "INR"
+  const effectiveCurrency = currencyCode || DEFAULT_CURRENCY
   const language = i18next.language || "en-IN"
 
   try {

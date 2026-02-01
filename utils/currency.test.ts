@@ -1,4 +1,9 @@
-import { formatCurrency, computeEffectiveCurrency } from "./currency"
+import {
+  formatCurrency,
+  computeEffectiveCurrency,
+  getDefaultCurrencyForLanguage,
+  getSupportedSystemCurrency,
+} from "./currency"
 import i18next from "i18next"
 
 // Mock i18next
@@ -139,5 +144,37 @@ describe("computeEffectiveCurrency", () => {
     const expensesByCurrency = createExpensesMap(["USD"])
     const result = computeEffectiveCurrency("USD", ["USD"], expensesByCurrency, "INR")
     expect(result).toBe("USD")
+  })
+})
+
+describe("getSupportedSystemCurrency", () => {
+  it("returns system currency when supported", () => {
+    expect(getSupportedSystemCurrency()).toBe("USD")
+  })
+
+  it("falls back to INR when unsupported", () => {
+    const { getLocales } = require("expo-localization")
+    ;(getLocales as jest.Mock).mockReturnValue([
+      { languageTag: "en-AU", textDirection: "ltr", currencyCode: "AUD" },
+    ])
+    expect(getSupportedSystemCurrency()).toBe("INR")
+  })
+})
+
+describe("getDefaultCurrencyForLanguage", () => {
+  it("maps languages to default currencies", () => {
+    expect(getDefaultCurrencyForLanguage("en-US")).toBe("USD")
+    expect(getDefaultCurrencyForLanguage("en-GB")).toBe("GBP")
+    expect(getDefaultCurrencyForLanguage("en-IN")).toBe("INR")
+    expect(getDefaultCurrencyForLanguage("hi")).toBe("INR")
+    expect(getDefaultCurrencyForLanguage("ja")).toBe("JPY")
+  })
+
+  it("uses system currency when language is system", () => {
+    const { getLocales } = require("expo-localization")
+    ;(getLocales as jest.Mock).mockReturnValue([
+      { languageTag: "ja-JP", textDirection: "ltr", currencyCode: "JPY" },
+    ])
+    expect(getDefaultCurrencyForLanguage("system")).toBe("JPY")
   })
 })
