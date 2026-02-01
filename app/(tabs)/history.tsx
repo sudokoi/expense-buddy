@@ -67,7 +67,11 @@ import type {
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
-import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
+import {
+  formatMonthLabel,
+  getAvailableMonths,
+  isTimeWindowCovered,
+} from "../../utils/analytics/time"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -289,6 +293,10 @@ export default function HistoryScreen() {
     return applyAllFilters(state.activeExpenses, filters, allInstruments)
   }, [state.activeExpenses, filters, allInstruments])
 
+  const availableMonths = useMemo(() => {
+    return getAvailableMonths(state.activeExpenses)
+  }, [state.activeExpenses])
+
   // Group filtered expenses by date
   const groupedExpenses = useMemo(() => {
     const sorted = [...filteredExpenses].sort((a, b) => b.date.localeCompare(a.date))
@@ -318,6 +326,12 @@ export default function HistoryScreen() {
 
     return !isTimeWindowCovered(state.expenses, filters.timeWindow)
   }, [filters.selectedMonth, filters.timeWindow, hasMore, syncConfig, state.expenses])
+
+  React.useEffect(() => {
+    if (!filters.selectedMonth) return
+    if (availableMonths.includes(filters.selectedMonth)) return
+    setSelectedMonth(null)
+  }, [availableMonths, filters.selectedMonth, setSelectedMonth])
 
   // Flatten for FlashList
   const flattenedExpenses = useMemo(() => {
@@ -870,6 +884,7 @@ export default function HistoryScreen() {
           isHydrated={isHydrated}
           allInstruments={allInstruments}
           categories={categories}
+          availableMonths={availableMonths}
           onTimeWindowChange={setTimeWindow}
           onMonthChange={setSelectedMonth}
           onCategoriesChange={setSelectedCategories}
@@ -1206,6 +1221,7 @@ export default function HistoryScreen() {
         isHydrated={isHydrated}
         allInstruments={allInstruments}
         categories={categories}
+        availableMonths={availableMonths}
         onTimeWindowChange={setTimeWindow}
         onMonthChange={setSelectedMonth}
         onCategoriesChange={setSelectedCategories}

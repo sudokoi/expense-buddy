@@ -1,5 +1,5 @@
 import { formatISO, subDays } from "date-fns"
-import { isTimeWindowCovered } from "./time"
+import { getAvailableMonths, isTimeWindowCovered } from "./time"
 import type { Expense } from "../../types/expense"
 
 const createExpense = (daysAgo: number): Expense => {
@@ -34,5 +34,44 @@ describe("isTimeWindowCovered", () => {
   it("returns false when oldest expense does not cover the window", () => {
     const expenses = [createExpense(0), createExpense(5)]
     expect(isTimeWindowCovered(expenses, "7d")).toBe(false)
+  })
+})
+
+describe("getAvailableMonths", () => {
+  it("returns sorted unique months", () => {
+    const expenses: Expense[] = [
+      {
+        id: "exp-1",
+        amount: 10,
+        category: "Food",
+        date: "2025-12-01T10:00:00Z",
+        note: "",
+        currency: "INR",
+        createdAt: "2025-12-01T10:00:00Z",
+        updatedAt: "2025-12-01T10:00:00Z",
+      },
+      {
+        id: "exp-2",
+        amount: 20,
+        category: "Food",
+        date: "2025-11-15T10:00:00Z",
+        note: "",
+        currency: "INR",
+        createdAt: "2025-11-15T10:00:00Z",
+        updatedAt: "2025-11-15T10:00:00Z",
+      },
+      {
+        id: "exp-3",
+        amount: 30,
+        category: "Food",
+        date: "2025-12-20T10:00:00Z",
+        note: "",
+        currency: "INR",
+        createdAt: "2025-12-20T10:00:00Z",
+        updatedAt: "2025-12-20T10:00:00Z",
+      },
+    ]
+
+    expect(getAvailableMonths(expenses)).toEqual(["2025-12", "2025-11"])
   })
 })

@@ -47,6 +47,7 @@ interface FilterSheetProps {
   isHydrated: boolean
   allInstruments: PaymentInstrument[]
   categories: Category[]
+  availableMonths: string[]
   onTimeWindowChange: (window: TimeWindow) => void
   onMonthChange: (month: string | null) => void
   onCategoriesChange: (categories: string[]) => void
@@ -78,6 +79,7 @@ export const FilterSheet = React.memo(function FilterSheet({
   filters,
   isHydrated,
   allInstruments,
+  availableMonths,
   onTimeWindowChange,
   onMonthChange,
   onCategoriesChange,
@@ -283,7 +285,11 @@ export const FilterSheet = React.memo(function FilterSheet({
               </CollapsibleSection>
 
               <CollapsibleSection title={t("history.filterSheet.month")}>
-                <MonthSelector value={draftSelectedMonth} onChange={handleMonthChange} />
+                <MonthSelector
+                  value={draftSelectedMonth}
+                  availableMonths={availableMonths}
+                  onChange={handleMonthChange}
+                />
               </CollapsibleSection>
 
               <CollapsibleSection title={t("history.filterSheet.search")}>

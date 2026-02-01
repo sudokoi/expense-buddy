@@ -14,7 +14,11 @@ import {
   groupExpensesByCurrency,
   getDateRangeForFilters,
 } from "../utils/analytics-calculations"
-import { filterExpensesByTimeWindow, getDateRangeForMonth } from "../utils/analytics/time"
+import {
+  filterExpensesByTimeWindow,
+  getDateRangeForMonth,
+  getAvailableMonths,
+} from "../utils/analytics/time"
 import { applyAllFilters } from "../utils/analytics/filters"
 import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
 
@@ -25,6 +29,7 @@ export interface AnalyticsBaseResult {
   dateRange: DateRange
   isLoading: boolean
   paymentInstruments: PaymentInstrument[]
+  availableMonths: string[]
   filterByTimeWindow: (expenses: Expense[]) => Expense[]
   filterByCategories: (expenses: Expense[]) => Expense[]
   filterByPaymentMethods: (expenses: Expense[]) => Expense[]
@@ -150,6 +155,10 @@ export function useAnalyticsBase(
     return applyAllFilters(currencyExpenses, filterState, paymentInstruments)
   }, [currencyExpenses, filterState, paymentInstruments])
 
+  const availableMonths = useMemo(() => {
+    return getAvailableMonths(currencyExpenses)
+  }, [currencyExpenses])
+
   // Compute date range
   const dateRange = useMemo(() => {
     return getDateRangeForFilters(timeWindow, selectedMonth, filteredExpenses)
@@ -162,6 +171,7 @@ export function useAnalyticsBase(
     dateRange,
     isLoading,
     paymentInstruments,
+    availableMonths,
     filterByTimeWindow,
     filterByCategories,
     filterByPaymentMethods,

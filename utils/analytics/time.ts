@@ -101,6 +101,22 @@ export function getDateRangeForFilters(
   return getDateRangeForTimeWindow(timeWindow, expenses)
 }
 
+export function getAvailableMonths(expenses: Expense[]): string[] {
+  const months = new Set<string>()
+
+  for (const expense of expenses) {
+    const expenseDate = parseISO(expense.date)
+    if (!isValid(expenseDate)) continue
+
+    const monthKey = `${expenseDate.getFullYear()}-${String(
+      expenseDate.getMonth() + 1
+    ).padStart(2, "0")}`
+    months.add(monthKey)
+  }
+
+  return Array.from(months).sort((a, b) => b.localeCompare(a))
+}
+
 /**
  * Filter expenses by time window
  * Returns only expenses whose date falls within the specified time window

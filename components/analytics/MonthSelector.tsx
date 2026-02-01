@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react"
+import { memo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
@@ -8,7 +8,7 @@ import { getMonthStartDate } from "../../utils/analytics/time"
 interface MonthSelectorProps {
   value: string | null
   onChange: (value: string | null) => void
-  maxMonths?: number
+  availableMonths: string[]
 }
 
 const layoutStyles = {
@@ -20,23 +20,12 @@ const layoutStyles = {
   } as ViewStyle,
 }
 
-function getMonthOptions(count: number, now: Date): string[] {
-  const months: string[] = []
-  for (let i = 0; i < count; i += 1) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
-    months.push(key)
-  }
-  return months
-}
-
 export const MonthSelector = memo(function MonthSelector({
   value,
   onChange,
-  maxMonths = 12,
+  availableMonths,
 }: MonthSelectorProps) {
   const { t } = useTranslation()
-  const months = useMemo(() => getMonthOptions(maxMonths, new Date()), [maxMonths])
 
   return (
     <ScrollView
@@ -54,7 +43,7 @@ export const MonthSelector = memo(function MonthSelector({
         >
           {t("common.all")}
         </Button>
-        {months.map((monthKey) => {
+        {availableMonths.map((monthKey) => {
           const isSelected = value === monthKey
           const label = formatDate(getMonthStartDate(monthKey), "MMM yyyy")
           return (

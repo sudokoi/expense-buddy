@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useMemo } from "react"
+import { useState, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import {
@@ -148,6 +148,7 @@ export default function AnalyticsScreen() {
     dateRange,
     isLoading,
     paymentInstruments,
+    availableMonths,
   } = useAnalyticsBase(
     timeWindow,
     selectedMonth,
@@ -487,6 +488,15 @@ export default function AnalyticsScreen() {
     effectiveCurrency,
   ])
 
+  useEffect(() => {
+    if (!selectedMonth) return
+    if (availableMonths.includes(selectedMonth)) return
+    applyFilters({
+      ...filters,
+      selectedMonth: null,
+    })
+  }, [applyFilters, availableMonths, filters, selectedMonth])
+
   const handleApplyFilters = useCallback(
     (next) => {
       // When payment methods are reset to "All", ensure instruments reset too.
@@ -628,6 +638,7 @@ export default function AnalyticsScreen() {
         isHydrating={!filtersHydrated}
         timeWindow={timeWindow}
         selectedMonth={selectedMonth}
+        availableMonths={availableMonths}
         selectedCategories={selectedCategories}
         selectedPaymentMethods={selectedPaymentMethods}
         paymentInstruments={paymentInstruments}

@@ -38,6 +38,7 @@ interface AnalyticsFiltersSheetProps {
   isHydrating?: boolean
   timeWindow: TimeWindow
   selectedMonth: string | null
+  availableMonths: string[]
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   paymentInstruments: PaymentInstrument[]
@@ -61,6 +62,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   isHydrating,
   timeWindow,
   selectedMonth,
+  availableMonths,
   selectedCategories,
   selectedPaymentMethods,
   paymentInstruments,
@@ -267,7 +269,11 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               </CollapsibleSection>
 
               <CollapsibleSection title={t("analytics.filtersModal.month")}>
-                <MonthSelector value={draftSelectedMonth} onChange={handleMonthChange} />
+                <MonthSelector
+                  value={draftSelectedMonth}
+                  availableMonths={availableMonths}
+                  onChange={handleMonthChange}
+                />
               </CollapsibleSection>
 
               {availableCurrencies.length > 1 && (
