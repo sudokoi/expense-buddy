@@ -1,19 +1,20 @@
 import { useMemo, useCallback } from "react"
 import { useExpenses, useSettings } from "../stores/hooks"
 import { Expense } from "../types/expense"
+import { isWithinInterval, parseISO } from "date-fns"
 import type { PaymentInstrument } from "../types/payment-instrument"
 import type { DateRange } from "../types/analytics"
 import {
   TimeWindow,
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
-  filterExpensesByTimeWindow,
   filterExpensesByCategories,
   filterExpensesByPaymentMethods,
   filterExpensesByPaymentInstruments,
   groupExpensesByCurrency,
-  getDateRangeForTimeWindow,
+  getDateRangeForFilters,
 } from "../utils/analytics-calculations"
+import { filterExpensesByTimeWindow, getDateRangeForMonth } from "../utils/analytics/time"
 import { applyAllFilters } from "../utils/analytics/filters"
 import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
 
@@ -38,6 +39,7 @@ export interface AnalyticsBaseResult {
  */
 export function useAnalyticsBase(
   timeWindow: TimeWindow,
+  selectedMonth: string | null,
   selectedCategories: string[],
   selectedPaymentMethods: PaymentMethodSelectionKey[],
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[],
@@ -81,9 +83,21 @@ export function useAnalyticsBase(
   // Memoized filter callbacks
   const filterByTimeWindow = useCallback(
     (expenses: Expense[]): Expense[] => {
+      if (selectedMonth) {
+        const { start, end } = getDateRangeForMonth(selectedMonth)
+        return expenses.filter((expense) => {
+          try {
+            const expenseDate = parseISO(expense.date)
+            return isWithinInterval(expenseDate, { start, end })
+          } catch {
+            return false
+          }
+        })
+      }
+
       return filterExpensesByTimeWindow(expenses, timeWindow)
     },
-    [timeWindow]
+    [selectedMonth, timeWindow]
   )
 
   const filterByCategories = useCallback(
@@ -115,6 +129,7 @@ export function useAnalyticsBase(
   const filterState = useMemo(
     () => ({
       timeWindow,
+      selectedMonth,
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
@@ -122,7 +137,13 @@ export function useAnalyticsBase(
       minAmount: null,
       maxAmount: null,
     }),
-    [timeWindow, selectedCategories, selectedPaymentMethods, selectedPaymentInstruments]
+    [
+      timeWindow,
+      selectedMonth,
+      selectedCategories,
+      selectedPaymentMethods,
+      selectedPaymentInstruments,
+    ]
   )
 
   const filteredExpenses = useMemo(() => {
@@ -131,8 +152,8 @@ export function useAnalyticsBase(
 
   // Compute date range
   const dateRange = useMemo(() => {
-    return getDateRangeForTimeWindow(timeWindow, filteredExpenses)
-  }, [timeWindow, filteredExpenses])
+    return getDateRangeForFilters(timeWindow, selectedMonth, filteredExpenses)
+  }, [timeWindow, selectedMonth, filteredExpenses])
 
   return {
     filteredExpenses,

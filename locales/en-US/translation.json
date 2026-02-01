@@ -121,6 +121,7 @@
       "title": "Filters",
       "loading": "Loading...",
       "time": "Time Period",
+      "month": "Month",
       "search": "Search",
       "amountRange": "Amount Range",
       "category": "Category",
@@ -151,6 +152,7 @@
     "filters": {
       "button": "Filters",
       "time": "Time: {{window}}",
+      "month": "Month: {{month}}",
       "category": "Category: {{category}}",
       "payment": "Payment: {{method}}",
       "instrument": "Instrument: {{instrument}}"
@@ -161,6 +163,7 @@
       "apply": "Apply",
       "loading": "Loading saved filters...",
       "time": "Time",
+      "month": "Month",
       "category": "Category",
       "paymentMethod": "Payment Method",
       "paymentInstrument": "Payment Instrument"

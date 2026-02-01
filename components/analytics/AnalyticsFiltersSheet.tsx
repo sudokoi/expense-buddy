@@ -13,6 +13,7 @@ import {
 } from "../../services/payment-instruments"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { TimeWindowSelector } from "./TimeWindowSelector"
+import { MonthSelector } from "./MonthSelector"
 import { CategoryFilter } from "./CategoryFilter"
 import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
@@ -36,6 +37,7 @@ interface AnalyticsFiltersSheetProps {
   open: boolean
   isHydrating?: boolean
   timeWindow: TimeWindow
+  selectedMonth: string | null
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   paymentInstruments: PaymentInstrument[]
@@ -43,6 +45,7 @@ interface AnalyticsFiltersSheetProps {
 
   onApply: (next: {
     timeWindow: TimeWindow
+    selectedMonth: string | null
     selectedCategories: string[]
     selectedPaymentMethods: PaymentMethodSelectionKey[]
     selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
@@ -57,6 +60,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   open,
   isHydrating,
   timeWindow,
+  selectedMonth,
   selectedCategories,
   selectedPaymentMethods,
   paymentInstruments,
@@ -70,6 +74,15 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   const insets = useSafeAreaInsets()
 
   const [draftTimeWindow, setDraftTimeWindow] = useState<TimeWindow>(timeWindow)
+  const [draftSelectedMonth, setDraftSelectedMonth] = useState<string | null>(
+    selectedMonth
+  )
+  const handleMonthChange = useCallback((month: string | null) => {
+    setDraftSelectedMonth(month)
+    if (month) {
+      setDraftTimeWindow("all")
+    }
+  }, [])
   const [draftCategories, setDraftCategories] = useState<string[]>(selectedCategories)
   const [draftPaymentMethods, setDraftPaymentMethods] =
     useState<PaymentMethodSelectionKey[]>(selectedPaymentMethods)
@@ -84,6 +97,9 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
 
     if (draftTimeWindow !== timeWindow) {
       setDraftTimeWindow(timeWindow)
+    }
+    if (draftSelectedMonth !== selectedMonth) {
+      setDraftSelectedMonth(selectedMonth)
     }
     if (draftCategories !== selectedCategories) {
       setDraftCategories(selectedCategories)
@@ -174,6 +190,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   const handleApply = useCallback(() => {
     onApply({
       timeWindow: draftTimeWindow,
+      selectedMonth: draftSelectedMonth,
       selectedCategories: draftCategories,
       selectedPaymentMethods: draftPaymentMethods,
       selectedPaymentInstruments: draftPaymentInstruments,
@@ -182,6 +199,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
   }, [
     onApply,
     draftTimeWindow,
+    draftSelectedMonth,
     draftCategories,
     draftPaymentMethods,
     draftPaymentInstruments,
@@ -190,6 +208,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
 
   const handleResetDraft = useCallback(() => {
     setDraftTimeWindow("7d")
+    setDraftSelectedMonth(null)
     setDraftCategories([])
     setDraftPaymentMethods([])
     setDraftPaymentInstruments([])
@@ -245,6 +264,10 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
                   value={draftTimeWindow}
                   onChange={setDraftTimeWindow}
                 />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("analytics.filtersModal.month")}>
+                <MonthSelector value={draftSelectedMonth} onChange={handleMonthChange} />
               </CollapsibleSection>
 
               {availableCurrencies.length > 1 && (

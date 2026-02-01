@@ -45,6 +45,7 @@ describe("analytics-filters-storage", () => {
   it("saveAnalyticsFilters SHALL store normalized JSON", async () => {
     await saveAnalyticsFilters({
       timeWindow: "1m",
+      selectedMonth: null,
       selectedCategories: ["Food"],
       selectedPaymentMethods: [],
       // Should be normalized to [] when payment methods are "All"
@@ -62,6 +63,7 @@ describe("analytics-filters-storage", () => {
     const storedJson = (AsyncStorage.setItem as jest.Mock).mock.calls[0][1]
     expect(JSON.parse(storedJson)).toEqual({
       timeWindow: "1m",
+      selectedMonth: null,
       selectedCategories: ["Food"],
       selectedPaymentMethods: [],
       selectedPaymentInstruments: [],
@@ -75,6 +77,7 @@ describe("analytics-filters-storage", () => {
   it("loadAnalyticsFilters SHALL roundtrip saved filters", async () => {
     const stored = {
       timeWindow: "6m",
+      selectedMonth: "2025-11",
       selectedCategories: ["Food", "Travel"],
       selectedPaymentMethods: ["Cash"],
       selectedPaymentInstruments: ["Credit Card::__others__"],
@@ -86,6 +89,30 @@ describe("analytics-filters-storage", () => {
 
     mockStorage.set(analyticsFiltersStorageKeyForTests(), JSON.stringify(stored))
 
-    await expect(loadAnalyticsFilters()).resolves.toEqual(stored)
+    await expect(loadAnalyticsFilters()).resolves.toEqual({
+      ...stored,
+      timeWindow: "all",
+    })
+  })
+
+  it("loadAnalyticsFilters SHALL clear month when invalid", async () => {
+    const stored = {
+      timeWindow: "6m",
+      selectedMonth: "invalid",
+      selectedCategories: [],
+      selectedPaymentMethods: [],
+      selectedPaymentInstruments: [],
+      selectedCurrency: null,
+      searchQuery: "",
+      minAmount: null,
+      maxAmount: null,
+    }
+
+    mockStorage.set(analyticsFiltersStorageKeyForTests(), JSON.stringify(stored))
+
+    await expect(loadAnalyticsFilters()).resolves.toEqual({
+      ...DEFAULT_ANALYTICS_FILTERS,
+      timeWindow: "6m",
+    })
   })
 })

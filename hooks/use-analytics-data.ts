@@ -41,6 +41,7 @@ export function useAnalyticsData(
 
   const base = useAnalyticsBase(
     timeWindow,
+    null,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,

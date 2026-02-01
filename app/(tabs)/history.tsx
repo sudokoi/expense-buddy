@@ -67,7 +67,7 @@ import type {
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
-import { isTimeWindowCovered } from "../../utils/analytics/time"
+import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -208,6 +208,7 @@ export default function HistoryScreen() {
     hasActive,
     isHydrated,
     setTimeWindow,
+    setSelectedMonth,
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
@@ -313,10 +314,10 @@ export default function HistoryScreen() {
   }, [filteredExpenses])
 
   const shouldShowLoadMore = useMemo(() => {
-    if (!hasMore || !syncConfig) return false
+    if (!hasMore || !syncConfig || filters.selectedMonth) return false
 
     return !isTimeWindowCovered(state.expenses, filters.timeWindow)
-  }, [filters.timeWindow, hasMore, syncConfig, state.expenses])
+  }, [filters.selectedMonth, filters.timeWindow, hasMore, syncConfig, state.expenses])
 
   // Flatten for FlashList
   const flattenedExpenses = useMemo(() => {
@@ -438,12 +439,21 @@ export default function HistoryScreen() {
     const chips: Array<{ label: string; onRemove: () => void }> = []
 
     // Time chip - always show
-    chips.push({
-      label: t("analytics.filters.time", {
-        window: t(`analytics.timeWindow.${filters.timeWindow}`),
-      }),
-      onRemove: () => setTimeWindow("all"),
-    })
+    if (filters.selectedMonth) {
+      chips.push({
+        label: t("analytics.filters.month", {
+          month: formatMonthLabel(filters.selectedMonth),
+        }),
+        onRemove: () => setSelectedMonth(null),
+      })
+    } else {
+      chips.push({
+        label: t("analytics.filters.time", {
+          window: t(`analytics.timeWindow.${filters.timeWindow}`),
+        }),
+        onRemove: () => setTimeWindow("all"),
+      })
+    }
 
     // Category chip - always show
     if (filters.selectedCategories.length === 0) {
@@ -530,6 +540,7 @@ export default function HistoryScreen() {
     filters,
     t,
     setTimeWindow,
+    setSelectedMonth,
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
@@ -860,6 +871,7 @@ export default function HistoryScreen() {
           allInstruments={allInstruments}
           categories={categories}
           onTimeWindowChange={setTimeWindow}
+          onMonthChange={setSelectedMonth}
           onCategoriesChange={setSelectedCategories}
           onPaymentMethodsChange={setSelectedPaymentMethods}
           onPaymentInstrumentsChange={setSelectedPaymentInstruments}
@@ -1195,6 +1207,7 @@ export default function HistoryScreen() {
         allInstruments={allInstruments}
         categories={categories}
         onTimeWindowChange={setTimeWindow}
+        onMonthChange={setSelectedMonth}
         onCategoriesChange={setSelectedCategories}
         onPaymentMethodsChange={setSelectedPaymentMethods}
         onPaymentInstrumentsChange={setSelectedPaymentInstruments}

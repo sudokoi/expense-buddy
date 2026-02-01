@@ -121,6 +121,7 @@
       "title": "फिल्टर",
       "loading": "लोड हो रहा है...",
       "time": "समय अवधि",
+      "month": "महीना",
       "search": "खोज",
       "amountRange": "राशि सीमा",
       "category": "श्रेणी",
@@ -151,6 +152,7 @@
     "filters": {
       "button": "फिल्टर",
       "time": "समय: {{window}}",
+      "month": "महीना: {{month}}",
       "category": "श्रेणी: {{category}}",
       "payment": "भुगतान: {{method}}",
       "instrument": "साधन: {{instrument}}"
@@ -161,6 +163,7 @@
       "apply": "लागू करें",
       "loading": "सहेजे गए फिल्टर लोड हो रहे हैं...",
       "time": "समय",
+      "month": "महीना",
       "category": "श्रेणी",
       "paymentMethod": "भुगतान विधि",
       "paymentInstrument": "भुगतान साधन"

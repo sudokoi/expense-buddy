@@ -115,11 +115,20 @@ export function filterExpensesByPaymentMethods(
 // Optimized Single-Pass Filter Application
 // ============================================================================
 
-import { parseISO, isWithinInterval, startOfDay, endOfDay, subDays } from "date-fns"
+import {
+  parseISO,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+  subDays,
+  isValid,
+} from "date-fns"
+import { getDateRangeForMonth } from "./time"
 import type { TimeWindow } from "./time"
 
 export interface FilterState {
   timeWindow: TimeWindow
+  selectedMonth: string | null
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
@@ -190,10 +199,22 @@ function matchesSearch(
 /**
  * Check if expense date falls within time window
  */
-function isExpenseInTimeWindow(expense: Expense, timeWindow: TimeWindow): boolean {
+function isExpenseInTimeWindow(
+  expense: Expense,
+  timeWindow: TimeWindow,
+  selectedMonth: string | null
+): boolean {
+  if (selectedMonth) {
+    const expenseDate = parseISO(expense.date)
+    if (!isValid(expenseDate)) return false
+    const { start, end } = getDateRangeForMonth(selectedMonth)
+    return isWithinInterval(expenseDate, { start, end })
+  }
+
   if (timeWindow === "all") return true
 
   const expenseDate = parseISO(expense.date)
+  if (!isValid(expenseDate)) return false
   const now = new Date()
   const end = endOfDay(now)
 
@@ -234,6 +255,7 @@ export function applyAllFilters(
 ): Expense[] {
   // Early return if no filters active
   const hasActiveFilters =
+    filters.selectedMonth !== null ||
     filters.timeWindow !== "all" ||
     filters.selectedCategories.length > 0 ||
     filters.selectedPaymentMethods.length > 0 ||
@@ -257,8 +279,10 @@ export function applyAllFilters(
 
   return expenses.filter((expense) => {
     // 1. Time window check (fast)
-    if (filters.timeWindow !== "all") {
-      if (!isExpenseInTimeWindow(expense, filters.timeWindow)) return false
+    if (filters.timeWindow !== "all" || filters.selectedMonth) {
+      if (!isExpenseInTimeWindow(expense, filters.timeWindow, filters.selectedMonth)) {
+        return false
+      }
     }
 
     // 2. Amount range check

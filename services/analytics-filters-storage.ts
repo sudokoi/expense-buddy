@@ -11,6 +11,7 @@ const ANALYTICS_FILTERS_KEY = "analytics_filters_v1"
 export const AnalyticsFiltersStateSchema = z
   .object({
     timeWindow: z.enum(["7d", "15d", "1m", "3m", "6m", "1y", "all"]),
+    selectedMonth: z.string().nullable(),
     selectedCategories: z.array(z.string()),
     selectedPaymentMethods: z.array(z.string()),
     selectedPaymentInstruments: z.array(z.string()),
@@ -35,6 +36,7 @@ export const AnalyticsFiltersStateSchema = z
 
 export interface AnalyticsFiltersState {
   timeWindow: TimeWindow
+  selectedMonth: string | null
   selectedCategories: string[]
   selectedPaymentMethods: PaymentMethodSelectionKey[]
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
@@ -46,6 +48,7 @@ export interface AnalyticsFiltersState {
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
   timeWindow: "7d",
+  selectedMonth: null,
   selectedCategories: [],
   selectedPaymentMethods: [],
   selectedPaymentInstruments: [],
@@ -64,6 +67,11 @@ const ALLOWED_PAYMENT_METHODS = new Set<string>([
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((v): v is string => typeof v === "string")
+}
+
+function asMonthKey(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  return /^\d{4}-\d{2}$/.test(value) ? value : null
 }
 
 function asTimeWindow(value: unknown): TimeWindow {
@@ -94,6 +102,7 @@ export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
 
     const next: AnalyticsFiltersState = {
       timeWindow: asTimeWindow(parsed.timeWindow),
+      selectedMonth: asMonthKey(parsed.selectedMonth),
       selectedCategories: asStringArray(parsed.selectedCategories),
       selectedPaymentMethods: asPaymentMethodKeys(parsed.selectedPaymentMethods),
       selectedPaymentInstruments: asStringArray(
@@ -111,6 +120,10 @@ export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
       next.selectedPaymentInstruments = []
     }
 
+    if (next.selectedMonth) {
+      next.timeWindow = "all"
+    }
+
     return next
   } catch (error) {
     console.warn("Failed to load analytics filters:", error)
@@ -123,6 +136,7 @@ export async function saveAnalyticsFilters(
 ): Promise<void> {
   const normalized: AnalyticsFiltersState = {
     ...filters,
+    selectedMonth: filters.selectedMonth ?? null,
     selectedPaymentInstruments:
       filters.selectedPaymentMethods.length === 0
         ? []

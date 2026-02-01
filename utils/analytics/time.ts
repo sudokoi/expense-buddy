@@ -5,9 +5,13 @@ import {
   endOfDay,
   isWithinInterval,
   isValid,
+  startOfMonth,
+  endOfMonth,
+  parse,
 } from "date-fns"
 import { Expense } from "../../types/expense"
 import type { DateRange } from "../../types/analytics"
+import { formatDate } from "../date"
 
 // Time window type
 export type TimeWindow = "7d" | "15d" | "1m" | "3m" | "6m" | "1y" | "all"
@@ -66,6 +70,35 @@ export function getDateRangeForTimeWindow(
   const days = getTimeWindowDays(timeWindow)
   const start = startOfDay(subDays(end, days - 1))
   return { start, end }
+}
+
+export function getMonthStartDate(monthKey: string): Date {
+  const parsed = parse(monthKey, "yyyy-MM", new Date())
+  if (!isValid(parsed)) {
+    return startOfMonth(new Date())
+  }
+  return startOfMonth(parsed)
+}
+
+export function getDateRangeForMonth(monthKey: string): DateRange {
+  const start = getMonthStartDate(monthKey)
+  return { start, end: endOfMonth(start) }
+}
+
+export function formatMonthLabel(monthKey: string): string {
+  return formatDate(getMonthStartDate(monthKey), "MMM yyyy")
+}
+
+export function getDateRangeForFilters(
+  timeWindow: TimeWindow,
+  selectedMonth: string | null,
+  expenses?: Expense[]
+): DateRange {
+  if (selectedMonth) {
+    return getDateRangeForMonth(selectedMonth)
+  }
+
+  return getDateRangeForTimeWindow(timeWindow, expenses)
 }
 
 /**

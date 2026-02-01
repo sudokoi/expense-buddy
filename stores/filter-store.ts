@@ -49,6 +49,13 @@ export const filterStore = createStore({
     setTimeWindow: (context, event: { timeWindow: TimeWindow }) => ({
       ...context,
       timeWindow: event.timeWindow,
+      selectedMonth: null,
+    }),
+
+    setSelectedMonth: (context, event: { month: string | null }) => ({
+      ...context,
+      selectedMonth: event.month,
+      timeWindow: event.month ? "all" : context.timeWindow,
     }),
 
     setSelectedCategories: (context, event: { categories: string[] }) => ({
@@ -116,6 +123,7 @@ export function useFilters() {
     filterStore,
     (s) => s.context.selectedPaymentInstruments
   )
+  const selectedMonth = useSelector(filterStore, (s) => s.context.selectedMonth)
   const selectedCurrency = useSelector(filterStore, (s) => s.context.selectedCurrency)
   const searchQuery = useSelector(filterStore, (s) => s.context.searchQuery)
   const minAmount = useSelector(filterStore, (s) => s.context.minAmount)
@@ -126,6 +134,7 @@ export function useFilters() {
   const filters = useMemo(
     () => ({
       timeWindow,
+      selectedMonth,
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
@@ -136,6 +145,7 @@ export function useFilters() {
     }),
     [
       timeWindow,
+      selectedMonth,
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
@@ -149,7 +159,11 @@ export function useFilters() {
   // Calculate active count (primitive value, safe to calculate inline)
   const activeCount = useMemo(() => {
     let count = 0
-    if (timeWindow !== "all") count++
+    if (selectedMonth) {
+      count++
+    } else if (timeWindow !== "all") {
+      count++
+    }
     if (selectedCategories.length > 0) count++
     if (selectedPaymentMethods.length > 0) count++
     if (selectedPaymentInstruments.length > 0) count++
@@ -158,6 +172,7 @@ export function useFilters() {
     return count
   }, [
     timeWindow,
+    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
@@ -175,6 +190,10 @@ export function useFilters() {
 
   const setTimeWindow = useCallback((timeWindow: TimeWindow) => {
     filterStore.trigger.setTimeWindow({ timeWindow })
+  }, [])
+
+  const setSelectedMonth = useCallback((month: string | null) => {
+    filterStore.trigger.setSelectedMonth({ month })
   }, [])
 
   const setSelectedCategories = useCallback((categories: string[]) => {
@@ -242,6 +261,7 @@ export function useFilters() {
     // Actions
     applyFilters,
     setTimeWindow,
+    setSelectedMonth,
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
@@ -270,6 +290,7 @@ export function useFilterPersistence() {
     const current = filterStore.getSnapshot().context
     await saveAnalyticsFilters({
       timeWindow: current.timeWindow,
+      selectedMonth: current.selectedMonth,
       selectedCategories: current.selectedCategories,
       selectedPaymentMethods: current.selectedPaymentMethods,
       selectedPaymentInstruments: current.selectedPaymentInstruments,

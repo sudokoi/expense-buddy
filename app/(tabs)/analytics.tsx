@@ -1,7 +1,6 @@
 import { useState, useCallback, memo, useMemo } from "react"
 import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
-import { TimeWindow } from "../../utils/analytics-calculations"
 import {
   useAnalyticsBase,
   useAnalyticsCharts,
@@ -16,6 +15,7 @@ import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
 import type { PaymentMethodType } from "../../types/expense"
+import { formatMonthLabel } from "../../utils/analytics/time"
 import {
   PAYMENT_INSTRUMENT_METHODS,
   findInstrumentById,
@@ -133,6 +133,7 @@ export default function AnalyticsScreen() {
   // Destructure filter values for convenience
   const {
     timeWindow,
+    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
@@ -149,6 +150,7 @@ export default function AnalyticsScreen() {
     paymentInstruments,
   } = useAnalyticsBase(
     timeWindow,
+    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
@@ -162,7 +164,11 @@ export default function AnalyticsScreen() {
     lineChartData,
   } = useAnalyticsCharts(filteredExpenses, dateRange, paymentInstruments, t)
 
-  const { statistics } = useAnalyticsStatistics(filteredExpenses, timeWindow, dateRange)
+  const { statistics } = useAnalyticsStatistics(
+    filteredExpenses,
+    selectedMonth ? "all" : timeWindow,
+    dateRange
+  )
 
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback(
@@ -364,12 +370,21 @@ export default function AnalyticsScreen() {
   const appliedChips = useMemo(() => {
     const chips: Array<{ key: string; label: string }> = []
 
-    chips.push({
-      key: "time",
-      label: t("analytics.filters.time", {
-        window: t(`analytics.timeWindow.${timeWindow}`),
-      }),
-    })
+    if (selectedMonth) {
+      chips.push({
+        key: "month",
+        label: t("analytics.filters.month", {
+          month: formatMonthLabel(selectedMonth),
+        }),
+      })
+    } else {
+      chips.push({
+        key: "time",
+        label: t("analytics.filters.time", {
+          window: t(`analytics.timeWindow.${timeWindow}`),
+        }),
+      })
+    }
 
     // Show Currency Chip if multiple available or purely informational if simplistic
     // User requested: "show applied currency in the applied filters"
@@ -457,6 +472,7 @@ export default function AnalyticsScreen() {
   }, [
     t,
     timeWindow,
+    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     showPaymentInstrumentFilter,
@@ -472,13 +488,7 @@ export default function AnalyticsScreen() {
   ])
 
   const handleApplyFilters = useCallback(
-    (next: {
-      timeWindow: TimeWindow
-      selectedCategories: string[]
-      selectedPaymentMethods: PaymentMethodSelectionKey[]
-      selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
-      selectedCurrency: string | null
-    }) => {
+    (next) => {
       // When payment methods are reset to "All", ensure instruments reset too.
       const normalizedPaymentInstruments =
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
@@ -486,6 +496,7 @@ export default function AnalyticsScreen() {
       // Apply all filters at once to the store
       applyFilters({
         timeWindow: next.timeWindow,
+        selectedMonth: next.selectedMonth,
         selectedCategories: next.selectedCategories,
         selectedPaymentMethods: next.selectedPaymentMethods,
         selectedPaymentInstruments: normalizedPaymentInstruments,
@@ -616,6 +627,7 @@ export default function AnalyticsScreen() {
         open={filtersOpen}
         isHydrating={!filtersHydrated}
         timeWindow={timeWindow}
+        selectedMonth={selectedMonth}
         selectedCategories={selectedCategories}
         selectedPaymentMethods={selectedPaymentMethods}
         paymentInstruments={paymentInstruments}

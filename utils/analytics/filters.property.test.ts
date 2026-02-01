@@ -68,6 +68,7 @@ describe("applyAllFilters", () => {
         const expenses = indices.map((_, i) => generateExpense({ id: `exp-${i}` }))
         const filterState: FilterState = {
           timeWindow: "all",
+          selectedMonth: null,
           selectedCategories: [],
           selectedPaymentMethods: [],
           selectedPaymentInstruments: [],
@@ -88,6 +89,36 @@ describe("applyAllFilters", () => {
     )
   })
 
+  it("should apply selected month over time window", () => {
+    fc.assert(
+      fc.property(fc.array(fc.integer({ min: 0, max: 50 })), (indices) => {
+        const expenses = indices.map((_, i) =>
+          generateExpense({
+            id: `exp-${i}`,
+            date: new Date(2024, 0, 10 + (i % 10)).toISOString(),
+          })
+        )
+
+        const filterState: FilterState = {
+          timeWindow: "7d",
+          selectedMonth: "2024-01",
+          selectedCategories: [],
+          selectedPaymentMethods: [],
+          selectedPaymentInstruments: [],
+          searchQuery: "",
+          minAmount: null,
+          maxAmount: null,
+        }
+
+        const result = applyAllFilters(expenses, filterState, [])
+        return result.every((expense) => {
+          const date = new Date(expense.date)
+          return date.getFullYear() === 2024 && date.getMonth() === 0
+        })
+      })
+    )
+  })
+
   it("should filter by categories correctly", () => {
     fc.assert(
       fc.property(
@@ -103,6 +134,7 @@ describe("applyAllFilters", () => {
 
           const filterState: FilterState = {
             timeWindow: "all",
+            selectedMonth: null,
             selectedCategories: [targetCategory],
             selectedPaymentMethods: [],
             selectedPaymentInstruments: [],
@@ -142,6 +174,7 @@ describe("applyAllFilters", () => {
 
           const filterState: FilterState = {
             timeWindow: "all",
+            selectedMonth: null,
             selectedCategories: [],
             selectedPaymentMethods: [],
             selectedPaymentInstruments: [],
@@ -185,6 +218,7 @@ describe("applyAllFilters", () => {
 
           const filterState: FilterState = {
             timeWindow: "all",
+            selectedMonth: null,
             selectedCategories: [targetCategory],
             selectedPaymentMethods: [],
             selectedPaymentInstruments: [],

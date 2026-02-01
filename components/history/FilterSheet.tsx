@@ -19,6 +19,7 @@ import type {
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import type { Category } from "../../types/category"
 import { TimeWindowSelector } from "../analytics/TimeWindowSelector"
+import { MonthSelector } from "../analytics/MonthSelector"
 import { CategoryFilter } from "../analytics/CategoryFilter"
 import { PaymentMethodFilter } from "../analytics/PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "../analytics/PaymentInstrumentFilter"
@@ -35,6 +36,7 @@ interface FilterSheetProps {
   onClose: () => void
   filters: {
     timeWindow: TimeWindow
+    selectedMonth: string | null
     selectedCategories: string[]
     selectedPaymentMethods: PaymentMethodSelectionKey[]
     selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
@@ -46,6 +48,7 @@ interface FilterSheetProps {
   allInstruments: PaymentInstrument[]
   categories: Category[]
   onTimeWindowChange: (window: TimeWindow) => void
+  onMonthChange: (month: string | null) => void
   onCategoriesChange: (categories: string[]) => void
   onPaymentMethodsChange: (methods: PaymentMethodSelectionKey[]) => void
   onPaymentInstrumentsChange: (instruments: PaymentInstrumentSelectionKey[]) => void
@@ -76,6 +79,7 @@ export const FilterSheet = React.memo(function FilterSheet({
   isHydrated,
   allInstruments,
   onTimeWindowChange,
+  onMonthChange,
   onCategoriesChange,
   onPaymentMethodsChange,
   onPaymentInstrumentsChange,
@@ -88,6 +92,9 @@ export const FilterSheet = React.memo(function FilterSheet({
 
   // Local draft state
   const [draftTimeWindow, setDraftTimeWindow] = useState<TimeWindow>(filters.timeWindow)
+  const [draftSelectedMonth, setDraftSelectedMonth] = useState<string | null>(
+    filters.selectedMonth
+  )
   const [draftCategories, setDraftCategories] = useState<string[]>(
     filters.selectedCategories
   )
@@ -105,6 +112,7 @@ export const FilterSheet = React.memo(function FilterSheet({
   React.useEffect(() => {
     if (open) {
       setDraftTimeWindow(filters.timeWindow)
+      setDraftSelectedMonth(filters.selectedMonth)
       setDraftCategories(filters.selectedCategories)
       setDraftPaymentMethods(filters.selectedPaymentMethods)
       setDraftPaymentInstruments(filters.selectedPaymentInstruments)
@@ -113,6 +121,13 @@ export const FilterSheet = React.memo(function FilterSheet({
       setDraftMaxAmount(filters.maxAmount)
     }
   }, [open, filters])
+
+  const handleMonthChange = useCallback((month: string | null) => {
+    setDraftSelectedMonth(month)
+    if (month) {
+      setDraftTimeWindow("all")
+    }
+  }, [])
 
   // Check if payment instrument filter should be shown
   const showPaymentInstrumentFilter = useMemo(() => {
@@ -179,6 +194,7 @@ export const FilterSheet = React.memo(function FilterSheet({
 
   const handleApply = useCallback(() => {
     onTimeWindowChange(draftTimeWindow)
+    onMonthChange(draftSelectedMonth)
     onCategoriesChange(draftCategories)
     onPaymentMethodsChange(draftPaymentMethods)
     onPaymentInstrumentsChange(draftPaymentInstruments)
@@ -187,6 +203,7 @@ export const FilterSheet = React.memo(function FilterSheet({
     onClose()
   }, [
     draftTimeWindow,
+    draftSelectedMonth,
     draftCategories,
     draftPaymentMethods,
     draftPaymentInstruments,
@@ -194,6 +211,7 @@ export const FilterSheet = React.memo(function FilterSheet({
     draftMinAmount,
     draftMaxAmount,
     onTimeWindowChange,
+    onMonthChange,
     onCategoriesChange,
     onPaymentMethodsChange,
     onPaymentInstrumentsChange,
@@ -204,6 +222,7 @@ export const FilterSheet = React.memo(function FilterSheet({
 
   const handleResetDraft = useCallback(() => {
     setDraftTimeWindow("all")
+    setDraftSelectedMonth(null)
     setDraftCategories([])
     setDraftPaymentMethods([])
     setDraftPaymentInstruments([])
@@ -261,6 +280,10 @@ export const FilterSheet = React.memo(function FilterSheet({
                   value={draftTimeWindow}
                   onChange={setDraftTimeWindow}
                 />
+              </CollapsibleSection>
+
+              <CollapsibleSection title={t("history.filterSheet.month")}>
+                <MonthSelector value={draftSelectedMonth} onChange={handleMonthChange} />
               </CollapsibleSection>
 
               <CollapsibleSection title={t("history.filterSheet.search")}>
