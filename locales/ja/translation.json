@@ -249,7 +249,7 @@
       "downloaded": "Downloaded {{count}} expenses",
       "settingsApplied": "Settings applied from GitHub",
       "autoSyncEnabled": "Auto-sync enabled",
-      "syncComplete": "Sync complete",
+      "syncComplete": "Sync complete — {{localCount}} local files updated, {{remoteCount}} remote files updated",
       "alreadyInSync": "Already in sync - no changes needed",
       "configCleared": "Configuration cleared",
       "categoryUpdated": "Category \"{{label}}\" updated",

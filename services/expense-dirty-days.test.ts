@@ -61,8 +61,9 @@ describe("expense-dirty-days", () => {
     await clearDirtyDays()
 
     const result = await loadDirtyDays()
-    expect(result.isTrusted).toBe(false)
+    expect(result.isTrusted).toBe(true)
     expect(result.state.dirtyDays).toEqual([])
+    expect(result.state.deletedDays).toEqual([])
   })
 
   it("consumeDirtyDays SHALL return state and clear storage", async () => {
@@ -72,6 +73,10 @@ describe("expense-dirty-days", () => {
     expect(consumed.state.dirtyDays).toEqual(["2025-01-04"])
 
     const key = dirtyDaysStorageKeyForTests()
-    expect(mockStorage.has(key)).toBe(false)
+    const stored = mockStorage.get(key)
+    expect(stored).not.toBeUndefined()
+    const parsed = JSON.parse(stored!)
+    expect(parsed.dirtyDays).toEqual([])
+    expect(parsed.deletedDays).toEqual([])
   })
 })

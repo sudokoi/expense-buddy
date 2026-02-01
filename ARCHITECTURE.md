@@ -161,6 +161,82 @@ const { settings, setTheme } = useSettings()
 | Expense data   | Expense Store      | Yes         | Yes  |
 | Notifications  | Notification Store | No          | No   |
 
+## Persistence Architecture
+
+Expense Buddy uses layered persistence to support offline-first behavior and sync:
+
+- **AsyncStorage** stores expenses, settings, filters, and dirty-day tracking.
+- **Secure storage** stores GitHub tokens and repo configuration.
+- **Daily CSV files** are generated during sync and stored remotely in GitHub.
+- **Hash storage** tracks file content hashes to skip unchanged uploads.
+
+## GitHub Sync Architecture
+
+### Sync Flow
+
+```mermaid
+flowchart TD
+    Start([Sync Requested]) --> Direction{Determine Sync Direction}
+
+    Direction -->|Push| SyncUp[Sync Up]
+    Direction -->|Pull| SyncDown[Sync Down]
+    Direction -->|Conflict| Conflict[Resolve Conflicts]
+    Direction -->|In Sync| Done[No Changes]
+    Direction -->|Error| Error[Sync Error]
+
+    SyncUp --> LoadDirty[Load Dirty Days]
+    LoadDirty --> HashDirty[Hash Dirty Day Files]
+    HashDirty --> Upload[Batch Upload Changed Files]
+    Upload --> Delete[Delete Confirmed Days]
+    Delete --> UpdateHashes[Update Hash Store]
+    UpdateHashes --> ClearDirty[Clear Dirty Days]
+    ClearDirty --> Done
+
+    SyncDown --> Fetch[Fetch Remote Files]
+    Fetch --> Merge[Merge Expenses]
+    Merge --> Replace[Replace Local Snapshot]
+    Replace --> ClearDirty
+
+    Conflict --> Resolve[User Resolution]
+    Resolve --> SyncUp
+```
+
+### Sync Machine Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> syncing: sync()
+    syncing --> success: synced
+    syncing --> inSync: no changes
+    syncing --> conflict: conflicts
+    syncing --> error: failure
+    conflict --> syncing: resolve
+    success --> idle
+    inSync --> idle
+    error --> idle
+```
+
+### Sync Notification Flow
+
+```mermaid
+flowchart LR
+    SM[Sync Manager] --> MC[Sync Machine]
+    MC --> ES[Expense Store]
+    ES --> SP[Store Provider]
+    SP --> NS[Notification Store]
+    NS --> UI[Toast Banner]
+```
+
+Notifications are formatted with i18n before they reach the UI, so the message string is
+display-ready by the time it reaches the notification store.
+
+## Internationalization Architecture
+
+- Locale bundles are loaded dynamically; only the active language is required at startup.
+- i18next is the single source of truth for translation lookups and formatting.
+- Locale-sensitive formatting (dates, currencies) uses the active language and device locale.
+
 ## Analytics Hook Architecture
 
 ### Hook Decomposition Strategy
@@ -410,6 +486,15 @@ History screen uses FlashList with:
 - `overrideItemLayout` for precise sizing
 - `keyExtractor` for stable keys
 
+### 5. GitHub Sync Optimization
+
+Sync uploads use dirty-day tracking to avoid scanning every daily CSV on each sync:
+
+- Expense mutations mark the affected day key as dirty (and track deleted days).
+- Dirty-day state persists in AsyncStorage, so restarts do not force full scans.
+- SyncUp only hashes/uploads dirty day files, and only deletes files confirmed in the current run.
+- Dirty-day state is cleared after successful or no-op syncs.
+
 ## Testing Strategy
 
 ### Property-Based Tests
@@ -462,38 +547,3 @@ XState stores are tested with:
 - Debounce user input
 - Memoize expensive calculations
 - Virtualize long lists
-
-## Migration Guide
-
-### From useAnalyticsData to Individual Hooks
-
-**Before**:
-
-```typescript
-const data = useAnalyticsData(timeWindow, categories, methods, instruments)
-// Re-renders when ANY data changes
-```
-
-**After**:
-
-```typescript
-const base = useAnalyticsBase(timeWindow, categories, methods, instruments, currency)
-const charts = useAnalyticsCharts(base.filteredExpenses, base.dateRange, instruments, t)
-const stats = useAnalyticsStatistics(base.filteredExpenses, timeWindow, base.dateRange)
-// Only re-renders when specific data changes
-```
-
-### From Scattered Type Imports to Barrel
-
-**Before**:
-
-```typescript
-import type { TimeWindow } from "../utils/analytics/time"
-import type { FilterState } from "../utils/analytics/filters"
-```
-
-**After**:
-
-```typescript
-import type { TimeWindow, FilterState } from "../types/analytics"
-```

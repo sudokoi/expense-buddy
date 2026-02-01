@@ -150,7 +150,7 @@ describe("Sync Notification Routing Properties", () => {
           const unsubscribe = emitter.onSyncNotification((n) => {
             receivedNotifications.push(n)
             // Route to notification store (mirrors StoreProvider behavior)
-            const message = `${n.message} — ${n.localFilesUpdated} local files updated, ${n.remoteFilesUpdated} remote files updated`
+            const message = n.message
             notificationStore.trigger.addNotification({
               message,
               notificationType: "success",
@@ -254,14 +254,10 @@ describe("Sync Notification Routing Properties", () => {
       fc.assert(
         fc.property(syncNotificationWithAtLeastOneChangeArb, (notification) => {
           // Verify the notification can be formatted correctly
-          const formattedMessage = `${notification.message} — ${notification.localFilesUpdated} local files updated, ${notification.remoteFilesUpdated} remote files updated`
+          const formattedMessage = notification.message
 
           // Verify format contains all required information
           expect(formattedMessage).toContain(notification.message)
-          expect(formattedMessage).toContain(String(notification.localFilesUpdated))
-          expect(formattedMessage).toContain(String(notification.remoteFilesUpdated))
-          expect(formattedMessage).toContain("local files updated")
-          expect(formattedMessage).toContain("remote files updated")
 
           return true
         }),

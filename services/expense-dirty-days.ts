@@ -100,11 +100,10 @@ export async function markDeletedDay(dayKey: string): Promise<DirtyDaysState> {
 }
 
 export async function clearDirtyDays(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(DIRTY_DAYS_KEY)
-  } catch (error) {
-    console.warn("Failed to clear dirty days:", error)
-  }
+  await saveState({
+    ...emptyState,
+    updatedAt: new Date().toISOString(),
+  })
 }
 
 export async function consumeDirtyDays(): Promise<DirtyDaysLoadResult> {

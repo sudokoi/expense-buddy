@@ -499,8 +499,8 @@ export async function syncUp(
           updatedHashes[filename] = hash
         }
 
-        for (const dayKey of deletedDaySet) {
-          delete updatedHashes[getFilenameForDay(dayKey)]
+        for (const file of filesToDelete) {
+          delete updatedHashes[file.path]
         }
       } else {
         // Keep hashes for unchanged files
@@ -1713,8 +1713,8 @@ export async function gitStyleSync(
         updatedHashes[filename] = hash
       }
 
-      for (const dayKey of deletedDaySet) {
-        delete updatedHashes[getFilenameForDay(dayKey)]
+      for (const file of filesToDelete) {
+        delete updatedHashes[file.path]
       }
     } else {
       // Keep hashes for unchanged files

@@ -3,6 +3,7 @@ import { Expense } from "../types/expense"
 import { loadSyncConfig, SyncNotification, type GitStyleSyncResult } from "./sync-manager"
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
+import i18next from "i18next"
 
 /**
  * Main auto-sync orchestration function
@@ -73,7 +74,10 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         notification = {
           localFilesUpdated,
           remoteFilesUpdated,
-          message: context.syncResult?.message || "Sync complete",
+          message: i18next.t("settings.notifications.syncComplete", {
+            localCount: localFilesUpdated,
+            remoteCount: remoteFilesUpdated,
+          }),
         }
 
         // Return merged expenses (includes both local and remote changes)
@@ -84,10 +88,15 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           downloadedSettings: syncResult?.mergedSettings,
         }
       } else if (context.syncResult) {
+        const localFilesUpdated = context.syncResult.localFilesUpdated || 0
+        const remoteFilesUpdated = context.syncResult.remoteFilesUpdated || 0
         notification = {
-          localFilesUpdated: context.syncResult.localFilesUpdated || 0,
-          remoteFilesUpdated: context.syncResult.remoteFilesUpdated || 0,
-          message: context.syncResult.message,
+          localFilesUpdated,
+          remoteFilesUpdated,
+          message: i18next.t("settings.notifications.syncComplete", {
+            localCount: localFilesUpdated,
+            remoteCount: remoteFilesUpdated,
+          }),
         }
 
         return {

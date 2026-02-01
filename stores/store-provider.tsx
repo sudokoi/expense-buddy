@@ -14,6 +14,7 @@ import {
   onSettingsDownloaded,
   onSyncNotification,
 } from "./expense-store"
+import { SyncNotification } from "../types/sync"
 import {
   settingsStore as defaultSettingsStore,
   SettingsStore,
@@ -118,16 +119,9 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(
-    (notification: {
-      localFilesUpdated: number
-      remoteFilesUpdated: number
-      message: string
-    }) => {
-      const localCount = notification.localFilesUpdated ?? 0
-      const remoteCount = notification.remoteFilesUpdated ?? 0
-      const message = `${notification.message} — ${localCount} local files updated, ${remoteCount} remote files updated`
+    (notification: SyncNotification) => {
       notificationStore.trigger.addNotification({
-        message,
+        message: notification.message,
         notificationType: "success",
         duration: 4000,
       })

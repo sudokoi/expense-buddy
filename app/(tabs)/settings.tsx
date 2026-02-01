@@ -528,8 +528,13 @@ export default function SettingsScreen() {
         onSuccess: (result) => {
           const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
           const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
-          const message = `${t("settings.notifications.syncComplete")} — ${localFilesUpdated} local files updated, ${remoteFilesUpdated} remote files updated`
-          addNotification(message, "success")
+          addNotification(
+            t("settings.notifications.syncComplete", {
+              localCount: localFilesUpdated,
+              remoteCount: remoteFilesUpdated,
+            }),
+            "success"
+          )
           clearDirtyDaysAfterSync()
           if (settings.syncSettings) {
             clearSettingsChangeFlag()

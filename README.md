@@ -59,6 +59,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
   - Auto-sync on app launch or after every change
   - Manual sync with upload/download controls
   - Incremental loading (last 7 days by default)
+- **Dirty-Day Sync**: Tracks which days changed and only re-hashes/uploads those daily files
 - **Differential Sync**: Only uploads changed files using content hashing for efficiency
 - **Batched Commits**: All file changes (uploads and deletions) are combined into a single atomic commit
 - **Detailed Sync Feedback**: Shows counts of expenses added, updated, and auto-resolved
