@@ -1,5 +1,10 @@
 import { formatISO, subDays } from "date-fns"
-import { getAvailableMonths, isTimeWindowCovered } from "./time"
+import {
+  getAvailableMonths,
+  getDateRangeForMonth,
+  getMonthStartDate,
+  isTimeWindowCovered,
+} from "./time"
 import type { Expense } from "../../types/expense"
 
 const createExpense = (daysAgo: number): Expense => {
@@ -73,5 +78,32 @@ describe("getAvailableMonths", () => {
     ]
 
     expect(getAvailableMonths(expenses)).toEqual(["2025-12", "2025-11"])
+  })
+})
+
+describe("getMonthStartDate", () => {
+  it("parses valid month keys", () => {
+    const date = getMonthStartDate("2024-02")
+    expect(date.getFullYear()).toBe(2024)
+    expect(date.getMonth()).toBe(1)
+  })
+
+  it("rejects invalid month keys", () => {
+    const invalidKeys = ["2024-13", "2024-00", "2024-1", "abcd-ef"]
+    for (const key of invalidKeys) {
+      const date = getMonthStartDate(key)
+      expect(date.getFullYear()).toBe(1970)
+      expect(date.getMonth()).toBe(0)
+    }
+  })
+})
+
+describe("getDateRangeForMonth", () => {
+  it("returns month range for valid key", () => {
+    const range = getDateRangeForMonth("2024-02")
+    expect(range.start.getFullYear()).toBe(2024)
+    expect(range.start.getMonth()).toBe(1)
+    expect(range.start.getDate()).toBe(1)
+    expect(range.end.getMonth()).toBe(1)
   })
 })

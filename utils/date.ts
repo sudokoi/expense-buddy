@@ -12,7 +12,7 @@ const locales: Record<string, any> = {
 
 export function getLocale() {
   const lang = i18next.language
-  return locales[lang] || enUS
+  return locales[lang] || enIN
 }
 
 export function getLocalDayKey(isoDate: string): string {

@@ -202,13 +202,12 @@ function matchesSearch(
 function isExpenseInTimeWindow(
   expense: Expense,
   timeWindow: TimeWindow,
-  selectedMonth: string | null
+  monthRange: { start: Date; end: Date } | null
 ): boolean {
-  if (selectedMonth) {
+  if (monthRange) {
     const expenseDate = parseISO(expense.date)
     if (!isValid(expenseDate)) return false
-    const { start, end } = getDateRangeForMonth(selectedMonth)
-    return isWithinInterval(expenseDate, { start, end })
+    return isWithinInterval(expenseDate, monthRange)
   }
 
   if (timeWindow === "all") return true
@@ -276,11 +275,14 @@ export function applyAllFilters(
 
   const searchLower = filters.searchQuery.toLowerCase().trim()
   const hasSearch = searchLower.length > 0
+  const monthRange = filters.selectedMonth
+    ? getDateRangeForMonth(filters.selectedMonth)
+    : null
 
   return expenses.filter((expense) => {
     // 1. Time window check (fast)
-    if (filters.timeWindow !== "all" || filters.selectedMonth) {
-      if (!isExpenseInTimeWindow(expense, filters.timeWindow, filters.selectedMonth)) {
+    if (filters.timeWindow !== "all" || monthRange) {
+      if (!isExpenseInTimeWindow(expense, filters.timeWindow, monthRange)) {
         return false
       }
     }

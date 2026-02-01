@@ -8,6 +8,7 @@ import {
   startOfMonth,
   endOfMonth,
   parse,
+  format,
 } from "date-fns"
 import { Expense } from "../../types/expense"
 import type { DateRange } from "../../types/analytics"
@@ -73,10 +74,19 @@ export function getDateRangeForTimeWindow(
 }
 
 export function getMonthStartDate(monthKey: string): Date {
-  const parsed = parse(monthKey, "yyyy-MM", new Date())
-  if (!isValid(parsed)) {
-    return startOfMonth(new Date())
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthKey)) {
+    return startOfMonth(new Date(0))
   }
+
+  const parsed = parse(monthKey, "yyyy-MM", new Date(0))
+  if (!isValid(parsed)) {
+    return startOfMonth(new Date(0))
+  }
+
+  if (format(parsed, "yyyy-MM") !== monthKey) {
+    return startOfMonth(new Date(0))
+  }
+
   return startOfMonth(parsed)
 }
 

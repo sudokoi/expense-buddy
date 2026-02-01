@@ -22,6 +22,8 @@ const emptyState: DirtyDaysState = {
   updatedAt: new Date(0).toISOString(),
 }
 
+let writeQueue = Promise.resolve()
+
 function normalizeState(state: DirtyDaysState): DirtyDaysState {
   const uniqueDirty = Array.from(new Set(state.dirtyDays)).sort()
   const uniqueDeleted = Array.from(new Set(state.deletedDays)).sort()
@@ -34,12 +36,23 @@ function normalizeState(state: DirtyDaysState): DirtyDaysState {
   }
 }
 
+function enqueueWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const next = writeQueue.then(operation, operation)
+  writeQueue = next.then(
+    () => undefined,
+    () => undefined
+  )
+  return next
+}
+
 async function saveState(state: DirtyDaysState): Promise<void> {
-  try {
-    await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(state))
-  } catch (error) {
-    console.warn("Failed to save dirty days:", error)
-  }
+  await enqueueWrite(async () => {
+    try {
+      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(state))
+    } catch (error) {
+      console.warn("Failed to save dirty days:", error)
+    }
+  })
 }
 
 export async function loadDirtyDays(): Promise<DirtyDaysLoadResult> {
@@ -77,26 +90,38 @@ export async function saveDirtyDays(state: DirtyDaysState): Promise<void> {
 }
 
 export async function markDirtyDay(dayKey: string): Promise<DirtyDaysState> {
-  const { state } = await loadDirtyDays()
-  const nextState = normalizeState({
-    ...state,
-    dirtyDays: [...state.dirtyDays, dayKey],
-    updatedAt: new Date().toISOString(),
+  return enqueueWrite(async () => {
+    const { state } = await loadDirtyDays()
+    const nextState = normalizeState({
+      ...state,
+      dirtyDays: [...state.dirtyDays, dayKey],
+      updatedAt: new Date().toISOString(),
+    })
+    try {
+      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
+    } catch (error) {
+      console.warn("Failed to save dirty days:", error)
+    }
+    return nextState
   })
-  await saveState(nextState)
-  return nextState
 }
 
 export async function markDeletedDay(dayKey: string): Promise<DirtyDaysState> {
-  const { state } = await loadDirtyDays()
-  const nextState = normalizeState({
-    ...state,
-    dirtyDays: [...state.dirtyDays, dayKey],
-    deletedDays: [...state.deletedDays, dayKey],
-    updatedAt: new Date().toISOString(),
+  return enqueueWrite(async () => {
+    const { state } = await loadDirtyDays()
+    const nextState = normalizeState({
+      ...state,
+      dirtyDays: [...state.dirtyDays, dayKey],
+      deletedDays: [...state.deletedDays, dayKey],
+      updatedAt: new Date().toISOString(),
+    })
+    try {
+      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
+    } catch (error) {
+      console.warn("Failed to save dirty days:", error)
+    }
+    return nextState
   })
-  await saveState(nextState)
-  return nextState
 }
 
 export async function clearDirtyDays(): Promise<void> {
@@ -107,9 +132,21 @@ export async function clearDirtyDays(): Promise<void> {
 }
 
 export async function consumeDirtyDays(): Promise<DirtyDaysLoadResult> {
-  const result = await loadDirtyDays()
-  await clearDirtyDays()
-  return result
+  return enqueueWrite(async () => {
+    const result = await loadDirtyDays()
+    try {
+      await AsyncStorage.setItem(
+        DIRTY_DAYS_KEY,
+        JSON.stringify({
+          ...emptyState,
+          updatedAt: new Date().toISOString(),
+        })
+      )
+    } catch (error) {
+      console.warn("Failed to save dirty days:", error)
+    }
+    return result
+  })
 }
 
 export function dirtyDaysStorageKeyForTests(): string {

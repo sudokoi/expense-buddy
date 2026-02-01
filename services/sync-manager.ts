@@ -33,7 +33,7 @@ import {
   saveFileHashes,
   FileHashMap,
 } from "./hash-storage"
-import { loadDirtyDays, clearDirtyDays } from "./expense-dirty-days"
+import { consumeDirtyDays } from "./expense-dirty-days"
 import { format } from "date-fns"
 import {
   mergeExpenses,
@@ -305,7 +305,7 @@ export async function syncUp(
     // Load stored hashes for differential sync
     const storedHashes = await loadFileHashes()
 
-    const dirtyDaysResult = await loadDirtyDays()
+    const dirtyDaysResult = await consumeDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
@@ -457,9 +457,6 @@ export async function syncUp(
 
     // If no changes to make, return early with success
     if (filesToUpload.length === 0 && filesToDelete.length === 0) {
-      if (useDirtyDays) {
-        await clearDirtyDays()
-      }
       return {
         success: true,
         message: i18next.t("githubSync.manager.noChanges", { skipped: skippedFiles }),
@@ -526,8 +523,6 @@ export async function syncUp(
         await saveSettingsHash(newSettingsHash)
         await clearSettingsChanged()
       }
-
-      await clearDirtyDays()
 
       // Fetch the actual commit timestamp from GitHub to ensure perfect sync
       let commitTimestamp: string | undefined
@@ -1161,7 +1156,7 @@ export async function getPendingSyncCount(expenses: Expense[]): Promise<{
   try {
     const storedHashes = await loadFileHashes()
     const groupedByDay = groupExpensesByDay(expenses)
-    const dirtyDaysResult = await loadDirtyDays()
+    const dirtyDaysResult = await consumeDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
@@ -1391,7 +1386,7 @@ export async function gitStyleSync(
     const remoteExpenses = fetchResult.expenses || []
     const remoteFilesUpdated = fetchResult.filesDownloaded ?? 0
 
-    const dirtyDaysResult = await loadDirtyDays()
+    const dirtyDaysResult = await consumeDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
@@ -1645,8 +1640,6 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
-      await clearDirtyDays()
-
       return {
         success: true,
         message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
@@ -1738,8 +1731,6 @@ export async function gitStyleSync(
       await saveSettingsHash(newSettingsHash)
       await clearSettingsChanged()
     }
-
-    await clearDirtyDays()
 
     // Fetch and save the commit timestamp
     let commitTimestamp: string | undefined

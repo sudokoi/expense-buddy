@@ -31,10 +31,8 @@ export const useExpenses = () => {
     expenseStore,
     (state) => state.context.syncNotification
   )
-  const pendingChanges = useSelector(expenseStore, (state) => ({
-    dirtyDays: state.context.dirtyDays,
-    deletedDays: state.context.deletedDays,
-  }))
+  const dirtyDays = useSelector(expenseStore, (state) => state.context.dirtyDays)
+  const deletedDays = useSelector(expenseStore, (state) => state.context.deletedDays)
   const clearDirtyDaysAfterSync = useCallback(
     () => expenseStore.trigger.clearDirtyDaysAfterSync(),
     [expenseStore]
@@ -114,8 +112,8 @@ export const useExpenses = () => {
       activeExpenses,
       isLoading,
       syncNotification,
-      dirtyDays: pendingChanges.dirtyDays,
-      deletedDays: pendingChanges.deletedDays,
+      dirtyDays,
+      deletedDays,
     },
     addExpense,
     editExpense,
