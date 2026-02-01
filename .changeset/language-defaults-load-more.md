@@ -1,5 +1,9 @@
 ---
-"expense-buddy": patch
+"expense-buddy": minor
 ---
 
-Sync default currency with language changes and hide history load more when the selected time window is already covered.
+Introduce month filters, smarter sync, and language-aligned defaults.
+
+- Add month filtering for analytics and history views.
+- Sync default currency with language changes and improve history load-more logic.
+- Optimize GitHub sync with dirty-day tracking and localized notifications.
