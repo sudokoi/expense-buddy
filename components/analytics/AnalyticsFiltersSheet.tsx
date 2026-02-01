@@ -85,6 +85,11 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
       setDraftTimeWindow("all")
     }
   }, [])
+
+  const handleTimeWindowChange = useCallback((window: TimeWindow) => {
+    setDraftTimeWindow(window)
+    setDraftSelectedMonth(null)
+  }, [])
   const [draftCategories, setDraftCategories] = useState<string[]>(selectedCategories)
   const [draftPaymentMethods, setDraftPaymentMethods] =
     useState<PaymentMethodSelectionKey[]>(selectedPaymentMethods)
@@ -264,7 +269,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               <CollapsibleSection title={t("analytics.filtersModal.time")}>
                 <TimeWindowSelector
                   value={draftTimeWindow}
-                  onChange={setDraftTimeWindow}
+                  onChange={handleTimeWindowChange}
                 />
               </CollapsibleSection>
 

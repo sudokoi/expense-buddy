@@ -131,6 +131,11 @@ export const FilterSheet = React.memo(function FilterSheet({
     }
   }, [])
 
+  const handleTimeWindowChange = useCallback((window: TimeWindow) => {
+    setDraftTimeWindow(window)
+    setDraftSelectedMonth(null)
+  }, [])
+
   // Check if payment instrument filter should be shown
   const showPaymentInstrumentFilter = useMemo(() => {
     const active = getActivePaymentInstruments(allInstruments)
@@ -280,7 +285,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               <CollapsibleSection title={t("history.filterSheet.time")}>
                 <TimeWindowSelector
                   value={draftTimeWindow}
-                  onChange={setDraftTimeWindow}
+                  onChange={handleTimeWindowChange}
                 />
               </CollapsibleSection>
 
