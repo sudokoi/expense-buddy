@@ -38,6 +38,10 @@ export interface SyncResult {
   filesSkipped?: number
   /** Number of files deleted during sync */
   filesDeleted?: number
+  /** Number of local files updated during sync (uploads + deletions) */
+  localFilesUpdated?: number
+  /** Number of remote files updated during sync (downloads) */
+  remoteFilesUpdated?: number
   /** Whether settings were synced */
   settingsSynced?: boolean
   /** Whether settings sync was skipped (unchanged) */
@@ -52,12 +56,10 @@ export interface SyncResult {
  * Notification data for sync operations
  */
 export interface SyncNotification {
-  /** Number of new items from remote */
-  newItemsCount: number
-  /** Number of updated items from remote */
-  updatedItemsCount: number
-  /** Total count of items after sync */
-  totalCount: number
+  /** Number of local files updated during sync */
+  localFilesUpdated: number
+  /** Number of remote files updated during sync */
+  remoteFilesUpdated: number
   /** Human-readable notification message */
   message: string
 }

@@ -145,9 +145,8 @@ const expenseArb: fc.Arbitrary<Expense> = fc.record({
 })
 
 const syncNotificationArb: fc.Arbitrary<SyncNotification> = fc.record({
-  newItemsCount: fc.integer({ min: 0, max: 100 }),
-  updatedItemsCount: fc.integer({ min: 0, max: 100 }),
-  totalCount: fc.integer({ min: 0, max: 200 }),
+  localFilesUpdated: fc.integer({ min: 0, max: 100 }),
+  remoteFilesUpdated: fc.integer({ min: 0, max: 100 }),
   message: fc.string({ minLength: 1, maxLength: 100 }),
 })
 
@@ -365,9 +364,8 @@ describe("Expense Store Properties", () => {
           const { syncNotification } = store.getSnapshot().context
           return (
             syncNotification !== null &&
-            syncNotification.newItemsCount === notification.newItemsCount &&
-            syncNotification.updatedItemsCount === notification.updatedItemsCount &&
-            syncNotification.totalCount === notification.totalCount &&
+            syncNotification.localFilesUpdated === notification.localFilesUpdated &&
+            syncNotification.remoteFilesUpdated === notification.remoteFilesUpdated &&
             syncNotification.message === notification.message
           )
         }),

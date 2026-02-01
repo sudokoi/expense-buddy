@@ -53,12 +53,8 @@ const layoutStyles = {
 export default function SettingsScreen() {
   const { t } = useTranslation()
 
-  const {
-    state,
-    replaceAllExpenses,
-    clearPendingChangesAfterSync,
-    reassignExpensesToOther,
-  } = useExpenses()
+  const { state, replaceAllExpenses, clearDirtyDaysAfterSync, reassignExpensesToOther } =
+    useExpenses()
   const { addNotification } = useNotifications()
   const {
     categories,
@@ -428,13 +424,16 @@ export default function SettingsScreen() {
 
   // Calculate pending count for display on sync button
   const pendingCount = useMemo(() => {
-    const expenseChanges =
-      state.pendingChanges.added +
-      state.pendingChanges.edited +
-      state.pendingChanges.deleted
+    const uniqueDirtyDays = new Set([...state.dirtyDays, ...state.deletedDays])
+    const expenseChanges = uniqueDirtyDays.size
     const settingsChanges = settings.syncSettings && hasUnsyncedSettingsChanges ? 1 : 0
     return expenseChanges + settingsChanges
-  }, [state.pendingChanges, settings.syncSettings, hasUnsyncedSettingsChanges])
+  }, [
+    state.dirtyDays,
+    state.deletedDays,
+    settings.syncSettings,
+    hasUnsyncedSettingsChanges,
+  ])
 
   // Sync button text with pending count
   const syncButtonText = useMemo(() => {
@@ -527,9 +526,11 @@ export default function SettingsScreen() {
           }
         },
         onSuccess: (result) => {
-          // ... (simplified success handler logic for brevity, or reuse)
-          addNotification(t("settings.notifications.syncComplete"), "success")
-          clearPendingChangesAfterSync()
+          const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
+          const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
+          const message = `${t("settings.notifications.syncComplete")} — ${localFilesUpdated} local files updated, ${remoteFilesUpdated} remote files updated`
+          addNotification(message, "success")
+          clearDirtyDaysAfterSync()
           if (settings.syncSettings) {
             clearSettingsChangeFlag()
           }
@@ -559,7 +560,7 @@ export default function SettingsScreen() {
     showConflictDialog,
     addNotification,
     clearSyncConfig,
-    clearPendingChangesAfterSync,
+    clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
     replaceSettings,

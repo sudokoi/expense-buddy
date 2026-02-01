@@ -11,12 +11,12 @@ import {
   removeLegacyExpensesKey,
 } from "../services/expense-storage"
 import {
-  trackAdd,
-  trackEdit,
-  trackDelete,
-  clearPendingChanges,
-  loadPendingChanges,
-} from "../services/change-tracker"
+  loadDirtyDays,
+  markDirtyDay,
+  markDeletedDay,
+  clearDirtyDays,
+} from "../services/expense-dirty-days"
+import { getLocalDayKey } from "../utils/date"
 import { AppSettings } from "../services/settings-manager"
 import {
   performAutoSyncOnChange,
@@ -41,6 +41,20 @@ function normalizeExpenseForSave(expense: Expense): Expense {
     category: normalizedCategory,
     paymentMethod: normalizedPaymentMethod,
   }
+}
+
+function addUniqueDay(days: string[], dayKey: string): string[] {
+  if (days.includes(dayKey)) return days
+  return [...days, dayKey].sort()
+}
+
+function addUniqueDays(days: string[], dayKeys: string[]): string[] {
+  if (dayKeys.length === 0) return days
+  const next = new Set(days)
+  for (const dayKey of dayKeys) {
+    next.add(dayKey)
+  }
+  return Array.from(next).sort()
 }
 
 // Store event emitter for cross-store communication
@@ -88,8 +102,8 @@ function createAutoSyncCallbacks(): AutoSyncCallbacks {
     onExpensesReplaced: (expenses: Expense[]) => {
       expenseStore.trigger.replaceExpenses({ expenses })
     },
-    onPendingChangesCleared: () => {
-      expenseStore.trigger.clearPendingChangesCount()
+    onDirtyDaysCleared: () => {
+      expenseStore.trigger.clearDirtyDaysState()
     },
     onSyncNotification: (notification: SyncNotification) => {
       expenseStore.trigger.setSyncNotification({ notification })
@@ -105,25 +119,20 @@ export const expenseStore = createStore({
     expenses: [] as Expense[],
     isLoading: true,
     syncNotification: null as SyncNotification | null,
-    pendingChanges: {
-      added: 0,
-      edited: 0,
-      deleted: 0,
-    },
+    dirtyDays: [] as string[],
+    deletedDays: [] as string[],
   },
 
   on: {
     loadExpenses: (
       context,
-      event: {
-        expenses: Expense[]
-        pendingChanges?: { added: number; edited: number; deleted: number }
-      }
+      event: { expenses: Expense[]; dirtyDays?: string[]; deletedDays?: string[] }
     ) => ({
       ...context,
       expenses: event.expenses,
       isLoading: false,
-      pendingChanges: event.pendingChanges ?? context.pendingChanges,
+      dirtyDays: event.dirtyDays ?? context.dirtyDays,
+      deletedDays: event.deletedDays ?? context.deletedDays,
     }),
 
     setLoading: (context, event: { isLoading: boolean }) => ({
@@ -134,64 +143,92 @@ export const expenseStore = createStore({
     addExpense: (context, event: { expense: Expense }, enqueue) => {
       const normalizedExpense = normalizeExpenseForSave(event.expense)
       const newExpenses = [normalizedExpense, ...context.expenses]
-      const newPendingChanges = {
-        ...context.pendingChanges,
-        added: context.pendingChanges.added + 1,
-      }
+      const dayKey = getLocalDayKey(normalizedExpense.date)
+      const dirtyDays = addUniqueDay(context.dirtyDays, dayKey)
 
       enqueue.effect(async () => {
         await persistExpenseAdded(normalizedExpense)
-        await trackAdd(normalizedExpense.id)
+        await markDirtyDay(dayKey)
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
-      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+      return { ...context, expenses: newExpenses, dirtyDays }
     },
 
     editExpense: (context, event: { expense: Expense }, enqueue) => {
       const normalizedExpense = normalizeExpenseForSave(event.expense)
+      const existingExpense = context.expenses.find(
+        (expense) => expense.id === normalizedExpense.id
+      )
+      const previousDayKey = existingExpense ? getLocalDayKey(existingExpense.date) : null
+      const nextDayKey = getLocalDayKey(normalizedExpense.date)
+      const hasOtherOldDayExpenses = previousDayKey
+        ? context.expenses.some(
+            (expense) =>
+              expense.id !== normalizedExpense.id &&
+              getLocalDayKey(expense.date) === previousDayKey
+          )
+        : false
+      const deletedDayKey =
+        previousDayKey && previousDayKey !== nextDayKey && !hasOtherOldDayExpenses
+          ? previousDayKey
+          : null
       const newExpenses = context.expenses.map((e) =>
         e.id === normalizedExpense.id ? normalizedExpense : e
       )
-      // Only increment edited if not already in added set (tracked via change-tracker)
-      // For simplicity, we increment here - the actual tracking is in change-tracker
-      const newPendingChanges = {
-        ...context.pendingChanges,
-        edited: context.pendingChanges.edited + 1,
+      let dirtyDays = addUniqueDay(context.dirtyDays, nextDayKey)
+      if (previousDayKey && previousDayKey !== nextDayKey) {
+        dirtyDays = addUniqueDay(dirtyDays, previousDayKey)
+      }
+      let deletedDays = context.deletedDays
+      if (deletedDayKey) {
+        deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
       enqueue.effect(async () => {
         await persistExpenseUpdated(normalizedExpense)
-        await trackEdit(normalizedExpense.id)
+        await markDirtyDay(nextDayKey)
+        if (previousDayKey && previousDayKey !== nextDayKey) {
+          await markDirtyDay(previousDayKey)
+        }
+        if (deletedDayKey) {
+          await markDeletedDay(deletedDayKey)
+        }
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
-      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+      return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
     },
 
     deleteExpense: (context, event: { id: string }, enqueue) => {
       const now = new Date().toISOString()
       // Soft delete: mark with deletedAt timestamp instead of removing
       let updatedExpense: Expense | null = null
+      let deletedDayKey: string | null = null
       const newExpenses = context.expenses.map((e) => {
         if (e.id !== event.id) return e
         updatedExpense = { ...e, deletedAt: now, updatedAt: now }
+        deletedDayKey = getLocalDayKey(e.date)
         return updatedExpense
       })
-      const newPendingChanges = {
-        ...context.pendingChanges,
-        deleted: context.pendingChanges.deleted + 1,
+      let dirtyDays = context.dirtyDays
+      let deletedDays = context.deletedDays
+      if (deletedDayKey) {
+        dirtyDays = addUniqueDay(dirtyDays, deletedDayKey)
+        deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
       enqueue.effect(async () => {
         if (updatedExpense) {
           await persistExpenseUpdated(updatedExpense)
         }
-        await trackDelete(event.id)
+        if (deletedDayKey) {
+          await markDeletedDay(deletedDayKey)
+        }
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
-      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+      return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
     },
 
     replaceExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
@@ -201,7 +238,10 @@ export const expenseStore = createStore({
         await removeLegacyExpensesKey()
       })
 
-      return { ...context, expenses: event.expenses }
+      return {
+        ...context,
+        expenses: event.expenses,
+      }
     },
 
     setSyncNotification: (
@@ -231,18 +271,20 @@ export const expenseStore = createStore({
       syncNotification: null,
     }),
 
-    clearPendingChangesCount: (context) => ({
+    clearDirtyDaysState: (context) => ({
       ...context,
-      pendingChanges: { added: 0, edited: 0, deleted: 0 },
+      dirtyDays: [],
+      deletedDays: [],
     }),
 
-    clearPendingChangesAfterSync: (context, _event, enqueue) => {
+    clearDirtyDaysAfterSync: (context, _event, enqueue) => {
       enqueue.effect(async () => {
-        await clearPendingChanges()
+        await clearDirtyDays()
       })
       return {
         ...context,
-        pendingChanges: { added: 0, edited: 0, deleted: 0 },
+        dirtyDays: [],
+        deletedDays: [],
       }
     },
 
@@ -250,11 +292,13 @@ export const expenseStore = createStore({
       const now = new Date().toISOString()
       const affectedExpenseIds: string[] = []
       const affectedExpenses: Expense[] = []
+      const affectedDays: string[] = []
 
       // Update all expenses with the deleted category to "Other"
       const newExpenses = context.expenses.map((expense) => {
         if (expense.category === event.fromCategory && !expense.deletedAt) {
           affectedExpenseIds.push(expense.id)
+          affectedDays.push(getLocalDayKey(expense.date))
           const updated = {
             ...expense,
             category: "Other",
@@ -266,11 +310,7 @@ export const expenseStore = createStore({
         return expense
       })
 
-      // Calculate new pending changes count (each affected expense counts as an edit)
-      const newPendingChanges = {
-        ...context.pendingChanges,
-        edited: context.pendingChanges.edited + affectedExpenseIds.length,
-      }
+      const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
       enqueue.effect(async () => {
         // Persist only affected expenses (avoid full-array rewrite)
@@ -278,9 +318,8 @@ export const expenseStore = createStore({
           await persistExpensesUpdated(affectedExpenses)
         }
 
-        // Track each affected expense as edited for sync
-        for (const id of affectedExpenseIds) {
-          await trackEdit(id)
+        for (const dayKey of new Set(affectedDays)) {
+          await markDirtyDay(dayKey)
         }
 
         // Trigger auto-sync if enabled for on_change timing
@@ -289,7 +328,7 @@ export const expenseStore = createStore({
         }
       })
 
-      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+      return { ...context, expenses: newExpenses, dirtyDays }
     },
 
     updateExpenseCategories: (
@@ -307,11 +346,13 @@ export const expenseStore = createStore({
       const now = new Date().toISOString()
       const affectedExpenseIds: string[] = []
       const affectedExpenses: Expense[] = []
+      const affectedDays: string[] = []
 
       // Update all active expenses with the old category to use the new category
       const newExpenses = context.expenses.map((expense) => {
         if (expense.category === fromCategory && !expense.deletedAt) {
           affectedExpenseIds.push(expense.id)
+          affectedDays.push(getLocalDayKey(expense.date))
           const updated = {
             ...expense,
             category: toCategory,
@@ -323,11 +364,7 @@ export const expenseStore = createStore({
         return expense
       })
 
-      // Calculate new pending changes count (each affected expense counts as an edit)
-      const newPendingChanges = {
-        ...context.pendingChanges,
-        edited: context.pendingChanges.edited + affectedExpenseIds.length,
-      }
+      const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
       enqueue.effect(async () => {
         // Persist only affected expenses (avoid full-array rewrite)
@@ -335,9 +372,8 @@ export const expenseStore = createStore({
           await persistExpensesUpdated(affectedExpenses)
         }
 
-        // Track each affected expense as edited for sync
-        for (const id of affectedExpenseIds) {
-          await trackEdit(id)
+        for (const dayKey of new Set(affectedDays)) {
+          await markDirtyDay(dayKey)
         }
 
         // Trigger auto-sync if enabled for on_change timing
@@ -346,7 +382,7 @@ export const expenseStore = createStore({
         }
       })
 
-      return { ...context, expenses: newExpenses, pendingChanges: newPendingChanges }
+      return { ...context, expenses: newExpenses, dirtyDays }
     },
   },
 })
@@ -363,15 +399,13 @@ export async function initializeExpenseStore(): Promise<void> {
       await removeLegacyExpensesKey()
     }
 
-    // Load pending changes from storage
-    const pendingChangesData = await loadPendingChanges()
-    const pendingChanges = {
-      added: pendingChangesData.added.size,
-      edited: pendingChangesData.edited.size,
-      deleted: pendingChangesData.deleted.size,
-    }
+    const dirtyDaysResult = await loadDirtyDays()
 
-    expenseStore.trigger.loadExpenses({ expenses, pendingChanges })
+    expenseStore.trigger.loadExpenses({
+      expenses,
+      dirtyDays: dirtyDaysResult.state.dirtyDays,
+      deletedDays: dirtyDaysResult.state.deletedDays,
+    })
 
     // Perform auto-sync on launch using the helper
     await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())

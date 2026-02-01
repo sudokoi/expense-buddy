@@ -119,11 +119,13 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(
     (notification: {
-      newItemsCount: number
-      updatedItemsCount: number
+      localFilesUpdated: number
+      remoteFilesUpdated: number
       message: string
     }) => {
-      const message = `${notification.message}: ${notification.newItemsCount} new, ${notification.updatedItemsCount} updated`
+      const localCount = notification.localFilesUpdated ?? 0
+      const remoteCount = notification.remoteFilesUpdated ?? 0
+      const message = `${notification.message} — ${localCount} local files updated, ${remoteCount} remote files updated`
       notificationStore.trigger.addNotification({
         message,
         notificationType: "success",

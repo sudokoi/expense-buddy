@@ -257,9 +257,8 @@ describe("Expense Store", () => {
     it("should set sync notification", () => {
       const store = createTestExpenseStore()
       const notification: SyncNotification = {
-        newItemsCount: 5,
-        updatedItemsCount: 2,
-        totalCount: 7,
+        localFilesUpdated: 3,
+        remoteFilesUpdated: 1,
         message: "Synced 7 items",
       }
 
@@ -272,9 +271,8 @@ describe("Expense Store", () => {
       const store = createTestExpenseStore()
       store.trigger.setSyncNotification({
         notification: {
-          newItemsCount: 1,
-          updatedItemsCount: 0,
-          totalCount: 1,
+          localFilesUpdated: 1,
+          remoteFilesUpdated: 0,
           message: "Synced 1 item",
         },
       })
@@ -290,9 +288,8 @@ describe("Expense Store", () => {
       const store = createTestExpenseStore()
       store.trigger.setSyncNotification({
         notification: {
-          newItemsCount: 1,
-          updatedItemsCount: 0,
-          totalCount: 1,
+          localFilesUpdated: 1,
+          remoteFilesUpdated: 0,
           message: "Synced 1 item",
         },
       })

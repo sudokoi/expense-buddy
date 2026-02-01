@@ -9,7 +9,7 @@ import {
   performAutoSyncIfEnabled,
   shouldAutoSyncForTiming,
 } from "../services/auto-sync-service"
-import { clearPendingChanges } from "../services/change-tracker"
+import { clearDirtyDays } from "../services/expense-dirty-days"
 
 /**
  * Result of an auto-sync operation
@@ -34,8 +34,8 @@ export interface AutoSyncResult {
 export interface AutoSyncCallbacks {
   /** Called when expenses should be replaced with merged results */
   onExpensesReplaced: (expenses: Expense[]) => void
-  /** Called when pending changes count should be cleared */
-  onPendingChangesCleared: () => void
+  /** Called when dirty-day state should be cleared */
+  onDirtyDaysCleared: () => void
   /** Called when a sync notification should be displayed */
   onSyncNotification: (notification: SyncNotification) => void
   /** Called when settings were downloaded from remote */
@@ -65,8 +65,8 @@ export async function performAutoSyncOnChange(
 
   if (result.synced && result.expenses) {
     callbacks.onExpensesReplaced(result.expenses)
-    await clearPendingChanges()
-    callbacks.onPendingChangesCleared()
+    await clearDirtyDays()
+    callbacks.onDirtyDaysCleared()
 
     if (result.notification) {
       callbacks.onSyncNotification(result.notification)
@@ -102,8 +102,8 @@ export async function performAutoSyncOnLaunch(
 
   if (result.synced && result.expenses) {
     callbacks.onExpensesReplaced(result.expenses)
-    await clearPendingChanges()
-    callbacks.onPendingChangesCleared()
+    await clearDirtyDays()
+    callbacks.onDirtyDaysCleared()
 
     if (result.notification) {
       callbacks.onSyncNotification(result.notification)

@@ -67,14 +67,12 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       const mergeResult = context.mergeResult
 
       if (mergeResult) {
-        const addedCount = mergeResult.addedFromRemote.length
-        const updatedCount = mergeResult.updatedFromRemote.length
-        const totalMerged = mergeResult.merged.length
+        const localFilesUpdated = syncResult?.localFilesUpdated ?? 0
+        const remoteFilesUpdated = syncResult?.remoteFilesUpdated ?? 0
 
         notification = {
-          newItemsCount: addedCount,
-          updatedItemsCount: updatedCount,
-          totalCount: totalMerged,
+          localFilesUpdated,
+          remoteFilesUpdated,
           message: context.syncResult?.message || "Sync complete",
         }
 
@@ -87,9 +85,8 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         }
       } else if (context.syncResult) {
         notification = {
-          newItemsCount: 0,
-          updatedItemsCount: context.syncResult.filesUploaded || 0,
-          totalCount: localExpenses.length,
+          localFilesUpdated: context.syncResult.localFilesUpdated || 0,
+          remoteFilesUpdated: context.syncResult.remoteFilesUpdated || 0,
           message: context.syncResult.message,
         }
 

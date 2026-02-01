@@ -1,7 +1,7 @@
 /**
  * Property-based tests for Sync Notification Routing
  *
- * For any sync operation that completes with changes (newItemsCount > 0 or updatedItemsCount > 0),
+ * For any sync operation that completes with changes (localFilesUpdated > 0 or remoteFilesUpdated > 0),
  * setting a sync notification in the expense store SHALL result in a corresponding notification
  * being added to the notification store.
  */
@@ -11,9 +11,8 @@ import { createStore } from "@xstate/store"
 
 // Define SyncNotification type locally to avoid import issues
 interface SyncNotification {
-  newItemsCount: number
-  updatedItemsCount: number
-  totalCount: number
+  localFilesUpdated: number
+  remoteFilesUpdated: number
   message: string
 }
 
@@ -127,11 +126,12 @@ const syncNotificationWithAtLeastOneChangeArb: fc.Arbitrary<SyncNotification> = 
     fc.integer({ min: 0, max: 100 }),
     fc.string({ minLength: 1, maxLength: 100 })
   )
-  .filter(([newItems, updatedItems]) => newItems > 0 || updatedItems > 0)
-  .map(([newItemsCount, updatedItemsCount, message]) => ({
-    newItemsCount,
-    updatedItemsCount,
-    totalCount: newItemsCount + updatedItemsCount,
+  .filter(([localFilesUpdated, remoteFilesUpdated]) =>
+    localFilesUpdated > 0 || remoteFilesUpdated > 0
+  )
+  .map(([localFilesUpdated, remoteFilesUpdated, message]) => ({
+    localFilesUpdated,
+    remoteFilesUpdated,
     message,
   }))
 
@@ -149,7 +149,7 @@ describe("Sync Notification Routing Properties", () => {
           const unsubscribe = emitter.onSyncNotification((n) => {
             receivedNotifications.push(n)
             // Route to notification store (mirrors StoreProvider behavior)
-            const message = `${n.message}: ${n.newItemsCount} new, ${n.updatedItemsCount} updated`
+            const message = `${n.message} — ${n.localFilesUpdated} local files updated, ${n.remoteFilesUpdated} remote files updated`
             notificationStore.trigger.addNotification({
               message,
               notificationType: "success",
@@ -253,14 +253,14 @@ describe("Sync Notification Routing Properties", () => {
       fc.assert(
         fc.property(syncNotificationWithAtLeastOneChangeArb, (notification) => {
           // Verify the notification can be formatted correctly
-          const formattedMessage = `${notification.message}: ${notification.newItemsCount} new, ${notification.updatedItemsCount} updated`
+          const formattedMessage = `${notification.message} — ${notification.localFilesUpdated} local files updated, ${notification.remoteFilesUpdated} remote files updated`
 
           // Verify format contains all required information
           expect(formattedMessage).toContain(notification.message)
-          expect(formattedMessage).toContain(String(notification.newItemsCount))
-          expect(formattedMessage).toContain(String(notification.updatedItemsCount))
-          expect(formattedMessage).toContain("new")
-          expect(formattedMessage).toContain("updated")
+          expect(formattedMessage).toContain(String(notification.localFilesUpdated))
+          expect(formattedMessage).toContain(String(notification.remoteFilesUpdated))
+          expect(formattedMessage).toContain("local files updated")
+          expect(formattedMessage).toContain("remote files updated")
 
           return true
         }),

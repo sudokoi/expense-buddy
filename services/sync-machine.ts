@@ -170,11 +170,11 @@ export const syncMachine = setup({
         !input.settings ||
         !result.mergedSettings ||
         computeSettingsHash(input.settings) === computeSettingsHash(result.mergedSettings)
+      const localFilesUpdated = result.localFilesUpdated ?? result.filesUploaded ?? 0
 
       if (
         result.success &&
-        result.filesUploaded === 0 &&
-        result.filesSkipped > 0 &&
+        localFilesUpdated === 0 &&
         !result.settingsSynced &&
         result.mergeResult?.addedFromRemote.length === 0 &&
         result.mergeResult?.updatedFromRemote.length === 0 &&

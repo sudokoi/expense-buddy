@@ -31,9 +31,13 @@ export const useExpenses = () => {
     expenseStore,
     (state) => state.context.syncNotification
   )
-  const pendingChanges = useSelector(
-    expenseStore,
-    (state) => state.context.pendingChanges
+  const pendingChanges = useSelector(expenseStore, (state) => ({
+    dirtyDays: state.context.dirtyDays,
+    deletedDays: state.context.deletedDays,
+  }))
+  const clearDirtyDaysAfterSync = useCallback(
+    () => expenseStore.trigger.clearDirtyDaysAfterSync(),
+    [expenseStore]
   )
 
   // Memoized: Filter out soft-deleted expenses for display
@@ -90,11 +94,6 @@ export const useExpenses = () => {
     [expenseStore]
   )
 
-  const clearPendingChangesAfterSync = useCallback(
-    () => expenseStore.trigger.clearPendingChangesAfterSync(),
-    [expenseStore]
-  )
-
   const reassignExpensesToOther = useCallback(
     (fromCategory: string) =>
       expenseStore.trigger.reassignExpensesToOther({ fromCategory }),
@@ -110,13 +109,20 @@ export const useExpenses = () => {
   return {
     // state.expenses contains ALL expenses (including soft-deleted) for sync operations
     // state.activeExpenses contains only non-deleted expenses for display
-    state: { expenses, activeExpenses, isLoading, syncNotification, pendingChanges },
+    state: {
+      expenses,
+      activeExpenses,
+      isLoading,
+      syncNotification,
+      dirtyDays: pendingChanges.dirtyDays,
+      deletedDays: pendingChanges.deletedDays,
+    },
     addExpense,
     editExpense,
     deleteExpense,
     replaceAllExpenses,
     clearSyncNotification,
-    clearPendingChangesAfterSync,
+    clearDirtyDaysAfterSync,
     reassignExpensesToOther,
     updateExpenseCategories,
   }

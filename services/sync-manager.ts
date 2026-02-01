@@ -33,6 +33,7 @@ import {
   saveFileHashes,
   FileHashMap,
 } from "./hash-storage"
+import { loadDirtyDays, clearDirtyDays } from "./expense-dirty-days"
 import { format } from "date-fns"
 import {
   mergeExpenses,
@@ -304,6 +305,11 @@ export async function syncUp(
     // Load stored hashes for differential sync
     const storedHashes = await loadFileHashes()
 
+    const dirtyDaysResult = await loadDirtyDays()
+    const useDirtyDays = dirtyDaysResult.isTrusted
+    const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
+    const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
+
     // Get list of existing files on GitHub
     let existingFiles: { name: string; path: string; sha: string }[]
     try {
@@ -342,6 +348,9 @@ export async function syncUp(
     // Group expenses by day
     const groupedByDay = groupExpensesByDay(expenses)
     const localDayKeys = new Set(groupedByDay.keys())
+    const dayKeysToProcess = useDirtyDays
+      ? new Set([...dirtyDaySet].filter((dayKey) => localDayKeys.has(dayKey)))
+      : localDayKeys
 
     // =========================================================================
     // Determine the local data range to avoid deleting remote files we never downloaded
@@ -369,7 +378,9 @@ export async function syncUp(
     const uploadedFileHashes: Map<string, string> = new Map()
     let skippedFiles = 0
 
-    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+    for (const dayKey of dayKeysToProcess) {
+      const dayExpenses = groupedByDay.get(dayKey)
+      if (!dayExpenses) continue
       const filename = getFilenameForDay(dayKey)
       const csvContent = exportToCSV(dayExpenses)
       const contentHash = computeContentHash(csvContent)
@@ -395,6 +406,10 @@ export async function syncUp(
     // deleting remote files we never downloaded (e.g., data older than 7 days)
     const filesToDelete: BatchFileDelete[] = []
     for (const file of existingExpenseFiles) {
+      if (useDirtyDays && !deletedDaySet.has(file.dayKey)) {
+        continue
+      }
+
       // Only consider deleting if:
       // 1. The file's day is not in our local data
       // 2. The file's day is WITHIN our local date range (we know about this day)
@@ -448,6 +463,8 @@ export async function syncUp(
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
+        localFilesUpdated: 0,
+        remoteFilesUpdated: 0,
         settingsSynced: false,
         settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
       }
@@ -472,23 +489,32 @@ export async function syncUp(
 
     if (batchResult.success) {
       // On success: update hashes for uploaded files, remove hashes for deleted files
-      const updatedHashes: FileHashMap = {}
+      const updatedHashes: FileHashMap = useDirtyDays ? { ...storedHashes } : {}
 
-      // Keep hashes for unchanged files
-      for (const [dayKey] of groupedByDay.entries()) {
-        const filename = getFilenameForDay(dayKey)
-        if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
-          // File was skipped (unchanged), keep its hash
-          updatedHashes[filename] = storedHashes[filename]
+      if (useDirtyDays) {
+        for (const [filename, hash] of uploadedFileHashes.entries()) {
+          updatedHashes[filename] = hash
         }
-      }
 
-      // Add hashes for newly uploaded files
-      for (const [filename, hash] of uploadedFileHashes.entries()) {
-        updatedHashes[filename] = hash
-      }
+        for (const dayKey of deletedDaySet) {
+          delete updatedHashes[getFilenameForDay(dayKey)]
+        }
+      } else {
+        // Keep hashes for unchanged files
+        for (const [dayKey] of groupedByDay.entries()) {
+          const filename = getFilenameForDay(dayKey)
+          if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
+            // File was skipped (unchanged), keep its hash
+            updatedHashes[filename] = storedHashes[filename]
+          }
+        }
 
-      // Note: deleted files are simply not included in updatedHashes
+        // Add hashes for newly uploaded files
+        for (const [filename, hash] of uploadedFileHashes.entries()) {
+          updatedHashes[filename] = hash
+        }
+        // Note: deleted files are simply not included in updatedHashes
+      }
 
       await saveFileHashes(updatedHashes)
 
@@ -497,6 +523,8 @@ export async function syncUp(
         await saveSettingsHash(newSettingsHash)
         await clearSettingsChanged()
       }
+
+      await clearDirtyDays()
 
       // Fetch the actual commit timestamp from GitHub to ensure perfect sync
       let commitTimestamp: string | undefined
@@ -524,6 +552,7 @@ export async function syncUp(
       const expenseFilesUploaded = filesToUpload.filter(
         (f) => f.path !== "settings.json"
       ).length
+      const localFilesUpdated = expenseFilesUploaded + filesToDelete.length
       if (expenseFilesUploaded > 0)
         message.push(`${expenseFilesUploaded} file(s) uploaded`)
       if (skippedFiles > 0) message.push(`${skippedFiles} file(s) unchanged`)
@@ -540,6 +569,8 @@ export async function syncUp(
         filesUploaded: expenseFilesUploaded,
         filesSkipped: skippedFiles,
         filesDeleted: filesToDelete.length,
+        localFilesUpdated,
+        remoteFilesUpdated: 0,
         settingsSynced: shouldSyncSettings,
         settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
         commitTimestamp,
@@ -595,6 +626,7 @@ export async function syncDown(
   error?: string
   hasMore?: boolean
   settingsDownloaded?: boolean
+  remoteFilesUpdated?: number
   authStatus?: 401 | 403
   shouldSignOut?: boolean
 }> {
@@ -656,6 +688,7 @@ export async function syncDown(
         error: i18next.t("githubSync.manager.noFilesFound"),
         settings: downloadedSettings,
         settingsDownloaded,
+        remoteFilesUpdated: 0,
       }
     }
 
@@ -741,6 +774,7 @@ export async function syncDown(
       settings: downloadedSettings,
       hasMore,
       settingsDownloaded,
+      remoteFilesUpdated: downloadedFiles,
     }
   } catch (error) {
     console.warn("[SyncManager] syncDown failed:", error)
@@ -778,6 +812,7 @@ export async function syncDownMore(
   expenses?: Expense[]
   error?: string
   hasMore?: boolean
+  remoteFilesUpdated?: number
   authStatus?: 401 | 403
   shouldSignOut?: boolean
 }> {
@@ -816,6 +851,7 @@ export async function syncDownMore(
         message: "No more expenses to load",
         expenses: currentExpenses,
         hasMore: false,
+        remoteFilesUpdated: 0,
       }
     }
 
@@ -850,6 +886,7 @@ export async function syncDownMore(
       message: `Loaded ${newExpenses.length} more expenses from ${downloadedFiles} file(s)`,
       expenses: allExpenses,
       hasMore,
+      remoteFilesUpdated: downloadedFiles,
     }
   } catch (error) {
     console.warn("[SyncManager] syncDownMore failed:", error)
@@ -1239,6 +1276,10 @@ export interface GitStyleSyncResult {
   filesSkipped: number
   /** Number of files deleted from remote */
   filesDeleted?: number
+  /** Number of local files updated during sync (uploads + deletions) */
+  localFilesUpdated?: number
+  /** Number of remote files updated during sync (downloads) */
+  remoteFilesUpdated?: number
   /** Error message if sync failed */
   error?: string
 
@@ -1323,6 +1364,12 @@ export async function gitStyleSync(
     }
 
     const remoteExpenses = fetchResult.expenses || []
+    const remoteFilesUpdated = fetchResult.filesDownloaded ?? 0
+
+    const dirtyDaysResult = await loadDirtyDays()
+    const useDirtyDays = dirtyDaysResult.isTrusted
+    const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
+    const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
 
     // =========================================================================
     // Step 2: Merge local and remote (Requirement 2.1, 3.1)
@@ -1397,6 +1444,9 @@ export async function gitStyleSync(
     // Group merged expenses by day
     const groupedByDay = groupExpensesByDay(mergedExpenses)
     const localDayKeys = new Set(groupedByDay.keys())
+    const dayKeysToProcess = useDirtyDays
+      ? new Set([...dirtyDaySet].filter((dayKey) => localDayKeys.has(dayKey)))
+      : localDayKeys
 
     // Determine the local data range to avoid deleting remote files we never downloaded
     let oldestLocalDate: string | null = null
@@ -1416,7 +1466,9 @@ export async function gitStyleSync(
     const uploadedFileHashes: Map<string, string> = new Map()
     let skippedFiles = 0
 
-    for (const [dayKey, dayExpenses] of groupedByDay.entries()) {
+    for (const dayKey of dayKeysToProcess) {
+      const dayExpenses = groupedByDay.get(dayKey)
+      if (!dayExpenses) continue
       const filename = getFilenameForDay(dayKey)
       const csvContent = exportToCSV(dayExpenses)
       const contentHash = computeContentHash(csvContent)
@@ -1438,6 +1490,9 @@ export async function gitStyleSync(
     // IMPORTANT: Only delete files within our local date range (Requirement 5.4)
     const filesToDelete: BatchFileDelete[] = []
     for (const file of existingExpenseFiles) {
+      if (useDirtyDays && !deletedDaySet.has(file.dayKey)) {
+        continue
+      }
       const isWithinLocalRange =
         oldestLocalDate &&
         newestLocalDate &&
@@ -1565,6 +1620,8 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
+      await clearDirtyDays()
+
       return {
         success: true,
         message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
@@ -1572,6 +1629,8 @@ export async function gitStyleSync(
         filesUploaded: 0,
         filesSkipped: skippedFiles,
         filesDeleted: 0,
+        localFilesUpdated: 0,
+        remoteFilesUpdated,
         settingsSynced: false,
         settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
         mergedCategories,
@@ -1622,19 +1681,29 @@ export async function gitStyleSync(
     // =========================================================================
     // Step 5: Update hashes and sync time
     // =========================================================================
-    const updatedHashes: FileHashMap = {}
+    const updatedHashes: FileHashMap = useDirtyDays ? { ...storedHashes } : {}
 
-    // Keep hashes for unchanged files
-    for (const [dayKey] of groupedByDay.entries()) {
-      const filename = getFilenameForDay(dayKey)
-      if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
-        updatedHashes[filename] = storedHashes[filename]
+    if (useDirtyDays) {
+      for (const [filename, hash] of uploadedFileHashes.entries()) {
+        updatedHashes[filename] = hash
       }
-    }
 
-    // Add hashes for newly uploaded files
-    for (const [filename, hash] of uploadedFileHashes.entries()) {
-      updatedHashes[filename] = hash
+      for (const dayKey of deletedDaySet) {
+        delete updatedHashes[getFilenameForDay(dayKey)]
+      }
+    } else {
+      // Keep hashes for unchanged files
+      for (const [dayKey] of groupedByDay.entries()) {
+        const filename = getFilenameForDay(dayKey)
+        if (storedHashes[filename] && !uploadedFileHashes.has(filename)) {
+          updatedHashes[filename] = storedHashes[filename]
+        }
+      }
+
+      // Add hashes for newly uploaded files
+      for (const [filename, hash] of uploadedFileHashes.entries()) {
+        updatedHashes[filename] = hash
+      }
     }
 
     await saveFileHashes(updatedHashes)
@@ -1644,6 +1713,8 @@ export async function gitStyleSync(
       await saveSettingsHash(newSettingsHash)
       await clearSettingsChanged()
     }
+
+    await clearDirtyDays()
 
     // Fetch and save the commit timestamp
     let commitTimestamp: string | undefined
@@ -1668,6 +1739,7 @@ export async function gitStyleSync(
     const expenseFilesUploaded = filesToUpload.filter(
       (f) => f.path !== "settings.json"
     ).length
+    const localFilesUpdated = expenseFilesUploaded + filesToDelete.length
 
     return {
       success: true,
@@ -1682,6 +1754,8 @@ export async function gitStyleSync(
       filesUploaded: expenseFilesUploaded,
       filesSkipped: skippedFiles,
       filesDeleted: filesToDelete.length,
+      localFilesUpdated,
+      remoteFilesUpdated,
       commitTimestamp,
       settingsSynced: shouldSyncSettings,
       settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,

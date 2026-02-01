@@ -3,6 +3,7 @@ export * from "./expense-storage"
 export * from "./settings-manager"
 export * from "./secure-storage"
 export * from "./hash-storage"
+export * from "./expense-dirty-days"
 
 // Sync services
 export * from "./sync-manager"
