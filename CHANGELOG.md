@@ -1,5 +1,14 @@
 # expense-buddy
 
+## 2.3.0
+
+### Minor Changes
+
+- [#40](https://github.com/sudokoi/expense-buddy/pull/40) [`7314667`](https://github.com/sudokoi/expense-buddy/commit/73146677ab1a1b508d64e466cca9011b6da0f608) Thanks [@sudokoi](https://github.com/sudokoi)! - Introduce month filters, smarter sync, and language-aligned defaults.
+  - Add month filtering for analytics and history views.
+  - Sync default currency with language changes and improve history load-more logic.
+  - Optimize GitHub sync with dirty-day tracking and localized notifications.
+
 ## 2.2.0
 
 ### Minor Changes
