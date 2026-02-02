@@ -253,7 +253,13 @@ export default function DashboardScreen() {
 
       {/* Summary Cards */}
       <XStack style={layoutStyles.summaryCardsRow}>
-        <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.blue.bg}>
+        <Card
+          flex={1}
+          bordered
+          padding="$4"
+          backgroundColor={CARD_COLORS.blue.bg}
+          onPress={handleAnalyticsPress}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -275,7 +281,13 @@ export default function DashboardScreen() {
             {formatCurrency(totalExpenses, effectiveCurrency)}
           </H4>
         </Card>
-        <Card flex={1} bordered padding="$4" backgroundColor={CARD_COLORS.green.bg}>
+        <Card
+          flex={1}
+          bordered
+          padding="$4"
+          backgroundColor={CARD_COLORS.green.bg}
+          onPress={handleHistoryPress}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"

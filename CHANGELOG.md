@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 2.3.1
+
+### Patch Changes
+
+- Link dashboard summary cards to tabs
+
 ## 2.3.0
 
 ### Minor Changes
