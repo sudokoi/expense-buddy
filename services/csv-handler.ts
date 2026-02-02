@@ -1,9 +1,11 @@
 import Papa from "papaparse"
 import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
+import { getFallbackCurrency } from "../utils/currency"
 
 export interface CSVRow {
   id: string
   amount: string
+  currency?: string
   category: string
   date: string
   note: string
@@ -22,6 +24,7 @@ export function exportToCSV(expenses: Expense[]): string {
   const rows: CSVRow[] = expenses.map((expense) => ({
     id: expense.id,
     amount: expense.amount.toString(),
+    currency: expense.currency || getFallbackCurrency(),
     category: expense.category,
     date: expense.date,
     note: expense.note || "",
@@ -38,6 +41,7 @@ export function exportToCSV(expenses: Expense[]): string {
     columns: [
       "id",
       "amount",
+      "currency",
       "category",
       "date",
       "note",
@@ -81,6 +85,7 @@ export function importFromCSV(csvString: string): Expense[] {
     return {
       id: row.id,
       amount: parseFloat(row.amount),
+      currency: row.currency?.trim() || getFallbackCurrency(),
       category: row.category as ExpenseCategory,
       date: row.date,
       note: row.note || "",

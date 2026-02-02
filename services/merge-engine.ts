@@ -73,6 +73,7 @@ function expensesAreIdentical(a: Expense, b: Expense): boolean {
 
   return (
     a.amount === b.amount &&
+    a.currency === b.currency &&
     a.category === b.category &&
     a.date === b.date &&
     a.note === b.note &&

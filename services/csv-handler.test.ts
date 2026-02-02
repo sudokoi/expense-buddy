@@ -7,6 +7,7 @@ import fc from "fast-check"
 import { exportToCSV, importFromCSV } from "./csv-handler"
 import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
 import { format, subDays } from "date-fns"
+import { getFallbackCurrency } from "../utils/currency"
 
 // Helper to generate valid expense categories
 const categoryArb = fc.constantFrom<ExpenseCategory>(
@@ -30,10 +31,13 @@ const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
   "Other"
 )
 
+const currencyArb = fc.constantFrom("INR", "USD", "GBP", "EUR", "JPY")
+
 // Helper to generate a valid expense with optional payment method
 const expenseWithPaymentMethodArb = fc.record({
   id: fc.uuid(),
   amount: fc.float({ min: Math.fround(0.01), max: Math.fround(10000), noNaN: true }),
+  currency: currencyArb,
   category: categoryArb,
   date: fc
     .integer({ min: 0, max: 60 })
@@ -62,6 +66,11 @@ function expensesAreEquivalent(original: Expense, imported: Expense): boolean {
 
   // Amount should match within floating point tolerance
   if (Math.abs(original.amount - imported.amount) > 0.01) return false
+
+  // Currency should match (legacy undefined treated as fallback INR)
+  const originalCurrency = original.currency || getFallbackCurrency()
+  const importedCurrency = imported.currency || getFallbackCurrency()
+  if (originalCurrency !== importedCurrency) return false
 
   // Category should match exactly
   if (original.category !== imported.category) return false
@@ -159,6 +168,7 @@ describe("CSV Handler Properties", () => {
                 .integer({ min: 0, max: 60 })
                 .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
               note: fc.string({ maxLength: 50 }).map((s) => s.replace(/[\n\r,]/g, " ")),
+              currency: currencyArb,
               paymentMethod: fc.record({
                 type: paymentMethodTypeArb,
                 identifier: fc.option(fc.stringMatching(/^\d{3,4}$/), { nil: undefined }),
@@ -226,6 +236,7 @@ describe("CSV Handler Properties", () => {
                 .integer({ min: 0, max: 60 })
                 .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
               note: fc.string({ maxLength: 50 }).map((s) => s.replace(/[\n\r,]/g, " ")),
+              currency: currencyArb,
               paymentMethod: fc.constant(undefined),
               createdAt: fc.constant(new Date().toISOString()),
               updatedAt: fc.constant(new Date().toISOString()),
@@ -301,6 +312,10 @@ def456,50.5,Transport,2024-01-16,Bus fare,UPI,1234,2024-01-16T08:00:00.000Z,2024
       expect(imported[0].deletedAt).toBeUndefined()
       expect(imported[1].deletedAt).toBeUndefined()
 
+      // Missing currency should default to fallback (INR)
+      expect(imported[0].currency).toBe(getFallbackCurrency())
+      expect(imported[1].currency).toBe(getFallbackCurrency())
+
       // Other fields should be preserved
       expect(imported[0].id).toBe("abc123")
       expect(imported[0].amount).toBe(100)
@@ -324,6 +339,7 @@ def456,50.5,Transport,2024-01-16,Bus fare,UPI,1234,2024-01-16T08:00:00.000Z,2024
                 .integer({ min: 0, max: 60 })
                 .map((daysAgo) => format(subDays(new Date(), daysAgo), "yyyy-MM-dd")),
               note: fc.string({ maxLength: 50 }).map((s) => s.replace(/[\n\r,]/g, " ")),
+              currency: currencyArb,
               paymentMethod: fc.constant(undefined),
               createdAt: fc.constant(new Date().toISOString()),
               updatedAt: fc.constant(new Date().toISOString()),
