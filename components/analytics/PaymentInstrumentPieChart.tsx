@@ -36,12 +36,16 @@ const styles = {
     borderRadius: 4,
   } as ViewStyle,
   legendLeft: {
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 8,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
   } as ViewStyle,
   legendRight: {
     gap: 8,
     alignItems: "center",
+    flexShrink: 0,
   } as ViewStyle,
   colorDot: {
     width: 12,
@@ -71,7 +75,10 @@ const LegendItem = memo(function LegendItem({
       >
         <XStack style={styles.legendLeft}>
           <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-          <Text fontWeight={isSelected ? "bold" : "normal"} numberOfLines={1}>
+          <Text
+            fontWeight={isSelected ? "bold" : "normal"}
+            style={{ flexShrink: 1, flexWrap: "wrap" }}
+          >
             {item.text}
           </Text>
         </XStack>
