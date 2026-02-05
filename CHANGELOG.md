@@ -1,5 +1,14 @@
 # expense-buddy
 
+## 2.3.3
+
+### Patch Changes
+
+Introduce queue for sync change, fix payment instrument legend overflow
+
+- fix(sync): queue in-flight edits, avoid dirty-day loss on sync, and improve manual/auto sync reliability
+- ui(analytics): consolidate payment instrument breakdown into the pie chart legend and improve label wrapping
+
 ## 2.3.2
 
 ### Patch Changes

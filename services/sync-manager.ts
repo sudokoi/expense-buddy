@@ -33,7 +33,7 @@ import {
   saveFileHashes,
   FileHashMap,
 } from "./hash-storage"
-import { consumeDirtyDays } from "./expense-dirty-days"
+import { loadDirtyDays } from "./expense-dirty-days"
 import { format } from "date-fns"
 import {
   mergeExpenses,
@@ -305,7 +305,7 @@ export async function syncUp(
     // Load stored hashes for differential sync
     const storedHashes = await loadFileHashes()
 
-    const dirtyDaysResult = await consumeDirtyDays()
+    const dirtyDaysResult = await loadDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
@@ -1156,7 +1156,7 @@ export async function getPendingSyncCount(expenses: Expense[]): Promise<{
   try {
     const storedHashes = await loadFileHashes()
     const groupedByDay = groupExpensesByDay(expenses)
-    const dirtyDaysResult = await consumeDirtyDays()
+    const dirtyDaysResult = await loadDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)
@@ -1386,7 +1386,7 @@ export async function gitStyleSync(
     const remoteExpenses = fetchResult.expenses || []
     const remoteFilesUpdated = fetchResult.filesDownloaded ?? 0
 
-    const dirtyDaysResult = await consumeDirtyDays()
+    const dirtyDaysResult = await loadDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
     const dirtyDaySet = new Set(dirtyDaysResult.state.dirtyDays)
     const deletedDaySet = new Set(dirtyDaysResult.state.deletedDays)

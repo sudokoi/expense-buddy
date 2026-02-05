@@ -25,6 +25,8 @@ export interface AutoSyncResult {
   downloadedSettings?: AppSettings
   /** Error message if sync failed */
   error?: string
+  /** Whether expense queue has pending operations after sync */
+  pendingExpenseOps?: boolean
 }
 
 /**
@@ -65,8 +67,10 @@ export async function performAutoSyncOnChange(
 
   if (result.synced && result.expenses) {
     callbacks.onExpensesReplaced(result.expenses)
-    await clearDirtyDays()
-    callbacks.onDirtyDaysCleared()
+    if (!result.pendingExpenseOps) {
+      await clearDirtyDays()
+      callbacks.onDirtyDaysCleared()
+    }
 
     if (result.notification) {
       callbacks.onSyncNotification(result.notification)
@@ -102,8 +106,10 @@ export async function performAutoSyncOnLaunch(
 
   if (result.synced && result.expenses) {
     callbacks.onExpensesReplaced(result.expenses)
-    await clearDirtyDays()
-    callbacks.onDirtyDaysCleared()
+    if (!result.pendingExpenseOps) {
+      await clearDirtyDays()
+      callbacks.onDirtyDaysCleared()
+    }
 
     if (result.notification) {
       callbacks.onSyncNotification(result.notification)

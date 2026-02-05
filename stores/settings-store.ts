@@ -23,6 +23,7 @@ import { getRandomCategoryColor } from "../constants/category-colors"
 import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
 import { changeLanguage } from "../i18n"
 import { getDefaultCurrencyForLanguage } from "../utils/currency"
+import { enqueueSyncOp } from "../services/sync-queue"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -49,6 +50,10 @@ function createSettingUpdater<K extends keyof AppSettings>(key: K) {
 
     enqueue.effect(async () => {
       await saveSettings(newSettings)
+      await enqueueSyncOp({
+        type: "settings.patch",
+        updates: { [key]: event[key] } as Partial<AppSettings>,
+      })
       if (newSyncState === "modified") {
         await markSettingsChanged()
       } else {
@@ -116,6 +121,10 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: { theme: event.theme },
+        })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -150,6 +159,13 @@ export const settingsStore = createStore({
       enqueue.effect(async () => {
         await saveSettings(newSettings)
         await changeLanguage(event.language)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: {
+            language: event.language,
+            defaultCurrency: newSettings.defaultCurrency,
+          },
+        })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -177,6 +193,10 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: event.updates,
+        })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -280,6 +300,7 @@ export const settingsStore = createStore({
       event: { category: Omit<Category, "order" | "updatedAt"> },
       enqueue
     ) => {
+      const now = new Date().toISOString()
       const existingColors = context.settings.categories.map((c) => c.color)
 
       // Find "Other" category to get its order (it should always be last)
@@ -293,7 +314,7 @@ export const settingsStore = createStore({
         icon: event.category.icon.trim(),
         color: event.category.color || getRandomCategoryColor(existingColors),
         order: otherOrder,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       }
 
       // Update "Other" to have a higher order so it stays at the bottom
@@ -302,7 +323,7 @@ export const settingsStore = createStore({
           return {
             ...cat,
             order: otherOrder + 1,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           }
         }
         return cat
@@ -317,6 +338,7 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({ type: "category.add", category: newCategory })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -339,6 +361,7 @@ export const settingsStore = createStore({
       event: { label: string; updates: Partial<Omit<Category, "updatedAt">> },
       enqueue
     ) => {
+      const now = new Date().toISOString()
       const normalizedLabel = event.label.trim()
       const normalizedUpdates: typeof event.updates = {
         ...event.updates,
@@ -351,7 +374,7 @@ export const settingsStore = createStore({
           return {
             ...cat,
             ...normalizedUpdates,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           }
         }
         return cat
@@ -365,6 +388,14 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({
+          type: "category.update",
+          label: normalizedLabel,
+          updates: {
+            ...normalizedUpdates,
+            updatedAt: now,
+          },
+        })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -412,6 +443,7 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({ type: "category.delete", label: event.label })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {
@@ -469,6 +501,7 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await enqueueSyncOp({ type: "category.reorder", labels: event.labels })
         if (newSyncState === "modified") {
           await markSettingsChanged()
         } else {

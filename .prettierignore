@@ -1,5 +1,8 @@
 node_modules/
 .expo/
+.kiro/
+.agent/
+.agents/
 .tamagui/
 dist/
 build/

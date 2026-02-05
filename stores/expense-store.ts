@@ -16,6 +16,7 @@ import {
   markDeletedDay,
   clearDirtyDays,
 } from "../services/expense-dirty-days"
+import { enqueueSyncOp } from "../services/sync-queue"
 import { getLocalDayKey } from "../utils/date"
 import { AppSettings } from "../services/settings-manager"
 import {
@@ -149,6 +150,7 @@ export const expenseStore = createStore({
       enqueue.effect(async () => {
         await persistExpenseAdded(normalizedExpense)
         await markDirtyDay(dayKey)
+        await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
@@ -194,6 +196,7 @@ export const expenseStore = createStore({
         if (deletedDayKey) {
           await markDeletedDay(deletedDayKey)
         }
+        await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 
@@ -224,6 +227,9 @@ export const expenseStore = createStore({
         }
         if (deletedDayKey) {
           await markDeletedDay(deletedDayKey)
+        }
+        if (updatedExpense) {
+          await enqueueSyncOp({ type: "expense.upsert", expense: updatedExpense })
         }
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
@@ -322,6 +328,13 @@ export const expenseStore = createStore({
           await markDirtyDay(dayKey)
         }
 
+        if (affectedExpenses.length > 0) {
+          await enqueueSyncOp({
+            type: "expense.batchUpsert",
+            expenses: affectedExpenses,
+          })
+        }
+
         // Trigger auto-sync if enabled for on_change timing
         if (affectedExpenseIds.length > 0) {
           await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
@@ -374,6 +387,13 @@ export const expenseStore = createStore({
 
         for (const dayKey of new Set(affectedDays)) {
           await markDirtyDay(dayKey)
+        }
+
+        if (affectedExpenses.length > 0) {
+          await enqueueSyncOp({
+            type: "expense.batchUpsert",
+            expenses: affectedExpenses,
+          })
         }
 
         // Trigger auto-sync if enabled for on_change timing

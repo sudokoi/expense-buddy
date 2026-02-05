@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
@@ -17,6 +17,14 @@ import {
 } from "../../hooks/use-sync-machine"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
+import {
+  applyQueuedOpsToExpenses,
+  applyQueuedOpsToSettings,
+  clearSyncOpsUpTo,
+  getSyncOpsSince,
+  getSyncQueueWatermark,
+} from "../../services/sync-queue"
+import { loadDirtyDays, saveDirtyDays } from "../../services/expense-dirty-days"
 import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
@@ -99,6 +107,7 @@ export default function SettingsScreen() {
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
+  const syncQueueWatermarkRef = useRef<number | null>(null)
 
   // Derive isConfigured from syncConfig !== null
   const isConfigured = syncConfig !== null
@@ -506,7 +515,15 @@ export default function SettingsScreen() {
   )
 
   // Handle sync using XState machine with callbacks
-  const handleSync = useCallback(() => {
+  const handleSync = useCallback(async () => {
+    const dirtyDaysState = await loadDirtyDays()
+    await saveDirtyDays({
+      ...dirtyDaysState.state,
+      dirtyDays: state.dirtyDays,
+      deletedDays: state.deletedDays,
+      updatedAt: new Date().toISOString(),
+    })
+    syncQueueWatermarkRef.current = await getSyncQueueWatermark()
     syncMachine.sync({
       localExpenses: state.expenses,
       settings: settings.syncSettings ? settings : undefined,
@@ -525,7 +542,7 @@ export default function SettingsScreen() {
             syncMachine.cancel()
           }
         },
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
           const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
           addNotification(
@@ -535,19 +552,56 @@ export default function SettingsScreen() {
             }),
             "success"
           )
-          clearDirtyDaysAfterSync()
-          if (settings.syncSettings) {
+
+          const watermark = syncQueueWatermarkRef.current
+          let opsAfter = watermark !== null ? await getSyncOpsSince(watermark) : []
+          if (watermark !== null && opsAfter.length === 0) {
+            const latestWatermark = await getSyncQueueWatermark()
+            if (latestWatermark > watermark) {
+              opsAfter = await getSyncOpsSince(watermark)
+            }
+          }
+
+          const baseExpenses = result.mergeResult?.merged ?? state.expenses
+          const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
+          const pendingExpenseOps = opsAfter.some((op) => op.type.startsWith("expense."))
+          const pendingSettingsOps = opsAfter.some(
+            (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
+          )
+
+          let settingsBase = settings
+          if (result.syncResult?.mergedSettings) {
+            settingsBase = result.syncResult.mergedSettings
+          } else if (result.syncResult?.mergedCategories) {
+            settingsBase = {
+              ...settingsBase,
+              categories: result.syncResult.mergedCategories,
+            }
+          }
+
+          const reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
+
+          if (watermark !== null) {
+            const lastAppliedId =
+              opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
+            await clearSyncOpsUpTo(lastAppliedId)
+          }
+
+          if (!pendingExpenseOps) {
+            clearDirtyDaysAfterSync()
+          }
+          if (settings.syncSettings && !pendingSettingsOps) {
             clearSettingsChangeFlag()
           }
 
-          if (result.mergeResult && result.mergeResult.merged.length > 0) {
-            replaceAllExpenses(result.mergeResult.merged)
+          if (reconciledExpenses.length > 0) {
+            replaceAllExpenses(reconciledExpenses)
           }
 
           if (settings.syncSettings && result.syncResult?.mergedSettings) {
-            replaceSettings(result.syncResult.mergedSettings)
+            replaceSettings(reconciledSettings)
           } else if (result.syncResult?.mergedCategories) {
-            replaceCategories(result.syncResult.mergedCategories)
+            replaceCategories(reconciledSettings.categories)
           }
         },
         onInSync: () => {
@@ -559,18 +613,20 @@ export default function SettingsScreen() {
       },
     })
   }, [
-    syncMachine,
+    state.dirtyDays,
+    state.deletedDays,
     state.expenses,
+    syncMachine,
     settings,
+    clearSyncConfig,
     showConflictDialog,
     addNotification,
-    clearSyncConfig,
+    t,
     clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
     replaceSettings,
     replaceCategories,
-    t,
   ])
 
   return (

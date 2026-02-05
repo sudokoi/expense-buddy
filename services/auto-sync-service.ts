@@ -4,6 +4,13 @@ import { loadSyncConfig, SyncNotification, type GitStyleSyncResult } from "./syn
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
 import i18next from "i18next"
+import {
+  applyQueuedOpsToExpenses,
+  applyQueuedOpsToSettings,
+  clearSyncOpsUpTo,
+  getSyncOpsSince,
+  getSyncQueueWatermark,
+} from "./sync-queue"
 
 /**
  * Main auto-sync orchestration function
@@ -17,10 +24,11 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   notification?: SyncNotification
   downloadedSettings?: AppSettings
   error?: string
+  pendingExpenseOps?: boolean
 }> {
   try {
     // Load current app settings to check if auto-sync and settings sync are enabled
-    const appSettings = await loadSettings()
+    let appSettings = await loadSettings()
 
     // Check if auto-sync is enabled
     if (!appSettings.autoSyncEnabled) {
@@ -33,45 +41,93 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       return { synced: false }
     }
 
-    // Create and start the sync machine actor for background operation
-    const actor = createActor(syncMachine)
-    actor.start()
+    let currentExpenses = localExpenses
+    let followUpRemaining = appSettings.autoSyncTiming === "on_change" ? 3 : 0
+    let pendingExpenseOps = false
+    let lastNotification: SyncNotification | undefined
+    let lastDownloadedSettings: AppSettings | undefined
 
-    // Send the SYNC event with the current state
-    // Note: git-style sync doesn't need hasLocalChanges - it always does fetch-merge-push
-    actor.send({
-      type: "SYNC",
-      localExpenses,
-      settings: appSettings.syncSettings ? appSettings : undefined,
-      syncSettingsEnabled: appSettings.syncSettings,
-    })
+    while (true) {
+      const watermark = await getSyncQueueWatermark()
 
-    // Wait for the machine to reach a final state
-    const finalSnapshot = await waitFor(
-      actor,
-      (snapshot) =>
-        snapshot.matches("success") ||
-        snapshot.matches("inSync") ||
-        snapshot.matches("error") ||
-        snapshot.matches("conflict"),
-      { timeout: 60000 } // 60 second timeout
-    )
+      // Create and start the sync machine actor for background operation
+      const actor = createActor(syncMachine)
+      actor.start()
 
-    actor.stop()
+      // Send the SYNC event with the current state
+      // Note: git-style sync doesn't need hasLocalChanges - it always does fetch-merge-push
+      actor.send({
+        type: "SYNC",
+        localExpenses: currentExpenses,
+        settings: appSettings.syncSettings ? appSettings : undefined,
+        syncSettingsEnabled: appSettings.syncSettings,
+      })
 
-    const context = finalSnapshot.context
-    const syncResult = context.syncResult as GitStyleSyncResult | undefined
+      // Wait for the machine to reach a final state
+      const finalSnapshot = await waitFor(
+        actor,
+        (snapshot) =>
+          snapshot.matches("success") ||
+          snapshot.matches("inSync") ||
+          snapshot.matches("error") ||
+          snapshot.matches("conflict"),
+        { timeout: 60000 } // 60 second timeout
+      )
 
-    if (finalSnapshot.matches("success")) {
-      // Build notification from merge result
-      let notification: SyncNotification | undefined
+      actor.stop()
+
+      const context = finalSnapshot.context
+      const syncResult = context.syncResult as GitStyleSyncResult | undefined
+
+      if (finalSnapshot.matches("conflict")) {
+        return {
+          synced: false,
+          error: "Conflict detected - manual sync required",
+        }
+      }
+
+      if (finalSnapshot.matches("error")) {
+        return {
+          synced: false,
+          error: context.error || "Sync failed",
+        }
+      }
+
       const mergeResult = context.mergeResult
+      const baseExpenses = mergeResult?.merged ?? currentExpenses
+      let opsAfter = await getSyncOpsSince(watermark)
+      if (opsAfter.length === 0) {
+        const latestWatermark = await getSyncQueueWatermark()
+        if (latestWatermark > watermark) {
+          opsAfter = await getSyncOpsSince(watermark)
+        }
+      }
+      const hasSettingsOps = opsAfter.some(
+        (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
+      )
+      const pendingOpsAny = opsAfter.length > 0
+      pendingExpenseOps = opsAfter.some((op) => op.type.startsWith("expense."))
+      const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
 
-      if (mergeResult) {
-        const localFilesUpdated = syncResult?.localFilesUpdated ?? 0
-        const remoteFilesUpdated = syncResult?.remoteFilesUpdated ?? 0
+      let reconciledSettings: AppSettings | undefined
+      if (syncResult?.mergedSettings || syncResult?.mergedCategories || hasSettingsOps) {
+        let settingsBase = appSettings
+        if (syncResult?.mergedSettings) {
+          settingsBase = syncResult.mergedSettings
+        } else if (syncResult?.mergedCategories) {
+          settingsBase = { ...settingsBase, categories: syncResult.mergedCategories }
+        }
+        reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
+      }
 
-        notification = {
+      const lastAppliedId =
+        opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
+      await clearSyncOpsUpTo(lastAppliedId)
+
+      if (syncResult) {
+        const localFilesUpdated = syncResult.localFilesUpdated ?? 0
+        const remoteFilesUpdated = syncResult.remoteFilesUpdated ?? 0
+        lastNotification = {
           localFilesUpdated,
           remoteFilesUpdated,
           message: i18next.t("settings.notifications.syncComplete", {
@@ -79,57 +135,32 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
             remoteCount: remoteFilesUpdated,
           }),
         }
+      }
 
-        // Return merged expenses (includes both local and remote changes)
+      lastDownloadedSettings = reconciledSettings
+      currentExpenses = reconciledExpenses
+      if (reconciledSettings) {
+        appSettings = reconciledSettings
+      }
+
+      if (!pendingOpsAny || followUpRemaining <= 0) {
+        if (pendingOpsAny) {
+          lastNotification = {
+            localFilesUpdated: 0,
+            remoteFilesUpdated: 0,
+            message: "Pending changes detected. Please sync manually.",
+          }
+        }
         return {
           synced: true,
-          expenses: mergeResult.merged,
-          notification,
-          downloadedSettings: syncResult?.mergedSettings,
-        }
-      } else if (context.syncResult) {
-        const localFilesUpdated = context.syncResult.localFilesUpdated || 0
-        const remoteFilesUpdated = context.syncResult.remoteFilesUpdated || 0
-        notification = {
-          localFilesUpdated,
-          remoteFilesUpdated,
-          message: i18next.t("settings.notifications.syncComplete", {
-            localCount: localFilesUpdated,
-            remoteCount: remoteFilesUpdated,
-          }),
-        }
-
-        return {
-          synced: true,
-          expenses: localExpenses,
-          notification,
-          downloadedSettings: syncResult?.mergedSettings,
+          expenses: reconciledExpenses,
+          notification: lastNotification,
+          downloadedSettings: lastDownloadedSettings,
+          pendingExpenseOps,
         }
       }
 
-      return {
-        synced: true,
-        expenses: localExpenses,
-        downloadedSettings: syncResult?.mergedSettings,
-      }
-    } else if (finalSnapshot.matches("inSync")) {
-      return {
-        synced: true,
-        expenses: localExpenses,
-        downloadedSettings: syncResult?.mergedSettings,
-      }
-    } else if (finalSnapshot.matches("conflict")) {
-      // For auto-sync, we don't show conflict dialogs - just skip
-      // User needs to manually sync to resolve conflicts
-      return {
-        synced: false,
-        error: "Conflict detected - manual sync required",
-      }
-    } else {
-      return {
-        synced: false,
-        error: context.error || "Sync failed",
-      }
+      followUpRemaining -= 1
     }
   } catch (error) {
     console.error("Auto-sync failed:", error)
