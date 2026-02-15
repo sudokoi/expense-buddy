@@ -40,10 +40,24 @@ The sync happens directly between your device and GitHub's servers. We do not op
 
 The app does not integrate with any analytics, advertising, or tracking services. The only external service the app can connect to is GitHub, and only if you explicitly configure it.
 
+## SMS Import Feature (Android Only)
+
+If you choose to use the optional SMS expense import feature:
+
+- **SMS messages are processed entirely on-device**
+- **No SMS content is sent to any server or cloud service**
+- **Only parsed expense data is stored locally**
+- **Merchant names from SMS are used to build local learning patterns** (can be synced to your GitHub if settings sync is enabled)
+- **The app requests READ_SMS permission only for detecting bank transaction messages**
+- **You can disable SMS import at any time in Settings**
+
 ## Permissions
 
 The app may request the following permissions:
 
+- **SMS Access (Android)**: Required only for the optional SMS expense import feature
+  - READ_SMS: To read incoming bank transaction SMS messages
+  - RECEIVE_SMS: To detect new SMS in real-time
 - **Internet Access**: Required only for the optional GitHub sync feature
 - **Secure Storage**: To safely store your GitHub token on your device
 

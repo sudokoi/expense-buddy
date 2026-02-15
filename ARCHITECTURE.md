@@ -25,6 +25,14 @@ graph TB
         SS[Settings Store]
         ES[Expense Store]
         NS[Notification Store]
+        RQS[Review Queue Store]
+    end
+
+    subgraph "SMS Import"
+        TP[Transaction Parser]
+        DD[Duplicate Detector]
+        LE[Learning Engine]
+        SL[SMS Listener]
     end
 
     subgraph "Persistence"
@@ -36,22 +44,33 @@ graph TB
         H[History Screen]
         A[Analytics Screen]
         S[Settings Screen]
+        RQ[Review Queue Modal]
     end
 
     FS -->|persists to| AS
     SS -->|persists to| AS
+    RQS -->|persists to| AS
     SS -->|syncs to| GH
     ES -->|syncs to| GH
+    LE -->|syncs to| GH
+
+    SL -->|detects| TP
+    TP -->|checks| DD
+    TP -->|suggests| LE
+    RQS -->|confirms| ES
+    RQS -->|learns| LE
 
     H -->|uses| FS
     A -->|uses| FS
     A -->|uses| SS
     S -->|uses| SS
     S -->|uses| UIS
+    RQ -->|uses| RQS
 
     style FS fill:#e1f5fe
     style SS fill:#fff3e0
     style UIS fill:#f3e5f5
+    style RQS fill:#e8f5e9
 ```
 
 ### Store Selection Flowchart
@@ -230,6 +249,136 @@ flowchart LR
 
 Notifications are formatted with i18n before they reach the UI, so the message string is
 display-ready by the time it reaches the notification store.
+
+## SMS Import Architecture (Android Only)
+
+### Overview
+
+The SMS import feature provides automatic expense detection from bank SMS messages using on-device processing only.
+
+### SMS Import Flow
+
+```mermaid
+flowchart TD
+    Start([SMS Received]) --> Parse[Transaction Parser]
+    Parse --> CheckDup{Duplicate?}
+    CheckDup -->|Yes| Drop[Drop Message]
+    CheckDup -->|No| Suggest[Learning Engine Suggests]
+    Suggest --> Queue[Add to Review Queue]
+    Queue --> Review[User Reviews]
+    Review --> Confirm{Action?}
+    Confirm -->|Confirm| Save[Save to Expense Store]
+    Confirm -->|Edit| Update[Update & Save]
+    Confirm -->|Reject| Mark[Mark Processed]
+    Save --> Learn[Learn from Confirmation]
+    Update --> Learn
+    Learn --> End([End])
+    Mark --> End
+    Drop --> End
+```
+
+### Components
+
+#### 1. SMS Listener (`services/sms-import/sms-listener.ts`)
+
+**Purpose**: Monitors incoming SMS messages (requires READ_SMS permission).
+
+**Key features**:
+
+- Initializes when SMS import is enabled
+- Triggers transaction parsing on new SMS
+- Handles permission checks
+
+#### 2. Transaction Parser (`services/sms-import/transaction-parser.ts`)
+
+**Purpose**: Extracts transaction data from SMS using regex patterns.
+
+**Supported Banks**:
+
+- **Indian**: HDFC, ICICI, SBI, Axis, Kotak
+- **US**: Chase, Bank of America, Wells Fargo, Citi
+- **EU**: Revolut, N26, ING
+- **JP**: MUFG, SMBC, Mizuho
+- **Wallets**: PhonePe, Paytm (UPI)
+
+**Key features**:
+
+- Amount parsing with currency symbol handling
+- Merchant name extraction and normalization
+- Date parsing (multiple formats)
+- Payment method inference
+- Confidence scoring
+
+#### 3. Duplicate Detector (`services/sms-import/duplicate-detector.ts`)
+
+**Purpose**: Prevents importing the same expense twice.
+
+**Detection methods**:
+
+- Message ID fingerprinting (exact match)
+- Amount + Date + Merchant similarity (fuzzy match)
+
+**Key features**:
+
+- Rotating window of 1,000 processed message IDs
+- Levenshtein distance for merchant name similarity
+- 85% similarity threshold for fuzzy matching
+
+#### 4. Learning Engine (`services/sms-import/learning-engine.ts`)
+
+**Purpose**: Learns from user corrections to improve categorization.
+
+**Key features**:
+
+- Merchant → Category mapping
+- Merchant → Payment method mapping
+- Fuzzy merchant matching for similar names
+- Pattern overwrite within 24h window for same merchant variations
+- GitHub sync support for merchant patterns
+
+**Learning flow**:
+
+```mermaid
+flowchart TD
+    Start([User Confirms]) --> CheckPattern{Pattern Exists?}
+    CheckPattern -->|No| Create[Create New Pattern]
+    CheckPattern -->|Yes| CheckOverwrite{Overwrite?}
+    CheckOverwrite -->|Yes| Replace[Replace Pattern]
+    CheckOverwrite -->|No| Update[Update Pattern]
+    Create --> Save[Save Patterns]
+    Replace --> Save
+    Update --> Save
+    Save --> End([End])
+```
+
+#### 5. Review Queue Store (`stores/review-queue-store.ts`)
+
+**Purpose**: Manages pending imports awaiting user review.
+
+**Key features**:
+
+- XState Store for reactive state management
+- AsyncStorage persistence
+- Auto-expires items after 30 days
+- Stats tracking (total, pending)
+
+### Data Flow
+
+1. **SMS Detection**: Listener receives SMS → Parser extracts data
+2. **Duplicate Check**: Detector validates uniqueness
+3. **Suggestion**: Learning engine suggests category/payment method
+4. **Queue**: Item added to review queue with suggestions
+5. **Review**: User confirms, edits, or rejects
+6. **Learn**: System learns from user actions
+7. **Sync**: Patterns sync via GitHub (if enabled)
+
+### Privacy & Security
+
+- **100% On-Device**: No SMS content leaves the device
+- **Minimal Data**: Only parsed expense data is stored
+- **Opt-In**: Feature is disabled by default
+- **Permission Control**: User can revoke SMS permission anytime
+- **No Cloud Processing**: No third-party SMS parsing services
 
 ## Internationalization Architecture
 
