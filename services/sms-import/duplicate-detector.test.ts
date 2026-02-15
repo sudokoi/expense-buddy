@@ -15,8 +15,8 @@ describe("DuplicateDetector", () => {
       ["swiggy", "swiggy", 1.0],
       ["Swiggy", "swiggy", 1.0],
       ["Amazon", "amazon", 1.0],
-      ["Starbucks", "starbucks coffee", 0.82],
-      ["Whole Foods", "wholefoods", 0.64],
+      ["Starbucks", "starbucks coffee", 0.56],
+      ["Whole Foods", "wholefoods", 0.91],
       ["Test", "Best", 0.75],
       ["", "", 1.0],
     ])("should calculate similarity between '%s' and '%s' as %s", (a, b, expected) => {

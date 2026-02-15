@@ -191,16 +191,12 @@ export class MerchantLearningEngine {
     expense: Expense,
     _parsed: ParsedTransaction
   ): boolean {
-    // Check category match
-    if (existing.category !== expense.category) {
+    // Only overwrite when the category changed (user re-categorized)
+    if (existing.category === expense.category) {
       return false
     }
 
-    // Check amount within 10%
-    // Note: In real implementation, we'd need to store amount in pattern
-    // For now, simplified check
-
-    // Check 24-hour window
+    // Check 24-hour window for overwrite eligibility
     const timeDiff = Math.abs(
       new Date().getTime() - new Date(existing.lastUsed).getTime()
     )

@@ -51,9 +51,9 @@ export class TransactionParser {
       return { parsed: null, confidence: 0 }
     }
 
-    // Extract merchant
+    // Extract merchant (check multiple capture groups for patterns with alternations)
     const merchant = this.cleanMerchant(
-      match[2] || groups.merchant || groups.payee || "Unknown"
+      match[2] || match[3] || groups.merchant || groups.payee || "Unknown"
     )
 
     // Extract date (use current date if not found)
@@ -174,6 +174,8 @@ export class TransactionParser {
       merchant
         .replace(/\s+/g, " ")
         .replace(/\b(PVT|LTD|INC|LLC|CORP)\.?\b/gi, "")
+        .replace(/\s*-\s*.*$/, "") // Remove trailing description after dash
+        .replace(/[.]+$/, "") // Remove trailing dots
         .trim()
     )
   }
@@ -186,10 +188,10 @@ export class TransactionParser {
 
     // Try various date formats
     const formats = [
+      // YYYY-MM-DD (check first to avoid 4-digit year matching as day in DMY)
+      { regex: /(\d{4})[-/](\d{1,2})[-/](\d{1,2})/, format: "YMD" },
       // DD-MM-YYYY
       { regex: /(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/, format: "DMY" },
-      // YYYY-MM-DD
-      { regex: /(\d{4})[-/](\d{1,2})[-/](\d{1,2})/, format: "YMD" },
       // MM-DD-YYYY
       { regex: /(\d{1,2})[-/](\d{1,2})[-/](\d{4})/, format: "MDY" },
     ]
@@ -277,6 +279,11 @@ export class TransactionParser {
     // Check for wallets
     if (lowerMessage.includes("paytm")) {
       return "Amazon Pay" // Using Amazon Pay as generic wallet
+    }
+
+    // Check for cash
+    if (lowerMessage.includes("cash")) {
+      return "Cash"
     }
 
     // Default

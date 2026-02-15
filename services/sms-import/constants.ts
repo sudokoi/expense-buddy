@@ -91,13 +91,13 @@ export const BANK_PATTERNS = {
   HDFC: {
     name: "HDFC Bank",
     regex:
-      /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:debited|credited).*?from\s*\*+(\d+).*?to\s*(.+?)(?:\.|$)/i,
+      /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:debited|credited).*?(?:to\s+(.+?)(?:\.|$)|Avl\s*Bal[^.]*\.[\d,.]+\.\s*(.+?)(?:\.|$))/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },
   ICICI: {
     name: "ICICI Bank",
-    regex: /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:spent|paid).*?(?:at|to)\s+(.+?)(?:\.|\s+on)/i,
+    regex: /(?:for|of)\s*(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:at|to)\s+(.+?)(?:\.|\s+on)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },
@@ -109,7 +109,7 @@ export const BANK_PATTERNS = {
   },
   AXIS: {
     name: "Axis Bank",
-    regex: /INR\s*([\d,.]+)\s*paid\s*to\s*(.+?)(?:\s+via|$)/i,
+    regex: /(?:INR|Rs\.?)\s*([\d,.]+)\s*paid\s*to\s*(.+?)(?:\s+via\b|$)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },

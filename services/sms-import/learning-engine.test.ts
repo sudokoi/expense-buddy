@@ -77,23 +77,23 @@ describe("MerchantLearningEngine", () => {
       },
     }
 
-    it("should return true for same category within 24h", () => {
+    it("should return false for same category within 24h", () => {
       const result = (engine as any).shouldOverwritePattern(
         mockPattern,
         mockExpense,
         mockParsed
       )
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
-    it("should return false for different category", () => {
+    it("should return true for different category within 24h", () => {
       const differentCategory = { ...mockExpense, category: "Shopping" }
       const result = (engine as any).shouldOverwritePattern(
         mockPattern,
         differentCategory,
         mockParsed
       )
-      expect(result).toBe(false)
+      expect(result).toBe(true)
     })
 
     it("should return false for old patterns (>24h)", () => {

@@ -8583,6 +8583,7 @@ __metadata:
     papaparse: "npm:^5.5.3"
     prettier: "npm:^3.8.1"
     react: "npm:19.1.0"
+    react-dom: "npm:19.1.0"
     react-i18next: "npm:^16.5.3"
     react-native: "npm:0.81.5"
     react-native-device-info: "npm:^15.0.1"
@@ -8592,6 +8593,7 @@ __metadata:
     react-native-safe-area-context: "npm:~5.6.2"
     react-native-screens: "npm:~4.16.0"
     react-native-svg: "npm:15.12.1"
+    react-native-web: "npm:^0.21.2"
     react-native-worklets: "npm:0.5.1"
     tamagui: "npm:^1.144.3"
     typescript: "npm:~5.9.3"
@@ -13232,6 +13234,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-dom@npm:19.1.0":
+  version: 19.1.0
+  resolution: "react-dom@npm:19.1.0"
+  dependencies:
+    scheduler: "npm:^0.26.0"
+  peerDependencies:
+    react: ^19.1.0
+  checksum: 10/c5b58605862c7b0bb044416b01c73647bb8e89717fb5d7a2c279b11815fb7b49b619fe685c404e59f55eb52c66831236cc565c25ee1c2d042739f4a2cc538aa2
+  languageName: node
+  linkType: hard
+
 "react-fast-compare@npm:^3.2.2":
   version: 3.2.2
   resolution: "react-fast-compare@npm:3.2.2"
@@ -13396,7 +13409,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-web@npm:^0.21.0":
+"react-native-web@npm:^0.21.0, react-native-web@npm:^0.21.2":
   version: 0.21.2
   resolution: "react-native-web@npm:0.21.2"
   dependencies:
