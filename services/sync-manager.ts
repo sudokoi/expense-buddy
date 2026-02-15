@@ -706,7 +706,7 @@ export async function syncDown(
       )
 
       if (fileData) {
-        const expenses = importFromCSV(fileData.content)
+        const { expenses } = importFromCSV(fileData.content)
         allExpenses.push(...expenses)
         downloadedFiles++
       }
@@ -870,7 +870,7 @@ export async function syncDownMore(
       )
 
       if (fileData) {
-        const expenses = importFromCSV(fileData.content)
+        const { expenses } = importFromCSV(fileData.content)
         newExpenses.push(...expenses)
         downloadedFiles++
       }
@@ -1000,7 +1000,7 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
         )
 
         if (fileData) {
-          const expenses = importFromCSV(fileData.content)
+          const { expenses } = importFromCSV(fileData.content)
           allExpenses.push(...expenses)
           downloadedFiles++
         }
@@ -1242,7 +1242,7 @@ export async function migrateToDailyFiles(): Promise<{
     }
 
     // Parse old file
-    const expenses = importFromCSV(oldFile.content)
+    const { expenses } = importFromCSV(oldFile.content)
 
     if (expenses.length === 0) {
       return { migrated: false, message: "Old file is empty" }
