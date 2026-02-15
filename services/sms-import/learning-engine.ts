@@ -189,7 +189,7 @@ export class MerchantLearningEngine {
   private shouldOverwritePattern(
     existing: MerchantPattern,
     expense: Expense,
-    parsed: ParsedTransaction
+    _parsed: ParsedTransaction
   ): boolean {
     // Check category match
     if (existing.category !== expense.category) {

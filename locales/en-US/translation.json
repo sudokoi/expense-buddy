@@ -413,6 +413,39 @@
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
   },
+  "smsImport": {
+    "title": "SMS Import",
+    "description": "Automatically detect expenses from bank SMS messages",
+    "enable": "Enable SMS Import",
+    "status": {
+      "active": "Active - monitoring bank SMS",
+      "permissionNeeded": "Permission needed",
+      "disabled": "Disabled"
+    },
+    "scanOnLaunch": "Scan on App Launch",
+    "scanOnLaunchHelp": "Check for new SMS when app opens",
+    "permissionGranted": "SMS permission granted",
+    "permissionDenied": "SMS permission not granted. Tap the toggle above to grant permission.",
+    "permissionAlert": {
+      "title": "Permission Required",
+      "message": "SMS permission is required to automatically import expenses from bank messages. Please enable it in Settings > Apps > Expense Buddy > Permissions."
+    },
+    "infoNote": "All imported expenses will be added to a review queue for your confirmation before being saved.",
+    "permissionDialog": {
+      "title": "SMS Permission",
+      "message": "Expense Buddy needs access to SMS to automatically detect expenses from bank messages.",
+      "buttonNeutral": "Ask Me Later",
+      "buttonPositive": "OK"
+    },
+    "permissionMessages": {
+      "granted": "SMS access granted. Expenses will be automatically imported from bank SMS messages.",
+      "denied": "SMS permission denied. You can enable it in Settings > Apps > Expense Buddy > Permissions.",
+      "blocked": "SMS permission permanently denied. Please enable it in system settings to use auto-import.",
+      "unavailable": "SMS import is not available on this device.",
+      "unsupported": "SMS import is only available on Android devices.",
+      "unknown": "Unknown permission status."
+    }
+  },
   "validation": {
     "expense": {
       "amountRequired": "Amount is required",

@@ -76,7 +76,7 @@ describe("DuplicateDetector", () => {
     })
 
     it("should not flag different messages as duplicates", async () => {
-      const transaction1: ParsedTransaction = {
+      const _transaction1: ParsedTransaction = {
         amount: 100,
         currency: "INR",
         merchant: "Test1",

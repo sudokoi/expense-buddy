@@ -91,31 +91,31 @@ export const BANK_PATTERNS = {
   HDFC: {
     name: "HDFC Bank",
     regex:
-      /(?:Rs\.?|INR)\s*([\d,\.]+)\s*(?:debited|credited).*?from\s*\*+(\d+).*?to\s*(.+?)(?:\.|$)/i,
+      /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:debited|credited).*?from\s*\*+(\d+).*?to\s*(.+?)(?:\.|$)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },
   ICICI: {
     name: "ICICI Bank",
-    regex: /(?:Rs\.?|INR)\s*([\d,\.]+)\s*(?:spent|paid).*?(?:at|to)\s+(.+?)(?:\.|\s+on)/i,
+    regex: /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:spent|paid).*?(?:at|to)\s+(.+?)(?:\.|\s+on)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },
   SBI: {
     name: "State Bank of India",
-    regex: /Rs\.?\s*([\d,\.]+)\s*withdrawn\s*from\s*(.+?)(?:\s+on|$)/i,
+    regex: /Rs\.?\s*([\d,.]+)\s*withdrawn\s*from\s*(.+?)(?:\s+on|$)/i,
     baseConfidence: 0.8,
     region: "IN" as const,
   },
   AXIS: {
     name: "Axis Bank",
-    regex: /INR\s*([\d,\.]+)\s*paid\s*to\s*(.+?)(?:\s+via|$)/i,
+    regex: /INR\s*([\d,.]+)\s*paid\s*to\s*(.+?)(?:\s+via|$)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },
   KOTAK: {
     name: "Kotak Mahindra Bank",
-    regex: /Rs\.?\s*([\d,\.]+)\s*debited\s*from\s*account/i,
+    regex: /Rs\.?\s*([\d,.]+)\s*debited\s*from\s*account/i,
     baseConfidence: 0.8,
     region: "IN" as const,
   },
@@ -124,28 +124,28 @@ export const BANK_PATTERNS = {
   CHASE: {
     name: "Chase",
     regex:
-      /(?:You made a|A)\s*\$?([\d,\.]+)\s*(?:transaction|purchase|payment).*?(?:at|to|with)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /(?:You made a|A)\s*\$?([\d,.]+)\s*(?:transaction|purchase|payment).*?(?:at|to|with)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.85,
     region: "US" as const,
   },
   BOFA: {
     name: "Bank of America",
     regex:
-      /\$?([\d,\.]+)\s*(?:was charged|purchase|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /\$?([\d,.]+)\s*(?:was charged|purchase|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.85,
     region: "US" as const,
   },
   WELLS_FARGO: {
     name: "Wells Fargo",
     regex:
-      /(?:Purchase|Transaction)\s*(?:of\s*)?\$?([\d,\.]+).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /(?:Purchase|Transaction)\s*(?:of\s*)?\$?([\d,.]+).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.8,
     region: "US" as const,
   },
   CITI: {
     name: "Citi",
     regex:
-      /\$?([\d,\.]+)\s*(?:spent|charged|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /\$?([\d,.]+)\s*(?:spent|charged|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.8,
     region: "US" as const,
   },
@@ -154,21 +154,21 @@ export const BANK_PATTERNS = {
   REVOLUT: {
     name: "Revolut",
     regex:
-      /(?:€|EUR|£|GBP)\s*([\d,\.]+)\s*(?:paid|sent|spent).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /(?:€|EUR|£|GBP)\s*([\d,.]+)\s*(?:paid|sent|spent).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.85,
     region: "EU" as const,
   },
   N26: {
     name: "N26",
     regex:
-      /(?:€|EUR)\s*([\d,\.]+)\s*(?:card payment|direct debit|transfer).*?(?:at|to|from)\s+(.+?)(?:\s+on|\.|\s*$)/i,
+      /(?:€|EUR)\s*([\d,.]+)\s*(?:card payment|direct debit|transfer).*?(?:at|to|from)\s+(.+?)(?:\s+on|\.|\s*$)/i,
     baseConfidence: 0.8,
     region: "EU" as const,
   },
   ING: {
     name: "ING",
     regex:
-      /(?:€|EUR)\s*([\d,\.]+)\s*(?:betaling|payment|afschrijving).*?(?:aan|at|to)\s+(.+?)(?:\s+op|\.|\s*$)/i,
+      /(?:€|EUR)\s*([\d,.]+)\s*(?:betaling|payment|afschrijving).*?(?:aan|at|to)\s+(.+?)(?:\s+op|\.|\s*$)/i,
     baseConfidence: 0.8,
     region: "EU" as const,
   },

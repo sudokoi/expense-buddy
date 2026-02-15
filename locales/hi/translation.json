@@ -413,6 +413,39 @@
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
   },
+  "smsImport": {
+    "title": "SMS आयात",
+    "description": "बैंक SMS संदेशों से स्वचालित रूप से खर्च पहचानें",
+    "enable": "SMS आयात सक्षम करें",
+    "status": {
+      "active": "सक्रिय - बैंक SMS की निगरानी",
+      "permissionNeeded": "अनुमति आवश्यक",
+      "disabled": "अक्षम"
+    },
+    "scanOnLaunch": "ऐप लॉन्च पर स्कैन करें",
+    "scanOnLaunchHelp": "ऐप खोलने पर नए SMS की जांच करें",
+    "permissionGranted": "SMS अनुमति प्रदान की गई",
+    "permissionDenied": "SMS अनुमति प्रदान नहीं की गई। अनुमति देने के लिए ऊपर टॉगल पर टैप करें।",
+    "permissionAlert": {
+      "title": "अनुमति आवश्यक",
+      "message": "बैंक संदेशों से स्वचालित रूप से खर्च आयात करने के लिए SMS अनुमति आवश्यक है। कृपया सेटिंग्स > ऐप्स > Expense Buddy > अनुमतियाँ में इसे सक्षम करें।"
+    },
+    "infoNote": "सभी आयातित खर्च सहेजे जाने से पहले आपकी पुष्टि के लिए समीक्षा कतार में जोड़े जाएंगे।",
+    "permissionDialog": {
+      "title": "SMS अनुमति",
+      "message": "बैंक संदेशों से स्वचालित रूप से खर्च पहचानने के लिए Expense Buddy को SMS एक्सेस की आवश्यकता है।",
+      "buttonNeutral": "बाद में पूछें",
+      "buttonPositive": "ठीक है"
+    },
+    "permissionMessages": {
+      "granted": "SMS एक्सेस प्रदान की गई। बैंक SMS संदेशों से खर्च स्वचालित रूप से आयात किए जाएंगे।",
+      "denied": "SMS अनुमति अस्वीकृत। आप इसे सेटिंग्स > ऐप्स > Expense Buddy > अनुमतियाँ में सक्षम कर सकते हैं।",
+      "blocked": "SMS अनुमति स्थायी रूप से अस्वीकृत। ऑटो-आयात उपयोग करने के लिए कृपया सिस्टम सेटिंग्स में सक्षम करें।",
+      "unavailable": "इस डिवाइस पर SMS आयात उपलब्ध नहीं है।",
+      "unsupported": "SMS आयात केवल Android डिवाइस पर उपलब्ध है।",
+      "unknown": "अज्ञात अनुमति स्थिति।"
+    }
+  },
   "validation": {
     "expense": {
       "amountRequired": "राशि आवश्यक है",

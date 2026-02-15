@@ -6,6 +6,15 @@
 
 import { Platform, PermissionsAndroid } from "react-native"
 
+/** Translated strings for the Android permission request dialog */
+export interface PermissionDialogStrings {
+  title: string
+  message: string
+  buttonNeutral: string
+  buttonNegative: string
+  buttonPositive: string
+}
+
 /**
  * Check if device supports SMS import (Android only)
  */
@@ -31,9 +40,12 @@ export async function checkSMSPermission(): Promise<boolean> {
 }
 
 /**
- * Request SMS permission from user
+ * Request SMS permission from user.
+ * Accepts pre-translated dialog strings so the service stays i18n-agnostic.
  */
-export async function requestSMSPermission(): Promise<boolean> {
+export async function requestSMSPermission(
+  dialogStrings: PermissionDialogStrings
+): Promise<boolean> {
   if (!isSMSSupported()) {
     return false
   }
@@ -42,12 +54,11 @@ export async function requestSMSPermission(): Promise<boolean> {
     const status = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_SMS,
       {
-        title: "SMS Permission",
-        message:
-          "Expense Buddy needs access to SMS to automatically detect expenses from bank messages.",
-        buttonNeutral: "Ask Me Later",
-        buttonNegative: "Cancel",
-        buttonPositive: "OK",
+        title: dialogStrings.title,
+        message: dialogStrings.message,
+        buttonNeutral: dialogStrings.buttonNeutral,
+        buttonNegative: dialogStrings.buttonNegative,
+        buttonPositive: dialogStrings.buttonPositive,
       }
     )
     return status === PermissionsAndroid.RESULTS.GRANTED
@@ -66,9 +77,7 @@ export async function canRequestSMSPermission(): Promise<boolean> {
   }
 
   try {
-    const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS)
-    // If already granted, can't request again (but that's ok)
-    // If never asked before, we can request
+    await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS)
     return true
   } catch (error) {
     console.error("Failed to check SMS permission status:", error)
@@ -101,28 +110,4 @@ export async function getSMSPermissionDetails(): Promise<{
     console.error("Failed to get SMS permission details:", error)
     return { granted: false, canAsk: false, status: "error" }
   }
-}
-
-/**
- * Permission status messages for UI
- */
-export const PERMISSION_MESSAGES = {
-  granted:
-    "SMS access granted. Expenses will be automatically imported from bank SMS messages.",
-  denied:
-    "SMS permission denied. You can enable it in Settings > Apps > Expense Buddy > Permissions.",
-  blocked:
-    "SMS permission permanently denied. Please enable it in system settings to use auto-import.",
-  unavailable: "SMS import is not available on this device.",
-  unsupported: "SMS import is only available on Android devices.",
-}
-
-/**
- * Get user-friendly message for permission status
- */
-export function getPermissionMessage(status: string): string {
-  return (
-    PERMISSION_MESSAGES[status as keyof typeof PERMISSION_MESSAGES] ||
-    "Unknown permission status."
-  )
 }

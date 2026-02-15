@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, reopened, synchronize, labeled, unlabeled]
+    types: [opened, reopened, synchronize]
   workflow_call:
 
 concurrency:
@@ -46,27 +46,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
-      - name: 🔍 Check if PR allows lockfile changes
-        id: check-label
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const labels = context.payload.pull_request.labels.map(l => l.name);
-            const allowLockfile = labels.includes('allow-lockfile-changes');
-            console.log(`PR labels: ${labels.join(', ')}`);
-            console.log(`Allow lockfile changes: ${allowLockfile}`);
-            core.setOutput('allow', allowLockfile ? 'true' : 'false');
-
-      - name: 📥 Install dependencies (with lockfile validation)
-        if: steps.check-label.outputs.allow != 'true'
+      - name: 📥 Install dependencies
         run: yarn install --immutable
-
-      - name: 📥 Install dependencies (allow lockfile changes)
-        if: steps.check-label.outputs.allow == 'true'
-        run: yarn install
-        env:
-          YARN_ENABLE_HARDENED_MODE: 0
 
       - name: 🎨 Check formatting
         run: yarn format:check

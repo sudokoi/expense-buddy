@@ -6,7 +6,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { ParsedTransaction, DuplicateCheck } from "../../types/sms-import"
-import { STORAGE_KEYS, DUPLICATE_THRESHOLDS, RETENTION_LIMITS } from "./constants"
+import { STORAGE_KEYS, RETENTION_LIMITS } from "./constants"
 
 export class DuplicateDetector {
   private processedIds: Set<string> = new Set()
@@ -87,7 +87,7 @@ export class DuplicateDetector {
    * Check if a similar expense already exists
    * Note: This is a simplified version. Full implementation would query expense store
    */
-  private async checkSimilarExists(parsed: ParsedTransaction): Promise<boolean> {
+  private async checkSimilarExists(_parsed: ParsedTransaction): Promise<boolean> {
     // In full implementation, this would:
     // 1. Load all expenses from storage
     // 2. Check for amount match (within tolerance)

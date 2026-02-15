@@ -413,6 +413,39 @@
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
   },
+  "smsImport": {
+    "title": "SMSインポート",
+    "description": "銀行のSMSメッセージから支出を自動検出",
+    "enable": "SMSインポートを有効にする",
+    "status": {
+      "active": "有効 - 銀行SMSを監視中",
+      "permissionNeeded": "権限が必要です",
+      "disabled": "無効"
+    },
+    "scanOnLaunch": "アプリ起動時にスキャン",
+    "scanOnLaunchHelp": "アプリを開いたときに新しいSMSを確認",
+    "permissionGranted": "SMS権限が付与されました",
+    "permissionDenied": "SMS権限が付与されていません。上のトグルをタップして権限を付与してください。",
+    "permissionAlert": {
+      "title": "権限が必要です",
+      "message": "銀行メッセージから支出を自動インポートするにはSMS権限が必要です。設定 > アプリ > Expense Buddy > 権限で有効にしてください。"
+    },
+    "infoNote": "インポートされたすべての支出は、保存前に確認のためレビューキューに追加されます。",
+    "permissionDialog": {
+      "title": "SMS権限",
+      "message": "銀行メッセージから支出を自動検出するために、Expense BuddyにSMSへのアクセスが必要です。",
+      "buttonNeutral": "後で聞く",
+      "buttonPositive": "OK"
+    },
+    "permissionMessages": {
+      "granted": "SMSアクセスが許可されました。銀行SMSメッセージから支出が自動的にインポートされます。",
+      "denied": "SMS権限が拒否されました。設定 > アプリ > Expense Buddy > 権限で有効にできます。",
+      "blocked": "SMS権限が永久に拒否されました。自動インポートを使用するにはシステム設定で有効にしてください。",
+      "unavailable": "このデバイスではSMSインポートは利用できません。",
+      "unsupported": "SMSインポートはAndroidデバイスでのみ利用可能です。",
+      "unknown": "不明な権限ステータスです。"
+    }
+  },
   "validation": {
     "expense": {
       "amountRequired": "金額を入力してください",

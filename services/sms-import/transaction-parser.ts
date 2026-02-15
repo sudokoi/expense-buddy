@@ -35,7 +35,7 @@ export class TransactionParser {
     message: string,
     pattern: { name: string; regex: RegExp; baseConfidence: number; region: string },
     source: ImportSource,
-    bankName: string
+    _bankName: string
   ): ParseResult {
     const match = message.match(pattern.regex)
 
@@ -107,13 +107,13 @@ export class TransactionParser {
       // Pattern: "You spent $XX.XX at MERCHANT"
       {
         regex:
-          /(?:spent|paid|charged)\s*(?:₹|\$|€|£|Rs\.?|INR)?\s*([\d,\.]+)\s*(?:at|to|with)\s+(.+?)(?:\s+on|\.|$)/i,
+          /(?:spent|paid|charged)\s*(?:₹|\$|€|£|Rs\.?|INR)?\s*([\d,.]+)\s*(?:at|to|with)\s+(.+?)(?:\s+on|\.|$)/i,
         baseConfidence: 0.6,
       },
       // Pattern: "Transaction of $XX.XX at MERCHANT"
       {
         regex:
-          /(?:transaction|purchase|payment)\s*(?:of\s*)?(?:₹|\$|€|£|Rs\.?|INR)?\s*([\d,\.]+)\s*(?:at|to|with)\s+(.+?)(?:\s+on|\.|$)/i,
+          /(?:transaction|purchase|payment)\s*(?:of\s*)?(?:₹|\$|€|£|Rs\.?|INR)?\s*([\d,.]+)\s*(?:at|to|with)\s+(.+?)(?:\s+on|\.|$)/i,
         baseConfidence: 0.6,
       },
     ]
@@ -230,12 +230,10 @@ export class TransactionParser {
    * Detect transaction type (debit/credit)
    */
   private detectTransactionType(message: string): "debit" | "credit" {
-    const debitKeywords = ["debited", "spent", "paid", "withdrawn", "purchase", "charge"]
     const creditKeywords = ["credited", "received", "refund", "cashback"]
 
     const lowerMessage = message.toLowerCase()
 
-    // Check for credit keywords first (more specific)
     if (creditKeywords.some((kw) => lowerMessage.includes(kw))) {
       return "credit"
     }
