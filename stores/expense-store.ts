@@ -436,10 +436,18 @@ export async function initializeExpenseStore(): Promise<void> {
     })
 
     // Perform auto-sync on launch using the helper
-    await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
+    // Set loading state to show spinner during sync
+    expenseStore.trigger.setLoading({ isLoading: true })
+    try {
+      await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
+    } finally {
+      // Always clear loading state, even if sync fails
+      expenseStore.trigger.setLoading({ isLoading: false })
+    }
   } catch (error) {
     console.warn("Failed to initialize expense store:", error)
     expenseStore.trigger.loadExpenses({ expenses: [] })
+    expenseStore.trigger.setLoading({ isLoading: false })
   }
 }
 

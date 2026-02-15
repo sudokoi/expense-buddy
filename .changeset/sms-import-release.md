@@ -150,7 +150,10 @@ New permissions required (Android only):
 
 ### 🐛 Bug Fixes
 
-N/A - This is a feature release
+- **Auto-Sync Loading State**: Fixed missing spinner during auto-sync on app launch
+  - Expense store now sets `isLoading: true` before starting auto-sync
+  - Loading state properly cleared after sync completes (success or failure)
+  - Users will now see loading indicator when app launches with auto-sync enabled
 
 ### 📝 Notes
 
