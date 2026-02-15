@@ -142,10 +142,8 @@ export default {
       backgroundColor: "#000000",
     },
     assetBundlePatterns: ["**/*"],
-    ios: {
-      supportsTablet: true,
-      buildNumber: String(versionCode),
-    },
+    // ANDROID ONLY - SMS import feature requires Android
+    platforms: ["android"],
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
@@ -153,11 +151,17 @@ export default {
       },
       package: "com.sudokoi.expensebuddy",
       versionCode,
-    },
-    web: {
-      bundler: "metro",
-      output: "static",
-      favicon: "./assets/images/favicon.png",
+      // Minimum Android 14 (API 34) for SMS library compatibility and modern features
+      minSdkVersion: 34,
+      // Target latest Android API
+      targetSdkVersion: 35,
+      // Required permissions for SMS import feature
+      permissions: [
+        "android.permission.READ_SMS",
+        "android.permission.RECEIVE_SMS",
+        "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+        "android.permission.POST_NOTIFICATIONS",
+      ],
     },
     plugins: [
       "expo-router",
@@ -165,11 +169,11 @@ export default {
       [
         "expo-build-properties",
         {
-          ios: {
-            newArchEnabled: true,
-          },
           android: {
             newArchEnabled: true,
+            minSdkVersion: 34,
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
           },
         },
       ],
