@@ -7,6 +7,7 @@ import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { getSystemCurrency } from "../utils/currency"
+import { SMSImportSettings } from "../types/sms-import"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -42,8 +43,18 @@ export interface AppSettings {
   categoriesVersion: number // Schema version for category migrations
   paymentInstruments: PaymentInstrument[] // Saved card/UPI instruments (synced if syncSettings is enabled)
   paymentInstrumentsMigrationVersion: number // One-time migration state for instrument linking
+  smsImportSettings: SMSImportSettings // SMS expense import settings
   updatedAt: string // ISO timestamp
   version: number // Schema version for migrations
+}
+
+/**
+ * Default SMS import settings
+ */
+const DEFAULT_SMS_IMPORT_SETTINGS: SMSImportSettings = {
+  enabled: false,
+  scanOnLaunch: false,
+  reviewRetentionDays: 30,
 }
 
 /**
@@ -61,8 +72,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   categoriesVersion: 1,
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
+  smsImportSettings: DEFAULT_SMS_IMPORT_SETTINGS,
   updatedAt: new Date().toISOString(),
-  version: 6,
+  version: 7,
 }
 
 /**
@@ -108,6 +120,8 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     paymentInstrumentsMigrationVersion:
       migrated.paymentInstrumentsMigrationVersion ??
       DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
+    smsImportSettings:
+      (migrated as AppSettings).smsImportSettings ?? DEFAULT_SMS_IMPORT_SETTINGS,
     updatedAt: migrated.updatedAt ?? new Date().toISOString(),
     version:
       typeof migrated.version === "number"
@@ -218,6 +232,18 @@ async function migrateV5ToV6(settings: AppSettings): Promise<AppSettings> {
 }
 
 /**
+ * Migrate settings from version 6 to version 7
+ * Adds smsImportSettings field
+ */
+function migrateV6ToV7(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    smsImportSettings: DEFAULT_SMS_IMPORT_SETTINGS,
+    version: 7,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -249,6 +275,12 @@ export async function loadSettings(): Promise<AppSettings> {
       // Migrate from v5 to v6 (add language)
       if (parsed.version < 6) {
         parsed = await migrateV5ToV6(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Migrate from v6 to v7 (add SMS import settings)
+      if (parsed.version < 7) {
+        parsed = migrateV6ToV7(parsed)
         await saveSettings(parsed)
       }
 
