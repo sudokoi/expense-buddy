@@ -9,16 +9,16 @@ import { YStack, XStack, Text, Switch, Button, Separator } from "tamagui"
 import { Alert } from "react-native"
 import { MessageSquare } from "@tamagui/lucide-icons"
 import { useTranslation } from "react-i18next"
-import { SMSImportSettings } from "../../types/sms-import"
+import { SMSImportSettings } from "../../../types/sms-import"
 import {
   loadSMSImportSettings,
   saveSMSImportSettings,
-} from "../../services/sms-import/settings"
+} from "../../../services/sms-import/settings"
 import {
   checkSMSPermission,
   requestSMSPermission,
   getPermissionMessage,
-} from "../../services/sms-import/permissions"
+} from "../../../services/sms-import/permissions"
 
 export function SMSImportSection() {
   const { t } = useTranslation()
