@@ -155,6 +155,17 @@ New permissions required (Android only):
   - Loading state properly cleared after sync completes (success or failure)
   - Users will now see loading indicator when app launches with auto-sync enabled
 
+### 🔧 Technical Fixes
+
+- **TypeScript Issues**: Fixed all TypeScript errors in test files
+  - Added missing `smsImportSettings` field to all test fixtures and arbitraries
+  - Updated test settings objects to use version 7
+  - All 728 tests now passing
+
+- **Translations**: Verified all SMS import UI strings use i18n translations
+  - All user-facing strings properly internationalized
+  - Translation keys added for: title, description, status messages, permission dialogs, and help text
+
 ### 📝 Notes
 
 - This release represents a significant architectural shift to Android-only
