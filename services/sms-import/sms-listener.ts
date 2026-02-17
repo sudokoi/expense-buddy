@@ -1,16 +1,17 @@
 /**
  * SMS Listener
  *
- * Listens for incoming SMS messages and processes them
+ * Listens for incoming SMS messages and processes them using hybrid parser
  */
 
 import { loadSMSImportSettings } from "./settings"
 import { checkSMSPermission } from "./permissions"
-import { transactionParser } from "./transaction-parser"
+import { hybridParser } from "./ml/hybrid-parser"
 import { duplicateDetector } from "./duplicate-detector"
 import { merchantLearningEngine } from "./learning-engine"
 import { reviewQueueStore } from "../../stores/review-queue-store"
 import { generateId } from "../../utils/id"
+import { ParsedTransaction } from "../../types/sms-import"
 
 export class SMSListener {
   private isListening = false
@@ -30,6 +31,14 @@ export class SMSListener {
     if (!hasPermission) {
       console.log("SMS permission not granted")
       return false
+    }
+
+    // Initialize hybrid parser (loads ML model if available)
+    try {
+      await hybridParser.initialize()
+    } catch (error) {
+      console.warn("Failed to initialize hybrid parser:", error)
+      // Continue without ML - regex will handle everything
     }
 
     await this.startListening()
@@ -61,12 +70,30 @@ export class SMSListener {
   async handleIncomingMessage(message: string, sender?: string): Promise<void> {
     console.log("Processing SMS:", message.substring(0, 50) + "...")
 
-    // Parse the message
-    const parsed = await transactionParser.parse(message, "sms")
+    // Parse the message using hybrid parser (regex + ML)
+    const parseResult = await hybridParser.parse(message, "sms")
 
-    if (!parsed) {
-      console.log("Not a transaction SMS")
+    if (!parseResult.parsed) {
+      console.log(
+        "Could not parse SMS - neither regex nor ML could extract transaction data"
+      )
+      console.log("Parse method used:", parseResult.method)
+      console.log("Confidence:", parseResult.confidence)
+      // Optionally: Show manual entry prompt or skip
       return
+    }
+
+    const parsed: ParsedTransaction = parseResult.parsed
+
+    // Log which parser was used
+    console.log(
+      `Parsed using ${parseResult.method} (confidence: ${parseResult.confidence.toFixed(2)})`
+    )
+    if (parseResult.regexConfidence) {
+      console.log(`  Regex confidence: ${parseResult.regexConfidence.toFixed(2)}`)
+    }
+    if (parseResult.mlConfidence) {
+      console.log(`  ML confidence: ${parseResult.mlConfidence.toFixed(2)}`)
     }
 
     // Update sender if provided
@@ -110,6 +137,10 @@ export class SMSListener {
     if (this.unsubscribe) {
       this.unsubscribe()
     }
+
+    // Dispose hybrid parser to free memory
+    await hybridParser.dispose()
+
     this.isListening = false
     console.log("SMS listener stopped")
   }
