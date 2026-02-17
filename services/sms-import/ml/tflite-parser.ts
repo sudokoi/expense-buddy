@@ -46,10 +46,17 @@ export class TFLiteSMSParser {
     try {
       // Load model from assets
       const delegate = this.config.useGpuDelegate ? "android-gpu" : undefined
-      this.model = await loadTensorflowModel(
-        require(`../../../assets/models/${this.config.modelPath}`),
-        delegate
-      )
+
+      // Check if model file exists
+      let modelPath
+      try {
+        modelPath = require(`../../../assets/models/${this.config.modelPath}`)
+      } catch (e) {
+        console.log("ML model not found, will use regex-only mode")
+        return
+      }
+
+      this.model = await loadTensorflowModel(modelPath, delegate)
 
       // Warm up with dummy inference
       await this.warmup()
@@ -58,7 +65,8 @@ export class TFLiteSMSParser {
       console.log("TFLite model initialized successfully")
     } catch (error) {
       console.error("Failed to initialize TFLite model:", error)
-      throw new Error("ML model initialization failed")
+      console.log("Falling back to regex-only mode")
+      // Don't throw - allow app to work without ML
     }
   }
 
