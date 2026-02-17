@@ -12,7 +12,7 @@ import {
   disposeSMSImport,
   requestSMSPermission,
   isSMSImportEnabled,
-} from "./services/sms-import"
+} from "./index"
 
 /**
  * Example: Initialize SMS import on app startup
@@ -78,7 +78,7 @@ export async function enableSMSImport(): Promise<boolean> {
  * Useful for development and debugging
  */
 export async function testSMSParsing() {
-  const { smsListener } = await import("./services/sms-import")
+  const { smsListener } = await import("./index")
 
   // Test messages
   const testMessages = [
@@ -109,7 +109,7 @@ export function SMSImportToggleExample() {
       }
     } else {
       // Disable SMS import
-      const { saveSMSImportSettings } = await import("./services/sms-import")
+      const { saveSMSImportSettings } = await import("./index")
       await saveSMSImportSettings({
         enabled: false,
         scanOnLaunch: false,
@@ -128,11 +128,14 @@ export function SMSImportToggleExample() {
  * Example: Integration with expense store
  * When user confirms an imported expense
  */
-export async function confirmImportedExpense(reviewItemId: string, expenseData: any) {
-  const { reviewQueueStore } = await import("./stores/review-queue-store")
+export async function confirmImportedExpense(
+  reviewItemId: string,
+  createExpense: () => Promise<void>
+) {
+  // 1. Create the expense using the provided function
+  await createExpense()
 
-  reviewQueueStore.trigger.confirmItem({
-    itemId: reviewItemId,
-    expenseData,
-  })
+  // 2. Remove from review queue
+  const { reviewQueueStore } = await import("../../stores/review-queue-store")
+  reviewQueueStore.trigger.removeItem({ itemId: reviewItemId })
 }

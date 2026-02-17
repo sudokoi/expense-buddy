@@ -44,8 +44,16 @@ export async function checkSMSPermission(): Promise<boolean> {
  * Accepts pre-translated dialog strings so the service stays i18n-agnostic.
  */
 export async function requestSMSPermission(
-  dialogStrings: PermissionDialogStrings
+  dialogStrings?: PermissionDialogStrings
 ): Promise<boolean> {
+  const strings = dialogStrings || {
+    title: "SMS Permission",
+    message:
+      "Expense Buddy needs access to SMS to automatically detect expenses from bank messages.",
+    buttonNeutral: "Ask Me Later",
+    buttonNegative: "Cancel",
+    buttonPositive: "OK",
+  }
   if (!isSMSSupported()) {
     return false
   }
@@ -54,11 +62,11 @@ export async function requestSMSPermission(
     const status = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.READ_SMS,
       {
-        title: dialogStrings.title,
-        message: dialogStrings.message,
-        buttonNeutral: dialogStrings.buttonNeutral,
-        buttonNegative: dialogStrings.buttonNegative,
-        buttonPositive: dialogStrings.buttonPositive,
+        title: strings.title,
+        message: strings.message,
+        buttonNeutral: strings.buttonNeutral,
+        buttonNegative: strings.buttonNegative,
+        buttonPositive: strings.buttonPositive,
       }
     )
     return status === PermissionsAndroid.RESULTS.GRANTED
