@@ -101,6 +101,11 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    scanOnLaunch: false,
+    reviewRetentionDays: 30,
+  }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),

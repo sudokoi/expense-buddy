@@ -73,8 +73,13 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    scanOnLaunch: false,
+    reviewRetentionDays: 30,
+  }),
   updatedAt: validIsoDateArbitrary,
-  version: fc.integer({ min: 6, max: 10 }),
+  version: fc.integer({ min: 7, max: 10 }),
   defaultCurrency: fc.constant("INR"),
   language: fc.constant("en-IN"),
 })
@@ -90,8 +95,13 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    scanOnLaunch: false,
+    reviewRetentionDays: 30,
+  }),
   updatedAt: validIsoDateArbitrary,
-  version: fc.constant(6),
+  version: fc.constant(7),
   defaultCurrency: fc.constant("INR"),
   language: fc.constant("en-IN"),
 })
@@ -349,8 +359,13 @@ describe("Sync Manager Settings Integration Properties", () => {
             categoriesVersion: 1,
             paymentInstruments: [],
             paymentInstrumentsMigrationVersion: 0,
+            smsImportSettings: {
+              enabled: false,
+              scanOnLaunch: false,
+              reviewRetentionDays: 30,
+            },
             updatedAt: new Date().toISOString(),
-            version: 6,
+            version: 7,
             defaultCurrency: "INR",
             language: "en-IN",
           }
