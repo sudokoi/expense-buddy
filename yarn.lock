@@ -8587,6 +8587,7 @@ __metadata:
     react-i18next: "npm:^16.5.3"
     react-native: "npm:0.81.5"
     react-native-device-info: "npm:^15.0.1"
+    react-native-fast-tflite: "npm:^2.0.0"
     react-native-gifted-charts: "npm:^1.4.70"
     react-native-keyboard-controller: "npm:1.18.5"
     react-native-reanimated: "npm:~4.1.6"
@@ -13310,6 +13311,16 @@ __metadata:
   peerDependencies:
     react-native: "*"
   checksum: 10/965cccc8b6453c2890a5ee72919189f4b29b076ff02a166ebe0743083db5e1c6b01a720f50e8d3c30af00f0ad204c8e6faaadd3ba57852763944f59fb711b789
+  languageName: node
+  linkType: hard
+
+"react-native-fast-tflite@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "react-native-fast-tflite@npm:2.0.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/5111cf239fed6247afb171e49643f34c1099351a3e3698d9f650ac53bd8be6af562c14643b4fb07648f160cd6fc52d9170481f8bfcdab61df56d2d40a77c8e48
   languageName: node
   linkType: hard
 
