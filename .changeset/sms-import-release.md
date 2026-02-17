@@ -48,6 +48,8 @@ This is a **major release** that introduces automatic SMS expense import functio
 - `sms-listener.ts` - SMS monitoring service (ready for native module)
 - `settings.ts` - SMS import settings management
 - `permissions.ts` - Android SMS permission handling
+- `ml/hybrid-parser.ts` - Hybrid regex + ML parser (architecture ready)
+- `ml/tflite-parser.ts` - TensorFlow Lite integration (react-native-fast-tflite)
 
 **New Types**:
 
@@ -147,6 +149,28 @@ New permissions required (Android only):
 - All imports go through review queue in v1 (no auto-import bypass)
 - Merchant learning requires multiple confirmations for high confidence
 - Pattern sync requires GitHub sync to be enabled
+
+### 🤖 Machine Learning Architecture
+
+**Hybrid Parser (v3.0.0 - Regex, v3.1 - ML Enhanced)**:
+
+- **Regex Parser**: Fast deterministic parsing for known bank patterns (<50ms)
+- **ML Parser**: TensorFlow Lite model for uncertain cases (50-100ms)
+- **Sequential Fallback**: Regex → ML → Manual entry
+- **Confidence Thresholds**: Regex (>0.8), ML (>0.7)
+- **Model**: MobileBERT (distilled), ~8MB, INT8 quantized
+- **Library**: react-native-fast-tflite (v2.0.0)
+
+**Training Infrastructure**:
+
+- Python training pipeline with UV package manager
+- Data preparation with 450+ synthetic samples
+- Support for Indian, US, EU, JP bank formats
+- Training scripts: prepare_data.py, train.py, convert_to_tflite.py
+- Ready for v3.1 model training and deployment
+
+**v3.0.0 Status**: Ships with regex-based parsing only (high accuracy)
+**v3.1 Roadmap**: Add trained ML model for edge cases and unknown formats
 
 ### 🐛 Bug Fixes
 
