@@ -323,9 +323,9 @@ export class TFLiteSMSParser {
     // Try common date formats
     const formats = [
       // DD-MM-YYYY or DD/MM/YYYY
-      /(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})/,
+      /(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})/,
       // YYYY-MM-DD
-      /(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/,
+      /(\d{4})[-/](\d{1,2})[-/](\d{1,2})/,
     ]
 
     for (const format of formats) {

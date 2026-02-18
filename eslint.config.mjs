@@ -74,6 +74,7 @@ export default [
       "scripts/",
       "*.config.js",
       "*.config.cjs",
+      "ml/**",
     ],
   },
 ]
