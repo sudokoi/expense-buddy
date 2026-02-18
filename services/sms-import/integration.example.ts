@@ -20,7 +20,7 @@ import {
  */
 export function useSMSImport() {
   useEffect(() => {
-    let isMounted = true
+    const _isMounted = true
 
     const init = async () => {
       // Check if SMS import is enabled
@@ -45,7 +45,7 @@ export function useSMSImport() {
     const subscription = AppState.addEventListener("change", handleAppStateChange)
 
     return () => {
-      isMounted = false
+      // Cleanup
       subscription.remove()
       disposeSMSImport()
     }

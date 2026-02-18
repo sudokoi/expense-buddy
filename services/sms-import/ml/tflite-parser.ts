@@ -51,7 +51,7 @@ export class TFLiteSMSParser {
       let modelPath
       try {
         modelPath = require(`../../../assets/models/${this.config.modelPath}`)
-      } catch (e) {
+      } catch {
         console.log("ML model not found, will use regex-only mode")
         return
       }
@@ -83,8 +83,7 @@ export class TFLiteSMSParser {
       const inputBuffer = this.preprocess(message)
 
       // Run inference
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const output = await (this.model as any).run([inputBuffer.buffer])
+      const output = await (this.model as any).run([inputBuffer.buffer as ArrayBuffer])
 
       // Parse output
       const result = this.postprocess(output)
@@ -133,8 +132,9 @@ export class TFLiteSMSParser {
 
     // Extract entities from output tensor
     // Layout: [merchant_start, merchant_end, amount, year, month, day, confidence]
-    const merchantStart = Math.floor(view[0] * this.config.maxInputLength)
-    const merchantEnd = Math.floor(view[1] * this.config.maxInputLength)
+    // Note: merchant indices would be used for actual NER extraction
+    const _merchantStart = Math.floor(view[0] * this.config.maxInputLength)
+    const _merchantEnd = Math.floor(view[1] * this.config.maxInputLength)
     const amount = view[2]
     const year = Math.floor(view[3])
     const month = Math.floor(view[4])
@@ -142,7 +142,8 @@ export class TFLiteSMSParser {
     const confidence = view[6]
 
     // Build result
-    const merchant = "Unknown" // Would extract from input using indices
+    // In production, use merchant indices to extract from input text
+    const merchant = "Unknown"
     const date = new Date(year, month - 1, day).toISOString()
 
     return {
@@ -158,8 +159,7 @@ export class TFLiteSMSParser {
    */
   private async warmup(): Promise<void> {
     const dummyInput = this.preprocess("Rs. 1000 spent at Amazon on 01-01-2024")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (this.model as any).run([dummyInput.buffer])
+    await (this.model as any).run([dummyInput.buffer as ArrayBuffer])
   }
 
   /**
