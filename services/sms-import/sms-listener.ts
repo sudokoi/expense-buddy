@@ -1,12 +1,12 @@
 /**
  * SMS Listener
  *
- * Listens for incoming SMS messages and processes them using hybrid parser
+ * Listens for incoming SMS messages and processes them using ML parser
  */
 
 import { loadSMSImportSettings } from "./settings"
 import { checkSMSPermission } from "./permissions"
-import { hybridParser } from "./ml/hybrid-parser"
+import { mlParser } from "./ml/ml-parser"
 import { duplicateDetector } from "./duplicate-detector"
 import { merchantLearningEngine } from "./learning-engine"
 import { reviewQueueStore } from "../../stores/review-queue-store"
@@ -33,12 +33,13 @@ export class SMSListener {
       return false
     }
 
-    // Initialize hybrid parser (loads ML model if available)
+    // Initialize ML parser (loads model if available)
     try {
-      await hybridParser.initialize()
+      await mlParser.initialize()
     } catch (error) {
-      console.warn("Failed to initialize hybrid parser:", error)
-      // Continue without ML - regex will handle everything
+      console.warn("Failed to initialize ML parser:", error)
+      // SMS import won't work without ML, but we still return true
+      // The listener is active, it just won't parse messages
     }
 
     await this.startListening()
@@ -92,8 +93,8 @@ export class SMSListener {
     console.log("Processing SMS:", message.substring(0, 50) + "...")
 
     try {
-      // Parse the message using hybrid parser (regex + ML)
-      const parseResult = await hybridParser.parse(message, "sms")
+      // Parse the message using ML parser
+      const parseResult = await mlParser.parse(message, "sms")
 
       if (!parseResult.parsed) {
         console.log(
@@ -107,16 +108,8 @@ export class SMSListener {
 
       const parsed: ParsedTransaction = parseResult.parsed
 
-      // Log which parser was used
-      console.log(
-        `Parsed using ${parseResult.method} (confidence: ${parseResult.confidence.toFixed(2)})`
-      )
-      if (parseResult.regexConfidence) {
-        console.log(`  Regex confidence: ${parseResult.regexConfidence.toFixed(2)}`)
-      }
-      if (parseResult.mlConfidence) {
-        console.log(`  ML confidence: ${parseResult.mlConfidence.toFixed(2)}`)
-      }
+      // Log parsing result
+      console.log(`Parsed with ML (confidence: ${parseResult.confidence.toFixed(2)})`)
 
       // Update sender if provided
       if (sender) {
@@ -166,8 +159,8 @@ export class SMSListener {
       this.unsubscribe()
     }
 
-    // Dispose hybrid parser to free memory
-    await hybridParser.dispose()
+    // Dispose ML parser to free memory
+    await mlParser.dispose()
 
     this.isListening = false
     console.log("SMS listener stopped")

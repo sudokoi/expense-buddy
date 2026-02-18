@@ -22,8 +22,7 @@
 
 // Core services
 export { smsListener, SMSListener } from "./sms-listener"
-export { hybridParser, HybridTransactionParser } from "./ml/hybrid-parser"
-export { transactionParser, TransactionParser } from "./transaction-parser"
+export { mlParser, MLTransactionParser } from "./ml/ml-parser"
 export { duplicateDetector, DuplicateDetector } from "./duplicate-detector"
 export { merchantLearningEngine, MerchantLearningEngine } from "./learning-engine"
 
@@ -45,8 +44,7 @@ export {
 } from "./permissions"
 
 // Types
-export type { HybridParseResult } from "./ml/hybrid-parser"
-export type { MLParseResult } from "./ml/tflite-parser"
+export type { MLParseResult as MLTransactionParseResult } from "./ml/ml-parser"
 
 // Constants
 export {
@@ -55,7 +53,6 @@ export {
   DUPLICATE_THRESHOLDS,
   LEARNING_THRESHOLDS,
   TIME_WINDOWS,
-  BANK_PATTERNS,
   DEFAULT_SMS_IMPORT_SETTINGS,
 } from "./constants"
 
