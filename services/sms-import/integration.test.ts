@@ -50,6 +50,7 @@ jest.mock("react-native-fast-tflite", () => ({
 import { SMSListener } from "./sms-listener"
 import { initializeSMSImport, disposeSMSImport } from "./index"
 import { reviewQueueStore } from "../../stores/review-queue-store"
+import type { PaymentMethodType } from "../../types/expense"
 
 describe("SMS Import Integration", () => {
   let smsListener: SMSListener
@@ -109,7 +110,7 @@ describe("SMS Import Integration", () => {
           currency: "INR",
           merchant: "TestMerchant",
           date: new Date().toISOString(),
-          paymentMethod: "UPI",
+          paymentMethod: "UPI" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.85,
           metadata: {
@@ -122,7 +123,7 @@ describe("SMS Import Integration", () => {
           },
         },
         suggestedCategory: "Food",
-        suggestedPaymentMethod: "UPI",
+        suggestedPaymentMethod: "UPI" as PaymentMethodType,
         suggestedInstrument: undefined,
         status: "pending" as const,
         createdAt: new Date().toISOString(),
@@ -143,7 +144,7 @@ describe("SMS Import Integration", () => {
           currency: "INR",
           merchant: "Amazon",
           date: new Date().toISOString(),
-          paymentMethod: "Credit Card",
+          paymentMethod: "Credit Card" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.9,
           metadata: {
@@ -156,7 +157,7 @@ describe("SMS Import Integration", () => {
           },
         },
         suggestedCategory: "Shopping",
-        suggestedPaymentMethod: "Credit Card",
+        suggestedPaymentMethod: "Credit Card" as PaymentMethodType,
         suggestedInstrument: undefined,
         status: "pending" as const,
         createdAt: new Date().toISOString(),
@@ -179,7 +180,7 @@ describe("SMS Import Integration", () => {
           currency: "INR",
           merchant: "Merchant1",
           date: new Date().toISOString(),
-          paymentMethod: "Cash",
+          paymentMethod: "Cash" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.8,
           metadata: {
@@ -192,7 +193,7 @@ describe("SMS Import Integration", () => {
           },
         },
         suggestedCategory: "Other",
-        suggestedPaymentMethod: "Cash",
+        suggestedPaymentMethod: "Cash" as PaymentMethodType,
         status: "pending" as const,
         createdAt: new Date().toISOString(),
       }
@@ -204,7 +205,7 @@ describe("SMS Import Integration", () => {
           currency: "INR",
           merchant: "Merchant2",
           date: new Date().toISOString(),
-          paymentMethod: "UPI",
+          paymentMethod: "UPI" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.85,
           metadata: {
@@ -217,7 +218,7 @@ describe("SMS Import Integration", () => {
           },
         },
         suggestedCategory: "Other",
-        suggestedPaymentMethod: "UPI",
+        suggestedPaymentMethod: "UPI" as PaymentMethodType,
         status: "pending" as const,
         createdAt: new Date().toISOString(),
       }

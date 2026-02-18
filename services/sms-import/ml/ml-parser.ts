@@ -8,7 +8,6 @@
 import type { ParsedTransaction, ImportSource } from "../../../types/sms-import"
 import type { PaymentMethodType } from "../../../types/expense"
 import { TFLiteSMSParser } from "./tflite-parser"
-import { generateId } from "../../../utils/id"
 
 export interface MLParseResult {
   parsed: ParsedTransaction | null

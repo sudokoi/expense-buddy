@@ -416,6 +416,7 @@
   "smsImport": {
     "title": "SMSインポート",
     "description": "銀行のSMSメッセージから支出を自動検出",
+    "betaWarning": "結果は常に正確ではない場合があります。インポートされたすべての取引を確認してください。",
     "enable": "SMSインポートを有効にする",
     "status": {
       "active": "有効 - 銀行SMSを監視中",
