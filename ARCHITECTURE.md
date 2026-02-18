@@ -254,7 +254,16 @@ display-ready by the time it reaches the notification store.
 
 ### Overview
 
-The SMS import feature provides automatic expense detection from bank SMS messages using on-device processing only.
+The SMS import feature (Beta) provides automatic expense detection from bank SMS messages using on-device processing only.
+
+**Beta Status**: This feature is currently in beta. Results may not always be accurate, and all imported transactions require manual review before being saved.
+
+**Error Handling**: The SMS import system is designed with multiple safeguards:
+
+- All parsing failures are caught and logged without crashing the app
+- The feature can be disabled at any time via Settings
+- Processing errors are silently handled - failed SMS messages are simply skipped
+- The app continues to function normally even if SMS import encounters errors
 
 ### SMS Import Flow
 
@@ -365,6 +374,8 @@ flowchart TD
 ### Data Flow
 
 1. **SMS Detection**: Listener receives SMS → Parser extracts data
+   - **Important**: Only NEW messages are processed. The app does NOT scan historical SMS when first enabled
+   - This prevents duplicate entries for transactions users may have already manually added
 2. **Duplicate Check**: Detector validates uniqueness
 3. **Suggestion**: Learning engine suggests category/payment method
 4. **Queue**: Item added to review queue with suggestions

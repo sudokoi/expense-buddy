@@ -47,87 +47,115 @@ export class SMSListener {
 
   /**
    * Start listening for SMS messages
+   *
+   * Only listens for NEW messages going forward. Does NOT scan historical
+   * SMS messages when first enabled, as users may have already manually
+   * added those transactions to the app.
    */
   private async startListening(): Promise<void> {
-    // Note: This is a placeholder. The actual implementation would use
-    // @maniac-tech/react-native-expo-read-sms to listen for SMS
-    // For now, we'll create a mock implementation
+    try {
+      // Note: This is a placeholder. The actual implementation would use
+      // @maniac-tech/react-native-expo-read-sms to listen for SMS
+      // For now, we'll create a mock implementation
 
-    console.log("SMS listener started (mock implementation)")
-    this.isListening = true
+      console.log("SMS listener started (mock implementation)")
+      this.isListening = true
 
-    // In real implementation:
-    // this.unsubscribe = startReadSMS((status, sms, error) => {
-    //   if (status === 'success' && sms) {
-    //     this.handleIncomingMessage(sms)
-    //   }
-    // })
+      // In real implementation:
+      // this.unsubscribe = startReadSMS((status, sms, error) => {
+      //   if (status === 'success' && sms) {
+      //     this.handleIncomingMessage(sms)
+      //   }
+      // })
+    } catch (error) {
+      console.error("Failed to start SMS listener:", error)
+      this.isListening = false
+      // Don't throw - app should continue working without SMS import
+    }
   }
 
   /**
    * Handle an incoming SMS message
+   *
+   * NOTE: Only processes NEW messages received after SMS import is enabled.
+   * We intentionally do NOT scan historical SMS messages when the feature is
+   * first enabled, as users may have already manually added those transactions.
    */
   async handleIncomingMessage(message: string, sender?: string): Promise<void> {
+    // Safety check: Ensure SMS import is enabled before processing
+    const settings = await loadSMSImportSettings()
+    if (!settings.enabled) {
+      console.log("SMS import is disabled, ignoring message")
+      return
+    }
+
     console.log("Processing SMS:", message.substring(0, 50) + "...")
 
-    // Parse the message using hybrid parser (regex + ML)
-    const parseResult = await hybridParser.parse(message, "sms")
+    try {
+      // Parse the message using hybrid parser (regex + ML)
+      const parseResult = await hybridParser.parse(message, "sms")
 
-    if (!parseResult.parsed) {
+      if (!parseResult.parsed) {
+        console.log(
+          "Could not parse SMS - neither regex nor ML could extract transaction data"
+        )
+        console.log("Parse method used:", parseResult.method)
+        console.log("Confidence:", parseResult.confidence)
+        // Optionally: Show manual entry prompt or skip
+        return
+      }
+
+      const parsed: ParsedTransaction = parseResult.parsed
+
+      // Log which parser was used
       console.log(
-        "Could not parse SMS - neither regex nor ML could extract transaction data"
+        `Parsed using ${parseResult.method} (confidence: ${parseResult.confidence.toFixed(2)})`
       )
-      console.log("Parse method used:", parseResult.method)
-      console.log("Confidence:", parseResult.confidence)
-      // Optionally: Show manual entry prompt or skip
-      return
+      if (parseResult.regexConfidence) {
+        console.log(`  Regex confidence: ${parseResult.regexConfidence.toFixed(2)}`)
+      }
+      if (parseResult.mlConfidence) {
+        console.log(`  ML confidence: ${parseResult.mlConfidence.toFixed(2)}`)
+      }
+
+      // Update sender if provided
+      if (sender) {
+        parsed.metadata.sender = sender
+      }
+
+      // Check for duplicates
+      const duplicate = await duplicateDetector.check(parsed)
+      if (duplicate.isDuplicate) {
+        console.log("Duplicate detected, skipping")
+        await duplicateDetector.markProcessed(parsed.metadata.messageId)
+        return
+      }
+
+      // Get suggestions from learning engine
+      const suggestions = await merchantLearningEngine.suggest(parsed.merchant)
+
+      // Add to review queue
+      const reviewItem = {
+        id: generateId(),
+        parsedTransaction: parsed,
+        suggestedCategory: suggestions?.category || "Other",
+        suggestedPaymentMethod: suggestions?.paymentMethod || "Other",
+        suggestedInstrument: suggestions?.instrument,
+        status: "pending" as const,
+        createdAt: new Date().toISOString(),
+      }
+
+      reviewQueueStore.trigger.addItem({ item: reviewItem })
+      console.log("Added to review queue:", reviewItem.id)
+
+      // Show notification (optional)
+      // await this.showImportNotification(parsed)
+    } catch (error) {
+      // Critical: Never crash the app due to SMS parsing errors
+      console.error("Error processing SMS message:", error)
+      console.log("SMS processing failed gracefully - app continues running")
+      // Silently fail - the message is not a transaction or couldn't be parsed
     }
-
-    const parsed: ParsedTransaction = parseResult.parsed
-
-    // Log which parser was used
-    console.log(
-      `Parsed using ${parseResult.method} (confidence: ${parseResult.confidence.toFixed(2)})`
-    )
-    if (parseResult.regexConfidence) {
-      console.log(`  Regex confidence: ${parseResult.regexConfidence.toFixed(2)}`)
-    }
-    if (parseResult.mlConfidence) {
-      console.log(`  ML confidence: ${parseResult.mlConfidence.toFixed(2)}`)
-    }
-
-    // Update sender if provided
-    if (sender) {
-      parsed.metadata.sender = sender
-    }
-
-    // Check for duplicates
-    const duplicate = await duplicateDetector.check(parsed)
-    if (duplicate.isDuplicate) {
-      console.log("Duplicate detected, skipping")
-      await duplicateDetector.markProcessed(parsed.metadata.messageId)
-      return
-    }
-
-    // Get suggestions from learning engine
-    const suggestions = await merchantLearningEngine.suggest(parsed.merchant)
-
-    // Add to review queue
-    const reviewItem = {
-      id: generateId(),
-      parsedTransaction: parsed,
-      suggestedCategory: suggestions?.category || "Other",
-      suggestedPaymentMethod: suggestions?.paymentMethod || "Other",
-      suggestedInstrument: suggestions?.instrument,
-      status: "pending" as const,
-      createdAt: new Date().toISOString(),
-    }
-
-    reviewQueueStore.trigger.addItem({ item: reviewItem })
-    console.log("Added to review queue:", reviewItem.id)
-
-    // Show notification (optional)
-    // await this.showImportNotification(parsed)
   }
 
   /**

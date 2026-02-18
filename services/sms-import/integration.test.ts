@@ -20,11 +20,43 @@ jest.mock("expo-secure-store", () => ({
   deleteItemAsync: jest.fn(),
 }))
 
-import { smsListener, initializeSMSImport } from "../index"
+// Mock AsyncStorage
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  multiGet: jest.fn(),
+  multiSet: jest.fn(),
+}))
+
+// Mock expo-notifications
+jest.mock("expo-notifications", () => ({
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+  setNotificationHandler: jest.fn(),
+  scheduleNotificationAsync: jest.fn(),
+}))
+
+// Mock react-native-fast-tflite
+jest.mock("react-native-fast-tflite", () => ({
+  loadTensorflowModel: jest.fn().mockResolvedValue({
+    run: jest.fn().mockResolvedValue([new ArrayBuffer(128 * 7 * 4)]), // Mock output buffer
+  }),
+  TensorflowModel: class MockTensorflowModel {
+    run = jest.fn().mockResolvedValue([new ArrayBuffer(128 * 7 * 4)])
+  },
+}))
+
+import { SMSListener } from "./sms-listener"
+import { initializeSMSImport } from "./index"
 import { reviewQueueStore } from "../../stores/review-queue-store"
 
 describe("SMS Import Integration", () => {
+  let smsListener: SMSListener
+
   beforeEach(async () => {
+    // Create fresh instance for each test
+    smsListener = new SMSListener()
+
     // Reset stores
     reviewQueueStore.trigger.loadQueue({ items: [] })
   })

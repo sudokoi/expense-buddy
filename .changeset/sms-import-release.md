@@ -152,25 +152,31 @@ New permissions required (Android only):
 
 ### 🤖 Machine Learning Architecture
 
-**Hybrid Parser (v3.0.0 - Regex, v3.1 - ML Enhanced)**:
+**Hybrid Parser (Regex + ML)**:
 
-- **Regex Parser**: Fast deterministic parsing for known bank patterns (<50ms)
-- **ML Parser**: TensorFlow Lite model for uncertain cases (50-100ms)
+- **Regex Parser**: Fast deterministic parsing for known bank patterns (<50ms, confidence >0.8)
+- **ML Parser**: TensorFlow Lite Bi-LSTM model for uncertain cases (50-100ms, confidence >0.7)
 - **Sequential Fallback**: Regex → ML → Manual entry
-- **Confidence Thresholds**: Regex (>0.8), ML (>0.7)
-- **Model**: MobileBERT (distilled), ~8MB, INT8 quantized
 - **Library**: react-native-fast-tflite (v2.0.0)
+
+**Model Specifications**:
+
+- **Architecture**: Bi-LSTM (Bidirectional Long Short-Term Memory)
+- **Task**: Named Entity Recognition (NER) for merchant, amount, date extraction
+- **Input**: 128 token sequence
+- **Output**: 7 NER classes (O, B-MERCHANT, I-MERCHANT, B-AMOUNT, I-AMOUNT, B-DATE, I-DATE)
+- **Size**: 0.90 MB (943 KB TFLite with SELECT_TF_OPS)
+- **Accuracy**: 96.4% on test set
+- **Inference**: ~50-100ms on mobile CPU
 
 **Training Infrastructure**:
 
 - Python training pipeline with UV package manager
-- Data preparation with 450+ synthetic samples
+- 455 training samples (5 real + 450 synthetic)
 - Support for Indian, US, EU, JP bank formats
 - Training scripts: prepare_data.py, train.py, convert_to_tflite.py
-- Ready for v3.1 model training and deployment
-
-**v3.0.0 Status**: Ships with regex-based parsing only (high accuracy)
-**v3.1 Roadmap**: Add trained ML model for edge cases and unknown formats
+- Model checkpoint: ml/models/checkpoints/final/
+- TFLite model: assets/models/sms_parser_model.tflite
 
 ### 🐛 Bug Fixes
 

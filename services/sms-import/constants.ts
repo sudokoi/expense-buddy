@@ -91,7 +91,7 @@ export const BANK_PATTERNS = {
   HDFC: {
     name: "HDFC Bank",
     regex:
-      /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:debited|credited).*?(?:to\s+(.+?)(?:\.|$)|Avl\s*Bal[^.]*\.[\d,.]+\.\s*(.+?)(?:\.|$))/i,
+      /(?:Rs\.?|INR)\s*([\d,.]+)\s*(?:debited|credited).*?(?:to|at)\s+(.+?)(?:\.|\s+on\s+\d{2}[-/]\d{2}[-/]\d{4}|\s+Avl)/i,
     baseConfidence: 0.85,
     region: "IN" as const,
   },

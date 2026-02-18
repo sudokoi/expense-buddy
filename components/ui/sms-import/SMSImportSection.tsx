@@ -100,12 +100,19 @@ export function SMSImportSection() {
       <XStack items="center" gap="$2">
         <MessageSquare size={20} color="$color" />
         <Text fontSize="$5" fontWeight="600" color="$color">
-          {t("smsImport.title")}
+          {t("smsImport.title")}{" "}
+          <Text fontSize="$3" color="#f97316" fontWeight="600">
+            (Beta)
+          </Text>
         </Text>
       </XStack>
 
       <Text fontSize="$3" color="$colorTransparent">
         {t("smsImport.description")}
+      </Text>
+
+      <Text fontSize="$2" color="#f97316" fontStyle="italic">
+        {t("smsImport.betaWarning")}
       </Text>
 
       <Separator my="$2" />

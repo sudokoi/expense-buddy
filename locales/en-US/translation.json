@@ -416,6 +416,7 @@
   "smsImport": {
     "title": "SMS Import",
     "description": "Automatically detect expenses from bank SMS messages",
+    "betaWarning": "Results may not always be accurate. Please review all imported transactions.",
     "enable": "Enable SMS Import",
     "status": {
       "active": "Active - monitoring bank SMS",

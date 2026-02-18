@@ -116,6 +116,12 @@ export class TransactionParser {
           /(?:transaction|purchase|payment)\s*(?:of\s*)?(?:₹|\$|€|£|Rs\.?|INR)?\s*([\d,.]+)\s*(?:at|to|with)\s+(.+?)(?:\s+on|\.|$)/i,
         baseConfidence: 0.6,
       },
+      // Pattern: "Rs.XXX at MERCHANT on DATE"
+      {
+        regex:
+          /(?:₹|Rs\.?|INR)\s*\.?\s*([\d,.]+)\s*(?:at|to)\s+(.+?)(?:\s+on\s+\d{2}[-/]\d{2}[-/]\d{4}|\.|$)/i,
+        baseConfidence: 0.8,
+      },
     ]
 
     for (const pattern of genericPatterns) {

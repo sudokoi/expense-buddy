@@ -8,7 +8,7 @@
  * 3. If ML confidence < 0.7, return null (manual entry required)
  */
 
-import type { ParsedTransaction, ImportSource } from "../../types/sms-import"
+import type { ParsedTransaction, ImportSource } from "../../../types/sms-import"
 import { TransactionParser as RegexParser } from "../transaction-parser"
 import { TFLiteSMSParser } from "./tflite-parser"
 

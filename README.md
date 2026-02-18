@@ -29,14 +29,16 @@ The app has transitioned to Android-only to leverage platform-specific features 
 
 ## ✨ Features
 
-### 📱 SMS Expense Import (Android Only)
+### 📱 SMS Expense Import (Beta) - Android Only
 
-- **Automatic Detection**: Automatically detects expenses from bank SMS messages
+- **Automatic Detection**: Automatically detects expenses from bank SMS messages (Beta - results may not always be accurate)
+- **100% On-Device Processing**: All SMS parsing happens locally on your phone. No SMS content ever leaves your device or is sent to any cloud service.
 - **Smart Parsing**: Supports major Indian banks (HDFC, ICICI, SBI, Axis, Kotak), US banks (Chase, Bank of America, Wells Fargo, Citi), EU banks (Revolut, N26, ING), and JP banks (MUFG, SMBC, Mizuho)
 - **Manual Review**: All imported expenses go through a review queue for your confirmation
 - **Learning System**: Learns from your corrections to improve future suggestions
 - **Duplicate Prevention**: Automatically prevents duplicate imports using message fingerprinting
 - **Cross-Device Sync**: Merchant patterns sync via GitHub for consistent experience across devices
+- **New Messages Only**: Only processes SMS received after enabling the feature. Does not scan historical messages to avoid duplicates with manually entered transactions.
 
 ### 📊 Expense Management
 
