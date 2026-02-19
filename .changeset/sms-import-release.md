@@ -44,12 +44,15 @@ This is a **major release** that introduces automatic SMS expense import functio
 
 - `transaction-parser.ts` - Regex-based SMS parsing with international bank support
 - `duplicate-detector.ts` - Fingerprinting and similarity-based deduplication
-- `learning-engine.ts` - Merchant pattern learning with fuzzy matching
-- `sms-listener.ts` - SMS monitoring service (ready for native module)
+- `learning-engine.ts` - Merchant pattern learning with fuzzy matching and LRU eviction
+- `sms-listener.ts` - SMS monitoring via `@maniac-tech/react-native-expo-read-sms`
 - `settings.ts` - SMS import settings management
 - `permissions.ts` - Android SMS permission handling
-- `ml/hybrid-parser.ts` - Hybrid regex + ML parser (architecture ready)
-- `ml/tflite-parser.ts` - TensorFlow Lite integration (react-native-fast-tflite)
+- `ml/ml-parser.ts` - ML parser wrapper with SHA-256 message ID generation
+- `ml/tflite-parser.ts` - TensorFlow Lite Bi-LSTM model with reverse vocab lookup
+- `merchant-sync.ts` - GitHub-based merchant pattern sync across devices
+- `inbox-scanner.ts` - On-demand historical SMS inbox scanning
+- `import-notification.ts` - Local push notifications for detected transactions
 
 **New Types**:
 
@@ -58,11 +61,14 @@ This is a **major release** that introduces automatic SMS expense import functio
 
 **New Store**:
 
-- `stores/review-queue-store.ts` - XState store for managing import review queue
+- `stores/review-queue-store.ts` - XState store for managing import review queue with confirm, edit, reject, and bulk actions
 
 **New UI**:
 
 - `components/ui/sms-import/SMSImportSection.tsx` - Settings UI for SMS import
+- `components/ui/sms-import/ReviewQueueModal.tsx` - Modal for reviewing, editing, confirming, or rejecting imported transactions
+- `components/ui/sms-import/ImportHistoryView.tsx` - Filterable list of auto-imported expenses (all/confirmed/edited/rejected)
+- `components/ui/expense-list/AutoImportedBadge.tsx` - Inline badge on expense list items for auto-imported expenses
 
 ### 🔧 Technical Improvements
 
@@ -77,8 +83,10 @@ This is a **major release** that introduces automatic SMS expense import functio
 #### Sync Architecture Updates
 
 - **Merchant Pattern Sync**: Learning data syncs via GitHub (`merchant-patterns.json`)
+- **Merge Strategy**: Usage count summation, raw pattern union, most-recent-timestamp wins
+- **Correction Sync**: User corrections merge by ID with most-recent-timestamp deduplication
+- **Integration**: Merchant sync runs after expense sync in the git-style sync flow
 - **Opt-out by Default**: Follows existing settings sync toggle
-- **Merge Strategy**: Usage count-based conflict resolution
 
 #### Performance Optimizations
 
@@ -91,14 +99,21 @@ This is a **major release** that introduces automatic SMS expense import functio
 Comprehensive test coverage added:
 
 - **Transaction Parser Tests**: 13 test suites covering all bank patterns
-- **Duplicate Detector Tests**: Similarity calculation and fingerprinting
-- **Learning Engine Tests**: Pattern learning, merchant matching, suggestions
+- **Duplicate Detector Tests**: Similarity calculation, fingerprinting, and amount/date/merchant property tests
+- **Learning Engine Tests**: Pattern learning, merchant matching, LRU eviction, and pattern overwrite property tests
+- **Review Queue Tests**: Confirm, edit, reject, and bulk action property tests
+- **Merchant Sync Tests**: Pattern merge and correction merge property tests
+- **ML Parser Tests**: Message ID uniqueness, tokenizer round-trip, and word/character-level tokenization property tests
+- **Import History Tests**: Filter correctness property tests
+- **SMS Listener Tests**: Permission handling, message processing, and error recovery
+- **Integration Tests**: End-to-end SMS import flow
 
 ### 📚 Documentation Updates
 
 - **README.md**: Added platform support section, SMS import features, configuration guide
 - **PRIVACY.md**: Added SMS import privacy section, permission details
-- **ARCHITECTURE.md**: Added SMS import architecture section with flow diagrams
+- **ARCHITECTURE.md**: Added SMS import architecture section with flow diagrams, review queue actions, merchant sync, and UI components
+- **ML_SMS_PARSER.md**: ML-only parser architecture documentation (replaced ML_HYBRID_PARSER.md)
 - **Implementation Doc**: Comprehensive technical specification in `docs/SMS_IMPORT_IMPLEMENTATION.md`
 
 ### 🔒 Privacy & Security
@@ -152,11 +167,12 @@ New permissions required (Android only):
 
 ### 🤖 Machine Learning Architecture
 
-**Hybrid Parser (Regex + ML)**:
+**ML-Only Parser**:
 
-- **Regex Parser**: Fast deterministic parsing for known bank patterns (<50ms, confidence >0.8)
-- **ML Parser**: TensorFlow Lite Bi-LSTM model for uncertain cases (50-100ms, confidence >0.7)
-- **Sequential Fallback**: Regex → ML → Manual entry
+- **ML Parser**: On-device TensorFlow Lite Bi-LSTM model for all SMS parsing (60-150ms, confidence ≥0.7 for review queue)
+- **No regex fallback**: Single ML pipeline simplifies debugging and maintenance
+- **Tokenization**: Word-level for known vocabulary, character-level fallback for OOV words
+- **Reverse vocab lookup**: Token IDs converted back to readable text for entity extraction
 - **Library**: react-native-fast-tflite (v2.0.0)
 
 **Model Specifications**:

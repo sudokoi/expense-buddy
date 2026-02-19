@@ -35,9 +35,14 @@ The app has transitioned to Android-only to leverage platform-specific features 
 - **100% On-Device Processing**: All SMS parsing happens locally on your phone. No SMS content ever leaves your device or is sent to any cloud service.
 - **Smart Parsing**: Supports major Indian banks (HDFC, ICICI, SBI, Axis, Kotak), US banks (Chase, Bank of America, Wells Fargo, Citi), EU banks (Revolut, N26, ING), and JP banks (MUFG, SMBC, Mizuho)
 - **Manual Review**: All imported expenses go through a review queue for your confirmation
+- **Review Queue Modal**: Review, edit, confirm, or reject each import with category/payment selectors, confidence indicator, and bulk actions
+- **Import History**: View and filter all auto-imported expenses by status (confirmed, edited, rejected)
+- **Auto-Imported Badge**: Visual indicator on expense list items showing which expenses were imported from SMS
 - **Learning System**: Learns from your corrections to improve future suggestions
-- **Duplicate Prevention**: Automatically prevents duplicate imports using message fingerprinting
+- **Duplicate Prevention**: Automatically prevents duplicate imports using message fingerprinting and amount/date/merchant similarity
 - **Cross-Device Sync**: Merchant patterns sync via GitHub for consistent experience across devices
+- **Inbox Scanner**: On-demand scan of historical SMS messages for missed transactions
+- **Import Notifications**: Local push notification when a new transaction is detected
 - **New Messages Only**: Only processes SMS received after enabling the feature. Does not scan historical messages to avoid duplicates with manually entered transactions.
 
 ### 📊 Expense Management
@@ -286,6 +291,8 @@ expense-buddy/
 ├── components/            # Reusable components
 │   ├── analytics/        # Analytics chart components
 │   ├── ui/               # Styled UI components
+│   │   ├── sms-import/   # SMS import UI (ReviewQueueModal, ImportHistoryView)
+│   │   └── expense-list/ # Expense list components (AutoImportedBadge)
 │   └── history/          # History-specific components
 ├── hooks/                # React hooks
 ├── stores/               # XState Store state management
@@ -343,7 +350,13 @@ expense-buddy/
 │ │ ├── transaction-parser.ts # SMS parsing engine
 │ │ ├── duplicate-detector.ts # Duplicate detection
 │ │ ├── learning-engine.ts # Merchant pattern learning
-│ │ └── sms-listener.ts # SMS monitoring service
+│ │ ├── sms-listener.ts # SMS monitoring service
+│ │ ├── merchant-sync.ts # GitHub-based merchant pattern sync
+│ │ ├── inbox-scanner.ts # Historical SMS inbox scanning
+│ │ ├── import-notification.ts # Local push notifications
+│ │ └── ml/ # ML parsing layer
+│ │ ├── ml-parser.ts # ML parser wrapper
+│ │ └── tflite-parser.ts # TFLite Bi-LSTM model integration
 │ ├── sync-machine.ts # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
 │ ├── sync-manager.ts # Sync orchestration
 │ ├── merge-engine.ts # Git-style merge logic (ID-based merge, timestamp resolution)
