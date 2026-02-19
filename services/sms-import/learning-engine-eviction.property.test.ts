@@ -259,12 +259,12 @@ describe("Learning Engine Properties", () => {
           fc.constantFrom(...allCategories),
           fc.constantFrom(...allCategories),
           amountArb,
-          fc.double({ min: 0, max: 0.1, noNaN: true }),
+          fc.double({ min: 0, max: 0.099, noNaN: true }),
           (patternCategory, expenseCategory, expenseAmount, fraction) => {
             fc.pre(patternCategory !== expenseCategory)
             fc.pre(expenseAmount > 0)
 
-            // Parsed amount is within 10% range
+            // Parsed amount is within 10% range (fraction capped below 0.1 to avoid floating-point boundary)
             const parsedAmount = expenseAmount * (1 + fraction)
             const now = Date.now()
             const recentLastUsed = new Date(now - 1000).toISOString()

@@ -43,6 +43,7 @@ import {
 } from "./merge-engine"
 import { mergeCategories } from "./category-merger"
 import { mergePaymentInstruments } from "./payment-instrument-merger"
+import { syncMerchantPatterns } from "./sms-import/merchant-sync"
 import i18next from "i18next"
 
 // Import sync types from centralized location
@@ -1640,6 +1641,13 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
+      // Sync merchant patterns even when no expense changes
+      try {
+        await syncMerchantPatterns(config)
+      } catch (e) {
+        console.warn("Merchant pattern sync failed:", e)
+      }
+
       return {
         success: true,
         message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
@@ -1746,6 +1754,16 @@ export async function gitStyleSync(
       }
     } catch (e) {
       console.warn("Failed to fetch commit timestamp after sync:", e)
+    }
+
+    // =========================================================================
+    // Merchant pattern sync: runs after expense sync completes
+    // =========================================================================
+    try {
+      await syncMerchantPatterns(config)
+    } catch (e) {
+      // Merchant sync failure should not fail the overall sync
+      console.warn("Merchant pattern sync failed:", e)
     }
 
     // =========================================================================

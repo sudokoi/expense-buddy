@@ -449,6 +449,46 @@
     "notification": {
       "title": "New Transaction Detected",
       "body": "{{currency}} {{amount}} at {{merchant}}"
+    },
+    "reviewQueue": {
+      "title": "Review Import",
+      "amount": "Amount",
+      "merchant": "Merchant",
+      "date": "Date",
+      "rawSms": "Raw SMS",
+      "showRawSms": "Show raw SMS",
+      "hideRawSms": "Hide raw SMS",
+      "confidence": "Confidence",
+      "confidenceHigh": "High",
+      "confidenceMedium": "Medium",
+      "confidenceLow": "Low",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "note": "Note",
+      "notePlaceholder": "Add a note",
+      "applyToFuture": "Apply to future transactions",
+      "confirm": "Confirm",
+      "edit": "Save Edit",
+      "reject": "Reject",
+      "confirmAll": "Confirm All",
+      "rejectAll": "Reject All",
+      "pendingCount": "{{count}} pending"
+    },
+    "autoImportedBadge": "Auto-imported",
+    "importHistory": {
+      "title": "Import History",
+      "empty": "No auto-imported expenses yet.",
+      "unknownMerchant": "Unknown Merchant",
+      "filters": {
+        "all": "All",
+        "confirmed": "Confirmed",
+        "edited": "Edited",
+        "rejected": "Rejected"
+      },
+      "status": {
+        "confirmed": "Confirmed",
+        "edited": "Edited"
+      }
     }
   },
   "validation": {

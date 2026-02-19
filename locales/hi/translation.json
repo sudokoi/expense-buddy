@@ -449,6 +449,46 @@
     "notification": {
       "title": "नया लेनदेन पाया गया",
       "body": "{{currency}} {{amount}} {{merchant}} पर"
+    },
+    "reviewQueue": {
+      "title": "आयात समीक्षा",
+      "amount": "राशि",
+      "merchant": "व्यापारी",
+      "date": "तारीख",
+      "rawSms": "मूल SMS",
+      "showRawSms": "मूल SMS दिखाएं",
+      "hideRawSms": "मूल SMS छुपाएं",
+      "confidence": "विश्वसनीयता",
+      "confidenceHigh": "उच्च",
+      "confidenceMedium": "मध्यम",
+      "confidenceLow": "कम",
+      "category": "श्रेणी",
+      "paymentMethod": "भुगतान विधि",
+      "note": "नोट",
+      "notePlaceholder": "नोट जोड़ें",
+      "applyToFuture": "भविष्य के लेनदेन पर लागू करें",
+      "confirm": "पुष्टि करें",
+      "edit": "संपादन सहेजें",
+      "reject": "अस्वीकार करें",
+      "confirmAll": "सभी पुष्टि करें",
+      "rejectAll": "सभी अस्वीकार करें",
+      "pendingCount": "{{count}} लंबित"
+    },
+    "autoImportedBadge": "स्वतः-आयातित",
+    "importHistory": {
+      "title": "आयात इतिहास",
+      "empty": "अभी तक कोई स्वतः-आयातित खर्च नहीं।",
+      "unknownMerchant": "अज्ञात व्यापारी",
+      "filters": {
+        "all": "सभी",
+        "confirmed": "पुष्टि किया",
+        "edited": "संपादित",
+        "rejected": "अस्वीकृत"
+      },
+      "status": {
+        "confirmed": "पुष्टि किया",
+        "edited": "संपादित"
+      }
     }
   },
   "validation": {

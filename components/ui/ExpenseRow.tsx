@@ -11,6 +11,7 @@ import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import { ExpenseCard } from "./ExpenseCard"
 import { AmountText } from "./AmountText"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { AutoImportedBadge } from "./expense-list/AutoImportedBadge"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
@@ -76,6 +77,7 @@ export const ExpenseRow = memo(function ExpenseRow({
               {paymentMethodDisplay}
             </Text>
           ) : null}
+          <AutoImportedBadge source={expense.source} />
         </YStack>
       </XStack>
 

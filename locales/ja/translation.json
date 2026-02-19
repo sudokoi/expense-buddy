@@ -449,6 +449,46 @@
     "notification": {
       "title": "新しい取引を検出しました",
       "body": "{{currency}} {{amount}} - {{merchant}}"
+    },
+    "reviewQueue": {
+      "title": "インポート確認",
+      "amount": "金額",
+      "merchant": "店舗名",
+      "date": "日付",
+      "rawSms": "元のSMS",
+      "showRawSms": "元のSMSを表示",
+      "hideRawSms": "元のSMSを非表示",
+      "confidence": "信頼度",
+      "confidenceHigh": "高",
+      "confidenceMedium": "中",
+      "confidenceLow": "低",
+      "category": "カテゴリー",
+      "paymentMethod": "支払い方法",
+      "note": "メモ",
+      "notePlaceholder": "メモを追加",
+      "applyToFuture": "今後の取引にも適用",
+      "confirm": "確認",
+      "edit": "編集を保存",
+      "reject": "却下",
+      "confirmAll": "すべて確認",
+      "rejectAll": "すべて却下",
+      "pendingCount": "{{count}}件保留中"
+    },
+    "autoImportedBadge": "自動インポート",
+    "importHistory": {
+      "title": "インポート履歴",
+      "empty": "自動インポートされた支出はまだありません。",
+      "unknownMerchant": "不明な店舗",
+      "filters": {
+        "all": "すべて",
+        "confirmed": "確認済み",
+        "edited": "編集済み",
+        "rejected": "却下"
+      },
+      "status": {
+        "confirmed": "確認済み",
+        "edited": "編集済み"
+      }
     }
   },
   "validation": {
