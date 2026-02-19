@@ -445,6 +445,10 @@
       "unavailable": "SMS import is not available on this device.",
       "unsupported": "SMS import is only available on Android devices.",
       "unknown": "Unknown permission status."
+    },
+    "notification": {
+      "title": "New Transaction Detected",
+      "body": "{{currency}} {{amount}} at {{merchant}}"
     }
   },
   "validation": {

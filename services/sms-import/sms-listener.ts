@@ -4,6 +4,10 @@
  * Listens for incoming SMS messages and processes them using ML parser
  */
 
+import {
+  startReadSMS,
+  requestReadSMSPermission,
+} from "@maniac-tech/react-native-expo-read-sms"
 import { loadSMSImportSettings } from "./settings"
 import { checkSMSPermission } from "./permissions"
 import { mlParser } from "./ml/ml-parser"
@@ -11,6 +15,7 @@ import { duplicateDetector } from "./duplicate-detector"
 import { merchantLearningEngine } from "./learning-engine"
 import { reviewQueueStore } from "../../stores/review-queue-store"
 import { generateId } from "../../utils/id"
+import { showImportNotification } from "./import-notification"
 import { ParsedTransaction } from "../../types/sms-import"
 
 export class SMSListener {
@@ -55,19 +60,35 @@ export class SMSListener {
    */
   private async startListening(): Promise<void> {
     try {
-      // Note: This is a placeholder. The actual implementation would use
-      // @maniac-tech/react-native-expo-read-sms to listen for SMS
-      // For now, we'll create a mock implementation
+      const hasPermission = await requestReadSMSPermission()
+      if (!hasPermission) {
+        console.log("SMS read permission not granted, cannot start listener")
+        return
+      }
 
-      console.log("SMS listener started (mock implementation)")
+      this.unsubscribe = startReadSMS(
+        (_status: string, sms: string, _error: string) => {
+          if (sms) {
+            // sms is a string in the format "[originatingAddress, messageBody]"
+            // Parse the originating address and body from the callback
+            const match = sms.match(/^\[([^,]*),\s*([\s\S]*)\]$/)
+            if (match) {
+              const sender = match[1]
+              const body = match[2]
+              this.handleIncomingMessage(body, sender)
+            } else {
+              // Fallback: treat entire string as message body
+              this.handleIncomingMessage(sms)
+            }
+          }
+        },
+        (error: string) => {
+          console.error("SMS read error:", error)
+        }
+      )
+
       this.isListening = true
-
-      // In real implementation:
-      // this.unsubscribe = startReadSMS((status, sms, error) => {
-      //   if (status === 'success' && sms) {
-      //     this.handleIncomingMessage(sms)
-      //   }
-      // })
+      console.log("SMS listener started")
     } catch (error) {
       console.error("Failed to start SMS listener:", error)
       this.isListening = false
@@ -141,8 +162,8 @@ export class SMSListener {
       reviewQueueStore.trigger.addItem({ item: reviewItem })
       console.log("Added to review queue:", reviewItem.id)
 
-      // Show notification (optional)
-      // await this.showImportNotification(parsed)
+      // Show notification for the detected transaction
+      await showImportNotification(parsed.merchant, parsed.amount, parsed.currency)
     } catch (error) {
       // Critical: Never crash the app due to SMS parsing errors
       console.error("Error processing SMS message:", error)

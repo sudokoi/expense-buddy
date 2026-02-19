@@ -25,6 +25,8 @@ export { smsListener, SMSListener } from "./sms-listener"
 export { mlParser, MLTransactionParser } from "./ml/ml-parser"
 export { duplicateDetector, DuplicateDetector } from "./duplicate-detector"
 export { merchantLearningEngine, MerchantLearningEngine } from "./learning-engine"
+export { inboxScanner, InboxScanner } from "./inbox-scanner"
+export type { ScanProgress, ScanResult } from "./inbox-scanner"
 
 // Settings and permissions
 export {

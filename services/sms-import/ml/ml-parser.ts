@@ -8,6 +8,7 @@
 import type { ParsedTransaction, ImportSource } from "../../../types/sms-import"
 import type { PaymentMethodType } from "../../../types/expense"
 import { TFLiteSMSParser } from "./tflite-parser"
+import * as Crypto from "expo-crypto"
 
 export interface MLParseResult {
   parsed: ParsedTransaction | null
@@ -59,7 +60,7 @@ export class MLTransactionParser {
 
       if (mlResult && mlResult.confidence >= this.ML_THRESHOLD) {
         // Build parsed transaction from ML result
-        const parsedTransaction = this.buildTransaction(mlResult, message, source)
+        const parsedTransaction = await this.buildTransaction(mlResult, message, source)
 
         return {
           parsed: parsedTransaction,
@@ -97,11 +98,12 @@ export class MLTransactionParser {
   /**
    * Build a ParsedTransaction from ML result
    */
-  private buildTransaction(
+  private async buildTransaction(
     mlResult: { merchant: string; amount: number; date: string; confidence: number },
     rawMessage: string,
     source: ImportSource
-  ): ParsedTransaction {
+  ): Promise<ParsedTransaction> {
+    const messageId = await this.generateMessageId(rawMessage)
     return {
       amount: mlResult.amount,
       currency: this.detectCurrency(rawMessage),
@@ -115,7 +117,7 @@ export class MLTransactionParser {
         source,
         rawMessage,
         sender: this.extractSender(rawMessage),
-        messageId: this.generateMessageId(rawMessage),
+        messageId,
         confidenceScore: mlResult.confidence,
         parsedAt: new Date().toISOString(),
       },
@@ -168,16 +170,18 @@ export class MLTransactionParser {
   }
 
   /**
-   * Generate message ID for duplicate detection
+   * Generate collision-resistant message ID using timestamp + SHA-256
+   * Format: {timestamp_base36}-{first_16_chars_of_hex_hash}
    */
-  private generateMessageId(message: string): string {
-    let hash = 0
-    for (let i = 0; i < message.length; i++) {
-      const char = message.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash
+  private async generateMessageId(message: string): Promise<string> {
+    const timestamp = Date.now().toString(36)
+    try {
+      const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, message)
+      return `${timestamp}-${hash.substring(0, 16)}`
+    } catch {
+      // Fallback to timestamp-only ID if expo-crypto is unavailable
+      return `${timestamp}-${Date.now().toString(36)}`
     }
-    return Math.abs(hash).toString(16)
   }
 
   /**

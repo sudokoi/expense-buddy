@@ -445,6 +445,10 @@
       "unavailable": "このデバイスではSMSインポートは利用できません。",
       "unsupported": "SMSインポートはAndroidデバイスでのみ利用可能です。",
       "unknown": "不明な権限ステータスです。"
+    },
+    "notification": {
+      "title": "新しい取引を検出しました",
+      "body": "{{currency}} {{amount}} - {{merchant}}"
     }
   },
   "validation": {

@@ -34,6 +34,7 @@ export class TFLiteSMSParser {
   private config: TFLiteModelConfig
   private initialized = false
   private vocab: Map<string, number> | null = null
+  private reverseVocab: Map<number, string> | null = null
   private oovToken = '<OOV>'
 
   constructor(config?: Partial<TFLiteModelConfig>) {
@@ -86,14 +87,19 @@ export class TFLiteSMSParser {
    */
   private async loadVocab(): Promise<void> {
     try {
-      // In production, load from JSON file
-      // For now, use a basic character-level approach as fallback
       const vocabJson = require("../../../assets/models/tokenizer_vocab.json")
-      this.vocab = new Map(Object.entries(vocabJson.word_index))
+      this.vocab = new Map(Object.entries(vocabJson.word_index).map(([word, id]) => [word, id as number]))
       console.log(`Loaded vocab: ${this.vocab.size} words`)
+
+      // Build reverse mapping: token ID -> word
+      this.reverseVocab = new Map()
+      for (const [word, id] of this.vocab) {
+        this.reverseVocab.set(id, word)
+      }
     } catch {
       console.log("Tokenizer vocab not found, using character-level fallback")
       this.vocab = null
+      this.reverseVocab = null
     }
   }
 
@@ -300,20 +306,23 @@ export class TFLiteSMSParser {
   }
 
   /**
-   * Convert tokens back to text (simplified)
+   * Convert tokens back to text using reverse vocabulary lookup
    */
   private tokensToText(tokens: number[]): string {
-    // Reverse vocab lookup (simplified)
-    if (!this.vocab) {
-      // Character-level decoding
+    if (!this.reverseVocab) {
+      // Character-level decoding fallback
       return tokens
         .filter(t => t > 0)
         .map(t => String.fromCharCode(t - 1))
         .join('')
     }
 
-    // Word-level decoding would require reverse mapping
-    return "Extracted Entity"
+    // Word-level decoding with character-level fallback for unknown IDs
+    return tokens
+      .filter(t => t > 0)
+      .map(t => this.reverseVocab!.get(t) ?? String.fromCharCode(t - 1))
+      .join(' ')
+      .trim()
   }
 
   /**

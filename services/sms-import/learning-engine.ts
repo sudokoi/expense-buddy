@@ -13,7 +13,12 @@ import {
   MerchantSuggestion,
 } from "../../types/merchant-patterns"
 import { ParsedTransaction } from "../../types/sms-import"
-import { STORAGE_KEYS, LEARNING_THRESHOLDS, TIME_WINDOWS } from "./constants"
+import {
+  STORAGE_KEYS,
+  LEARNING_THRESHOLDS,
+  TIME_WINDOWS,
+  RETENTION_LIMITS,
+} from "./constants"
 import { duplicateDetector } from "./duplicate-detector"
 
 export class MerchantLearningEngine {
@@ -189,7 +194,7 @@ export class MerchantLearningEngine {
   private shouldOverwritePattern(
     existing: MerchantPattern,
     expense: Expense,
-    _parsed: ParsedTransaction
+    parsed: ParsedTransaction
   ): boolean {
     // Only overwrite when the category changed (user re-categorized)
     if (existing.category === expense.category) {
@@ -201,6 +206,11 @@ export class MerchantLearningEngine {
       new Date().getTime() - new Date(existing.lastUsed).getTime()
     )
     if (timeDiff > TIME_WINDOWS.PATTERN_OVERWRITE_WINDOW) {
+      return false
+    }
+
+    // Amount must be within 10% of the expense amount
+    if (Math.abs(parsed.amount - expense.amount) > expense.amount * 0.1) {
       return false
     }
 
@@ -239,10 +249,28 @@ export class MerchantLearningEngine {
   }
 
   /**
-   * Save patterns to storage
+   * Save patterns to storage, evicting LRU patterns if over limit
    */
   private async savePatterns(): Promise<void> {
     try {
+      // LRU eviction if over limit
+      if (this.patterns.size > RETENTION_LIMITS.MAX_MERCHANT_PATTERNS) {
+        const sorted = Array.from(this.patterns.entries()).sort((a, b) => {
+          // Non-overridden first (they get evicted first), then overridden
+          if (a[1].userOverridden !== b[1].userOverridden) {
+            return a[1].userOverridden ? 1 : -1
+          }
+          // Within each group, sort by lastUsed ascending (oldest first)
+          return new Date(a[1].lastUsed).getTime() - new Date(b[1].lastUsed).getTime()
+        })
+
+        // Evict from the front (oldest, non-overridden first)
+        while (this.patterns.size > RETENTION_LIMITS.MAX_MERCHANT_PATTERNS) {
+          const oldest = sorted.shift()
+          if (oldest) this.patterns.delete(oldest[0])
+        }
+      }
+
       const patternsArray = Array.from(this.patterns.values())
       await AsyncStorage.setItem(
         STORAGE_KEYS.MERCHANT_PATTERNS,

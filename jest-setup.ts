@@ -26,6 +26,24 @@ jest.mock("expo-secure-store", () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }))
 
+// Mock expo-crypto
+jest.mock("expo-crypto", () => ({
+  digestStringAsync: jest.fn((algorithm: string, data: string) => {
+    // Simple deterministic hex hash for testing
+    let hash = 0
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i)
+      hash = (hash << 5) - hash + char
+      hash = hash & hash
+    }
+    const hex = Math.abs(hash).toString(16).padStart(64, "0")
+    return Promise.resolve(hex)
+  }),
+  CryptoDigestAlgorithm: {
+    SHA256: "SHA-256",
+  },
+}))
+
 // Mock React Native
 jest.mock("react-native", () => ({
   Platform: {

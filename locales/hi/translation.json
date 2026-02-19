@@ -445,6 +445,10 @@
       "unavailable": "इस डिवाइस पर SMS आयात उपलब्ध नहीं है।",
       "unsupported": "SMS आयात केवल Android डिवाइस पर उपलब्ध है।",
       "unknown": "अज्ञात अनुमति स्थिति।"
+    },
+    "notification": {
+      "title": "नया लेनदेन पाया गया",
+      "body": "{{currency}} {{amount}} {{merchant}} पर"
     }
   },
   "validation": {

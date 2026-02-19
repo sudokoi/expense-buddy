@@ -5,6 +5,12 @@
  * Note: These tests verify the SMS import system works correctly
  */
 
+// Mock native SMS module
+jest.mock("@maniac-tech/react-native-expo-read-sms", () => ({
+  startReadSMS: jest.fn().mockReturnValue(jest.fn()),
+  requestReadSMSPermission: jest.fn().mockResolvedValue(true),
+}))
+
 // Mock expo modules
 jest.mock("expo-constants", () => ({
   default: {

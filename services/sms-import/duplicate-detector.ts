@@ -5,8 +5,11 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { isSameDay, parseISO } from "date-fns"
 import { ParsedTransaction, DuplicateCheck } from "../../types/sms-import"
-import { STORAGE_KEYS, RETENTION_LIMITS } from "./constants"
+import { expenseStore } from "../../stores/expense-store"
+import { getActiveExpenses } from "../../stores/expense-store"
+import { STORAGE_KEYS, RETENTION_LIMITS, DUPLICATE_THRESHOLDS } from "./constants"
 
 export class DuplicateDetector {
   private processedIds: Set<string> = new Set()
@@ -40,8 +43,6 @@ export class DuplicateDetector {
     }
 
     // Check 2: Amount + Date + Merchant similarity
-    // This would need access to existing expenses - simplified version
-    // In full implementation, query expense store
     const similarExists = await this.checkSimilarExists(parsed)
     if (similarExists) {
       return {
@@ -84,17 +85,25 @@ export class DuplicateDetector {
   }
 
   /**
-   * Check if a similar expense already exists
-   * Note: This is a simplified version. Full implementation would query expense store
+   * Check if a similar expense already exists by comparing amount, date, and merchant name
    */
-  private async checkSimilarExists(_parsed: ParsedTransaction): Promise<boolean> {
-    // In full implementation, this would:
-    // 1. Load all expenses from storage
-    // 2. Check for amount match (within tolerance)
-    // 3. Check for date match (same day)
-    // 4. Check for merchant similarity
-    // For now, return false
-    return false
+  private async checkSimilarExists(parsed: ParsedTransaction): Promise<boolean> {
+    const expenses = expenseStore.getSnapshot().context.expenses
+    const activeExpenses = getActiveExpenses(expenses)
+    const parsedDate = parseISO(parsed.date)
+
+    const candidates = activeExpenses.filter((expense) => {
+      const amountDiff = Math.abs(expense.amount - parsed.amount)
+      const amountMatch =
+        amountDiff <= parsed.amount * DUPLICATE_THRESHOLDS.AMOUNT_TOLERANCE
+      const dateMatch = isSameDay(parseISO(expense.date), parsedDate)
+      return amountMatch && dateMatch
+    })
+
+    return candidates.some((candidate) => {
+      const similarity = this.calculateSimilarity(parsed.merchant, candidate.note)
+      return similarity > DUPLICATE_THRESHOLDS.MERCHANT_SIMILARITY
+    })
   }
 
   /**
