@@ -30,7 +30,7 @@
 This document outlines the implementation plan for adding SMS-based automatic expense import functionality to Expense Buddy. The feature will:
 
 - **Monitor incoming SMS messages** for transaction messages from banks and payment providers
-- **Parse transaction data** using pattern matching and on-device processing
+- **Parse transaction data** using an on-device ML model (TensorFlow Lite Bi-LSTM)
 - **Present all expenses for user review** before adding to the expense list (no auto-import bypass in v1)
 - **Learn from user corrections** to improve future categorization
 - **Prevent duplicate entries** through sophisticated fingerprinting
@@ -163,8 +163,8 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 │                    PARSING & PROCESSING                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │ Pattern      │  │ Duplicate    │  │ Merchant     │          │
-│  │ Matcher      │──│ Detector     │──│ Normalizer   │          │
+│  │ ML Parser    │  │ Duplicate    │  │ Merchant     │          │
+│  │ (TFLite)     │──│ Detector     │──│ Normalizer   │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -192,7 +192,7 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 ### Component Interactions
 
 1. **SMS Listener** receives incoming messages
-2. **Transaction Parser** extracts structured data using regex patterns
+2. **ML Parser** extracts structured data using on-device TFLite Bi-LSTM model
 3. **Duplicate Detector** checks against existing expenses
 4. **Merchant Learning Engine** suggests category and payment method
 5. **Review Queue Store** manages pending items (all imports require review in v1)
@@ -471,27 +471,27 @@ export interface Expense {
 
 ### Phase 3: Transaction Parsing (Week 2-4)
 
-**Goal:** Extract transaction data from messages
+**Goal:** Extract transaction data from messages using on-device ML
 
 **Tasks:**
 
-- [ ] Create transaction parser engine
-- [ ] Define regex patterns for Indian banks (HDFC, ICICI, SBI, Axis, Kotak)
-- [ ] Define regex patterns for US banks (Chase, Bank of America, Wells Fargo, Citi)
-- [ ] Define regex patterns for EU banks (Revolut, N26, ING)
-- [ ] Define regex patterns for JP banks (MUFG, SMBC, Mizuho)
-- [ ] Define patterns for UPI wallets (Paytm, GPay, PhonePe)
-- [ ] Implement merchant name extraction
-- [ ] Implement amount parsing (handle different formats: ₹, $, €, ¥)
-- [ ] Implement date parsing
-- [ ] Add confidence scoring
+- [ ] Integrate TensorFlow Lite runtime (`react-native-fast-tflite`)
+- [ ] Create TFLite tokenizer for SMS text preprocessing
+- [ ] Create ML parser service wrapping the Bi-LSTM model
+- [ ] Implement confidence thresholding (≥ 0.7 for review queue)
+- [ ] Implement merchant name extraction from model output
+- [ ] Implement amount and currency parsing from model output
+- [ ] Implement date parsing from model output
 - [ ] Create merchant normalizer
+- [ ] Add SHA-256 message ID fingerprinting
 
 **Deliverables:**
 
-- Parser working for Indian, US, EU, and JP banks
-- Confidence scoring implemented
-- Unit tests for parsing accuracy
+- ML parser working across all bank formats (Indian, US, EU, JP)
+- Confidence scoring from model output
+- Unit and property-based tests for parsing accuracy
+
+> **Note:** The ML-only approach replaces the earlier regex-based pattern matching design. See [ML_SMS_PARSER.md](./ML_SMS_PARSER.md) for full architecture details.
 
 **Dependencies:** Phase 2
 
@@ -719,240 +719,95 @@ export class SMSListener {
 }
 ```
 
-### 3. Transaction Parser
+### 3. ML Transaction Parser
+
+The transaction parser uses an on-device TensorFlow Lite Bi-LSTM model to extract structured data from SMS messages. This replaces the earlier regex-based approach, providing universal support across bank formats and languages.
+
+> **Full architecture details:** See [ML_SMS_PARSER.md](./ML_SMS_PARSER.md)
 
 ```typescript
-// services/sms-import/transaction-parser.ts
+// services/sms-import/ml/tflite-parser.ts
+
+import { loadTensorflowModel } from "react-native-fast-tflite"
+import { TFLiteTokenizer } from "./tflite-tokenizer"
+import { generateMessageId } from "./message-id"
 
 interface ParseResult {
   parsed: ParsedTransaction | null
   confidence: number
+  method: "ml"
 }
 
-export class TransactionParser {
-  private patterns: Map<string, BankPattern> = new Map()
+export class TFLiteParser {
+  private model: TensorflowModel | null = null
+  private tokenizer: TFLiteTokenizer | null = null
 
-  constructor() {
-    this.loadPatterns()
+  async initialize(): Promise<boolean> {
+    this.tokenizer = new TFLiteTokenizer()
+    await this.tokenizer.loadVocab()
+
+    this.model = await loadTensorflowModel(require("@/assets/models/sms_parser.tflite"))
+    return true
   }
 
-  async parse(
-    message: string,
-    source: ImportSource = "sms"
-  ): Promise<ParsedTransaction | null> {
-    // Try each bank pattern
-    for (const [bankName, pattern] of this.patterns) {
-      const result = this.tryPattern(message, pattern, source)
-      if (result.parsed && result.confidence > 0.5) {
-        return result.parsed
-      }
+  async parse(message: string, source: ImportSource = "sms"): Promise<ParseResult> {
+    if (!this.model || !this.tokenizer) {
+      return { parsed: null, confidence: 0, method: "ml" }
     }
 
-    // Try generic patterns
-    return this.tryGenericPatterns(message, source)
-  }
+    // Tokenize and run inference
+    const tokens = this.tokenizer.tokenize(message)
+    const output = this.model.runSync([tokens])
 
-  private tryPattern(
-    message: string,
-    pattern: BankPattern,
-    source: ImportSource
-  ): ParseResult {
-    const match = message.match(pattern.regex)
+    // Decode model output into structured fields
+    const decoded = this.decodeOutput(output, message)
 
-    if (!match) {
-      return { parsed: null, confidence: 0 }
+    if (!decoded || decoded.confidence < 0.7) {
+      return { parsed: null, confidence: decoded?.confidence ?? 0, method: "ml" }
     }
-
-    const groups = match.groups || {}
-
-    // Extract amount
-    const amount = this.parseAmount(groups.amount)
-    if (!amount) {
-      return { parsed: null, confidence: 0 }
-    }
-
-    // Extract merchant
-    const merchant = this.cleanMerchant(groups.merchant || groups.payee || "Unknown")
-
-    // Extract date
-    const date = this.parseDate(groups.date || groups.datetime)
-
-    // Extract payment method
-    const paymentMethod = this.inferPaymentMethod(message, groups)
-
-    // Calculate confidence
-    const confidence = this.calculateConfidence(match, pattern, groups)
 
     return {
       parsed: {
-        amount,
-        currency: groups.currency || "INR",
-        merchant,
-        date: date || new Date().toISOString(),
-        paymentMethod,
-        paymentInstrument: this.extractInstrument(groups),
-        transactionType: this.detectTransactionType(message),
-        confidenceScore: confidence,
+        amount: decoded.amount,
+        currency: decoded.currency,
+        merchant: decoded.merchant,
+        date: decoded.date || new Date().toISOString(),
+        paymentMethod: decoded.paymentMethod,
+        transactionType: decoded.transactionType,
+        confidenceScore: decoded.confidence,
         metadata: {
           source,
           rawMessage: message,
-          sender: groups.sender || "Unknown",
-          messageId: this.generateMessageId(message),
-          confidenceScore: confidence,
+          sender: decoded.sender || "Unknown",
+          messageId: generateMessageId(message),
+          confidenceScore: decoded.confidence,
           parsedAt: new Date().toISOString(),
         },
       },
-      confidence,
+      confidence: decoded.confidence,
+      method: "ml",
     }
   }
-
-  private parseAmount(amountStr: string): number | null {
-    if (!amountStr) return null
-
-    // Remove currency symbols (₹, $, €, ¥, £) and commas
-    const cleaned = amountStr.replace(/[₹$€¥£,]/g, "").replace(/\s+/g, "")
-
-    const amount = parseFloat(cleaned)
-    return isNaN(amount) ? null : amount
-  }
-
-  private cleanMerchant(merchant: string): string {
-    return toTitleCase(
-      merchant
-        .replace(/\s+/g, " ")
-        .replace(/\b(PVT|LTD|INC|LLC|CORP)\.?\b/gi, "")
-        .trim()
-    )
-  }
-}
-
-/**
- * Utility: Convert string to title case
- * (String.prototype.toTitleCase does not exist in JS)
- */
-function toTitleCase(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/(?:^|\s)\S/g, (match) => match.toUpperCase())
-}
-
-  private calculateConfidence(
-    match: RegExpMatchArray,
-    pattern: BankPattern,
-    groups: Record<string, string>
-  ): number {
-    let score = pattern.baseConfidence || 0.7
-
-    // Boost if all required groups present
-    const requiredGroups = ["amount", "merchant"]
-    const hasAllRequired = requiredGroups.every((g) => groups[g])
-    if (hasAllRequired) score += 0.2
-
-    // Boost if date present
-    if (groups.date || groups.datetime) score += 0.1
-
-    return Math.min(score, 1.0)
-  }
-
-  private generateMessageId(message: string): string {
-    // Simple hash for duplicate detection
-    let hash = 0
-    for (let i = 0; i < message.length; i++) {
-      const char = message.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash
-    }
-    return Math.abs(hash).toString(16)
-  }
-}
-
-// Bank-specific patterns
-const BANK_PATTERNS: Record<string, BankPattern> = {
-  // --- Indian Banks ---
-  HDFC: {
-    name: "HDFC Bank",
-    regex:
-      /(?:Rs\.?|INR)\s*([\d,\.]+)\s*(?:debited|credited).*?from\s*\*+(\d+).*?to\s*(.+?)(?:\.|$)/i,
-    baseConfidence: 0.85,
-  },
-  ICICI: {
-    name: "ICICI Bank",
-    regex: /(?:Rs\.?|INR)\s*([\d,\.]+)\s*(?:spent|paid).*?(?:at|to)\s+(.+?)(?:\.|\s+on)/i,
-    baseConfidence: 0.85,
-  },
-  SBI: {
-    name: "State Bank of India",
-    regex: /Rs\.?\s*([\d,\.]+)\s*withdrawn\s*from\s*(.+?)(?:\s+on|$)/i,
-    baseConfidence: 0.80,
-  },
-  AXIS: {
-    name: "Axis Bank",
-    regex: /INR\s*([\d,\.]+)\s*paid\s*to\s*(.+?)(?:\s+via|$)/i,
-    baseConfidence: 0.85,
-  },
-  KOTAK: {
-    name: "Kotak Mahindra Bank",
-    regex: /Rs\.?\s*([\d,\.]+)\s*debited\s*from\s*account/i,
-    baseConfidence: 0.80,
-  },
-
-  // --- US Banks ---
-  CHASE: {
-    name: "Chase",
-    regex: /(?:You made a|A)\s*\$?([\d,\.]+)\s*(?:transaction|purchase|payment).*?(?:at|to|with)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.85,
-  },
-  BOFA: {
-    name: "Bank of America",
-    regex: /\$?([\d,\.]+)\s*(?:was charged|purchase|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.85,
-  },
-  WELLS_FARGO: {
-    name: "Wells Fargo",
-    regex: /(?:Purchase|Transaction)\s*(?:of\s*)?\$?([\d,\.]+).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.80,
-  },
-  CITI: {
-    name: "Citi",
-    regex: /\$?([\d,\.]+)\s*(?:spent|charged|transaction).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.80,
-  },
-
-  // --- EU Banks ---
-  REVOLUT: {
-    name: "Revolut",
-    regex: /(?:€|EUR|£|GBP)\s*([\d,\.]+)\s*(?:paid|sent|spent).*?(?:at|to)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.85,
-  },
-  N26: {
-    name: "N26",
-    regex: /(?:€|EUR)\s*([\d,\.]+)\s*(?:card payment|direct debit|transfer).*?(?:at|to|from)\s+(.+?)(?:\s+on|\.|\s*$)/i,
-    baseConfidence: 0.80,
-  },
-  ING: {
-    name: "ING",
-    regex: /(?:€|EUR)\s*([\d,\.]+)\s*(?:betaling|payment|afschrijving).*?(?:aan|at|to)\s+(.+?)(?:\s+op|\.|\s*$)/i,
-    baseConfidence: 0.80,
-  },
-
-  // --- JP Banks ---
-  MUFG: {
-    name: "MUFG (三菱UFJ)",
-    regex: /(?:¥|JPY)\s*([\d,]+)\s*(?:引落|振込|お支払い).*?(.+?)(?:\s|$)/i,
-    baseConfidence: 0.75,
-  },
-  SMBC: {
-    name: "SMBC (三井住友)",
-    regex: /(?:¥|JPY)\s*([\d,]+)\s*(?:ご利用|お引落し).*?(.+?)(?:\s|$)/i,
-    baseConfidence: 0.75,
-  },
-  MIZUHO: {
-    name: "Mizuho (みずほ)",
-    regex: /(?:¥|JPY)\s*([\d,]+)\s*(?:お振込|ご利用).*?(.+?)(?:\s|$)/i,
-    baseConfidence: 0.75,
-  },
 }
 ```
+
+#### Message ID Generation (SHA-256)
+
+```typescript
+// services/sms-import/ml/message-id.ts
+
+import * as Crypto from "expo-crypto"
+
+/**
+ * Generate a deterministic SHA-256 message ID for duplicate detection.
+ * Uses the full message content to produce a collision-resistant fingerprint.
+ */
+export function generateMessageId(message: string): string {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, message)
+}
+```
+
+> **Why SHA-256?** The earlier design used a simple 32-bit hash which had high collision risk. SHA-256 provides collision-resistant fingerprinting suitable for the 1000-ID rotating window.
 
 ### 4. Duplicate Detection
 
@@ -2380,57 +2235,25 @@ function migrateV6ToV7(settings: AppSettings): AppSettings {
 
 ## Appendices
 
-### Appendix A: Supported Bank Patterns
+### Appendix A: Supported Bank Formats
 
-#### Indian Banks
+The ML-only parser (TFLite Bi-LSTM) handles all bank SMS formats universally without per-bank regex patterns. The model was trained on transaction SMS samples from the following regions:
 
-| Bank  | Pattern Example                    | Regex Pattern                                             |
-| ----- | ---------------------------------- | --------------------------------------------------------- |
-| HDFC  | `Rs.1,500 debited from a/c **1234` | `(?:Rs\.?\|INR)\s*([\d,\.]+)\s*debited.*?from\s*\*+(\d+)` |
-| ICICI | `INR 2,499 spent at AMAZON`        | `INR\s*([\d,\.]+)\s*spent\s*at\s*(.+?)(?:\on\|$)`         |
-| SBI   | `Rs.500 withdrawn from ATM`        | `Rs\.?\s*([\d,\.]+)\s*withdrawn\s*from\s*(.+?)(?:\on\|$)` |
-| Axis  | `INR 1,200 paid to SWIGGY`         | `INR\s*([\d,\.]+)\s*paid\s*to\s*(.+?)(?:\via\|$)`         |
-| Kotak | `Rs.800.00 debited from account`   | `Rs\.?\s*([\d,\.]+)\s*debited\s*from\s*account`           |
+| Region | Banks / Providers                                   |
+| ------ | --------------------------------------------------- |
+| India  | HDFC, ICICI, SBI, Axis, Kotak, Paytm, GPay, PhonePe |
+| US     | Chase, Bank of America, Wells Fargo, Citi           |
+| EU     | Revolut, N26, ING                                   |
+| Japan  | MUFG (三菱UFJ), SMBC (三井住友), Mizuho (みずほ)    |
 
-#### UPI Wallets
-
-| Provider   | Pattern Example                       |
-| ---------- | ------------------------------------- |
-| Paytm      | `Rs.350 paid via Paytm UPI`           |
-| Google Pay | `₹500 sent to John via GPay`          |
-| PhonePe    | `Rs.1,200 paid to AMAZON via PhonePe` |
-
-#### US Banks
-
-| Bank            | Pattern Example                               | Regex Pattern                                                                        |
-| --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Chase           | `You made a $45.99 transaction at STARBUCKS`  | `(?:You made a\|A)\s*\$?([\d,\.]+)\s*(?:transaction\|purchase).*?(?:at\|to)\s+(.+?)` |
-| Bank of America | `$120.00 was charged at WHOLE FOODS on 02/15` | `\$?([\d,\.]+)\s*(?:was charged\|purchase).*?(?:at\|to)\s+(.+?)`                     |
-| Wells Fargo     | `Purchase of $89.50 at TARGET on 02/15`       | `(?:Purchase\|Transaction)\s*(?:of\s*)?\$?([\d,\.]+).*?(?:at\|to)\s+(.+?)`           |
-| Citi            | `$250.00 spent at AMAZON on your Citi card`   | `\$?([\d,\.]+)\s*(?:spent\|charged).*?(?:at\|to)\s+(.+?)`                            |
-
-#### EU Banks
-
-| Bank    | Pattern Example                    | Regex Pattern                                                                   |
-| ------- | ---------------------------------- | ------------------------------------------------------------------------------- |
-| Revolut | `€25.00 paid to UBER`              | `(?:€\|EUR\|£\|GBP)\s*([\d,\.]+)\s*(?:paid\|sent).*?(?:at\|to)\s+(.+?)`         |
-| N26     | `€42.50 card payment at LIDL`      | `(?:€\|EUR)\s*([\d,\.]+)\s*(?:card payment\|direct debit).*?(?:at\|to)\s+(.+?)` |
-| ING     | `€15.00 betaling aan ALBERT HEIJN` | `(?:€\|EUR)\s*([\d,\.]+)\s*(?:betaling\|payment).*?(?:aan\|at\|to)\s+(.+?)`     |
-
-#### JP Banks
-
-| Bank   | Pattern Example              | Regex Pattern                                              |
-| ------ | ---------------------------- | ---------------------------------------------------------- |
-| MUFG   | `¥3,500 引落 セブンイレブン` | `(?:¥\|JPY)\s*([\d,]+)\s*(?:引落\|振込\|お支払い).*?(.+?)` |
-| SMBC   | `¥12,000 ご利用 アマゾン`    | `(?:¥\|JPY)\s*([\d,]+)\s*(?:ご利用\|お引落し).*?(.+?)`     |
-| Mizuho | `¥5,000 お振込 楽天`         | `(?:¥\|JPY)\s*([\d,]+)\s*(?:お振込\|ご利用).*?(.+?)`       |
+> **Note:** Unlike the earlier regex-based design, the ML model generalizes to unseen SMS formats. No per-bank pattern maintenance is required. See [ML_SMS_PARSER.md](./ML_SMS_PARSER.md) for architecture details.
 
 ### Appendix B: Error Codes
 
 | Code     | Description                 | Recovery                        |
 | -------- | --------------------------- | ------------------------------- |
 | `SMS001` | SMS permission denied       | Show manual import option       |
-| `SMS002` | Failed to parse transaction | Log for pattern improvement     |
+| `SMS002` | Failed to parse transaction | Log for model improvement       |
 | `SMS003` | Duplicate detected          | Skip silently                   |
 | `SMS004` | Learning engine error       | Continue without suggestions    |
 | `SMS005` | Storage full                | Alert user to clear old imports |
@@ -2459,6 +2282,7 @@ If analytics are enabled (opt-in):
 | 2026-02-15 | 1.1     | Added GitHub sync for merchant learning patterns                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 2026-02-15 | 1.2     | Added sync trigger behavior specification (no auto-sync on import)                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-02-15 | 1.3     | v1 scope corrections: SMS-only (dropped notification listener — expo-notifications cannot read other apps' notifications, requires native NotificationListenerService); removed auto-import bypass (all imports require review queue); fixed .toTitleCase() bug (not a JS built-in); added international bank patterns (US, EU, JP); CSV format version bump with backward-compatible migration; settings migration v6→v7 simplified; review queue uses triggerSync: false |
+| 2026-02-19 | 2.0     | ML-only architecture: replaced all regex-based bank patterns with on-device TFLite Bi-LSTM model; removed BANK_PATTERNS and TransactionParser class; added TFLiteParser, TFLiteTokenizer, and ML message-id (SHA-256) services; updated architecture diagrams; updated Phase 3 tasks; replaced Appendix A bank pattern tables with ML training coverage table; added reference to ML_SMS_PARSER.md                                                                         |
 
 ---
 
@@ -2466,9 +2290,10 @@ If analytics are enabled (opt-in):
 
 1. [Expo SMS Documentation](https://docs.expo.dev/versions/latest/sdk/sms/)
 2. [Android SMS Permissions](https://developer.android.com/reference/android/Manifest.permission#READ_SMS)
-3. [transaction-sms-parser Library](https://github.com/saurabhgupta050890/transaction-sms-parser)
-4. [Levenshtein Distance Algorithm](https://en.wikipedia.org/wiki/Levenshtein_distance)
-5. [XState Store Documentation](https://stately.ai/docs/xstate-store)
+3. [ML SMS Parser Architecture](./ML_SMS_PARSER.md)
+4. [TensorFlow Lite for React Native](https://github.com/nicklockwood/react-native-fast-tflite)
+5. [Levenshtein Distance Algorithm](https://en.wikipedia.org/wiki/Levenshtein_distance)
+6. [XState Store Documentation](https://stately.ai/docs/xstate-store)
 
 ---
 
