@@ -44,12 +44,14 @@ async function readSMSInbox(): Promise<RawSMSMessage[]> {
 
   try {
     const { SMSInboxReader } = NativeModules
-    if (!SMSInboxReader?.readInbox) {
-      console.warn("SMSInboxReader native module not available")
+
+    if (!SMSInboxReader || typeof SMSInboxReader.readInbox !== "function") {
+      console.warn("SMSInboxReader native module not available - inbox scanning disabled")
       return []
     }
+
     const messages: RawSMSMessage[] = await SMSInboxReader.readInbox()
-    return messages
+    return messages ?? []
   } catch (error) {
     console.error("Failed to read SMS inbox:", error)
     return []

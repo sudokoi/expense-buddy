@@ -32,6 +32,12 @@ import {
 import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
+import {
+  initializeSMSImport,
+  disposeSMSImport,
+  isSMSImportEnabled,
+} from "../services/sms-import"
+import { inboxScanner } from "../services/sms-import/inbox-scanner"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -94,6 +100,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       if (githubAuthActorRef.current) {
         githubAuthActorRef.current.stop()
       }
+      disposeSMSImport().catch((e) => console.warn("Failed to dispose SMS import:", e))
     }
   }, [])
 
@@ -114,6 +121,21 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       initializeSettingsStore()
       initializeExpenseStore()
       initializeUIStateStore()
+
+      const smsImportEnabled = await isSMSImportEnabled()
+      if (smsImportEnabled) {
+        try {
+          await initializeSMSImport()
+          const smsSettings = await import("../services/sms-import/settings").then((m) =>
+            m.loadSMSImportSettings()
+          )
+          if (smsSettings.scanOnLaunch) {
+            inboxScanner.scan().catch((e) => console.warn("Scan on launch failed:", e))
+          }
+        } catch (error) {
+          console.warn("SMS import initialization failed:", error)
+        }
+      }
     })()
   }, [skipInitialization])
 

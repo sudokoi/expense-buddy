@@ -42,7 +42,6 @@ This is a **major release** that introduces automatic SMS expense import functio
 
 **Core Services** (`services/sms-import/`):
 
-- `transaction-parser.ts` - Regex-based SMS parsing with international bank support
 - `duplicate-detector.ts` - Fingerprinting and similarity-based deduplication
 - `learning-engine.ts` - Merchant pattern learning with fuzzy matching and LRU eviction
 - `sms-listener.ts` - SMS monitoring via `@maniac-tech/react-native-expo-read-sms`
