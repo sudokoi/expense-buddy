@@ -74,8 +74,12 @@ function mergePatternArrays(
       base.userOverridden = localP.userOverridden || remoteP.userOverridden
       merged.push(base)
     } else {
-      // Only in one set — include as-is
-      merged.push(localP ?? remoteP!)
+      // Only in one set — include with deduplicated rawPatterns
+      const pattern = localP ?? remoteP!
+      merged.push({
+        ...pattern,
+        rawPatterns: Array.from(new Set(pattern.rawPatterns)),
+      })
     }
   }
 
