@@ -18,6 +18,10 @@ import {
   checkSMSPermission,
   requestSMSPermission,
 } from "../../../services/sms-import/permissions"
+import { smsListener } from "../../../services/sms-import/sms-listener"
+import { mlParser } from "../../../services/sms-import/ml/ml-parser"
+import { duplicateDetector } from "../../../services/sms-import/duplicate-detector"
+import { merchantLearningEngine } from "../../../services/sms-import/learning-engine"
 
 export function SMSImportSection() {
   const { t } = useTranslation()
@@ -70,6 +74,19 @@ export function SMSImportSection() {
       const newSettings = { ...settings, enabled }
       setSettings(newSettings)
       await saveSMSImportSettings(newSettings)
+
+      if (enabled) {
+        try {
+          await duplicateDetector.initialize()
+          await merchantLearningEngine.initialize()
+          await mlParser.initialize()
+          await smsListener.initialize()
+        } catch (error) {
+          console.error("Failed to start SMS listener:", error)
+        }
+      } else {
+        await smsListener.dispose()
+      }
     },
     [settings, hasPermission, t]
   )
