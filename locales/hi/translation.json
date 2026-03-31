@@ -220,6 +220,7 @@
       "paymentInstruments": "भुगतान साधन",
       "categories": "श्रेणियाँ",
       "github": "गिटहब सिंक",
+      "smsImport": "SMS आयात",
       "localization": "स्थानीयकरण",
       "appearance": "दिखावट",
       "about": "ऐप जानकारी"

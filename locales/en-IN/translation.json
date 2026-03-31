@@ -220,6 +220,7 @@
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
+      "smsImport": "SMS IMPORT",
       "localization": "LOCALIZATION",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"

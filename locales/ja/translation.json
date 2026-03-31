@@ -220,6 +220,7 @@
       "paymentInstruments": "支払手段",
       "categories": "カテゴリー",
       "github": "GitHub 同期",
+      "smsImport": "SMSインポート",
       "localization": "ローカリゼーション",
       "appearance": "外観",
       "about": "アプリ情報"
