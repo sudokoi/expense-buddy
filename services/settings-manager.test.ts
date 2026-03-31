@@ -97,10 +97,14 @@ const appSettingsArb = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant<PaymentInstrument[]>([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    syncLearnings: false,
+  }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(6), // Always use latest version to avoid migration in tests
+  version: fc.constant(7), // Always use latest version to avoid migration in tests
 })
 
 describe("Settings Manager Properties", () => {
@@ -380,7 +384,7 @@ describe("Settings Manager Properties", () => {
       expect(loaded.paymentInstruments).toEqual([])
       expect(loaded.paymentInstrumentsMigrationVersion).toBe(0)
       expect(loaded.language).toBe("system")
-      expect(loaded.version).toBe(6)
+      expect(loaded.version).toBe(7)
     })
   })
 
@@ -540,8 +544,8 @@ describe("Settings Manager Properties", () => {
             loaded.paymentInstrumentsMigrationVersion === 0 &&
             // Language should default to "system"
             loaded.language === "system" &&
-            // Version should be upgraded to 6 (v2 -> v3 -> v4 -> v5 -> v6)
-            loaded.version === 6
+            // Version should be upgraded to 7 (v2 -> v3 -> v4 -> v5 -> v6 -> v7)
+            loaded.version === 7
           )
         }),
         { numRuns: 100 }

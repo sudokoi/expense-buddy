@@ -13,9 +13,36 @@
   <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml/badge.svg" alt="Build Status" /></a>
 </p>
 
-A modern, cross-platform expense tracking app built with React Native and Expo. Track your daily expenses, visualize spending patterns, and sync your data securely to GitHub.
+A modern, cross-platform expense tracking app built with React Native and Expo. Track your daily expenses, visualize spending patterns, and sync your data securely to GitHub. Now with automatic SMS import for Android!
+
+**Platform Support**: Android 14+ (SMS Import requires Android 14+)
+
+## 📱 Platform Support
+
+- **Android**: Full support including SMS expense import
+  - Requires Android 14 (API 34) or higher
+  - SMS permissions required for automatic import feature
+- **iOS**: Not supported
+- **Web**: Not supported
+
+The app has transitioned to Android-only to leverage platform-specific features like SMS access for automatic expense detection.
 
 ## ✨ Features
+
+### 📱 SMS Expense Import (Beta) - Android Only
+
+- **Automatic Detection**: Automatically detects expenses from bank SMS messages (Beta - results may not always be accurate)
+- **100% On-Device Processing**: All SMS parsing happens locally on your phone. No SMS content ever leaves your device or is sent to any cloud service.
+- **Smart Parsing**: Supports major Indian banks (HDFC, ICICI, SBI, Axis, Kotak), US banks (Chase, Bank of America, Wells Fargo, Citi), EU banks (Revolut, N26, ING), and JP banks (MUFG, SMBC, Mizuho)
+- **Manual Review**: All imported expenses go through a review queue for your confirmation
+- **Review Queue Modal**: Review, edit, confirm, or reject each import with category/payment selectors, confidence indicator, and bulk actions
+- **Import History**: View and filter all auto-imported expenses by status (confirmed, edited)
+- **Auto-Imported Badge**: Visual indicator on expense list items showing which expenses were imported from SMS
+- **Learning System**: Learns from your corrections to improve future suggestions
+- **Duplicate Prevention**: Automatically prevents duplicate imports using message fingerprinting and amount/date/merchant similarity
+- **Cross-Device Sync**: Optional merchant-pattern sync via your configured GitHub repository
+- **Import Notifications**: Local push notification when a new transaction is detected
+- **New Messages Only**: Only processes SMS received after enabling the feature. Does not scan historical messages to avoid duplicates with manually entered transactions.
 
 ### 📊 Expense Management
 
@@ -147,6 +174,21 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 3. Tap **Add** to create a new card/UPI nickname
 4. Edit or remove instruments as needed (removals are soft-deletes so they sync correctly)
 
+### Setting Up SMS Import
+
+1. **Enable SMS Import** (Android only)
+   - Go to the **Settings** tab
+   - Find **SMS Import** section
+   - Toggle **Enable SMS Import**
+   - Grant SMS permission when prompted
+   - Optionally enable **Scan on App Launch** to check for new SMS automatically
+
+2. **Using SMS Import**
+   - When enabled, the app will monitor incoming SMS for bank transactions
+   - Detected expenses appear in the **Review Queue**
+   - Review each import, edit if needed, and confirm to save
+   - The app learns from your corrections to improve future suggestions
+
 ### Setting Up GitHub Sync
 
 1. **Sign in with GitHub (Android)**
@@ -248,6 +290,8 @@ expense-buddy/
 ├── components/            # Reusable components
 │   ├── analytics/        # Analytics chart components
 │   ├── ui/               # Styled UI components
+│   │   ├── sms-import/   # SMS import UI (ReviewQueueModal, ImportHistoryView)
+│   │   └── expense-list/ # Expense list components (AutoImportedBadge)
 │   └── history/          # History-specific components
 ├── hooks/                # React hooks
 ├── stores/               # XState Store state management
@@ -298,11 +342,23 @@ expense-buddy/
 │ └── index.ts # Store exports
 │ └── **tests**/ # Unit and property-based tests
 ├── services/ # Business logic
+│ ├── sms-import/ # SMS expense import services
+│ │ ├── constants.ts # Storage keys, bank patterns, thresholds
+│ │ ├── settings.ts # SMS import settings selectors backed by AppSettings
+│ │ ├── permissions.ts # SMS permission handling
+│ │ ├── import-notification.ts # Local push notifications
+│ │ ├── duplicate-detector.ts # Duplicate detection
+│ │ ├── learning-engine.ts # Merchant pattern learning
+│ │ ├── sms-listener.ts # SMS monitoring service
+│ │ ├── merchant-sync.ts # GitHub-based merchant pattern sync
+│ │ └── ml/ # ML parsing layer
+│ │ ├── ml-parser.ts # ML parser wrapper
+│ │ └── tflite-parser.ts # TFLite Bi-LSTM model integration
 │ ├── sync-machine.ts # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
 │ ├── sync-manager.ts # Sync orchestration
 │ ├── merge-engine.ts # Git-style merge logic (ID-based merge, timestamp resolution)
 │ ├── github-sync.ts # GitHub API client (includes batch commit via Git Data API)
-│ ├── csv-handler.ts # CSV import/export
+│ ├── csv-handler.ts # CSV import/export (v2.0 with SMS import support)
 │ ├── daily-file-manager.ts
 │ ├── hash-storage.ts # Content hashing for differential sync
 │ ├── change-tracker.ts # Record-level change tracking

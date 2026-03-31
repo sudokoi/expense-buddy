@@ -9,6 +9,7 @@ import React from "react"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import { ReviewQueueFab } from "../../components/ui/sms-import/ReviewQueueFab"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
@@ -392,6 +393,8 @@ export default function DashboardScreen() {
           />
         ))}
       </YStack>
+
+      <ReviewQueueFab />
     </ScreenContainer>
   )
 }

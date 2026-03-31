@@ -131,7 +131,7 @@ describe("CSV Handler Properties", () => {
             const csv = exportToCSV(expenses)
 
             // Import back from CSV
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // Should have same number of expenses
             if (expenses.length !== imported.length) {
@@ -184,7 +184,7 @@ describe("CSV Handler Properties", () => {
           ),
           (expenses) => {
             const csv = exportToCSV(expenses)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // All imported expenses should have payment methods
             for (let i = 0; i < expenses.length; i++) {
@@ -248,7 +248,7 @@ describe("CSV Handler Properties", () => {
           ),
           (expenses) => {
             const csv = exportToCSV(expenses)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // All imported expenses should NOT have payment methods
             for (const imp of imported) {
@@ -266,9 +266,8 @@ describe("CSV Handler Properties", () => {
 
     it("should handle empty expense list", () => {
       const csv = exportToCSV([])
-      // Papa.unparse returns empty string for empty array
-      // This is expected behavior - no data means no CSV content
-      expect(csv).toBe("")
+      // exportToCSV adds version header even for empty data
+      expect(csv).toBe("#version: 2.0\n")
     })
 
     it("should handle mixed expenses (with and without payment methods)", () => {
@@ -277,7 +276,7 @@ describe("CSV Handler Properties", () => {
           fc.array(expenseWithPaymentMethodArb, { minLength: 2, maxLength: 30 }),
           (expenses) => {
             const csv = exportToCSV(expenses)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // Count expenses with/without payment methods in original
             const originalWithPM = expenses.filter((e) => e.paymentMethod).length
@@ -303,7 +302,7 @@ describe("CSV Handler Properties", () => {
 abc123,100,Food,2024-01-15,Lunch,Cash,,2024-01-15T12:00:00.000Z,2024-01-15T12:00:00.000Z
 def456,50.5,Transport,2024-01-16,Bus fare,UPI,1234,2024-01-16T08:00:00.000Z,2024-01-16T08:00:00.000Z`
 
-      const imported = importFromCSV(legacyCsv)
+      const { expenses: imported } = importFromCSV(legacyCsv)
 
       // Should import successfully
       expect(imported).toHaveLength(2)
@@ -350,7 +349,7 @@ def456,50.5,Transport,2024-01-16,Bus fare,UPI,1234,2024-01-16T08:00:00.000Z,2024
           ),
           (expenses) => {
             const csv = exportToCSV(expenses)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // All imported expenses should have deletedAt set
             for (let i = 0; i < expenses.length; i++) {

@@ -43,6 +43,7 @@ import {
 } from "./merge-engine"
 import { mergeCategories } from "./category-merger"
 import { mergePaymentInstruments } from "./payment-instrument-merger"
+import { syncMerchantPatterns } from "./sms-import/merchant-sync"
 import i18next from "i18next"
 
 // Import sync types from centralized location
@@ -68,6 +69,13 @@ export type {
 const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
 const GITHUB_BRANCH_KEY = "github_branch"
+
+function shouldSyncSMSLearnings(
+  settings: AppSettings | undefined,
+  syncSettingsEnabled: boolean
+): boolean {
+  return Boolean(syncSettingsEnabled && settings?.smsImportSettings.syncLearnings)
+}
 
 /**
  * Save GitHub sync configuration securely
@@ -706,7 +714,7 @@ export async function syncDown(
       )
 
       if (fileData) {
-        const expenses = importFromCSV(fileData.content)
+        const { expenses } = importFromCSV(fileData.content)
         allExpenses.push(...expenses)
         downloadedFiles++
       }
@@ -870,7 +878,7 @@ export async function syncDownMore(
       )
 
       if (fileData) {
-        const expenses = importFromCSV(fileData.content)
+        const { expenses } = importFromCSV(fileData.content)
         newExpenses.push(...expenses)
         downloadedFiles++
       }
@@ -1000,7 +1008,7 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
         )
 
         if (fileData) {
-          const expenses = importFromCSV(fileData.content)
+          const { expenses } = importFromCSV(fileData.content)
           allExpenses.push(...expenses)
           downloadedFiles++
         }
@@ -1242,7 +1250,7 @@ export async function migrateToDailyFiles(): Promise<{
     }
 
     // Parse old file
-    const expenses = importFromCSV(oldFile.content)
+    const { expenses } = importFromCSV(oldFile.content)
 
     if (expenses.length === 0) {
       return { migrated: false, message: "Old file is empty" }
@@ -1640,6 +1648,14 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
+      if (shouldSyncSMSLearnings(settings, Boolean(syncSettingsEnabled))) {
+        try {
+          await syncMerchantPatterns(config)
+        } catch (e) {
+          console.warn("Merchant pattern sync failed:", e)
+        }
+      }
+
       return {
         success: true,
         message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
@@ -1746,6 +1762,18 @@ export async function gitStyleSync(
       }
     } catch (e) {
       console.warn("Failed to fetch commit timestamp after sync:", e)
+    }
+
+    // =========================================================================
+    // Merchant pattern sync: runs after expense sync completes
+    // =========================================================================
+    if (shouldSyncSMSLearnings(settings, Boolean(syncSettingsEnabled))) {
+      try {
+        await syncMerchantPatterns(config)
+      } catch (e) {
+        // Merchant sync failure should not fail the overall sync
+        console.warn("Merchant pattern sync failed:", e)
+      }
     }
 
     // =========================================================================

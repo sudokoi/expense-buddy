@@ -36,8 +36,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   categoriesVersion: 1,
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
+  smsImportSettings: {
+    enabled: false,
+    syncLearnings: false,
+  },
   updatedAt: new Date().toISOString(),
-  version: 6,
+  version: 7,
   defaultCurrency: "INR",
   language: "system",
 }
@@ -183,10 +187,14 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    syncLearnings: false,
+  }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 6, max: 10 }),
+  version: fc.integer({ min: 7, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),

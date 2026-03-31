@@ -25,6 +25,14 @@ graph TB
         SS[Settings Store]
         ES[Expense Store]
         NS[Notification Store]
+        RQS[Review Queue Store]
+    end
+
+    subgraph "SMS Import"
+        TP[Transaction Parser]
+        DD[Duplicate Detector]
+        LE[Learning Engine]
+        SL[SMS Listener]
     end
 
     subgraph "Persistence"
@@ -36,22 +44,33 @@ graph TB
         H[History Screen]
         A[Analytics Screen]
         S[Settings Screen]
+        RQ[Review Queue Modal]
     end
 
     FS -->|persists to| AS
     SS -->|persists to| AS
+    RQS -->|persists to| AS
     SS -->|syncs to| GH
     ES -->|syncs to| GH
+    LE -->|syncs to| GH
+
+    SL -->|detects| TP
+    TP -->|checks| DD
+    TP -->|suggests| LE
+    RQS -->|confirms| ES
+    RQS -->|learns| LE
 
     H -->|uses| FS
     A -->|uses| FS
     A -->|uses| SS
     S -->|uses| SS
     S -->|uses| UIS
+    RQ -->|uses| RQS
 
     style FS fill:#e1f5fe
     style SS fill:#fff3e0
     style UIS fill:#f3e5f5
+    style RQS fill:#e8f5e9
 ```
 
 ### Store Selection Flowchart
@@ -159,6 +178,7 @@ const { settings, setTheme } = useSettings()
 | UI preferences | UI State Store     | Yes         | No   |
 | User settings  | Settings Store     | Yes         | Yes  |
 | Expense data   | Expense Store      | Yes         | Yes  |
+| SMS imports    | Review Queue Store | Yes         | No   |
 | Notifications  | Notification Store | No          | No   |
 
 ## Persistence Architecture
@@ -230,6 +250,201 @@ flowchart LR
 
 Notifications are formatted with i18n before they reach the UI, so the message string is
 display-ready by the time it reaches the notification store.
+
+## SMS Import Architecture (Android Only)
+
+### Overview
+
+The SMS import feature (Beta) provides automatic expense detection from bank SMS messages using on-device ML-only processing. All parsing uses a TensorFlow Lite Bi-LSTM model via `react-native-fast-tflite`.
+
+**Beta Status**: This feature is currently in beta. Results may not always be accurate, and all imported transactions require manual review before being saved.
+
+**Error Handling**: The SMS import system is designed with multiple safeguards:
+
+- All parsing failures are caught and logged without crashing the app
+- The feature can be disabled at any time via Settings
+- Processing errors are silently handled - failed SMS messages are simply skipped
+- The app continues to function normally even if SMS import encounters errors
+
+### SMS Import Flow
+
+```mermaid
+flowchart TD
+    Start([SMS Received]) --> Parse[ML Parser - TFLite Bi-LSTM]
+    Parse --> Confidence{Confidence ≥ 0.7?}
+    Confidence -->|No| Skip[Skip Message]
+    Confidence -->|Yes| CheckDup{Duplicate?}
+    CheckDup -->|Yes| Drop[Drop Message]
+    CheckDup -->|No| Suggest[Learning Engine Suggests]
+    Suggest --> Queue[Add to Review Queue]
+    Queue --> Notify[Show Import Notification]
+    Notify --> Review[User Reviews in Modal]
+    Review --> Confirm{Action?}
+    Confirm -->|Confirm| Save[Save to Expense Store]
+    Confirm -->|Edit| Update[Update & Save]
+    Confirm -->|Reject| Mark[Mark Processed]
+    Save --> Learn[Learn from Confirmation]
+    Update --> Learn
+    Learn --> End([End])
+    Mark --> End
+    Drop --> End
+    Skip --> End
+```
+
+### Components
+
+#### 1. SMS Listener (`services/sms-import/sms-listener.ts`)
+
+**Purpose**: Monitors incoming SMS messages using `@maniac-tech/react-native-expo-read-sms`.
+
+**Key features**:
+
+- Requests SMS permission via `requestReadSMSPermission()`
+- Starts real-time listening via `startReadSMS()` callback
+- Passes messages to ML parser for transaction extraction
+- Triggers import notification after adding to review queue
+- Graceful error handling — app continues if listener fails to start
+- Properly unsubscribes on dispose
+
+#### 2. ML Parser (`services/sms-import/ml/ml-parser.ts`, `tflite-parser.ts`)
+
+**Purpose**: Extracts transaction data from SMS using an on-device Bi-LSTM model.
+
+**Key features**:
+
+- Word-level tokenization for known vocabulary, character-level fallback for OOV words
+- Reverse vocabulary lookup converts token IDs back to readable entity text
+- SHA-256 message ID generation via `expo-crypto` for collision-resistant duplicate detection
+- Confidence threshold: ≥0.7 for review queue, <0.7 skipped
+
+#### 3. Duplicate Detector (`services/sms-import/duplicate-detector.ts`)
+
+**Purpose**: Prevents importing the same expense twice.
+
+**Detection methods**:
+
+- Message ID fingerprinting (exact match)
+- Amount + Date + Merchant similarity (fuzzy match)
+
+**Key features**:
+
+- Rotating window of 1,000 processed message IDs
+- Queries expense store for same-day matches with amount within 1% tolerance
+- Levenshtein distance for merchant name similarity (>0.85 threshold)
+
+#### 4. Learning Engine (`services/sms-import/learning-engine.ts`)
+
+**Purpose**: Learns from user corrections to improve categorization.
+
+**Key features**:
+
+- Merchant → Category mapping
+- Merchant → Payment method mapping
+- Fuzzy merchant matching for similar names
+- Pattern overwrite within 24h window (with 10% amount range check)
+- LRU eviction at 1,000 patterns (user-overridden patterns evicted last)
+- Optional GitHub sync support for merchant patterns when enabled in SMS settings
+
+**Learning flow**:
+
+```mermaid
+flowchart TD
+    Start([User Confirms]) --> CheckPattern{Pattern Exists?}
+    CheckPattern -->|No| Create[Create New Pattern]
+    CheckPattern -->|Yes| CheckOverwrite{Overwrite?}
+    CheckOverwrite -->|Yes| Replace[Replace Pattern]
+    CheckOverwrite -->|No| Update[Update Pattern]
+    Create --> Save[Save Patterns]
+    Replace --> Save
+    Update --> Save
+    Save --> CheckLimit{Count > 1000?}
+    CheckLimit -->|Yes| Evict[LRU Eviction]
+    CheckLimit -->|No| End([End])
+    Evict --> End
+```
+
+#### 5. Review Queue Store (`stores/review-queue-store.ts`)
+
+**Purpose**: Manages pending imports awaiting user review.
+
+**Key features**:
+
+- XState Store for reactive state management
+- AsyncStorage persistence
+- Auto-expires items after 30 days
+- Stats tracking (total, pending)
+- Confirm: creates expense with `source: 'auto-imported'`, triggers learning, marks processed
+- Edit: creates expense with user-modified fields and `userCorrected: true`, stores correction
+- Reject: marks processed without creating expense
+- Bulk actions: Confirm All / Reject All for processing backlogs
+
+#### 6. Merchant Sync (`services/sms-import/merchant-sync.ts`)
+
+**Purpose**: Synchronizes learned merchant patterns across devices via GitHub.
+
+**Key features**:
+
+- Downloads/uploads `merchant-patterns.json` using existing GitHub API infrastructure
+- Merge strategy: sum usage counts, union raw patterns, keep most recent `lastUsed`
+- Correction merge: union by ID, most recent timestamp wins on conflict
+- Integrated into `sync-manager.ts` git-style sync flow (runs after expense sync)
+
+#### 7. Import Notification (`services/sms-import/import-notification.ts`)
+
+**Purpose**: Shows local push notification when a transaction is detected.
+
+**Key features**:
+
+- Uses `expo-notifications` for immediate local notification
+- Includes merchant name and amount in notification body
+- Notification tap opens the dashboard where the review queue is available
+- Skips silently if notification permissions not granted
+
+### UI Components
+
+#### Review Queue Modal (`components/ui/sms-import/ReviewQueueModal.tsx`)
+
+- Tamagui Sheet-based modal displaying transaction details
+- Category selector, payment method selector with instrument dropdown
+- Collapsible raw SMS section, confidence indicator
+- Note input pre-populated with merchant name
+- Confirm / Edit / Reject action buttons
+- "Apply to future transactions" checkbox
+- Bulk Confirm All / Reject All when queue has >1 pending item
+
+#### Auto-Imported Badge (`components/ui/expense-list/AutoImportedBadge.tsx`)
+
+- Inline badge rendering "Auto-imported" when `expense.source === 'auto-imported'`
+- Returns null for all other source values
+- Integrated into `ExpenseRow` component
+
+#### Import History View (`components/ui/sms-import/ImportHistoryView.tsx`)
+
+- FlatList of expenses where `source === 'auto-imported'`
+- Filter tabs: All, Confirmed, Edited
+- Displays import date, merchant, amount, and correction status
+- Pure filtering logic extracted to `import-history-utils.ts` for testability
+
+### Data Flow
+
+1. **SMS Detection**: Listener receives SMS → ML parser extracts data (confidence ≥0.7)
+   - **Important**: Only NEW messages are processed. The app does NOT scan historical SMS when first enabled
+   - This prevents duplicate entries for transactions users may have already manually added
+2. **Duplicate Check**: Detector validates uniqueness (message ID + amount/date/merchant similarity)
+3. **Suggestion**: Learning engine suggests category/payment method
+4. **Queue**: Item added to review queue with suggestions
+5. **Notification**: Local push notification shown to user
+6. **Review**: User confirms, edits, or rejects in modal
+7. **Learn**: System learns from user actions (patterns updated, corrections stored)
+8. **Sync**: Merchant patterns sync via the user's configured GitHub repo only when enabled
+
+### Privacy & Security
+
+- **100% On-Device Parsing**: SMS parsing runs locally on the device
+- **Minimal Data**: Raw SMS content stays in the review flow and is not persisted with saved expenses
+- **Opt-In**: Feature is disabled by default
+- **Permission Control**: User can revoke SMS permission anytime
+- **No App Backend**: No project-operated backend server or third-party SMS parsing service
 
 ## Internationalization Architecture
 

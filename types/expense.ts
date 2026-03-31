@@ -1,3 +1,5 @@
+import { SMSImportMetadata } from "./sms-import"
+
 export type ExpenseCategory = string
 
 export type PaymentMethodType =
@@ -26,4 +28,8 @@ export interface Expense {
   createdAt: string // ISO timestamp
   updatedAt: string // ISO timestamp
   deletedAt?: string // ISO timestamp - when soft-deleted (undefined if not deleted)
+
+  // SMS Import fields (v2.0)
+  source?: "manual" | "auto-imported" // Source of the expense
+  importMetadata?: SMSImportMetadata // Metadata for auto-imported expenses
 }

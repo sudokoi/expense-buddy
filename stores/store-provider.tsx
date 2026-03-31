@@ -32,6 +32,11 @@ import {
 import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
+import {
+  initializeSMSImport,
+  disposeSMSImport,
+  isSMSImportEnabled,
+} from "../services/sms-import"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -94,6 +99,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       if (githubAuthActorRef.current) {
         githubAuthActorRef.current.stop()
       }
+      disposeSMSImport().catch((e) => console.warn("Failed to dispose SMS import:", e))
     }
   }, [])
 
@@ -114,6 +120,15 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       initializeSettingsStore()
       initializeExpenseStore()
       initializeUIStateStore()
+
+      const smsImportEnabled = await isSMSImportEnabled()
+      if (smsImportEnabled) {
+        try {
+          await initializeSMSImport()
+        } catch (error) {
+          console.warn("SMS import initialization failed:", error)
+        }
+      }
     })()
   }, [skipInitialization])
 

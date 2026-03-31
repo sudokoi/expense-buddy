@@ -220,6 +220,7 @@
       "paymentInstruments": "支払手段",
       "categories": "カテゴリー",
       "github": "GitHub 同期",
+      "smsImport": "SMSインポート",
       "localization": "ローカリゼーション",
       "appearance": "外観",
       "about": "アプリ情報"
@@ -412,6 +413,89 @@
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "smsImport": {
+    "title": "SMSインポート",
+    "description": "新しい銀行SMSの取引を自動検出し、インポート前にレビューキューへ追加します。",
+    "betaWarning": "結果は常に正確ではない場合があります。インポートされたすべての取引を確認してください。",
+    "enable": "SMSインポートを有効にする",
+    "syncLearnings": "学習内容を同期",
+    "syncLearningsHelp": "スマート分類の学習内容を設定済みのGitHubリポジトリに同期し、他のデバイスでも利用できるようにします。",
+    "reviewFirstHelp": "新しい取引SMSは自動で検出されますが、レビューキューで確認するまでは保存されません。",
+    "privacyNote": "SMSメッセージは端末内で処理されます。元のSMS本文は端末内に留まり、GitHubには同期されません。",
+    "modelUpdateNote": "スマート分類はあなたの修正から学習しますが、SMS解析モデル自体はアプリのアップデートでのみ更新されます。",
+    "smartCategorisation": {
+      "title": "スマート分類",
+      "description": "Expense Buddyは、あなたが修正したカテゴリや支払い方法を学習し、次回以降のインポートでより良い候補を提示します。"
+    },
+    "status": {
+      "active": "有効 - 銀行SMSを監視中",
+      "permissionNeeded": "権限が必要です",
+      "disabled": "無効"
+    },
+    "permissionGranted": "SMS権限が付与されました",
+    "permissionDenied": "SMS権限が付与されていません。上のトグルをタップして権限を付与してください。",
+    "permissionAlert": {
+      "title": "権限が必要です",
+      "message": "銀行メッセージから支出を自動インポートするにはSMS権限が必要です。設定 > アプリ > Expense Buddy > 権限で有効にしてください。"
+    },
+    "permissionDialog": {
+      "title": "SMS権限",
+      "message": "銀行メッセージから支出を自動検出するために、Expense BuddyにSMSへのアクセスが必要です。",
+      "buttonNeutral": "後で聞く",
+      "buttonPositive": "OK"
+    },
+    "permissionMessages": {
+      "granted": "SMSアクセスが許可されました。銀行SMSメッセージから支出が自動的にインポートされます。",
+      "denied": "SMS権限が拒否されました。設定 > アプリ > Expense Buddy > 権限で有効にできます。",
+      "blocked": "SMS権限が永久に拒否されました。自動インポートを使用するにはシステム設定で有効にしてください。",
+      "unavailable": "このデバイスではSMSインポートは利用できません。",
+      "unsupported": "SMSインポートはAndroidデバイスでのみ利用可能です。",
+      "unknown": "不明な権限ステータスです。"
+    },
+    "notification": {
+      "title": "新しい取引を検出しました",
+      "body": "{{currency}} {{amount}} - {{merchant}}"
+    },
+    "reviewQueue": {
+      "title": "インポート確認",
+      "amount": "金額",
+      "merchant": "店舗名",
+      "date": "日付",
+      "rawSms": "元のSMS",
+      "showRawSms": "元のSMSを表示",
+      "hideRawSms": "元のSMSを非表示",
+      "confidence": "信頼度",
+      "confidenceHigh": "高",
+      "confidenceMedium": "中",
+      "confidenceLow": "低",
+      "category": "カテゴリー",
+      "paymentMethod": "支払い方法",
+      "note": "メモ",
+      "notePlaceholder": "メモを追加",
+      "applyToFuture": "今後の取引にも適用",
+      "confirm": "確認",
+      "edit": "編集を保存",
+      "reject": "却下",
+      "confirmAll": "すべて確認",
+      "rejectAll": "すべて却下",
+      "pendingCount": "{{count}}件保留中"
+    },
+    "autoImportedBadge": "自動インポート",
+    "importHistory": {
+      "title": "インポート履歴",
+      "empty": "自動インポートされた支出はまだありません。",
+      "unknownMerchant": "不明な店舗",
+      "filters": {
+        "all": "すべて",
+        "confirmed": "確認済み",
+        "edited": "編集済み"
+      },
+      "status": {
+        "confirmed": "確認済み",
+        "edited": "編集済み"
+      }
+    }
   },
   "validation": {
     "expense": {

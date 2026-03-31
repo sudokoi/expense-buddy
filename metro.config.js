@@ -12,6 +12,9 @@ const config = getDefaultConfig(__dirname, {
 
 config.resolver.sourceExts.push("mjs")
 
+// Support TensorFlow Lite model files
+config.resolver.assetExts.push("tflite")
+
 module.exports = withTamagui(config, {
   components: ["tamagui"],
   config: "./tamagui.config.ts",

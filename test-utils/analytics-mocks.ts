@@ -67,8 +67,12 @@ export function createMockSettings(overrides?: Partial<AppSettings>): AppSetting
     categoriesVersion: 1,
     paymentInstruments: [],
     paymentInstrumentsMigrationVersion: 0,
+    smsImportSettings: {
+      enabled: false,
+      syncLearnings: false,
+    },
     updatedAt: now,
-    version: 1,
+    version: 7,
     ...overrides,
   }
 }

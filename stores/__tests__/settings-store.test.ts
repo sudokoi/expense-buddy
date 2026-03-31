@@ -18,8 +18,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   categoriesVersion: 1,
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
+  smsImportSettings: {
+    enabled: false,
+    syncLearnings: false,
+  },
   updatedAt: new Date().toISOString(),
-  version: 6,
+  version: 7,
 }
 
 // Create a fresh store for each test to avoid state pollution
@@ -146,8 +150,12 @@ describe("Settings Store", () => {
         categoriesVersion: 1,
         paymentInstruments: [],
         paymentInstrumentsMigrationVersion: 0,
+        smsImportSettings: {
+          enabled: false,
+          syncLearnings: false,
+        },
         updatedAt: new Date().toISOString(),
-        version: 6,
+        version: 7,
         defaultCurrency: "INR",
         language: "system",
       }
@@ -246,8 +254,12 @@ describe("Settings Store", () => {
         categoriesVersion: 1,
         paymentInstruments: [],
         paymentInstrumentsMigrationVersion: 0,
+        smsImportSettings: {
+          enabled: false,
+          syncLearnings: false,
+        },
         updatedAt: new Date().toISOString(),
-        version: 6,
+        version: 7,
         defaultPaymentMethod: "UPI",
         defaultCurrency: "INR",
         language: "system",

@@ -79,7 +79,7 @@ describe("Other Payment Method Description Round-Trip Properties", () => {
             const csv = exportToCSV(expenses)
 
             // Import from CSV (simulates sync down)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // Should have same number of expenses
             if (expenses.length !== imported.length) {
@@ -123,7 +123,7 @@ describe("Other Payment Method Description Round-Trip Properties", () => {
             const csv = exportToCSV(expenses)
 
             // Import from CSV (simulates sync down)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // Should have same number of expenses
             if (expenses.length !== imported.length) {
@@ -171,7 +171,7 @@ describe("Other Payment Method Description Round-Trip Properties", () => {
             const csv = exportToCSV(expenses)
 
             // Import from CSV (simulates sync down)
-            const imported = importFromCSV(csv)
+            const { expenses: imported } = importFromCSV(csv)
 
             // Should have same number of expenses
             if (expenses.length !== imported.length) {

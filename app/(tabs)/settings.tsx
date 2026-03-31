@@ -38,6 +38,7 @@ import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
+import { SMSImportSection } from "../../components/ui/sms-import/SMSImportSection"
 import { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 
@@ -751,6 +752,11 @@ export default function SettingsScreen() {
             <Label>{t("settings.appearance.theme")}</Label>
             <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
           </YStack>
+        </SettingsSection>
+
+        {/* SMS IMPORT Section */}
+        <SettingsSection title={t("settings.sections.smsImport")}>
+          <SMSImportSection />
         </SettingsSection>
 
         {/* APP INFORMATION Section */}

@@ -10,3 +10,13 @@ build/
 yarn.lock
 package-lock.json
 .yarn/
+
+# Python files (use ruff/black instead)
+ml/
+*.py
+*.pyi
+__pycache__/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

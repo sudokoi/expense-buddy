@@ -220,6 +220,7 @@
       "paymentInstruments": "भुगतान साधन",
       "categories": "श्रेणियाँ",
       "github": "गिटहब सिंक",
+      "smsImport": "SMS आयात",
       "localization": "स्थानीयकरण",
       "appearance": "दिखावट",
       "about": "ऐप जानकारी"
@@ -412,6 +413,89 @@
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "smsImport": {
+    "title": "SMS आयात",
+    "description": "नए बैंक SMS लेनदेन को स्वचालित रूप से पहचानें और आयात से पहले उन्हें समीक्षा कतार में रखें।",
+    "betaWarning": "परिणाम हमेशा सटीक नहीं हो सकते हैं। कृपया सभी आयातित लेनदेन की समीक्षा करें।",
+    "enable": "SMS आयात सक्षम करें",
+    "syncLearnings": "सीख को सिंक करें",
+    "syncLearningsHelp": "स्मार्ट श्रेणीकरण की सीख को आपके कॉन्फ़िगर किए गए GitHub रिपॉज़िटरी में सिंक करें ताकि वह आपके अन्य डिवाइसों पर भी उपयोग हो सके।",
+    "reviewFirstHelp": "नए लेनदेन SMS स्वतः पहचाने जाते हैं, लेकिन समीक्षा कतार से आपकी पुष्टि तक कुछ भी सहेजा नहीं जाता।",
+    "privacyNote": "SMS संदेश डिवाइस पर ही प्रोसेस होते हैं। मूल SMS सामग्री आपके डिवाइस पर रहती है और GitHub पर सिंक नहीं होती।",
+    "modelUpdateNote": "स्मार्ट श्रेणीकरण आपकी सुधारों से सीखता है, लेकिन SMS पार्सिंग मॉडल स्वयं केवल ऐप अपडेट के माध्यम से अपडेट होता है।",
+    "smartCategorisation": {
+      "title": "स्मार्ट श्रेणीकरण",
+      "description": "Expense Buddy उन श्रेणियों और भुगतान विधियों से सीखता है जिन्हें आप सुधारते हैं, ताकि भविष्य के आयात बेहतर सुझावों से शुरू हों।"
+    },
+    "status": {
+      "active": "सक्रिय - बैंक SMS की निगरानी",
+      "permissionNeeded": "अनुमति आवश्यक",
+      "disabled": "अक्षम"
+    },
+    "permissionGranted": "SMS अनुमति प्रदान की गई",
+    "permissionDenied": "SMS अनुमति प्रदान नहीं की गई। अनुमति देने के लिए ऊपर टॉगल पर टैप करें।",
+    "permissionAlert": {
+      "title": "अनुमति आवश्यक",
+      "message": "बैंक संदेशों से स्वचालित रूप से खर्च आयात करने के लिए SMS अनुमति आवश्यक है। कृपया सेटिंग्स > ऐप्स > Expense Buddy > अनुमतियाँ में इसे सक्षम करें।"
+    },
+    "permissionDialog": {
+      "title": "SMS अनुमति",
+      "message": "बैंक संदेशों से स्वचालित रूप से खर्च पहचानने के लिए Expense Buddy को SMS एक्सेस की आवश्यकता है।",
+      "buttonNeutral": "बाद में पूछें",
+      "buttonPositive": "ठीक है"
+    },
+    "permissionMessages": {
+      "granted": "SMS एक्सेस प्रदान की गई। बैंक SMS संदेशों से खर्च स्वचालित रूप से आयात किए जाएंगे।",
+      "denied": "SMS अनुमति अस्वीकृत। आप इसे सेटिंग्स > ऐप्स > Expense Buddy > अनुमतियाँ में सक्षम कर सकते हैं।",
+      "blocked": "SMS अनुमति स्थायी रूप से अस्वीकृत। ऑटो-आयात उपयोग करने के लिए कृपया सिस्टम सेटिंग्स में सक्षम करें।",
+      "unavailable": "इस डिवाइस पर SMS आयात उपलब्ध नहीं है।",
+      "unsupported": "SMS आयात केवल Android डिवाइस पर उपलब्ध है।",
+      "unknown": "अज्ञात अनुमति स्थिति।"
+    },
+    "notification": {
+      "title": "नया लेनदेन पाया गया",
+      "body": "{{currency}} {{amount}} {{merchant}} पर"
+    },
+    "reviewQueue": {
+      "title": "आयात समीक्षा",
+      "amount": "राशि",
+      "merchant": "व्यापारी",
+      "date": "तारीख",
+      "rawSms": "मूल SMS",
+      "showRawSms": "मूल SMS दिखाएं",
+      "hideRawSms": "मूल SMS छुपाएं",
+      "confidence": "विश्वसनीयता",
+      "confidenceHigh": "उच्च",
+      "confidenceMedium": "मध्यम",
+      "confidenceLow": "कम",
+      "category": "श्रेणी",
+      "paymentMethod": "भुगतान विधि",
+      "note": "नोट",
+      "notePlaceholder": "नोट जोड़ें",
+      "applyToFuture": "भविष्य के लेनदेन पर लागू करें",
+      "confirm": "पुष्टि करें",
+      "edit": "संपादन सहेजें",
+      "reject": "अस्वीकार करें",
+      "confirmAll": "सभी पुष्टि करें",
+      "rejectAll": "सभी अस्वीकार करें",
+      "pendingCount": "{{count}} लंबित"
+    },
+    "autoImportedBadge": "स्वतः-आयातित",
+    "importHistory": {
+      "title": "आयात इतिहास",
+      "empty": "अभी तक कोई स्वतः-आयातित खर्च नहीं।",
+      "unknownMerchant": "अज्ञात व्यापारी",
+      "filters": {
+        "all": "सभी",
+        "confirmed": "पुष्टि किया",
+        "edited": "संपादित"
+      },
+      "status": {
+        "confirmed": "पुष्टि किया",
+        "edited": "संपादित"
+      }
+    }
   },
   "validation": {
     "expense": {

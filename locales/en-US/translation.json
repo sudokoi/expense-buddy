@@ -220,6 +220,7 @@
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
+      "smsImport": "SMS IMPORT",
       "localization": "LOCALIZATION",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
@@ -412,6 +413,89 @@
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "smsImport": {
+    "title": "SMS Import",
+    "description": "Automatically detect new bank SMS transactions and place them in a review queue before import.",
+    "betaWarning": "Results may not always be accurate. Please review all imported transactions.",
+    "enable": "Enable SMS Import",
+    "syncLearnings": "Sync Learnings",
+    "syncLearningsHelp": "Sync smart categorisation learnings to your configured GitHub repository so they can be used on your other devices.",
+    "reviewFirstHelp": "New transaction SMS messages are detected automatically, but nothing is saved until you confirm it from the review queue.",
+    "privacyNote": "SMS messages are processed on-device. Raw SMS content stays on your device and is not synced to GitHub.",
+    "modelUpdateNote": "Smart categorisation learns from your corrections, but the SMS parsing model itself is updated only through app updates.",
+    "smartCategorisation": {
+      "title": "Smart Categorisation",
+      "description": "Expense Buddy learns from the categories and payment methods you correct so future imports can start with better suggestions."
+    },
+    "status": {
+      "active": "Active - monitoring bank SMS",
+      "permissionNeeded": "Permission needed",
+      "disabled": "Disabled"
+    },
+    "permissionGranted": "SMS permission granted",
+    "permissionDenied": "SMS permission not granted. Tap the toggle above to grant permission.",
+    "permissionAlert": {
+      "title": "Permission Required",
+      "message": "SMS permission is required to automatically import expenses from bank messages. Please enable it in Settings > Apps > Expense Buddy > Permissions."
+    },
+    "permissionDialog": {
+      "title": "SMS Permission",
+      "message": "Expense Buddy needs access to SMS to automatically detect expenses from bank messages.",
+      "buttonNeutral": "Ask Me Later",
+      "buttonPositive": "OK"
+    },
+    "permissionMessages": {
+      "granted": "SMS access granted. Expenses will be automatically imported from bank SMS messages.",
+      "denied": "SMS permission denied. You can enable it in Settings > Apps > Expense Buddy > Permissions.",
+      "blocked": "SMS permission permanently denied. Please enable it in system settings to use auto-import.",
+      "unavailable": "SMS import is not available on this device.",
+      "unsupported": "SMS import is only available on Android devices.",
+      "unknown": "Unknown permission status."
+    },
+    "notification": {
+      "title": "New Transaction Detected",
+      "body": "{{currency}} {{amount}} at {{merchant}}"
+    },
+    "reviewQueue": {
+      "title": "Review Import",
+      "amount": "Amount",
+      "merchant": "Merchant",
+      "date": "Date",
+      "rawSms": "Raw SMS",
+      "showRawSms": "Show raw SMS",
+      "hideRawSms": "Hide raw SMS",
+      "confidence": "Confidence",
+      "confidenceHigh": "High",
+      "confidenceMedium": "Medium",
+      "confidenceLow": "Low",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "note": "Note",
+      "notePlaceholder": "Add a note",
+      "applyToFuture": "Apply to future transactions",
+      "confirm": "Confirm",
+      "edit": "Save Edit",
+      "reject": "Reject",
+      "confirmAll": "Confirm All",
+      "rejectAll": "Reject All",
+      "pendingCount": "{{count}} pending"
+    },
+    "autoImportedBadge": "Auto-imported",
+    "importHistory": {
+      "title": "Import History",
+      "empty": "No auto-imported expenses yet.",
+      "unknownMerchant": "Unknown Merchant",
+      "filters": {
+        "all": "All",
+        "confirmed": "Confirmed",
+        "edited": "Edited"
+      },
+      "status": {
+        "confirmed": "Confirmed",
+        "edited": "Edited"
+      }
+    }
   },
   "validation": {
     "expense": {

@@ -11,22 +11,22 @@ const SUPPORTED_LOCALES = ["en-US", "en-GB", "en-IN", "hi", "ja"] as const
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 /**
- * Dynamically load a locale's translations
+ * Load a locale's translations
  * @param lang - The locale code to load
  * @returns The translation object
  */
 const loadLocaleTranslations = async (lang: SupportedLocale) => {
   switch (lang) {
     case "en-US":
-      return (await import("./locales/en-US/translation.json")).default
+      return require("./locales/en-US/translation.json")
     case "en-GB":
-      return (await import("./locales/en-GB/translation.json")).default
+      return require("./locales/en-GB/translation.json")
     case "en-IN":
       return enIN // Already loaded statically
     case "hi":
-      return (await import("./locales/hi/translation.json")).default
+      return require("./locales/hi/translation.json")
     case "ja":
-      return (await import("./locales/ja/translation.json")).default
+      return require("./locales/ja/translation.json")
     default:
       throw new Error(`Unsupported locale: ${lang}`)
   }
@@ -63,7 +63,7 @@ export const loadLocale = async (lang: string): Promise<void> => {
     return
   }
 
-  // Load locale dynamically
+  // Load locale bundle
   try {
     const translations = await loadLocaleTranslations(targetLang)
     i18next.addResourceBundle(targetLang, "translation", translations)

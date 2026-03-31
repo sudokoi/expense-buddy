@@ -141,7 +141,11 @@ export const expenseStore = createStore({
       isLoading: event.isLoading,
     }),
 
-    addExpense: (context, event: { expense: Expense }, enqueue) => {
+    addExpense: (
+      context,
+      event: { expense: Expense; triggerSync?: boolean },
+      enqueue
+    ) => {
       const normalizedExpense = normalizeExpenseForSave(event.expense)
       const newExpenses = [normalizedExpense, ...context.expenses]
       const dayKey = getLocalDayKey(normalizedExpense.date)
@@ -151,7 +155,11 @@ export const expenseStore = createStore({
         await persistExpenseAdded(normalizedExpense)
         await markDirtyDay(dayKey)
         await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
-        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        // Only trigger sync if explicitly allowed (defaults to true for backward compatibility)
+        // Review queue imports set triggerSync: false to batch sync later
+        if (event.triggerSync !== false) {
+          await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        }
       })
 
       return { ...context, expenses: newExpenses, dirtyDays }
@@ -428,10 +436,18 @@ export async function initializeExpenseStore(): Promise<void> {
     })
 
     // Perform auto-sync on launch using the helper
-    await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
+    // Set loading state to show spinner during sync
+    expenseStore.trigger.setLoading({ isLoading: true })
+    try {
+      await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
+    } finally {
+      // Always clear loading state, even if sync fails
+      expenseStore.trigger.setLoading({ isLoading: false })
+    }
   } catch (error) {
     console.warn("Failed to initialize expense store:", error)
     expenseStore.trigger.loadExpenses({ expenses: [] })
+    expenseStore.trigger.setLoading({ isLoading: false })
   }
 }
 

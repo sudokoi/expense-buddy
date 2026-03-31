@@ -94,8 +94,12 @@ const appSettingsArb = fc.record({
   categoriesVersion: fc.constant(1),
   paymentInstruments: fc.constant<PaymentInstrument[]>([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
+  smsImportSettings: fc.constant({
+    enabled: false,
+    syncLearnings: false,
+  }),
   updatedAt: isoDateArb,
-  version: fc.constant(6),
+  version: fc.constant(7),
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
 })
