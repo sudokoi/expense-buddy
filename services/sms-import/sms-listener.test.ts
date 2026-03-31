@@ -48,8 +48,7 @@ jest.mock("react-native-fast-tflite", () => ({
 // Mock settings to return enabled by default
 const mockLoadSettings = jest.fn().mockResolvedValue({
   enabled: true,
-  scanOnLaunch: false,
-  reviewRetentionDays: 30,
+  syncLearnings: false,
 })
 jest.mock("./settings", () => ({
   loadSMSImportSettings: (...args: unknown[]) => mockLoadSettings(...args),
@@ -111,8 +110,7 @@ describe("SMS Listener", () => {
     mockedStartReadSMS.mockReturnValue(jest.fn())
     mockLoadSettings.mockResolvedValue({
       enabled: true,
-      scanOnLaunch: false,
-      reviewRetentionDays: 30,
+      syncLearnings: false,
     })
     mockCheckSMSPermission.mockResolvedValue(true)
   })

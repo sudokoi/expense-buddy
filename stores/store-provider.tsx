@@ -37,7 +37,6 @@ import {
   disposeSMSImport,
   isSMSImportEnabled,
 } from "../services/sms-import"
-import { inboxScanner } from "../services/sms-import/inbox-scanner"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -126,12 +125,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       if (smsImportEnabled) {
         try {
           await initializeSMSImport()
-          const smsSettings = await import("../services/sms-import/settings").then((m) =>
-            m.loadSMSImportSettings()
-          )
-          if (smsSettings.scanOnLaunch) {
-            inboxScanner.scan().catch((e) => console.warn("Scan on launch failed:", e))
-          }
         } catch (error) {
           console.warn("SMS import initialization failed:", error)
         }

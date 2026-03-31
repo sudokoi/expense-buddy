@@ -7,13 +7,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { YStack, XStack, Text, Switch, Separator } from "tamagui"
 import { Alert } from "react-native"
-import { MessageSquare } from "@tamagui/lucide-icons"
+import { Brain, MessageSquare } from "@tamagui/lucide-icons"
 import { useTranslation } from "react-i18next"
-import { SMSImportSettings } from "../../../types/sms-import"
-import {
-  loadSMSImportSettings,
-  saveSMSImportSettings,
-} from "../../../services/sms-import/settings"
 import {
   checkSMSPermission,
   requestSMSPermission,
@@ -22,36 +17,32 @@ import { smsListener } from "../../../services/sms-import/sms-listener"
 import { mlParser } from "../../../services/sms-import/ml/ml-parser"
 import { duplicateDetector } from "../../../services/sms-import/duplicate-detector"
 import { merchantLearningEngine } from "../../../services/sms-import/learning-engine"
+import { useSettings } from "../../../stores/hooks"
 
 export function SMSImportSection() {
   const { t } = useTranslation()
-  const [settings, setSettings] = useState<SMSImportSettings | null>(null)
+  const { settings, updateSMSImportSettings } = useSettings()
   const [hasPermission, setHasPermission] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const loadSettings = useCallback(async () => {
+  const smsSettings = settings.smsImportSettings
+
+  const loadPermissionStatus = useCallback(async () => {
     try {
-      const [smsSettings, permissionStatus] = await Promise.all([
-        loadSMSImportSettings(),
-        checkSMSPermission(),
-      ])
-      setSettings(smsSettings)
-      setHasPermission(permissionStatus)
+      setHasPermission(await checkSMSPermission())
     } catch (error) {
-      console.error("Failed to load SMS import settings:", error)
+      console.error("Failed to load SMS permission status:", error)
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
+    loadPermissionStatus()
+  }, [loadPermissionStatus])
 
   const handleToggleEnabled = useCallback(
     async (enabled: boolean) => {
-      if (!settings) return
-
       if (enabled && !hasPermission) {
         const granted = await requestSMSPermission({
           title: t("smsImport.permissionDialog.title"),
@@ -71,9 +62,7 @@ export function SMSImportSection() {
         setHasPermission(true)
       }
 
-      const newSettings = { ...settings, enabled }
-      setSettings(newSettings)
-      await saveSMSImportSettings(newSettings)
+      updateSMSImportSettings({ enabled })
 
       if (enabled) {
         try {
@@ -88,32 +77,28 @@ export function SMSImportSection() {
         await smsListener.dispose()
       }
     },
-    [settings, hasPermission, t]
+    [hasPermission, t, updateSMSImportSettings]
   )
 
-  const handleToggleScanOnLaunch = useCallback(
-    async (scanOnLaunch: boolean) => {
-      if (!settings) return
-
-      const newSettings = { ...settings, scanOnLaunch }
-      setSettings(newSettings)
-      await saveSMSImportSettings(newSettings)
+  const handleToggleSyncLearnings = useCallback(
+    (syncLearnings: boolean) => {
+      updateSMSImportSettings({ syncLearnings })
     },
-    [settings]
+    [updateSMSImportSettings]
   )
 
-  if (isLoading || !settings) {
+  if (isLoading) {
     return null
   }
 
   const getStatusText = () => {
-    if (!settings.enabled) return t("smsImport.status.disabled")
+    if (!smsSettings.enabled) return t("smsImport.status.disabled")
     if (!hasPermission) return t("smsImport.status.permissionNeeded")
     return t("smsImport.status.active")
   }
 
   return (
-    <YStack gap="$3">
+    <YStack gap="$4">
       <XStack items="center" gap="$2">
         <MessageSquare size={20} color="$color" />
         <Text fontSize="$5" fontWeight="600" color="$color">
@@ -132,11 +117,10 @@ export function SMSImportSection() {
         {t("smsImport.betaWarning")}
       </Text>
 
-      <Separator my="$2" />
+      <Separator />
 
-      {/* Enable/Disable Toggle */}
       <XStack justify="space-between" items="center">
-        <YStack>
+        <YStack flex={1} pr="$3">
           <Text color="$color" fontSize="$4">
             {t("smsImport.enable")}
           </Text>
@@ -145,48 +129,66 @@ export function SMSImportSection() {
           </Text>
         </YStack>
         <Switch
-          checked={settings.enabled}
+          checked={smsSettings.enabled}
           onCheckedChange={handleToggleEnabled}
-          bg={settings.enabled ? "$green8" : undefined}
+          bg={smsSettings.enabled ? "$green8" : undefined}
         >
           <Switch.Thumb />
         </Switch>
       </XStack>
 
-      {/* Scan on Launch Toggle */}
-      {settings.enabled && (
-        <>
-          <XStack justify="space-between" items="center" mt="$2">
-            <YStack>
-              <Text color="$color" fontSize="$4">
-                {t("smsImport.scanOnLaunch")}
-              </Text>
-              <Text fontSize="$2" color="$colorTransparent">
-                {t("smsImport.scanOnLaunchHelp")}
-              </Text>
-            </YStack>
-            <Switch
-              checked={settings.scanOnLaunch}
-              onCheckedChange={handleToggleScanOnLaunch}
-            >
-              <Switch.Thumb />
-            </Switch>
-          </XStack>
+      <YStack bg={hasPermission ? "$green2" : "$red2"} p="$3" rounded="$3" gap="$1">
+        <Text
+          fontSize="$3"
+          color={hasPermission ? "$green10" : "$red10"}
+          fontWeight="600"
+        >
+          {hasPermission
+            ? t("smsImport.permissionGranted")
+            : t("smsImport.permissionDenied")}
+        </Text>
+        <Text fontSize="$2" color="$colorTransparent">
+          {t("smsImport.reviewFirstHelp")}
+        </Text>
+      </YStack>
 
-          {/* Permission Status */}
-          <YStack bg={hasPermission ? "$green2" : "$red2"} p="$3" rounded="$2" mt="$2">
-            <Text fontSize="$3" color={hasPermission ? "$green10" : "$red10"}>
-              {hasPermission
-                ? t("smsImport.permissionGranted")
-                : t("smsImport.permissionDenied")}
+      <YStack bg="$backgroundFocus" p="$3" rounded="$3" gap="$3">
+        <XStack items="center" gap="$2">
+          <Brain size={18} color="$color" />
+          <Text color="$color" fontSize="$4" fontWeight="600">
+            {t("smsImport.smartCategorisation.title")}
+          </Text>
+        </XStack>
+
+        <Text fontSize="$2" color="$colorTransparent">
+          {t("smsImport.smartCategorisation.description")}
+        </Text>
+
+        <XStack justify="space-between" items="center">
+          <YStack flex={1} pr="$3">
+            <Text color="$color" fontSize="$4">
+              {t("smsImport.syncLearnings")}
+            </Text>
+            <Text fontSize="$2" color="$colorTransparent">
+              {t("smsImport.syncLearningsHelp")}
             </Text>
           </YStack>
-        </>
-      )}
+          <Switch
+            checked={smsSettings.syncLearnings}
+            onCheckedChange={handleToggleSyncLearnings}
+            disabled={!smsSettings.enabled}
+          >
+            <Switch.Thumb />
+          </Switch>
+        </XStack>
 
-      {/* Info Note */}
-      <Text fontSize="$2" color="$colorTransparent" mt="$2">
-        {t("smsImport.infoNote")}
+        <Text fontSize="$2" color="$colorTransparent">
+          {t("smsImport.modelUpdateNote")}
+        </Text>
+      </YStack>
+
+      <Text fontSize="$2" color="$colorTransparent">
+        {t("smsImport.privacyNote")}
       </Text>
     </YStack>
   )

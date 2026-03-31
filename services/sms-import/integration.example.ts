@@ -112,8 +112,7 @@ export function SMSImportToggleExample() {
       const { saveSMSImportSettings } = await import("./index")
       await saveSMSImportSettings({
         enabled: false,
-        scanOnLaunch: false,
-        reviewRetentionDays: 30,
+        syncLearnings: false,
       })
       await disposeSMSImport()
     }

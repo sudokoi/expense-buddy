@@ -5,7 +5,8 @@ import { useColorScheme } from "react-native"
 import { StatusBar } from "expo-status-bar"
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
 import { useFonts } from "expo-font"
-import { SplashScreen, Stack } from "expo-router"
+import * as Notifications from "expo-notifications"
+import { SplashScreen, Stack, useRouter } from "expo-router"
 import { Provider } from "components/Provider"
 import { useTheme } from "tamagui"
 import { NotificationStack } from "../components/NotificationStack"
@@ -109,6 +110,7 @@ function UpdateAndChangelogOverlays() {
 }
 
 function RootLayoutNav() {
+  const router = useRouter()
   const systemScheme = useColorScheme()
   const theme = useTheme()
   const { settings } = useSettings()
@@ -122,6 +124,21 @@ function RootLayoutNav() {
       ? "dark"
       : "light"
     : effectiveTheme
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const screen = response.notification.request.content.data?.screen
+        if (screen === "review-queue") {
+          router.push("/(tabs)")
+        }
+      }
+    )
+
+    return () => {
+      subscription.remove()
+    }
+  }, [router])
 
   return (
     <ThemeProvider value={resolvedScheme === "dark" ? DarkTheme : DefaultTheme}>

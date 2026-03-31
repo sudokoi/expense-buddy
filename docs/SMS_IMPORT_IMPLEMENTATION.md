@@ -1,8 +1,8 @@
-# SMS Auto-Import Feature Implementation Plan
+# SMS Auto-Import Implementation Reference
 
 **Branch:** `feature/sms-expense-import`  
-**Status:** In Development  
-**Last Updated:** 2026-02-15  
+**Status:** Review-First v1 Shipped  
+**Last Updated:** 2026-03-31  
 **Author:** Development Team
 
 ---
@@ -40,7 +40,7 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 
 - Reduces manual data entry friction
 - Captures expenses users might forget to log
-- Provides learning system that improves over time
+- Provides a learning system that improves categorization suggestions over time
 - Maintains 100% on-device processing for privacy
 
 > **v1 Scope Note:** This version is scoped to SMS-only. Notification listener support (which requires a native Android `NotificationListenerService` module — `expo-notifications` only handles the app's own push notifications) is deferred to a future version.
@@ -54,7 +54,7 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 #### FR-1: SMS Import
 
 - **FR-1.1:** Support SMS message monitoring (with user permission)
-- **FR-1.2:** Provide on-demand historical SMS inbox scanning
+- **FR-1.2:** Detect only new incoming SMS messages after the feature is enabled
 
 #### FR-2: Transaction Parsing
 
@@ -81,7 +81,7 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 #### FR-5: Auto-Import Tagging
 
 - **FR-5.1:** Add `source: 'auto-imported'` to expense metadata
-- **FR-5.2:** Store complete SMS content in metadata
+- **FR-5.2:** Keep raw SMS content only in the review queue, not in persisted expense metadata
 - **FR-5.3:** Display "Auto-imported" badge in expense lists
 - **FR-5.4:** Show "SMS Import" source indicator in UI
 
@@ -114,7 +114,7 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 #### NFR-2: Privacy & Security
 
 - **NFR-2.1:** All processing on-device only
-- **NFR-2.2:** No SMS content sent to cloud services
+- **NFR-2.2:** No raw SMS content sent to any project-operated backend or synced to GitHub
 - **NFR-2.3:** No analytics on transaction data
 - **NFR-2.4:** Secure storage of merchant patterns
 - **NFR-2.5:** Allow complete feature disable and data deletion
@@ -153,10 +153,10 @@ This document outlines the implementation plan for adding SMS-based automatic ex
 ┌─────────────────────────────────────────────────────────────────┐
 │                        SMS SERVICE                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐                            │
-│  │ SMS Listener │  │ Inbox Scanner│                            │
-│  │ (Native)     │  │ (On-demand)  │                            │
-│  └──────────────┘  └──────────────┘                            │
+│  ┌──────────────┐                                            │
+│  │ SMS Listener │                                            │
+│  │ (Native)     │                                            │
+│  └──────────────┘                                            │
 └─────────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────────┐
@@ -221,9 +221,6 @@ export interface SMSImportMetadata {
   /** Source type (always "sms" in v1) */
   source: ImportSource
 
-  /** Original raw message content */
-  rawMessage: string
-
   /** SMS sender address (e.g., "AD-HDFCBK") */
   sender: string
 
@@ -276,6 +273,9 @@ export interface ParsedTransaction {
 
   /** Import metadata */
   metadata: SMSImportMetadata
+
+  /** Original raw message content for review UI only */
+  rawMessage: string
 }
 
 /**
@@ -311,11 +311,8 @@ export interface SMSImportSettings {
   /** Master enable/disable switch for SMS import */
   enabled: boolean
 
-  /** Scan inbox on app launch */
-  scanOnLaunch: boolean
-
-  /** Days to keep items in review queue */
-  reviewRetentionDays: number
+  /** Whether learnings sync through the user's GitHub repo */
+  syncLearnings: boolean
 }
 ```
 
@@ -424,7 +421,7 @@ export interface Expense {
 }
 ```
 
-> **Migration Note:** The `source` and `importMetadata` fields are new optional additions to the Expense type. This requires a CSV format version bump. Existing expenses without these fields will default to `source: undefined` (treated as manual). A backward-compatible migration script must handle reading old-format CSVs that lack these columns. See [Migration Strategy](#migration-strategy) for details.
+> **Migration Note:** The `source` and `importMetadata` fields are new optional additions to the Expense type. This requires a CSV format version bump. Existing expenses without these fields will default to `source: undefined` (treated as manual). Raw SMS text is intentionally excluded from persisted `importMetadata`.
 
 ---
 
@@ -459,13 +456,12 @@ export interface Expense {
 - [ ] Install and configure `@maniac-tech/react-native-expo-read-sms`
 - [ ] Implement SMS permission request flow
 - [ ] Create SMS listener service
-- [ ] Create inbox scanner for historical messages
 - [ ] Add message filtering (bank detection)
 
 **Deliverables:**
 
-- SMS listening functional
-- Inbox scanning working
+- SMS listening functional for new incoming messages only
+- Historical scanning intentionally out of scope for v1
 
 **Dependencies:** Phase 1
 
@@ -614,9 +610,6 @@ export interface Expense {
 ```typescript
 // services/sms-import/constants.ts
 export const STORAGE_KEYS = {
-  // Feature settings
-  IMPORT_SETTINGS: "sms_import_settings_v1",
-
   // Review queue
   REVIEW_QUEUE: "sms_review_queue_v1",
 
@@ -649,28 +642,28 @@ export class SMSListener {
   private unsubscribe?: () => void
 
   async initialize(): Promise<boolean> {
-    const settings = await getSMSImportSettings()
+    const settings = await loadSMSImportSettings()
 
-    if (!settings.enabled || !settings.smsEnabled) {
+    if (!settings.enabled) {
       return false
     }
 
-    // Check permissions
-    const hasPermission = await this.checkPermissions()
+    const hasPermission = await checkSMSPermission()
     if (!hasPermission) {
       return false
     }
 
-    await this.startSMSListener()
+    try {
+      await mlParser.initialize()
+    } catch {
+      // Listener stays active even if model init fails
+    }
+
+    await this.startListening()
     return true
   }
 
-  private async checkPermissions(): Promise<boolean> {
-    const smsPermission = await check(PERMISSIONS.ANDROID.READ_SMS)
-    return smsPermission === RESULTS.GRANTED
-  }
-
-  private async startSMSListener(): Promise<void> {
+  private async startListening(): Promise<void> {
     const hasPermission = await requestReadSMSPermission()
     if (!hasPermission) return
 
@@ -684,11 +677,12 @@ export class SMSListener {
 
   private async handleIncomingMessage(message: string): Promise<void> {
     // Parse transaction
-    const parsed = await transactionParser.parse(message, "sms")
-
-    if (!parsed) {
-      return // Not a transaction message
+    const parseResult = await mlParser.parse(message, "sms")
+    if (!parseResult.parsed) {
+      return
     }
+
+    const parsed = parseResult.parsed
 
     // Check for duplicates
     const duplicate = await duplicateDetector.check(parsed)
@@ -701,15 +695,20 @@ export class SMSListener {
     const suggestions = await learningEngine.suggest(parsed.merchant)
 
     // Add to review queue (all imports require review in v1)
-    await reviewQueueStore.addItem({
-      parsedTransaction: parsed,
-      suggestedCategory: suggestions?.category || "Other",
-      suggestedPaymentMethod: suggestions?.paymentMethod || "Other",
-      suggestedInstrument: suggestions?.instrument,
+    reviewQueueStore.trigger.addItem({
+      item: {
+        id: generateId(),
+        parsedTransaction: parsed,
+        suggestedCategory: suggestions?.category || "Other",
+        suggestedPaymentMethod: suggestions?.paymentMethod || "Other",
+        suggestedInstrument: suggestions?.instrument,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      },
     })
 
     // Show notification to user
-    await this.showImportNotification(parsed)
+    await showImportNotification(parsed.merchant, parsed.amount, parsed.currency)
   }
 
   async dispose(): Promise<void> {
@@ -777,12 +776,12 @@ export class TFLiteParser {
         confidenceScore: decoded.confidence,
         metadata: {
           source,
-          rawMessage: message,
           sender: decoded.sender || "Unknown",
           messageId: generateMessageId(message),
           confidenceScore: decoded.confidence,
           parsedAt: new Date().toISOString(),
         },
+        rawMessage: message,
       },
       confidence: decoded.confidence,
       method: "ml",
@@ -1335,7 +1334,7 @@ export const reviewQueueStore = createStore({
           correctedPaymentMethod: event.updates.paymentMethod,
           correctedInstrument: event.updates.instrument,
           timestamp: new Date().toISOString(),
-          applyToFuture: true,
+          applyToFuture: event.applyToFuture,
         })
 
         // Learn from correction
@@ -1388,7 +1387,7 @@ export const reviewQueueStore = createStore({
 
     clearOldItems: (context, _event, enqueue) => {
       const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - RETENTION_LIMITS.REVIEW_QUEUE_DAYS)
 
       const newQueue = context.queue.filter((item) => {
         const itemDate = new Date(item.createdAt)
@@ -1456,7 +1455,7 @@ function createExpenseFromReviewItem(
 - Note input field
 - Confidence indicator (visual bar or percentage)
 - Confirm/Edit/Reject buttons
-- "Apply to future transactions" checkbox
+- "Apply to future transactions" checkbox while editing
 - Swipe gestures for quick actions (optional)
 
 **Accessibility:**
@@ -1479,32 +1478,32 @@ function createExpenseFromReviewItem(
 
 ### 3. Settings Page
 
-**Route:** `/settings/sms-import`
+**Implementation:** Grouped SMS settings section in the main Settings screen
 
 **Sections:**
 
 1. **Enable/Disable Feature** - Master toggle
-2. **SMS Monitoring** - Enable/disable SMS listening, scan on launch
-3. **Advanced Settings** - Retention period
-4. **Learning Data** - View/edit learned patterns
-5. **Privacy** - Delete all import data
+2. **Permission Status** - Current SMS permission state
+3. **Smart Categorisation** - Explanation of local learning behavior
+4. **Sync Learnings** - Optional cross-device sync to the user's configured GitHub repo
+5. **Privacy & Model Notes** - Review-first behavior, privacy note, and model-update note
 
 ### 4. Import History
 
-**Route:** `/history/sms-imports` (or section in main history)
+**Component:** `components/ui/sms-import/ImportHistoryView.tsx`
 
 **Features:**
 
 - List of all auto-imported expenses
-- Filter by status (confirmed/edited/rejected)
-- Search by merchant
-- Bulk actions (delete, reprocess)
+- Filter by status (confirmed/edited)
 
 ---
 
 ## Testing Strategy
 
 ### Unit Tests
+
+> **Note:** These examples are illustrative. The shipped implementation uses the ML parser and the review queue store APIs in `services/sms-import/` and `stores/review-queue-store.ts`.
 
 ```typescript
 // __tests__/services/transaction-parser.test.ts
@@ -1574,10 +1573,7 @@ describe("SMS Import Flow", () => {
     // 3. Confirm the import
     reviewQueueStore.trigger.confirmItem({
       itemId: queue[0].id,
-      expenseData: {
-        category: "Food",
-        paymentMethod: { type: "UPI" },
-      },
+      applyToFuture: false,
     })
 
     // 4. Check expense was created
@@ -1648,13 +1644,14 @@ describe("Parsing Performance", () => {
 ### Data Handling
 
 1. **On-Device Only**
-   - No SMS content leaves the device
+   - Raw SMS content stays on the device
    - No cloud APIs for parsing
+   - No project-operated backend server
    - No analytics on transaction data
    - No crash reporting with SMS content
 
 2. **Minimal Data Retention**
-   - Only store parsed expense data (not full SMS)
+   - Only store parsed expense data with saved expenses (not full SMS)
    - Message IDs stored for dedup only
    - Rotating window of 1000 processed IDs
    - Review queue auto-expires after 30 days
@@ -1662,22 +1659,23 @@ describe("Parsing Performance", () => {
 3. **Secure Storage**
    - Use AsyncStorage (encrypted on modern devices)
    - Sensitive data in SecureStore
-   - No backup of import metadata to cloud
+   - Raw SMS content is not synced to GitHub
 
 ### Permissions
 
 **SMS Permission:**
 
 - Required: `READ_SMS`, `RECEIVE_SMS` (Android)
+- Optional: `POST_NOTIFICATIONS` for review notifications
 - Justification: "To automatically detect expenses from bank SMS"
 - Fallback: Manual import if permission denied
 
 ### User Control
 
 1. **Complete Disable:** Toggle to turn off entire feature
-2. **Data Deletion:** Clear all import history and learned patterns
+2. **Learning Sync Opt-In:** Cross-device learning sync is disabled by default
 3. **Review Required:** All imports require manual review in v1
-4. **Transparency:** Show exactly what data is stored
+4. **Transparency:** Show exactly what data is stored and synced
 
 ---
 
@@ -1685,13 +1683,13 @@ describe("Parsing Performance", () => {
 
 ### Merchant Learning Sync
 
-**Objective:** Sync merchant patterns and user corrections to GitHub for cross-device transfer and backup.
+**Objective:** Sync merchant patterns and user corrections to the user's configured GitHub repository for cross-device transfer and backup.
 
 #### Design Decisions
 
-- **Opt-out:** Syncs by default (follows existing expense sync toggle)
+- **Opt-in:** Runs only when both settings sync and `smsImportSettings.syncLearnings` are enabled
 - **Merge resolution:** Usage count-based with timestamp fallback
-- **Sync frequency:** Follows expense sync settings (on_launch/on_change)
+- **Sync frequency:** Runs alongside the existing GitHub sync flow
 - **Scope:** Patterns + User corrections
 - **Format:** Plain JSON for debuggability
 
@@ -2038,21 +2036,9 @@ confirmItem: (context, event, enqueue) => {
 **Pattern Sync Behavior:**
 
 ```typescript
-// In merchant learning engine
-async learnFromExpense(expense: Expense, ...): Promise<void> {
-  // Update local patterns
-  await this.savePatterns()
-
-  // Only queue sync op if user explicitly edited in settings
-  // Auto-import confirmations don't queue immediate sync
-  if (expense.importMetadata?.userCorrected) {
-    await enqueueSyncOp({
-      type: "merchantPatterns.update",
-      patterns: this.patterns,
-      corrections: this.corrections
-    })
-  }
-}
+// Sync manager triggers merchant sync after the normal GitHub sync flow
+// only when settings.syncSettings && settings.smsImportSettings.syncLearnings.
+// Learning data is always saved locally immediately.
 ```
 
 ### Benefits
@@ -2221,15 +2207,14 @@ function migrateV6ToV7(settings: AppSettings): AppSettings {
     ...settings,
     smsImportSettings: {
       enabled: false,
-      scanOnLaunch: false,
-      reviewRetentionDays: 30,
+      syncLearnings: false,
     },
     version: 7,
   }
 }
 ```
 
-> **Note:** The v7 migration uses a simplified settings interface with a single `enabled` toggle (no separate `smsEnabled` field since v1 is SMS-only). Fields like `autoImportEnabled`, `notificationsEnabled`, and `minimumConfidence` are deferred to future versions. All imports go through the review queue in v1.
+> **Note:** The v7 migration uses `smsImportSettings.enabled` and `smsImportSettings.syncLearnings`. Fields like `autoImportEnabled` and `minimumConfidence` are deferred to future versions. All imports go through the review queue in v1.
 
 ---
 
@@ -2258,16 +2243,15 @@ The ML-only parser (TFLite Bi-LSTM) handles all bank SMS formats universally wit
 | `SMS004` | Learning engine error       | Continue without suggestions    |
 | `SMS005` | Storage full                | Alert user to clear old imports |
 
-### Appendix C: Analytics (Optional)
+### Appendix C: Analytics (Not Implemented in v1)
 
-If analytics are enabled (opt-in):
+Expense Buddy does not currently ship product analytics for SMS import. If analytics are added in the future, they must avoid PII and raw SMS content.
 
 | Event                      | Properties                        |
 | -------------------------- | --------------------------------- |
 | `sms_import_received`      | confidence                        |
 | `sms_import_confirmed`     | time_to_confirm, category_changed |
 | `sms_import_edited`        | fields_changed, apply_to_future   |
-| `sms_import_rejected`      | reason                            |
 | `learning_suggestion_used` | merchant, confidence              |
 
 **Note:** No PII in analytics. Merchant names hashed.
@@ -2299,7 +2283,7 @@ If analytics are enabled (opt-in):
 
 **Next Steps:**
 
-1. Review and approve implementation plan
-2. Create Phase 1 tickets
-3. Set up feature branch structure
-4. Begin development
+1. Monitor review-first import quality in real-world usage
+2. Consider optional high-confidence auto-add in a future release
+3. Consider native historical scanning only if it becomes a deliberate product scope
+4. Continue improving the offline TFLite model through the Python training pipeline

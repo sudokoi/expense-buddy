@@ -24,6 +24,7 @@ import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
 import { changeLanguage } from "../i18n"
 import { getDefaultCurrencyForLanguage } from "../utils/currency"
 import { enqueueSyncOp } from "../services/sync-queue"
+import { SMSImportSettings } from "../types/sms-import"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -183,6 +184,45 @@ export const settingsStore = createStore({
     setAutoSyncEnabled: createSettingUpdater("autoSyncEnabled"),
 
     setAutoSyncTiming: createSettingUpdater("autoSyncTiming"),
+
+    updateSMSImportSettings: (
+      context,
+      event: { updates: Partial<SMSImportSettings> },
+      enqueue
+    ) => {
+      const newSettings = {
+        ...context.settings,
+        smsImportSettings: {
+          ...context.settings.smsImportSettings,
+          ...event.updates,
+        },
+      }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: {
+            smsImportSettings: newSettings.smsImportSettings,
+          },
+        })
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
 
     updateSettings: (context, event: { updates: Partial<AppSettings> }, enqueue) => {
       const newSettings = { ...context.settings, ...event.updates }

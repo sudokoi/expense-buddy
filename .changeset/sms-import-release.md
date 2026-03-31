@@ -34,9 +34,9 @@ This is a **major release** that introduces automatic SMS expense import functio
 - **Learning System**: Learns from your corrections to improve future suggestions
   - Merchant → Category mapping
   - Merchant → Payment method mapping
-  - Cross-device sync via GitHub
+  - Optional cross-device sync via your configured GitHub repository
 - **Duplicate Prevention**: Message fingerprinting prevents duplicate imports
-- **Privacy-First**: 100% on-device processing, no SMS content leaves your device
+- **Privacy-First**: 100% on-device parsing, raw SMS content does not leave your device
 
 #### 🏗️ New Services & Components
 
@@ -50,7 +50,6 @@ This is a **major release** that introduces automatic SMS expense import functio
 - `ml/ml-parser.ts` - ML parser wrapper with SHA-256 message ID generation
 - `ml/tflite-parser.ts` - TensorFlow Lite Bi-LSTM model with reverse vocab lookup
 - `merchant-sync.ts` - GitHub-based merchant pattern sync across devices
-- `inbox-scanner.ts` - On-demand historical SMS inbox scanning
 - `import-notification.ts` - Local push notifications for detected transactions
 
 **New Types**:
@@ -66,7 +65,7 @@ This is a **major release** that introduces automatic SMS expense import functio
 
 - `components/ui/sms-import/SMSImportSection.tsx` - Settings UI for SMS import
 - `components/ui/sms-import/ReviewQueueModal.tsx` - Modal for reviewing, editing, confirming, or rejecting imported transactions
-- `components/ui/sms-import/ImportHistoryView.tsx` - Filterable list of auto-imported expenses (all/confirmed/edited/rejected)
+- `components/ui/sms-import/ImportHistoryView.tsx` - Filterable list of auto-imported expenses (all/confirmed/edited)
 - `components/ui/expense-list/AutoImportedBadge.tsx` - Inline badge on expense list items for auto-imported expenses
 
 ### 🔧 Technical Improvements
@@ -75,17 +74,17 @@ This is a **major release** that introduces automatic SMS expense import functio
 
 - **Expense Type**: Added `source` and `importMetadata` fields
   - `source`: "manual" | "auto-imported"
-  - `importMetadata`: SMS content, sender, confidence score, timestamps
+  - `importMetadata`: sender, confidence score, and review timestamps
 - **CSV v2.0**: Added `#version: 2.0` header and new columns
 - **Settings v7**: Added `smsImportSettings` with enable/disable toggle
 
 #### Sync Architecture Updates
 
-- **Merchant Pattern Sync**: Learning data syncs via GitHub (`merchant-patterns.json`)
+- **Merchant Pattern Sync**: Learning data syncs via GitHub (`merchant-patterns.json`) only when enabled
 - **Merge Strategy**: Usage count summation, raw pattern union, most-recent-timestamp wins
 - **Correction Sync**: User corrections merge by ID with most-recent-timestamp deduplication
 - **Integration**: Merchant sync runs after expense sync in the git-style sync flow
-- **Opt-out by Default**: Follows existing settings sync toggle
+- **Opt-out by Default**: Requires both settings sync and the SMS learning sync toggle
 
 #### Performance Optimizations
 
@@ -129,6 +128,7 @@ New permissions required (Android only):
 
 - `READ_SMS`: Read incoming bank transaction SMS
 - `RECEIVE_SMS`: Detect new SMS in real-time
+- `POST_NOTIFICATIONS`: Alert users when a transaction is ready for review
 
 ### 🔄 Migration Guide
 
@@ -162,7 +162,7 @@ New permissions required (Android only):
 - SMS import requires Android 14+ (API 34)
 - All imports go through review queue in v1 (no auto-import bypass)
 - Merchant learning requires multiple confirmations for high confidence
-- Pattern sync requires GitHub sync to be enabled
+- Pattern sync requires both GitHub settings sync and SMS learning sync to be enabled
 
 ### 🤖 Machine Learning Architecture
 
@@ -173,6 +173,7 @@ New permissions required (Android only):
 - **Tokenization**: Word-level for known vocabulary, character-level fallback for OOV words
 - **Reverse vocab lookup**: Token IDs converted back to readable text for entity extraction
 - **Library**: react-native-fast-tflite (v2.0.0)
+- **Model Updates**: The parser model is retrained offline in `ml/training/` and shipped via app updates; the app does not retrain it on-device
 
 **Model Specifications**:
 
@@ -215,7 +216,7 @@ New permissions required (Android only):
 
 - This release represents a significant architectural shift to Android-only
 - SMS import is the first step toward more advanced automation features
-- Future versions may add notification listener support and auto-import bypass
+- Future versions may add auto-import bypass for high-confidence transactions
 
 ---
 

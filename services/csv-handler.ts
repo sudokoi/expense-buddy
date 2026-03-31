@@ -124,7 +124,15 @@ export function importFromCSV(csvString: string): {
       }
       if (row.importMetadata?.trim()) {
         try {
-          expense.importMetadata = JSON.parse(row.importMetadata)
+          const parsedMetadata = JSON.parse(
+            row.importMetadata
+          ) as Expense["importMetadata"] & {
+            rawMessage?: string
+          }
+          if (parsedMetadata) {
+            const { rawMessage: _rawMessage, ...safeMetadata } = parsedMetadata
+            expense.importMetadata = safeMetadata
+          }
         } catch {
           // Ignore malformed metadata
         }

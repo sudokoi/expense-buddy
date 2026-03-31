@@ -230,9 +230,9 @@ const reviewQueueItemArb = (
       paymentMethod: paymentMethodArb,
       transactionType: fc.constantFrom("debit" as const, "credit" as const),
       confidenceScore: fc.double({ min: 0, max: 1, noNaN: true }),
+      rawMessage: fc.string({ minLength: 5, maxLength: 100 }),
       metadata: fc.record({
         source: fc.constant("sms" as const),
-        rawMessage: fc.string({ minLength: 5, maxLength: 100 }),
         sender: fc.stringMatching(/^[A-Z]{2}-[A-Z]{4,8}$/),
         messageId: messageIdArb,
         confidenceScore: fc.double({ min: 0, max: 1, noNaN: true }),

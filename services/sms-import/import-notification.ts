@@ -2,8 +2,8 @@
  * Import Notification Service
  *
  * Displays local push notifications when SMS transactions are detected
- * and added to the review queue. Tapping the notification navigates
- * to the review queue screen.
+ * and added to the review queue. Tapping the notification opens the app
+ * to the dashboard where the review queue is visible.
  */
 
 import * as Notifications from "expo-notifications"

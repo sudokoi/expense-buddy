@@ -69,8 +69,7 @@ export function createMockSettings(overrides?: Partial<AppSettings>): AppSetting
     paymentInstrumentsMigrationVersion: 0,
     smsImportSettings: {
       enabled: false,
-      scanOnLaunch: false,
-      reviewRetentionDays: 30,
+      syncLearnings: false,
     },
     updatedAt: now,
     version: 7,

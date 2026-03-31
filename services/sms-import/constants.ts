@@ -8,9 +8,6 @@
  * AsyncStorage keys for SMS import feature
  */
 export const STORAGE_KEYS = {
-  /** SMS import settings */
-  IMPORT_SETTINGS: "sms_import_settings_v1",
-
   /** Review queue items */
   REVIEW_QUEUE: "sms_review_queue_v1",
 
@@ -88,6 +85,5 @@ export const TIME_WINDOWS = {
  */
 export const DEFAULT_SMS_IMPORT_SETTINGS = {
   enabled: false,
-  scanOnLaunch: false,
-  reviewRetentionDays: 30,
+  syncLearnings: false,
 }

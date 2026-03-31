@@ -99,8 +99,7 @@ const appSettingsArb = fc.record({
   paymentInstrumentsMigrationVersion: fc.constant(0),
   smsImportSettings: fc.constant({
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms

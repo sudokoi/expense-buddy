@@ -51,9 +51,9 @@ describe("DuplicateDetector", () => {
         paymentMethod: "UPI",
         transactionType: "debit",
         confidenceScore: 0.9,
+        rawMessage: "Test message",
         metadata: {
           source: "sms",
-          rawMessage: "Test message",
           sender: "AD-TEST",
           messageId: "abc123",
           confidenceScore: 0.9,
@@ -84,9 +84,9 @@ describe("DuplicateDetector", () => {
         paymentMethod: "UPI",
         transactionType: "debit",
         confidenceScore: 0.9,
+        rawMessage: "Test message 1",
         metadata: {
           source: "sms",
-          rawMessage: "Test message 1",
           sender: "AD-TEST1",
           messageId: "id1",
           confidenceScore: 0.9,
@@ -102,9 +102,9 @@ describe("DuplicateDetector", () => {
         paymentMethod: "UPI",
         transactionType: "debit",
         confidenceScore: 0.9,
+        rawMessage: "Test message 2",
         metadata: {
           source: "sms",
-          rawMessage: "Test message 2",
           sender: "AD-TEST2",
           messageId: "id2",
           confidenceScore: 0.9,
@@ -133,9 +133,9 @@ describe("DuplicateDetector", () => {
         paymentMethod: "UPI",
         transactionType: "debit",
         confidenceScore: 0.9,
+        rawMessage: "Test",
         metadata: {
           source: "sms",
-          rawMessage: "Test",
           sender: "AD-TEST",
           messageId: "test-id-1",
           confidenceScore: 0.9,

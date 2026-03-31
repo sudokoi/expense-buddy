@@ -415,23 +415,29 @@
   },
   "smsImport": {
     "title": "SMSインポート",
-    "description": "銀行のSMSメッセージから支出を自動検出",
+    "description": "新しい銀行SMSの取引を自動検出し、インポート前にレビューキューへ追加します。",
     "betaWarning": "結果は常に正確ではない場合があります。インポートされたすべての取引を確認してください。",
     "enable": "SMSインポートを有効にする",
+    "syncLearnings": "学習内容を同期",
+    "syncLearningsHelp": "スマート分類の学習内容を設定済みのGitHubリポジトリに同期し、他のデバイスでも利用できるようにします。",
+    "reviewFirstHelp": "新しい取引SMSは自動で検出されますが、レビューキューで確認するまでは保存されません。",
+    "privacyNote": "SMSメッセージは端末内で処理されます。元のSMS本文は端末内に留まり、GitHubには同期されません。",
+    "modelUpdateNote": "スマート分類はあなたの修正から学習しますが、SMS解析モデル自体はアプリのアップデートでのみ更新されます。",
+    "smartCategorisation": {
+      "title": "スマート分類",
+      "description": "Expense Buddyは、あなたが修正したカテゴリや支払い方法を学習し、次回以降のインポートでより良い候補を提示します。"
+    },
     "status": {
       "active": "有効 - 銀行SMSを監視中",
       "permissionNeeded": "権限が必要です",
       "disabled": "無効"
     },
-    "scanOnLaunch": "アプリ起動時にスキャン",
-    "scanOnLaunchHelp": "アプリを開いたときに新しいSMSを確認",
     "permissionGranted": "SMS権限が付与されました",
     "permissionDenied": "SMS権限が付与されていません。上のトグルをタップして権限を付与してください。",
     "permissionAlert": {
       "title": "権限が必要です",
       "message": "銀行メッセージから支出を自動インポートするにはSMS権限が必要です。設定 > アプリ > Expense Buddy > 権限で有効にしてください。"
     },
-    "infoNote": "インポートされたすべての支出は、保存前に確認のためレビューキューに追加されます。",
     "permissionDialog": {
       "title": "SMS権限",
       "message": "銀行メッセージから支出を自動検出するために、Expense BuddyにSMSへのアクセスが必要です。",
@@ -482,8 +488,7 @@
       "filters": {
         "all": "すべて",
         "confirmed": "確認済み",
-        "edited": "編集済み",
-        "rejected": "却下"
+        "edited": "編集済み"
       },
       "status": {
         "confirmed": "確認済み",

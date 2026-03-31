@@ -67,9 +67,9 @@ describe("MerchantLearningEngine", () => {
       paymentMethod: "UPI" as const,
       transactionType: "debit" as const,
       confidenceScore: 0.9,
+      rawMessage: "Test",
       metadata: {
         source: "sms" as const,
-        rawMessage: "Test",
         sender: "AD-TEST",
         messageId: "123",
         confidenceScore: 0.9,
@@ -136,9 +136,9 @@ describe("MerchantLearningEngine", () => {
           paymentMethod: "UPI",
           transactionType: "debit",
           confidenceScore: 0.9,
+          rawMessage: "Test",
           metadata: {
             source: "sms",
-            rawMessage: "Test",
             sender: "AD-TEST",
             messageId: "123",
             confidenceScore: 0.9,
@@ -181,9 +181,9 @@ describe("MerchantLearningEngine", () => {
         paymentMethod: "UPI" as const,
         transactionType: "debit" as const,
         confidenceScore: 0.9,
+        rawMessage: "Test",
         metadata: {
           source: "sms" as const,
-          rawMessage: "Test",
           sender: "AD-TEST",
           messageId: "123",
           confidenceScore: 0.9,
@@ -220,9 +220,9 @@ describe("MerchantLearningEngine", () => {
         paymentMethod: "UPI" as const,
         transactionType: "debit" as const,
         confidenceScore: 0.9,
+        rawMessage: "Test",
         metadata: {
           source: "sms" as const,
-          rawMessage: "Test",
           sender: "AD-TEST",
           messageId: "123",
           confidenceScore: 0.9,
@@ -261,7 +261,6 @@ describe("MerchantLearningEngine", () => {
           updatedAt: new Date().toISOString(),
           importMetadata: {
             source: "sms" as const,
-            rawMessage: "Test",
             sender: "AD-TEST",
             messageId: "123",
             confidenceScore: 0.9,
@@ -277,9 +276,9 @@ describe("MerchantLearningEngine", () => {
           paymentMethod: "UPI" as const,
           transactionType: "debit" as const,
           confidenceScore: 0.9,
+          rawMessage: "Test",
           metadata: {
             source: "sms" as const,
-            rawMessage: "Test",
             sender: "AD-TEST",
             messageId: "123",
             confidenceScore: 0.9,

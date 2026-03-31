@@ -38,8 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paymentInstrumentsMigrationVersion: 0,
   smsImportSettings: {
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   },
   updatedAt: new Date().toISOString(),
   version: 7,
@@ -190,8 +189,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   smsImportSettings: fc.constant({
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   }),
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })

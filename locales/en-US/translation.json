@@ -220,6 +220,7 @@
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
+      "smsImport": "SMS IMPORT",
       "localization": "LOCALIZATION",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
@@ -415,23 +416,29 @@
   },
   "smsImport": {
     "title": "SMS Import",
-    "description": "Automatically detect expenses from bank SMS messages",
+    "description": "Automatically detect new bank SMS transactions and place them in a review queue before import.",
     "betaWarning": "Results may not always be accurate. Please review all imported transactions.",
     "enable": "Enable SMS Import",
+    "syncLearnings": "Sync Learnings",
+    "syncLearningsHelp": "Sync smart categorisation learnings to your configured GitHub repository so they can be used on your other devices.",
+    "reviewFirstHelp": "New transaction SMS messages are detected automatically, but nothing is saved until you confirm it from the review queue.",
+    "privacyNote": "SMS messages are processed on-device. Raw SMS content stays on your device and is not synced to GitHub.",
+    "modelUpdateNote": "Smart categorisation learns from your corrections, but the SMS parsing model itself is updated only through app updates.",
+    "smartCategorisation": {
+      "title": "Smart Categorisation",
+      "description": "Expense Buddy learns from the categories and payment methods you correct so future imports can start with better suggestions."
+    },
     "status": {
       "active": "Active - monitoring bank SMS",
       "permissionNeeded": "Permission needed",
       "disabled": "Disabled"
     },
-    "scanOnLaunch": "Scan on App Launch",
-    "scanOnLaunchHelp": "Check for new SMS when app opens",
     "permissionGranted": "SMS permission granted",
     "permissionDenied": "SMS permission not granted. Tap the toggle above to grant permission.",
     "permissionAlert": {
       "title": "Permission Required",
       "message": "SMS permission is required to automatically import expenses from bank messages. Please enable it in Settings > Apps > Expense Buddy > Permissions."
     },
-    "infoNote": "All imported expenses will be added to a review queue for your confirmation before being saved.",
     "permissionDialog": {
       "title": "SMS Permission",
       "message": "Expense Buddy needs access to SMS to automatically detect expenses from bank messages.",
@@ -482,8 +489,7 @@
       "filters": {
         "all": "All",
         "confirmed": "Confirmed",
-        "edited": "Edited",
-        "rejected": "Rejected"
+        "edited": "Edited"
       },
       "status": {
         "confirmed": "Confirmed",

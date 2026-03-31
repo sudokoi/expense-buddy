@@ -121,9 +121,9 @@ export function setupMLParserMock(): void {
                 paymentInstrument: undefined,
                 transactionType: "debit",
                 confidenceScore: result.confidence,
+                rawMessage: message,
                 metadata: {
                   source: "sms",
-                  rawMessage: message,
                   sender: "Unknown",
                   messageId: "test-msg-id",
                   confidenceScore: result.confidence,

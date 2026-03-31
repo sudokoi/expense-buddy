@@ -343,7 +343,7 @@ flowchart TD
 - Fuzzy merchant matching for similar names
 - Pattern overwrite within 24h window (with 10% amount range check)
 - LRU eviction at 1,000 patterns (user-overridden patterns evicted last)
-- GitHub sync support for merchant patterns
+- Optional GitHub sync support for merchant patterns when enabled in SMS settings
 
 **Learning flow**:
 
@@ -389,18 +389,7 @@ flowchart TD
 - Correction merge: union by ID, most recent timestamp wins on conflict
 - Integrated into `sync-manager.ts` git-style sync flow (runs after expense sync)
 
-#### 7. Inbox Scanner (`services/sms-import/inbox-scanner.ts`)
-
-**Purpose**: On-demand scan of historical SMS messages for missed transactions.
-
-**Key features**:
-
-- Reads historical SMS via `@maniac-tech/react-native-expo-read-sms`
-- Parses each message through ML parser and duplicate detector
-- Reports progress via callback (`scanned` and `found` counts)
-- Prompts for permission if not granted
-
-#### 8. Import Notification (`services/sms-import/import-notification.ts`)
+#### 7. Import Notification (`services/sms-import/import-notification.ts`)
 
 **Purpose**: Shows local push notification when a transaction is detected.
 
@@ -408,7 +397,7 @@ flowchart TD
 
 - Uses `expo-notifications` for immediate local notification
 - Includes merchant name and amount in notification body
-- Notification tap navigates to review queue (`data: { screen: 'review-queue' }`)
+- Notification tap opens the dashboard where the review queue is available
 - Skips silently if notification permissions not granted
 
 ### UI Components
@@ -432,7 +421,7 @@ flowchart TD
 #### Import History View (`components/ui/sms-import/ImportHistoryView.tsx`)
 
 - FlatList of expenses where `source === 'auto-imported'`
-- Filter tabs: All, Confirmed, Edited, Rejected
+- Filter tabs: All, Confirmed, Edited
 - Displays import date, merchant, amount, and correction status
 - Pure filtering logic extracted to `import-history-utils.ts` for testability
 
@@ -441,22 +430,21 @@ flowchart TD
 1. **SMS Detection**: Listener receives SMS → ML parser extracts data (confidence ≥0.7)
    - **Important**: Only NEW messages are processed. The app does NOT scan historical SMS when first enabled
    - This prevents duplicate entries for transactions users may have already manually added
-   - On-demand inbox scanning available separately
 2. **Duplicate Check**: Detector validates uniqueness (message ID + amount/date/merchant similarity)
 3. **Suggestion**: Learning engine suggests category/payment method
 4. **Queue**: Item added to review queue with suggestions
 5. **Notification**: Local push notification shown to user
 6. **Review**: User confirms, edits, or rejects in modal
 7. **Learn**: System learns from user actions (patterns updated, corrections stored)
-8. **Sync**: Merchant patterns sync via GitHub (if enabled)
+8. **Sync**: Merchant patterns sync via the user's configured GitHub repo only when enabled
 
 ### Privacy & Security
 
-- **100% On-Device**: No SMS content leaves the device
-- **Minimal Data**: Only parsed expense data is stored
+- **100% On-Device Parsing**: SMS parsing runs locally on the device
+- **Minimal Data**: Raw SMS content stays in the review flow and is not persisted with saved expenses
 - **Opt-In**: Feature is disabled by default
 - **Permission Control**: User can revoke SMS permission anytime
-- **No Cloud Processing**: No third-party SMS parsing services
+- **No App Backend**: No project-operated backend server or third-party SMS parsing service
 
 ## Internationalization Architecture
 

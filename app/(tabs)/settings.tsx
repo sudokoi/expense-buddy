@@ -755,7 +755,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         {/* SMS IMPORT Section */}
-        <SettingsSection title={t("smsImport.title")}>
+        <SettingsSection title={t("settings.sections.smsImport")}>
           <SMSImportSection />
         </SettingsSection>
 

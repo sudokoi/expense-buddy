@@ -20,8 +20,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paymentInstrumentsMigrationVersion: 0,
   smsImportSettings: {
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   },
   updatedAt: new Date().toISOString(),
   version: 7,
@@ -153,8 +152,7 @@ describe("Settings Store", () => {
         paymentInstrumentsMigrationVersion: 0,
         smsImportSettings: {
           enabled: false,
-          scanOnLaunch: false,
-          reviewRetentionDays: 30,
+          syncLearnings: false,
         },
         updatedAt: new Date().toISOString(),
         version: 7,
@@ -258,8 +256,7 @@ describe("Settings Store", () => {
         paymentInstrumentsMigrationVersion: 0,
         smsImportSettings: {
           enabled: false,
-          scanOnLaunch: false,
-          reviewRetentionDays: 30,
+          syncLearnings: false,
         },
         updatedAt: new Date().toISOString(),
         version: 7,

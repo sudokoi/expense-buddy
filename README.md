@@ -36,12 +36,11 @@ The app has transitioned to Android-only to leverage platform-specific features 
 - **Smart Parsing**: Supports major Indian banks (HDFC, ICICI, SBI, Axis, Kotak), US banks (Chase, Bank of America, Wells Fargo, Citi), EU banks (Revolut, N26, ING), and JP banks (MUFG, SMBC, Mizuho)
 - **Manual Review**: All imported expenses go through a review queue for your confirmation
 - **Review Queue Modal**: Review, edit, confirm, or reject each import with category/payment selectors, confidence indicator, and bulk actions
-- **Import History**: View and filter all auto-imported expenses by status (confirmed, edited, rejected)
+- **Import History**: View and filter all auto-imported expenses by status (confirmed, edited)
 - **Auto-Imported Badge**: Visual indicator on expense list items showing which expenses were imported from SMS
 - **Learning System**: Learns from your corrections to improve future suggestions
 - **Duplicate Prevention**: Automatically prevents duplicate imports using message fingerprinting and amount/date/merchant similarity
-- **Cross-Device Sync**: Merchant patterns sync via GitHub for consistent experience across devices
-- **Inbox Scanner**: On-demand scan of historical SMS messages for missed transactions
+- **Cross-Device Sync**: Optional merchant-pattern sync via your configured GitHub repository
 - **Import Notifications**: Local push notification when a new transaction is detected
 - **New Messages Only**: Only processes SMS received after enabling the feature. Does not scan historical messages to avoid duplicates with manually entered transactions.
 
@@ -345,15 +344,13 @@ expense-buddy/
 ├── services/ # Business logic
 │ ├── sms-import/ # SMS expense import services
 │ │ ├── constants.ts # Storage keys, bank patterns, thresholds
-│ │ ├── settings.ts # SMS import settings management
+│ │ ├── settings.ts # SMS import settings selectors backed by AppSettings
 │ │ ├── permissions.ts # SMS permission handling
-│ │ ├── transaction-parser.ts # SMS parsing engine
+│ │ ├── import-notification.ts # Local push notifications
 │ │ ├── duplicate-detector.ts # Duplicate detection
 │ │ ├── learning-engine.ts # Merchant pattern learning
 │ │ ├── sms-listener.ts # SMS monitoring service
 │ │ ├── merchant-sync.ts # GitHub-based merchant pattern sync
-│ │ ├── inbox-scanner.ts # Historical SMS inbox scanning
-│ │ ├── import-notification.ts # Local push notifications
 │ │ └── ml/ # ML parsing layer
 │ │ ├── ml-parser.ts # ML parser wrapper
 │ │ └── tflite-parser.ts # TFLite Bi-LSTM model integration

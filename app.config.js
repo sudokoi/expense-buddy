@@ -159,7 +159,6 @@ export default {
       permissions: [
         "android.permission.READ_SMS",
         "android.permission.RECEIVE_SMS",
-        "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
         "android.permission.POST_NOTIFICATIONS",
       ],
     },

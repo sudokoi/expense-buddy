@@ -1,45 +1,33 @@
 /**
- * SMS Import Settings Service
- *
- * Manages SMS import settings persistence and retrieval
+ * SMS Import Settings selectors backed by AppSettings.
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { SMSImportSettings } from "../../types/sms-import"
-import { STORAGE_KEYS, DEFAULT_SMS_IMPORT_SETTINGS } from "./constants"
+import { DEFAULT_SETTINGS, loadSettings, saveSettings } from "../settings-manager"
 
 /**
- * Load SMS import settings from storage
+ * Load SMS import settings from app settings storage.
  */
 export async function loadSMSImportSettings(): Promise<SMSImportSettings> {
-  try {
-    const stored = await AsyncStorage.getItem(STORAGE_KEYS.IMPORT_SETTINGS)
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<SMSImportSettings>
-      return {
-        enabled: parsed.enabled ?? DEFAULT_SMS_IMPORT_SETTINGS.enabled,
-        scanOnLaunch: parsed.scanOnLaunch ?? DEFAULT_SMS_IMPORT_SETTINGS.scanOnLaunch,
-        reviewRetentionDays:
-          parsed.reviewRetentionDays ?? DEFAULT_SMS_IMPORT_SETTINGS.reviewRetentionDays,
-      }
-    }
-  } catch (error) {
-    console.error("Failed to load SMS import settings:", error)
+  const settings = await loadSettings()
+  return {
+    ...DEFAULT_SETTINGS.smsImportSettings,
+    ...settings.smsImportSettings,
   }
-
-  return { ...DEFAULT_SMS_IMPORT_SETTINGS }
 }
 
 /**
- * Save SMS import settings to storage
+ * Save SMS import settings through app settings storage.
  */
 export async function saveSMSImportSettings(settings: SMSImportSettings): Promise<void> {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEYS.IMPORT_SETTINGS, JSON.stringify(settings))
-  } catch (error) {
-    console.error("Failed to save SMS import settings:", error)
-    throw error
-  }
+  const current = await loadSettings()
+  await saveSettings({
+    ...current,
+    smsImportSettings: {
+      ...DEFAULT_SETTINGS.smsImportSettings,
+      ...settings,
+    },
+  })
 }
 
 /**
@@ -66,5 +54,5 @@ export async function isSMSImportEnabled(): Promise<boolean> {
  * Reset SMS import settings to defaults
  */
 export async function resetSMSImportSettings(): Promise<void> {
-  await saveSMSImportSettings({ ...DEFAULT_SMS_IMPORT_SETTINGS })
+  await saveSMSImportSettings({ ...DEFAULT_SETTINGS.smsImportSettings })
 }

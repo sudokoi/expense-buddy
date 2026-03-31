@@ -16,6 +16,7 @@ import { PaymentMethodType } from "../types/expense"
 import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
 import { Category } from "../types/category"
+import { SMSImportSettings } from "../types/sms-import"
 
 // Import for helper function only
 import { getActiveExpenses } from "./expense-store"
@@ -169,6 +170,12 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const updateSMSImportSettings = useCallback(
+    (updates: Partial<SMSImportSettings>) =>
+      settingsStore.trigger.updateSMSImportSettings({ updates }),
+    [settingsStore]
+  )
+
   const updateSettings = useCallback(
     (updates: Partial<AppSettings>) => settingsStore.trigger.updateSettings({ updates }),
     [settingsStore]
@@ -220,6 +227,7 @@ export const useSettings = () => {
     setDefaultPaymentMethod,
     setAutoSyncEnabled,
     setAutoSyncTiming,
+    updateSMSImportSettings,
     updateSettings,
     replaceSettings,
     clearSettingsChangeFlag,

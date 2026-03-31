@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** January 28, 2026
+**Last Updated:** March 31, 2026
 
 ## Overview
 
@@ -45,11 +45,14 @@ The app does not integrate with any analytics, advertising, or tracking services
 If you choose to use the optional SMS expense import feature:
 
 - **SMS messages are processed entirely on-device**
-- **No SMS content is sent to any server or cloud service**
-- **Only parsed expense data is stored locally**
-- **Merchant names from SMS are used to build local learning patterns** (can be synced to your GitHub if settings sync is enabled)
+- **No SMS content is sent to any app backend or cloud service**
+- **Raw SMS content stays on your device and is not synced to GitHub**
+- **Only parsed expense data is stored with saved expenses**
+- **Merchant names and your corrections can be used to build local smart-categorisation learnings**
+- **You can optionally sync those learnings to your configured GitHub repository** if both settings sync and the SMS learning sync toggle are enabled
 - **The app requests READ_SMS permission only for detecting bank transaction messages**
 - **You can disable SMS import at any time in Settings**
+- **The SMS parsing model does not retrain on-device**; model improvements arrive through app updates
 
 ## Permissions
 
@@ -58,6 +61,7 @@ The app may request the following permissions:
 - **SMS Access (Android)**: Required only for the optional SMS expense import feature
   - READ_SMS: To read incoming bank transaction SMS messages
   - RECEIVE_SMS: To detect new SMS in real-time
+  - POST_NOTIFICATIONS: To alert you when a new transaction is ready for review
 - **Internet Access**: Required only for the optional GitHub sync feature
 - **Secure Storage**: To safely store your GitHub token on your device
 

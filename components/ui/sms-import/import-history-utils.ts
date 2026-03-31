@@ -5,9 +5,9 @@
 
 import { Expense } from "../../../types/expense"
 
-export type ImportFilter = "all" | "confirmed" | "edited" | "rejected"
+export type ImportFilter = "all" | "confirmed" | "edited"
 
-export const IMPORT_FILTERS: ImportFilter[] = ["all", "confirmed", "edited", "rejected"]
+export const IMPORT_FILTERS: ImportFilter[] = ["all", "confirmed", "edited"]
 
 export function formatImportDate(expense: Expense): string {
   const dateStr = expense.importMetadata?.parsedAt ?? expense.createdAt
@@ -18,15 +18,12 @@ export function formatImportDate(expense: Expense): string {
   }
 }
 
-export function getImportStatus(expense: Expense): "confirmed" | "edited" | "rejected" {
+export function getImportStatus(expense: Expense): "confirmed" | "edited" {
   if (expense.importMetadata?.userCorrected) return "edited"
   return "confirmed"
 }
 
 export function matchesFilter(expense: Expense, filter: ImportFilter): boolean {
   if (filter === "all") return true
-  // Rejected items are not in the expense store (they were never created),
-  // so we only filter confirmed vs edited from persisted expenses
-  if (filter === "rejected") return false
   return getImportStatus(expense) === filter
 }

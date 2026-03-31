@@ -119,9 +119,9 @@ describe("SMS Import Integration", () => {
           paymentMethod: "UPI" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.85,
+          rawMessage: "Test message",
           metadata: {
             source: "sms" as const,
-            rawMessage: "Test message",
             sender: "Unknown",
             messageId: "msg-test",
             confidenceScore: 0.85,
@@ -153,9 +153,9 @@ describe("SMS Import Integration", () => {
           paymentMethod: "Credit Card" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.9,
+          rawMessage: "Test message 2",
           metadata: {
             source: "sms" as const,
-            rawMessage: "Test message 2",
             sender: "Unknown",
             messageId: "msg-test-2",
             confidenceScore: 0.9,
@@ -189,9 +189,9 @@ describe("SMS Import Integration", () => {
           paymentMethod: "Cash" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.8,
+          rawMessage: "Test",
           metadata: {
             source: "sms" as const,
-            rawMessage: "Test",
             sender: "Unknown",
             messageId: "msg-1",
             confidenceScore: 0.8,
@@ -214,9 +214,9 @@ describe("SMS Import Integration", () => {
           paymentMethod: "UPI" as PaymentMethodType,
           transactionType: "debit" as const,
           confidenceScore: 0.85,
+          rawMessage: "Test 2",
           metadata: {
             source: "sms" as const,
-            rawMessage: "Test 2",
             sender: "Unknown",
             messageId: "msg-2",
             confidenceScore: 0.85,

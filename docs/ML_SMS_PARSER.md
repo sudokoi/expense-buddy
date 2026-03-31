@@ -31,7 +31,7 @@ The SMS Import feature uses an **ML-only parsing approach** powered by an on-dev
 
 - **Generalization**: Handles unseen SMS formats from any bank or region
 - **Universal**: Works across languages and financial institutions
-- **Improves over time**: The learning engine refines merchant categorization from user feedback
+- **Learns categorization over time**: The learning engine refines merchant categorization from user feedback
 - **On-device**: All inference runs locally, no data leaves the device
 - **Single path**: One parsing pipeline simplifies debugging and maintenance
 
@@ -80,8 +80,7 @@ if (result.parsed) {
 
 1. **Lazy Loading**: ML model loads on first SMS or app startup
 2. **Caching**: Parsed results cached for 24h
-3. **Batch Processing**: Inbox scanner processes multiple SMS together
-4. **Warmup**: Model runs a dummy inference on init to prime the pipeline
+3. **Warmup**: Model runs a dummy inference on init to prime the pipeline
 
 ## Machine Learning Model
 
@@ -218,7 +217,7 @@ yarn test services/sms-import/ml/message-id.property.test.ts
 ## Privacy & Security
 
 - **On-Device**: All ML inference happens locally
-- **No Cloud**: No SMS data sent to servers
+- **No App Backend**: No SMS data sent to any project-operated backend server
 - **Opt-In**: User consent required for data collection
 - **Anonymized**: Training data hashed and stripped of PII
 
@@ -238,9 +237,9 @@ if (mlParser.isMLAvailable()) {
 ### Low Accuracy
 
 1. Check confidence scores in the review queue
-2. Correct misclassified imports (feeds the learning engine)
+2. Correct misclassified imports (feeds the local learning engine)
 3. Collect more training samples for underrepresented banks
-4. Retrain model with new data
+4. Retrain the model in `ml/training/` and ship the updated TFLite file in an app release
 
 ## Resources
 

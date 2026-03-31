@@ -19,9 +19,6 @@ export interface SMSImportMetadata {
   /** Source type (always "sms" in v1) */
   source: ImportSource
 
-  /** Original raw message content */
-  rawMessage: string
-
   /** SMS sender address (e.g., "AD-HDFCBK") */
   sender: string
 
@@ -74,6 +71,9 @@ export interface ParsedTransaction {
 
   /** Import metadata */
   metadata: SMSImportMetadata
+
+  /** Original raw message content for review UI only */
+  rawMessage: string
 }
 
 /**
@@ -109,11 +109,8 @@ export interface SMSImportSettings {
   /** Master enable/disable switch for SMS import */
   enabled: boolean
 
-  /** Scan inbox on app launch */
-  scanOnLaunch: boolean
-
-  /** Days to keep items in review queue */
-  reviewRetentionDays: number
+  /** Whether smart categorization learnings should sync via GitHub */
+  syncLearnings: boolean
 }
 
 /**

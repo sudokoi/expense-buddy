@@ -75,8 +75,7 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   smsImportSettings: fc.constant({
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   }),
   updatedAt: validIsoDateArbitrary,
   version: fc.integer({ min: 7, max: 10 }),
@@ -97,8 +96,7 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstrumentsMigrationVersion: fc.constant(0),
   smsImportSettings: fc.constant({
     enabled: false,
-    scanOnLaunch: false,
-    reviewRetentionDays: 30,
+    syncLearnings: false,
   }),
   updatedAt: validIsoDateArbitrary,
   version: fc.constant(7),
@@ -361,8 +359,7 @@ describe("Sync Manager Settings Integration Properties", () => {
             paymentInstrumentsMigrationVersion: 0,
             smsImportSettings: {
               enabled: false,
-              scanOnLaunch: false,
-              reviewRetentionDays: 30,
+              syncLearnings: false,
             },
             updatedAt: new Date().toISOString(),
             version: 7,

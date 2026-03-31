@@ -53,8 +53,7 @@ export interface AppSettings {
  */
 const DEFAULT_SMS_IMPORT_SETTINGS: SMSImportSettings = {
   enabled: false,
-  scanOnLaunch: false,
-  reviewRetentionDays: 30,
+  syncLearnings: false,
 }
 
 /**
@@ -120,8 +119,10 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     paymentInstrumentsMigrationVersion:
       migrated.paymentInstrumentsMigrationVersion ??
       DEFAULT_SETTINGS.paymentInstrumentsMigrationVersion,
-    smsImportSettings:
-      (migrated as AppSettings).smsImportSettings ?? DEFAULT_SMS_IMPORT_SETTINGS,
+    smsImportSettings: {
+      ...DEFAULT_SMS_IMPORT_SETTINGS,
+      ...((migrated as AppSettings).smsImportSettings ?? {}),
+    },
     updatedAt: migrated.updatedAt ?? new Date().toISOString(),
     version:
       typeof migrated.version === "number"
@@ -405,6 +406,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     defaultCurrency: settings.defaultCurrency,
     language: settings.language,
     paymentInstruments: sortedInstruments,
+    smsImportSettings: settings.smsImportSettings,
     syncSettings: settings.syncSettings,
     theme: settings.theme,
     version: settings.version,

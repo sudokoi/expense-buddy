@@ -294,7 +294,7 @@ export function ReviewQueueModal({
         {showRawSms && (
           <YStack bg="$backgroundFocus" p="$3" rounded="$2">
             <Text fontSize="$2" color="$color" opacity={0.8} fontFamily="$body">
-              {parsed.metadata.rawMessage}
+              {parsed.rawMessage}
             </Text>
           </YStack>
         )}
@@ -351,23 +351,24 @@ export function ReviewQueueModal({
           />
         </YStack>
 
-        {/* Apply to Future Checkbox */}
-        <XStack items="center" gap="$3" style={layoutStyles.touchTarget}>
-          <Checkbox
-            id="apply-to-future"
-            checked={applyToFuture}
-            onCheckedChange={handleApplyToFutureChange}
-            size="$4"
-            aria-label={t("smsImport.reviewQueue.applyToFuture")}
-          >
-            <Checkbox.Indicator>
-              <Check size={16} />
-            </Checkbox.Indicator>
-          </Checkbox>
-          <Label htmlFor="apply-to-future" color="$color" fontSize="$3">
-            {t("smsImport.reviewQueue.applyToFuture")}
-          </Label>
-        </XStack>
+        {isEditing ? (
+          <XStack items="center" gap="$3" style={layoutStyles.touchTarget}>
+            <Checkbox
+              id="apply-to-future"
+              checked={applyToFuture}
+              onCheckedChange={handleApplyToFutureChange}
+              size="$4"
+              aria-label={t("smsImport.reviewQueue.applyToFuture")}
+            >
+              <Checkbox.Indicator>
+                <Check size={16} />
+              </Checkbox.Indicator>
+            </Checkbox>
+            <Label htmlFor="apply-to-future" color="$color" fontSize="$3">
+              {t("smsImport.reviewQueue.applyToFuture")}
+            </Label>
+          </XStack>
+        ) : null}
 
         <Separator />
 

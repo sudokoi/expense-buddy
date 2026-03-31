@@ -11,6 +11,7 @@ import { ReviewQueueItem } from "../types/sms-import"
 import { Expense, PaymentMethodType } from "../types/expense"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { STORAGE_KEYS } from "../services/sms-import/constants"
+import { RETENTION_LIMITS } from "../services/sms-import/constants"
 import { expenseStore } from "./expense-store"
 import { merchantLearningEngine } from "../services/sms-import/learning-engine"
 import { duplicateDetector } from "../services/sms-import/duplicate-detector"
@@ -92,16 +93,18 @@ async function runEditEffect(
 ): Promise<void> {
   expenseStore.trigger.addExpense({ expense, triggerSync: false })
 
-  const correction = {
-    id: generateId(),
-    originalMerchant: item.parsedTransaction.merchant,
-    correctedCategory: overrides.category,
-    correctedPaymentMethod: overrides.paymentMethod,
-    correctedInstrument: overrides.instrument,
-    timestamp: new Date().toISOString(),
-    applyToFuture: true,
+  if (overrides.applyToFuture) {
+    const correction = {
+      id: generateId(),
+      originalMerchant: item.parsedTransaction.merchant,
+      correctedCategory: overrides.category,
+      correctedPaymentMethod: overrides.paymentMethod,
+      correctedInstrument: overrides.instrument,
+      timestamp: new Date().toISOString(),
+      applyToFuture: true,
+    }
+    await merchantLearningEngine.addCorrection(correction)
   }
-  await merchantLearningEngine.addCorrection(correction)
   await merchantLearningEngine.learnFromExpense(expense, item.parsedTransaction)
   await duplicateDetector.markProcessed(item.parsedTransaction.metadata.messageId)
 }
@@ -219,12 +222,12 @@ export const reviewQueueStore = createStore({
     }),
 
     clearOldItems: (context, _event, enqueue) => {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - RETENTION_LIMITS.REVIEW_QUEUE_DAYS)
 
       const newQueue = context.queue.filter((item) => {
         const itemDate = new Date(item.createdAt)
-        return itemDate > thirtyDaysAgo
+        return itemDate > cutoff
       })
 
       enqueue.effect(async () => {
@@ -395,4 +398,5 @@ export async function initializeReviewQueue(): Promise<void> {
   reviewQueueStore.trigger.setLoading({ isLoading: true })
   const items = await loadReviewQueue()
   reviewQueueStore.trigger.loadQueue({ items })
+  reviewQueueStore.trigger.clearOldItems()
 }

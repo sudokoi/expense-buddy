@@ -2,7 +2,7 @@
  * ImportHistoryView
  *
  * Displays a filterable list of auto-imported expenses.
- * Supports filtering by status: All, Confirmed, Edited, Rejected.
+ * Supports filtering by status: All, Confirmed, Edited.
  */
 
 import { useState, useMemo, useCallback } from "react"

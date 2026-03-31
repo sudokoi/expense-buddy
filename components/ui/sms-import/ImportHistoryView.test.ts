@@ -20,7 +20,6 @@ const dateArb = fc
 const importMetadataArb = (userCorrected: boolean): fc.Arbitrary<SMSImportMetadata> =>
   fc.record({
     source: fc.constant("sms" as const),
-    rawMessage: fc.string({ minLength: 5, maxLength: 80 }),
     sender: fc.stringMatching(/^[A-Z]{2}-[A-Z]{4,8}$/),
     messageId: fc.stringMatching(/^[a-z0-9]{5,15}$/),
     confidenceScore: fc.double({ min: 0, max: 1, noNaN: true }),
@@ -120,18 +119,6 @@ describe("ImportHistoryView Filtering Logic", () => {
             (e) => e.importMetadata?.userCorrected === true
           )
           expect(filtered).toHaveLength(expectedEdited.length)
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("filter 'rejected' SHALL return empty since rejected items are never persisted as expenses", () => {
-      fc.assert(
-        fc.property(mixedExpenseListArb, (expenses) => {
-          const autoImported = expenses.filter((e) => e.source === "auto-imported")
-          const filtered = autoImported.filter((e) => matchesFilter(e, "rejected"))
-
-          expect(filtered).toHaveLength(0)
         }),
         { numRuns: 100 }
       )

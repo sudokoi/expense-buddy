@@ -70,6 +70,13 @@ const GITHUB_TOKEN_KEY = "github_pat"
 const GITHUB_REPO_KEY = "github_repo"
 const GITHUB_BRANCH_KEY = "github_branch"
 
+function shouldSyncSMSLearnings(
+  settings: AppSettings | undefined,
+  syncSettingsEnabled: boolean
+): boolean {
+  return Boolean(syncSettingsEnabled && settings?.smsImportSettings.syncLearnings)
+}
+
 /**
  * Save GitHub sync configuration securely
  */
@@ -1641,11 +1648,12 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
-      // Sync merchant patterns even when no expense changes
-      try {
-        await syncMerchantPatterns(config)
-      } catch (e) {
-        console.warn("Merchant pattern sync failed:", e)
+      if (shouldSyncSMSLearnings(settings, Boolean(syncSettingsEnabled))) {
+        try {
+          await syncMerchantPatterns(config)
+        } catch (e) {
+          console.warn("Merchant pattern sync failed:", e)
+        }
       }
 
       return {
@@ -1759,11 +1767,13 @@ export async function gitStyleSync(
     // =========================================================================
     // Merchant pattern sync: runs after expense sync completes
     // =========================================================================
-    try {
-      await syncMerchantPatterns(config)
-    } catch (e) {
-      // Merchant sync failure should not fail the overall sync
-      console.warn("Merchant pattern sync failed:", e)
+    if (shouldSyncSMSLearnings(settings, Boolean(syncSettingsEnabled))) {
+      try {
+        await syncMerchantPatterns(config)
+      } catch (e) {
+        // Merchant sync failure should not fail the overall sync
+        console.warn("Merchant pattern sync failed:", e)
+      }
     }
 
     // =========================================================================

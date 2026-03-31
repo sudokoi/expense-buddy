@@ -115,12 +115,12 @@ export class MLTransactionParser {
       confidenceScore: mlResult.confidence,
       metadata: {
         source,
-        rawMessage,
         sender: this.extractSender(rawMessage),
         messageId,
         confidenceScore: mlResult.confidence,
         parsedAt: new Date().toISOString(),
       },
+      rawMessage,
     }
   }
 
