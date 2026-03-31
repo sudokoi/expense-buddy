@@ -45,7 +45,7 @@ This is a **major release** that introduces automatic SMS expense import functio
 - `duplicate-detector.ts` - Fingerprinting and similarity-based deduplication
 - `learning-engine.ts` - Merchant pattern learning with fuzzy matching and LRU eviction
 - `sms-listener.ts` - SMS monitoring via `@maniac-tech/react-native-expo-read-sms`
-- `settings.ts` - SMS import settings management
+- `settings.ts` - SMS import settings selectors backed by AppSettings
 - `permissions.ts` - Android SMS permission handling
 - `ml/ml-parser.ts` - ML parser wrapper with SHA-256 message ID generation
 - `ml/tflite-parser.ts` - TensorFlow Lite Bi-LSTM model with reverse vocab lookup

@@ -13,7 +13,7 @@
     "upgrade:tamagui": "yarn up '*tamagui*'@latest '@tamagui/*'@latest",
     "upgrade:tamagui:canary": "yarn up '*tamagui*'@canary '@tamagui/*'@canary",
     "check:tamagui": "tamagui check",
-    "start": "expo start -c --android",
+    "start": "expo start -c",
     "android": "expo run:android",
     "test": "jest",
     "test:watch": "jest --watchAll",
