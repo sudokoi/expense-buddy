@@ -20,6 +20,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 ### 📊 Expense Management
 
 - **Quick Entry**: Add expenses with amount, category, date, and notes
+- **Flexible Amount Entry**: Enter plain numbers or math expressions like `120+30`; switch to numeric-only keypad entry from **Settings → General** if you prefer
 - **Custom Categories**: Create, edit, and reorder expense categories with custom colors and icons
 - **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking, Amazon Pay, etc.)
 - **Saved Payment Instruments**: Save your commonly used cards/UPI IDs with nicknames
@@ -133,6 +134,9 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 1. Tap the **+** tab
 2. Enter the amount
+
+- You can type expressions like `120+30` when math entry is enabled in **Settings → General**
+
 3. Select a category
 4. Add a note (optional)
 5. Choose your payment method
