@@ -747,7 +747,14 @@ export default function HistoryScreen() {
         setShowDatePicker(false)
       }
     }
-  }, [editingExpense, state.activeExpenses, editExpense, addNotification, t])
+  }, [
+    editingExpense,
+    state.activeExpenses,
+    editExpense,
+    addNotification,
+    settings.enableMathExpressions,
+    t,
+  ])
 
   // Filter sheet handlers
   const handleOpenFilterSheet = useCallback(() => {
