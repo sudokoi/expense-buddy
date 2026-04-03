@@ -17,7 +17,9 @@ const layoutStyles = {
   collapsibleHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
   } as ViewStyle,
 }
 
@@ -60,10 +62,15 @@ export function LocalizationSection({
         accessibilityState={{ expanded }}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
-        <XStack flex={1} style={layoutStyles.collapsibleHeader}>
-          <Text color="$color" opacity={0.6} fontSize="$3">
-            {summary}
-          </Text>
+        <XStack flex={1} bg="$backgroundHover" style={layoutStyles.collapsibleHeader}>
+          <YStack flex={1} gap="$0.5">
+            <Text fontSize="$2" color="$color" opacity={0.5} textTransform="uppercase">
+              {t("settings.sections.localization")}
+            </Text>
+            <Text color="$color" opacity={0.72} fontSize="$3">
+              {summary}
+            </Text>
+          </YStack>
           {expanded ? (
             <ChevronUp size={20} color="$color" opacity={0.6} />
           ) : (
@@ -73,15 +80,21 @@ export function LocalizationSection({
       </Pressable>
 
       {expanded && (
-        <YStack gap="$4" mt="$2">
-          <YStack gap="$2">
+        <YStack
+          gap="$3"
+          mt="$1"
+          bg="$backgroundHover"
+          p="$3"
+          style={{ borderRadius: 16 }}
+        >
+          <YStack gap="$1.5">
             <Label color="$color" opacity={0.8} fontSize="$2">
               {t("settings.localization.language")}
             </Label>
             <LanguageSelector value={languagePreference} onChange={onLanguageChange} />
           </YStack>
 
-          <YStack gap="$2">
+          <YStack gap="$1.5">
             <Label color="$color" opacity={0.8} fontSize="$2">
               {t("settings.localization.currency")}
             </Label>

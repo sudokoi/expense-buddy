@@ -86,6 +86,7 @@ const appSettingsArb = fc.record({
     >,
     { nil: undefined }
   ),
+  enableMathExpressions: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: fc.constantFrom("on_launch", "on_change") as fc.Arbitrary<
     "on_launch" | "on_change"
@@ -95,7 +96,7 @@ const appSettingsArb = fc.record({
   paymentInstruments: fc.constant<PaymentInstrument[]>([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: isoDateArb,
-  version: fc.constant(6),
+  version: fc.constant(7),
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
 })

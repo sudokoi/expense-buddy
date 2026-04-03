@@ -57,6 +57,31 @@ describe("Expense Validation", () => {
   })
 
   describe("Valid data", () => {
+    it("should accept valid math expressions when math entry is enabled", () => {
+      const result = validateExpenseForm({
+        amount: "100+25",
+        category: "Food",
+      })
+
+      expect(result.success).toBe(true)
+    })
+
+    it("should reject math expressions when math entry is disabled", () => {
+      const result = validateExpenseForm(
+        {
+          amount: "100+25",
+          category: "Food",
+        },
+        undefined,
+        { allowMathExpressions: false }
+      )
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.errors.amount).toBe("Amount must be a valid number")
+      }
+    })
+
     it("should return success for valid expense data", () => {
       const result = validateExpenseForm({
         amount: "25.50",

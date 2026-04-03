@@ -16,10 +16,10 @@ import { ViewStyle, TextStyle, Keyboard } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
-  parseExpression,
-  hasOperators,
-  formatAmount,
-} from "../../utils/expression-parser"
+  getAmountInputProps,
+  getAmountPreview,
+  parseAmountInput,
+} from "../../utils/amount-input"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { validateExpenseForm } from "../../utils/expense-validation"
 import { CategoryCard } from "../../components/ui/CategoryCard"
@@ -115,6 +115,10 @@ export default function AddExpenseScreen() {
     useState<InstrumentEntryKind>("none")
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
+  const amountInputProps = useMemo(
+    () => getAmountInputProps(settings.enableMathExpressions),
+    [settings.enableMathExpressions]
+  )
 
   // Validation errors state for field-level error messages
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -141,15 +145,10 @@ export default function AddExpenseScreen() {
 
   // Compute preview when expression contains operators
   const expressionPreview = useMemo(() => {
-    if (!amount.trim() || !hasOperators(amount)) {
-      return null
-    }
-    const result = parseExpression(amount)
-    if (result.success && result.value !== undefined) {
-      return formatAmount(result.value)
-    }
-    return null
-  }, [amount])
+    return getAmountPreview(amount, {
+      allowMathExpressions: settings.enableMathExpressions,
+    })
+  }, [amount, settings.enableMathExpressions])
 
   const handlePaymentMethodSelect = (type: PaymentMethodType) => {
     // Mark that user has interacted with payment method selection
@@ -220,7 +219,8 @@ export default function AddExpenseScreen() {
         paymentMethodType: effectivePaymentMethod,
         paymentMethodId,
       },
-      t
+      t,
+      { allowMathExpressions: settings.enableMathExpressions }
     )
 
     if (!validation.success) {
@@ -232,7 +232,9 @@ export default function AddExpenseScreen() {
     setErrors({})
 
     // Parse the expression for the final amount value
-    const result = parseExpression(amount)
+    const result = parseAmountInput(amount, {
+      allowMathExpressions: settings.enableMathExpressions,
+    })
 
     if (!result.success) {
       setErrors({ amount: result.error || t("add.expressionError") })
@@ -296,8 +298,13 @@ export default function AddExpenseScreen() {
               <Input
                 flex={1}
                 size="$5"
-                placeholder={t("add.amountPlaceholder")}
-                keyboardType="default"
+                placeholder={
+                  settings.enableMathExpressions
+                    ? t("add.amountPlaceholder")
+                    : t("add.amountPlaceholderNumeric")
+                }
+                keyboardType={amountInputProps.keyboardType}
+                inputMode={amountInputProps.inputMode}
                 value={amount}
                 onChangeText={(text) => {
                   setAmount(text)

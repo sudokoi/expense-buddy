@@ -4,7 +4,6 @@ import { ViewStyle } from "react-native"
 import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
-import { SettingsSection } from "./SettingsSection"
 import { useTranslation } from "react-i18next"
 
 // Layout styles
@@ -123,7 +122,10 @@ export const CategorySection = memo(function CategorySection({
   )
 
   return (
-    <SettingsSection title={t("settings.sections.categories")}>
+    <YStack gap="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color">
+        {t("settings.sections.categories")}
+      </Text>
       <Text color="$color" opacity={0.7} fontSize="$3">
         {t("settings.categories.description")}
       </Text>
@@ -235,7 +237,7 @@ export const CategorySection = memo(function CategorySection({
           </Accordion.Content>
         </Accordion.Item>
       </Accordion>
-    </SettingsSection>
+    </YStack>
   )
 })
 

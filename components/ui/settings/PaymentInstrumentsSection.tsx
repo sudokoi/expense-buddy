@@ -22,8 +22,9 @@ const layoutStyles = {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
   } as ViewStyle,
   accordionTriggerInner: {
     flexDirection: "row",
@@ -128,12 +129,16 @@ export function PaymentInstrumentsSection() {
       <YStack gap="$3">
         <XStack style={layoutStyles.row}>
           <YStack flex={1} gap="$1">
-            <Label>{t("instruments.title")}</Label>
-            <Text color="$color" opacity={0.7} fontSize="$3">
-              {t("instruments.description")}
+            <Text fontSize="$4" fontWeight="600">
+              {t("instruments.title")}
+            </Text>
+            <Text color="$color" opacity={0.64} fontSize="$3">
+              {active.length > 0
+                ? t("instruments.manage") + ` (${active.length})`
+                : t("instruments.description")}
             </Text>
           </YStack>
-          <Button size="$4" themeInverse icon={Plus} onPress={handleAdd}>
+          <Button size="$3" icon={Plus} onPress={handleAdd}>
             {t("instruments.add")}
           </Button>
         </XStack>
@@ -154,6 +159,8 @@ export function PaymentInstrumentsSection() {
             <Accordion.Item value="payment-instruments">
               <Accordion.Trigger
                 bg="$backgroundHover"
+                borderWidth={1}
+                borderColor="$borderColor"
                 style={layoutStyles.accordionTrigger}
               >
                 {({ open }: { open: boolean }) => (
@@ -174,18 +181,35 @@ export function PaymentInstrumentsSection() {
               </Accordion.Trigger>
 
               <Accordion.Content style={layoutStyles.accordionContent}>
-                <YStack gap="$4">
+                <YStack
+                  gap="$4"
+                  bg="$backgroundHover"
+                  p="$3"
+                  style={{ borderRadius: 16 }}
+                >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
                     if (list.length === 0) return null
                     return (
-                      <YStack key={method} gap="$2">
-                        <Text fontWeight="700" color="$color" opacity={0.8}>
+                      <YStack key={method} gap="$2.5">
+                        <Text
+                          fontWeight="700"
+                          color="$color"
+                          opacity={0.55}
+                          fontSize="$2"
+                        >
                           {method}
                         </Text>
                         {list.map((inst) => (
-                          <XStack key={inst.id} gap="$2" style={layoutStyles.row}>
-                            <Text flex={1} numberOfLines={1}>
+                          <XStack
+                            key={inst.id}
+                            gap="$2"
+                            bg="$background"
+                            px="$3"
+                            py="$2.5"
+                            style={[layoutStyles.row, { borderRadius: 16 }]}
+                          >
+                            <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
                             <Button

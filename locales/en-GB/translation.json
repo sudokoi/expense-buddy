@@ -98,6 +98,7 @@
         "datePlaceholder": "Select date",
         "amount": "Amount",
         "amountPlaceholder": "Enter amount or expression (e.g., 100+50)",
+        "amountPlaceholderNumeric": "Enter amount",
         "amountError": "Please enter a valid amount",
         "expressionError": "Please enter a valid expression",
         "preview": "= {{amount}}",
@@ -133,6 +134,7 @@
     "title": "Add New Expense",
     "amount": "Amount",
     "amountPlaceholder": "0.00 or 100+50",
+    "amountPlaceholderNumeric": "0.00",
     "amountError": "Please enter a valid amount",
     "expressionError": "Please enter a valid expression",
     "preview": "= {{amount}}",
@@ -216,15 +218,21 @@
   },
   "settings": {
     "sections": {
+      "payment": "PAYMENT",
       "defaultPayment": "DEFAULT PAYMENT METHOD",
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
       "localization": "LOCALIZATION",
+      "general": "GENERAL",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
     },
+    "payment": {
+      "description": "Manage your default payment method, saved instruments, and spending categories."
+    },
     "localization": {
+      "description": "Choose how the app reads and formats your data.",
       "language": "Language",
       "currency": "Currency"
     },
@@ -339,6 +347,11 @@
         "light": "Light",
         "dark": "Dark"
       }
+    },
+    "general": {
+      "description": "Adjust display and amount-entry preferences.",
+      "mathEntry": "Allow mathematical amount entry",
+      "mathEntryHelp": "Use expressions like 120+45 in amount fields when enabled."
     },
     "about": {
       "currentVersion": "Current Version",

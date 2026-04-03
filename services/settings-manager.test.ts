@@ -91,6 +91,7 @@ const appSettingsArb = fc.record({
   defaultPaymentMethod: optionalPaymentMethodTypeArb,
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
+  enableMathExpressions: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -100,7 +101,7 @@ const appSettingsArb = fc.record({
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(6), // Always use latest version to avoid migration in tests
+  version: fc.constant(7), // Always use latest version to avoid migration in tests
 })
 
 describe("Settings Manager Properties", () => {
@@ -183,6 +184,7 @@ describe("Settings Manager Properties", () => {
             loaded.theme === settings.theme &&
             loaded.syncSettings === settings.syncSettings &&
             loaded.defaultPaymentMethod === settings.defaultPaymentMethod &&
+            loaded.enableMathExpressions === settings.enableMathExpressions &&
             loaded.autoSyncEnabled === settings.autoSyncEnabled &&
             loaded.autoSyncTiming === settings.autoSyncTiming &&
             loaded.paymentInstrumentsMigrationVersion ===
@@ -210,6 +212,7 @@ describe("Settings Manager Properties", () => {
             parsed.theme === settings.theme &&
             parsed.syncSettings === settings.syncSettings &&
             parsed.defaultPaymentMethod === settings.defaultPaymentMethod &&
+            parsed.enableMathExpressions === settings.enableMathExpressions &&
             parsed.autoSyncEnabled === settings.autoSyncEnabled &&
             parsed.autoSyncTiming === settings.autoSyncTiming &&
             parsed.paymentInstrumentsMigrationVersion ===
@@ -375,12 +378,13 @@ describe("Settings Manager Properties", () => {
       expect(loaded.theme).toBe("system")
       expect(loaded.syncSettings).toBe(false)
       expect(loaded.defaultPaymentMethod).toBeUndefined()
+      expect(loaded.enableMathExpressions).toBe(true)
       expect(loaded.autoSyncEnabled).toBe(false)
       expect(loaded.autoSyncTiming).toBe("on_launch")
       expect(loaded.paymentInstruments).toEqual([])
       expect(loaded.paymentInstrumentsMigrationVersion).toBe(0)
       expect(loaded.language).toBe("system")
-      expect(loaded.version).toBe(6)
+      expect(loaded.version).toBe(7)
     })
   })
 
@@ -457,6 +461,18 @@ describe("Settings Manager Properties", () => {
         }),
         { numRuns: 100 }
       )
+    })
+  })
+
+  describe("Math entry setting", () => {
+    it("should compute different hashes when enableMathExpressions differs", () => {
+      const settings1: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: true }
+      const settings2: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: false }
+
+      const hash1 = computeSettingsHash(settings1)
+      const hash2 = computeSettingsHash(settings2)
+
+      expect(hash1).not.toBe(hash2)
     })
   })
 
@@ -540,8 +556,9 @@ describe("Settings Manager Properties", () => {
             loaded.paymentInstrumentsMigrationVersion === 0 &&
             // Language should default to "system"
             loaded.language === "system" &&
-            // Version should be upgraded to 6 (v2 -> v3 -> v4 -> v5 -> v6)
-            loaded.version === 6
+            loaded.enableMathExpressions === true &&
+            // Version should be upgraded to 7 (v2 -> v3 -> v4 -> v5 -> v6 -> v7)
+            loaded.version === 7
           )
         }),
         { numRuns: 100 }

@@ -4,6 +4,8 @@ import { ReactNode } from "react"
 interface SettingsSectionProps {
   /** Section title displayed as uppercase header */
   title: string
+  /** Optional short description below the title */
+  description?: string
   /** Content to render inside the section */
   children: ReactNode
   /** Optional gap between children, defaults to $3 */
@@ -25,20 +27,38 @@ interface SettingsSectionProps {
  * </SettingsSection>
  * ```
  */
-export function SettingsSection({ title, children, gap = "$3" }: SettingsSectionProps) {
+export function SettingsSection({
+  title,
+  description,
+  children,
+  gap = "$3",
+}: SettingsSectionProps) {
   return (
-    <Card bordered padding="$4" borderRadius="$4">
+    <Card
+      bordered
+      padding="$4"
+      borderRadius="$6"
+      backgroundColor="$color1"
+      borderColor="$borderColor"
+    >
       <YStack gap={gap as "$3"}>
-        <Text
-          fontSize="$2"
-          fontWeight="600"
-          color="$color"
-          opacity={0.6}
-          textTransform="uppercase"
-          letterSpacing={1}
-        >
-          {title}
-        </Text>
+        <YStack gap="$1.5" pb="$2" borderBottomWidth={1} borderBottomColor="$borderColor">
+          <Text
+            fontSize="$2"
+            fontWeight="700"
+            color="$color"
+            opacity={0.52}
+            textTransform="uppercase"
+            letterSpacing={1}
+          >
+            {title}
+          </Text>
+          {description ? (
+            <Text fontSize="$3" color="$color" opacity={0.72} lineHeight={20}>
+              {description}
+            </Text>
+          ) : null}
+        </YStack>
         {children}
       </YStack>
     </Card>

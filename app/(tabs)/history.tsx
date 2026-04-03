@@ -38,10 +38,10 @@ import type {
 import type { Category } from "../../types/category"
 import { syncDownMore } from "../../services/sync-manager"
 import {
-  parseExpression,
-  hasOperators,
-  formatAmount,
-} from "../../utils/expression-parser"
+  getAmountInputProps,
+  getAmountPreview,
+  parseAmountInput,
+} from "../../utils/amount-input"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
@@ -245,6 +245,10 @@ export default function HistoryScreen() {
     useState<InstrumentEntryKind>("none")
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
+  const amountInputProps = useMemo(
+    () => getAmountInputProps(settings.enableMathExpressions),
+    [settings.enableMathExpressions]
+  )
 
   // Handle back button to close dialogs instead of navigating
   React.useEffect(() => {
@@ -270,15 +274,10 @@ export default function HistoryScreen() {
 
   // Compute preview when expression contains operators
   const expressionPreview = useMemo(() => {
-    if (!editingExpense?.amount.trim() || !hasOperators(editingExpense.amount)) {
-      return null
-    }
-    const result = parseExpression(editingExpense.amount)
-    if (result.success && result.value !== undefined) {
-      return formatAmount(result.value)
-    }
-    return null
-  }, [editingExpense?.amount])
+    return getAmountPreview(editingExpense?.amount ?? "", {
+      allowMathExpressions: settings.enableMathExpressions,
+    })
+  }, [editingExpense?.amount, settings.enableMathExpressions])
 
   // Get current payment method config for identifier input in edit dialog
   const selectedPaymentConfig = useMemo(() => {
@@ -716,7 +715,9 @@ export default function HistoryScreen() {
           return
         }
 
-        const result = parseExpression(editingExpense.amount)
+        const result = parseAmountInput(editingExpense.amount, {
+          allowMathExpressions: settings.enableMathExpressions,
+        })
 
         if (!result.success) {
           addNotification(
@@ -1067,8 +1068,13 @@ export default function HistoryScreen() {
                           prev ? { ...prev, amount: text } : null
                         )
                       }
-                      placeholder={t("history.editDialog.fields.amountPlaceholder")}
-                      keyboardType="default"
+                      placeholder={
+                        settings.enableMathExpressions
+                          ? t("history.editDialog.fields.amountPlaceholder")
+                          : t("history.editDialog.fields.amountPlaceholderNumeric")
+                      }
+                      keyboardType={amountInputProps.keyboardType}
+                      inputMode={amountInputProps.inputMode}
                     />
                   </XStack>
                   {expressionPreview && (

@@ -98,6 +98,7 @@
         "datePlaceholder": "दिनांक चुनें",
         "amount": "राशि",
         "amountPlaceholder": "राशि या अभिव्यक्ति दर्ज करें (उदा. 100+50)",
+        "amountPlaceholderNumeric": "राशि दर्ज करें",
         "amountError": "कृपया एक मान्य राशि दर्ज करें",
         "expressionError": "कृपया एक मान्य अभिव्यक्ति दर्ज करें",
         "preview": "= {{amount}}",
@@ -133,6 +134,7 @@
     "title": "नया व्यय जोड़ें",
     "amount": "राशि",
     "amountPlaceholder": "0.00 या 100+50",
+    "amountPlaceholderNumeric": "0.00",
     "amountError": "कृपया एक मान्य राशि दर्ज करें",
     "expressionError": "कृपया एक मान्य अभिव्यक्ति दर्ज करें",
     "preview": "= {{amount}}",
@@ -216,15 +218,21 @@
   },
   "settings": {
     "sections": {
+      "payment": "भुगतान",
       "defaultPayment": "डिफ़ॉल्ट भुगतान विधि",
       "paymentInstruments": "भुगतान साधन",
       "categories": "श्रेणियाँ",
       "github": "गिटहब सिंक",
       "localization": "स्थानीयकरण",
+      "general": "सामान्य",
       "appearance": "दिखावट",
       "about": "ऐप जानकारी"
     },
+    "payment": {
+      "description": "डिफ़ॉल्ट भुगतान विधि, सहेजे गए साधन और खर्च श्रेणियाँ एक साथ प्रबंधित करें।"
+    },
     "localization": {
+      "description": "भाषा और मुद्रा जैसी प्राथमिकताएँ चुनें।",
       "language": "भाषा",
       "currency": "मुद्रा"
     },
@@ -339,6 +347,11 @@
         "light": "लाइट",
         "dark": "डार्क"
       }
+    },
+    "general": {
+      "description": "दिखावट और राशि दर्ज करने की प्राथमिकताओं को समायोजित करें।",
+      "mathEntry": "गणितीय राशि प्रविष्टि की अनुमति दें",
+      "mathEntryHelp": "सक्षम होने पर राशि फ़ील्ड में 120+45 जैसे भाव दर्ज करें।"
     },
     "about": {
       "currentVersion": "वर्तमान संस्करण",

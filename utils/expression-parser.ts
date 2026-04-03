@@ -10,6 +10,10 @@ export interface ParseResult {
   error?: string
 }
 
+export interface ExpressionParseOptions {
+  allowZero?: boolean
+}
+
 type Token = { type: "number"; value: number } | { type: "operator"; value: string }
 
 /**
@@ -141,7 +145,10 @@ function evaluate(tokens: Token[]): number {
  * @param expression - The expression string to evaluate (e.g., "211+192")
  * @returns ParseResult with evaluated value or error message
  */
-export function parseExpression(expression: string): ParseResult {
+export function parseExpression(
+  expression: string,
+  { allowZero = false }: ExpressionParseOptions = {}
+): ParseResult {
   // 1. Trim and validate input
   const trimmed = expression.trim()
   if (!trimmed) {
@@ -173,8 +180,13 @@ export function parseExpression(expression: string): ParseResult {
   }
 
   // 7. Check for zero or negative result
-  if (result <= 0) {
-    return { success: false, error: "Amount must be greater than zero" }
+  if (allowZero ? result < 0 : result <= 0) {
+    return {
+      success: false,
+      error: allowZero
+        ? "Amount must be zero or greater"
+        : "Amount must be greater than zero",
+    }
   }
 
   return { success: true, value: result }
