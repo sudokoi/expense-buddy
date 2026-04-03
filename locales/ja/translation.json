@@ -98,6 +98,7 @@
         "datePlaceholder": "日付を選択",
         "amount": "金額",
         "amountPlaceholder": "金額または式を入力 (例: 100+50)",
+        "amountPlaceholderNumeric": "金額を入力",
         "amountError": "有効な金額を入力してください",
         "expressionError": "有効な式を入力してください",
         "preview": "= {{amount}}",
@@ -133,6 +134,7 @@
     "title": "新しい支出を追加",
     "amount": "金額",
     "amountPlaceholder": "0 または 100+50",
+    "amountPlaceholderNumeric": "0.00",
     "amountError": "有効な金額を入力してください",
     "expressionError": "有効な式を入力してください",
     "preview": "= {{amount}}",
@@ -216,15 +218,21 @@
   },
   "settings": {
     "sections": {
+      "payment": "支払い",
       "defaultPayment": "デフォルトの支払方法",
       "paymentInstruments": "支払手段",
       "categories": "カテゴリー",
       "github": "GitHub 同期",
       "localization": "ローカリゼーション",
+      "general": "一般",
       "appearance": "外観",
       "about": "アプリ情報"
     },
+    "payment": {
+      "description": "デフォルトの支払方法、保存済みの手段、カテゴリーをまとめて管理します。"
+    },
     "localization": {
+      "description": "言語や通貨などの表示方法を選びます。",
       "language": "言語",
       "currency": "通貨"
     },
@@ -339,6 +347,11 @@
         "light": "ライト",
         "dark": "ダーク"
       }
+    },
+    "general": {
+      "description": "表示設定と金額入力の設定を調整します。",
+      "mathEntry": "数式で金額を入力できるようにする",
+      "mathEntryHelp": "有効にすると、金額欄で 120+45 のような式を使えます。"
     },
     "about": {
       "currentVersion": "現在のバージョン",

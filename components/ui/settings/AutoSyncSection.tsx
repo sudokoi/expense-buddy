@@ -32,6 +32,9 @@ const layoutStyles = {
   autoSyncRow: {
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
   } as ViewStyle,
   radioRow: {
     alignItems: "center",
@@ -71,12 +74,12 @@ export function AutoSyncSection({
       borderTopColor="$borderColor"
       style={{ paddingTop: 16 }}
     >
-      <Text fontSize="$4" fontWeight="600">
+      <Text fontSize="$3" fontWeight="700" color="$color" opacity={0.8}>
         {t("settings.autoSync.title")}
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
-      <XStack style={layoutStyles.autoSyncRow}>
+      <XStack bg="$backgroundHover" style={layoutStyles.autoSyncRow}>
         <YStack flex={1}>
           <Label>{t("settings.autoSync.enable")}</Label>
           <Text
@@ -99,7 +102,7 @@ export function AutoSyncSection({
       </XStack>
 
       {/* Also sync settings toggle */}
-      <XStack style={layoutStyles.autoSyncRow}>
+      <XStack bg="$backgroundHover" style={layoutStyles.autoSyncRow}>
         <YStack flex={1}>
           <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text
@@ -123,7 +126,12 @@ export function AutoSyncSection({
 
       {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
-        <YStack gap="$2" style={{ marginTop: 8 }}>
+        <YStack
+          gap="$2"
+          style={{ marginTop: 4, borderRadius: 16 }}
+          bg="$backgroundHover"
+          p="$3"
+        >
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
             <XStack gap="$2" style={layoutStyles.radioRow}>

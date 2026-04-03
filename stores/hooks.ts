@@ -157,6 +157,12 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setEnableMathExpressions = useCallback(
+    (enableMathExpressions: boolean) =>
+      settingsStore.trigger.setEnableMathExpressions({ enableMathExpressions }),
+    [settingsStore]
+  )
+
   const setAutoSyncEnabled = useCallback(
     (autoSyncEnabled: boolean) =>
       settingsStore.trigger.setAutoSyncEnabled({ autoSyncEnabled }),
@@ -212,12 +218,14 @@ export const useSettings = () => {
     effectiveTheme,
     hasUnsyncedChanges,
     defaultPaymentMethod: settings.defaultPaymentMethod,
+    enableMathExpressions: settings.enableMathExpressions,
     autoSyncEnabled: settings.autoSyncEnabled,
     autoSyncTiming: settings.autoSyncTiming,
     syncConfig,
     setTheme,
     setSyncSettings,
     setDefaultPaymentMethod,
+    setEnableMathExpressions,
     setAutoSyncEnabled,
     setAutoSyncTiming,
     updateSettings,

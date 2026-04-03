@@ -41,6 +41,7 @@ describe("hydrateSettingsFromJson (properties)", () => {
         // required fields
         expect(hydrated).toHaveProperty("theme")
         expect(hydrated).toHaveProperty("syncSettings")
+        expect(hydrated).toHaveProperty("enableMathExpressions")
         expect(hydrated).toHaveProperty("autoSyncEnabled")
         expect(hydrated).toHaveProperty("autoSyncTiming")
         expect(hydrated).toHaveProperty("categories")
@@ -51,6 +52,7 @@ describe("hydrateSettingsFromJson (properties)", () => {
         expect(Array.isArray(hydrated.categories)).toBe(true)
         expect(Array.isArray(hydrated.paymentInstruments)).toBe(true)
         expect(typeof hydrated.syncSettings).toBe("boolean")
+        expect(typeof hydrated.enableMathExpressions).toBe("boolean")
         expect(typeof hydrated.autoSyncEnabled).toBe("boolean")
 
         // version is always bumped to at least current

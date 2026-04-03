@@ -30,6 +30,7 @@ import { getDefaultCurrencyForLanguage } from "../../utils/currency"
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
   syncSettings: true,
+  enableMathExpressions: true,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -37,7 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 6,
+  version: 7,
   defaultCurrency: "INR",
   language: "system",
 }
@@ -177,6 +178,7 @@ const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_chang
 const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  enableMathExpressions: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -186,7 +188,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 6, max: 10 }),
+  version: fc.integer({ min: 7, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),

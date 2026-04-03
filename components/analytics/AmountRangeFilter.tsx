@@ -2,6 +2,7 @@ import { useState } from "react"
 import { XStack, Input, Text, YStack } from "tamagui"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSettings } from "../../stores/hooks"
+import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
 
 interface AmountRangeFilterProps {
   minAmount: number | null
@@ -18,13 +19,26 @@ export function AmountRangeFilter({
 }: AmountRangeFilterProps) {
   const { settings } = useSettings()
   const symbol = getCurrencySymbol(settings.defaultCurrency)
+  const amountInputProps = getAmountInputProps(settings.enableMathExpressions)
 
   const [min, setMin] = useState(minAmount?.toString() ?? "")
   const [max, setMax] = useState(maxAmount?.toString() ?? "")
 
   const handleBlur = () => {
-    const minNum = min ? parseFloat(min) : null
-    const maxNum = max ? parseFloat(max) : null
+    const minResult = min
+      ? parseAmountInput(min, {
+          allowMathExpressions: settings.enableMathExpressions,
+          allowZero: true,
+        })
+      : null
+    const maxResult = max
+      ? parseAmountInput(max, {
+          allowMathExpressions: settings.enableMathExpressions,
+          allowZero: true,
+        })
+      : null
+    const minNum = minResult?.success ? (minResult.value ?? null) : null
+    const maxNum = maxResult?.success ? (maxResult.value ?? null) : null
     onChange(minNum, maxNum)
   }
 
@@ -37,7 +51,8 @@ export function AmountRangeFilter({
           onChangeText={setMin}
           onBlur={handleBlur}
           placeholder={`${symbol} Min`}
-          keyboardType="numeric"
+          keyboardType={amountInputProps.keyboardType}
+          inputMode={amountInputProps.inputMode}
         />
         <Text>to</Text>
         <Input
@@ -46,7 +61,8 @@ export function AmountRangeFilter({
           onChangeText={setMax}
           onBlur={handleBlur}
           placeholder={`${symbol} Max`}
-          keyboardType="numeric"
+          keyboardType={amountInputProps.keyboardType}
+          inputMode={amountInputProps.inputMode}
         />
       </XStack>
       {error && (

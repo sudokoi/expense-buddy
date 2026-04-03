@@ -61,6 +61,7 @@ export function createMockSettings(overrides?: Partial<AppSettings>): AppSetting
     language: "en-IN",
     defaultCurrency: "USD",
     syncSettings: false,
+    enableMathExpressions: true,
     autoSyncEnabled: false,
     autoSyncTiming: "on_change",
     categories: [],
@@ -68,7 +69,7 @@ export function createMockSettings(overrides?: Partial<AppSettings>): AppSetting
     paymentInstruments: [],
     paymentInstrumentsMigrationVersion: 0,
     updatedAt: now,
-    version: 1,
+    version: 7,
     ...overrides,
   }
 }

@@ -145,6 +145,8 @@ export const settingsStore = createStore({
 
     setDefaultCurrency: createSettingUpdater("defaultCurrency"),
 
+    setEnableMathExpressions: createSettingUpdater("enableMathExpressions"),
+
     setLanguage: (context, event: { language: string }, enqueue) => {
       const newSettings = {
         ...context.settings,

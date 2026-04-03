@@ -36,6 +36,7 @@ export interface AppSettings {
   defaultPaymentMethod?: PaymentMethodType // Optional default payment method
   defaultCurrency: string // Default currency code (e.g., "INR")
   language: string // App language (e.g., "en-US", "system")
+  enableMathExpressions: boolean // Whether amount inputs accept arithmetic expressions
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
@@ -55,6 +56,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultPaymentMethod: undefined,
   defaultCurrency: getSystemCurrency(),
   language: "system",
+  enableMathExpressions: true,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -62,7 +64,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 6,
+  version: 7,
 }
 
 /**
@@ -93,6 +95,10 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     migrated = { ...migrated, language: migrated.language ?? "system", version: 6 }
   }
 
+  if ((typeof migrated.version === "number" ? migrated.version : version) < 7) {
+    migrated = migrateV6ToV7(migrated as AppSettings)
+  }
+
   return {
     theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
     syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
@@ -100,6 +106,8 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     defaultCurrency:
       (migrated as AppSettings).defaultCurrency ?? DEFAULT_SETTINGS.defaultCurrency,
     language: (migrated as AppSettings).language ?? DEFAULT_SETTINGS.language,
+    enableMathExpressions:
+      migrated.enableMathExpressions ?? DEFAULT_SETTINGS.enableMathExpressions,
     autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
     autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
     categories: migrated.categories ?? DEFAULT_CATEGORIES,
@@ -218,6 +226,18 @@ async function migrateV5ToV6(settings: AppSettings): Promise<AppSettings> {
 }
 
 /**
+ * Migrate settings from version 6 to version 7
+ * Adds math-expression toggle for amount entry
+ */
+function migrateV6ToV7(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    enableMathExpressions: settings.enableMathExpressions ?? true,
+    version: 7,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -249,6 +269,12 @@ export async function loadSettings(): Promise<AppSettings> {
       // Migrate from v5 to v6 (add language)
       if (parsed.version < 6) {
         parsed = await migrateV5ToV6(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Migrate from v6 to v7 (add math entry toggle)
+      if (parsed.version < 7) {
+        parsed = migrateV6ToV7(parsed)
         await saveSettings(parsed)
       }
 
@@ -371,6 +397,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     categoriesVersion: settings.categoriesVersion,
     defaultPaymentMethod: settings.defaultPaymentMethod,
     defaultCurrency: settings.defaultCurrency,
+    enableMathExpressions: settings.enableMathExpressions,
     language: settings.language,
     paymentInstruments: sortedInstruments,
     syncSettings: settings.syncSettings,

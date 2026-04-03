@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react"
-import { YStack, XStack, Text, Button, Label } from "tamagui"
+import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { PaymentMethodType } from "../../types/expense"
@@ -40,6 +40,7 @@ import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentI
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
+import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -51,10 +52,19 @@ const layoutStyles = {
   syncButtonsContainer: {
     marginTop: 8,
   } as ViewStyle,
+  groupedContent: {
+    paddingTop: 14,
+  } as ViewStyle,
   collapsibleHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  } as ViewStyle,
+  switchRow: {
+    alignItems: "center",
+    justifyContent: "space-between",
   } as ViewStyle,
 }
 
@@ -94,6 +104,7 @@ export default function SettingsScreen() {
     setDefaultPaymentMethod,
     setDefaultCurrency,
     setLanguage,
+    setEnableMathExpressions,
     setAutoSyncEnabled,
     setAutoSyncTiming,
     replaceSettings,
@@ -632,8 +643,11 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
-        {/* DEFAULT PAYMENT METHOD Section */}
-        <SettingsSection title={t("settings.sections.defaultPayment")}>
+        <SettingsSection
+          title={t("settings.sections.payment")}
+          description={t("settings.payment.description")}
+          gap="$4"
+        >
           <YStack gap="$2">
             <Pressable
               onPress={() => setDefaultPaymentMethodExpanded((prev) => !prev)}
@@ -641,10 +655,14 @@ export default function SettingsScreen() {
               accessibilityState={{ expanded: defaultPaymentMethodExpanded }}
               style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
             >
-              <XStack flex={1} style={layoutStyles.collapsibleHeader}>
+              <XStack
+                flex={1}
+                bg="$backgroundHover"
+                style={layoutStyles.collapsibleHeader}
+              >
                 <YStack gap="$1" flex={1} pointerEvents="none">
                   <Label color="$color" opacity={0.8}>
-                    {t("settings.defaultPayment.label")}
+                    {t("settings.sections.defaultPayment")}
                   </Label>
                   <Text color="$color" opacity={0.6} fontSize="$3">
                     {defaultPaymentMethodLabel}
@@ -659,7 +677,7 @@ export default function SettingsScreen() {
             </Pressable>
 
             {defaultPaymentMethodExpanded && (
-              <YStack gap="$2">
+              <YStack gap="$2" bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
                 <Text color="$color" opacity={0.7} fontSize="$3">
                   {t("settings.defaultPayment.description")}
                 </Text>
@@ -670,22 +688,30 @@ export default function SettingsScreen() {
               </YStack>
             )}
           </YStack>
-        </SettingsSection>
 
-        {/* PAYMENT INSTRUMENTS Section */}
-        <SettingsSection title={t("settings.sections.paymentInstruments")}>
-          <PaymentInstrumentsSection />
-        </SettingsSection>
+          <YStack
+            style={layoutStyles.groupedContent}
+            borderTopWidth={1}
+            borderTopColor="$borderColor"
+          >
+            <PaymentInstrumentsSection />
+          </YStack>
 
-        {/* CATEGORIES Section */}
-        <CategorySection
-          categories={categories}
-          onAdd={handleAddCategory}
-          onEdit={handleEditCategory}
-          onDelete={handleCategoryDelete}
-          onReorder={handleCategoryReorder}
-          getExpenseCount={getExpenseCountForCategory}
-        />
+          <YStack
+            style={layoutStyles.groupedContent}
+            borderTopWidth={1}
+            borderTopColor="$borderColor"
+          >
+            <CategorySection
+              categories={categories}
+              onAdd={handleAddCategory}
+              onEdit={handleEditCategory}
+              onDelete={handleCategoryDelete}
+              onReorder={handleCategoryReorder}
+              getExpenseCount={getExpenseCountForCategory}
+            />
+          </YStack>
+        </SettingsSection>
 
         {/* Category Form Modal */}
         <CategoryFormModal
@@ -696,14 +722,60 @@ export default function SettingsScreen() {
           onSave={handleCategorySave}
         />
 
-        {/* GITHUB SYNC Section */}
-        <SettingsSection title={t("settings.sections.github")}>
-          <Text color="$color" opacity={0.7} fontSize="$3">
-            {Platform.OS === "web"
-              ? t("settings.github.descriptionWeb")
-              : t("settings.github.descriptionNative")}
-          </Text>
+        <SettingsSection
+          title={t("settings.sections.general")}
+          description={t("settings.general.description")}
+          gap="$4"
+        >
+          <YStack gap="$2">
+            <Label>{t("settings.appearance.theme")}</Label>
+            <YStack bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
+              <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+            </YStack>
+          </YStack>
 
+          <XStack
+            bg="$backgroundHover"
+            borderTopWidth={1}
+            borderTopColor="$borderColor"
+            px="$3"
+            py="$3"
+            style={[
+              layoutStyles.groupedContent,
+              layoutStyles.switchRow,
+              { borderRadius: 16 },
+            ]}
+          >
+            <YStack flex={1} gap="$1">
+              <Label>{t("settings.general.mathEntry")}</Label>
+              <Text color="$color" opacity={0.6} fontSize="$2">
+                {t("settings.general.mathEntryHelp")}
+              </Text>
+            </YStack>
+            <Switch
+              size="$4"
+              checked={settings.enableMathExpressions}
+              onCheckedChange={setEnableMathExpressions}
+              backgroundColor={
+                settings.enableMathExpressions
+                  ? SEMANTIC_COLORS.success
+                  : ("$gray8" as any)
+              }
+            >
+              <Switch.Thumb />
+            </Switch>
+          </XStack>
+        </SettingsSection>
+
+        {/* GITHUB SYNC Section */}
+        <SettingsSection
+          title={t("settings.sections.github")}
+          description={
+            Platform.OS === "web"
+              ? t("settings.github.descriptionWeb")
+              : t("settings.github.descriptionNative")
+          }
+        >
           {/* GitHub Configuration */}
           <GitHubConfigSection
             syncConfig={syncConfig}
@@ -736,21 +808,16 @@ export default function SettingsScreen() {
           )}
         </SettingsSection>
 
-        <SettingsSection title={t("settings.sections.localization")}>
+        <SettingsSection
+          title={t("settings.sections.localization")}
+          description={t("settings.localization.description")}
+        >
           <LocalizationSection
             languagePreference={settings.language}
             onLanguageChange={handleLanguageChange}
             defaultCurrency={settings.defaultCurrency}
             onCurrencyChange={handleCurrencyChange}
           />
-        </SettingsSection>
-
-        {/* APPEARANCE Section */}
-        <SettingsSection title={t("settings.sections.appearance")}>
-          <YStack gap="$2">
-            <Label>{t("settings.appearance.theme")}</Label>
-            <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
-          </YStack>
         </SettingsSection>
 
         {/* APP INFORMATION Section */}
