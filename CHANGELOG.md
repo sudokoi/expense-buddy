@@ -1,5 +1,21 @@
 # expense-buddy
 
+## 2.5.0
+
+### Minor Changes
+
+- [#47](https://github.com/sudokoi/expense-buddy/pull/47) [`1f05bf4`](https://github.com/sudokoi/expense-buddy/commit/1f05bf46d4453de9a070eb9da5f2a58230598913) Thanks [@sudokoi](https://github.com/sudokoi)! - Optimize sync engine with Git Trees API and SHA-based differential downloads
+  - Replace O(N) fetch phase with a single Git Trees API call to retrieve the full repository tree and blob SHAs
+  - Download only files whose SHA has changed since the last sync, skipping unchanged files entirely
+  - Reuse tree data in the push phase to eliminate a redundant `listFiles()` API call
+  - Fix sync notification count to reflect actual merge results (added + updated from remote) instead of raw download count
+  - Add `remote-sha-cache.ts` for persisting blob SHAs between syncs (AsyncStorage, local-only)
+  - Add `getRepositoryTree()` to the GitHub API client for tree-based fetching
+  - Graceful fallback to Contents API when the Trees API is unavailable (network errors, truncated trees, 404/500)
+  - Cold start (empty SHA cache) performs a full download, identical to pre-optimization behavior
+  - No changes to remote repository format, merge logic, or push-side differential sync
+  - Comprehensive property-based and integration tests covering all 6 correctness properties
+
 ## 2.4.0
 
 ### Minor Changes
