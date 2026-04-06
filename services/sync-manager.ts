@@ -13,6 +13,7 @@ import {
   downloadSettingsFile,
   getLatestCommitTimestamp,
   GitHubApiError,
+  getRepositoryTree,
 } from "./github-sync"
 import {
   AppSettings,
@@ -34,6 +35,7 @@ import {
   FileHashMap,
 } from "./hash-storage"
 import { loadDirtyDays } from "./expense-dirty-days"
+import { loadRemoteSHACache, saveRemoteSHACache } from "./remote-sha-cache"
 import { format } from "date-fns"
 import {
   mergeExpenses,
@@ -928,7 +930,9 @@ async function getLastSyncTime(): Promise<string | null> {
  * Unlike syncDown which only fetches recent days, this fetches all expense files
  * to ensure complete data for merge operations.
  */
-export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
+export async function fetchAllRemoteExpenses(
+  localExpenses?: Expense[]
+): Promise<FetchAllRemoteResult> {
   try {
     const config = await loadSyncConfig()
     if (!config) {
@@ -938,111 +942,259 @@ export async function fetchAllRemoteExpenses(): Promise<FetchAllRemoteResult> {
       }
     }
 
-    // List all files in the repository
-    let files: { name: string; path: string; sha: string }[]
-    try {
-      files = await listFiles(config.token, config.repo, config.branch)
-    } catch (listError) {
-      if (
-        listError instanceof GitHubApiError &&
-        (listError.status === 401 || listError.status === 403)
-      ) {
-        return {
-          success: false,
-          error: listError.message,
-          authStatus: listError.status,
-          shouldSignOut: listError.shouldSignOut,
-        }
-      }
+    // Try tree-based fetch first (single API call for file listing + SHAs)
+    const treeResult = await getRepositoryTree(config.token, config.repo, config.branch)
 
-      // Catch network errors during fetch
-      const errorMessage = String(listError)
-      if (
-        errorMessage.includes("Failed to fetch") ||
-        errorMessage.includes("Network request failed") ||
-        errorMessage.includes("TypeError")
-      ) {
-        return {
-          success: false,
-          error: "No internet connection. Cannot fetch remote expenses.",
-        }
-      }
+    // If tree fetch failed with auth error, propagate immediately (no fallback)
+    if (!treeResult.success && treeResult.authStatus) {
       return {
         success: false,
-        error: `Failed to list remote files: ${errorMessage}`,
+        error: treeResult.error,
+        authStatus: treeResult.authStatus,
+        shouldSignOut: treeResult.shouldSignOut,
       }
     }
 
-    // Filter for expense files (expenses-YYYY-MM-DD.csv)
-    const expenseFiles = files.filter((file) => getDayKeyFromFilename(file.name) !== null)
-
-    if (expenseFiles.length === 0) {
-      // No expense files found - return empty array (not an error)
-      return {
-        success: true,
-        expenses: [],
-        filesDownloaded: 0,
-      }
+    // If tree fetch succeeded, use SHA-based differential download
+    if (treeResult.success) {
+      return await fetchWithTree(config, treeResult.entries, localExpenses)
     }
 
-    // Download and parse ALL expense files (not just recent window)
-    const allExpenses: Expense[] = []
-    let downloadedFiles = 0
-    const downloadErrors: string[] = []
-
-    for (const file of expenseFiles) {
-      try {
-        const fileData = await downloadCSV(
-          config.token,
-          config.repo,
-          config.branch,
-          file.path
-        )
-
-        if (fileData) {
-          const expenses = importFromCSV(fileData.content)
-          allExpenses.push(...expenses)
-          downloadedFiles++
-        }
-      } catch (fileError) {
-        if (
-          fileError instanceof GitHubApiError &&
-          (fileError.status === 401 || fileError.status === 403)
-        ) {
-          return {
-            success: false,
-            error: fileError.message,
-            authStatus: fileError.status,
-            shouldSignOut: fileError.shouldSignOut,
-          }
-        }
-
-        // Log but continue with other files - one bad file shouldn't fail entire fetch
-        console.warn(`Failed to download ${file.path}:`, fileError)
-        downloadErrors.push(file.path)
-      }
-    }
-
-    // If we couldn't download ANY files, that's an error
-    if (downloadedFiles === 0 && expenseFiles.length > 0) {
-      return {
-        success: false,
-        error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
-      }
-    }
-
-    return {
-      success: true,
-      expenses: allExpenses,
-      filesDownloaded: downloadedFiles,
-    }
+    // Tree fetch failed with non-auth error — fall back to Contents API
+    return await fetchWithContentsApi(config)
   } catch (error) {
-    // Catch network errors during fetch
     console.warn("[SyncManager] fetchAllRemoteExpenses failed:", error)
     return {
       success: false,
       error: getUserFriendlyMessage(error),
     }
+  }
+}
+
+/**
+ * Classify remote tree entries as changed or unchanged based on SHA cache.
+ * A file is "unchanged" only if the cache has a matching SHA AND local expenses
+ * exist for that day. Otherwise it's "changed" and needs downloading.
+ */
+export function classifyTreeEntries(
+  expenseEntries: { path: string; sha: string }[],
+  shaCache: { [filename: string]: string },
+  localDayKeys: Set<string>
+): {
+  changed: { path: string; sha: string }[]
+  unchanged: { path: string; sha: string; dayKey: string }[]
+} {
+  const changed: { path: string; sha: string }[] = []
+  const unchanged: { path: string; sha: string; dayKey: string }[] = []
+
+  for (const entry of expenseEntries) {
+    const dayKey = getDayKeyFromFilename(entry.path)!
+    if (shaCache[entry.path] === entry.sha && localDayKeys.has(dayKey)) {
+      unchanged.push({ ...entry, dayKey })
+    } else {
+      changed.push(entry)
+    }
+  }
+
+  return { changed, unchanged }
+}
+
+/**
+ * Fetch expenses using Git Trees API + SHA-based differential download.
+ * Only downloads files whose blob SHA differs from the cached SHA.
+ * Unchanged files reuse expenses from the local store.
+ */
+async function fetchWithTree(
+  config: SyncConfig,
+  entries: { path: string; sha: string }[],
+  localExpenses?: Expense[]
+): Promise<FetchAllRemoteResult> {
+  // Filter to expense files only
+  const expenseEntries = entries.filter(
+    (entry) => getDayKeyFromFilename(entry.path) !== null
+  )
+
+  if (expenseEntries.length === 0) {
+    return {
+      success: true,
+      expenses: [],
+      filesDownloaded: 0,
+      treeEntries: entries.map((e) => ({ path: e.path, sha: e.sha })),
+    }
+  }
+
+  // Load SHA cache to determine which files changed
+  const shaCache = await loadRemoteSHACache()
+
+  // Group local expenses by day for reuse on unchanged files
+  const localByDay = localExpenses
+    ? groupExpensesByDay(localExpenses)
+    : new Map<string, Expense[]>()
+
+  // Classify files as changed or unchanged
+  const { changed: changedFiles, unchanged: unchangedFiles } = classifyTreeEntries(
+    expenseEntries,
+    shaCache,
+    new Set(localByDay.keys())
+  )
+
+  // Collect all expenses: reuse local for unchanged, download for changed
+  const allExpenses: Expense[] = []
+  let downloadedFiles = 0
+  const downloadErrors: string[] = []
+
+  // Reuse local expenses for unchanged files
+  for (const file of unchangedFiles) {
+    const dayExpenses = localByDay.get(file.dayKey)
+    if (dayExpenses) {
+      allExpenses.push(...dayExpenses)
+    }
+  }
+
+  // Download changed/new files
+  for (const file of changedFiles) {
+    try {
+      const fileData = await downloadCSV(
+        config.token,
+        config.repo,
+        config.branch,
+        file.path
+      )
+
+      if (fileData) {
+        const expenses = importFromCSV(fileData.content)
+        allExpenses.push(...expenses)
+        downloadedFiles++
+      }
+    } catch (fileError) {
+      if (
+        fileError instanceof GitHubApiError &&
+        (fileError.status === 401 || fileError.status === 403)
+      ) {
+        return {
+          success: false,
+          error: fileError.message,
+          authStatus: fileError.status,
+          shouldSignOut: fileError.shouldSignOut,
+        }
+      }
+
+      console.warn(`Failed to download ${file.path}:`, fileError)
+      downloadErrors.push(file.path)
+    }
+  }
+
+  // If we had changed files but couldn't download ANY of them, that's an error
+  if (downloadedFiles === 0 && changedFiles.length > 0) {
+    return {
+      success: false,
+      error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
+    }
+  }
+
+  return {
+    success: true,
+    expenses: allExpenses,
+    filesDownloaded: downloadedFiles,
+    treeEntries: entries.map((e) => ({ path: e.path, sha: e.sha })),
+  }
+}
+
+/**
+ * Fallback: fetch expenses using the Contents API (listFiles + downloadCSV).
+ * Used when the Git Trees API is unavailable.
+ */
+async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteResult> {
+  let files: { name: string; path: string; sha: string }[]
+  try {
+    files = await listFiles(config.token, config.repo, config.branch)
+  } catch (listError) {
+    if (
+      listError instanceof GitHubApiError &&
+      (listError.status === 401 || listError.status === 403)
+    ) {
+      return {
+        success: false,
+        error: listError.message,
+        authStatus: listError.status,
+        shouldSignOut: listError.shouldSignOut,
+      }
+    }
+
+    const errorMessage = String(listError)
+    if (
+      errorMessage.includes("Failed to fetch") ||
+      errorMessage.includes("Network request failed") ||
+      errorMessage.includes("TypeError")
+    ) {
+      return {
+        success: false,
+        error: "No internet connection. Cannot fetch remote expenses.",
+      }
+    }
+    return {
+      success: false,
+      error: `Failed to list remote files: ${errorMessage}`,
+    }
+  }
+
+  const expenseFiles = files.filter((file) => getDayKeyFromFilename(file.name) !== null)
+
+  if (expenseFiles.length === 0) {
+    return {
+      success: true,
+      expenses: [],
+      filesDownloaded: 0,
+    }
+  }
+
+  const allExpenses: Expense[] = []
+  let downloadedFiles = 0
+  const downloadErrors: string[] = []
+
+  for (const file of expenseFiles) {
+    try {
+      const fileData = await downloadCSV(
+        config.token,
+        config.repo,
+        config.branch,
+        file.path
+      )
+
+      if (fileData) {
+        const expenses = importFromCSV(fileData.content)
+        allExpenses.push(...expenses)
+        downloadedFiles++
+      }
+    } catch (fileError) {
+      if (
+        fileError instanceof GitHubApiError &&
+        (fileError.status === 401 || fileError.status === 403)
+      ) {
+        return {
+          success: false,
+          error: fileError.message,
+          authStatus: fileError.status,
+          shouldSignOut: fileError.shouldSignOut,
+        }
+      }
+
+      console.warn(`Failed to download ${file.path}:`, fileError)
+      downloadErrors.push(file.path)
+    }
+  }
+
+  if (downloadedFiles === 0 && expenseFiles.length > 0) {
+    return {
+      success: false,
+      error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
+    }
+  }
+
+  return {
+    success: true,
+    expenses: allExpenses,
+    filesDownloaded: downloadedFiles,
   }
 }
 
@@ -1366,12 +1518,11 @@ export async function gitStyleSync(
     }
 
     // =========================================================================
-    // Step 1: Fetch all remote expenses (Requirement 1.1, 1.2)
+    // Step 1: Fetch all remote expenses (optimized with tree + SHA comparison)
     // =========================================================================
-    const fetchResult = await fetchAllRemoteExpenses()
+    const fetchResult = await fetchAllRemoteExpenses(localExpenses)
 
     if (!fetchResult.success) {
-      // Requirement 1.3: If fetch fails, abort sync
       return {
         success: false,
         message: "Failed to fetch remote expenses",
@@ -1384,7 +1535,7 @@ export async function gitStyleSync(
     }
 
     const remoteExpenses = fetchResult.expenses || []
-    const remoteFilesUpdated = fetchResult.filesDownloaded ?? 0
+    const treeEntries = fetchResult.treeEntries
 
     const dirtyDaysResult = await loadDirtyDays()
     const useDirtyDays = dirtyDaysResult.isTrusted
@@ -1452,14 +1603,27 @@ export async function gitStyleSync(
     // Load stored hashes for differential sync
     const storedHashes = await loadFileHashes()
 
-    // Get list of existing files on GitHub
-    const existingFiles = await listFiles(config.token, config.repo, config.branch)
-    const existingExpenseFiles = existingFiles
-      .filter((file) => getDayKeyFromFilename(file.name) !== null)
-      .map((file) => ({
-        ...file,
-        dayKey: getDayKeyFromFilename(file.name)!,
-      }))
+    // Get list of existing files on GitHub (reuse tree data if available)
+    let existingExpenseFiles: { path: string; name: string; dayKey: string }[]
+    if (treeEntries) {
+      // Reuse tree entries from fetch phase to avoid a redundant listFiles() call
+      existingExpenseFiles = treeEntries
+        .filter((entry) => getDayKeyFromFilename(entry.path) !== null)
+        .map((entry) => ({
+          path: entry.path,
+          name: entry.path,
+          dayKey: getDayKeyFromFilename(entry.path)!,
+        }))
+    } else {
+      // Fallback: tree data not available (e.g., Contents API fallback path)
+      const existingFiles = await listFiles(config.token, config.repo, config.branch)
+      existingExpenseFiles = existingFiles
+        .filter((file) => getDayKeyFromFilename(file.name) !== null)
+        .map((file) => ({
+          ...file,
+          dayKey: getDayKeyFromFilename(file.name)!,
+        }))
+    }
 
     // Group merged expenses by day
     const groupedByDay = groupExpensesByDay(mergedExpenses)
@@ -1648,7 +1812,8 @@ export async function gitStyleSync(
         filesSkipped: skippedFiles,
         filesDeleted: 0,
         localFilesUpdated: 0,
-        remoteFilesUpdated,
+        remoteFilesUpdated:
+          mergeResult.addedFromRemote.length + mergeResult.updatedFromRemote.length,
         settingsSynced: false,
         settingsSkipped: syncSettingsEnabled && settings ? true : undefined,
         mergedCategories,
@@ -1726,6 +1891,17 @@ export async function gitStyleSync(
 
     await saveFileHashes(updatedHashes)
 
+    // Update remote SHA cache with tree entries from this sync
+    if (treeEntries) {
+      const shaCache: { [filename: string]: string } = {}
+      for (const entry of treeEntries) {
+        if (getDayKeyFromFilename(entry.path) !== null) {
+          shaCache[entry.path] = entry.sha
+        }
+      }
+      await saveRemoteSHACache(shaCache)
+    }
+
     // Update settings hash if settings were synced
     if (shouldSyncSettings && newSettingsHash) {
       await saveSettingsHash(newSettingsHash)
@@ -1771,7 +1947,8 @@ export async function gitStyleSync(
       filesSkipped: skippedFiles,
       filesDeleted: filesToDelete.length,
       localFilesUpdated,
-      remoteFilesUpdated,
+      remoteFilesUpdated:
+        mergeResult.addedFromRemote.length + mergeResult.updatedFromRemote.length,
       commitTimestamp,
       settingsSynced: shouldSyncSettings,
       settingsSkipped: syncSettingsEnabled && settings && !shouldSyncSettings,
