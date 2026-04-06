@@ -60,6 +60,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
   - Auto-sync on app launch or after every change
   - Manual sync with upload/download controls
   - Incremental loading (last 7 days by default)
+- **Optimized Fetch**: Uses the Git Trees API to retrieve the full repository tree in a single request, then compares blob SHAs against a local cache to download only files that actually changed
 - **Dirty-Day Sync**: Tracks which days changed and only re-hashes/uploads those daily files
 - **Differential Sync**: Only uploads changed files using content hashing for efficiency
 - **Batched Commits**: All file changes (uploads and deletions) are combined into a single atomic commit
@@ -305,10 +306,11 @@ expense-buddy/
 │ ├── sync-machine.ts # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
 │ ├── sync-manager.ts # Sync orchestration
 │ ├── merge-engine.ts # Git-style merge logic (ID-based merge, timestamp resolution)
-│ ├── github-sync.ts # GitHub API client (includes batch commit via Git Data API)
+│ ├── github-sync.ts # GitHub API client (includes batch commit via Git Data API + Trees API)
 │ ├── csv-handler.ts # CSV import/export
 │ ├── daily-file-manager.ts
-│ ├── hash-storage.ts # Content hashing for differential sync
+│ ├── hash-storage.ts # Content hashing for differential sync (push-side)
+│ ├── remote-sha-cache.ts # Blob SHA cache for differential fetch (fetch-side)
 │ ├── change-tracker.ts # Record-level change tracking
 │ ├── expense-storage.ts # Incremental local expense storage + migration
 │ ├── payment-instruments.ts # Instrument utilities + validation

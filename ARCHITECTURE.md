@@ -165,10 +165,11 @@ const { settings, setTheme } = useSettings()
 
 Expense Buddy uses layered persistence to support offline-first behavior and sync:
 
-- **AsyncStorage** stores expenses, settings, filters, and dirty-day tracking.
+- **AsyncStorage** stores expenses, settings, filters, dirty-day tracking, and the remote SHA cache.
 - **Secure storage** stores GitHub tokens and repo configuration.
 - **Daily CSV files** are generated during sync and stored remotely in GitHub.
-- **Hash storage** tracks file content hashes to skip unchanged uploads.
+- **Hash storage** tracks file content hashes to skip unchanged uploads (push-side).
+- **Remote SHA cache** tracks git blob SHAs to skip unchanged downloads (fetch-side).
 
 ## GitHub Sync Architecture
 
@@ -192,10 +193,19 @@ flowchart TD
     UpdateHashes --> ClearDirty[Clear Dirty Days]
     ClearDirty --> Done
 
-    SyncDown --> Fetch[Fetch Remote Files]
-    Fetch --> Merge[Merge Expenses]
+    SyncDown --> FetchTree[Fetch Repository Tree via Git Trees API]
+    FetchTree --> LoadSHACache[Load Remote SHA Cache]
+    LoadSHACache --> CompareSHAs{Compare blob SHAs}
+    CompareSHAs -->|Changed| Download[Download changed files via Contents API]
+    CompareSHAs -->|Unchanged| Reuse[Reuse local expenses]
+    Download --> Combine[Combine all expenses]
+    Reuse --> Combine
+    FetchTree -.->|Fallback on failure| FallbackFetch[listFiles + downloadCSV]
+    FallbackFetch --> Combine
+    Combine --> Merge[Merge Expenses]
     Merge --> Replace[Replace Local Snapshot]
-    Replace --> ClearDirty
+    Replace --> UpdateSHACache[Update SHA Cache]
+    UpdateSHACache --> ClearDirty
 
     Conflict --> Resolve[User Resolution]
     Resolve --> SyncUp
@@ -488,12 +498,35 @@ History screen uses FlashList with:
 
 ### 5. GitHub Sync Optimization
 
-Sync uploads use dirty-day tracking to avoid scanning every daily CSV on each sync:
+Sync uses a two-tier differential strategy to minimize API calls on both fetch and push:
+
+**Fetch-side (Git Trees API + SHA cache):**
+
+- A single `GET /git/trees/{sha}?recursive=1` call retrieves the full repository tree with blob SHAs.
+- Blob SHAs are compared against a local `RemoteSHACache` (AsyncStorage key `"remote_sha_cache"`).
+- Only files whose SHA differs from the cache (or are missing from it) are downloaded via the Contents API.
+- Unchanged files reuse locally stored expenses, avoiding any download.
+- Tree data is passed to the push phase, eliminating a redundant `listFiles()` call.
+- If the Trees API fails for a non-auth reason, the fetch falls back to the existing Contents API pattern.
+- On cold start (empty cache), all files are downloaded — identical to pre-optimization behavior.
+
+**Push-side (dirty-day tracking + content hashing):**
 
 - Expense mutations mark the affected day key as dirty (and track deleted days).
 - Dirty-day state persists in AsyncStorage, so restarts do not force full scans.
 - SyncUp only hashes/uploads dirty day files, and only deletes files confirmed in the current run.
 - Dirty-day state is cleared after successful or no-op syncs.
+
+**Notification count fix:**
+
+- `remoteFilesUpdated` is derived from `mergeResult.addedFromRemote.length + mergeResult.updatedFromRemote.length` instead of the raw download count.
+
+| Scenario                    | Before (API calls)         | After (API calls)          |
+| --------------------------- | -------------------------- | -------------------------- |
+| 100 files, 0 changed        | 101 (list + 100 downloads) | 1 (tree only)              |
+| 100 files, 3 changed        | 101                        | 4 (tree + 3 downloads)     |
+| 100 files, all changed      | 101                        | 101 (tree + 100 downloads) |
+| Push phase (redundant list) | 1 extra listFiles          | 0 (reuse tree data)        |
 
 ## Testing Strategy
 
