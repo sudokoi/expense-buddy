@@ -402,7 +402,8 @@
       "unavailable": "GitHub is temporarily unavailable. Try again later.",
       "general": "GitHub sync failed ({{status}})",
       "timestamp": "Could not extract timestamp from commit",
-      "blob": "Failed to create blob for {{path}}: {{error}}"
+      "blob": "Failed to create blob for {{path}}: {{error}}",
+      "truncatedTree": "Repository tree is too large to fetch completely"
     },
     "manager": {
       "notConfigured": "Sync not configured",
