@@ -1804,6 +1804,18 @@ export async function gitStyleSync(
         console.warn("Failed to update sync time:", e)
       }
 
+      // Persist SHA cache even on no-op push — tree SHAs are still valid
+      // since nothing was uploaded to change them
+      if (treeEntries) {
+        const shaCache: { [filename: string]: string } = {}
+        for (const entry of treeEntries) {
+          if (getDayKeyFromFilename(entry.path) !== null) {
+            shaCache[entry.path] = entry.sha
+          }
+        }
+        await saveRemoteSHACache(shaCache)
+      }
+
       return {
         success: true,
         message: buildSyncMessage(mergeResult, 0, skippedFiles, 0),
@@ -1891,11 +1903,21 @@ export async function gitStyleSync(
 
     await saveFileHashes(updatedHashes)
 
-    // Update remote SHA cache with tree entries from this sync
+    // Update remote SHA cache with tree entries from this sync.
+    // Uploaded files have new blob SHAs after batchCommit, so we exclude them
+    // from the cache — they'll be re-downloaded next sync (small set).
     if (treeEntries) {
+      const uploadedPaths = new Set(
+        filesToUpload.filter((f) => f.path !== "settings.json").map((f) => f.path)
+      )
+      const deletedPaths = new Set(filesToDelete.map((f) => f.path))
       const shaCache: { [filename: string]: string } = {}
       for (const entry of treeEntries) {
-        if (getDayKeyFromFilename(entry.path) !== null) {
+        if (
+          getDayKeyFromFilename(entry.path) !== null &&
+          !uploadedPaths.has(entry.path) &&
+          !deletedPaths.has(entry.path)
+        ) {
           shaCache[entry.path] = entry.sha
         }
       }

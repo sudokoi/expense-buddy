@@ -17,7 +17,13 @@ export async function loadRemoteSHACache(): Promise<RemoteSHACache> {
   try {
     const stored = await AsyncStorage.getItem(REMOTE_SHA_CACHE_KEY)
     if (stored) {
-      return JSON.parse(stored)
+      const parsed = JSON.parse(stored)
+      // Validate shape: must be a plain object with string values
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        console.warn("Remote SHA cache has invalid shape, resetting")
+        return {}
+      }
+      return parsed
     }
   } catch (error) {
     console.warn("Failed to load remote SHA cache:", error)

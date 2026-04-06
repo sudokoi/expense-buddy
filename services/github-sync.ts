@@ -493,7 +493,7 @@ export async function getRepositoryTree(
 
     // Truncated trees indicate >100k entries — fall back
     if (data.truncated) {
-      return { success: false, error: "Repository tree is too large (truncated)" }
+      return { success: false, error: i18next.t("githubSync.errors.truncatedTree") }
     }
 
     // Filter to blob entries only

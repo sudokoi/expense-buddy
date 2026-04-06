@@ -83,8 +83,10 @@ describe("Property 1: Tree Parsing Extracts All Blob Entries", () => {
     await fc.assert(
       fc.asyncProperty(mixedTreeArb, async ([blobs, trees]) => {
         const allEntries = [...blobs, ...trees]
-        // Shuffle to ensure order doesn't matter
-        const shuffled = [...allEntries].sort(() => Math.random() - 0.5)
+        // Sort deterministically so failures remain reproducible and shrinkable
+        const shuffled = [...allEntries].sort((a, b) =>
+          `${a.type}:${a.path}:${a.sha}`.localeCompare(`${b.type}:${b.path}:${b.sha}`)
+        )
 
         mockSuccessfulTreeFetch(shuffled)
 

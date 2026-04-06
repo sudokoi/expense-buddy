@@ -139,7 +139,7 @@ describe("getRepositoryTree() error handling", () => {
 
     expect(result.success).toBe(false)
     if (result.success) return
-    expect(result.error).toContain("truncated")
+    expect(result.error).toBe("githubSync.errors.truncatedTree")
   })
 
   it("should return error on network failure during getBranchRef", async () => {

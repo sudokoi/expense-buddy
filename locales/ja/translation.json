@@ -402,7 +402,8 @@
       "unavailable": "GitHubは一時的に利用できません。後でもう一度お試しください。",
       "general": "GitHub同期に失敗しました ({{status}})",
       "timestamp": "コミットからタイムスタンプを抽出できませんでした",
-      "blob": "{{path}} のblob作成に失敗しました: {{error}}"
+      "blob": "{{path}} のblob作成に失敗しました: {{error}}",
+      "truncatedTree": "リポジトリツリーが大きすぎて完全に取得できません"
     },
     "manager": {
       "notConfigured": "同期が設定されていません",
