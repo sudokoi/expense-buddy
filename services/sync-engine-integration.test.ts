@@ -469,16 +469,18 @@ describe("Sync Engine Integration - End-to-End Optimized Flow", () => {
       expect(result.mergeResult!.addedFromRemote.length).toBe(2)
 
       // Verify SHA cache was saved after sync.
-      // Uploaded files are excluded from the cache because their blob SHAs
-      // changed during batchCommit. On cold start all files are uploaded,
-      // so the cache should be empty (they'll be re-fetched next sync).
+      // batchCommit returns new blob SHAs for uploaded files, so the cache
+      // should contain the post-push SHAs (not the pre-push tree SHAs).
       const setCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
       const shaCacheCall = setCalls.find(([key]: [string]) => key === "remote_sha_cache")
       expect(shaCacheCall).toBeDefined()
 
       const savedCache = JSON.parse(shaCacheCall![1])
-      expect(savedCache["expenses-2024-06-14.csv"]).toBeUndefined()
-      expect(savedCache["expenses-2024-06-15.csv"]).toBeUndefined()
+      // On cold start, both files are uploaded, so cache has new blob SHAs from batchCommit
+      // (not the original tree SHAs "sha-14"/"sha-15")
+      const cachedShas = Object.values(savedCache) as string[]
+      expect(cachedShas).toHaveLength(2)
+      expect(cachedShas.every((s: string) => s.startsWith("blob-sha-"))).toBe(true)
     })
 
     it("should skip downloading unchanged files when SHA cache matches", async () => {
