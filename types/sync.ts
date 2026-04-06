@@ -100,4 +100,6 @@ export interface FetchAllRemoteResult {
   shouldSignOut?: boolean
   /** Number of files downloaded */
   filesDownloaded?: number
+  /** Tree entries from Git Trees API, reusable by push phase */
+  treeEntries?: { path: string; sha: string }[]
 }

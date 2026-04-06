@@ -197,6 +197,29 @@ interface GitNewCommitResponse {
   message: string
 }
 
+// ============================================================================
+// Repository Tree Types (Git Trees API - read-only)
+// ============================================================================
+
+/** Entry from the Git Trees API response (GET /git/trees/{sha}?recursive=1) */
+export interface RepositoryTreeEntry {
+  path: string
+  mode: string
+  type: "blob" | "tree"
+  sha: string
+  size?: number
+}
+
+/** Result of fetching the repository tree */
+export type RepositoryTreeResult =
+  | { success: true; entries: RepositoryTreeEntry[]; treeSha: string }
+  | {
+      success: false
+      error: string
+      authStatus?: 401 | 403
+      shouldSignOut?: boolean
+    }
+
 /**
  * Map HTTP status codes to user-friendly error messages and codes
  */
@@ -342,6 +365,153 @@ export async function getCommitTree(
     return {
       error: i18next.t("githubSync.errors.network", { error }),
       errorCode: "UNKNOWN",
+    }
+  }
+}
+
+/**
+ * Fetch the full repository tree in a single API call.
+ * Uses: getBranchRef → getCommitTree → GET /git/trees/{sha}?recursive=1
+ *
+ * Returns only blob entries (files), filtering out tree entries (directories).
+ * If the tree is truncated (>100k entries), returns a failure result.
+ */
+export async function getRepositoryTree(
+  token: string,
+  repo: string,
+  branch: string
+): Promise<RepositoryTreeResult> {
+  // Step 1: Get branch ref
+  const refResult = await getBranchRef(token, repo, branch)
+  if ("error" in refResult) {
+    const code = refResult.errorCode
+    if (code === "AUTH") {
+      return {
+        success: false,
+        error: refResult.error,
+        authStatus: 401,
+        shouldSignOut: true,
+      }
+    }
+    if (code === "PERMISSION") {
+      return {
+        success: false,
+        error: refResult.error,
+        authStatus: 403,
+        shouldSignOut: true,
+      }
+    }
+    if (code === "RATE_LIMIT") {
+      return {
+        success: false,
+        error: refResult.error,
+        authStatus: 403,
+        shouldSignOut: false,
+      }
+    }
+    return { success: false, error: refResult.error }
+  }
+
+  // Step 2: Get commit tree SHA
+  const commitResult = await getCommitTree(token, repo, refResult.sha)
+  if ("error" in commitResult) {
+    const code = commitResult.errorCode
+    if (code === "AUTH") {
+      return {
+        success: false,
+        error: commitResult.error,
+        authStatus: 401,
+        shouldSignOut: true,
+      }
+    }
+    if (code === "PERMISSION") {
+      return {
+        success: false,
+        error: commitResult.error,
+        authStatus: 403,
+        shouldSignOut: true,
+      }
+    }
+    if (code === "RATE_LIMIT") {
+      return {
+        success: false,
+        error: commitResult.error,
+        authStatus: 403,
+        shouldSignOut: false,
+      }
+    }
+    return { success: false, error: commitResult.error }
+  }
+
+  // Step 3: Fetch the full tree recursively
+  try {
+    const [owner, repoName] = repo.split("/")
+    if (!owner || !repoName) {
+      return { success: false, error: i18next.t("githubSync.errors.repoFormat") }
+    }
+
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repoName}/git/trees/${commitResult.treeSha}?recursive=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    )
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        const error = await toGitHubApiError(response)
+        return {
+          success: false,
+          error: error.message,
+          authStatus: 401,
+          shouldSignOut: true,
+        }
+      }
+      if (response.status === 403) {
+        const error = await toGitHubApiError(response)
+        return {
+          success: false,
+          error: error.message,
+          authStatus: 403,
+          shouldSignOut: error.shouldSignOut,
+        }
+      }
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error:
+          errorData.message ||
+          i18next.t("githubSync.errors.unknown", { status: response.status }),
+      }
+    }
+
+    const data = await response.json()
+
+    // Truncated trees indicate >100k entries — fall back
+    if (data.truncated) {
+      return { success: false, error: "Repository tree is too large (truncated)" }
+    }
+
+    // Filter to blob entries only
+    const entries: RepositoryTreeEntry[] = (data.tree || [])
+      .filter((entry: any) => entry.type === "blob")
+      .map((entry: any) => ({
+        path: entry.path,
+        mode: entry.mode,
+        type: entry.type as "blob",
+        sha: entry.sha,
+        ...(entry.size !== undefined ? { size: entry.size } : {}),
+      }))
+
+    return { success: true, entries, treeSha: commitResult.treeSha }
+  } catch (error) {
+    return {
+      success: false,
+      error: i18next.t("githubSync.errors.network", { error }),
     }
   }
 }

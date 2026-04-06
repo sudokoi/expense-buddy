@@ -2,8 +2,7 @@
   "extends": "./tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0"
+    "resolveJsonModule": true
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
 }
