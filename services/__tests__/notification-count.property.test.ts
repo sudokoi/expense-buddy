@@ -105,7 +105,7 @@ describe("Property 5: Notification Count Derived From Merge Result", () => {
         fc.array(expenseArb, { minLength: 0, maxLength: 10 }),
         fc.array(expenseArb, { minLength: 0, maxLength: 10 }),
         fc.nat({ max: 1000 }),
-        (addedFromRemote, updatedFromRemote, filesDownloaded) => {
+        (addedFromRemote, updatedFromRemote, _filesDownloaded) => {
           const mergeResult = { addedFromRemote, updatedFromRemote }
           const count = computeRemoteFilesUpdated(mergeResult)
 
