@@ -1904,21 +1904,23 @@ export async function gitStyleSync(
     await saveFileHashes(updatedHashes)
 
     // Update remote SHA cache with tree entries from this sync.
-    // Uploaded files have new blob SHAs after batchCommit, so we exclude them
-    // from the cache — they'll be re-downloaded next sync (small set).
+    // For uploaded files, use the new blob SHAs returned by batchCommit.
+    // For unchanged files, keep the pre-push tree SHAs.
+    // Deleted files are excluded.
     if (treeEntries) {
-      const uploadedPaths = new Set(
-        filesToUpload.filter((f) => f.path !== "settings.json").map((f) => f.path)
-      )
       const deletedPaths = new Set(filesToDelete.map((f) => f.path))
       const shaCache: { [filename: string]: string } = {}
       for (const entry of treeEntries) {
-        if (
-          getDayKeyFromFilename(entry.path) !== null &&
-          !uploadedPaths.has(entry.path) &&
-          !deletedPaths.has(entry.path)
-        ) {
+        if (getDayKeyFromFilename(entry.path) !== null && !deletedPaths.has(entry.path)) {
           shaCache[entry.path] = entry.sha
+        }
+      }
+      // Overwrite with new blob SHAs for uploaded files
+      if (batchResult.blobShas) {
+        for (const [path, sha] of Object.entries(batchResult.blobShas)) {
+          if (getDayKeyFromFilename(path) !== null) {
+            shaCache[path] = sha
+          }
         }
       }
       await saveRemoteSHACache(shaCache)

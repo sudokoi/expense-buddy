@@ -119,6 +119,8 @@ export interface BatchCommitRequest {
 export interface BatchCommitResult {
   success: boolean
   commitSha?: string
+  /** Map of uploaded file path to its new blob SHA (from createBlob) */
+  blobShas?: { [path: string]: string }
   error?: string
   errorCode?: "AUTH" | "PERMISSION" | "NOT_FOUND" | "CONFLICT" | "RATE_LIMIT" | "UNKNOWN"
 }
@@ -817,6 +819,7 @@ export async function batchCommit(
 
   // Step 3: Create blobs for each file to upload
   const treeEntries: { path: string; sha: string | null }[] = []
+  const blobShas: { [path: string]: string } = {}
 
   for (const upload of uploads) {
     const blobResult = await createBlob(token, repo, upload.content)
@@ -830,7 +833,9 @@ export async function batchCommit(
         errorCode: blobResult.errorCode,
       }
     }
-    treeEntries.push({ path: sanitizePath(upload.path), sha: blobResult.sha })
+    const sanitized = sanitizePath(upload.path)
+    treeEntries.push({ path: sanitized, sha: blobResult.sha })
+    blobShas[sanitized] = blobResult.sha
   }
 
   // Step 4: Add deletions to tree entries (sha: null marks deletion)
@@ -873,6 +878,7 @@ export async function batchCommit(
   return {
     success: true,
     commitSha: newCommitSha,
+    blobShas,
   }
 }
 
