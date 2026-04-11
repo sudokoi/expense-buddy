@@ -29,7 +29,7 @@ function getNextCursor(
   previousCursor: string | null
 ): string | null {
   if (messages.length === 0) {
-    return previousCursor ?? new Date().toISOString()
+    return previousCursor
   }
 
   const newestMessage = messages.reduce(
@@ -46,7 +46,18 @@ function getNextCursor(
     null as (typeof messages)[number] | null
   )
 
-  return newestMessage?.receivedAt ?? previousCursor
+  if (!newestMessage) {
+    return previousCursor
+  }
+
+  const newestTimestamp = new Date(newestMessage.receivedAt).getTime()
+  if (!Number.isFinite(newestTimestamp)) {
+    return previousCursor
+  }
+
+  // The native Android query uses DATE > since, so keep the cursor 1 ms behind the
+  // newest scanned message to avoid skipping sibling messages with the same timestamp.
+  return new Date(Math.max(0, newestTimestamp - 1)).toISOString()
 }
 
 function createReviewItemFromMessage(

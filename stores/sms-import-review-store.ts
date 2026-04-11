@@ -63,6 +63,32 @@ function mergeReviewItems(
   return normalizeReviewItems(Array.from(byId.values()))
 }
 
+function createQueueSnapshot(
+  input: Pick<
+    SmsImportReviewQueueSnapshot,
+    "items" | "lastScanCursor" | "bootstrapCompletedAt"
+  >,
+  now: number = Date.now()
+): SmsImportReviewQueueSnapshot {
+  return {
+    items: normalizeReviewItems(input.items, now),
+    lastScanCursor: input.lastScanCursor,
+    bootstrapCompletedAt: input.bootstrapCompletedAt,
+  }
+}
+
+function applyQueueSnapshot(
+  context: { isLoading: boolean },
+  snapshot: SmsImportReviewQueueSnapshot
+) {
+  return {
+    ...context,
+    items: snapshot.items,
+    lastScanCursor: snapshot.lastScanCursor,
+    bootstrapCompletedAt: snapshot.bootstrapCompletedAt,
+  }
+}
+
 async function persistQueueState(snapshot: SmsImportReviewQueueSnapshot): Promise<void> {
   await AsyncStorage.setItem(SMS_IMPORT_REVIEW_QUEUE_KEY, JSON.stringify(snapshot))
 }
@@ -78,10 +104,7 @@ export function createSmsImportReviewStore() {
 
     on: {
       loadQueueState: (context, event: SmsImportReviewQueueSnapshot) => ({
-        ...context,
-        items: normalizeReviewItems(event.items),
-        lastScanCursor: event.lastScanCursor,
-        bootstrapCompletedAt: event.bootstrapCompletedAt,
+        ...applyQueueSnapshot(context, createQueueSnapshot(event)),
         isLoading: false,
       }),
 
@@ -94,8 +117,7 @@ export function createSmsImportReviewStore() {
         },
         enqueue
       ) => {
-        const nextContext = {
-          ...context,
+        const snapshot = createQueueSnapshot({
           items: mergeReviewItems(context.items, event.items),
           lastScanCursor:
             event.lastScanCursor === undefined
@@ -105,17 +127,13 @@ export function createSmsImportReviewStore() {
             event.bootstrapCompletedAt === undefined
               ? context.bootstrapCompletedAt
               : event.bootstrapCompletedAt,
-        }
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextContext.items,
-            lastScanCursor: nextContext.lastScanCursor,
-            bootstrapCompletedAt: nextContext.bootstrapCompletedAt,
-          })
         })
 
-        return nextContext
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       markItemAccepted: (
@@ -124,29 +142,26 @@ export function createSmsImportReviewStore() {
         enqueue
       ) => {
         const now = new Date().toISOString()
-        const nextItems = context.items.map((item) =>
-          item.id === event.id
-            ? {
-                ...item,
-                status: "accepted" as const,
-                acceptedExpenseId: event.acceptedExpenseId,
-                updatedAt: now,
-              }
-            : item
-        )
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextItems,
-            lastScanCursor: context.lastScanCursor,
-            bootstrapCompletedAt: context.bootstrapCompletedAt,
-          })
+        const snapshot = createQueueSnapshot({
+          items: context.items.map((item) =>
+            item.id === event.id
+              ? {
+                  ...item,
+                  status: "accepted" as const,
+                  acceptedExpenseId: event.acceptedExpenseId,
+                  updatedAt: now,
+                }
+              : item
+          ),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
-        return {
-          ...context,
-          items: nextItems,
-        }
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       markItemsAccepted: (
@@ -162,117 +177,102 @@ export function createSmsImportReviewStore() {
           event.acceptedItems.map((item) => [item.id, item.acceptedExpenseId])
         )
         const now = new Date().toISOString()
-        const nextItems = context.items.map((item) => {
-          if (!acceptedById.has(item.id)) {
-            return item
-          }
+        const snapshot = createQueueSnapshot({
+          items: context.items.map((item) => {
+            if (!acceptedById.has(item.id)) {
+              return item
+            }
 
-          return {
-            ...item,
-            status: "accepted" as const,
-            acceptedExpenseId: acceptedById.get(item.id),
-            updatedAt: now,
-          }
+            return {
+              ...item,
+              status: "accepted" as const,
+              acceptedExpenseId: acceptedById.get(item.id),
+              updatedAt: now,
+            }
+          }),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
         enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextItems,
-            lastScanCursor: context.lastScanCursor,
-            bootstrapCompletedAt: context.bootstrapCompletedAt,
-          })
+          await persistQueueState(snapshot)
         })
 
-        return {
-          ...context,
-          items: nextItems,
-        }
+        return applyQueueSnapshot(context, snapshot)
       },
 
       markItemRejected: (context, event: { id: string }, enqueue) => {
         const now = new Date().toISOString()
-        const nextItems = context.items.map((item) =>
-          item.id === event.id
-            ? {
-                ...item,
-                status: "rejected" as const,
-                updatedAt: now,
-              }
-            : item
-        )
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextItems,
-            lastScanCursor: context.lastScanCursor,
-            bootstrapCompletedAt: context.bootstrapCompletedAt,
-          })
+        const snapshot = createQueueSnapshot({
+          items: context.items.map((item) =>
+            item.id === event.id
+              ? {
+                  ...item,
+                  status: "rejected" as const,
+                  updatedAt: now,
+                }
+              : item
+          ),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
-        return {
-          ...context,
-          items: nextItems,
-        }
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       dismissItem: (context, event: { id: string }, enqueue) => {
         const now = new Date().toISOString()
-        const nextItems = context.items.map((item) =>
-          item.id === event.id
-            ? {
-                ...item,
-                status: "dismissed" as const,
-                updatedAt: now,
-              }
-            : item
-        )
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextItems,
-            lastScanCursor: context.lastScanCursor,
-            bootstrapCompletedAt: context.bootstrapCompletedAt,
-          })
+        const snapshot = createQueueSnapshot({
+          items: context.items.map((item) =>
+            item.id === event.id
+              ? {
+                  ...item,
+                  status: "dismissed" as const,
+                  updatedAt: now,
+                }
+              : item
+          ),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
-        return {
-          ...context,
-          items: nextItems,
-        }
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       clearResolvedItems: (context, _event, enqueue) => {
-        const nextItems = context.items.filter((item) => item.status === "pending")
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextItems,
-            lastScanCursor: context.lastScanCursor,
-            bootstrapCompletedAt: context.bootstrapCompletedAt,
-          })
+        const snapshot = createQueueSnapshot({
+          items: context.items.filter((item) => item.status === "pending"),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
-        return {
-          ...context,
-          items: nextItems,
-        }
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       setLastScanCursor: (context, event: { cursor: string | null }, enqueue) => {
-        const nextContext = {
-          ...context,
+        const snapshot = createQueueSnapshot({
+          items: context.items,
           lastScanCursor: event.cursor,
-        }
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextContext.items,
-            lastScanCursor: nextContext.lastScanCursor,
-            bootstrapCompletedAt: nextContext.bootstrapCompletedAt,
-          })
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
         })
 
-        return nextContext
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
 
       setBootstrapCompletedAt: (
@@ -280,20 +280,17 @@ export function createSmsImportReviewStore() {
         event: { completedAt: string | null },
         enqueue
       ) => {
-        const nextContext = {
-          ...context,
+        const snapshot = createQueueSnapshot({
+          items: context.items,
+          lastScanCursor: context.lastScanCursor,
           bootstrapCompletedAt: event.completedAt,
-        }
-
-        enqueue.effect(async () => {
-          await persistQueueState({
-            items: nextContext.items,
-            lastScanCursor: nextContext.lastScanCursor,
-            bootstrapCompletedAt: nextContext.bootstrapCompletedAt,
-          })
         })
 
-        return nextContext
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
       },
     },
   })
@@ -309,26 +306,35 @@ export async function initializeSmsImportReviewStore(
   try {
     const rawValue = await AsyncStorage.getItem(SMS_IMPORT_REVIEW_QUEUE_KEY)
     if (!rawValue) {
-      store.trigger.loadQueueState({
+      const snapshot = createQueueSnapshot({
         items: [],
         lastScanCursor: null,
         bootstrapCompletedAt: null,
       })
+      store.trigger.loadQueueState(snapshot)
       return
     }
 
     const parsed = JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>
-    store.trigger.loadQueueState({
+    const rawSnapshot = {
       items: Array.isArray(parsed.items) ? parsed.items : [],
       lastScanCursor: parsed.lastScanCursor ?? null,
       bootstrapCompletedAt: parsed.bootstrapCompletedAt ?? null,
-    })
+    }
+    const normalizedSnapshot = createQueueSnapshot(rawSnapshot)
+
+    store.trigger.loadQueueState(normalizedSnapshot)
+
+    if (JSON.stringify(rawSnapshot) !== JSON.stringify(normalizedSnapshot)) {
+      await persistQueueState(normalizedSnapshot)
+    }
   } catch (error) {
     console.warn("Failed to initialize SMS import review store:", error)
-    store.trigger.loadQueueState({
+    const snapshot = createQueueSnapshot({
       items: [],
       lastScanCursor: null,
       bootstrapCompletedAt: null,
     })
+    store.trigger.loadQueueState(snapshot)
   }
 }

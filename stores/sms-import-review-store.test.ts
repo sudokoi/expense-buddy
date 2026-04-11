@@ -106,6 +106,12 @@ describe("smsImportReviewStore", () => {
 
     const context = smsImportReviewStore.getSnapshot().context
     expect(context.items.map((item) => item.id)).toEqual(["old-pending"])
+    const persistedSnapshot = JSON.parse(
+      storage.get(STORAGE_KEY) || "{}"
+    ) as SmsImportReviewQueueSnapshot
+    expect(persistedSnapshot.items.map((item) => item.id)).toEqual(["old-pending"])
+    expect(persistedSnapshot.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
+    expect(persistedSnapshot.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
   })
 
   it("can initialize an injected review store instance", async () => {
@@ -182,5 +188,36 @@ describe("smsImportReviewStore", () => {
       "expense-1",
     ])
     expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
+  })
+
+  it("prunes expired resolved items when a later mutation persists the queue", async () => {
+    jest.useFakeTimers()
+    try {
+      jest.setSystemTime(new Date("2026-04-11T10:30:00.000Z"))
+
+      smsImportReviewStore.trigger.loadQueueState({
+        items: [
+          createItem("resolved", {
+            status: "accepted",
+            updatedAt: "2026-04-11T10:30:00.000Z",
+            createdAt: "2026-04-11T10:30:00.000Z",
+          }),
+          createItem("pending"),
+        ],
+        lastScanCursor: null,
+        bootstrapCompletedAt: null,
+      })
+
+      jest.setSystemTime(new Date("2026-04-19T10:30:00.000Z"))
+
+      smsImportReviewStore.trigger.markItemRejected({ id: "pending" })
+      await jest.runAllTimersAsync()
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items.map((item) => item.id)).toEqual(["pending"])
+      expect(context.items[0]?.status).toBe("rejected")
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })

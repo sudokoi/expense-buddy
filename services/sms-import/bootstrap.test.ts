@@ -77,7 +77,7 @@ describe("scanSmsImportReviewQueue", () => {
     expect(mockScanRecentSmsMessages).not.toHaveBeenCalled()
   })
 
-  it("creates new review items, dedupes existing ones, and keeps the newest cursor", async () => {
+  it("creates new review items, dedupes existing ones, and keeps a non-lossy newest cursor", async () => {
     const existingMessage = createMessage()
     const newerMessage = createMessage({
       messageId: "sms-2",
@@ -108,7 +108,7 @@ describe("scanSmsImportReviewQueue", () => {
       categorySuggestion: "Transport",
       status: "pending",
     })
-    expect(result.nextCursor).toBe("2026-04-11T10:20:00.000Z")
+    expect(result.nextCursor).toBe("2026-04-11T10:19:59.999Z")
     expect(result.bootstrapCompletedAt).not.toBeNull()
   })
 
@@ -130,7 +130,7 @@ describe("scanSmsImportReviewQueue", () => {
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
     mockScanRecentSmsMessages.mockResolvedValue([])
 
-    await scanSmsImportReviewQueue({
+    const result = await scanSmsImportReviewQueue({
       existingItems: [],
       lastScanCursor: null,
       bootstrapCompletedAt: null,
@@ -140,6 +140,30 @@ describe("scanSmsImportReviewQueue", () => {
       lookbackDays: 7,
       limit: 500,
     })
+    expect(result.nextCursor).toBeNull()
+  })
+
+  it("keeps the cursor just behind the newest timestamp to avoid missing same-timestamp messages", async () => {
+    const firstMessage = createMessage({
+      messageId: "sms-1",
+      receivedAt: "2026-04-11T10:20:00.000Z",
+    })
+    const secondMessage = createMessage({
+      messageId: "sms-2",
+      body: "INR 250 paid to Uber Trip via credit card",
+      receivedAt: "2026-04-11T10:20:00.000Z",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.nextCursor).toBe("2026-04-11T10:19:59.999Z")
   })
 
   it("dedupes duplicate messages produced within the same scan batch", async () => {
