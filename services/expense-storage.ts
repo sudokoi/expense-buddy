@@ -111,13 +111,13 @@ export async function persistExpensesAdded(expenses: Expense[]): Promise<void> {
     return
   }
 
-  for (const expense of expenses) {
-    await AsyncStorage.setItem(expenseItemKeyV1(expense.id), JSON.stringify(expense))
-  }
-
   const ids = (await loadExpenseIdsV1()) ?? []
   const nextIds = [...new Set([...expenses.map((expense) => expense.id), ...ids])]
   await saveExpenseIdsV1(nextIds)
+
+  await AsyncStorage.multiSet(
+    expenses.map((expense) => [expenseItemKeyV1(expense.id), JSON.stringify(expense)])
+  )
 }
 
 export async function persistExpenseUpdated(expense: Expense): Promise<void> {

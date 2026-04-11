@@ -124,4 +124,27 @@ describe("scanSmsImportReviewQueue", () => {
     expect(result.nextCursor).toBe("2026-04-11T10:20:00.000Z")
     expect(result.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
   })
+
+  it("dedupes duplicate messages produced within the same scan batch", async () => {
+    const firstMessage = createMessage({
+      messageId: "sms-1",
+      receivedAt: "2026-04-11T10:15:05.000Z",
+    })
+    const duplicateMessage = createMessage({
+      messageId: "sms-2",
+      receivedAt: "2026-04-11T10:15:45.000Z",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, duplicateMessage])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.createdItems).toHaveLength(1)
+    expect(result.createdItems[0]?.sourceMessage.messageId).toBe("sms-1")
+  })
 })

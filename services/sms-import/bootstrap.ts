@@ -60,6 +60,8 @@ function createReviewItemFromMessage(
     return null
   }
 
+  existingFingerprints.add(fingerprint)
+
   const now = new Date().toISOString()
   return {
     id: `${fingerprint}_${message.messageId}`,
