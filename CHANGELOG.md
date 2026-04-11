@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 3.0.0
+
+### Major Changes
+
+- [#49](https://github.com/sudokoi/expense-buddy/pull/49) [`1ef6533`](https://github.com/sudokoi/expense-buddy/commit/1ef6533e9c5ee8702c853bafe1e86b65967788c4) Thanks [@sudokoi](https://github.com/sudokoi)! - Ship Android SMS import as a review-first, local-only workflow and formalize its platform-scoped behavior in the product docs.
+  - add Android-only SMS import with on-device regex parsing, bounded recent-message scans, and inline permission requests during manual scans
+  - show SMS permission status in Settings and keep raw SMS content in a local review queue until the user accepts an expense
+  - map SMS category suggestions onto the shipped default categories and fall back to Other when no default category matches or the suggested category no longer exists
+  - update privacy, architecture, README, and ADR documentation to reflect the release behavior and data boundaries
+
 ## 2.5.0
 
 ### Minor Changes
