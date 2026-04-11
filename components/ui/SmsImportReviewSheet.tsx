@@ -7,10 +7,9 @@ import {
   type Expense,
   type ExpenseCategory,
 } from "../../types/expense"
-import {
-  getPaymentMethodI18nKey,
-  PAYMENT_METHODS,
-} from "../../constants/payment-methods"
+import type { Category } from "../../types/category"
+import type { PaymentInstrument } from "../../types/payment-instrument"
+import { getPaymentMethodI18nKey, PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useCategories,
   useExpenses,
@@ -19,6 +18,14 @@ import {
   useSmsImportReview,
   useUIState,
 } from "../../stores/hooks"
+import {
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+} from "../../services/payment-instruments"
+import {
+  resolveSmsImportCategory,
+  resolveSmsImportPaymentSuggestion,
+} from "../../services/sms-import/suggestion-resolver"
 import { parseNumericAmount } from "../../utils/amount-input"
 import { type SmsImportReviewItem } from "../../types/sms-import"
 import { AppSheetScaffold } from "./AppSheetScaffold"
@@ -30,6 +37,8 @@ type EditableSmsImportDraft = {
   category: ExpenseCategory
   note: string
   paymentMethodType?: PaymentMethodType
+  paymentMethodIdentifier?: string
+  paymentInstrumentId?: string
 }
 
 const layoutStyles = {
@@ -64,14 +73,22 @@ function getLocalizedCategoryLabel(
 }
 
 function getLocalizedPaymentMethodLabel(
-  paymentMethodType: PaymentMethodType | undefined,
+  paymentMethod: SmsImportReviewItem["paymentMethodSuggestion"] | undefined,
+  paymentInstruments: PaymentInstrument[],
   t: (key: string) => string
 ): string {
-  if (!paymentMethodType) {
+  if (!paymentMethod?.type) {
     return t("common.none")
   }
 
-  return t(`paymentMethods.${getPaymentMethodI18nKey(paymentMethodType)}`)
+  const methodLabel = t(`paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)}`)
+  const instrument = findInstrumentById(paymentInstruments, paymentMethod.instrumentId)
+
+  if (!instrument) {
+    return methodLabel
+  }
+
+  return `${methodLabel} • ${formatPaymentInstrumentLabel(instrument)}`
 }
 
 function getLocalizedReviewStatus(
@@ -92,25 +109,21 @@ function getLocalizedReviewStatus(
 
 function resolveCategoryLabel(
   item: SmsImportReviewItem,
-  availableCategories: Array<{ label: string }>
+  availableCategories: Category[]
 ): ExpenseCategory {
-  const labels = new Set(availableCategories.map((category) => category.label))
-
-  if (item.categorySuggestion && labels.has(item.categorySuggestion)) {
-    return item.categorySuggestion
-  }
-
-  if (labels.has("Other")) {
-    return "Other"
-  }
-
-  return availableCategories[0]?.label ?? "Other"
+  return resolveSmsImportCategory(item, availableCategories)
 }
 
 function createDraftFromItem(
   item: SmsImportReviewItem,
-  availableCategories: Array<{ label: string }>
+  availableCategories: Category[],
+  paymentInstruments: PaymentInstrument[]
 ): EditableSmsImportDraft {
+  const resolvedPaymentSuggestion = resolveSmsImportPaymentSuggestion(
+    item,
+    paymentInstruments
+  )
+
   return {
     amount:
       typeof item.amount === "number" && Number.isFinite(item.amount)
@@ -118,7 +131,9 @@ function createDraftFromItem(
         : "",
     category: resolveCategoryLabel(item, availableCategories),
     note: item.noteSuggestion ?? item.merchantName ?? "",
-    paymentMethodType: item.paymentMethodSuggestion?.type,
+    paymentMethodType: resolvedPaymentSuggestion?.type,
+    paymentMethodIdentifier: resolvedPaymentSuggestion?.identifier,
+    paymentInstrumentId: resolvedPaymentSuggestion?.instrumentId,
   }
 }
 
@@ -141,6 +156,8 @@ function buildExpenseFromDraft(
     paymentMethod: draft.paymentMethodType
       ? {
           type: draft.paymentMethodType,
+          identifier: draft.paymentMethodIdentifier,
+          instrumentId: draft.paymentInstrumentId,
         }
       : undefined,
   }
@@ -150,6 +167,7 @@ export function SmsImportReviewSheet() {
   const { t } = useTranslation()
   const { categories } = useCategories()
   const { settings } = useSettings()
+  const paymentInstruments = settings.paymentInstruments
   const { addExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const {
@@ -196,9 +214,9 @@ export function SmsImportReviewSheet() {
   const openEditor = useCallback(
     (item: SmsImportReviewItem) => {
       setEditingItemId(item.id)
-      setEditingDraft(createDraftFromItem(item, categories))
+      setEditingDraft(createDraftFromItem(item, categories, paymentInstruments))
     },
-    [categories]
+    [categories, paymentInstruments]
   )
 
   const closeEditor = useCallback(() => {
@@ -229,9 +247,9 @@ export function SmsImportReviewSheet() {
 
   const handleAcceptSuggested = useCallback(
     (item: SmsImportReviewItem) => {
-      void acceptItem(item, createDraftFromItem(item, categories))
+      void acceptItem(item, createDraftFromItem(item, categories, paymentInstruments))
     },
-    [acceptItem, categories]
+    [acceptItem, categories, paymentInstruments]
   )
 
   const handleAcceptEdited = useCallback(() => {
@@ -251,7 +269,7 @@ export function SmsImportReviewSheet() {
         item,
         expense: buildExpenseFromDraft(
           item,
-          createDraftFromItem(item, categories),
+          createDraftFromItem(item, categories, paymentInstruments),
           settings.defaultCurrency || "INR"
         ),
       }))
@@ -298,7 +316,9 @@ export function SmsImportReviewSheet() {
     categories,
     markItemAccepted,
     pendingItems,
+    paymentInstruments,
     settings.defaultCurrency,
+    t,
   ])
 
   const pendingSubtitle = useMemo(() => {
@@ -440,12 +460,14 @@ export function SmsImportReviewSheet() {
                       ? {
                           ...current,
                           paymentMethodType: undefined,
+                          paymentMethodIdentifier: undefined,
+                          paymentInstrumentId: undefined,
                         }
                       : current
                   )
                 }}
               >
-                  {t("common.none")}
+                {t("common.none")}
               </Button>
 
               {PAYMENT_METHODS.map((config) => (
@@ -459,6 +481,8 @@ export function SmsImportReviewSheet() {
                         ? {
                             ...current,
                             paymentMethodType: config.value,
+                            paymentMethodIdentifier: undefined,
+                            paymentInstrumentId: undefined,
                           }
                         : current
                     )
@@ -490,7 +514,9 @@ export function SmsImportReviewSheet() {
         <YStack gap="$4" pb="$6">
           {pendingItems.length > 0 ? (
             <YStack gap="$3">
-              <Text fontWeight="700">{t("smsImport.sheet.sectionTitles.pendingReview")}</Text>
+              <Text fontWeight="700">
+                {t("smsImport.sheet.sectionTitles.pendingReview")}
+              </Text>
 
               {pendingItems.map((item) => (
                 <Card key={item.id} bordered padding="$3">
@@ -506,20 +532,23 @@ export function SmsImportReviewSheet() {
 
                     <YStack gap="$1">
                       <Text>
-                        {t("smsImport.sheet.labels.amount")}: 
+                        {t("smsImport.sheet.labels.amount")}:
                         {typeof item.amount === "number"
                           ? `${item.currency || settings.defaultCurrency || "INR"} ${item.amount}`
                           : t("smsImport.sheet.values.needsReview")}
                       </Text>
                       <Text>
-                        {t("smsImport.sheet.labels.category")}: {getLocalizedCategoryLabel(
+                        {t("smsImport.sheet.labels.category")}:{" "}
+                        {getLocalizedCategoryLabel(
                           resolveCategoryLabel(item, categories),
                           t
                         )}
                       </Text>
                       <Text>
-                        {t("smsImport.sheet.labels.payment")}: {getLocalizedPaymentMethodLabel(
-                          item.paymentMethodSuggestion?.type,
+                        {t("smsImport.sheet.labels.payment")}:{" "}
+                        {getLocalizedPaymentMethodLabel(
+                          resolveSmsImportPaymentSuggestion(item, paymentInstruments),
+                          paymentInstruments,
                           t
                         )}
                       </Text>
@@ -558,7 +587,9 @@ export function SmsImportReviewSheet() {
           {resolvedItems.length > 0 && showResolvedItems ? (
             <YStack gap="$3">
               <XStack justify="space-between" items="center">
-                <Text fontWeight="700">{t("smsImport.sheet.sectionTitles.resolved")}</Text>
+                <Text fontWeight="700">
+                  {t("smsImport.sheet.sectionTitles.resolved")}
+                </Text>
                 <Button size="$3" onPress={clearResolvedItems}>
                   {t("smsImport.sheet.footer.clearResolved")}
                 </Button>
@@ -574,10 +605,8 @@ export function SmsImportReviewSheet() {
                       {formatTimestamp(item.sourceMessage.receivedAt)}
                     </Text>
                     <Text>
-                      {t("smsImport.sheet.labels.status")}: {getLocalizedReviewStatus(
-                        item.status,
-                        t
-                      )}
+                      {t("smsImport.sheet.labels.status")}:{" "}
+                      {getLocalizedReviewStatus(item.status, t)}
                     </Text>
                     <Text numberOfLines={2} opacity={0.75}>
                       {item.sourceMessage.body}

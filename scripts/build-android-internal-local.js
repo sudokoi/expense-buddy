@@ -4,7 +4,8 @@ const { spawnSync } = require("node:child_process")
 
 const rootDir = resolve(__dirname, "..")
 const outputDir = join(rootDir, "build")
-const outputPath = process.env.OUTPUT_PATH || join(outputDir, "expense-buddy-internal.apk")
+const outputPath =
+  process.env.OUTPUT_PATH || join(outputDir, "expense-buddy-internal.apk")
 const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx"
 const extraArgs = process.argv.slice(2)
 
@@ -32,7 +33,7 @@ const result = spawnSync(
       ...process.env,
       NODE_ENV: "production",
     },
-  },
+  }
 )
 
 if (result.error) {

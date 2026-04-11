@@ -165,8 +165,10 @@ A modern expense tracking app built with React Native and Expo. Track your daily
 1. Go to the **Settings** tab
 2. Open the **SMS Import** section and review the displayed permission status
 3. Tap **Scan recent messages**
-  - If SMS access has not been granted yet, the app requests `READ_SMS` at this point
-  - Startup bootstrap only re-checks status and scans when permission was already granted earlier
+
+- If SMS access has not been granted yet, the app requests `READ_SMS` at this point
+- Startup bootstrap only re-checks status and scans when permission was already granted earlier
+
 4. Review the staged items, then **Accept**, **Edit**, **Reject**, or **Dismiss** each match
 5. Only accepted items become normal expense records and participate in optional GitHub sync
 

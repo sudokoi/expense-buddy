@@ -18,7 +18,9 @@ const amountPattern = /(?:INR|RS\.?|₹)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
 const debitKeywords = /debited|spent|withdrawn|paid|purchase|txn|transaction|upi/i
 const creditOnlyKeywords = /credited|received/i
 const merchantPattern = /\b(?:at|to|merchant)\s+([A-Za-z0-9&._\-/ ]{2,40})/i
-const defaultCategoryLabels = new Set(DEFAULT_CATEGORIES.map((category) => category.label))
+const defaultCategoryLabels = new Set(
+  DEFAULT_CATEGORIES.map((category) => category.label)
+)
 const otherCategoryLabel = defaultCategoryLabels.has("Other") ? "Other" : "Other"
 
 const categoryInferenceRules: Array<{ category: string; pattern: RegExp }> = [

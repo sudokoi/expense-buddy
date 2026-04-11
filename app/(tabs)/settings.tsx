@@ -254,6 +254,7 @@ export default function SettingsScreen() {
     pendingSmsImportItems.length,
     setSmsImportReviewSheetOpen,
     smsImportItems,
+    t,
     upsertReviewItems,
   ])
 
