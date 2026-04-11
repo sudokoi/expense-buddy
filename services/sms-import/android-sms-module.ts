@@ -62,5 +62,10 @@ export async function scanRecentSmsMessages(
     ...options,
   })
 
-  return messages.map(normalizeNativeMessage)
+  return messages
+    .map(normalizeNativeMessage)
+    .sort(
+      (left, right) =>
+        new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime()
+    )
 }

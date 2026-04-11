@@ -21,12 +21,29 @@ export interface SmsImportBootstrapResult {
   bootstrapCompletedAt: string | null
 }
 
-function getNextCursor(messages: Array<{ receivedAt: string }>): string | null {
+function getNextCursor(
+  messages: Array<{ receivedAt: string }>,
+  previousCursor: string | null
+): string | null {
   if (messages.length === 0) {
-    return new Date().toISOString()
+    return previousCursor ?? new Date().toISOString()
   }
 
-  return messages[0].receivedAt
+  const newestMessage = messages.reduce(
+    (latest, message) => {
+      if (!latest) {
+        return message
+      }
+
+      return new Date(message.receivedAt).getTime() >
+        new Date(latest.receivedAt).getTime()
+        ? message
+        : latest
+    },
+    null as (typeof messages)[number] | null
+  )
+
+  return newestMessage?.receivedAt ?? previousCursor
 }
 
 function createReviewItemFromMessage(
@@ -63,7 +80,7 @@ function createReviewItemFromMessage(
   }
 }
 
-export async function bootstrapSmsImportOnLaunch(
+export async function scanSmsImportReviewQueue(
   input: SmsImportBootstrapInput
 ): Promise<SmsImportBootstrapResult> {
   if (Platform.OS !== "android") {
@@ -103,7 +120,13 @@ export async function bootstrapSmsImportOnLaunch(
   return {
     permissionStatus,
     createdItems,
-    nextCursor: getNextCursor(messages),
+    nextCursor: getNextCursor(messages, input.lastScanCursor),
     bootstrapCompletedAt,
   }
+}
+
+export async function bootstrapSmsImportOnLaunch(
+  input: SmsImportBootstrapInput
+): Promise<SmsImportBootstrapResult> {
+  return scanSmsImportReviewQueue(input)
 }

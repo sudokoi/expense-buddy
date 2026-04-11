@@ -44,8 +44,10 @@ node_modules
 .env.production.local
 
 .expo
-ios
-android
+/ios
+/android
+**/android/build
+**/android/.gradle
 
 # credentials (keystores, signing keys)
 credentials

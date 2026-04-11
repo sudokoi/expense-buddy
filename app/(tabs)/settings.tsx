@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react"
+import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
@@ -9,6 +9,8 @@ import {
   useNotifications,
   useSettings,
   useCategories,
+  useSmsImportReview,
+  useUIState,
 } from "../../stores/hooks"
 import {
   useSyncMachine,
@@ -41,6 +43,12 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
+import {
+  getSmsPermissionStatus,
+  requestSmsPermission,
+  type SmsImportPermissionStatus,
+} from "../../services/sms-import/android-sms-module"
+import { scanSmsImportReviewQueue } from "../../services/sms-import/bootstrap"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -66,6 +74,10 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "space-between",
   } as ViewStyle,
+  actionRow: {
+    flexWrap: "wrap",
+    gap: 8,
+  } as ViewStyle,
 }
 
 export default function SettingsScreen() {
@@ -74,6 +86,14 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearDirtyDaysAfterSync, reassignExpensesToOther } =
     useExpenses()
   const { addNotification } = useNotifications()
+  const {
+    items: smsImportItems,
+    pendingItems: pendingSmsImportItems,
+    lastScanCursor,
+    bootstrapCompletedAt,
+    upsertReviewItems,
+  } = useSmsImportReview()
+  const { setSmsImportReviewSheetOpen } = useUIState()
   const {
     categories,
     addCategory,
@@ -144,6 +164,10 @@ export default function SettingsScreen() {
 
   // UI state
   const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
+  const [smsPermissionStatus, setSmsPermissionStatus] =
+    useState<SmsImportPermissionStatus>("undetermined")
+  const [isRequestingSmsPermission, setIsRequestingSmsPermission] = useState(false)
+  const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
 
   const defaultPaymentMethodLabel = useMemo(() => {
     const value = settings.defaultPaymentMethod
@@ -151,6 +175,108 @@ export default function SettingsScreen() {
     const match = PAYMENT_METHODS.find((m) => m.value === value)
     return match?.label ?? value
   }, [settings.defaultPaymentMethod, t])
+
+  const refreshSmsPermissionStatus = useCallback(async () => {
+    if (Platform.OS !== "android") {
+      setSmsPermissionStatus("unavailable")
+      return
+    }
+
+    try {
+      setSmsPermissionStatus(await getSmsPermissionStatus())
+    } catch {
+      setSmsPermissionStatus("unavailable")
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshSmsPermissionStatus()
+  }, [refreshSmsPermissionStatus])
+
+  const handleScanSmsImports = useCallback(async () => {
+    if (Platform.OS !== "android") {
+      addNotification("SMS import is only available on Android.", "info")
+      return
+    }
+
+    setIsScanningSmsImports(true)
+
+    try {
+      const permissionStatus = await getSmsPermissionStatus()
+      setSmsPermissionStatus(permissionStatus)
+
+      if (permissionStatus !== "granted") {
+        addNotification("Grant SMS permission before scanning recent messages.", "error")
+        return
+      }
+
+      const result = await scanSmsImportReviewQueue({
+        existingItems: smsImportItems,
+        lastScanCursor,
+        bootstrapCompletedAt,
+      })
+
+      upsertReviewItems(result.createdItems, {
+        lastScanCursor: result.nextCursor,
+        bootstrapCompletedAt: result.bootstrapCompletedAt,
+      })
+
+      const nextPendingCount = pendingSmsImportItems.length + result.createdItems.length
+      if (nextPendingCount > 0) {
+        setSmsImportReviewSheetOpen(true)
+      }
+
+      if (result.createdItems.length > 0) {
+        addNotification(
+          result.createdItems.length === 1
+            ? "1 SMS transaction is ready for review."
+            : `${result.createdItems.length} SMS transactions are ready for review.`,
+          "success"
+        )
+      } else {
+        addNotification(
+          "No new SMS transactions were found in the recent scan window.",
+          "info"
+        )
+      }
+    } catch (error) {
+      addNotification(error instanceof Error ? error.message : String(error), "error")
+    } finally {
+      setIsScanningSmsImports(false)
+    }
+  }, [
+    addNotification,
+    bootstrapCompletedAt,
+    lastScanCursor,
+    pendingSmsImportItems.length,
+    setSmsImportReviewSheetOpen,
+    smsImportItems,
+    upsertReviewItems,
+  ])
+
+  const handleRequestSmsAccess = useCallback(async () => {
+    if (Platform.OS !== "android") {
+      addNotification("SMS import is only available on Android.", "info")
+      return
+    }
+
+    setIsRequestingSmsPermission(true)
+
+    try {
+      const permissionStatus = await requestSmsPermission()
+      setSmsPermissionStatus(permissionStatus)
+
+      if (permissionStatus === "granted") {
+        addNotification("SMS permission granted.", "success")
+      } else {
+        addNotification("SMS permission was not granted.", "info")
+      }
+    } catch (error) {
+      addNotification(error instanceof Error ? error.message : String(error), "error")
+    } finally {
+      setIsRequestingSmsPermission(false)
+    }
+  }, [addNotification])
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -767,6 +893,46 @@ export default function SettingsScreen() {
           </XStack>
         </SettingsSection>
 
+        {Platform.OS === "android" ? (
+          <SettingsSection
+            title="SMS Import"
+            description="Import recent SMS transactions on-device and review them before saving expenses."
+            gap="$4"
+          >
+            <CardLikeStatusRow label="Permission status" value={smsPermissionStatus} />
+
+            <XStack style={layoutStyles.actionRow}>
+              <Button
+                onPress={handleRequestSmsAccess}
+                disabled={isRequestingSmsPermission}
+              >
+                {isRequestingSmsPermission
+                  ? "Requesting access..."
+                  : "Request SMS access"}
+              </Button>
+              <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
+                {isScanningSmsImports ? "Scanning..." : "Scan recent messages"}
+              </Button>
+            </XStack>
+
+            <XStack style={layoutStyles.actionRow}>
+              <Button
+                onPress={() => setSmsImportReviewSheetOpen(true)}
+                disabled={smsImportItems.length === 0}
+              >
+                {smsImportItems.length > 0
+                  ? `Review imports (${pendingSmsImportItems.length} pending)`
+                  : "Review imports"}
+              </Button>
+            </XStack>
+
+            <Text color="$color" opacity={0.65} fontSize="$2">
+              The current scan is limited to recent messages and keeps raw SMS data local
+              to this device.
+            </Text>
+          </SettingsSection>
+        ) : null}
+
         {/* GITHUB SYNC Section */}
         <SettingsSection
           title={t("settings.sections.github")}
@@ -834,5 +1000,21 @@ export default function SettingsScreen() {
         </SettingsSection>
       </YStack>
     </ScreenContainer>
+  )
+}
+
+function CardLikeStatusRow({ label, value }: { label: string; value: string }) {
+  return (
+    <XStack
+      bg="$backgroundHover"
+      px="$3"
+      py="$3"
+      rounded="$6"
+      justify="space-between"
+      items="center"
+    >
+      <Label>{label}</Label>
+      <Text fontWeight="600">{value}</Text>
+    </XStack>
   )
 }

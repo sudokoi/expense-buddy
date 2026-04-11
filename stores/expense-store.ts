@@ -5,6 +5,7 @@ import {
   loadAllExpensesFromStorage,
   migrateLegacyExpensesToV1,
   persistExpenseAdded,
+  persistExpensesAdded,
   persistExpenseUpdated,
   persistExpensesSnapshot,
   persistExpensesUpdated,
@@ -151,6 +152,36 @@ export const expenseStore = createStore({
         await persistExpenseAdded(normalizedExpense)
         await markDirtyDay(dayKey)
         await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
+        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+      })
+
+      return { ...context, expenses: newExpenses, dirtyDays }
+    },
+
+    addExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
+      const normalizedExpenses = event.expenses.map(normalizeExpenseForSave)
+      if (normalizedExpenses.length === 0) {
+        return context
+      }
+
+      const newExpenses = [...normalizedExpenses, ...context.expenses]
+      const affectedDays = normalizedExpenses.map((expense) =>
+        getLocalDayKey(expense.date)
+      )
+      const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
+
+      enqueue.effect(async () => {
+        await persistExpensesAdded(normalizedExpenses)
+
+        for (const dayKey of new Set(affectedDays)) {
+          await markDirtyDay(dayKey)
+        }
+
+        await enqueueSyncOp({
+          type: "expense.batchUpsert",
+          expenses: normalizedExpenses,
+        })
+
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
       })
 

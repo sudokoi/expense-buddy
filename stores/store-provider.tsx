@@ -142,7 +142,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         console.warn("SMS import bootstrap failed:", error)
       }
     })()
-  }, [skipInitialization])
+  }, [skipInitialization, smsImportReviewStore])
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(

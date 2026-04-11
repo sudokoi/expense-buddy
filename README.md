@@ -13,7 +13,7 @@
   <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml/badge.svg" alt="Build Status" /></a>
 </p>
 
-A modern, cross-platform expense tracking app built with React Native and Expo. Track your daily expenses, visualize spending patterns, and sync your data securely to GitHub.
+A modern expense tracking app built with React Native and Expo. Track your daily expenses, review recent Android SMS transactions before importing them, visualize spending patterns, and sync confirmed expense data securely to GitHub.
 
 ## ✨ Features
 
@@ -29,6 +29,10 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - **Default Payment Method**: Set a preferred payment method for faster entry
 - **Full CRUD**: Create, read, update, and delete expenses with ease
 - **History View**: Browse expenses organized by date with comprehensive filters (time, amount, search, categories, methods, instruments) and cross-tab synchronization with Analytics
+- **Android SMS Import**: Scan recent SMS transactions on Android, review matched items locally, and import only the expenses you confirm
+  - Recent-window scan only for the current version
+  - Regex-first parsing for explainable matches
+  - Raw SMS content stays on-device and out of GitHub sync
 
 ### 📈 Analytics & Insights
 
@@ -80,7 +84,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 
 ### 🎨 User Experience
 
-- **Cross-Platform**: Works on iOS, Android, and Web
+- **Platform Support**: Core expense tracking works on iOS, Android, and Web; SMS import is currently Android-only
 - **Dark Mode**: Automatic theme switching with proper token-based styling
 - **In-App Updates**: Automatic update check on launch with non-intrusive banner notification
   - Dismissible notifications that remember your choice per version
@@ -102,6 +106,7 @@ A modern, cross-platform expense tracking app built with React Native and Expo. 
 - Expo CLI
 - For iOS: Xcode and CocoaPods
 - For Android: Android Studio and SDK
+- For Android SMS import development: an Android development build or release build is required; Expo Go cannot load the custom native SMS module
 
 ### Installation
 

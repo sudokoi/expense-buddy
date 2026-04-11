@@ -25,6 +25,7 @@ graph TB
         SS[Settings Store]
         ES[Expense Store]
         NS[Notification Store]
+        SIR[SMS Import Review Store]
     end
 
     subgraph "Persistence"
@@ -42,16 +43,19 @@ graph TB
     SS -->|persists to| AS
     SS -->|syncs to| GH
     ES -->|syncs to| GH
+    SIR -->|persists to| AS
 
     H -->|uses| FS
     A -->|uses| FS
     A -->|uses| SS
     S -->|uses| SS
     S -->|uses| UIS
+    S -->|uses| SIR
 
     style FS fill:#e1f5fe
     style SS fill:#fff3e0
     style UIS fill:#f3e5f5
+    style SIR fill:#ede7f6
 ```
 
 ### Store Selection Flowchart
@@ -71,12 +75,16 @@ flowchart TD
     Q3 -->|No| Q4{Is it UI layout<br/>or preferences?}
 
     Q4 -->|Yes| UIS[UI State Store]
-    Q4 -->|No| NS[Notification Store]
+    Q4 -->|No| Q5{Is it sensitive SMS review<br/>state kept local only?}
+
+    Q5 -->|Yes| SIR[SMS Import Review Store]
+    Q5 -->|No| NS[Notification Store]
 
     SS -->|GitHub Sync + AsyncStorage| Persist[(Persistence)]
     ES -->|GitHub Sync + AsyncStorage| Persist
     FS -->|AsyncStorage| Persist
     UIS -->|AsyncStorage| Persist
+    SIR -->|AsyncStorage only| Persist
     NS -->|No persistence| NoPersist[ ]
 
     style FS fill:#e1f5fe
@@ -84,6 +92,7 @@ flowchart TD
     style UIS fill:#f3e5f5
     style ES fill:#e8f5e9
     style NS fill:#ffebee
+    style SIR fill:#ede7f6
 ```
 
 ### Store Types
@@ -153,23 +162,43 @@ const { settings, setTheme } = useSettings()
 
 ### Store Selection Guide
 
-| Use Case       | Store              | Persistence | Sync |
-| -------------- | ------------------ | ----------- | ---- |
-| Filter state   | Filter Store       | Yes         | No   |
-| UI preferences | UI State Store     | Yes         | No   |
-| User settings  | Settings Store     | Yes         | Yes  |
-| Expense data   | Expense Store      | Yes         | Yes  |
-| Notifications  | Notification Store | No          | No   |
+| Use Case        | Store                   | Persistence | Sync |
+| --------------- | ----------------------- | ----------- | ---- |
+| Filter state    | Filter Store            | Yes         | No   |
+| UI preferences  | UI State Store          | Yes         | No   |
+| SMS review data | SMS Import Review Store | Yes         | No   |
+| User settings   | Settings Store          | Yes         | Yes  |
+| Expense data    | Expense Store           | Yes         | Yes  |
+| Notifications   | Notification Store      | No          | No   |
 
 ## Persistence Architecture
 
 Expense Buddy uses layered persistence to support offline-first behavior and sync:
 
 - **AsyncStorage** stores expenses, settings, filters, dirty-day tracking, and the remote SHA cache.
+- **AsyncStorage** also stores the local-only SMS import review queue and review UI state.
 - **Secure storage** stores GitHub tokens and repo configuration.
 - **Daily CSV files** are generated during sync and stored remotely in GitHub.
 - **Hash storage** tracks file content hashes to skip unchanged uploads (push-side).
 - **Remote SHA cache** tracks git blob SHAs to skip unchanged downloads (fetch-side).
+
+## SMS Import Architecture
+
+The SMS import feature is intentionally narrow in the current version:
+
+- **Android only** for native SMS access
+- **Regex-first parsing** for deterministic, explainable matches
+- **Review-first staging** so matched messages do not create expenses automatically
+- **Local-only raw SMS storage** so sender, body, and dedupe metadata never enter GitHub sync
+
+The runtime flow is:
+
+1. The app checks Android SMS permission status.
+2. On launch or manual scan, the native Expo module reads recent inbox messages within the bounded scan window.
+3. The service layer parses candidate expenses and generates dedupe fingerprints.
+4. Parsed candidates are stored in the SMS import review store.
+5. The review sheet lets the user accept, edit, reject, dismiss, or clear items.
+6. Only accepted items become normal expense records and join the regular dirty-day and GitHub sync flow.
 
 ## GitHub Sync Architecture
 

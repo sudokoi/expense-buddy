@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** January 28, 2026
+**Last Updated:** April 11, 2026
 
 ## Overview
 
@@ -21,6 +21,17 @@ All expense data you enter is stored locally on your device using:
 - **Expo SecureStore** for sensitive configuration (like GitHub tokens)
 
 Your data never leaves your device unless you explicitly choose to sync it to GitHub (see below).
+
+## SMS Import (Android Only)
+
+If you enable SMS import on Android:
+
+- **Recent SMS messages are scanned on-device only**
+- **Raw SMS sender and body content are stored locally for review only**
+- **Raw SMS content, dedupe fingerprints, and review metadata are not synced to GitHub**
+- **Only expenses you explicitly confirm are added to your normal expense records**
+
+The current SMS import flow is review-first. Messages that match supported transaction patterns are staged locally until you accept, reject, dismiss, or clear them.
 
 ## GitHub Sync (Optional)
 
@@ -46,6 +57,7 @@ The app may request the following permissions:
 
 - **Internet Access**: Required only for the optional GitHub sync feature
 - **Secure Storage**: To safely store your GitHub token on your device
+- **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import
 
 ## Children's Privacy
 
@@ -67,4 +79,4 @@ https://github.com/sudokoi/expense-buddy/issues
 
 ---
 
-**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync to your own GitHub repository.
+**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync confirmed expense records to your own GitHub repository.

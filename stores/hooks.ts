@@ -57,6 +57,25 @@ export const useExpenses = () => {
     [expenseStore]
   )
 
+  const addExpenses = useCallback(
+    (expenses: Array<Omit<Expense, "id" | "createdAt" | "updatedAt">>) => {
+      const baseTimestamp = Date.now()
+      const createdExpenses = expenses.map((expense, index) => {
+        const now = new Date(baseTimestamp + index).toISOString()
+        return {
+          ...expense,
+          id: `${baseTimestamp}_${index}`,
+          createdAt: now,
+          updatedAt: now,
+        }
+      })
+
+      expenseStore.trigger.addExpenses({ expenses: createdExpenses })
+      return createdExpenses
+    },
+    [expenseStore]
+  )
+
   const editExpense = useCallback(
     (id: string, updates: Omit<Expense, "id" | "createdAt" | "updatedAt">) => {
       const existing = expenseStore
@@ -117,6 +136,7 @@ export const useExpenses = () => {
       deletedDays,
     },
     addExpense,
+    addExpenses,
     editExpense,
     deleteExpense,
     replaceAllExpenses,
@@ -397,6 +417,10 @@ export const useUIState = () => {
     uiStateStore,
     (state) => state.context.paymentInstrumentsSectionExpanded
   )
+  const smsImportReviewSheetOpen = useSelector(
+    uiStateStore,
+    (state) => state.context.smsImportReviewSheetOpen
+  )
 
   const setPaymentMethodExpanded = useCallback(
     (expanded: boolean) => uiStateStore.trigger.setPaymentMethodExpanded({ expanded }),
@@ -409,11 +433,18 @@ export const useUIState = () => {
     [uiStateStore]
   )
 
+  const setSmsImportReviewSheetOpen = useCallback(
+    (open: boolean) => uiStateStore.trigger.setSmsImportReviewSheetOpen({ open }),
+    [uiStateStore]
+  )
+
   return {
     paymentMethodSectionExpanded,
     paymentInstrumentsSectionExpanded,
+    smsImportReviewSheetOpen,
     setPaymentMethodExpanded,
     setPaymentInstrumentsExpanded,
+    setSmsImportReviewSheetOpen,
   }
 }
 
