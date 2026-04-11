@@ -123,7 +123,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeSettingsStore()
       await initializeExpenseStore()
       await initializeUIStateStore()
-      await initializeSmsImportReviewStore()
+      await initializeSmsImportReviewStore(smsImportReviewStore)
 
       try {
         const reviewSnapshot = smsImportReviewStore.getSnapshot().context

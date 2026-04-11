@@ -97,6 +97,7 @@ describe("scanSmsImportReviewQueue", () => {
     expect(mockScanRecentSmsMessages).toHaveBeenCalledWith({
       since: "2026-04-11T10:00:00.000Z",
       lookbackDays: 7,
+      limit: 500,
     })
     expect(result.permissionStatus).toBe("granted")
     expect(result.createdItems).toHaveLength(1)
@@ -123,6 +124,22 @@ describe("scanSmsImportReviewQueue", () => {
 
     expect(result.nextCursor).toBe("2026-04-11T10:20:00.000Z")
     expect(result.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
+  })
+
+  it("uses the bounded initial scan window and limit when no cursor exists", async () => {
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([])
+
+    await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(mockScanRecentSmsMessages).toHaveBeenCalledWith({
+      lookbackDays: 7,
+      limit: 500,
+    })
   })
 
   it("dedupes duplicate messages produced within the same scan batch", async () => {

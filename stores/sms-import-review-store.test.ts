@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
+  createSmsImportReviewStore,
   initializeSmsImportReviewStore,
   smsImportReviewStore,
 } from "./sms-import-review-store"
@@ -78,6 +79,50 @@ describe("smsImportReviewStore", () => {
     expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
     expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
     expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
+    expect(context.isLoading).toBe(false)
+  })
+
+  it("prunes resolved items older than 7 days but keeps pending items", async () => {
+    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+    const snapshot: SmsImportReviewQueueSnapshot = {
+      items: [
+        createItem("old-accepted", {
+          status: "accepted",
+          updatedAt: eightDaysAgo,
+          createdAt: eightDaysAgo,
+        }),
+        createItem("old-pending", {
+          status: "pending",
+          updatedAt: eightDaysAgo,
+          createdAt: eightDaysAgo,
+        }),
+      ],
+      lastScanCursor: "2026-04-11T10:20:00.000Z",
+      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
+    }
+    storage.set(STORAGE_KEY, JSON.stringify(snapshot))
+
+    await initializeSmsImportReviewStore()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items.map((item) => item.id)).toEqual(["old-pending"])
+  })
+
+  it("can initialize an injected review store instance", async () => {
+    const alternateStore = createSmsImportReviewStore()
+    storage.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        items: [createItem("alternate")],
+        lastScanCursor: "2026-04-11T10:20:00.000Z",
+        bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
+      } satisfies SmsImportReviewQueueSnapshot)
+    )
+
+    await initializeSmsImportReviewStore(alternateStore)
+
+    const context = alternateStore.getSnapshot().context
+    expect(context.items.map((item) => item.id)).toEqual(["alternate"])
     expect(context.isLoading).toBe(false)
   })
 

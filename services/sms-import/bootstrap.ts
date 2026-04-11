@@ -8,6 +8,9 @@ import {
 import { parseSmsImportCandidate } from "./parser"
 import { SmsImportReviewItem } from "../../types/sms-import"
 
+const SMS_IMPORT_SCAN_LOOKBACK_DAYS = 7
+const SMS_IMPORT_SCAN_LIMIT = 500
+
 export interface SmsImportBootstrapInput {
   existingItems: SmsImportReviewItem[]
   lastScanCursor: string | null
@@ -109,8 +112,15 @@ export async function scanSmsImportReviewQueue(
   )
   const messages = await scanRecentSmsMessages(
     input.lastScanCursor
-      ? { since: input.lastScanCursor, lookbackDays: 7 }
-      : { lookbackDays: 7 }
+      ? {
+          since: input.lastScanCursor,
+          lookbackDays: SMS_IMPORT_SCAN_LOOKBACK_DAYS,
+          limit: SMS_IMPORT_SCAN_LIMIT,
+        }
+      : {
+          lookbackDays: SMS_IMPORT_SCAN_LOOKBACK_DAYS,
+          limit: SMS_IMPORT_SCAN_LIMIT,
+        }
   )
 
   const createdItems = messages
