@@ -1,7 +1,7 @@
 # ADR-004: Android-Only Scope and Play Permission Gate for SMS Import
 
 **Date:** 2026-04-11  
-**Status:** Proposed  
+**Status:** Accepted  
 **Author:** Planning draft via GitHub Copilot
 
 ---
@@ -23,6 +23,8 @@ For v1:
 - keep hard platform-code cleanup as a later follow-up
 - limit the initial historical bootstrap scan to the last 7 days only
 - use app-open bootstrap plus incremental rescans rather than a continuous background service
+- request `READ_SMS` inline from the manual Settings scan flow, not during app bootstrap
+- show permission status in Settings so the SMS import surface stays explicit
 - require policy validation and release-review preparation before production rollout
 
 ## Consequences
@@ -32,6 +34,7 @@ For v1:
 - Keeps the first version aligned with the only supported platform for SMS ingestion
 - Reduces implementation surface and testing burden
 - Limits first-run noise by capping historical scan depth to 7 days
+- Avoids prompting for SMS access during app startup
 - Avoids committing to battery-heavy or policy-risky background behavior too early
 
 ### Negative
@@ -55,7 +58,7 @@ This ADR depends on explicit Google Play restricted-permission review and corres
 
 ## Rollout and follow-up scope
 
-- First release: 7-day bootstrap scan, app-open review queue, manual rescan, Android-only documentation.
+- First release: 7-day bootstrap scan, app-open review queue, Settings-driven manual rescan, Android-only documentation.
 - Later release: consider extending the scan window beyond 7 days.
 - Later release: consider new-SMS event capture behind a feature flag and a separate decision review.
 - Later cleanup: remove remaining iOS/web code paths and dependencies after the Android SMS path stabilizes.

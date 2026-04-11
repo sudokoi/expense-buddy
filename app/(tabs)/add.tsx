@@ -7,12 +7,13 @@ import {
   useSettings,
   useCategories,
   useNotifications,
+  useSmsImportReview,
   useUIState,
 } from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
-import { ViewStyle, TextStyle, Keyboard } from "react-native"
+import { ViewStyle, TextStyle, Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -79,7 +80,13 @@ export default function AddExpenseScreen() {
     defaultPaymentMethod,
     isLoading: isSettingsLoading,
   } = useSettings()
-  const { paymentMethodSectionExpanded, setPaymentMethodExpanded } = useUIState()
+  const { items: smsImportItems, pendingItems: pendingSmsImportItems } =
+    useSmsImportReview()
+  const {
+    paymentMethodSectionExpanded,
+    setPaymentMethodExpanded,
+    setSmsImportReviewSheetOpen,
+  } = useUIState()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
@@ -188,6 +195,11 @@ export default function AddExpenseScreen() {
     // Use store action to toggle and persist
     setPaymentMethodExpanded(!paymentMethodSectionExpanded)
   }
+
+  const handleOpenSmsImport = useCallback(() => {
+    Keyboard.dismiss()
+    setSmsImportReviewSheetOpen(true)
+  }, [setSmsImportReviewSheetOpen])
 
   const resetForm = useCallback(() => {
     setAmount("")
@@ -486,6 +498,22 @@ export default function AddExpenseScreen() {
               </YStack>
             )}
           </YStack>
+
+          {Platform.OS === "android" ? (
+            <Button
+              size="$4"
+              bordered
+              onPress={handleOpenSmsImport}
+              disabled={smsImportItems.length === 0}
+              fontWeight="bold"
+            >
+              {pendingSmsImportItems.length > 0
+                ? t("add.importSmsWithPending", {
+                    count: pendingSmsImportItems.length,
+                  })
+                : t("add.importSms")}
+            </Button>
+          ) : null}
 
           {/* Save Buttons */}
           <XStack style={layoutStyles.saveButton} gap="$2">

@@ -31,7 +31,9 @@ A modern expense tracking app built with React Native and Expo. Track your daily
 - **History View**: Browse expenses organized by date with comprehensive filters (time, amount, search, categories, methods, instruments) and cross-tab synchronization with Analytics
 - **Android SMS Import**: Scan recent SMS transactions on Android, review matched items locally, and import only the expenses you confirm
   - Recent-window scan only for the current version
+  - Settings shows the current SMS permission status and manual scans request access inline only when needed
   - Regex-first parsing for explainable matches
+  - Category suggestions are limited to the shipped default categories; unmatched or deleted suggestions fall back to **Other**
   - Raw SMS content stays on-device and out of GitHub sync
 
 ### 📈 Analytics & Insights
@@ -85,6 +87,7 @@ A modern expense tracking app built with React Native and Expo. Track your daily
 ### 🎨 User Experience
 
 - **Platform Support**: Core expense tracking works on iOS, Android, and Web; SMS import is currently Android-only
+  - SMS import requires a native Android build because Expo Go cannot load the custom SMS module
 - **Dark Mode**: Automatic theme switching with proper token-based styling
 - **In-App Updates**: Automatic update check on launch with non-intrusive banner notification
   - Dismissible notifications that remember your choice per version
@@ -156,6 +159,18 @@ A modern expense tracking app built with React Native and Expo. Track your daily
 2. Find **Saved Instruments**
 3. Tap **Add** to create a new card/UPI nickname
 4. Edit or remove instruments as needed (removals are soft-deletes so they sync correctly)
+
+### Importing SMS Transactions (Android)
+
+1. Go to the **Settings** tab
+2. Open the **SMS Import** section and review the displayed permission status
+3. Tap **Scan recent messages**
+  - If SMS access has not been granted yet, the app requests `READ_SMS` at this point
+  - Startup bootstrap only re-checks status and scans when permission was already granted earlier
+4. Review the staged items, then **Accept**, **Edit**, **Reject**, or **Dismiss** each match
+5. Only accepted items become normal expense records and participate in optional GitHub sync
+
+Category suggestions are intentionally conservative. The parser only suggests the built-in default categories (`Food`, `Transport`, `Groceries`, `Rent`, `Utilities`, `Entertainment`, `Health`, `Other`). If no default category matches, or if the suggested category was deleted, the review flow resolves it to **Other**.
 
 ### Setting Up GitHub Sync
 

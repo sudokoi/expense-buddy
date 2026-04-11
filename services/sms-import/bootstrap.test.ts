@@ -104,7 +104,7 @@ describe("scanSmsImportReviewQueue", () => {
       sourceMessage: newerMessage,
       amount: 250,
       paymentMethodSuggestion: { type: "Credit Card" },
-      categorySuggestion: "Travel",
+      categorySuggestion: "Transport",
       status: "pending",
     })
     expect(result.nextCursor).toBe("2026-04-11T10:20:00.000Z")

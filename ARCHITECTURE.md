@@ -190,15 +190,19 @@ The SMS import feature is intentionally narrow in the current version:
 - **Regex-first parsing** for deterministic, explainable matches
 - **Review-first staging** so matched messages do not create expenses automatically
 - **Local-only raw SMS storage** so sender, body, and dedupe metadata never enter GitHub sync
+- **Default-category suggestion model** so parser output stays aligned with shipped categories and unresolved matches fall back to `Other`
 
 The runtime flow is:
 
-1. The app checks Android SMS permission status.
-2. On launch or manual scan, the native Expo module reads recent inbox messages within the bounded scan window.
-3. The service layer parses candidate expenses and generates dedupe fingerprints.
-4. Parsed candidates are stored in the SMS import review store.
-5. The review sheet lets the user accept, edit, reject, dismiss, or clear items.
-6. Only accepted items become normal expense records and join the regular dirty-day and GitHub sync flow.
+1. On startup, the app checks Android SMS permission status without prompting.
+2. If permission was already granted, bootstrap scanning can read recent inbox messages within the bounded scan window.
+3. From Settings, manual **Scan recent messages** requests permission inline when needed and then runs the same bounded scan flow.
+4. The service layer parses candidate expenses, infers payment method and default-category suggestions, and generates dedupe fingerprints.
+5. Parsed candidates are stored in the SMS import review store, which remains local to the device.
+6. The review sheet lets the user accept, edit, reject, dismiss, or clear items.
+7. Only accepted items become normal expense records and join the regular dirty-day and GitHub sync flow.
+
+Category inference is intentionally conservative. Parser rules only suggest categories from the shipped default set (`Food`, `Transport`, `Groceries`, `Rent`, `Utilities`, `Entertainment`, `Health`, `Other`). If no default rule matches, or if the suggested category is no longer present in user settings, the review flow resolves the item to `Other` before import.
 
 ## GitHub Sync Architecture
 

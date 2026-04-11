@@ -166,7 +166,6 @@ export default function SettingsScreen() {
   const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
   const [smsPermissionStatus, setSmsPermissionStatus] =
     useState<SmsImportPermissionStatus>("undetermined")
-  const [isRequestingSmsPermission, setIsRequestingSmsPermission] = useState(false)
   const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
 
   const defaultPaymentMethodLabel = useMemo(() => {
@@ -195,18 +194,23 @@ export default function SettingsScreen() {
 
   const handleScanSmsImports = useCallback(async () => {
     if (Platform.OS !== "android") {
-      addNotification("SMS import is only available on Android.", "info")
+      addNotification(t("settings.smsImport.notifications.androidOnly"), "info")
       return
     }
 
     setIsScanningSmsImports(true)
 
     try {
-      const permissionStatus = await getSmsPermissionStatus()
+      let permissionStatus = await getSmsPermissionStatus()
+
+      if (permissionStatus !== "granted") {
+        permissionStatus = await requestSmsPermission()
+      }
+
       setSmsPermissionStatus(permissionStatus)
 
       if (permissionStatus !== "granted") {
-        addNotification("Grant SMS permission before scanning recent messages.", "error")
+        addNotification(t("settings.smsImport.notifications.permissionRequired"), "info")
         return
       }
 
@@ -229,15 +233,14 @@ export default function SettingsScreen() {
       if (result.createdItems.length > 0) {
         addNotification(
           result.createdItems.length === 1
-            ? "1 SMS transaction is ready for review."
-            : `${result.createdItems.length} SMS transactions are ready for review.`,
+            ? t("settings.smsImport.notifications.readyOne")
+            : t("settings.smsImport.notifications.readyMany", {
+                count: result.createdItems.length,
+              }),
           "success"
         )
       } else {
-        addNotification(
-          "No new SMS transactions were found in the recent scan window.",
-          "info"
-        )
+        addNotification(t("settings.smsImport.notifications.emptyScan"), "info")
       }
     } catch (error) {
       addNotification(error instanceof Error ? error.message : String(error), "error")
@@ -253,30 +256,6 @@ export default function SettingsScreen() {
     smsImportItems,
     upsertReviewItems,
   ])
-
-  const handleRequestSmsAccess = useCallback(async () => {
-    if (Platform.OS !== "android") {
-      addNotification("SMS import is only available on Android.", "info")
-      return
-    }
-
-    setIsRequestingSmsPermission(true)
-
-    try {
-      const permissionStatus = await requestSmsPermission()
-      setSmsPermissionStatus(permissionStatus)
-
-      if (permissionStatus === "granted") {
-        addNotification("SMS permission granted.", "success")
-      } else {
-        addNotification("SMS permission was not granted.", "info")
-      }
-    } catch (error) {
-      addNotification(error instanceof Error ? error.message : String(error), "error")
-    } finally {
-      setIsRequestingSmsPermission(false)
-    }
-  }, [addNotification])
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -895,23 +874,20 @@ export default function SettingsScreen() {
 
         {Platform.OS === "android" ? (
           <SettingsSection
-            title="SMS Import"
-            description="Import recent SMS transactions on-device and review them before saving expenses."
+            title={t("settings.smsImport.title")}
+            description={t("settings.smsImport.description")}
             gap="$4"
           >
-            <CardLikeStatusRow label="Permission status" value={smsPermissionStatus} />
+            <CardLikeStatusRow
+              label={t("settings.smsImport.permissionStatus")}
+              value={formatSmsPermissionStatus(smsPermissionStatus, t)}
+            />
 
             <XStack style={layoutStyles.actionRow}>
-              <Button
-                onPress={handleRequestSmsAccess}
-                disabled={isRequestingSmsPermission}
-              >
-                {isRequestingSmsPermission
-                  ? "Requesting access..."
-                  : "Request SMS access"}
-              </Button>
               <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
-                {isScanningSmsImports ? "Scanning..." : "Scan recent messages"}
+                {isScanningSmsImports
+                  ? t("settings.smsImport.actions.scanning")
+                  : t("settings.smsImport.actions.scan")}
               </Button>
             </XStack>
 
@@ -921,14 +897,15 @@ export default function SettingsScreen() {
                 disabled={smsImportItems.length === 0}
               >
                 {smsImportItems.length > 0
-                  ? `Review imports (${pendingSmsImportItems.length} pending)`
-                  : "Review imports"}
+                  ? t("settings.smsImport.actions.reviewWithPending", {
+                      count: pendingSmsImportItems.length,
+                    })
+                  : t("settings.smsImport.actions.review")}
               </Button>
             </XStack>
 
             <Text color="$color" opacity={0.65} fontSize="$2">
-              The current scan is limited to recent messages and keeps raw SMS data local
-              to this device.
+              {t("settings.smsImport.helper")}
             </Text>
           </SettingsSection>
         ) : null}
@@ -1017,4 +994,20 @@ function CardLikeStatusRow({ label, value }: { label: string; value: string }) {
       <Text fontWeight="600">{value}</Text>
     </XStack>
   )
+}
+
+function formatSmsPermissionStatus(
+  status: SmsImportPermissionStatus,
+  t: (key: string) => string
+): string {
+  switch (status) {
+    case "granted":
+      return t("settings.smsImport.statuses.granted")
+    case "denied":
+      return t("settings.smsImport.statuses.denied")
+    case "undetermined":
+      return t("settings.smsImport.statuses.undetermined")
+    case "unavailable":
+      return t("settings.smsImport.statuses.unavailable")
+  }
 }

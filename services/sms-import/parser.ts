@@ -1,5 +1,6 @@
 import { PaymentMethod } from "../../types/expense"
 import { SmsImportRawMessage } from "../../types/sms-import"
+import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
 
 export interface ParsedSmsImportCandidate {
   amount: number
@@ -17,6 +18,45 @@ const amountPattern = /(?:INR|RS\.?|₹)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
 const debitKeywords = /debited|spent|withdrawn|paid|purchase|txn|transaction|upi/i
 const creditOnlyKeywords = /credited|received/i
 const merchantPattern = /\b(?:at|to|merchant)\s+([A-Za-z0-9&._\-/ ]{2,40})/i
+const defaultCategoryLabels = new Set(DEFAULT_CATEGORIES.map((category) => category.label))
+const otherCategoryLabel = defaultCategoryLabels.has("Other") ? "Other" : "Other"
+
+const categoryInferenceRules: Array<{ category: string; pattern: RegExp }> = [
+  {
+    category: "Food",
+    pattern:
+      /swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food/i,
+  },
+  {
+    category: "Transport",
+    pattern:
+      /uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel/i,
+  },
+  {
+    category: "Groceries",
+    pattern:
+      /grocery|groceries|supermarket|hypermarket|bigbasket|blinkit|zepto|instamart|fresh|dmart|reliance fresh/i,
+  },
+  {
+    category: "Rent",
+    pattern: /\brent\b|landlord|lease|tenancy|apartment rent|house rent/i,
+  },
+  {
+    category: "Utilities",
+    pattern:
+      /electricity|water bill|utility bill|gas bill|broadband|wifi|internet bill|mobile bill|recharge|airtel|jio|vi\b|bsnl/i,
+  },
+  {
+    category: "Entertainment",
+    pattern:
+      /netflix|spotify|prime video|hotstar|bookmyshow|movie|cinema|theatre|gaming|playstation|xbox/i,
+  },
+  {
+    category: "Health",
+    pattern:
+      /hospital|clinic|pharmacy|medical|medicine|diagnostic|lab|apollo|practo|medplus|health/i,
+  },
+]
 
 function parseAmount(body: string): number | null {
   const match = body.match(amountPattern)
@@ -53,25 +93,23 @@ function inferMerchant(body: string): string | undefined {
   return match[1].replace(/\s+/g, " ").trim()
 }
 
-function inferCategory(merchantName?: string): string | undefined {
-  if (!merchantName) {
-    return undefined
+function normalizeSuggestedCategory(category: string): string {
+  return defaultCategoryLabels.has(category) ? category : otherCategoryLabel
+}
+
+function inferCategory(body: string, merchantName?: string): string {
+  const normalizedContent = `${merchantName ?? ""} ${body}`.trim().toLowerCase()
+  if (normalizedContent.length === 0) {
+    return otherCategoryLabel
   }
 
-  const normalizedMerchant = merchantName.toLowerCase()
-  if (/swiggy|zomato|cafe|restaurant|pizza|food/.test(normalizedMerchant)) {
-    return "Food"
+  for (const rule of categoryInferenceRules) {
+    if (rule.pattern.test(normalizedContent)) {
+      return normalizeSuggestedCategory(rule.category)
+    }
   }
 
-  if (/uber|ola|petrol|fuel|metro|rail|travel/.test(normalizedMerchant)) {
-    return "Travel"
-  }
-
-  if (/amazon|flipkart|myntra|store|mart/.test(normalizedMerchant)) {
-    return "Shopping"
-  }
-
-  return undefined
+  return otherCategoryLabel
 }
 
 export function parseSmsImportCandidate(
@@ -97,7 +135,7 @@ export function parseSmsImportCandidate(
     amount,
     currency: "INR",
     merchantName,
-    categorySuggestion: inferCategory(merchantName),
+    categorySuggestion: inferCategory(body, merchantName),
     paymentMethodSuggestion: inferPaymentMethod(body),
     noteSuggestion: merchantName ? `SMS import: ${merchantName}` : undefined,
     transactionDate: message.receivedAt,

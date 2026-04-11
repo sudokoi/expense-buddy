@@ -30,19 +30,35 @@ describe("parseSmsImportCandidate", () => {
   })
 
   it.each([
-    ["INR 499 spent at Amazon Marketplace using debit card", "Shopping", "Debit Card"],
-    ["INR 820 paid to Uber Trip via credit card", "Travel", "Credit Card"],
+    ["INR 499 spent at Amazon Marketplace using debit card", "Other", "Debit Card"],
+    ["INR 820 paid to Uber Trip via credit card", "Transport", "Credit Card"],
+    ["INR 1499 paid for Jio recharge", "Utilities", undefined],
+    ["INR 899 spent at Apollo Pharmacy", "Health", undefined],
+    ["INR 550 spent at BigBasket", "Groceries", undefined],
   ])(
     "infers category and payment method for %s",
     (body, expectedCategory, expectedPaymentMethod) => {
       const candidate = parseSmsImportCandidate(createMessage(body))
 
       expect(candidate?.categorySuggestion).toBe(expectedCategory)
-      expect(candidate?.paymentMethodSuggestion).toEqual({
-        type: expectedPaymentMethod,
-      })
+
+      if (expectedPaymentMethod) {
+        expect(candidate?.paymentMethodSuggestion).toEqual({
+          type: expectedPaymentMethod,
+        })
+      } else {
+        expect(candidate?.paymentMethodSuggestion).toBeUndefined()
+      }
     }
   )
+
+  it("falls back to Other when no default category pattern matches", () => {
+    const candidate = parseSmsImportCandidate(
+      createMessage("INR 299 paid to Amazon Marketplace via UPI")
+    )
+
+    expect(candidate?.categorySuggestion).toBe("Other")
+  })
 
   it("ignores credited messages", () => {
     const candidate = parseSmsImportCandidate(

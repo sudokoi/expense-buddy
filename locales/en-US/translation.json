@@ -143,6 +143,8 @@
     "note": "Note (Optional)",
     "notePlaceholder": "What was this for?",
     "paymentMethod": "Payment Method (Optional)",
+    "importSms": "Import SMS",
+    "importSmsWithPending": "Import SMS ({{count}} pending)",
     "addAnother": "Add another",
     "save": "Save Expense",
     "success": "Expense added",
@@ -353,6 +355,31 @@
       "mathEntry": "Allow mathematical amount entry",
       "mathEntryHelp": "Use expressions like 120+45 in amount fields when enabled."
     },
+    "smsImport": {
+      "title": "SMS Import",
+      "description": "Import recent SMS transactions on-device and review them before saving expenses.",
+      "permissionStatus": "Permission status",
+      "helper": "The current scan is limited to recent messages and keeps raw SMS data local to this device.",
+      "actions": {
+        "scan": "Scan recent messages",
+        "scanning": "Scanning...",
+        "review": "Review imports",
+        "reviewWithPending": "Review imports ({{count}} pending)"
+      },
+      "statuses": {
+        "granted": "Granted",
+        "denied": "Denied",
+        "undetermined": "Not requested",
+        "unavailable": "Unavailable"
+      },
+      "notifications": {
+        "androidOnly": "SMS import is only available on Android.",
+        "permissionRequired": "SMS permission is required to scan recent messages.",
+        "readyOne": "1 SMS transaction is ready for review.",
+        "readyMany": "{{count}} SMS transactions are ready for review.",
+        "emptyScan": "No new SMS transactions were found in the recent scan window."
+      }
+    },
     "about": {
       "currentVersion": "Current Version",
       "latestVersion": "Latest Version",
@@ -361,6 +388,65 @@
       "download": "Download v{{version}}",
       "reportIssue": "Report an Issue",
       "viewGitHub": "View on GitHub"
+    }
+  },
+  "smsImport": {
+    "sheet": {
+      "title": "Review SMS Imports",
+      "editTitle": "Edit SMS Import",
+      "subtitle": {
+        "editing": "Review the parsed details, adjust anything needed, then import the confirmed expense.",
+        "pendingAndResolved": "{{pendingCount}} pending and {{resolvedCount}} resolved SMS imports.",
+        "pendingOnly": "{{count}} pending SMS imports ready for review.",
+        "resolvedOnly": "{{count}} resolved SMS imports kept locally."
+      },
+      "footer": {
+        "saveAndImport": "Save and Import",
+        "hideResolved": "Hide resolved",
+        "showResolved": "Show resolved",
+        "acceptAllSuggested": "Accept All Suggested",
+        "clearResolved": "Clear resolved"
+      },
+      "sourceSms": "Source SMS",
+      "unknownSender": "Unknown sender",
+      "fields": {
+        "amount": "Amount",
+        "category": "Category",
+        "paymentMethod": "Payment method",
+        "note": "Note"
+      },
+      "sectionTitles": {
+        "pendingReview": "Pending review",
+        "resolved": "Resolved"
+      },
+      "labels": {
+        "amount": "Amount",
+        "category": "Category",
+        "payment": "Payment",
+        "status": "Status"
+      },
+      "values": {
+        "needsReview": "Needs review"
+      },
+      "actions": {
+        "accept": "Accept",
+        "reject": "Reject",
+        "dismiss": "Dismiss"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "dismissed": "Dismissed"
+      },
+      "notifications": {
+        "invalidAmount": "Enter a valid amount before importing.",
+        "importedOne": "Imported SMS transaction as an expense.",
+        "noPendingReady": "No pending SMS items are ready to import.",
+        "importedMany": "Imported {{count}} SMS transactions.",
+        "importedPartial": "Imported {{count}} SMS transactions. Some items still need review."
+      },
+      "emptyResolved": "All current SMS imports are resolved. Use Show resolved to review or clear them."
     }
   },
   "dayView": {

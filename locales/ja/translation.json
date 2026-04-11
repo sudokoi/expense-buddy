@@ -143,6 +143,8 @@
     "note": "メモ (任意)",
     "notePlaceholder": "何に使いましたか？",
     "paymentMethod": "支払方法 (任意)",
+    "importSms": "SMSを取り込む",
+    "importSmsWithPending": "SMSを取り込む (保留 {{count}} 件)",
     "addAnother": "続けて追加",
     "save": "支出を保存",
     "success": "支出を追加しました",
@@ -353,6 +355,31 @@
       "mathEntry": "数式で金額を入力できるようにする",
       "mathEntryHelp": "有効にすると、金額欄で 120+45 のような式を使えます。"
     },
+    "smsImport": {
+      "title": "SMS インポート",
+      "description": "最近のSMS取引を端末上で取り込み、支出として保存する前に確認できます。",
+      "permissionStatus": "権限の状態",
+      "helper": "現在のスキャンは最近のメッセージのみが対象で、生のSMSデータはこの端末内に保持されます。",
+      "actions": {
+        "scan": "最近のメッセージをスキャン",
+        "scanning": "スキャン中...",
+        "review": "インポートを確認",
+        "reviewWithPending": "インポートを確認 ({{count}} 件保留)"
+      },
+      "statuses": {
+        "granted": "許可済み",
+        "denied": "拒否",
+        "undetermined": "未要求",
+        "unavailable": "利用不可"
+      },
+      "notifications": {
+        "androidOnly": "SMSインポートはAndroidでのみ利用できます。",
+        "permissionRequired": "最近のメッセージをスキャンするにはSMS権限が必要です。",
+        "readyOne": "1件のSMS取引を確認できます。",
+        "readyMany": "{{count}}件のSMS取引を確認できます。",
+        "emptyScan": "最近のスキャン範囲では新しいSMS取引は見つかりませんでした。"
+      }
+    },
     "about": {
       "currentVersion": "現在のバージョン",
       "latestVersion": "最新バージョン",
@@ -361,6 +388,65 @@
       "download": "v{{version}} をダウンロード",
       "reportIssue": "問題を報告",
       "viewGitHub": "GitHubで見る"
+    }
+  },
+  "smsImport": {
+    "sheet": {
+      "title": "SMSインポートを確認",
+      "editTitle": "SMSインポートを編集",
+      "subtitle": {
+        "editing": "解析結果を確認し、必要なら調整してから、確定した支出として取り込みます。",
+        "pendingAndResolved": "保留中 {{pendingCount}} 件、処理済み {{resolvedCount}} 件のSMSインポートがあります。",
+        "pendingOnly": "{{count}}件の保留中SMSインポートを確認できます。",
+        "resolvedOnly": "{{count}}件の処理済みSMSインポートが端末内に保持されています。"
+      },
+      "footer": {
+        "saveAndImport": "保存して取り込む",
+        "hideResolved": "処理済みを隠す",
+        "showResolved": "処理済みを表示",
+        "acceptAllSuggested": "提案をすべて受け入れる",
+        "clearResolved": "処理済みをクリア"
+      },
+      "sourceSms": "元のSMS",
+      "unknownSender": "送信元不明",
+      "fields": {
+        "amount": "金額",
+        "category": "カテゴリー",
+        "paymentMethod": "支払方法",
+        "note": "メモ"
+      },
+      "sectionTitles": {
+        "pendingReview": "確認待ち",
+        "resolved": "処理済み"
+      },
+      "labels": {
+        "amount": "金額",
+        "category": "カテゴリー",
+        "payment": "支払い",
+        "status": "状態"
+      },
+      "values": {
+        "needsReview": "確認が必要"
+      },
+      "actions": {
+        "accept": "受け入れる",
+        "reject": "却下",
+        "dismiss": "非表示"
+      },
+      "statuses": {
+        "pending": "保留中",
+        "accepted": "受け入れ済み",
+        "rejected": "却下済み",
+        "dismissed": "非表示"
+      },
+      "notifications": {
+        "invalidAmount": "取り込む前に有効な金額を入力してください。",
+        "importedOne": "SMS取引を支出として取り込みました。",
+        "noPendingReady": "取り込み可能な保留中SMS項目はありません。",
+        "importedMany": "{{count}}件のSMS取引を取り込みました。",
+        "importedPartial": "{{count}}件のSMS取引を取り込みました。まだ確認が必要な項目があります。"
+      },
+      "emptyResolved": "現在のSMSインポートはすべて処理済みです。確認または削除するには「処理済みを表示」を使ってください。"
     }
   },
   "dayView": {

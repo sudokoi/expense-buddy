@@ -26,9 +26,13 @@ Your data never leaves your device unless you explicitly choose to sync it to Gi
 
 If you enable SMS import on Android:
 
+- **The app checks SMS permission status on startup, but only prompts for `READ_SMS` when you choose to scan recent messages**
 - **Recent SMS messages are scanned on-device only**
+- **Scans are bounded to the recent import window used by the current release**
 - **Raw SMS sender and body content are stored locally for review only**
 - **Raw SMS content, dedupe fingerprints, and review metadata are not synced to GitHub**
+- **Category suggestions are generated locally from deterministic regex rules mapped to the app's default categories**
+- **If no category matches, or if a suggested category was deleted, the app falls back to `Other` until you confirm or edit the item**
 - **Only expenses you explicitly confirm are added to your normal expense records**
 
 The current SMS import flow is review-first. Messages that match supported transaction patterns are staged locally until you accept, reject, dismiss, or clear them.
@@ -57,7 +61,7 @@ The app may request the following permissions:
 
 - **Internet Access**: Required only for the optional GitHub sync feature
 - **Secure Storage**: To safely store your GitHub token on your device
-- **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import
+- **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import; the app requests it when you manually start a scan from Settings
 
 ## Children's Privacy
 

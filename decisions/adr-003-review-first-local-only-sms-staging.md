@@ -1,7 +1,7 @@
 # ADR-003: Review-First Local-Only SMS Staging
 
 **Date:** 2026-04-11  
-**Status:** Proposed  
+**Status:** Accepted  
 **Author:** Planning draft via GitHub Copilot
 
 ---
@@ -23,6 +23,7 @@ The system will:
 - keep raw SMS bodies, senders, and dedupe fingerprints out of synced expense records
 - keep review-state storage local to the device
 - avoid syncing raw SMS data or review metadata to GitHub in v1
+- keep accepted, rejected, and dismissed workflow state in local persistence only
 
 ## Consequences
 
@@ -55,5 +56,5 @@ This ADR is central to the product's privacy posture. The privacy policy and arc
 ## Rollout and follow-up scope
 
 - Implement a local review queue with pending, accepted, rejected, and dismissed states.
-- Add a secondary UI entry point so users can revisit dismissed items later.
+- Add a secondary UI entry point so users can revisit staged items later.
 - Revisit optional synced learnings or merchant rules only under a separate ADR and only without syncing raw SMS content.

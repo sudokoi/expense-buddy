@@ -15,6 +15,7 @@
     "check:tamagui": "tamagui check",
     "start": "expo start -c",
     "android": "expo run:android",
+    "build:android:internal:local": "node ./scripts/build-android-internal-local.js",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",

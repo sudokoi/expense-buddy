@@ -7,7 +7,10 @@ import {
   type Expense,
   type ExpenseCategory,
 } from "../../types/expense"
-import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import {
+  getPaymentMethodI18nKey,
+  PAYMENT_METHODS,
+} from "../../constants/payment-methods"
 import {
   useCategories,
   useExpenses,
@@ -51,6 +54,40 @@ function formatTimestamp(value: string): string {
   }
 
   return date.toLocaleString()
+}
+
+function getLocalizedCategoryLabel(
+  label: ExpenseCategory,
+  t: (key: string) => string
+): string {
+  return label === "Other" ? t("settings.categories.other") : label
+}
+
+function getLocalizedPaymentMethodLabel(
+  paymentMethodType: PaymentMethodType | undefined,
+  t: (key: string) => string
+): string {
+  if (!paymentMethodType) {
+    return t("common.none")
+  }
+
+  return t(`paymentMethods.${getPaymentMethodI18nKey(paymentMethodType)}`)
+}
+
+function getLocalizedReviewStatus(
+  status: SmsImportReviewItem["status"],
+  t: (key: string) => string
+): string {
+  switch (status) {
+    case "pending":
+      return t("smsImport.sheet.statuses.pending")
+    case "accepted":
+      return t("smsImport.sheet.statuses.accepted")
+    case "rejected":
+      return t("smsImport.sheet.statuses.rejected")
+    case "dismissed":
+      return t("smsImport.sheet.statuses.dismissed")
+  }
 }
 
 function resolveCategoryLabel(
@@ -178,16 +215,16 @@ export function SmsImportReviewSheet() {
       )
 
       if (!expenseDraft) {
-        addNotification("Enter a valid amount before importing.", "error")
+        addNotification(t("smsImport.sheet.notifications.invalidAmount"), "error")
         return false
       }
 
       const [createdExpense] = addExpenses([expenseDraft])
       markItemAccepted(item.id, createdExpense?.id)
-      addNotification("Imported SMS transaction as an expense.", "success")
+      addNotification(t("smsImport.sheet.notifications.importedOne"), "success")
       return true
     },
-    [addExpenses, addNotification, markItemAccepted, settings.defaultCurrency]
+    [addExpenses, addNotification, markItemAccepted, settings.defaultCurrency, t]
   )
 
   const handleAcceptSuggested = useCallback(
@@ -228,7 +265,7 @@ export function SmsImportReviewSheet() {
       )
 
     if (acceptedPairs.length === 0) {
-      addNotification("No pending SMS items are ready to import.", "error")
+      addNotification(t("smsImport.sheet.notifications.noPendingReady"), "error")
       return
     }
 
@@ -241,13 +278,17 @@ export function SmsImportReviewSheet() {
     if (acceptedPairs.length === pendingItems.length) {
       addNotification(
         acceptedPairs.length === 1
-          ? "Imported 1 SMS transaction."
-          : `Imported ${acceptedPairs.length} SMS transactions.`,
+          ? t("smsImport.sheet.notifications.importedOne")
+          : t("smsImport.sheet.notifications.importedMany", {
+              count: acceptedPairs.length,
+            }),
         "success"
       )
     } else {
       addNotification(
-        `Imported ${acceptedPairs.length} SMS transactions. Some items still need review.`,
+        t("smsImport.sheet.notifications.importedPartial", {
+          count: acceptedPairs.length,
+        }),
         "info"
       )
     }
@@ -262,19 +303,26 @@ export function SmsImportReviewSheet() {
 
   const pendingSubtitle = useMemo(() => {
     if (editingItem) {
-      return "Review the parsed details, adjust anything needed, then import the confirmed expense."
+      return t("smsImport.sheet.subtitle.editing")
     }
 
     if (pendingItems.length > 0 && resolvedItems.length > 0) {
-      return `${pendingItems.length} pending and ${resolvedItems.length} resolved SMS imports.`
+      return t("smsImport.sheet.subtitle.pendingAndResolved", {
+        pendingCount: pendingItems.length,
+        resolvedCount: resolvedItems.length,
+      })
     }
 
     if (pendingItems.length > 0) {
-      return `${pendingItems.length} pending SMS imports ready for review.`
+      return t("smsImport.sheet.subtitle.pendingOnly", {
+        count: pendingItems.length,
+      })
     }
 
-    return `${resolvedItems.length} resolved SMS imports kept locally.`
-  }, [editingItem, pendingItems.length, resolvedItems.length])
+    return t("smsImport.sheet.subtitle.resolvedOnly", {
+      count: resolvedItems.length,
+    })
+  }, [editingItem, pendingItems.length, resolvedItems.length, t])
 
   if (!hasItems) {
     return null
@@ -284,7 +332,7 @@ export function SmsImportReviewSheet() {
     <AppSheetScaffold
       open={open}
       onClose={closeSheet}
-      title={editingItem ? "Edit SMS Import" : "Review SMS Imports"}
+      title={editingItem ? t("smsImport.sheet.editTitle") : t("smsImport.sheet.title")}
       subtitle={pendingSubtitle}
       snapPoints={[92]}
       scroll
@@ -293,24 +341,30 @@ export function SmsImportReviewSheet() {
           <XStack justify="flex-end" gap="$2">
             <Button onPress={closeEditor}>{t("common.cancel")}</Button>
             <Button themeInverse onPress={handleAcceptEdited}>
-              Save and Import
+              {t("smsImport.sheet.footer.saveAndImport")}
             </Button>
           </XStack>
         ) : pendingItems.length > 1 ? (
           <XStack justify="space-between" gap="$2">
             <Button onPress={() => setShowResolvedItems((current) => !current)}>
-              {showResolvedItems ? "Hide resolved" : "Show resolved"}
+              {showResolvedItems
+                ? t("smsImport.sheet.footer.hideResolved")
+                : t("smsImport.sheet.footer.showResolved")}
             </Button>
             <Button themeInverse onPress={handleAcceptAllSuggested}>
-              Accept All Suggested
+              {t("smsImport.sheet.footer.acceptAllSuggested")}
             </Button>
           </XStack>
         ) : resolvedItems.length > 0 ? (
           <XStack justify="space-between" gap="$2">
             <Button onPress={() => setShowResolvedItems((current) => !current)}>
-              {showResolvedItems ? "Hide resolved" : "Show resolved"}
+              {showResolvedItems
+                ? t("smsImport.sheet.footer.hideResolved")
+                : t("smsImport.sheet.footer.showResolved")}
             </Button>
-            <Button onPress={clearResolvedItems}>Clear resolved</Button>
+            <Button onPress={clearResolvedItems}>
+              {t("smsImport.sheet.footer.clearResolved")}
+            </Button>
           </XStack>
         ) : undefined
       }
@@ -319,9 +373,9 @@ export function SmsImportReviewSheet() {
         <YStack gap="$4" pb="$6">
           <Card bordered padding="$3" backgroundColor="$backgroundHover">
             <YStack gap="$2">
-              <Text fontWeight="700">Source SMS</Text>
+              <Text fontWeight="700">{t("smsImport.sheet.sourceSms")}</Text>
               <Text fontSize="$3" opacity={0.7}>
-                {editingItem.sourceMessage.sender || "Unknown sender"}
+                {editingItem.sourceMessage.sender || t("smsImport.sheet.unknownSender")}
               </Text>
               <Text fontSize="$2" opacity={0.6}>
                 {formatTimestamp(editingItem.sourceMessage.receivedAt)}
@@ -331,7 +385,7 @@ export function SmsImportReviewSheet() {
           </Card>
 
           <YStack gap="$2">
-            <Label>Amount</Label>
+            <Label>{t("smsImport.sheet.fields.amount")}</Label>
             <Input
               keyboardType="numeric"
               value={editingDraft.amount}
@@ -349,7 +403,7 @@ export function SmsImportReviewSheet() {
           </YStack>
 
           <YStack gap="$2">
-            <Label>Category</Label>
+            <Label>{t("smsImport.sheet.fields.category")}</Label>
             <XStack style={layoutStyles.categoryRow}>
               {categories.map((category) => (
                 <CategoryCard
@@ -374,7 +428,7 @@ export function SmsImportReviewSheet() {
           </YStack>
 
           <YStack gap="$2">
-            <Label>Payment method</Label>
+            <Label>{t("smsImport.sheet.fields.paymentMethod")}</Label>
             <XStack style={layoutStyles.paymentMethodRow}>
               <Button
                 bg={editingDraft.paymentMethodType ? "$background" : "$backgroundHover"}
@@ -391,7 +445,7 @@ export function SmsImportReviewSheet() {
                   )
                 }}
               >
-                None
+                  {t("common.none")}
               </Button>
 
               {PAYMENT_METHODS.map((config) => (
@@ -415,7 +469,7 @@ export function SmsImportReviewSheet() {
           </YStack>
 
           <YStack gap="$2">
-            <Label>Note</Label>
+            <Label>{t("smsImport.sheet.fields.note")}</Label>
             <TextArea
               minH={100}
               value={editingDraft.note}
@@ -436,7 +490,7 @@ export function SmsImportReviewSheet() {
         <YStack gap="$4" pb="$6">
           {pendingItems.length > 0 ? (
             <YStack gap="$3">
-              <Text fontWeight="700">Pending review</Text>
+              <Text fontWeight="700">{t("smsImport.sheet.sectionTitles.pendingReview")}</Text>
 
               {pendingItems.map((item) => (
                 <Card key={item.id} bordered padding="$3">
@@ -452,17 +506,23 @@ export function SmsImportReviewSheet() {
 
                     <YStack gap="$1">
                       <Text>
-                        Amount:{" "}
+                        {t("smsImport.sheet.labels.amount")}: 
                         {typeof item.amount === "number"
                           ? `${item.currency || settings.defaultCurrency || "INR"} ${item.amount}`
-                          : "Needs review"}
+                          : t("smsImport.sheet.values.needsReview")}
                       </Text>
                       <Text>
-                        Category:{" "}
-                        {item.categorySuggestion ||
-                          resolveCategoryLabel(item, categories)}
+                        {t("smsImport.sheet.labels.category")}: {getLocalizedCategoryLabel(
+                          resolveCategoryLabel(item, categories),
+                          t
+                        )}
                       </Text>
-                      <Text>Payment: {item.paymentMethodSuggestion?.type || "None"}</Text>
+                      <Text>
+                        {t("smsImport.sheet.labels.payment")}: {getLocalizedPaymentMethodLabel(
+                          item.paymentMethodSuggestion?.type,
+                          t
+                        )}
+                      </Text>
                       <Text numberOfLines={3} opacity={0.75}>
                         {item.sourceMessage.body}
                       </Text>
@@ -470,23 +530,23 @@ export function SmsImportReviewSheet() {
 
                     <XStack style={layoutStyles.actionRow}>
                       <Button themeInverse onPress={() => handleAcceptSuggested(item)}>
-                        Accept
+                        {t("smsImport.sheet.actions.accept")}
                       </Button>
-                      <Button onPress={() => openEditor(item)}>Edit</Button>
+                      <Button onPress={() => openEditor(item)}>{t("common.edit")}</Button>
                       <Button
                         theme="red"
                         onPress={() => {
                           markItemRejected(item.id)
                         }}
                       >
-                        Reject
+                        {t("smsImport.sheet.actions.reject")}
                       </Button>
                       <Button
                         onPress={() => {
                           dismissItem(item.id)
                         }}
                       >
-                        Dismiss
+                        {t("smsImport.sheet.actions.dismiss")}
                       </Button>
                     </XStack>
                   </YStack>
@@ -498,9 +558,9 @@ export function SmsImportReviewSheet() {
           {resolvedItems.length > 0 && showResolvedItems ? (
             <YStack gap="$3">
               <XStack justify="space-between" items="center">
-                <Text fontWeight="700">Resolved</Text>
+                <Text fontWeight="700">{t("smsImport.sheet.sectionTitles.resolved")}</Text>
                 <Button size="$3" onPress={clearResolvedItems}>
-                  Clear resolved
+                  {t("smsImport.sheet.footer.clearResolved")}
                 </Button>
               </XStack>
 
@@ -513,7 +573,12 @@ export function SmsImportReviewSheet() {
                     <Text fontSize="$2" opacity={0.6}>
                       {formatTimestamp(item.sourceMessage.receivedAt)}
                     </Text>
-                    <Text>Status: {item.status}</Text>
+                    <Text>
+                      {t("smsImport.sheet.labels.status")}: {getLocalizedReviewStatus(
+                        item.status,
+                        t
+                      )}
+                    </Text>
                     <Text numberOfLines={2} opacity={0.75}>
                       {item.sourceMessage.body}
                     </Text>
@@ -525,10 +590,7 @@ export function SmsImportReviewSheet() {
 
           {pendingItems.length === 0 && resolvedItems.length > 0 && !showResolvedItems ? (
             <Card bordered padding="$3" backgroundColor="$backgroundHover">
-              <Text opacity={0.75}>
-                All current SMS imports are resolved. Use Show resolved to review or clear
-                them.
-              </Text>
+              <Text opacity={0.75}>{t("smsImport.sheet.emptyResolved")}</Text>
             </Card>
           ) : null}
         </YStack>

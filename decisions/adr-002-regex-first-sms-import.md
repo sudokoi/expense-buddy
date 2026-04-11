@@ -1,7 +1,7 @@
 # ADR-002: Regex-First SMS Import
 
 **Date:** 2026-04-11  
-**Status:** Proposed  
+**Status:** Accepted  
 **Author:** Planning draft via GitHub Copilot
 
 ---
@@ -14,14 +14,16 @@ The current product goal is a narrow first release that prioritizes reliability,
 
 ## Decision
 
-Adopt a regex-first parser for v1 SMS import.
+Adopt a regex-first parser for the shipped SMS import release.
 
 The parser will:
 
 - use deterministic pattern matching rather than ML or TFLite
 - prioritize India-first transactional SMS coverage
-- be implemented as a registry of locale or region-specific regex packs
+- be implemented as a deterministic rule set that can grow into locale or region-specific regex packs
 - keep extraction logic explainable and testable
+- map category suggestions onto the app's shipped default categories only
+- fall back to `Other` when no default category can be resolved
 - defer any ML or hybrid parser approach to a later ADR if regex-first proves insufficient
 
 ## Consequences
@@ -32,6 +34,7 @@ The parser will:
 - Lower implementation and maintenance complexity
 - No bundled ML model assets, tokenizer files, or model-loading constraints in v1
 - Better fit for a review-first UX where the system should be transparent about why a message matched
+- Avoids suggesting custom or stale categories that may not exist on a given device
 
 ### Negative
 
@@ -54,6 +57,6 @@ This decision supports local-only processing and avoids introducing any remote i
 
 ## Rollout and follow-up scope
 
-- Start with India-first regex packs for debit card, credit card, ATM withdrawal, bank debit, and UPI transactional messages.
+- Start with India-first transactional coverage and general merchant regex rules that map into the shipped default categories.
 - Add smoke coverage for the other currently supported locales after the India-first path is stable.
 - Revisit ML only if regex-first coverage, precision, or maintenance cost proves insufficient after release data is reviewed.
