@@ -176,6 +176,7 @@ export function SmsImportReviewSheet() {
     resolvedItems,
     isLoading,
     markItemAccepted,
+    markItemsAccepted,
     markItemRejected,
     dismissItem,
     clearResolvedItems,
@@ -289,9 +290,12 @@ export function SmsImportReviewSheet() {
 
     const createdExpenses = addExpenses(acceptedPairs.map((pair) => pair.expense))
 
-    acceptedPairs.forEach((pair, index) => {
-      markItemAccepted(pair.item.id, createdExpenses[index]?.id)
-    })
+    markItemsAccepted(
+      acceptedPairs.map((pair, index) => ({
+        id: pair.item.id,
+        acceptedExpenseId: createdExpenses[index]?.id,
+      }))
+    )
 
     if (acceptedPairs.length === pendingItems.length) {
       addNotification(
@@ -314,7 +318,7 @@ export function SmsImportReviewSheet() {
     addExpenses,
     addNotification,
     categories,
-    markItemAccepted,
+    markItemsAccepted,
     pendingItems,
     paymentInstruments,
     settings.defaultCurrency,

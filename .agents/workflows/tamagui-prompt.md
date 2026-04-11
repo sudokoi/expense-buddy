@@ -10,14 +10,14 @@ This document provides an overview of the Tamagui configuration for this project
 
 All text components will use the "body" font family by default.
 
-### Only Allow Shorthands: `true`
+### Only Allow Shorthands: `not enforced`
 
-**You MUST use shorthand properties in this project.**
+Shorthand properties are supported in this project, but full property names are also allowed because `onlyAllowShorthands` is not enabled in the current Tamagui config. Prefer shorthands where they improve readability, but do not assume full property names will error.
 
-Full property names are not allowed. For example:
+For example:
 
 - ✅ `<Stack w="$10" />` (correct)
-- ❌ `<Stack width="$10" />` (will error)
+- ✅ `<Stack width="$10" />` (also allowed)
 
 See the Shorthand Properties section below for all available shorthands.
 

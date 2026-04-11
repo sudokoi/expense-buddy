@@ -114,4 +114,28 @@ describe("smsImportReviewStore", () => {
     const context = smsImportReviewStore.getSnapshot().context
     expect(context.items.map((item) => item.id)).toEqual(["newer"])
   })
+
+  it("marks multiple items accepted with a single persisted snapshot", async () => {
+    smsImportReviewStore.trigger.upsertReviewItems({
+      items: [createItem("older"), createItem("newer")],
+    })
+    await flushEffects()
+    jest.clearAllMocks()
+
+    smsImportReviewStore.trigger.markItemsAccepted({
+      acceptedItems: [
+        { id: "older", acceptedExpenseId: "expense-1" },
+        { id: "newer", acceptedExpenseId: "expense-2" },
+      ],
+    })
+    await flushEffects()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items.every((item) => item.status === "accepted")).toBe(true)
+    expect(context.items.map((item) => item.acceptedExpenseId)).toEqual([
+      "expense-2",
+      "expense-1",
+    ])
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
+  })
 })

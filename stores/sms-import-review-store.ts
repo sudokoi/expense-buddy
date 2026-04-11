@@ -112,6 +112,46 @@ export const smsImportReviewStore = createStore({
       }
     },
 
+    markItemsAccepted: (
+      context,
+      event: { acceptedItems: Array<{ id: string; acceptedExpenseId?: string }> },
+      enqueue
+    ) => {
+      if (event.acceptedItems.length === 0) {
+        return context
+      }
+
+      const acceptedById = new Map(
+        event.acceptedItems.map((item) => [item.id, item.acceptedExpenseId])
+      )
+      const now = new Date().toISOString()
+      const nextItems = context.items.map((item) => {
+        if (!acceptedById.has(item.id)) {
+          return item
+        }
+
+        return {
+          ...item,
+          status: "accepted" as const,
+          acceptedExpenseId: acceptedById.get(item.id),
+          updatedAt: now,
+        }
+      })
+
+      enqueue.effect(async () => {
+        await persistQueueState({
+          items: nextItems,
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
+        })
+      })
+
+      return {
+        ...context,
+        items: nextItems,
+      }
+    },
+
     markItemRejected: (context, event: { id: string }, enqueue) => {
       const now = new Date().toISOString()
       const nextItems = context.items.map((item) =>
