@@ -151,6 +151,7 @@ export default {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#000000",
       },
+      permissions: ["android.permission.READ_SMS"],
       package: "com.sudokoi.expensebuddy",
       versionCode,
     },

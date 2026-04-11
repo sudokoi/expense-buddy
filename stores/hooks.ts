@@ -16,6 +16,7 @@ import { PaymentMethodType } from "../types/expense"
 import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
 import { Category } from "../types/category"
+import { SmsImportReviewItem } from "../types/sms-import"
 
 // Import for helper function only
 import { getActiveExpenses } from "./expense-store"
@@ -413,5 +414,98 @@ export const useUIState = () => {
     paymentInstrumentsSectionExpanded,
     setPaymentMethodExpanded,
     setPaymentInstrumentsExpanded,
+  }
+}
+
+export const useSmsImportReview = () => {
+  const { smsImportReviewStore } = useStoreContext()
+
+  const items = useSelector(smsImportReviewStore, (state) => state.context.items)
+  const isLoading = useSelector(smsImportReviewStore, (state) => state.context.isLoading)
+  const lastScanCursor = useSelector(
+    smsImportReviewStore,
+    (state) => state.context.lastScanCursor
+  )
+  const bootstrapCompletedAt = useSelector(
+    smsImportReviewStore,
+    (state) => state.context.bootstrapCompletedAt
+  )
+
+  const pendingItems = useMemo(
+    () => items.filter((item) => item.status === "pending"),
+    [items]
+  )
+  const resolvedItems = useMemo(
+    () => items.filter((item) => item.status !== "pending"),
+    [items]
+  )
+
+  const upsertReviewItems = useCallback(
+    (
+      nextItems: SmsImportReviewItem[],
+      options?: { lastScanCursor?: string | null; bootstrapCompletedAt?: string | null }
+    ) => {
+      smsImportReviewStore.trigger.upsertReviewItems({
+        items: nextItems,
+        lastScanCursor: options?.lastScanCursor,
+        bootstrapCompletedAt: options?.bootstrapCompletedAt,
+      })
+    },
+    [smsImportReviewStore]
+  )
+
+  const markItemAccepted = useCallback(
+    (id: string, acceptedExpenseId?: string) => {
+      smsImportReviewStore.trigger.markItemAccepted({ id, acceptedExpenseId })
+    },
+    [smsImportReviewStore]
+  )
+
+  const markItemRejected = useCallback(
+    (id: string) => {
+      smsImportReviewStore.trigger.markItemRejected({ id })
+    },
+    [smsImportReviewStore]
+  )
+
+  const dismissItem = useCallback(
+    (id: string) => {
+      smsImportReviewStore.trigger.dismissItem({ id })
+    },
+    [smsImportReviewStore]
+  )
+
+  const clearResolvedItems = useCallback(() => {
+    smsImportReviewStore.trigger.clearResolvedItems()
+  }, [smsImportReviewStore])
+
+  const setLastScanCursor = useCallback(
+    (cursor: string | null) => {
+      smsImportReviewStore.trigger.setLastScanCursor({ cursor })
+    },
+    [smsImportReviewStore]
+  )
+
+  const setBootstrapCompletedAt = useCallback(
+    (completedAt: string | null) => {
+      smsImportReviewStore.trigger.setBootstrapCompletedAt({ completedAt })
+    },
+    [smsImportReviewStore]
+  )
+
+  return {
+    items,
+    pendingItems,
+    resolvedItems,
+    isLoading,
+    lastScanCursor,
+    bootstrapCompletedAt,
+    upsertReviewItems,
+    markItemAccepted,
+    markItemRejected,
+    dismissItem,
+    clearResolvedItems,
+    setLastScanCursor,
+    setBootstrapCompletedAt,
   }
 }
