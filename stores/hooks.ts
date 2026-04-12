@@ -417,10 +417,6 @@ export const useUIState = () => {
     uiStateStore,
     (state) => state.context.paymentInstrumentsSectionExpanded
   )
-  const smsImportReviewSheetOpen = useSelector(
-    uiStateStore,
-    (state) => state.context.smsImportReviewSheetOpen
-  )
 
   const setPaymentMethodExpanded = useCallback(
     (expanded: boolean) => uiStateStore.trigger.setPaymentMethodExpanded({ expanded }),
@@ -433,18 +429,11 @@ export const useUIState = () => {
     [uiStateStore]
   )
 
-  const setSmsImportReviewSheetOpen = useCallback(
-    (open: boolean) => uiStateStore.trigger.setSmsImportReviewSheetOpen({ open }),
-    [uiStateStore]
-  )
-
   return {
     paymentMethodSectionExpanded,
     paymentInstrumentsSectionExpanded,
-    smsImportReviewSheetOpen,
     setPaymentMethodExpanded,
     setPaymentInstrumentsExpanded,
-    setSmsImportReviewSheetOpen,
   }
 }
 

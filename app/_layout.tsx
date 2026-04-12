@@ -12,7 +12,6 @@ import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
 import { UpdateBanner } from "../components/ui/UpdateBanner"
 import { ChangelogSheet } from "../components/ui/ChangelogSheet"
-import { SmsImportReviewSheet } from "../components/ui/SmsImportReviewSheet"
 import { useUpdateCheck } from "../hooks/use-update-check"
 import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { KeyboardProvider } from "react-native-keyboard-controller"
@@ -105,8 +104,6 @@ function UpdateAndChangelogOverlays() {
           void changelog.viewFullReleaseNotes()
         }}
       />
-
-      <SmsImportReviewSheet />
     </>
   )
 }

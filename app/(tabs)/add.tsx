@@ -35,6 +35,7 @@ import {
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -80,13 +81,9 @@ export default function AddExpenseScreen() {
     defaultPaymentMethod,
     isLoading: isSettingsLoading,
   } = useSettings()
-  const { items: smsImportItems, pendingItems: pendingSmsImportItems } =
-    useSmsImportReview()
-  const {
-    paymentMethodSectionExpanded,
-    setPaymentMethodExpanded,
-    setSmsImportReviewSheetOpen,
-  } = useUIState()
+  const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
+  const { paymentMethodSectionExpanded, setPaymentMethodExpanded } = useUIState()
+  const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
@@ -196,10 +193,10 @@ export default function AddExpenseScreen() {
     setPaymentMethodExpanded(!paymentMethodSectionExpanded)
   }
 
-  const handleOpenSmsImport = useCallback(() => {
+  const handleOpenSmsImport = useCallback(async () => {
     Keyboard.dismiss()
-    setSmsImportReviewSheetOpen(true)
-  }, [setSmsImportReviewSheetOpen])
+    await startSmsImportFromAdd()
+  }, [startSmsImportFromAdd])
 
   const resetForm = useCallback(() => {
     setAmount("")
@@ -297,6 +294,26 @@ export default function AddExpenseScreen() {
       >
         <YStack gap="$3" style={layoutStyles.container}>
           <H4 style={layoutStyles.header}>{t("add.title")}</H4>
+
+          {Platform.OS === "android" ? (
+            <Button
+              size="$4"
+              bordered
+              onPress={() => {
+                void handleOpenSmsImport()
+              }}
+              disabled={isScanningSmsImports}
+              fontWeight="bold"
+            >
+              {isScanningSmsImports
+                ? t("settings.smsImport.actions.scanning")
+                : pendingSmsImportItems.length > 0
+                  ? t("add.importSmsWithPending", {
+                      count: pendingSmsImportItems.length,
+                    })
+                  : t("add.importSms")}
+            </Button>
+          ) : null}
 
           {/* Amount Input */}
           <YStack gap="$2">
@@ -498,22 +515,6 @@ export default function AddExpenseScreen() {
               </YStack>
             )}
           </YStack>
-
-          {Platform.OS === "android" ? (
-            <Button
-              size="$4"
-              bordered
-              onPress={handleOpenSmsImport}
-              disabled={smsImportItems.length === 0}
-              fontWeight="bold"
-            >
-              {pendingSmsImportItems.length > 0
-                ? t("add.importSmsWithPending", {
-                    count: pendingSmsImportItems.length,
-                  })
-                : t("add.importSms")}
-            </Button>
-          ) : null}
 
           {/* Save Buttons */}
           <XStack style={layoutStyles.saveButton} gap="$2">

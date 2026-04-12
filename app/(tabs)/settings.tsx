@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
@@ -10,7 +10,6 @@ import {
   useSettings,
   useCategories,
   useSmsImportReview,
-  useUIState,
 } from "../../stores/hooks"
 import {
   useSyncMachine,
@@ -43,12 +42,7 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
-import {
-  getSmsPermissionStatus,
-  requestSmsPermission,
-  type SmsImportPermissionStatus,
-} from "../../services/sms-import/android-sms-module"
-import { scanSmsImportReviewQueue } from "../../services/sms-import/bootstrap"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -86,14 +80,7 @@ export default function SettingsScreen() {
   const { state, replaceAllExpenses, clearDirtyDaysAfterSync, reassignExpensesToOther } =
     useExpenses()
   const { addNotification } = useNotifications()
-  const {
-    items: smsImportItems,
-    pendingItems: pendingSmsImportItems,
-    lastScanCursor,
-    bootstrapCompletedAt,
-    upsertReviewItems,
-  } = useSmsImportReview()
-  const { setSmsImportReviewSheetOpen } = useUIState()
+  const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
   const {
     categories,
     addCategory,
@@ -132,6 +119,8 @@ export default function SettingsScreen() {
     saveSyncConfig,
     clearSyncConfig,
   } = useSettings()
+  const { isScanningSmsImports, openSmsImportReview, scanSmsImports } =
+    useSmsImportActions()
 
   // GitHub config state
   const [isTesting, setIsTesting] = useState(false)
@@ -164,10 +153,6 @@ export default function SettingsScreen() {
 
   // UI state
   const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
-  const [smsPermissionStatus, setSmsPermissionStatus] =
-    useState<SmsImportPermissionStatus>("undetermined")
-  const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
-
   const defaultPaymentMethodLabel = useMemo(() => {
     const value = settings.defaultPaymentMethod
     if (!value) return t("settings.defaultPayment.none")
@@ -175,88 +160,9 @@ export default function SettingsScreen() {
     return match?.label ?? value
   }, [settings.defaultPaymentMethod, t])
 
-  const refreshSmsPermissionStatus = useCallback(async () => {
-    if (Platform.OS !== "android") {
-      setSmsPermissionStatus("unavailable")
-      return
-    }
-
-    try {
-      setSmsPermissionStatus(await getSmsPermissionStatus())
-    } catch {
-      setSmsPermissionStatus("unavailable")
-    }
-  }, [])
-
-  useEffect(() => {
-    void refreshSmsPermissionStatus()
-  }, [refreshSmsPermissionStatus])
-
   const handleScanSmsImports = useCallback(async () => {
-    if (Platform.OS !== "android") {
-      addNotification(t("settings.smsImport.notifications.androidOnly"), "info")
-      return
-    }
-
-    setIsScanningSmsImports(true)
-
-    try {
-      let permissionStatus = await getSmsPermissionStatus()
-
-      if (permissionStatus !== "granted") {
-        permissionStatus = await requestSmsPermission()
-      }
-
-      setSmsPermissionStatus(permissionStatus)
-
-      if (permissionStatus !== "granted") {
-        addNotification(t("settings.smsImport.notifications.permissionRequired"), "info")
-        return
-      }
-
-      const result = await scanSmsImportReviewQueue({
-        existingItems: smsImportItems,
-        lastScanCursor,
-        bootstrapCompletedAt,
-      })
-
-      upsertReviewItems(result.createdItems, {
-        lastScanCursor: result.nextCursor,
-        bootstrapCompletedAt: result.bootstrapCompletedAt,
-      })
-
-      const nextPendingCount = pendingSmsImportItems.length + result.createdItems.length
-      if (nextPendingCount > 0) {
-        setSmsImportReviewSheetOpen(true)
-      }
-
-      if (result.createdItems.length > 0) {
-        addNotification(
-          result.createdItems.length === 1
-            ? t("settings.smsImport.notifications.readyOne")
-            : t("settings.smsImport.notifications.readyMany", {
-                count: result.createdItems.length,
-              }),
-          "success"
-        )
-      } else {
-        addNotification(t("settings.smsImport.notifications.emptyScan"), "info")
-      }
-    } catch (error) {
-      addNotification(error instanceof Error ? error.message : String(error), "error")
-    } finally {
-      setIsScanningSmsImports(false)
-    }
-  }, [
-    addNotification,
-    bootstrapCompletedAt,
-    lastScanCursor,
-    pendingSmsImportItems.length,
-    setSmsImportReviewSheetOpen,
-    smsImportItems,
-    t,
-    upsertReviewItems,
-  ])
+    await scanSmsImports()
+  }, [scanSmsImports])
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -879,11 +785,6 @@ export default function SettingsScreen() {
             description={t("settings.smsImport.description")}
             gap="$4"
           >
-            <CardLikeStatusRow
-              label={t("settings.smsImport.permissionStatus")}
-              value={formatSmsPermissionStatus(smsPermissionStatus, t)}
-            />
-
             <XStack style={layoutStyles.actionRow}>
               <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
                 {isScanningSmsImports
@@ -892,18 +793,15 @@ export default function SettingsScreen() {
               </Button>
             </XStack>
 
-            <XStack style={layoutStyles.actionRow}>
-              <Button
-                onPress={() => setSmsImportReviewSheetOpen(true)}
-                disabled={smsImportItems.length === 0}
-              >
-                {smsImportItems.length > 0
-                  ? t("settings.smsImport.actions.reviewWithPending", {
-                      count: pendingSmsImportItems.length,
-                    })
-                  : t("settings.smsImport.actions.review")}
-              </Button>
-            </XStack>
+            {pendingSmsImportItems.length > 0 ? (
+              <XStack style={layoutStyles.actionRow}>
+                <Button onPress={openSmsImportReview}>
+                  {t("settings.smsImport.actions.reviewWithPending", {
+                    count: pendingSmsImportItems.length,
+                  })}
+                </Button>
+              </XStack>
+            ) : null}
 
             <Text color="$color" opacity={0.65} fontSize="$2">
               {t("settings.smsImport.helper")}
@@ -979,36 +877,4 @@ export default function SettingsScreen() {
       </YStack>
     </ScreenContainer>
   )
-}
-
-function CardLikeStatusRow({ label, value }: { label: string; value: string }) {
-  return (
-    <XStack
-      bg="$backgroundHover"
-      px="$3"
-      py="$3"
-      rounded="$6"
-      justify="space-between"
-      items="center"
-    >
-      <Label>{label}</Label>
-      <Text fontWeight="600">{value}</Text>
-    </XStack>
-  )
-}
-
-function formatSmsPermissionStatus(
-  status: SmsImportPermissionStatus,
-  t: (key: string) => string
-): string {
-  switch (status) {
-    case "granted":
-      return t("settings.smsImport.statuses.granted")
-    case "denied":
-      return t("settings.smsImport.statuses.denied")
-    case "undetermined":
-      return t("settings.smsImport.statuses.undetermined")
-    case "unavailable":
-      return t("settings.smsImport.statuses.unavailable")
-  }
 }

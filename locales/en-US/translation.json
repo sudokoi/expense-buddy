@@ -446,7 +446,9 @@
         "importedMany": "Imported {{count}} SMS transactions.",
         "importedPartial": "Imported {{count}} SMS transactions. Some items still need review."
       },
-      "emptyResolved": "All current SMS imports are resolved. Use Show resolved to review or clear them."
+      "emptyResolved": "All current SMS imports are resolved. Use Show resolved to review or clear them.",
+      "emptyTitle": "No SMS imports to review.",
+      "emptyDescription": "Scan recent messages from Settings or Add Expense to start reviewing imports."
     }
   },
   "dayView": {

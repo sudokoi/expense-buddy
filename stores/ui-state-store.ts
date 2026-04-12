@@ -20,7 +20,6 @@ export const uiStateStore = createStore({
   context: {
     paymentMethodSectionExpanded: false,
     paymentInstrumentsSectionExpanded: false,
-    smsImportReviewSheetOpen: false,
   },
 
   on: {
@@ -39,7 +38,6 @@ export const uiStateStore = createStore({
         ...context,
         paymentMethodSectionExpanded: event.paymentMethodSectionExpanded,
         paymentInstrumentsSectionExpanded: event.paymentInstrumentsSectionExpanded,
-        smsImportReviewSheetOpen: false,
       }
     },
 
@@ -76,13 +74,6 @@ export const uiStateStore = createStore({
       return {
         ...context,
         paymentInstrumentsSectionExpanded: event.expanded,
-      }
-    },
-
-    setSmsImportReviewSheetOpen: (context, event: { open: boolean }) => {
-      return {
-        ...context,
-        smsImportReviewSheetOpen: event.open,
       }
     },
   },
