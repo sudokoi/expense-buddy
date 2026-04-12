@@ -1,21 +1,11 @@
 import { useCallback, useMemo, useState } from "react"
 import type { ViewStyle } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
-import {
-  Button,
-  Card,
-  H4,
-  Input,
-  Label,
-  ScrollView,
-  Text,
-  TextArea,
-  XStack,
-  YStack,
-} from "tamagui"
+import { Button, Card, H4, Input, Label, Text, TextArea, XStack, YStack } from "tamagui"
 import {
   PaymentMethodType,
   type Expense,
@@ -34,6 +24,7 @@ import {
 import {
   findInstrumentById,
   formatPaymentInstrumentLabel,
+  isPaymentInstrumentMethod,
 } from "../../services/payment-instruments"
 import {
   resolveSmsImportCategory,
@@ -41,8 +32,14 @@ import {
 } from "../../services/sms-import/suggestion-resolver"
 import { parseNumericAmount } from "../../utils/amount-input"
 import { type SmsImportReviewItem } from "../../types/sms-import"
+import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
+import type { PaymentInstrumentMethod } from "../../types/payment-instrument"
+import {
+  InstrumentEntryKind,
+  PaymentInstrumentInlineDropdown,
+} from "./PaymentInstrumentInlineDropdown"
 
 type EditableSmsImportDraft = {
   amount: string
@@ -51,7 +48,10 @@ type EditableSmsImportDraft = {
   paymentMethodType?: PaymentMethodType
   paymentMethodIdentifier?: string
   paymentInstrumentId?: string
+  instrumentEntryKind: InstrumentEntryKind
 }
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 const layoutStyles = {
   container: {
@@ -66,6 +66,9 @@ const layoutStyles = {
   paymentMethodRow: {
     flexWrap: "wrap",
     gap: 8,
+  } as ViewStyle,
+  identifierContainer: {
+    marginTop: 8,
   } as ViewStyle,
   actionRow: {
     flexWrap: "wrap",
@@ -95,7 +98,7 @@ function getLocalizedPaymentMethodLabel(
   t: (key: string) => string
 ): string {
   if (!paymentMethod?.type) {
-    return t("common.none")
+    return t("paymentMethods.other")
   }
 
   const methodLabel = t(`paymentMethods.${getPaymentMethodI18nKey(paymentMethod.type)}`)
@@ -148,9 +151,14 @@ function createDraftFromItem(
         : "",
     category: resolveCategoryLabel(item, availableCategories),
     note: item.noteSuggestion ?? item.merchantName ?? "",
-    paymentMethodType: resolvedPaymentSuggestion?.type,
+    paymentMethodType: resolvedPaymentSuggestion?.type ?? "Other",
     paymentMethodIdentifier: resolvedPaymentSuggestion?.identifier,
     paymentInstrumentId: resolvedPaymentSuggestion?.instrumentId,
+    instrumentEntryKind: resolvedPaymentSuggestion?.instrumentId
+      ? "saved"
+      : resolvedPaymentSuggestion?.identifier
+        ? "manual"
+        : "none",
   }
 }
 
@@ -185,8 +193,8 @@ export function SmsImportReviewScreen() {
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
   const { categories } = useCategories()
-  const { settings } = useSettings()
-  const paymentInstruments = settings.paymentInstruments
+  const { settings, updateSettings } = useSettings()
+  const paymentInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
   const { addExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const {
@@ -349,6 +357,55 @@ export function SmsImportReviewScreen() {
     return t("smsImport.sheet.emptyDescription")
   }, [editingItem, pendingItems.length, resolvedItems.length, t])
 
+  const selectedPaymentConfig = editingDraft?.paymentMethodType
+    ? (PAYMENT_METHODS.find((pm) => pm.value === editingDraft.paymentMethodType) ?? null)
+    : null
+
+  const handlePaymentMethodSelect = useCallback((type: PaymentMethodType) => {
+    setEditingDraft((current) =>
+      current
+        ? {
+            ...current,
+            paymentMethodType: type,
+            paymentMethodIdentifier: undefined,
+            paymentInstrumentId: undefined,
+            instrumentEntryKind: "none",
+          }
+        : current
+    )
+  }, [])
+
+  const handleIdentifierChange = useCallback(
+    (text: string) => {
+      setEditingDraft((current) => {
+        if (!current) {
+          return current
+        }
+
+        if (current.paymentMethodType === "Other") {
+          const maxLen = selectedPaymentConfig?.maxLength || 50
+          return {
+            ...current,
+            paymentMethodIdentifier: text.slice(0, maxLen),
+          }
+        }
+
+        const maxLen = selectedPaymentConfig?.maxLength || 4
+        return {
+          ...current,
+          paymentMethodIdentifier: validateIdentifier(text, maxLen),
+          paymentInstrumentId: undefined,
+          instrumentEntryKind:
+            current.paymentMethodType &&
+            isPaymentInstrumentMethod(current.paymentMethodType)
+              ? "manual"
+              : current.instrumentEntryKind,
+        }
+      })
+    },
+    [selectedPaymentConfig?.maxLength]
+  )
+
   const footer = editingItem ? (
     <XStack justify="flex-end" gap="$2">
       <Button onPress={closeEditor}>{t("common.cancel")}</Button>
@@ -386,10 +443,11 @@ export function SmsImportReviewScreen() {
 
   return (
     <YStack flex={1} bg="$background">
-      <ScrollView
-        flex={1}
+      <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        bottomOffset={96}
+        contentContainerStyle={{ flexGrow: 1 }}
       >
         <YStack gap="$4" px="$4" pt="$4" pb="$4" style={layoutStyles.container}>
           <Card bordered padding="$3" backgroundColor="$backgroundHover">
@@ -467,50 +525,80 @@ export function SmsImportReviewScreen() {
               <YStack gap="$2">
                 <Label>{t("smsImport.sheet.fields.paymentMethod")}</Label>
                 <XStack style={layoutStyles.paymentMethodRow}>
-                  <Button
-                    bg={
-                      editingDraft.paymentMethodType ? "$background" : "$backgroundHover"
-                    }
-                    borderColor={
-                      editingDraft.paymentMethodType ? "$borderColor" : "$color8"
-                    }
-                    borderWidth={editingDraft.paymentMethodType ? 1 : 2}
-                    onPress={() => {
-                      setEditingDraft((current) =>
-                        current
-                          ? {
-                              ...current,
-                              paymentMethodType: undefined,
-                              paymentMethodIdentifier: undefined,
-                              paymentInstrumentId: undefined,
-                            }
-                          : current
-                      )
-                    }}
-                  >
-                    {t("common.none")}
-                  </Button>
-
                   {PAYMENT_METHODS.map((config) => (
                     <PaymentMethodCard
                       key={config.value}
                       config={config}
                       isSelected={editingDraft.paymentMethodType === config.value}
-                      onPress={() => {
-                        setEditingDraft((current) =>
-                          current
-                            ? {
-                                ...current,
-                                paymentMethodType: config.value,
-                                paymentMethodIdentifier: undefined,
-                                paymentInstrumentId: undefined,
-                              }
-                            : current
-                        )
-                      }}
+                      onPress={() => handlePaymentMethodSelect(config.value)}
                     />
                   ))}
                 </XStack>
+
+                {selectedPaymentConfig?.hasIdentifier ? (
+                  <YStack gap="$1" style={layoutStyles.identifierContainer}>
+                    <Label color="$color" opacity={0.6} fontSize="$2">
+                      {selectedPaymentConfig.identifierLabel ||
+                        t("history.editDialog.fields.identifier")}{" "}
+                      {t("common.optional")}
+                    </Label>
+
+                    {editingDraft.paymentMethodType &&
+                    isPaymentInstrumentMethod(editingDraft.paymentMethodType) ? (
+                      <PaymentInstrumentInlineDropdown
+                        method={editingDraft.paymentMethodType as PaymentInstrumentMethod}
+                        instruments={paymentInstruments}
+                        kind={
+                          editingDraft.paymentInstrumentId
+                            ? "saved"
+                            : editingDraft.instrumentEntryKind === "manual"
+                              ? "manual"
+                              : "none"
+                        }
+                        selectedInstrumentId={editingDraft.paymentInstrumentId}
+                        manualDigits={editingDraft.paymentMethodIdentifier ?? ""}
+                        identifierLabel={selectedPaymentConfig.identifierLabel}
+                        maxLength={selectedPaymentConfig.maxLength}
+                        onChange={(next) => {
+                          setEditingDraft((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  instrumentEntryKind: next.kind,
+                                  paymentInstrumentId: next.selectedInstrumentId,
+                                  paymentMethodIdentifier: next.manualDigits,
+                                }
+                              : current
+                          )
+                        }}
+                        onCreateInstrument={(inst) => {
+                          updateSettings({
+                            paymentInstruments: [inst, ...paymentInstruments],
+                          })
+                        }}
+                      />
+                    ) : (
+                      <Input
+                        size="$4"
+                        placeholder={
+                          editingDraft.paymentMethodType === "Other"
+                            ? t("history.editDialog.fields.otherPlaceholder")
+                            : t("history.editDialog.fields.identifierPlaceholder", {
+                                max: selectedPaymentConfig.maxLength,
+                              })
+                        }
+                        keyboardType={
+                          editingDraft.paymentMethodType === "Other"
+                            ? "default"
+                            : "numeric"
+                        }
+                        value={editingDraft.paymentMethodIdentifier ?? ""}
+                        onChangeText={handleIdentifierChange}
+                        maxLength={selectedPaymentConfig.maxLength}
+                      />
+                    )}
+                  </YStack>
+                ) : null}
               </YStack>
 
               <YStack gap="$2">
@@ -529,6 +617,15 @@ export function SmsImportReviewScreen() {
                     )
                   }}
                 />
+              </YStack>
+
+              <YStack
+                borderTopWidth={1}
+                borderColor="$borderColor"
+                pt="$3"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+              >
+                {footer}
               </YStack>
             </YStack>
           ) : items.length === 0 ? (
@@ -667,18 +764,20 @@ export function SmsImportReviewScreen() {
             </YStack>
           )}
         </YStack>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      <YStack
-        bg="$background"
-        borderTopWidth={1}
-        borderColor="$borderColor"
-        px="$4"
-        pt="$3"
-        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-      >
-        <YStack style={layoutStyles.container}>{footer}</YStack>
-      </YStack>
+      {editingItem ? null : (
+        <YStack
+          bg="$background"
+          borderTopWidth={1}
+          borderColor="$borderColor"
+          px="$4"
+          pt="$3"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
+          <YStack style={layoutStyles.container}>{footer}</YStack>
+        </YStack>
+      )}
     </YStack>
   )
 }
