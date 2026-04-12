@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.0.1
+
+### Patch Changes
+
+- [#51](https://github.com/sudokoi/expense-buddy/pull/51) [`c5e54d5`](https://github.com/sudokoi/expense-buddy/commit/c5e54d5ed39d235a3d8484554e12ce039f1a2304) Thanks [@sudokoi](https://github.com/sudokoi)! - Add a dedicated routed SMS import review screen so imported messages can be staged, reviewed, and corrected before they are applied.
+
+  This moves SMS import review out of the previous sheet flow and makes it safer to confirm matches and catch mistakes before creating expenses.
+
 ## 3.0.0
 
 ### Major Changes
