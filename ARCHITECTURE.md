@@ -1,615 +1,206 @@
-# Architecture Documentation
+# Architecture
 
-## Overview
+Expense Buddy is an Expo Router application with a local-first architecture. The app treats the device as the primary execution environment, GitHub as an optional user-controlled sync backend, and SMS import as a review-first pipeline that never requires a server.
 
-This document describes the architecture patterns and design decisions used in the Expense Buddy application.
+This document focuses on the current architecture shape, the reasons behind the main boundaries, and the parts of the system that are most important when extending the app.
 
-## Store Architecture
+## Design Principles
 
-### XState Store Pattern
+- Local-first by default. Core expense tracking works without a backend.
+- Review before import. SMS parsing produces staged candidates, not immediate expenses.
+- Explicit state boundaries. Stores are split by persistence and sync requirements, not by screen alone.
+- Deterministic import today. Regex-first parsing is easier to explain, test, and ship.
+- User-owned sync. GitHub is a transport and persistence target, not an application server.
 
-The application uses XState's lightweight store (`@xstate/store`) for state management. This provides:
+## Runtime Layers
 
-- **Predictable state updates** through explicit events
-- **Type safety** with TypeScript
-- **DevTools support** for debugging
-- **Minimal boilerplate** compared to full XState machines
+| Layer              | Responsibility                                           | Main locations                               |
+| ------------------ | -------------------------------------------------------- | -------------------------------------------- |
+| Routes             | Screen composition and navigation                        | `app/`                                       |
+| Components         | Reusable presentational building blocks                  | `components/`                                |
+| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                     |
+| Stores             | Long-lived application state                             | `stores/`                                    |
+| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                  |
+| Native module      | Android SMS access                                       | `modules/expense-buddy-sms-import/`          |
+| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/` |
 
-### Store Relationships
+The main dependency direction is:
 
-```mermaid
-graph TB
-    subgraph "Stores"
-        FS[Filter Store]
-        UIS[UI State Store]
-        SS[Settings Store]
-        ES[Expense Store]
-        NS[Notification Store]
-        SIR[SMS Import Review Store]
-    end
+1. Routes render components and call hooks.
+2. Hooks read from stores and invoke service-layer actions.
+3. Stores hold durable state and expose explicit update events.
+4. Services handle I/O, parsing, merging, persistence, and sync.
+5. The native SMS module is accessed through the SMS import service layer rather than directly from screens.
 
-    subgraph "Persistence"
-        AS[AsyncStorage]
-        GH[GitHub Sync]
-    end
+## State Model
 
-    subgraph "UI Components"
-        H[History Screen]
-        A[Analytics Screen]
-        S[Settings Screen]
-    end
+Expense Buddy uses XState lightweight stores for most long-lived state, plus a dedicated XState machine for sync lifecycle control.
 
-    FS -->|persists to| AS
-    SS -->|persists to| AS
-    SS -->|syncs to| GH
-    ES -->|syncs to| GH
-    SIR -->|persists to| AS
+| Store                   | Purpose                                                 | Persists locally | Syncs across devices      |
+| ----------------------- | ------------------------------------------------------- | ---------------- | ------------------------- |
+| Expense Store           | Expense records and expense mutations                   | Yes              | Yes                       |
+| Settings Store          | Categories, instruments, app preferences, sync settings | Yes              | Yes for syncable settings |
+| Filter Store            | Shared History and Analytics filter state               | Yes              | No                        |
+| SMS Import Review Store | Parsed SMS candidates and review actions                | Yes              | No                        |
+| UI State Store          | Device-local expansion and layout preferences           | Yes              | No                        |
+| Notification Store      | Toasts and transient feedback                           | No               | No                        |
 
-    H -->|uses| FS
-    A -->|uses| FS
-    A -->|uses| SS
-    S -->|uses| SS
-    S -->|uses| UIS
-    S -->|uses| SIR
+Selection rules:
 
-    style FS fill:#e1f5fe
-    style SS fill:#fff3e0
-    style UIS fill:#f3e5f5
-    style SIR fill:#ede7f6
-```
+- If the data should survive app restarts and sync across devices, it belongs in Expense Store or Settings Store.
+- If it should survive restarts but remain local to the device, it belongs in Filter Store, UI State Store, or SMS Import Review Store.
+- If it is purely transient UI feedback, it belongs in Notification Store.
 
-### Store Selection Flowchart
+The sync state machine coordinates fetch, merge, push, conflict, and error states. It is intentionally separate from the data stores so sync orchestration does not leak into normal state updates.
 
-```mermaid
-flowchart TD
-    Start([Need to store state?])
+## Persistence Model
 
-    Start --> Q1{Does it need to sync<br/>across devices?}
-    Q1 -->|Yes| Q2{Is it user settings<br/>or expense data?}
-    Q1 -->|No| Q3{Is it a filter<br/>or search state?}
+| Data               | Local storage         | Remote storage                     | Notes                                        |
+| ------------------ | --------------------- | ---------------------------------- | -------------------------------------------- |
+| Expenses           | AsyncStorage snapshot | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`  |
+| Settings           | AsyncStorage          | Optional `settings.json` in GitHub | Credentials are excluded                     |
+| GitHub credentials | Secure storage        | No                                 | Token and repo configuration stay on-device  |
+| Filters            | AsyncStorage          | No                                 | Shared between History and Analytics locally |
+| SMS review queue   | AsyncStorage          | No                                 | Raw SMS import data stays local              |
+| Dirty-day metadata | AsyncStorage          | No                                 | Used to minimize sync work                   |
+| Remote SHA cache   | AsyncStorage          | No                                 | Used to skip unchanged downloads             |
 
-    Q2 -->|Settings| SS[Settings Store]
-    Q2 -->|Expenses| ES[Expense Store]
-
-    Q3 -->|Yes| FS[Filter Store]
-    Q3 -->|No| Q4{Is it UI layout<br/>or preferences?}
-
-    Q4 -->|Yes| UIS[UI State Store]
-    Q4 -->|No| Q5{Is it sensitive SMS review<br/>state kept local only?}
-
-    Q5 -->|Yes| SIR[SMS Import Review Store]
-    Q5 -->|No| NS[Notification Store]
-
-    SS -->|GitHub Sync + AsyncStorage| Persist[(Persistence)]
-    ES -->|GitHub Sync + AsyncStorage| Persist
-    FS -->|AsyncStorage| Persist
-    UIS -->|AsyncStorage| Persist
-    SIR -->|AsyncStorage only| Persist
-    NS -->|No persistence| NoPersist[ ]
-
-    style FS fill:#e1f5fe
-    style SS fill:#fff3e0
-    style UIS fill:#f3e5f5
-    style ES fill:#e8f5e9
-    style NS fill:#ffebee
-    style SIR fill:#ede7f6
-```
-
-### Store Types
-
-#### 1. Filter Store (`stores/filter-store.ts`)
-
-**Purpose**: Manages analytics and history filter state with cross-tab synchronization.
-
-**When to use**:
-
-- Analytics filters (time window, categories, payment methods)
-- History filters (search, amount range)
-- Any filter state that should persist across tabs
-
-**Key features**:
-
-- Debounced search input (300ms)
-- Persistence to AsyncStorage
-- Individual selectors for each property to prevent unnecessary re-renders
-- Batch updates via `applyFilters` event
-
-```typescript
-const { filters, setTimeWindow, setSearchQuery } = useFilters()
-```
-
-#### 2. UI State Store (`stores/ui-state-store.ts`)
-
-**Purpose**: Manages device-local UI preferences that should NOT sync across devices.
-
-**When to use**:
-
-- Section expansion states (payment methods, instruments)
-- UI layout preferences
-- Any device-specific UI state
-
-**Key features**:
-
-- AsyncStorage persistence
-- No sync with GitHub
-- Independent per device
-
-```typescript
-// Store is accessed directly
-uiStateStore.trigger.setPaymentMethodExpanded({ expanded: true })
-```
-
-#### 3. Settings Store (`stores/settings-store.ts`)
-
-**Purpose**: Manages application settings with GitHub sync support.
-
-**When to use**:
-
-- User preferences (theme, language, currency)
-- Categories and payment instruments
-- Sync configuration
-
-**Key features**:
-
-- Sync state tracking (synced/modified/conflict)
-- Hash-based change detection
-- Automatic persistence
-- GitHub synchronization
-
-```typescript
-const { settings, setTheme } = useSettings()
-```
-
-### Store Selection Guide
-
-| Use Case        | Store                   | Persistence | Sync |
-| --------------- | ----------------------- | ----------- | ---- |
-| Filter state    | Filter Store            | Yes         | No   |
-| UI preferences  | UI State Store          | Yes         | No   |
-| SMS review data | SMS Import Review Store | Yes         | No   |
-| User settings   | Settings Store          | Yes         | Yes  |
-| Expense data    | Expense Store           | Yes         | Yes  |
-| Notifications   | Notification Store      | No          | No   |
-
-## Persistence Architecture
-
-Expense Buddy uses layered persistence to support offline-first behavior and sync:
-
-- **AsyncStorage** stores expenses, settings, filters, dirty-day tracking, and the remote SHA cache.
-- **AsyncStorage** also stores the local-only SMS import review queue and review UI state.
-- **Secure storage** stores GitHub tokens and repo configuration.
-- **Daily CSV files** are generated during sync and stored remotely in GitHub.
-- **Hash storage** tracks file content hashes to skip unchanged uploads (push-side).
-- **Remote SHA cache** tracks git blob SHAs to skip unchanged downloads (fetch-side).
+This split supports offline-first behavior while keeping the sync format small and inspectable.
 
 ## SMS Import Architecture
 
-The SMS import feature is intentionally narrow in the current version:
+SMS import is intentionally narrow in the current product scope.
 
-- **Android only** for native SMS access
-- **Regex-first parsing** for deterministic, explainable matches
-- **Review-first staging** so matched messages do not create expenses automatically
-- **Local-only raw SMS storage** so sender, body, and dedupe metadata never enter GitHub sync
-- **Default-category suggestion model** so parser output stays aligned with shipped categories and unresolved matches fall back to `Other`
+Current constraints:
 
-The runtime flow is:
+- Android only
+- Recent-window scanning rather than full historical inbox import
+- Regex-first parsing for explainable matches
+- Review-first staging before an expense is created
+- Local-only raw SMS handling
 
-1. On startup, the app checks Android SMS permission status without prompting.
-2. If permission was already granted, bootstrap scanning can read recent inbox messages within the bounded scan window.
-3. From Settings, manual **Scan recent messages** requests permission inline when needed and then runs the same bounded scan flow.
-4. The service layer parses candidate expenses, infers payment method and default-category suggestions, and generates dedupe fingerprints.
-5. Parsed candidates are stored in the SMS import review store, which remains local to the device.
-6. The review sheet lets the user accept, edit, reject, dismiss, or clear items.
-7. Only accepted items become normal expense records and join the regular dirty-day and GitHub sync flow.
+Runtime flow:
 
-Category inference is intentionally conservative. Parser rules only suggest categories from the shipped default set (`Food`, `Transport`, `Groceries`, `Rent`, `Utilities`, `Entertainment`, `Health`, `Other`). If no default rule matches, or if the suggested category is no longer present in user settings, the review flow resolves the item to `Other` before import.
+1. The app checks SMS permission status on startup without prompting.
+2. If permission was already granted, bootstrap logic can scan the bounded recent window.
+3. A manual scan from Settings requests `READ_SMS` inline when needed.
+4. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and category suggestions.
+5. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
+6. Parsed candidates are stored in the SMS Import Review Store.
+7. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
+8. Only accepted items are converted into normal expense records and enter the regular sync flow.
+
+Why regex-first today:
+
+- easier to debug against real SMS fixtures
+- easier to explain to users in a review-first flow
+- lighter than bundling and maintaining model assets in the current Expo and Android packaging setup
+- safer for a narrow first release
+
+Planned direction:
+
+- keep all parsing on-device
+- broaden parser coverage over time
+- revisit on-device ML only if regex coverage, precision, or maintenance cost becomes the limiting factor
+
+There is no server-side parsing roadmap. Any future ML-based parser is expected to remain local to the device.
+
+Related decisions:
+
+- [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
+- [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
 
 ## GitHub Sync Architecture
 
-### Sync Flow
-
-```mermaid
-flowchart TD
-    Start([Sync Requested]) --> Direction{Determine Sync Direction}
-
-    Direction -->|Push| SyncUp[Sync Up]
-    Direction -->|Pull| SyncDown[Sync Down]
-    Direction -->|Conflict| Conflict[Resolve Conflicts]
-    Direction -->|In Sync| Done[No Changes]
-    Direction -->|Error| Error[Sync Error]
-
-    SyncUp --> LoadDirty[Load Dirty Days]
-    LoadDirty --> HashDirty[Hash Dirty Day Files]
-    HashDirty --> Upload[Batch Upload Changed Files]
-    Upload --> Delete[Delete Confirmed Days]
-    Delete --> UpdateHashes[Update Hash Store]
-    UpdateHashes --> ClearDirty[Clear Dirty Days]
-    ClearDirty --> Done
-
-    SyncDown --> FetchTree[Fetch Repository Tree via Git Trees API]
-    FetchTree --> LoadSHACache[Load Remote SHA Cache]
-    LoadSHACache --> CompareSHAs{Compare blob SHAs}
-    CompareSHAs -->|Changed| Download[Download changed files via Contents API]
-    CompareSHAs -->|Unchanged| Reuse[Reuse local expenses]
-    Download --> Combine[Combine all expenses]
-    Reuse --> Combine
-    FetchTree -.->|Fallback on failure| FallbackFetch[listFiles + downloadCSV]
-    FallbackFetch --> Combine
-    Combine --> Merge[Merge Expenses]
-    Merge --> Replace[Replace Local Snapshot]
-    Replace --> UpdateSHACache[Update SHA Cache]
-    UpdateSHACache --> ClearDirty
-
-    Conflict --> Resolve[User Resolution]
-    Resolve --> SyncUp
-```
-
-### Sync Machine Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> idle
-    idle --> syncing: sync()
-    syncing --> success: synced
-    syncing --> inSync: no changes
-    syncing --> conflict: conflicts
-    syncing --> error: failure
-    conflict --> syncing: resolve
-    success --> idle
-    inSync --> idle
-    error --> idle
-```
-
-### Sync Notification Flow
-
-```mermaid
-flowchart LR
-    SM[Sync Manager] --> MC[Sync Machine]
-    MC --> ES[Expense Store]
-    ES --> SP[Store Provider]
-    SP --> NS[Notification Store]
-    NS --> UI[Toast Banner]
-```
-
-Notifications are formatted with i18n before they reach the UI, so the message string is
-display-ready by the time it reaches the notification store.
-
-## Internationalization Architecture
-
-- Locale bundles are loaded dynamically; only the active language is required at startup.
-- i18next is the single source of truth for translation lookups and formatting.
-- Locale-sensitive formatting (dates, currencies) uses the active language and device locale.
-
-## Analytics Hook Architecture
-
-### Hook Decomposition Strategy
-
-The analytics functionality is split into focused hooks for better performance and tree-shaking:
-
-### Analytics Data Flow
-
-```mermaid
-graph LR
-    subgraph "Input"
-        F[Filter State]
-        E[Raw Expenses]
-    end
-
-    subgraph "Base Hook"
-        AB[useAnalyticsBase]
-        CG[groupExpensesByCurrency]
-        CEC[computeEffectiveCurrency]
-        AF[applyAllFilters]
-    end
-
-    subgraph "Derived Hooks"
-        ACH[useAnalyticsCharts]
-        ASH[useAnalyticsStatistics]
-    end
-
-    subgraph "Output"
-        CD[Chart Data]
-        ST[Statistics]
-    end
+The sync system follows a fetch-merge-push model so local and remote edits are reconciled before upload.
 
-    E --> CG
-    CG --> CEC
-    F --> AF
-    CEC --> AF
-    AF --> AB
-    AB --> ACH
-    AB --> ASH
-    ACH --> CD
-    ASH --> ST
+Sync phases:
 
-    style AB fill:#e3f2fd
-    style ACH fill:#f3e5f5
-    style ASH fill:#fff3e0
-```
+1. Determine whether the current action is a fetch, push, combined sync, or conflict resolution step.
+2. Fetch the remote repository tree through the Git Trees API.
+3. Compare remote blob SHAs against the local SHA cache.
+4. Download only changed daily files when needed.
+5. Merge remote and local expenses by expense ID.
+6. Resolve most conflicts automatically using timestamps, and surface true conflicts when edits are too close together.
+7. Upload only dirty day files and confirmed deletions.
+8. Update local caches and clear dirty-day metadata after success.
 
-### Hook Dependencies
+Key data model rules:
 
-```mermaid
-graph TD
-    FS[Filter Store] -->|filters| UAB[useAnalyticsBase]
-    ES[Expense Store] -->|activeExpenses| UAB
+- expenses are stored remotely as `expenses-YYYY-MM-DD.csv`
+- deletions are represented by `deletedAt` instead of hard removal
+- settings sync is optional and separated from credentials
+- conflict resolution favors correctness over minimizing prompts
 
-    UAB -->|filteredExpenses| UAC[useAnalyticsCharts]
-    UAB -->|filteredExpenses| UAS[useAnalyticsStatistics]
-    UAB -->|dateRange| UAC
-    UAB -->|dateRange| UAS
+Optimization strategy:
 
-    UAC -->|pieChartData| PC[PieChart Component]
-    UAC -->|lineChartData| LC[LineChart Component]
-    UAS -->|statistics| SC[StatisticsCards Component]
+- Git Trees API reduces fetch overhead by retrieving the remote tree and blob SHAs in one call
+- remote SHA caching skips downloads for unchanged files
+- dirty-day tracking limits hashing and uploads to changed dates only
+- batched writes keep uploads atomic at the commit level
 
-    style UAB fill:#e3f2fd
-    style UAC fill:#f3e5f5
-    style UAS fill:#fff3e0
-```
+The sync engine is designed so a user can stay productive offline and reconcile later without losing the edit history needed for conflict handling.
 
-#### 1. useAnalyticsBase (`hooks/use-analytics-base.ts`)
+## Analytics Architecture
 
-**Responsibilities**:
+Analytics is split into focused hooks so filtering, chart building, and statistics calculation do not force one another to recompute unnecessarily.
 
-- Currency grouping and selection
-- Filter application (single-pass)
-- Date range calculation
+| Hook                     | Responsibility                                                    |
+| ------------------------ | ----------------------------------------------------------------- |
+| `useAnalyticsBase`       | Select effective currency, compute date ranges, and apply filters |
+| `useAnalyticsCharts`     | Build chart-ready category, method, and trend datasets            |
+| `useAnalyticsStatistics` | Build totals, averages, and summary statistics                    |
+| `useAnalyticsData`       | Legacy composite wrapper; avoid for new work                      |
 
-**Returns**:
+Important architectural decisions in analytics:
 
-- `filteredExpenses`: Expenses after all filters
-- `availableCurrencies`: List of currencies in data
-- `effectiveCurrency`: Selected or auto-detected currency
-- `dateRange`: Start and end dates for charts
-- Individual filter callbacks for granular control
+- Filter state is shared across History and Analytics through Filter Store.
+- Filtering is implemented as a single-pass pipeline rather than repeated array filtering.
+- Lookup structures such as Sets and Maps are built up front to keep checks close to O(1).
+- Search runs late in the filter pipeline because it is the most expensive check.
 
-#### 2. useAnalyticsCharts (`hooks/use-analytics-charts.ts`)
+The result is a predictable path from raw expenses to filtered datasets to charts and summary cards, without duplicating filter logic across screens.
 
-**Responsibilities**:
+## Internationalization and App Shell
 
-- Pie chart data preparation
-- Line chart data preparation
-- Payment method/instrument chart data
+- i18next is the translation source of truth.
+- Locale bundles load dynamically so only the active language is needed at startup.
+- Locale-aware formatting is derived from the active language and device preferences.
+- The app shell is composed through Expo Router layouts and shared providers in `components/Provider.tsx`.
 
-**Performance**: Only recomputes when filtered expenses change
+This keeps startup lean while ensuring notifications, labels, and formatting remain consistent across screens.
 
-#### 3. useAnalyticsStatistics (`hooks/use-analytics-statistics.ts`)
+## Performance Considerations
 
-**Responsibilities**:
-
-- Total/average calculations
-- Trend analysis
-- Statistics card data
-
-#### 4. useAnalyticsData (Composite)
-
-**Status**: Deprecated
-
-**Reason**: The composite hook combines all three hooks but causes unnecessary re-renders. Use individual hooks instead.
-
-### Single-Pass Filter Optimization
-
-**Problem**: Sequential filtering creates intermediate arrays:
-
-```typescript
-// Bad: O(n×4) with 4 intermediate arrays
-const timeFiltered = filterByTimeWindow(expenses)
-const categoryFiltered = filterByCategories(timeFiltered)
-const methodFiltered = filterByPaymentMethods(categoryFiltered)
-const result = filterByPaymentInstruments(methodFiltered)
-```
-
-**Solution**: Single-pass filtering in `utils/analytics/filters.ts`:
-
-```typescript
-// Good: O(n) single pass
-const result = applyAllFilters(expenses, filterState, instruments)
-```
-
-**Benefits**:
-
-- 4× fewer array allocations
-- Better memory usage
-- Consistent filtering logic across app
-
-**Filter Algorithm Flow**:
-
-```mermaid
-flowchart TD
-    Start([Start]) --> CheckActive{Any filters<br/>active?}
-    CheckActive -->|No| ReturnAll[Return all expenses]
-    CheckActive -->|Yes| BuildSets["Build lookup Sets<br/>for categories, methods,<br/>instruments"]
-
-    BuildSets --> BuildMap["Build instrument<br/>lookup table for O#40;1#41;"]
-    BuildMap --> Loop[For each expense]
-
-    Loop --> CheckTime{Time window<br/>matches?}
-    CheckTime -->|No| Next[Next expense]
-    CheckTime -->|Yes| CheckAmount{Amount in<br/>range?}
-
-    CheckAmount -->|No| Next
-    CheckAmount -->|Yes| CheckCat{Category in<br/>selection?}
-
-    CheckCat -->|No| Next
-    CheckCat -->|Yes| CheckMethod{Payment method<br/>matches?}
-
-    CheckMethod -->|No| Next
-    CheckMethod -->|Yes| CheckInst{Instrument<br/>matches?}
-
-    CheckInst -->|No| Next
-    CheckInst -->|Yes| CheckSearch{Search query<br/>matches?}
-
-    CheckSearch -->|No| Next
-    CheckSearch -->|Yes| AddResult[Add to results]
-
-    Next --> More{More<br/>expenses?}
-    More -->|Yes| Loop
-    More -->|No| ReturnResult["Return filtered<br/>results"]
-
-    ReturnAll --> End([End])
-    ReturnResult --> End
-
-    style BuildSets fill:#e3f2fd
-    style BuildMap fill:#e3f2fd
-    style CheckSearch fill:#fff3e0
-```
-
-**Implementation details**:
-
-- Uses Set lookups for O(1) category/method checks
-- Cached instrument Map for O(1) lookups
-- Search performed last (most expensive check)
-- Early return if no filters active
-
-## Type Organization
-
-### Analytics Types (`types/analytics.ts`)
-
-All analytics-related types are exported through a single barrel file:
-
-```typescript
-// Import from single source of truth
-import type { TimeWindow, FilterState, PieChartDataItem } from "../types/analytics"
-
-// Instead of scattered imports:
-// import type { TimeWindow } from "../utils/analytics/time"
-// import type { FilterState } from "../utils/analytics/filters"
-```
-
-**Types exported**:
-
-- `TimeWindow` - Time period options
-- `FilterState` - Complete filter state
-- `PaymentInstrumentSelectionKey` - Instrument identifier
-- `PaymentMethodSelectionKey` - Method identifier
-- `PieChartDataItem` - Pie chart data structure
-- `PaymentMethodChartDataItem` - Payment method chart data
-- `PaymentInstrumentChartDataItem` - Instrument chart data
-- `LineChartDataItem` - Line chart data structure
-- `CategoryColorMap` - Dynamic category colors
-- `DateRange` - Date range for calculations
-
-## Performance Optimizations
-
-### 1. Debounced Search
-
-Search queries are debounced at the store level (300ms) to prevent excessive re-renders while typing.
-
-### 2. Individual Selectors
-
-Filter store uses individual selectors for each property:
-
-```typescript
-const timeWindow = useSelector(filterStore, (s) => s.context.timeWindow)
-const searchQuery = useSelector(filterStore, (s) => s.context.searchQuery)
-```
-
-This prevents re-renders when unrelated filter properties change.
-
-### 3. Memoized Filter State
-
-The filters object is memoized to maintain stable references:
-
-```typescript
-const filters = useMemo(
-  () => ({
-    timeWindow,
-    selectedCategories, // ...
-  }),
-  [timeWindow, selectedCategories /* ... */]
-)
-```
-
-### 4. FlashList Virtualization
-
-History screen uses FlashList with:
-
-- `getItemType` for different recycling pools
-- `overrideItemLayout` for precise sizing
-- `keyExtractor` for stable keys
-
-### 5. GitHub Sync Optimization
-
-Sync uses a two-tier differential strategy to minimize API calls on both fetch and push:
-
-**Fetch-side (Git Trees API + SHA cache):**
-
-- A single `GET /git/trees/{sha}?recursive=1` call retrieves the full repository tree with blob SHAs.
-- Blob SHAs are compared against a local `RemoteSHACache` (AsyncStorage key `"remote_sha_cache"`).
-- Only files whose SHA differs from the cache (or are missing from it) are downloaded via the Contents API.
-- Unchanged files reuse locally stored expenses, avoiding any download.
-- Tree data is passed to the push phase, eliminating a redundant `listFiles()` call.
-- If the Trees API fails for a non-auth reason, the fetch falls back to the existing Contents API pattern.
-- On cold start (empty cache), all files are downloaded — identical to pre-optimization behavior.
-
-**Push-side (dirty-day tracking + content hashing):**
-
-- Expense mutations mark the affected day key as dirty (and track deleted days).
-- Dirty-day state persists in AsyncStorage, so restarts do not force full scans.
-- SyncUp only hashes/uploads dirty day files, and only deletes files confirmed in the current run.
-- Dirty-day state is cleared after successful or no-op syncs.
-
-**Notification count fix:**
-
-- `remoteFilesUpdated` is derived from `mergeResult.addedFromRemote.length + mergeResult.updatedFromRemote.length` instead of the raw download count.
-
-| Scenario                    | Before (API calls)         | After (API calls)          |
-| --------------------------- | -------------------------- | -------------------------- |
-| 100 files, 0 changed        | 101 (list + 100 downloads) | 1 (tree only)              |
-| 100 files, 3 changed        | 101                        | 4 (tree + 3 downloads)     |
-| 100 files, all changed      | 101                        | 101 (tree + 100 downloads) |
-| Push phase (redundant list) | 1 extra listFiles          | 0 (reuse tree data)        |
+- Store selectors are kept granular to avoid unrelated re-renders.
+- Search input is debounced at the filter-store layer.
+- Analytics filtering is single-pass to reduce intermediate allocations.
+- History views rely on list virtualization for large datasets.
+- Sync minimizes API calls through SHA caching and dirty-day tracking.
+- Dynamic locale loading avoids bundling every language into the initial startup path.
 
 ## Testing Strategy
 
-### Property-Based Tests
+The architecture is supported by both unit tests and property-based tests.
 
-Critical pure functions use property-based testing with `fast-check`:
+Areas with strong automated coverage include:
 
-- **Filter functions**: `utils/analytics/filters.property.test.ts`
-- **Currency utilities**: `utils/currency.property.test.ts`
-- **Analytics calculations**: `utils/analytics/analytics-calculations.property.test.ts`
+- sync orchestration and merge behavior
+- storage and migration logic
+- SMS import parsing and suggestion resolution
+- settings and expense store behavior
+- update checks and error classification
+- analytics and filter invariants
 
-**Benefits**:
+Property-based tests are used where the system benefits from invariant checking across many generated inputs, especially around merge logic, sync behavior, and data transformations.
 
-- Tests edge cases automatically
-- Verifies invariants across wide input ranges
-- Catches bugs that unit tests miss
+## When to Extend vs Replace
 
-### Store Tests
+Before adding new architecture layers, prefer extending the existing seams:
 
-XState stores are tested with:
+- add new durable data through an existing store or a narrowly scoped new store
+- add new side effects in services, not in components
+- keep screen hooks as orchestration layers, not persistence layers
+- prefer explicit ADRs for changes that alter sync, import, or platform scope
 
-- State transition verification
-- Event handling
-- Persistence roundtrips
-- Property-based state consistency
-
-## Best Practices
-
-### 1. Store Events
-
-- Use descriptive event names: `setTimeWindow`, `applyFilters`
-- Batch related updates: `applyFilters` instead of multiple individual events
-- Keep events pure - side effects in `enqueue.effect`
-
-### 2. Hook Design
-
-- Split large hooks into focused ones
-- Return memoized objects
-- Use individual selectors for XState stores
-- Document return types explicitly
-
-### 3. Type Safety
-
-- Export types through barrel files
-- Use `type` imports when possible
-- Avoid `any` - use `unknown` with type guards
-
-### 4. Performance
-
-- Use single-pass algorithms where possible
-- Debounce user input
-- Memoize expensive calculations
-- Virtualize long lists
+If a future change introduces on-device ML parsing, background ingestion, or a new sync target, that change should be documented in a new ADR before it is treated as the default architecture.

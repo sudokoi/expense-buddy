@@ -1,4 +1,4 @@
-# Expense Buddy 💰
+# Expense Buddy
 
 <p align="center">
   <img src="./assets/images/expense-buddy.png" alt="Expense Buddy Logo" width="200"/>
@@ -13,387 +13,245 @@
   <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml/badge.svg" alt="Build Status" /></a>
 </p>
 
-A modern expense tracking app built with React Native and Expo. Track your daily expenses, review recent Android SMS transactions before importing them, visualize spending patterns, and sync confirmed expense data securely to GitHub.
+Expense Buddy is a privacy-first expense tracker built with React Native and Expo, designed around one core idea: turn transaction SMS messages into draft expenses automatically, let you review them on-device, and keep the confirmed data synced to a GitHub repository you control.
 
-## ✨ Features
+Manual entry, analytics, multi-currency support, and GitHub sync are all there, but the product's differentiator is the import pipeline: scan recent Android SMS messages, extract likely expenses, stage them locally, and import only what you approve.
 
-### 📊 Expense Management
+## Why Expense Buddy
 
-- **Quick Entry**: Add expenses with amount, category, date, and notes
-- **Flexible Amount Entry**: Enter plain numbers or math expressions like `120+30`; switch to numeric-only keypad entry from **Settings → General** if you prefer
-- **Custom Categories**: Create, edit, and reorder expense categories with custom colors and icons
-- **Payment Methods**: Track how you pay (Cash, UPI, Credit Card, Debit Card, Net Banking, Amazon Pay, etc.)
-- **Saved Payment Instruments**: Save your commonly used cards/UPI IDs with nicknames
-  - Cards store only last **4** digits, UPI stores only last **3** digits
-  - Expenses can reference a saved instrument by ID (CSV stays backward compatible)
-- **Default Payment Method**: Set a preferred payment method for faster entry
-- **Full CRUD**: Create, read, update, and delete expenses with ease
-- **History View**: Browse expenses organized by date with comprehensive filters (time, amount, search, categories, methods, instruments) and cross-tab synchronization with Analytics
-- **Android SMS Import**: Scan recent SMS transactions on Android, review matched items locally, and import only the expenses you confirm
-  - Recent-window scan only for the current version
-  - Settings shows the current SMS permission status and manual scans request access inline only when needed
-  - Regex-first parsing for explainable matches
-  - Category suggestions are limited to the shipped default categories; unmatched or deleted suggestions fall back to **Other**
-  - Raw SMS content stays on-device and out of GitHub sync
+- Auto-detect likely expenses from Android transaction SMS messages
+- Keep raw SMS content on-device and out of GitHub sync
+- Review, edit, reject, or dismiss imported items before they become expenses
+- Sync confirmed expenses across devices using your own private GitHub repository
+- Track expenses manually too, with custom categories, payment methods, and saved instruments
+- Explore spending with charts, filters, and multi-currency analytics
 
-### 📈 Analytics & Insights
+## Auto-Import First
 
-- **Visual Charts**: Bar charts showing daily spending patterns
-- **Category Breakdown**: See spending distribution across categories
-- **Payment Method Analysis**: Pie chart showing expense distribution by payment method
-- **Multi-Currency Support**: Analytics automatically groups expenses by currency; filter chips appear when multiple currencies are present
-- **Advanced Filters**: Filter by time period, categories, payment methods, saved instruments, amount range, and search text
-- **Cross-Tab Filter Sync**: Filters applied in History automatically apply to Analytics and vice versa
-- **Instrument Breakdown**: See spending per card/UPI nickname for selected payment methods
-- **Time-based Analysis**: Track expenses over days/weeks/months plus 3m / 6m / 1y windows
-- **Amount Range Filtering**: Filter expenses by minimum and maximum amounts
-- **Search**: Search across expense notes, categories, payment methods, and instrument nicknames
+Expense Buddy currently ships a regex-first SMS import pipeline for Android. That means the parser is deterministic, explainable, and easy to validate against real messages. The current flow is intentionally review-first: the app finds likely transactions, stages them locally, and waits for your approval before anything is added to your expense history.
 
-### ☁️ GitHub Sync
+Today, the import system:
 
-- **Secure Backup**: Sync expenses to your private GitHub repository
-- **Optional Settings Sync**: Also sync non-sensitive app settings (like categories and saved payment instruments) via `settings.json`
-  - Off by default; controlled by a toggle in Settings
-  - GitHub token/repo configuration is never synced (stays on-device)
-- **Daily File Organization**: Expenses stored as `expenses-YYYY-MM-DD.csv` files (one file per day)
-- **Git-Style Sync**: Fetch-merge-push workflow prevents accidental data loss
-  - Always fetches remote data before pushing
-  - Merges local and remote changes by expense ID
-  - Timestamp-based auto-resolution (newer version wins)
-  - True conflict detection when edits happen within the same time window
-- **Soft Delete**: Expenses are marked with `deletedAt` timestamp instead of being removed, ensuring deletions sync correctly across devices
-- **Smart Sync**:
-  - Auto-sync on app launch or after every change
-  - Manual sync with upload/download controls
-  - Incremental loading (last 7 days by default)
-- **Optimized Fetch**: Uses the Git Trees API to retrieve the full repository tree in a single request, then compares blob SHAs against a local cache to download only files that actually changed
-- **Dirty-Day Sync**: Tracks which days changed and only re-hashes/uploads those daily files
-- **Differential Sync**: Only uploads changed files using content hashing for efficiency
-- **Batched Commits**: All file changes (uploads and deletions) are combined into a single atomic commit
-- **Detailed Sync Feedback**: Shows counts of expenses added, updated, and auto-resolved
-- **Load More**: Download older expenses 7 days at a time
-- **Migration Support**: Automatically migrates from old single-file format to daily files
+- scans a recent SMS window on Android
+- uses deterministic regex rules for transaction extraction
+- suggests only shipped default categories for safety
+- falls back to `Other` when no safe category match exists
+- keeps raw SMS data local to the device
 
-### 🌍 Internationalization (i18n)
+Planned direction:
 
-- **Multiple Languages**: Full support for **English (US, UK, IN)**, **Hindi (हिंदी)**, and **Japanese (日本語)**
-- **Dynamic Locale Loading**: Only the active locale is bundled at startup for faster app launch; other locales load on-demand when selected
-- **Locale Awareness**:
-  - Currency symbols adapt to your choice ($, £, ₹)
-  - Date formats match your region
-- **Per-Transaction Currency**: Track expenses in any currency (useful for travel)
-- **Persistent Preferences**: Remembers your language and default currency settings
+- keep the import flow fully on-device
+- broaden parser coverage beyond the initial regex packs
+- evaluate on-device ML models as a future replacement for parts of the regex pipeline if coverage or maintenance cost becomes the bottleneck
 
-### 🎨 User Experience
+That future ML direction is not shipping today. The current release is regex-based by design.
 
-- **Platform Support**: Core expense tracking works on iOS, Android, and Web; SMS import is currently Android-only
-  - SMS import requires a native Android build because Expo Go cannot load the custom SMS module
-- **Dark Mode**: Automatic theme switching with proper token-based styling
-- **In-App Updates**: Automatic update check on launch with non-intrusive banner notification
-  - Dismissible notifications that remember your choice per version
-  - Manual check available in Settings
-  - Opens Play Store or GitHub releases based on install source
-  - Shows a one-time “What’s New” changelog sheet on first launch after updating (when release notes exist)
-- **Reusable UI Components**: Consistent styling with `ExpenseCard`, `AmountText`, `CategoryIcon`, `ScreenContainer`, `SectionHeader`, and `CategoryCard`
-- **Notifications**: Toast messages for sync status and actions
-- **Offline First**: Works without internet, syncs when connected
-- **First-Time Setup**: Guided flow to download existing data
-- **Performance Optimized**: Virtualized lists + memoized components/handlers for smooth scrolling with large datasets
+## Features
 
-## 🚀 Getting Started
+### SMS Import and Review
+
+- Android-only SMS import using the native `expense-buddy-sms-import` module
+- Inline `READ_SMS` permission handling from Settings
+- Review queue where each staged item can be accepted, edited, rejected, or dismissed
+- Conservative category suggestion resolver built around shipped default categories
+- Local-only processing with no backend parsing
+
+### Expense Tracking
+
+- Quick add flow with amount, category, date, notes, and payment method
+- Optional math expression entry like `120+30`
+- Custom categories with icons, colors, editing, and reordering
+- Saved payment instruments for cards and UPI handles
+- Full create, edit, delete, and soft-delete sync behavior
+- Day-level detail view and searchable history
+
+### GitHub Sync
+
+- Private repository sync using a fetch-merge-push workflow
+- Daily CSV files in `expenses-YYYY-MM-DD.csv` format
+- Optional settings sync for non-sensitive app settings
+- Dirty-day tracking so only changed dates are re-uploaded
+- Differential fetch and upload using remote blob SHA caching
+- Timestamp-based auto-resolution with true conflict detection when needed
+- Manual sync controls plus optional auto-sync on launch or on change
+
+### Analytics
+
+- Daily trend charts and category or payment-method breakdowns
+- Multi-currency grouping and filtering
+- Advanced filters for date range, amount, search text, categories, methods, and saved instruments
+- Shared filter state between History and Analytics
+
+### User Experience
+
+- Works on Android, iOS, and Web for core expense tracking
+- SMS import is Android-only and requires a native build
+- Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
+- Dark mode, changelog gating, update notifications, and reusable Tamagui UI primitives
+
+## How the SMS Import Flow Works
+
+1. Open Settings and scan recent messages.
+2. Expense Buddy reads recent Android transaction SMS messages on-device.
+3. The parser extracts likely transaction details and stages them locally.
+4. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
+5. Only accepted items become normal expense records and participate in optional GitHub sync.
+
+This review-first model is deliberate. The app aims to reduce manual entry without hiding how an import decision was made.
+
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 24.x or higher
-- Yarn 4.5.0 (included via packageManager)
+- Yarn 4.5.0
 - Expo CLI
 - For iOS: Xcode and CocoaPods
 - For Android: Android Studio and SDK
-- For Android SMS import development: an Android development build or release build is required; Expo Go cannot load the custom native SMS module
+- For SMS import development: an Android development build or release build, because Expo Go cannot load the custom native SMS module
 
 ### Installation
 
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/sudokoi/expense-buddy.git
-   cd expense-buddy
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   yarn install
-   ```
-
-3. **Start the development server**
-
-   ```bash
-   yarn start
-   ```
-
-4. **Run on your platform**
-   - iOS: `yarn ios`
-   - Android: `yarn android`
-   - Web: `yarn web`
-
-## 📱 Usage
-
-### Adding an Expense
-
-1. Tap the **+** tab
-2. Enter the amount
-
-- You can type expressions like `120+30` when math entry is enabled in **Settings → General**
-
-3. Select a category
-4. Add a note (optional)
-5. Choose your payment method
-6. If you selected Credit/Debit/UPI, optionally select a saved instrument (or choose **Others** and enter digits)
-7. Choose the date
-8. Tap **Add Expense**
-
-### Managing Payment Instruments
-
-1. Go to the **Settings** tab
-2. Find **Saved Instruments**
-3. Tap **Add** to create a new card/UPI nickname
-4. Edit or remove instruments as needed (removals are soft-deletes so they sync correctly)
-
-### Importing SMS Transactions (Android)
-
-1. Go to the **Settings** tab
-2. Open the **SMS Import** section and review the displayed permission status
-3. Tap **Scan recent messages**
-
-- If SMS access has not been granted yet, the app requests `READ_SMS` at this point
-- Startup bootstrap only re-checks status and scans when permission was already granted earlier
-
-4. Review the staged items, then **Accept**, **Edit**, **Reject**, or **Dismiss** each match
-5. Only accepted items become normal expense records and participate in optional GitHub sync
-
-Category suggestions are intentionally conservative. The parser only suggests the built-in default categories (`Food`, `Transport`, `Groceries`, `Rent`, `Utilities`, `Entertainment`, `Health`, `Other`). If no default category matches, or if the suggested category was deleted, the review flow resolves it to **Other**.
-
-### Setting Up GitHub Sync
-
-1. **Sign in with GitHub (Android)**
-   - Go to the **Settings** tab → **GitHub Sync**
-   - Tap **Sign in with GitHub**
-   - A browser will open and GitHub will show a short **code**
-   - Confirm the code and authorize access
-   - Back in the app, choose a **personal repository you own**
-     - Organization repositories are not supported
-     - Only repositories where you have **write access** are shown
-   - Enter/select a branch (usually `main`)
-   - Tap **Save Config** and then **Test**
-
-2. **Use a token instead (Web / fallback)**
-   - Create a GitHub Personal Access Token (PAT)
-
-     **Option A: Fine-grained token (Recommended)**
-     - GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
-     - Generate new token, select the sync repository
-     - Permissions → Repository permissions → **Contents: Read and write**
-
-     **Option B: Classic token**
-     - GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-     - Select the `repo` scope (required for private repositories)
-
-   - In the app, enter:
-     - Token
-     - Repository in `owner/repo` format
-     - Branch (usually `main`)
-   - Tap **Save Config** and then **Test**
-
-3. **Enable Auto-Sync** (Optional)
-   - Toggle **Enable Auto-Sync**
-   - Choose timing:
-     - **On App Launch**: Sync when app starts
-     - **On Every Change**: Sync after add/edit/delete
-   - Tap **Save Auto-Sync Settings**
-
-### Syncing Data
-
-**Smart Sync:**
-
-- Tap **Sync Now** – uses git-style fetch-merge-push:
-  - Fetches all remote expenses first
-  - Merges with local data (newer timestamps win)
-  - Prompts only for true conflicts (same expense edited on both sides within seconds)
-  - Pushes merged result to remote
-
-**Auto-Sync:**
-
-- Happens automatically based on your settings
-- Shows notifications when sync completes with detailed counts
-- Handles conflicts using timestamps (latest wins)
-
-### Loading More History
-
-- Scroll to bottom of History tab
-- Tap **Load More** to download 7 more days
-- Repeat to load older expenses
-
-## 🏗️ Architecture
-
-Expense Buddy follows a modular architecture with clear separation of concerns:
-
-### Tech Stack
-
-- **Framework**: React Native with Expo
-- **Routing**: Expo Router (file-based routing)
-- **UI Library**: Tamagui v1.144.0 (universal design system)
-- **State Management**: XState Store v3 (reactive stores) + XState v5 (sync state machine)
-- **Storage**: AsyncStorage + Expo SecureStore (with encryption utilities)
-- **Charts**: react-native-gifted-charts
-- **Date Handling**: date-fns
-- **CSV Parsing**: PapaParse
-- **Testing**: Jest + fast-check (property-based testing)
-- **Error Handling**: Centralized error utilities with classification
-- **Type Safety**: Comprehensive TypeScript with ServiceResult pattern
-
-### 📚 Architecture Documentation
-
-For detailed architecture documentation including:
-
-- Store patterns and when to use each store type
-- Hook decomposition strategy
-- Performance optimization rationale
-- Single-pass filtering algorithm
-- Migration guides
-
-**See [ARCHITECTURE.md](./ARCHITECTURE.md)**
-
-### Project Structure
-
-```
-expense-buddy/
-├── app/                    # Expo Router pages
-│   ├── (tabs)/            # Tab navigation screens
-│   ├── day/[date].tsx     # Day detail view
-│   └── _layout.tsx        # Root layout
-├── components/            # Reusable components
-│   ├── analytics/        # Analytics chart components
-│   ├── ui/               # Styled UI components
-│   └── history/          # History-specific components
-├── hooks/                # React hooks
-├── stores/               # XState Store state management
-├── services/             # Business logic
-├── utils/                # Utility functions
-├── constants/            # App constants
-├── types/               # TypeScript types
-└── locales/             # i18n translation files
+```bash
+git clone https://github.com/sudokoi/expense-buddy.git
+cd expense-buddy
+yarn install
+yarn start
 ```
 
-For a complete component and service reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+### Run the app
+
+- iOS: `yarn ios`
+- Android: `yarn android`
+- Web: `yarn web`
+
+## GitHub Sync Setup
+
+### Sign in with GitHub on Android
+
+1. Go to Settings > GitHub Sync.
+2. Tap Sign in with GitHub.
+3. Approve the device-flow code in the browser.
+4. Pick a personal repository you own and can write to.
+5. Save the branch and test the connection.
+
+### Token-based setup for Web or fallback use
+
+1. Create a GitHub Personal Access Token.
+2. Grant `Contents: Read and write` for a fine-grained token, or use the classic `repo` scope for a private repository.
+3. In the app, enter the token, repository in `owner/repo` format, and branch.
+4. Save the config and test the connection.
+
+### Auto-sync options
+
+- Sync on app launch
+- Sync after every add, edit, or delete
+- Manual sync with upload and download controls
+
+## Architecture
+
+Expense Buddy uses Expo Router for navigation, Tamagui for UI, XState stores for app state, and a service layer for sync, storage, analytics, and SMS import logic.
+
+Key implementation details:
+
+- file-based routing under `app/`
+- XState stores for expenses, settings, filters, notifications, UI state, and SMS review state
+- service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
+- native Android SMS module bridged through `services/sms-import/`
+- property-based and unit tests across storage, sync, parsing, and store behavior
+
+For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+## Project Structure
+
+```text
 expense-buddy/
-├── app/ # Expo Router pages
-│ ├── (tabs)/ # Tab navigation screens
-│ │ ├── index.tsx # Dashboard with charts
-│ │ ├── add.tsx # Add expense screen
-│ │ ├── history.tsx # Expense history with edit/delete
-│ │ ├── settings.tsx # Sync settings
-│ │ └── \_layout.tsx # Tab layout
-│ ├── day/[date].tsx # Day detail view
-│ └── \_layout.tsx # Root layout
-├── components/ # Reusable components
-│ ├── analytics/ # Analytics chart components
-│ │ ├── PaymentMethodPieChart.tsx # Payment method breakdown
-│ │ └── CollapsibleSection.tsx # Collapsible chart wrapper
-│ ├── ui/ # Styled UI components
-│ │ ├── AmountText.tsx # Styled amount display
-│ │ ├── CategoryCard.tsx # Category selection card
-│ │ ├── CategoryIcon.tsx # Category icon with background
-│ │ ├── ExpenseCard.tsx # Expense list item card
-│ │ ├── ScreenContainer.tsx # Screen wrapper with padding
-│ │ ├── SectionHeader.tsx # Section title component
-│ │ ├── DefaultPaymentMethodSelector.tsx # Payment method preference
-│ │ ├── PaymentMethodCard.tsx # Payment method display card
-│ │ └── index.ts # Component exports
-│ ├── Provider.tsx # App providers
-│ ├── NotificationStack.tsx
-│ └── SyncIndicator.tsx
-├── hooks/ # React hooks
-│ ├── use-sync-machine.ts # XState sync machine React hook
-│ └── use-update-check.ts # In-app update check hook
-├── stores/ # XState Store state management
-│ ├── expense-store.ts # Expense data store
-│ ├── settings-store.ts # App settings store
-│ ├── notification-store.ts # Toast notifications store
-│ ├── hooks.ts # Custom hooks (useExpenses, useSettings, etc.)
-│ ├── store-provider.tsx # Store initialization provider
-│ └── index.ts # Store exports
-│ └── **tests**/ # Unit and property-based tests
-├── services/ # Business logic
-│ ├── sync-machine.ts # XState sync state machine (idle/fetching/merging/pushing/conflict/error)
-│ ├── sync-manager.ts # Sync orchestration
-│ ├── merge-engine.ts # Git-style merge logic (ID-based merge, timestamp resolution)
-│ ├── github-sync.ts # GitHub API client (includes batch commit via Git Data API + Trees API)
-│ ├── csv-handler.ts # CSV import/export
-│ ├── daily-file-manager.ts
-│ ├── hash-storage.ts # Content hashing for differential sync (push-side)
-│ ├── remote-sha-cache.ts # Blob SHA cache for differential fetch (fetch-side)
-│ ├── change-tracker.ts # Record-level change tracking
-│ ├── expense-storage.ts # Incremental local expense storage + migration
-│ ├── payment-instruments.ts # Instrument utilities + validation
-│ ├── payment-instruments-migration.ts # One-time linking migration for legacy expenses
-│ ├── payment-instrument-merger.ts # Merge logic for syncing instruments
-│ └── auto-sync-service.ts
-├── constants/ # App constants
-│ ├── categories.ts
-│ ├── payment-methods.ts # Payment method definitions
-│ └── payment-method-colors.ts # Chart colors for payment methods
-├── tamagui.config.ts # Tamagui theme configuration with getColorValue helper
-└── types/ # TypeScript types
-├── expense.ts
-└── payment-instrument.ts
+├── app/
+│   ├── (tabs)/
+│   │   ├── index.tsx           # dashboard
+│   │   ├── add.tsx             # manual expense entry
+│   │   ├── analytics.tsx       # charts and breakdowns
+│   │   ├── history.tsx         # history and filters
+│   │   ├── settings.tsx        # sync, import, and app settings
+│   │   └── _layout.tsx
+│   ├── +html.tsx
+│   ├── +not-found.tsx
+│   ├── day/[date].tsx          # day detail screen
+│   ├── github/repo-picker.tsx  # GitHub repository selection flow
+│   ├── modal.tsx
+│   └── _layout.tsx
+├── components/
+│   ├── analytics/              # charts, filters, and analytics UI
+│   ├── history/                # history list and related UI
+│   ├── ui/                     # shared styled components
+│   ├── NotificationStack.tsx
+│   ├── Provider.tsx
+│   └── SyncIndicator.tsx
+├── hooks/                      # analytics, auth, sync, changelog, and update hooks
+├── services/
+│   ├── sms-import/
+│   │   ├── android-sms-module.ts
+│   │   ├── bootstrap.ts
+│   │   ├── parser.ts
+│   │   └── suggestion-resolver.ts
+│   ├── github-sync.ts          # GitHub API client
+│   ├── sync-machine.ts         # sync state machine
+│   ├── sync-manager.ts         # sync orchestration
+│   ├── merge-engine.ts         # conflict resolution and merge logic
+│   ├── expense-storage.ts      # local expense persistence
+│   ├── settings-manager.ts     # settings persistence and sync support
+│   ├── update-checker.ts
+│   └── auto-sync-service.ts
+├── stores/
+│   ├── expense-store.ts
+│   ├── settings-store.ts
+│   ├── filter-store.ts
+│   ├── sms-import-review-store.ts
+│   ├── notification-store.ts
+│   ├── ui-state-store.ts
+│   └── store-provider.tsx
+├── modules/
+│   └── expense-buddy-sms-import/  # native Android SMS module
+├── locales/                    # en-US, en-GB, en-IN, hi, ja
+├── decisions/                  # ADRs and technical decisions
+├── assets/
+├── constants/
+├── types/
+├── utils/
+└── scripts/
+```
 
-````
-
-## 🧪 Testing
-
-The app includes comprehensive unit tests and property-based tests:
+## Testing
 
 ```bash
-# Run all tests
 yarn test
-
-# Run tests in watch mode
 yarn test:watch
-````
+```
 
-### Test Coverage
+The test suite includes unit tests and property-based tests for sync, storage, parsing, and state-management behavior.
 
-- **Unit Tests**: Coverage for services, stores, and critical utilities
-- **Property-Based Tests**: fast-check properties validating merge/sync/store correctness
-- **Test Files**: Located in `stores/__tests__/` and `services/`
-
-## 🔧 Configuration
-
-### Environment Variables
+## Configuration
 
 The app does not require user-provided environment variables.
 
-The GitHub OAuth Client ID is configured in `app.config.js` (not a secret). For Expo Go / local dev you can override it via `EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID`.
+The GitHub OAuth Client ID is configured in `app.config.js` and can be overridden for local Expo development with `EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID`.
 
-### EAS Build Profiles
+Build profiles are defined in `eas.json`:
 
-Defined in `eas.json`:
+- `development` for dev client builds
+- `preview` for internal testing
+- `production` for store-ready builds
+- `internal` for direct APK distribution
 
-- **development**: Development client with hot reload
-- **preview**: Internal distribution for testing
-- **production**: Production builds with auto-increment
-- **internal**: APK builds for direct distribution
+## Building
 
-## 📦 Building
-
-### Development Build
+### Development
 
 ```bash
 yarn start
 ```
 
-### Production Build
+### Production
 
 ```bash
 # iOS
@@ -406,82 +264,25 @@ eas build --platform android --profile production
 eas build --platform android --profile internal
 ```
 
-### Automated Releases
+Release automation is documented in [.github/RELEASE.md](.github/RELEASE.md).
 
-See [.github/RELEASE.md](.github/RELEASE.md) for automated APK builds via GitHub Actions.
+## Privacy
 
-## 🐛 Reporting Issues
+Expense Buddy does not collect user data. Expense data lives on-device by default, and optional sync writes only to the GitHub repository you configure. Raw SMS import data is processed locally and is not uploaded as part of sync.
 
-Found a bug or have a feature request? We'd love to hear from you!
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
-**In-App Reporting:**
+## Reporting Issues
 
-- Open the app and go to **Settings**
-- Scroll to **APP INFORMATION**
-- Tap **Report an Issue**
-- Choose between Bug Report or Feature Request
+- In the app: Settings > App Information > Report an Issue
+- On GitHub: [Issue templates](https://github.com/sudokoi/expense-buddy/issues/new/choose)
 
-**GitHub Issues:**
+## Contributing
 
-- Visit [github.com/sudokoi/expense-buddy/issues](https://github.com/sudokoi/expense-buddy/issues/new/choose)
-- Select the appropriate template
-- Fill in the details
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 
-## 🤝 Contributing
+This project uses a strict issue-first contribution process. If you want to propose a fix, feature, refactor, or documentation change, open an issue first and discuss the problem and proposed solution before sending code.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## License
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Make your changes and **create a changeset**:
-   ```bash
-   yarn changeset
-   ```
-4. Commit your changes with the changeset:
-   ```bash
-   git add .
-   git commit -m 'feat: add some amazing feature'
-   ```
-5. Push to the branch (`git push origin feature/AmazingFeature`)
-6. Open a Pull Request
-
-### Changelog Management
-
-This project uses [Changesets](https://github.com/changesets/changesets) for version management and automated changelog generation.
-
-**When contributing:**
-
-- Run `yarn changeset` to document your changes
-- Select change type: `patch` (bug fixes), `minor` (new features), or `major` (breaking changes)
-- Write a clear description of what changed
-- Commit the generated changeset file with your PR
-
-**Automated releases:**
-
-- When PRs with changesets are merged, a "Version Packages" PR is automatically created
-- Merging the Version PR triggers automatic tag creation
-- Tag push triggers APK build and GitHub Release creation
-- See [.github/RELEASE.md](.github/RELEASE.md) for the full workflow
-
-## 🔒 Privacy Policy
-
-Expense Buddy does not collect any data. All your expense data is stored locally on your device. The optional GitHub sync feature uses your own credentials and repository. Read the full [Privacy Policy](PRIVACY.md).
-
-## 📝 License
-
-This project is open source and available under the [AGPL-3.0 License](LICENSE).
-
-## 🙏 Acknowledgments
-
-- Built with [Expo](https://expo.dev/)
-- UI powered by [Tamagui](https://tamagui.dev/)
-- Charts by [react-native-gifted-charts](https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts)
-- Icons from [Lucide](https://lucide.dev/)
-
-## 📧 Contact
-
-For questions or feedback, please open an issue on GitHub.
-
----
-
-Made with ❤️ using React Native and Expo
+Expense Buddy is available under the [AGPL-3.0 License](LICENSE).
