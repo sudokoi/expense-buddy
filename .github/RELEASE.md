@@ -118,6 +118,12 @@ To manually trigger a build without going through the changeset flow:
 3. Scroll down to **Artifacts**
 4. Download the APK zip file
 
+## Play Store Presence
+
+The current Google Play listing copy lives in [.github/PLAY_STORE_LISTING.md](./PLAY_STORE_LISTING.md).
+
+Update that file whenever Play Store title, short description, full description, or policy-sensitive messaging changes.
+
 ## Prerequisites
 
 The following secrets must be configured in the repository:
