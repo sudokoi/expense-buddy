@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.0.2
+
+### Patch Changes
+
+- [`2c0e7db`](https://github.com/sudokoi/expense-buddy/commit/2c0e7db6fc61b6d7ab4094c53789b468d22f0e28) Thanks [@sudokoi](https://github.com/sudokoi)! - Improve the SMS import review editor so it behaves like the main expense forms.
+
+  This makes the review screen keyboard-safe while editing, defaults unresolved payment methods to Other, and adds the same saved payment instrument dropdown used in the add and edit flows for UPI and cards.
+
 ## 3.0.1
 
 ### Patch Changes
