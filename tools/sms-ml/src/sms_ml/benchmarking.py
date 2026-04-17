@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, cast
 
 from sms_ml.baselines.current_regex import SmsPrediction
 from sms_ml.datasets import NormalizedSmsRecord
@@ -11,6 +12,22 @@ from sms_ml.datasets import NormalizedSmsRecord
 
 class Predictor(Protocol):
     def predict_sms(self, body: str) -> SmsPrediction: ...
+
+
+class RecordPredictor(Protocol):
+    def predict_record(self, record: NormalizedSmsRecord) -> SmsPrediction: ...
+
+
+def predict_for_record(
+    record: NormalizedSmsRecord, predictor: Predictor
+) -> SmsPrediction:
+    record_predict = getattr(predictor, "predict_record", None)
+    if callable(record_predict):
+        predict_record = cast(
+            Callable[[NormalizedSmsRecord], SmsPrediction], record_predict
+        )
+        return predict_record(record)
+    return predictor.predict_sms(record.sms_text)
 
 
 @dataclass(frozen=True)
@@ -52,7 +69,7 @@ def evaluate_records(
     if not records:
         raise ValueError("Cannot benchmark an empty record set")
 
-    first_prediction = predictor.predict_sms(records[0].sms_text)
+    first_prediction = predict_for_record(records[0], predictor)
     supported_predictions = 0
     transaction_type_hits = 0
     merchant_hits = 0
@@ -64,7 +81,7 @@ def evaluate_records(
     credit_records = 0
 
     for record in records:
-        prediction = predictor.predict_sms(record.sms_text)
+        prediction = predict_for_record(record, predictor)
         if record.transaction_type == "debit":
             debit_records += 1
         if record.transaction_type == "credit":

@@ -39,6 +39,7 @@ Run these from the repository root:
 - `yarn ml:train:seed-logreg`
 - `yarn ml:benchmark:logreg`
 - `yarn ml:train:seed-litert`
+- `yarn ml:benchmark:litert`
 - `yarn ml:export:seed-litert:android`
 - `yarn ml:lint`
 - `yarn ml:format`
@@ -74,11 +75,16 @@ To prepare it for the new workspace:
 - run `yarn ml:train:seed-logreg` to train the first text classifier bootstrap model and write metrics into `artifacts/training/`
 - run `yarn ml:benchmark:logreg` to benchmark a hybrid predictor that keeps deterministic extraction but swaps in the trained model for category prediction
 - run `yarn ml:train:seed-litert` to train and export the first LiteRT-ready Android classifier bundle
+- run `yarn ml:benchmark:litert` to benchmark the exported LiteRT model in the same hybrid extraction-plus-category flow used by the app
 - run `yarn ml:export:seed-litert:android` to copy the latest LiteRT model bundle into the Android native module assets
 
 Current limitation:
 
 - the seed data starts without true expense-category labels, so category accuracy remains unavailable until the dataset is manually labeled
+
+Public-source note:
+
+- direct, reusable public transaction-SMS datasets are scarce; see `docs/public-sources.md` for the reviewed source shortlist and reuse caveats
 
 ## Reference Notes
 

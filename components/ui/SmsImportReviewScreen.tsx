@@ -127,6 +127,40 @@ function getLocalizedReviewStatus(
   }
 }
 
+function formatSuggestionDebugText(
+  item: SmsImportReviewItem,
+  t: (key: string) => string
+): string | null {
+  if (!item.categorySuggestionSource) {
+    return null
+  }
+
+  const parts = [
+    `${t("smsImport.sheet.debug.source")}: ${
+      item.categorySuggestionSource === "ml"
+        ? t("smsImport.sheet.debug.sourceMl")
+        : t("smsImport.sheet.debug.sourceRegex")
+    }`,
+  ]
+
+  if (
+    item.categorySuggestionSource === "ml" &&
+    typeof item.categorySuggestionConfidence === "number"
+  ) {
+    parts.push(
+      `${t("smsImport.sheet.debug.confidence")}: ${Math.round(
+        item.categorySuggestionConfidence * 100
+      )}%`
+    )
+  }
+
+  if (item.categorySuggestionSource === "ml" && item.categorySuggestionModelId) {
+    parts.push(`${t("smsImport.sheet.debug.model")}: ${item.categorySuggestionModelId}`)
+  }
+
+  return parts.join(" • ")
+}
+
 function resolveCategoryLabel(
   item: SmsImportReviewItem,
   availableCategories: Category[]
@@ -662,6 +696,11 @@ export function SmsImportReviewScreen() {
                           </YStack>
 
                           <YStack gap="$1">
+                            {formatSuggestionDebugText(item, t) ? (
+                              <Text fontSize="$1" opacity={0.55}>
+                                {formatSuggestionDebugText(item, t)}
+                              </Text>
+                            ) : null}
                             <Text>
                               {t("smsImport.sheet.labels.amount")}:{" "}
                               {typeof item.amount === "number"

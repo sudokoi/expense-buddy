@@ -425,6 +425,13 @@
         "payment": "भुगतान",
         "status": "स्थिति"
       },
+      "debug": {
+        "source": "सुझाव स्रोत",
+        "sourceMl": "एमएल",
+        "sourceRegex": "रेगेक्स",
+        "confidence": "विश्वास",
+        "model": "मॉडल"
+      },
       "values": {
         "needsReview": "समीक्षा आवश्यक"
       },

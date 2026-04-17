@@ -70,6 +70,7 @@ This document tracks the first trainable model path in the SMS ML workspace.
 ## Native-ready commands
 
 - `yarn ml:train:seed-litert`
+- `yarn ml:benchmark:litert`
 - `yarn ml:export:seed-litert:android`
 
 ## Native-ready artifacts
@@ -77,6 +78,7 @@ This document tracks the first trainable model path in the SMS ML workspace.
 - training metrics: `artifacts/training/seed-litert-v1-metrics.json`
 - model bundle: `artifacts/training/seed-litert-v1/model.tflite`
 - model metadata: `artifacts/training/seed-litert-v1/metadata.json`
+- hybrid benchmark: `artifacts/benchmarks/seed-v1-litert-hybrid.json`
 - Android asset bundle: `modules/expense-buddy-sms-import/android/src/main/assets/sms_ml/seed-litert-v1/`
 
 ## Native-ready caveats
@@ -90,6 +92,7 @@ This document tracks the first trainable model path in the SMS ML workspace.
 - train accuracy: `1.0`
 - validation accuracy: `0.8636363636363636`
 - current confidence gate: `0.55`
+- hybrid category accuracy: `0.857566765578635`
 
 ## Native runtime notes
 

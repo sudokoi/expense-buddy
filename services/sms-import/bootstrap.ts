@@ -92,9 +92,7 @@ function createParsedBootstrapCandidate(
 
 function createReviewItem(
   candidate: ParsedBootstrapCandidate,
-  categoryPrediction?: Awaited<
-    ReturnType<typeof categorizeSmsImportMessages>
-  >[number]
+  categoryPrediction?: Awaited<ReturnType<typeof categorizeSmsImportMessages>>[number]
 ): SmsImportReviewItem {
   const { fingerprint, message, parsedCandidate } = candidate
   const useMlCategory = categoryPrediction?.shouldUsePrediction ?? false
@@ -181,10 +179,7 @@ export async function scanSmsImportReviewQueue(
   )
 
   const createdItems = parsedCandidates.map((candidate) =>
-    createReviewItem(
-      candidate,
-      predictionByMessageId.get(candidate.message.messageId)
-    )
+    createReviewItem(candidate, predictionByMessageId.get(candidate.message.messageId))
   )
 
   const bootstrapCompletedAt = input.bootstrapCompletedAt ?? new Date().toISOString()

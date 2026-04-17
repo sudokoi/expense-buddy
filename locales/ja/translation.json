@@ -425,6 +425,13 @@
         "payment": "支払い",
         "status": "状態"
       },
+      "debug": {
+        "source": "提案ソース",
+        "sourceMl": "ML",
+        "sourceRegex": "正規表現",
+        "confidence": "信頼度",
+        "model": "モデル"
+      },
       "values": {
         "needsReview": "確認が必要"
       },

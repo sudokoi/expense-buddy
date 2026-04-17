@@ -23,7 +23,9 @@ ANDROID_ASSET_ROOT = (
 def copy_required_file(file_name: str) -> None:
     source_path = ARTIFACT_ROOT / file_name
     if not source_path.exists():
-        raise FileNotFoundError(f"Missing {source_path}. Run yarn ml:train:seed-litert first.")
+        raise FileNotFoundError(
+            f"Missing {source_path}. Run yarn ml:train:seed-litert first."
+        )
 
     ANDROID_ASSET_ROOT.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source_path, ANDROID_ASSET_ROOT / file_name)

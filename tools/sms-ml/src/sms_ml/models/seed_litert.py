@@ -73,7 +73,7 @@ def iter_terms(tokens: list[str]) -> list[str]:
 
 
 def stable_hash_index(term: str, feature_dimension: int = FEATURE_DIMENSION) -> int:
-    digest = hashlib.sha256(f"{HASH_SALT}\0{term}".encode("utf-8")).digest()
+    digest = hashlib.sha256(f"{HASH_SALT}\0{term}".encode()).digest()
     return int.from_bytes(digest[:4], byteorder="big", signed=False) % feature_dimension
 
 
@@ -102,7 +102,9 @@ def encode_labels(records: list[NormalizedSmsRecord]) -> np.ndarray:
     labeled_records = labeled_debit_records(records)
     return np.array(
         [
-            DEFAULT_EXPENSE_CATEGORIES.index(cast(ExpenseCategory, record.target_category))
+            DEFAULT_EXPENSE_CATEGORIES.index(
+                cast(ExpenseCategory, record.target_category)
+            )
             for record in labeled_records
         ],
         dtype=np.int32,
@@ -112,11 +114,14 @@ def encode_labels(records: list[NormalizedSmsRecord]) -> np.ndarray:
 def create_model(label_count: int) -> Any:
     import tensorflow as tf
 
-    tf.keras.utils.set_random_seed(42)
-    return tf.keras.Sequential(
+    tf_any = cast(Any, tf)
+    tf_any.keras.utils.set_random_seed(42)
+    return tf_any.keras.Sequential(
         [
-            tf.keras.layers.Input(shape=(FEATURE_DIMENSION,), name="features"),
-            tf.keras.layers.Dense(label_count, activation="softmax", name="category"),
+            tf_any.keras.layers.Input(shape=(FEATURE_DIMENSION,), name="features"),
+            tf_any.keras.layers.Dense(
+                label_count, activation="softmax", name="category"
+            ),
         ]
     )
 
@@ -134,6 +139,7 @@ def compute_class_weights(labels: np.ndarray) -> dict[int, float]:
 def train_model(records: list[NormalizedSmsRecord]) -> Any:
     import tensorflow as tf
 
+    tf_any = cast(Any, tf)
     labeled_records = labeled_debit_records(records)
     if len(labeled_records) < 2:
         raise ValueError("Need at least two labeled debit records to train LiteRT")
@@ -146,8 +152,8 @@ def train_model(records: list[NormalizedSmsRecord]) -> Any:
     targets = encode_labels(records)
     model = create_model(len(DEFAULT_EXPENSE_CATEGORIES))
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.02),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+        optimizer=tf_any.keras.optimizers.Adam(learning_rate=0.02),
+        loss=tf_any.keras.losses.SparseCategoricalCrossentropy(),
         metrics=["accuracy"],
     )
     model.fit(
@@ -165,9 +171,29 @@ def predict_category(model: Any, sms_text: str) -> tuple[ExpenseCategory, float]
     features = np.expand_dims(vectorize_text(sms_text), axis=0)
     probabilities = cast(np.ndarray, model.predict(features, verbose=0))[0]
     index = int(np.argmax(probabilities))
-    return cast(ExpenseCategory, DEFAULT_EXPENSE_CATEGORIES[index]), float(
-        probabilities[index]
-    )
+    return DEFAULT_EXPENSE_CATEGORIES[index], float(probabilities[index])
+
+
+def load_tflite_interpreter(path: Path) -> Any:
+    import tensorflow as tf
+
+    tf_any = cast(Any, tf)
+    interpreter = tf_any.lite.Interpreter(model_path=str(path))
+    interpreter.allocate_tensors()
+    return interpreter
+
+
+def predict_tflite_category(
+    interpreter: Any, sms_text: str
+) -> tuple[ExpenseCategory, float]:
+    input_details = interpreter.get_input_details()[0]
+    output_details = interpreter.get_output_details()[0]
+    features = np.expand_dims(vectorize_text(sms_text), axis=0).astype(np.float32)
+    interpreter.set_tensor(input_details["index"], features)
+    interpreter.invoke()
+    probabilities = cast(np.ndarray, interpreter.get_tensor(output_details["index"]))[0]
+    index = int(np.argmax(probabilities))
+    return DEFAULT_EXPENSE_CATEGORIES[index], float(probabilities[index])
 
 
 def evaluate_model(model: Any, records: list[NormalizedSmsRecord]) -> dict[str, object]:
@@ -226,9 +252,10 @@ def get_model_metadata() -> LiteRtModelMetadata:
 def export_tflite_model(model: Any, path: Path) -> None:
     import tensorflow as tf
 
-    converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    payload = converter.convert()
+    tf_any = cast(Any, tf)
+    converter = tf_any.lite.TFLiteConverter.from_keras_model(model)
+    converter.optimizations = [tf_any.lite.Optimize.DEFAULT]
+    payload = cast(bytes, converter.convert())
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(payload)
 
@@ -253,7 +280,8 @@ def write_training_metrics(
         "trainingScope": "labeled debit seed records",
         "warnings": [
             "The current seed labels are bootstrapped from heuristic rules.",
-            "Use these metrics for tooling validation, not for product-level quality claims.",
+            "Use these metrics for tooling validation, not for product-level "
+            "quality claims.",
         ],
         "featureContract": get_model_metadata().to_dict(),
         "train": train_metrics,

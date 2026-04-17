@@ -425,6 +425,13 @@
         "payment": "Payment",
         "status": "Status"
       },
+      "debug": {
+        "source": "Suggestion source",
+        "sourceMl": "ML",
+        "sourceRegex": "Regex",
+        "confidence": "Confidence",
+        "model": "Model"
+      },
       "values": {
         "needsReview": "Needs review"
       },

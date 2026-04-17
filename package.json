@@ -39,6 +39,7 @@
     "ml:train:seed-logreg": "uv run --directory tools/sms-ml --project . python scripts/train_seed_logreg.py",
     "ml:benchmark:logreg": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_logreg.py",
     "ml:train:seed-litert": "uv run --directory tools/sms-ml --project . python scripts/train_seed_litert.py",
+    "ml:benchmark:litert": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_litert.py",
     "ml:export:seed-litert:android": "uv run --directory tools/sms-ml --project . python scripts/export_seed_litert_android.py",
     "ml:lint": "uv run --directory tools/sms-ml --project . ruff check .",
     "ml:format": "uv run --directory tools/sms-ml --project . ruff format .",
