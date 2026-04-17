@@ -59,3 +59,40 @@ This document tracks the first trainable model path in the SMS ML workspace.
 2. compare it against `seed-logreg-v1` on independently reviewed labels when available
 3. keep the classifier head simple so the experiment measures representation quality rather than training complexity
 4. only pursue mobile inference integration if the gain over TF-IDF is real on non-heuristic labels
+
+## Native-ready model
+
+- model ID: `seed-litert-v1`
+- feature pipeline: deterministic hashed token and bigram counts over bank, merchant, and SMS text
+- classifier: LiteRT-exported softmax layer
+- inference role: on-device Android category suggestion via the SMS native module
+
+## Native-ready commands
+
+- `yarn ml:train:seed-litert`
+- `yarn ml:export:seed-litert:android`
+
+## Native-ready artifacts
+
+- training metrics: `artifacts/training/seed-litert-v1-metrics.json`
+- model bundle: `artifacts/training/seed-litert-v1/model.tflite`
+- model metadata: `artifacts/training/seed-litert-v1/metadata.json`
+- Android asset bundle: `modules/expense-buddy-sms-import/android/src/main/assets/sms_ml/seed-litert-v1/`
+
+## Native-ready caveats
+
+- the current LiteRT model is trained on the same heuristic-shaped seed labels as `seed-logreg-v1`
+- the hashed feature contract is intentionally simple so the Kotlin runtime can mirror it exactly
+- this is the first app-integration milestone, not the final model architecture for shipping quality claims
+
+## Native-ready observed results
+
+- train accuracy: `1.0`
+- validation accuracy: `0.8636363636363636`
+- current confidence gate: `0.55`
+
+## Native runtime notes
+
+- the Android runtime only replaces the category suggestion when the LiteRT confidence clears the model threshold and the predicted label is not `Other`
+- transaction detection, amount parsing, and payment-method hints remain deterministic in the TypeScript parser
+- the Android asset bundle is generated from the ML workspace and copied into the native module with `yarn ml:export:seed-litert:android`

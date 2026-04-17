@@ -30,12 +30,14 @@ working in the SMS ML workspace.
 - `current-regex`: existing regex-heavy parser reproduced in Python for offline evaluation
 - `taxonomy-first`: deterministic category mapper using the explicit merchant and text policy used to seed labels
 - `seed-logreg-v1`: first trainable bootstrap classifier using TF-IDF plus logistic regression over labeled debit SMS text
+- `seed-litert-v1`: first Android-native classifier using hashed token features and a LiteRT-exported softmax model
 
 ## Current measured state
 
 - `current-regex` category accuracy on the current labeled seed set: `0.5578635014836796`
 - `taxonomy-first` category accuracy on the current labeled seed set: `1.0`
 - `seed-logreg-v1` validation accuracy on labeled debit seed data: `0.9393939393939394`
+- `seed-litert-v1` validation accuracy on labeled debit seed data: `0.8636363636363636`
 - `seed-logreg-hybrid` category accuracy on the current labeled seed set: `0.9881305637982196`
 
 ## Evaluation warning
@@ -61,6 +63,15 @@ working in the SMS ML workspace.
 - compare every trainable model against `current-regex` and `taxonomy-first`
 - treat the seed dataset as a bootstrapping set, not a production-quality benchmark
 - save model metadata and evaluation artifacts in a form that both developers and LLM agents can inspect without rerunning training
+- prefer model contracts that can be mirrored exactly inside the Android native module without a JS-thread dependency
+
+## Native runtime contract
+
+- the first app integration uses a LiteRT bundle inside the Android SMS native module
+- the native model consumes deterministic hashed unigram and bigram features rather than raw strings
+- Android feature extraction mirrors the Python export contract through shared metadata fields such as feature dimension, hash salt, token limits, and confidence threshold
+- low-confidence native predictions fall back to the existing regex category suggestion in the app bootstrap flow
+- the current Android gate is intentionally conservative: predictions under `0.55` confidence, or predictions of `Other`, do not replace the regex suggestion
 
 ## Embedding recommendation
 

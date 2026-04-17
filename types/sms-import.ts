@@ -17,6 +17,9 @@ export interface SmsImportReviewItem {
   currency?: string
   merchantName?: string
   categorySuggestion?: ExpenseCategory
+  categorySuggestionConfidence?: number
+  categorySuggestionModelId?: string
+  categorySuggestionSource?: "regex" | "ml"
   paymentMethodSuggestion?: PaymentMethod
   noteSuggestion?: string
   transactionDate?: string

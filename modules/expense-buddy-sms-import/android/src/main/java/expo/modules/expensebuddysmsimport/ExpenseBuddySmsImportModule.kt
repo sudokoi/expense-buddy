@@ -21,6 +21,13 @@ data class SmsImportScanOptionsRecord(
   @Field val lookbackDays: Int? = null,
 ) : Record
 
+data class SmsCategoryPredictionRequestRecord(
+  @Field val messageId: String = "",
+  @Field val sender: String = "",
+  @Field val body: String = "",
+  @Field val merchantName: String? = null,
+) : Record
+
 class SmsPermissionMissingException :
   CodedException(
     code = "ERR_SMS_PERMISSION_MISSING",
@@ -57,6 +64,10 @@ class ExpenseBuddySmsImportModule : Module() {
     AsyncFunction("scanMessagesAsync") { options: SmsImportScanOptionsRecord ->
       ensurePermissionGranted()
       queryRecentMessages(options)
+    }
+
+    AsyncFunction("categorizeMessagesAsync") { requests: List<SmsCategoryPredictionRequestRecord> ->
+      classifyMessages(requests)
     }
   }
 
@@ -116,6 +127,32 @@ class ExpenseBuddySmsImportModule : Module() {
     }
 
     return messages
+  }
+
+  private fun classifyMessages(
+    requests: List<SmsCategoryPredictionRequestRecord>,
+  ): List<Map<String, Any>> {
+    val reactContext = appContext.reactContext ?: throw SmsImportContextLostException()
+    val classifier = SmsCategoryLiteRtClassifier.getInstance(reactContext)
+
+    return classifier.classifyBatch(
+      requests.map { request ->
+        SmsCategoryPredictionRequest(
+          messageId = request.messageId,
+          sender = request.sender,
+          body = request.body,
+          merchantName = request.merchantName,
+        )
+      }
+    ).map { prediction ->
+      mapOf(
+        "messageId" to prediction.messageId,
+        "category" to prediction.category,
+        "confidence" to prediction.confidence,
+        "shouldUsePrediction" to prediction.shouldUsePrediction,
+        "modelId" to prediction.modelId,
+      )
+    }
   }
 
   private fun resolveLowerBound(options: SmsImportScanOptionsRecord): SmsQueryLowerBound {

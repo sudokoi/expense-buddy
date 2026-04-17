@@ -1,6 +1,8 @@
 import { Platform } from "react-native"
 import { SmsImportRawMessage } from "../../types/sms-import"
 import ExpenseBuddySmsImportModule, {
+  NativeSmsCategoryPrediction,
+  NativeSmsCategoryPredictionRequest,
   NativeSmsImportMessage,
   SmsImportPermissionResponse,
   SmsImportScanOptions,
@@ -16,6 +18,9 @@ export interface AndroidSmsModule {
   getPermissionStatusAsync(): Promise<SmsImportPermissionResponse>
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
+  categorizeMessagesAsync?(
+    requests: NativeSmsCategoryPredictionRequest[]
+  ): Promise<NativeSmsCategoryPrediction[]>
 }
 
 let moduleOverride: AndroidSmsModule | null = null
@@ -68,4 +73,23 @@ export async function scanRecentSmsMessages(
       (left, right) =>
         new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime()
     )
+}
+
+export async function categorizeSmsImportMessages(
+  requests: NativeSmsCategoryPredictionRequest[]
+): Promise<NativeSmsCategoryPrediction[]> {
+  if (Platform.OS !== "android" || requests.length === 0) {
+    return []
+  }
+
+  const installedModule = moduleOverride ?? ExpenseBuddySmsImportModule
+  if (!installedModule?.categorizeMessagesAsync) {
+    return []
+  }
+
+  try {
+    return await installedModule.categorizeMessagesAsync(requests)
+  } catch {
+    return []
+  }
 }

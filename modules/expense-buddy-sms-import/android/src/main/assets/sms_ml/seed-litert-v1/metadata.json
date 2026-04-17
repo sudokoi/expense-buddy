@@ -1,0 +1,21 @@
+{
+  "model_id": "seed-litert-v1",
+  "approach": "hashed-bow-litert-softmax",
+  "labels": [
+    "Food",
+    "Transport",
+    "Groceries",
+    "Rent",
+    "Utilities",
+    "Entertainment",
+    "Health",
+    "Other"
+  ],
+  "feature_dimension": 2048,
+  "hash_salt": "sms-ml-seed-litert-v1",
+  "min_token_length": 2,
+  "max_token_length": 32,
+  "max_tokens": 256,
+  "ngram_separator": "__",
+  "min_confidence": 0.55
+}

@@ -3,15 +3,22 @@ jest.mock("react-native", () => ({
 }))
 
 jest.mock("./android-sms-module", () => ({
+  categorizeSmsImportMessages: jest.fn(),
   getSmsPermissionStatus: jest.fn(),
   scanRecentSmsMessages: jest.fn(),
 }))
 
 import { createSmsImportFingerprint } from "./fingerprint"
 import { scanSmsImportReviewQueue } from "./bootstrap"
-import { getSmsPermissionStatus, scanRecentSmsMessages } from "./android-sms-module"
+import {
+  categorizeSmsImportMessages,
+  getSmsPermissionStatus,
+  scanRecentSmsMessages,
+} from "./android-sms-module"
 import type { SmsImportRawMessage, SmsImportReviewItem } from "../../types/sms-import"
 
+const mockCategorizeSmsImportMessages =
+  categorizeSmsImportMessages as jest.MockedFunction<typeof categorizeSmsImportMessages>
 const mockGetSmsPermissionStatus = getSmsPermissionStatus as jest.MockedFunction<
   typeof getSmsPermissionStatus
 >
@@ -56,6 +63,7 @@ function createExistingItem(message: SmsImportRawMessage): SmsImportReviewItem {
 describe("scanSmsImportReviewQueue", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockCategorizeSmsImportMessages.mockResolvedValue([])
   })
 
   it("returns no items when permission is not granted", async () => {
@@ -106,6 +114,7 @@ describe("scanSmsImportReviewQueue", () => {
       amount: 250,
       paymentMethodSuggestion: { type: "Credit Card" },
       categorySuggestion: "Transport",
+      categorySuggestionSource: "regex",
       status: "pending",
     })
     expect(result.nextCursor).toBe("2026-04-11T10:19:59.999Z")
@@ -187,5 +196,67 @@ describe("scanSmsImportReviewQueue", () => {
 
     expect(result.createdItems).toHaveLength(1)
     expect(result.createdItems[0]?.sourceMessage.messageId).toBe("sms-1")
+  })
+
+  it("prefers the native ML category when the prediction clears the confidence gate", async () => {
+    const message = createMessage({
+      body: "INR 250 paid to Uber Trip via credit card",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockCategorizeSmsImportMessages.mockResolvedValue([
+      {
+        messageId: message.messageId,
+        category: "Food",
+        confidence: 0.92,
+        shouldUsePrediction: true,
+        modelId: "seed-litert-v1",
+      },
+    ])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.createdItems[0]).toMatchObject({
+      categorySuggestion: "Food",
+      categorySuggestionConfidence: 0.92,
+      categorySuggestionModelId: "seed-litert-v1",
+      categorySuggestionSource: "ml",
+    })
+  })
+
+  it("falls back to regex when the native prediction is below the gate", async () => {
+    const message = createMessage({
+      body: "INR 250 paid to Uber Trip via credit card",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockCategorizeSmsImportMessages.mockResolvedValue([
+      {
+        messageId: message.messageId,
+        category: "Food",
+        confidence: 0.31,
+        shouldUsePrediction: false,
+        modelId: "seed-litert-v1",
+      },
+    ])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.createdItems[0]).toMatchObject({
+      categorySuggestion: "Transport",
+      categorySuggestionSource: "regex",
+      categorySuggestionConfidence: undefined,
+      categorySuggestionModelId: undefined,
+    })
   })
 })

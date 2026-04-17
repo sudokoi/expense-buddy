@@ -26,8 +26,26 @@ export interface NativeSmsImportMessage {
   receivedAt: string
 }
 
+export interface NativeSmsCategoryPredictionRequest {
+  messageId: string
+  sender: string
+  body: string
+  merchantName?: string
+}
+
+export interface NativeSmsCategoryPrediction {
+  messageId: string
+  category: string
+  confidence: number
+  shouldUsePrediction: boolean
+  modelId: string
+}
+
 export interface ExpenseBuddySmsImportNativeModule extends NativeModule {
   getPermissionStatusAsync(): Promise<SmsImportPermissionResponse>
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options?: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
+  categorizeMessagesAsync?(
+    requests: NativeSmsCategoryPredictionRequest[]
+  ): Promise<NativeSmsCategoryPrediction[]>
 }

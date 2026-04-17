@@ -28,23 +28,24 @@ Manual entry, analytics, multi-currency support, and GitHub sync are all there, 
 
 ## Auto-Import First
 
-Expense Buddy currently ships a regex-first SMS import pipeline for Android. That means the parser is deterministic, explainable, and easy to validate against real messages. The current flow is intentionally review-first: the app finds likely transactions, stages them locally, and waits for your approval before anything is added to your expense history.
+Expense Buddy ships a hybrid SMS import pipeline for Android. Transaction detection and field extraction stay deterministic and explainable, while category suggestion can be upgraded by a bundled on-device LiteRT model. The flow remains intentionally review-first: the app finds likely transactions, stages them locally, and waits for your approval before anything is added to your expense history.
 
 Today, the import system:
 
 - scans a recent SMS window on Android
-- uses deterministic regex rules for transaction extraction
-- suggests only shipped default categories for safety
-- falls back to `Other` when no safe category match exists
+- uses deterministic rules for transaction extraction
+- runs a bundled native LiteRT classifier for default-category suggestions
+- falls back to the regex category suggestion when model confidence is low
 - keeps raw SMS data local to the device
 
 Planned direction:
 
 - keep the import flow fully on-device
 - broaden parser coverage beyond the initial regex packs
-- evaluate on-device ML models as a future replacement for parts of the regex pipeline if coverage or maintenance cost becomes the bottleneck
+- replace the seed LiteRT model with a model trained on more independent labels
+- keep ML limited to suggestion-quality improvements while review-first import remains the guardrail
 
-That future ML direction is not shipping today. The current release is regex-based by design.
+The current ML model is a first integration milestone, not a final quality claim. It is trained on a small heuristic-shaped seed set and is intentionally gated behind conservative fallback behavior.
 
 ## Features
 
@@ -53,6 +54,7 @@ That future ML direction is not shipping today. The current release is regex-bas
 - Android-only SMS import using the native `expense-buddy-sms-import` module
 - Inline `READ_SMS` permission handling from Settings
 - Review queue where each staged item can be accepted, edited, rejected, or dismissed
+- Native LiteRT category suggestion with regex fallback for low-confidence predictions
 - Conservative category suggestion resolver built around shipped default categories
 - Local-only processing with no backend parsing
 
@@ -93,9 +95,11 @@ That future ML direction is not shipping today. The current release is regex-bas
 
 1. Open Settings and scan recent messages.
 2. Expense Buddy reads recent Android transaction SMS messages on-device.
-3. The parser extracts likely transaction details and stages them locally.
-4. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
-5. Only accepted items become normal expense records and participate in optional GitHub sync.
+3. The parser extracts likely transaction details and a regex fallback category locally.
+4. The native Android module can score the same messages with a bundled LiteRT category model.
+5. The app stages the candidate with the ML category only when the model is confident enough.
+6. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
+7. Only accepted items become normal expense records and participate in optional GitHub sync.
 
 This review-first model is deliberate. The app aims to reduce manual entry without hiding how an import decision was made.
 

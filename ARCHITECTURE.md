@@ -9,7 +9,7 @@ This document focuses on the current architecture shape, the reasons behind the 
 - Local-first by default. Core expense tracking works without a backend.
 - Review before import. SMS parsing produces staged candidates, not immediate expenses.
 - Explicit state boundaries. Stores are split by persistence and sync requirements, not by screen alone.
-- Deterministic import today. Regex-first parsing is easier to explain, test, and ship.
+- Deterministic extraction with local ML suggestions. The app keeps transaction extraction rule-based and uses native ML only for category suggestion when confidence is high enough.
 - User-owned sync. GitHub is a transport and persistence target, not an application server.
 
 ## Runtime Layers
@@ -75,7 +75,8 @@ Current constraints:
 
 - Android only
 - Recent-window scanning rather than full historical inbox import
-- Regex-first parsing for explainable matches
+- Deterministic extraction for explainable matches
+- Native LiteRT category suggestions with regex fallback
 - Review-first staging before an expense is created
 - Local-only raw SMS handling
 
@@ -84,24 +85,27 @@ Runtime flow:
 1. The app checks SMS permission status on startup without prompting.
 2. If permission was already granted, bootstrap logic can scan the bounded recent window.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
-4. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and category suggestions.
-5. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
-6. Parsed candidates are stored in the SMS Import Review Store.
-7. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
-8. Only accepted items are converted into normal expense records and enter the regular sync flow.
+4. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
+5. `services/sms-import/bootstrap.ts` batches eligible messages through the Android native module for LiteRT category inference.
+6. The native module mirrors the Python export contract with deterministic hashed token features and replaces the category suggestion only when the model clears its confidence gate.
+7. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
+8. Parsed candidates are stored in the SMS Import Review Store.
+9. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
+10. Only accepted items are converted into normal expense records and enter the regular sync flow.
 
-Why regex-first today:
+Why this hybrid shape:
 
 - easier to debug against real SMS fixtures
 - easier to explain to users in a review-first flow
-- lighter than bundling and maintaining model assets in the current Expo and Android packaging setup
-- safer for a narrow first release
+- keeps deterministic extraction on the JS side while moving actual category inference off the JS thread
+- lets the app ship a native model bundle without requiring server-side parsing or on-device training
 
 Planned direction:
 
 - keep all parsing on-device
 - broaden parser coverage over time
-- revisit on-device ML only if regex coverage, precision, or maintenance cost becomes the limiting factor
+- replace the seed LiteRT model with one trained on more independent labels
+- add local personalization only after the base on-device model is stable enough to justify it
 
 There is no server-side parsing roadmap. Any future ML-based parser is expected to remain local to the device.
 
@@ -109,6 +113,7 @@ Related decisions:
 
 - [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
 - [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
+- [On-Device ML SMS Categorization Proposal](./decisions/proposal-on-device-ml-sms-categorization.md)
 
 ## GitHub Sync Architecture
 
