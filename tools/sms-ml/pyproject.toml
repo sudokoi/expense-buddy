@@ -8,7 +8,9 @@ version = "0.1.0"
 description = "Offline training and evaluation workspace for Expense Buddy SMS categorization"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "scikit-learn>=1.5,<2",
+]
 
 [dependency-groups]
 dev = [

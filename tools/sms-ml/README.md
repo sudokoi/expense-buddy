@@ -36,6 +36,8 @@ Run these from the repository root:
 - `yarn ml:labels:apply`
 - `yarn ml:benchmark:seed`
 - `yarn ml:benchmark:taxonomy`
+- `yarn ml:train:seed-logreg`
+- `yarn ml:benchmark:logreg`
 - `yarn ml:lint`
 - `yarn ml:format`
 - `yarn ml:typecheck`
@@ -67,6 +69,8 @@ To prepare it for the new workspace:
 - run `yarn ml:labels:apply` to merge reviewed categories back into the normalized JSONL files
 - run `yarn ml:benchmark:seed` to benchmark the current regex baseline and write a report into `artifacts/benchmarks/`
 - run `yarn ml:benchmark:taxonomy` to benchmark the taxonomy-first heuristic baseline against the same labeled seed dataset
+- run `yarn ml:train:seed-logreg` to train the first text classifier bootstrap model and write metrics into `artifacts/training/`
+- run `yarn ml:benchmark:logreg` to benchmark a hybrid predictor that keeps deterministic extraction but swaps in the trained model for category prediction
 
 Current limitation:
 
@@ -76,5 +80,7 @@ Current limitation:
 
 - `current-regex` reflects the shipped parser's current offline category heuristics
 - `taxonomy-first` uses the explicit merchant and text mapping policy from the seed labeling workflow
+- `seed-logreg-v1` is the first trainable bootstrap category model and currently uses TF-IDF plus logistic regression over labeled debit SMS text
 - fuel and travel intents are intentionally collapsed into `Transport` because the shipped app taxonomy does not yet expose separate `Fuel` or `Travel` categories
 - because the current seed labels were auto-seeded from the same mapping policy, `taxonomy-first` is a bootstrap sanity-check baseline rather than an unbiased offline winner
+- for the same reason, `seed-logreg-v1` is useful for plumbing and export experiments but not yet for credible product claims

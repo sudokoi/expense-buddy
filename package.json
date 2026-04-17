@@ -36,6 +36,8 @@
     "ml:labels:apply": "uv run --directory tools/sms-ml --project . python scripts/apply_seed_labels.py",
     "ml:benchmark:seed": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_current_regex.py",
     "ml:benchmark:taxonomy": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_taxonomy_first.py",
+    "ml:train:seed-logreg": "uv run --directory tools/sms-ml --project . python scripts/train_seed_logreg.py",
+    "ml:benchmark:logreg": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_logreg.py",
     "ml:lint": "uv run --directory tools/sms-ml --project . ruff check .",
     "ml:format": "uv run --directory tools/sms-ml --project . ruff format .",
     "ml:format:check": "uv run --directory tools/sms-ml --project . ruff format --check .",

@@ -29,12 +29,22 @@ working in the SMS ML workspace.
 
 - `current-regex`: existing regex-heavy parser reproduced in Python for offline evaluation
 - `taxonomy-first`: deterministic category mapper using the explicit merchant and text policy used to seed labels
+- `seed-logreg-v1`: first trainable bootstrap classifier using TF-IDF plus logistic regression over labeled debit SMS text
+
+## Current measured state
+
+- `current-regex` category accuracy on the current labeled seed set: `0.5578635014836796`
+- `taxonomy-first` category accuracy on the current labeled seed set: `1.0`
+- `seed-logreg-v1` validation accuracy on labeled debit seed data: `0.9393939393939394`
+- `seed-logreg-hybrid` category accuracy on the current labeled seed set: `0.9881305637982196`
 
 ## Evaluation warning
 
 - the current labeled seed dataset was initialized from the same taxonomy-first mapping policy
 - a perfect taxonomy-first score on the current seed labels is therefore expected and should not be treated as a production-quality comparison
 - use the taxonomy-first baseline as a sanity check and bootstrapping tool, not as the final benchmark to beat
+- any model trained purely on these heuristic labels inherits the same ceiling and should be treated as a workflow bootstrap rather than a production-ready quality signal
+- the very high `seed-logreg-hybrid` score should be read in the same light: it is useful for plumbing validation, not yet for product claims
 
 ## Seed workflow
 
@@ -50,3 +60,11 @@ working in the SMS ML workspace.
 - train only category prediction first
 - compare every trainable model against `current-regex` and `taxonomy-first`
 - treat the seed dataset as a bootstrapping set, not a production-quality benchmark
+- save model metadata and evaluation artifacts in a form that both developers and LLM agents can inspect without rerunning training
+
+## Embedding recommendation
+
+- embeddings are likely more helpful than plain TF-IDF once we need better generalization across unseen merchants and message wording
+- the right first use is a frozen embedding encoder plus a lightweight classifier head
+- embeddings are less compelling if the labels are still mostly heuristic-derived, because the model will mainly learn the same rule surface with higher complexity
+- for product planning, embeddings should be evaluated offline first and only considered for Android inference if the accuracy gain is large enough to justify runtime cost
