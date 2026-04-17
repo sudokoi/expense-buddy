@@ -28,7 +28,20 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix --max-warnings=0",
     "check:translations": "node scripts/check-translations.js",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\""
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "ml:sync": "uv sync --directory tools/sms-ml --project .",
+    "ml:import:seed": "uv run --directory tools/sms-ml --project . python scripts/import_seed_reference.py",
+    "ml:prepare:seed": "uv run --directory tools/sms-ml --project . python scripts/normalize_seed_reference.py",
+    "ml:labels:init": "uv run --directory tools/sms-ml --project . python scripts/init_seed_label_queue.py",
+    "ml:labels:apply": "uv run --directory tools/sms-ml --project . python scripts/apply_seed_labels.py",
+    "ml:benchmark:seed": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_current_regex.py",
+    "ml:benchmark:taxonomy": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_taxonomy_first.py",
+    "ml:lint": "uv run --directory tools/sms-ml --project . ruff check .",
+    "ml:format": "uv run --directory tools/sms-ml --project . ruff format .",
+    "ml:format:check": "uv run --directory tools/sms-ml --project . ruff format --check .",
+    "ml:typecheck": "uv run --directory tools/sms-ml --project . pyright",
+    "ml:test": "uv run --directory tools/sms-ml --project . pytest",
+    "ml:check": "yarn ml:lint && yarn ml:format:check && yarn ml:typecheck && yarn ml:test"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

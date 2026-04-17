@@ -1,0 +1,116 @@
+{
+  "sourceCommit": "cab99ec",
+  "sourceFiles": {
+    "train": "ml/data/processed/train.json",
+    "val": "ml/data/processed/val.json"
+  },
+  "recordCounts": {
+    "train": 364,
+    "val": 91
+  },
+  "schema": {
+    "sms": "str",
+    "merchant": "str",
+    "amount": "float",
+    "currency": "str",
+    "date": "str",
+    "type": "str",
+    "bank": "str"
+  },
+  "notes": [
+    "Recovered from local git history as seed data for the ML workspace.",
+    "The records appear synthetic or anonymized rather than raw personal SMS."
+  ],
+  "preview": [
+    {
+      "sms": "$8149.73 credited at Paytm on 09/03/2024. Card ending in 2429. Balance: $26071.3.",
+      "merchant": "Paytm",
+      "amount": 8149.73,
+      "currency": "USD",
+      "date": "09/03/2024",
+      "type": "credit",
+      "bank": "HDFC"
+    },
+    {
+      "sms": "Rs. 47231.71 debited from A/c **6325 on 24-04-2024 at Zomato. Avl Bal: Rs. 86483.27.",
+      "merchant": "Zomato",
+      "amount": 47231.71,
+      "currency": "INR",
+      "date": "24-04-2024",
+      "type": "debit",
+      "bank": "ICICI"
+    },
+    {
+      "sms": "$25366.15 withdrawn at Swiggy on 2023-09-09. Card ending in 1934. Balance: $58954.59.",
+      "merchant": "Swiggy",
+      "amount": 25366.15,
+      "currency": "USD",
+      "date": "2023-09-09",
+      "type": "debit",
+      "bank": "HDFC"
+    },
+    {
+      "sms": "$21179.15 withdrawn at Ola on 2024-02-10. Card ending in 4426. Balance: $10447.54.",
+      "merchant": "Ola",
+      "amount": 21179.15,
+      "currency": "USD",
+      "date": "2024-02-10",
+      "type": "debit",
+      "bank": "Bank of America"
+    },
+    {
+      "sms": "Rs. 18062.01 credited from A/c **3062 on 06-04-2023 at Chevron. Avl Bal: Rs. 45505.36.",
+      "merchant": "Chevron",
+      "amount": 18062.01,
+      "currency": "INR",
+      "date": "06-04-2023",
+      "type": "credit",
+      "bank": "HDFC"
+    },
+    {
+      "sms": "$48279.38 spent at AJIO on 2023-10-02. Card ending in 2733. Balance: $23087.94.",
+      "merchant": "AJIO",
+      "amount": 48279.38,
+      "currency": "USD",
+      "date": "2023-10-02",
+      "type": "debit",
+      "bank": "ICICI"
+    },
+    {
+      "sms": "\u20ac45398.87 spent at Target on 07-06-2024. Card: ****1701. Balance: \u20ac77274.28.",
+      "merchant": "Target",
+      "amount": 45398.87,
+      "currency": "EUR",
+      "date": "07-06-2024",
+      "type": "debit",
+      "bank": "Axis"
+    },
+    {
+      "sms": "You made a $39688.71 transaction at Best Buy on 22/06/2024. Available: $55686.88.",
+      "merchant": "Best Buy",
+      "amount": 39688.71,
+      "currency": "USD",
+      "date": "22/06/2024",
+      "type": "debit",
+      "bank": "SBI"
+    },
+    {
+      "sms": "Your A/c **8752 spent Rs. 40287.5 on 2023-10-19 at Whole Foods. Balance: Rs. 43078.28.",
+      "merchant": "Whole Foods",
+      "amount": 40287.5,
+      "currency": "INR",
+      "date": "2023-10-19",
+      "type": "debit",
+      "bank": "ICICI"
+    },
+    {
+      "sms": "debited: $21622.94 at Grofers on 2023-08-22 with card ...9829.",
+      "merchant": "Grofers",
+      "amount": 21622.94,
+      "currency": "USD",
+      "date": "2023-08-22",
+      "type": "debit",
+      "bank": "HDFC"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ node_modules/
 .agent/
 .agents/
 .tamagui/
+tools/sms-ml/
 dist/
 build/
 *.lock

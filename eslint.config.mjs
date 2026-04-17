@@ -71,6 +71,7 @@ export default [
       ".yarn/",
       "dist/",
       "build/",
+      "tools/sms-ml/**",
       "scripts/",
       "*.config.js",
       "*.config.cjs",

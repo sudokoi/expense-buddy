@@ -48,6 +48,19 @@ node_modules
 /android
 **/android/build
 **/android/.gradle
+tools/sms-ml/.venv
+tools/sms-ml/.pytest_cache
+tools/sms-ml/.ruff_cache
+tools/sms-ml/.mypy_cache
+tools/sms-ml/.pyright
+tools/sms-ml/.coverage
+tools/sms-ml/htmlcov
+tools/sms-ml/.ipynb_checkpoints
+tools/sms-ml/**/*.pyc
+tools/sms-ml/**/__pycache__
+tools/sms-ml/artifacts
+tools/sms-ml/models/generated
+tools/sms-ml/data/private
 
 # credentials (keystores, signing keys)
 credentials

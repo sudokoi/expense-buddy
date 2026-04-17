@@ -1,0 +1,3278 @@
+[
+  {
+    "sms": "$8149.73 credited at Paytm on 09/03/2024. Card ending in 2429. Balance: $26071.3.",
+    "merchant": "Paytm",
+    "amount": 8149.73,
+    "currency": "USD",
+    "date": "09/03/2024",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs. 47231.71 debited from A/c **6325 on 24-04-2024 at Zomato. Avl Bal: Rs. 86483.27.",
+    "merchant": "Zomato",
+    "amount": 47231.71,
+    "currency": "INR",
+    "date": "24-04-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$25366.15 withdrawn at Swiggy on 2023-09-09. Card ending in 1934. Balance: $58954.59.",
+    "merchant": "Swiggy",
+    "amount": 25366.15,
+    "currency": "USD",
+    "date": "2023-09-09",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$21179.15 withdrawn at Ola on 2024-02-10. Card ending in 4426. Balance: $10447.54.",
+    "merchant": "Ola",
+    "amount": 21179.15,
+    "currency": "USD",
+    "date": "2024-02-10",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 18062.01 credited from A/c **3062 on 06-04-2023 at Chevron. Avl Bal: Rs. 45505.36.",
+    "merchant": "Chevron",
+    "amount": 18062.01,
+    "currency": "INR",
+    "date": "06-04-2023",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$48279.38 spent at AJIO on 2023-10-02. Card ending in 2733. Balance: $23087.94.",
+    "merchant": "AJIO",
+    "amount": 48279.38,
+    "currency": "USD",
+    "date": "2023-10-02",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac45398.87 spent at Target on 07-06-2024. Card: ****1701. Balance: \u20ac77274.28.",
+    "merchant": "Target",
+    "amount": 45398.87,
+    "currency": "EUR",
+    "date": "07-06-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "You made a $39688.71 transaction at Best Buy on 22/06/2024. Available: $55686.88.",
+    "merchant": "Best Buy",
+    "amount": 39688.71,
+    "currency": "USD",
+    "date": "22/06/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Your A/c **8752 spent Rs. 40287.5 on 2023-10-19 at Whole Foods. Balance: Rs. 43078.28.",
+    "merchant": "Whole Foods",
+    "amount": 40287.5,
+    "currency": "INR",
+    "date": "2023-10-19",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "debited: $21622.94 at Grofers on 2023-08-22 with card ...9829.",
+    "merchant": "Grofers",
+    "amount": 21622.94,
+    "currency": "USD",
+    "date": "2023-08-22",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Your A/c **2455 debited Rs. 12971.16 on 03-11-2024 at Ola. Balance: Rs. 49189.4.",
+    "merchant": "Ola",
+    "amount": 12971.16,
+    "currency": "INR",
+    "date": "03-11-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 19195.28 credited from A/c **1886 on 2023-11-19 at Netflix. Avl Bal: Rs. 92072.48.",
+    "merchant": "Netflix",
+    "amount": 19195.28,
+    "currency": "INR",
+    "date": "2023-11-19",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a51050.27 at Ola on 18-03-2024. Available: \u00a558153.55.",
+    "merchant": "Ola",
+    "amount": 1050.27,
+    "currency": "JPY",
+    "date": "18-03-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **7927 credited Rs. 14881.56 on 03-07-2023 at PhonePe. Balance: Rs. 53926.24.",
+    "merchant": "PhonePe",
+    "amount": 14881.56,
+    "currency": "INR",
+    "date": "03-07-2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "INR 8303.78 debited via Debit Card to MakeMyTrip on 20-02-2023. Ref: 889950880813.",
+    "merchant": "MakeMyTrip",
+    "amount": 8303.78,
+    "currency": "INR",
+    "date": "20-02-2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Rs. 181.52 spent from A/c **1003 on 14-03-2023 at Chevron. Avl Bal: Rs. 62978.79.",
+    "merchant": "Chevron",
+    "amount": 181.52,
+    "currency": "INR",
+    "date": "14-03-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "credited: $47433.06 at Grofers on 2023-12-12 with card ...6920.",
+    "merchant": "Grofers",
+    "amount": 47433.06,
+    "currency": "USD",
+    "date": "2023-12-12",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "withdrawn of Rs. 35328.61 made at Domino's on 17/03/2024. Card ending 8395. Avl Bal: Rs. 61718.4.",
+    "merchant": "Domino's",
+    "amount": 35328.61,
+    "currency": "INR",
+    "date": "17/03/2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $7012.87 transaction at Shell on 2023-05-16. Available: $84260.15.",
+    "merchant": "Shell",
+    "amount": 7012.87,
+    "currency": "USD",
+    "date": "2023-05-16",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "You made a $36755.21 transaction at Netflix on 03/04/2023. Available: $18532.05.",
+    "merchant": "Netflix",
+    "amount": 36755.21,
+    "currency": "USD",
+    "date": "03/04/2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u20ac7493.54 spent at Target on 19/12/2023. Card: ****9122. Balance: \u20ac74938.39.",
+    "merchant": "Target",
+    "amount": 7493.54,
+    "currency": "EUR",
+    "date": "19/12/2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "You made a $13310.96 transaction at Costco on 11/12/2023. Available: $50093.02.",
+    "merchant": "Costco",
+    "amount": 13310.96,
+    "currency": "USD",
+    "date": "11/12/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "INR 6611.42 withdrawn via Credit Card to Amazon on 2023-02-17. Ref: 119997470118.",
+    "merchant": "Amazon",
+    "amount": 6611.42,
+    "currency": "INR",
+    "date": "2023-02-17",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "INR 21221.59 credited via UPI to Grofers on 2023-08-22. Ref: 239258246547.",
+    "merchant": "Grofers",
+    "amount": 21221.59,
+    "currency": "INR",
+    "date": "2023-08-22",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Rs. 45473.79 debited from A/c **7870 on 19-01-2023 at AJIO. Avl Bal: Rs. 56002.5.",
+    "merchant": "AJIO",
+    "amount": 45473.79,
+    "currency": "INR",
+    "date": "19-01-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 23205.86 debited via Net Banking to Uber on 2024-06-14. Ref: 419467311184.",
+    "merchant": "Uber",
+    "amount": 23205.86,
+    "currency": "INR",
+    "date": "2024-06-14",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "withdrawn of Rs. 28968.62 made at PhonePe on 2024-06-14. Card ending 5244. Avl Bal: Rs. 98418.08.",
+    "merchant": "PhonePe",
+    "amount": 28968.62,
+    "currency": "INR",
+    "date": "2024-06-14",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 35365.71 debited via Wallet to Zomato on 26/01/2024. Ref: 845719442787.",
+    "merchant": "Zomato",
+    "amount": 35365.71,
+    "currency": "INR",
+    "date": "26/01/2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "spent of Rs. 36935.71 made at PhonePe on 05-12-2023. Card ending 3106. Avl Bal: Rs. 77542.78.",
+    "merchant": "PhonePe",
+    "amount": 36935.71,
+    "currency": "INR",
+    "date": "05-12-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Rs. 680.14 withdrawn from A/c **9473 on 16/08/2023 at KFC. Avl Bal: Rs. 53427.74.",
+    "merchant": "KFC",
+    "amount": 680.14,
+    "currency": "INR",
+    "date": "16/08/2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **4038 spent Rs. 41900.89 on 04/03/2024 at Ola. Balance: Rs. 14885.23.",
+    "merchant": "Ola",
+    "amount": 41900.89,
+    "currency": "INR",
+    "date": "04/03/2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Transaction: \u20ac37326.56 to BookMyShow on 17-09-2024 via UPI.",
+    "merchant": "BookMyShow",
+    "amount": 37326.56,
+    "currency": "EUR",
+    "date": "17-09-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u20ac23991.9 debited at KFC on 19/10/2023. Card: ****1129. Balance: \u20ac30967.8.",
+    "merchant": "KFC",
+    "amount": 23991.9,
+    "currency": "EUR",
+    "date": "19/10/2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "$18353.28 credited at Costco on 2023-08-02. Card ending in 3936. Balance: $14245.29.",
+    "merchant": "Costco",
+    "amount": 18353.28,
+    "currency": "USD",
+    "date": "2023-08-02",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Rs. 5918.46 spent from A/c **8411 on 04-05-2023 at Best Buy. Avl Bal: Rs. 50887.72.",
+    "merchant": "Best Buy",
+    "amount": 5918.46,
+    "currency": "INR",
+    "date": "04-05-2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$5842.4 credited at PhonePe on 2023-04-25. Card ending in 5796. Balance: $56041.93.",
+    "merchant": "PhonePe",
+    "amount": 5842.4,
+    "currency": "USD",
+    "date": "2023-04-25",
+    "type": "credit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Your A/c **4246 spent Rs. 35099.92 on 20-10-2024 at BigBasket. Balance: Rs. 57049.81.",
+    "merchant": "BigBasket",
+    "amount": 35099.92,
+    "currency": "INR",
+    "date": "20-10-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a539484.11 at Costco on 27-02-2023. Available: \u00a58365.32.",
+    "merchant": "Costco",
+    "amount": 39484.11,
+    "currency": "JPY",
+    "date": "27-02-2023",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$26013.35 credited at BookMyShow on 02/06/2023. Card ending in 8792. Balance: $13317.27.",
+    "merchant": "BookMyShow",
+    "amount": 26013.35,
+    "currency": "USD",
+    "date": "02/06/2023",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Rs. 10906.19 withdrawn from A/c **7189 on 2023-05-10 at Pizza Hut. Avl Bal: Rs. 45809.22.",
+    "merchant": "Pizza Hut",
+    "amount": 10906.19,
+    "currency": "INR",
+    "date": "2023-05-10",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Transaction: \u20ac23932.92 to Costco on 07/05/2024 via Wallet.",
+    "merchant": "Costco",
+    "amount": 23932.92,
+    "currency": "EUR",
+    "date": "07/05/2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "You made a $22781.52 transaction at Uber on 24/02/2023. Available: $90736.75.",
+    "merchant": "Uber",
+    "amount": 22781.52,
+    "currency": "USD",
+    "date": "24/02/2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "withdrawn: $28301.94 at Pizza Hut on 2024-06-02 with card ...7841.",
+    "merchant": "Pizza Hut",
+    "amount": 28301.94,
+    "currency": "USD",
+    "date": "2024-06-02",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "spent of Rs. 43115.88 made at Ola on 2024-09-17. Card ending 2622. Avl Bal: Rs. 15346.45.",
+    "merchant": "Ola",
+    "amount": 43115.88,
+    "currency": "INR",
+    "date": "2024-09-17",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "You made a $29714.69 transaction at Spotify on 27-11-2023. Available: $68941.62.",
+    "merchant": "Spotify",
+    "amount": 29714.69,
+    "currency": "USD",
+    "date": "27-11-2023",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "credited: $29594.29 at AJIO on 2023-08-22 with card ...8849.",
+    "merchant": "AJIO",
+    "amount": 29594.29,
+    "currency": "USD",
+    "date": "2023-08-22",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Transaction: \u20ac23754.48 to Uber on 2023-06-28 via Debit Card.",
+    "merchant": "Uber",
+    "amount": 23754.48,
+    "currency": "EUR",
+    "date": "2023-06-28",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "credited of Rs. 24632.1 made at Swiggy on 2023-06-26. Card ending 2389. Avl Bal: Rs. 96730.82.",
+    "merchant": "Swiggy",
+    "amount": 24632.1,
+    "currency": "INR",
+    "date": "2023-06-26",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$29652.84 withdrawn at BigBasket on 24/11/2024. Card ending in 5377. Balance: $27608.56.",
+    "merchant": "BigBasket",
+    "amount": 29652.84,
+    "currency": "USD",
+    "date": "24/11/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Transaction: \u20ac42332.22 to AJIO on 2023-05-14 via Credit Card.",
+    "merchant": "AJIO",
+    "amount": 42332.22,
+    "currency": "EUR",
+    "date": "2023-05-14",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **9234 debited Rs. 7808.68 on 15/01/2024 at BigBasket. Balance: Rs. 58006.18.",
+    "merchant": "BigBasket",
+    "amount": 7808.68,
+    "currency": "INR",
+    "date": "15/01/2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $4551.64 transaction at Paytm on 23-06-2024. Available: $28311.93.",
+    "merchant": "Paytm",
+    "amount": 4551.64,
+    "currency": "USD",
+    "date": "23-06-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 19120.79 withdrawn via Wallet to Myntra on 2023-03-02. Ref: 659859437131.",
+    "merchant": "Myntra",
+    "amount": 19120.79,
+    "currency": "INR",
+    "date": "2023-03-02",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 8218.32 withdrawn via Debit Card to Chevron on 21/10/2023. Ref: 944724148527.",
+    "merchant": "Chevron",
+    "amount": 8218.32,
+    "currency": "INR",
+    "date": "21/10/2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "spent of Rs. 35440.87 made at Domino's on 2023-05-06. Card ending 8324. Avl Bal: Rs. 4736.24.",
+    "merchant": "Domino's",
+    "amount": 35440.87,
+    "currency": "INR",
+    "date": "2023-05-06",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $19120.98 transaction at Shell on 10/08/2024. Available: $28649.04.",
+    "merchant": "Shell",
+    "amount": 19120.98,
+    "currency": "USD",
+    "date": "10/08/2024",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs.500 withdrawn from ATM on 13-02-2024",
+    "merchant": "ATM Withdrawal",
+    "amount": 500.0,
+    "currency": "INR",
+    "date": "13-02-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "spent of Rs. 21366.59 made at Starbucks on 26/11/2024. Card ending 9405. Avl Bal: Rs. 92948.51.",
+    "merchant": "Starbucks",
+    "amount": 21366.59,
+    "currency": "INR",
+    "date": "26/11/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 21149.31 debited via UPI to Zomato on 12-09-2024. Ref: 387551345189.",
+    "merchant": "Zomato",
+    "amount": 21149.31,
+    "currency": "INR",
+    "date": "12-09-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "credited of Rs. 34810.23 made at AJIO on 12-06-2023. Card ending 4042. Avl Bal: Rs. 79177.12.",
+    "merchant": "AJIO",
+    "amount": 34810.23,
+    "currency": "INR",
+    "date": "12-06-2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 18348.51 withdrawn from A/c **4073 on 2023-11-04 at Whole Foods. Avl Bal: Rs. 96023.09.",
+    "merchant": "Whole Foods",
+    "amount": 18348.51,
+    "currency": "INR",
+    "date": "2023-11-04",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 37661.56 spent from A/c **3634 on 07/04/2024 at Netflix. Avl Bal: Rs. 27759.89.",
+    "merchant": "Netflix",
+    "amount": 37661.56,
+    "currency": "INR",
+    "date": "07/04/2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Rs. 47234.85 spent from A/c **2537 on 2024-09-28 at Whole Foods. Avl Bal: Rs. 87246.56.",
+    "merchant": "Whole Foods",
+    "amount": 47234.85,
+    "currency": "INR",
+    "date": "2024-09-28",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a526509.88 at Shell on 2024-03-28. Available: \u00a555467.63.",
+    "merchant": "Shell",
+    "amount": 26509.88,
+    "currency": "JPY",
+    "date": "2024-03-28",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 9316.21 debited from A/c **1590 on 28/01/2023 at Nykaa. Avl Bal: Rs. 34386.12.",
+    "merchant": "Nykaa",
+    "amount": 9316.21,
+    "currency": "INR",
+    "date": "28/01/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Thank you for using your ICICI Bank Credit Card ending 5678 for INR 2,499 at AMAZON on 14-02-2024",
+    "merchant": "Amazon",
+    "amount": 2499.0,
+    "currency": "INR",
+    "date": "14-02-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a521943.26 credited at Pizza Hut on 2023-04-26. Balance: \u00a538171.69.",
+    "merchant": "Pizza Hut",
+    "amount": 21943.26,
+    "currency": "JPY",
+    "date": "2023-04-26",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs.1,500.00 debited from a/c **1234 on 15-02-2024. Avl Bal: Rs.25,430.50. Swiggy - Food Order",
+    "merchant": "Swiggy",
+    "amount": 1500.0,
+    "currency": "INR",
+    "date": "15-02-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "withdrawn of Rs. 36151.67 made at Costco on 27/12/2024. Card ending 1560. Avl Bal: Rs. 89942.59.",
+    "merchant": "Costco",
+    "amount": 36151.67,
+    "currency": "INR",
+    "date": "27/12/2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "You made a $20224.32 transaction at Nykaa on 18-03-2023. Available: $51718.2.",
+    "merchant": "Nykaa",
+    "amount": 20224.32,
+    "currency": "USD",
+    "date": "18-03-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$34495.46 spent at KFC on 03-04-2024. Card ending in 4605. Balance: $83755.12.",
+    "merchant": "KFC",
+    "amount": 34495.46,
+    "currency": "USD",
+    "date": "03-04-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u20ac29707.34 credited at Whole Foods on 05-03-2023. Card: ****5902. Balance: \u20ac46746.04.",
+    "merchant": "Whole Foods",
+    "amount": 29707.34,
+    "currency": "EUR",
+    "date": "05-03-2023",
+    "type": "credit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "You made a $3099.63 transaction at Nykaa on 25/04/2024. Available: $43017.1.",
+    "merchant": "Nykaa",
+    "amount": 3099.63,
+    "currency": "USD",
+    "date": "25/04/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$14672.75 debited at Paytm on 2024-06-20. Card ending in 2765. Balance: $16992.13.",
+    "merchant": "Paytm",
+    "amount": 14672.75,
+    "currency": "USD",
+    "date": "2024-06-20",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Transaction: \u20ac4556.49 to Shell on 20/01/2023 via Wallet.",
+    "merchant": "Shell",
+    "amount": 4556.49,
+    "currency": "EUR",
+    "date": "20/01/2023",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$19932.01 credited at KFC on 19/04/2023. Card ending in 3343. Balance: $98098.86.",
+    "merchant": "KFC",
+    "amount": 19932.01,
+    "currency": "USD",
+    "date": "19/04/2023",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "spent of Rs. 36839.12 made at KFC on 15-07-2024. Card ending 2541. Avl Bal: Rs. 9071.49.",
+    "merchant": "KFC",
+    "amount": 36839.12,
+    "currency": "INR",
+    "date": "15-07-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "INR 30135.6 credited via Net Banking to BigBasket on 2024-04-10. Ref: 713722071900.",
+    "merchant": "BigBasket",
+    "amount": 30135.6,
+    "currency": "INR",
+    "date": "2024-04-10",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a534448.75 spent at Google Pay on 11-10-2023. Balance: \u00a516732.61.",
+    "merchant": "Google Pay",
+    "amount": 34448.75,
+    "currency": "JPY",
+    "date": "11-10-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Rs. 881.05 debited from A/c **7043 on 2023-01-16 at Grofers. Avl Bal: Rs. 23459.0.",
+    "merchant": "Grofers",
+    "amount": 881.05,
+    "currency": "INR",
+    "date": "2023-01-16",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "INR 24149.48 debited via Debit Card to BP on 2024-11-28. Ref: 857310055501.",
+    "merchant": "BP",
+    "amount": 24149.48,
+    "currency": "INR",
+    "date": "2024-11-28",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 4222.99 spent from A/c **4407 on 2024-12-06 at Spotify. Avl Bal: Rs. 59082.15.",
+    "merchant": "Spotify",
+    "amount": 4222.99,
+    "currency": "INR",
+    "date": "2024-12-06",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a57041.2 at AJIO on 2023-04-07. Available: \u00a524615.57.",
+    "merchant": "AJIO",
+    "amount": 7041.2,
+    "currency": "JPY",
+    "date": "2023-04-07",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "spent: $30002.0 at Swiggy on 27/09/2023 with card ...8131.",
+    "merchant": "Swiggy",
+    "amount": 30002.0,
+    "currency": "USD",
+    "date": "27/09/2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Your A/c **4498 credited Rs. 1995.08 on 04/07/2024 at Domino's. Balance: Rs. 35176.2.",
+    "merchant": "Domino's",
+    "amount": 1995.08,
+    "currency": "INR",
+    "date": "04/07/2024",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$3050.41 withdrawn at Ola on 09/04/2023. Card ending in 4795. Balance: $77805.43.",
+    "merchant": "Ola",
+    "amount": 3050.41,
+    "currency": "USD",
+    "date": "09/04/2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$40860.04 credited at Zomato on 07-02-2023. Card ending in 1955. Balance: $22099.3.",
+    "merchant": "Zomato",
+    "amount": 40860.04,
+    "currency": "USD",
+    "date": "07-02-2023",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "credited of Rs. 7920.08 made at Starbucks on 2024-10-17. Card ending 8219. Avl Bal: Rs. 13966.58.",
+    "merchant": "Starbucks",
+    "amount": 7920.08,
+    "currency": "INR",
+    "date": "2024-10-17",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 22466.79 debited via Wallet to Google Pay on 22/07/2023. Ref: 193836186358.",
+    "merchant": "Google Pay",
+    "amount": 22466.79,
+    "currency": "INR",
+    "date": "22/07/2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Your A/c **6103 credited Rs. 41497.39 on 2023-12-10 at Myntra. Balance: Rs. 30238.96.",
+    "merchant": "Myntra",
+    "amount": 41497.39,
+    "currency": "INR",
+    "date": "2023-12-10",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Rs. 17547.31 credited from A/c **6315 on 23-02-2023 at Shell. Avl Bal: Rs. 34714.55.",
+    "merchant": "Shell",
+    "amount": 17547.31,
+    "currency": "INR",
+    "date": "23-02-2023",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$40375.39 withdrawn at Target on 16-07-2024. Card ending in 4818. Balance: $21790.4.",
+    "merchant": "Target",
+    "amount": 40375.39,
+    "currency": "USD",
+    "date": "16-07-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "withdrawn: $2022.45 at AJIO on 2023-07-23 with card ...1942.",
+    "merchant": "AJIO",
+    "amount": 2022.45,
+    "currency": "USD",
+    "date": "2023-07-23",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Transaction: \u20ac32168.76 to Pizza Hut on 14-12-2024 via UPI.",
+    "merchant": "Pizza Hut",
+    "amount": 32168.76,
+    "currency": "EUR",
+    "date": "14-12-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Your A/c **8038 spent Rs. 21215.68 on 2023-01-25 at Domino's. Balance: Rs. 14693.73.",
+    "merchant": "Domino's",
+    "amount": 21215.68,
+    "currency": "INR",
+    "date": "2023-01-25",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u00a542988.43 spent at MakeMyTrip on 2024-02-09. Balance: \u00a548196.98.",
+    "merchant": "MakeMyTrip",
+    "amount": 42988.43,
+    "currency": "JPY",
+    "date": "2024-02-09",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 45537.13 credited via Net Banking to McDonald's on 06/08/2023. Ref: 797349374828.",
+    "merchant": "McDonald's",
+    "amount": 45537.13,
+    "currency": "INR",
+    "date": "06/08/2023",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 3382.68 debited via Net Banking to Starbucks on 2023-10-02. Ref: 889777194087.",
+    "merchant": "Starbucks",
+    "amount": 3382.68,
+    "currency": "INR",
+    "date": "2023-10-02",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "credited: $8784.59 at Google Pay on 04/03/2023 with card ...6572.",
+    "merchant": "Google Pay",
+    "amount": 8784.59,
+    "currency": "USD",
+    "date": "04/03/2023",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a510759.25 withdrawn at Amazon on 09/02/2023. Balance: \u00a510674.88.",
+    "merchant": "Amazon",
+    "amount": 10759.25,
+    "currency": "JPY",
+    "date": "09/02/2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "INR 15867.04 withdrawn via Credit Card to Nykaa on 04/05/2023. Ref: 635931587094.",
+    "merchant": "Nykaa",
+    "amount": 15867.04,
+    "currency": "INR",
+    "date": "04/05/2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "You made a $11146.7 transaction at Domino's on 14/08/2024. Available: $83883.07.",
+    "merchant": "Domino's",
+    "amount": 11146.7,
+    "currency": "USD",
+    "date": "14/08/2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Rs. 1900.67 withdrawn from A/c **1555 on 2024-02-16 at Myntra. Avl Bal: Rs. 36754.99.",
+    "merchant": "Myntra",
+    "amount": 1900.67,
+    "currency": "INR",
+    "date": "2024-02-16",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $29042.25 transaction at McDonald's on 2024-03-07. Available: $47046.92.",
+    "merchant": "McDonald's",
+    "amount": 29042.25,
+    "currency": "USD",
+    "date": "2024-03-07",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 37510.33 debited via Credit Card to Best Buy on 20/03/2024. Ref: 711828537780.",
+    "merchant": "Best Buy",
+    "amount": 37510.33,
+    "currency": "INR",
+    "date": "20/03/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u00a547573.02 debited at Exxon on 23/07/2024. Balance: \u00a517538.6.",
+    "merchant": "Exxon",
+    "amount": 47573.02,
+    "currency": "JPY",
+    "date": "23/07/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a546099.83 at McDonald's on 2023-11-23. Available: \u00a538037.32.",
+    "merchant": "McDonald's",
+    "amount": 46099.83,
+    "currency": "JPY",
+    "date": "2023-11-23",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "withdrawn of Rs. 13235.68 made at Ola on 07-08-2024. Card ending 9836. Avl Bal: Rs. 51617.04.",
+    "merchant": "Ola",
+    "amount": 13235.68,
+    "currency": "INR",
+    "date": "07-08-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Transaction: \u20ac10214.81 to Shell on 12/08/2023 via Credit Card.",
+    "merchant": "Shell",
+    "amount": 10214.81,
+    "currency": "EUR",
+    "date": "12/08/2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "\u20ac46982.92 credited at Grofers on 2024-01-18. Card: ****8301. Balance: \u20ac86748.93.",
+    "merchant": "Grofers",
+    "amount": 46982.92,
+    "currency": "EUR",
+    "date": "2024-01-18",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$21753.27 debited at Uber on 08/05/2024. Card ending in 2259. Balance: $73029.93.",
+    "merchant": "Uber",
+    "amount": 21753.27,
+    "currency": "USD",
+    "date": "08/05/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Your A/c **2765 withdrawn Rs. 5143.44 on 05-05-2024 at Ola. Balance: Rs. 88617.99.",
+    "merchant": "Ola",
+    "amount": 5143.44,
+    "currency": "INR",
+    "date": "05-05-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 31707.04 spent from A/c **7808 on 06-02-2024 at Costco. Avl Bal: Rs. 22597.55.",
+    "merchant": "Costco",
+    "amount": 31707.04,
+    "currency": "INR",
+    "date": "06-02-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Rs. 22120.42 spent from A/c **6169 on 2024-08-10 at Whole Foods. Avl Bal: Rs. 31104.56.",
+    "merchant": "Whole Foods",
+    "amount": 22120.42,
+    "currency": "INR",
+    "date": "2024-08-10",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "spent of Rs. 44103.71 made at BigBasket on 2024-01-03. Card ending 2436. Avl Bal: Rs. 73230.95.",
+    "merchant": "BigBasket",
+    "amount": 44103.71,
+    "currency": "INR",
+    "date": "2024-01-03",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "withdrawn: $24113.13 at Amazon on 2024-12-18 with card ...4956.",
+    "merchant": "Amazon",
+    "amount": 24113.13,
+    "currency": "USD",
+    "date": "2024-12-18",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "debited: $35772.2 at Costco on 24/09/2023 with card ...2419.",
+    "merchant": "Costco",
+    "amount": 35772.2,
+    "currency": "USD",
+    "date": "24/09/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Transaction: \u20ac37619.9 to Grofers on 14/08/2024 via Net Banking.",
+    "merchant": "Grofers",
+    "amount": 37619.9,
+    "currency": "EUR",
+    "date": "14/08/2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "withdrawn: $32590.82 at Google Pay on 2023-05-09 with card ...7930.",
+    "merchant": "Google Pay",
+    "amount": 32590.82,
+    "currency": "USD",
+    "date": "2023-05-09",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u00a518639.82 debited at McDonald's on 15/05/2024. Balance: \u00a518385.08.",
+    "merchant": "McDonald's",
+    "amount": 18639.82,
+    "currency": "JPY",
+    "date": "15/05/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "You made a $2695.49 transaction at McDonald's on 2024-11-06. Available: $57290.87.",
+    "merchant": "McDonald's",
+    "amount": 2695.49,
+    "currency": "USD",
+    "date": "2024-11-06",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "\u20ac13110.57 credited at BP on 03-03-2024. Card: ****8176. Balance: \u20ac64112.04.",
+    "merchant": "BP",
+    "amount": 13110.57,
+    "currency": "EUR",
+    "date": "03-03-2024",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u20ac23133.92 withdrawn at Starbucks on 19/11/2023. Card: ****8445. Balance: \u20ac91427.73.",
+    "merchant": "Starbucks",
+    "amount": 23133.92,
+    "currency": "EUR",
+    "date": "19/11/2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "debited of Rs. 47588.12 made at Whole Foods on 2023-03-11. Card ending 5943. Avl Bal: Rs. 45257.76.",
+    "merchant": "Whole Foods",
+    "amount": 47588.12,
+    "currency": "INR",
+    "date": "2023-03-11",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $15085.37 transaction at Google Pay on 2024-06-08. Available: $74087.18.",
+    "merchant": "Google Pay",
+    "amount": 15085.37,
+    "currency": "USD",
+    "date": "2024-06-08",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$14603.47 credited at Pizza Hut on 14/03/2023. Card ending in 3176. Balance: $73830.58.",
+    "merchant": "Pizza Hut",
+    "amount": 14603.47,
+    "currency": "USD",
+    "date": "14/03/2023",
+    "type": "credit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 17873.85 spent from A/c **1584 on 23-05-2024 at AJIO. Avl Bal: Rs. 47659.74.",
+    "merchant": "AJIO",
+    "amount": 17873.85,
+    "currency": "INR",
+    "date": "23-05-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Your A/c **5759 withdrawn Rs. 23086.97 on 2024-07-26 at Nykaa. Balance: Rs. 31250.91.",
+    "merchant": "Nykaa",
+    "amount": 23086.97,
+    "currency": "INR",
+    "date": "2024-07-26",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "You made a $7581.22 transaction at Myntra on 22-02-2024. Available: $47772.47.",
+    "merchant": "Myntra",
+    "amount": 7581.22,
+    "currency": "USD",
+    "date": "22-02-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "spent of Rs. 15648.95 made at AJIO on 02-01-2023. Card ending 2150. Avl Bal: Rs. 49486.91.",
+    "merchant": "AJIO",
+    "amount": 15648.95,
+    "currency": "INR",
+    "date": "02-01-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a537609.73 at BP on 25/05/2023. Available: \u00a519157.1.",
+    "merchant": "BP",
+    "amount": 37609.73,
+    "currency": "JPY",
+    "date": "25/05/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u00a522001.3 debited at Chevron on 2023-01-13. Balance: \u00a556335.17.",
+    "merchant": "Chevron",
+    "amount": 22001.3,
+    "currency": "JPY",
+    "date": "2023-01-13",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a548297.8 credited at Best Buy on 2023-09-10. Balance: \u00a556408.52.",
+    "merchant": "Best Buy",
+    "amount": 48297.8,
+    "currency": "JPY",
+    "date": "2023-09-10",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 26928.05 withdrawn via Wallet to Amazon on 10-09-2024. Ref: 726365304579.",
+    "merchant": "Amazon",
+    "amount": 26928.05,
+    "currency": "INR",
+    "date": "10-09-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Your A/c **9802 spent Rs. 6807.06 on 20-09-2023 at Myntra. Balance: Rs. 72508.52.",
+    "merchant": "Myntra",
+    "amount": 6807.06,
+    "currency": "INR",
+    "date": "20-09-2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "INR 31756.5 withdrawn via Credit Card to MakeMyTrip on 06-06-2023. Ref: 684583467452.",
+    "merchant": "MakeMyTrip",
+    "amount": 31756.5,
+    "currency": "INR",
+    "date": "06-06-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Transaction: \u20ac27923.65 to Ola on 23/05/2024 via Net Banking.",
+    "merchant": "Ola",
+    "amount": 27923.65,
+    "currency": "EUR",
+    "date": "23/05/2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 17427.19 spent from A/c **4136 on 24/09/2023 at Swiggy. Avl Bal: Rs. 81995.96.",
+    "merchant": "Swiggy",
+    "amount": 17427.19,
+    "currency": "INR",
+    "date": "24/09/2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **1469 spent Rs. 27114.55 on 2024-08-04 at Nykaa. Balance: Rs. 10159.0.",
+    "merchant": "Nykaa",
+    "amount": 27114.55,
+    "currency": "INR",
+    "date": "2024-08-04",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Your A/c **4842 spent Rs. 9606.26 on 2023-06-27 at AJIO. Balance: Rs. 82795.44.",
+    "merchant": "AJIO",
+    "amount": 9606.26,
+    "currency": "INR",
+    "date": "2023-06-27",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u20ac41519.06 debited at Paytm on 2023-09-01. Card: ****8144. Balance: \u20ac22438.82.",
+    "merchant": "Paytm",
+    "amount": 41519.06,
+    "currency": "EUR",
+    "date": "2023-09-01",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $15542.94 transaction at Exxon on 21-09-2023. Available: $98484.61.",
+    "merchant": "Exxon",
+    "amount": 15542.94,
+    "currency": "USD",
+    "date": "21-09-2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$4169.06 credited at Shell on 2024-11-03. Card ending in 8219. Balance: $91096.51.",
+    "merchant": "Shell",
+    "amount": 4169.06,
+    "currency": "USD",
+    "date": "2024-11-03",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$18206.77 credited at Nykaa on 2024-03-24. Card ending in 4429. Balance: $94079.53.",
+    "merchant": "Nykaa",
+    "amount": 18206.77,
+    "currency": "USD",
+    "date": "2024-03-24",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Transaction: \u20ac47858.66 to KFC on 2024-12-04 via Credit Card.",
+    "merchant": "KFC",
+    "amount": 47858.66,
+    "currency": "EUR",
+    "date": "2024-12-04",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac1147.8 debited at KFC on 2024-12-07. Card: ****1247. Balance: \u20ac71050.92.",
+    "merchant": "KFC",
+    "amount": 1147.8,
+    "currency": "EUR",
+    "date": "2024-12-07",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "\u00a546556.21 spent at Target on 2024-02-06. Balance: \u00a541970.47.",
+    "merchant": "Target",
+    "amount": 46556.21,
+    "currency": "JPY",
+    "date": "2024-02-06",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a510046.87 at BP on 2024-01-08. Available: \u00a565966.77.",
+    "merchant": "BP",
+    "amount": 10046.87,
+    "currency": "JPY",
+    "date": "2024-01-08",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Your A/c **2041 spent Rs. 7173.54 on 2023-03-10 at Costco. Balance: Rs. 50338.4.",
+    "merchant": "Costco",
+    "amount": 7173.54,
+    "currency": "INR",
+    "date": "2023-03-10",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$43461.27 spent at Best Buy on 2024-04-05. Card ending in 6050. Balance: $31301.69.",
+    "merchant": "Best Buy",
+    "amount": 43461.27,
+    "currency": "USD",
+    "date": "2024-04-05",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Your A/c **2138 credited Rs. 32371.47 on 17-02-2024 at BookMyShow. Balance: Rs. 72668.57.",
+    "merchant": "BookMyShow",
+    "amount": 32371.47,
+    "currency": "INR",
+    "date": "17-02-2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **9134 credited Rs. 14511.3 on 25-07-2023 at Google Pay. Balance: Rs. 29043.21.",
+    "merchant": "Google Pay",
+    "amount": 14511.3,
+    "currency": "INR",
+    "date": "25-07-2023",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Your A/c **5780 spent Rs. 42179.41 on 12-06-2023 at MakeMyTrip. Balance: Rs. 53422.06.",
+    "merchant": "MakeMyTrip",
+    "amount": 42179.41,
+    "currency": "INR",
+    "date": "12-06-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Transaction: \u20ac8294.07 to Target on 07/02/2023 via Credit Card.",
+    "merchant": "Target",
+    "amount": 8294.07,
+    "currency": "EUR",
+    "date": "07/02/2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "debited of Rs. 49397.96 made at Myntra on 18/04/2023. Card ending 7170. Avl Bal: Rs. 4695.6.",
+    "merchant": "Myntra",
+    "amount": 49397.96,
+    "currency": "INR",
+    "date": "18/04/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs. 2218.22 credited from A/c **1848 on 21-10-2024 at MakeMyTrip. Avl Bal: Rs. 66780.99.",
+    "merchant": "MakeMyTrip",
+    "amount": 2218.22,
+    "currency": "INR",
+    "date": "21-10-2024",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **9389 withdrawn Rs. 43235.91 on 11-08-2023 at Nykaa. Balance: Rs. 89065.86.",
+    "merchant": "Nykaa",
+    "amount": 43235.91,
+    "currency": "INR",
+    "date": "11-08-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "spent: $15987.36 at AJIO on 27/08/2023 with card ...8741.",
+    "merchant": "AJIO",
+    "amount": 15987.36,
+    "currency": "USD",
+    "date": "27/08/2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$49198.19 credited at KFC on 2024-03-26. Card ending in 8520. Balance: $79237.3.",
+    "merchant": "KFC",
+    "amount": 49198.19,
+    "currency": "USD",
+    "date": "2024-03-26",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a531376.65 withdrawn at Google Pay on 15-08-2023. Balance: \u00a579408.3.",
+    "merchant": "Google Pay",
+    "amount": 31376.65,
+    "currency": "JPY",
+    "date": "15-08-2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$48987.72 debited at PhonePe on 2023-09-16. Card ending in 4967. Balance: $3500.55.",
+    "merchant": "PhonePe",
+    "amount": 48987.72,
+    "currency": "USD",
+    "date": "2023-09-16",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "credited: $26458.46 at Best Buy on 2023-08-03 with card ...9879.",
+    "merchant": "Best Buy",
+    "amount": 26458.46,
+    "currency": "USD",
+    "date": "2023-08-03",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$31296.0 debited at AJIO on 26/08/2024. Card ending in 7935. Balance: $35816.14.",
+    "merchant": "AJIO",
+    "amount": 31296.0,
+    "currency": "USD",
+    "date": "26/08/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "INR 44976.75 withdrawn via UPI to Whole Foods on 11-09-2023. Ref: 205127810881.",
+    "merchant": "Whole Foods",
+    "amount": 44976.75,
+    "currency": "INR",
+    "date": "11-09-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "debited: $24788.98 at Costco on 02-09-2023 with card ...2175.",
+    "merchant": "Costco",
+    "amount": 24788.98,
+    "currency": "USD",
+    "date": "02-09-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "spent of Rs. 25360.43 made at Swiggy on 06-05-2024. Card ending 9124. Avl Bal: Rs. 86228.78.",
+    "merchant": "Swiggy",
+    "amount": 25360.43,
+    "currency": "INR",
+    "date": "06-05-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$31116.14 withdrawn at Starbucks on 26-06-2023. Card ending in 1990. Balance: $11107.37.",
+    "merchant": "Starbucks",
+    "amount": 31116.14,
+    "currency": "USD",
+    "date": "26-06-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a510833.81 withdrawn at Paytm on 2023-12-01. Balance: \u00a53573.45.",
+    "merchant": "Paytm",
+    "amount": 10833.81,
+    "currency": "JPY",
+    "date": "2023-12-01",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u20ac48572.9 withdrawn at Domino's on 10-03-2023. Card: ****1670. Balance: \u20ac31546.75.",
+    "merchant": "Domino's",
+    "amount": 48572.9,
+    "currency": "EUR",
+    "date": "10-03-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **5193 withdrawn Rs. 6882.57 on 25-06-2023 at BigBasket. Balance: Rs. 38090.58.",
+    "merchant": "BigBasket",
+    "amount": 6882.57,
+    "currency": "INR",
+    "date": "25-06-2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $7400.79 transaction at Domino's on 06/03/2024. Available: $85117.07.",
+    "merchant": "Domino's",
+    "amount": 7400.79,
+    "currency": "USD",
+    "date": "06/03/2024",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Your A/c **4226 spent Rs. 33666.08 on 28-12-2024 at Whole Foods. Balance: Rs. 83080.31.",
+    "merchant": "Whole Foods",
+    "amount": 33666.08,
+    "currency": "INR",
+    "date": "28-12-2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "spent of Rs. 38699.53 made at Domino's on 28-04-2023. Card ending 1847. Avl Bal: Rs. 59445.04.",
+    "merchant": "Domino's",
+    "amount": 38699.53,
+    "currency": "INR",
+    "date": "28-04-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "debited of Rs. 49996.43 made at Zomato on 2023-10-07. Card ending 7645. Avl Bal: Rs. 16612.45.",
+    "merchant": "Zomato",
+    "amount": 49996.43,
+    "currency": "INR",
+    "date": "2023-10-07",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u00a525143.31 spent at PhonePe on 23-01-2023. Balance: \u00a542388.21.",
+    "merchant": "PhonePe",
+    "amount": 25143.31,
+    "currency": "JPY",
+    "date": "23-01-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Rs. 30830.13 spent from A/c **9409 on 2023-04-08 at McDonald's. Avl Bal: Rs. 75416.09.",
+    "merchant": "McDonald's",
+    "amount": 30830.13,
+    "currency": "INR",
+    "date": "2023-04-08",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a524527.75 credited at Myntra on 2024-10-18. Balance: \u00a579457.25.",
+    "merchant": "Myntra",
+    "amount": 24527.75,
+    "currency": "JPY",
+    "date": "2024-10-18",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 27089.58 withdrawn via UPI to Costco on 2024-07-08. Ref: 752623121386.",
+    "merchant": "Costco",
+    "amount": 27089.58,
+    "currency": "INR",
+    "date": "2024-07-08",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 28935.66 spent from A/c **4574 on 12-06-2024 at PhonePe. Avl Bal: Rs. 57267.09.",
+    "merchant": "PhonePe",
+    "amount": 28935.66,
+    "currency": "INR",
+    "date": "12-06-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u20ac47012.54 credited at Netflix on 08/11/2024. Card: ****3189. Balance: \u20ac62122.51.",
+    "merchant": "Netflix",
+    "amount": 47012.54,
+    "currency": "EUR",
+    "date": "08/11/2024",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 26854.55 spent via UPI to Flipkart on 16/02/2023. Ref: 447493360917.",
+    "merchant": "Flipkart",
+    "amount": 26854.55,
+    "currency": "INR",
+    "date": "16/02/2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **5868 debited Rs. 45576.68 on 05/10/2023 at MakeMyTrip. Balance: Rs. 21587.83.",
+    "merchant": "MakeMyTrip",
+    "amount": 45576.68,
+    "currency": "INR",
+    "date": "05/10/2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $17179.24 transaction at Exxon on 06/12/2023. Available: $81012.72.",
+    "merchant": "Exxon",
+    "amount": 17179.24,
+    "currency": "USD",
+    "date": "06/12/2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Transaction: \u20ac25968.33 to McDonald's on 2024-12-05 via Debit Card.",
+    "merchant": "McDonald's",
+    "amount": 25968.33,
+    "currency": "EUR",
+    "date": "2024-12-05",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$39495.05 credited at Grofers on 27-01-2024. Card ending in 1529. Balance: $15059.33.",
+    "merchant": "Grofers",
+    "amount": 39495.05,
+    "currency": "USD",
+    "date": "27-01-2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$36518.18 withdrawn at Netflix on 23/02/2024. Card ending in 8651. Balance: $83288.27.",
+    "merchant": "Netflix",
+    "amount": 36518.18,
+    "currency": "USD",
+    "date": "23/02/2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "credited: $44718.01 at Pizza Hut on 02/05/2023 with card ...2019.",
+    "merchant": "Pizza Hut",
+    "amount": 44718.01,
+    "currency": "USD",
+    "date": "02/05/2023",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u00a514286.23 withdrawn at Walmart on 06/02/2023. Balance: \u00a538537.42.",
+    "merchant": "Walmart",
+    "amount": 14286.23,
+    "currency": "JPY",
+    "date": "06/02/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "withdrawn of Rs. 17599.59 made at Paytm on 02-01-2024. Card ending 7300. Avl Bal: Rs. 84411.11.",
+    "merchant": "Paytm",
+    "amount": 17599.59,
+    "currency": "INR",
+    "date": "02-01-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a541572.18 debited at MakeMyTrip on 21/07/2023. Balance: \u00a59026.98.",
+    "merchant": "MakeMyTrip",
+    "amount": 41572.18,
+    "currency": "JPY",
+    "date": "21/07/2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **5275 debited Rs. 31819.8 on 2023-01-12 at Ola. Balance: Rs. 62462.59.",
+    "merchant": "Ola",
+    "amount": 31819.8,
+    "currency": "INR",
+    "date": "2023-01-12",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u20ac4340.94 withdrawn at Grofers on 02-06-2023. Card: ****4371. Balance: \u20ac12689.64.",
+    "merchant": "Grofers",
+    "amount": 4340.94,
+    "currency": "EUR",
+    "date": "02-06-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$42964.42 credited at AJIO on 03/12/2024. Card ending in 2350. Balance: $77631.53.",
+    "merchant": "AJIO",
+    "amount": 42964.42,
+    "currency": "USD",
+    "date": "03/12/2024",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a542143.14 credited at Grofers on 13-03-2023. Balance: \u00a54119.64.",
+    "merchant": "Grofers",
+    "amount": 42143.14,
+    "currency": "JPY",
+    "date": "13-03-2023",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Your A/c **2145 withdrawn Rs. 22242.38 on 28/12/2023 at BigBasket. Balance: Rs. 23273.69.",
+    "merchant": "BigBasket",
+    "amount": 22242.38,
+    "currency": "INR",
+    "date": "28/12/2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac41206.9 credited at Pizza Hut on 27/11/2023. Card: ****6843. Balance: \u20ac72171.72.",
+    "merchant": "Pizza Hut",
+    "amount": 41206.9,
+    "currency": "EUR",
+    "date": "27/11/2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 22380.93 withdrawn from A/c **8068 on 09-02-2024 at Costco. Avl Bal: Rs. 96935.27.",
+    "merchant": "Costco",
+    "amount": 22380.93,
+    "currency": "INR",
+    "date": "09-02-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "INR 22072.0 debited via Debit Card to BigBasket on 2023-11-11. Ref: 109316641222.",
+    "merchant": "BigBasket",
+    "amount": 22072.0,
+    "currency": "INR",
+    "date": "2023-11-11",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac25.00 paid to UBER on 15-02-2024",
+    "merchant": "Uber",
+    "amount": 25.0,
+    "currency": "EUR",
+    "date": "15-02-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Your A/c **4802 withdrawn Rs. 42569.12 on 14/01/2024 at Paytm. Balance: Rs. 74534.45.",
+    "merchant": "Paytm",
+    "amount": 42569.12,
+    "currency": "INR",
+    "date": "14/01/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 2663.01 debited via Debit Card to PhonePe on 02/02/2023. Ref: 487979684129.",
+    "merchant": "PhonePe",
+    "amount": 2663.01,
+    "currency": "INR",
+    "date": "02/02/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $17599.01 transaction at PhonePe on 04-07-2023. Available: $64019.41.",
+    "merchant": "PhonePe",
+    "amount": 17599.01,
+    "currency": "USD",
+    "date": "04-07-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 49667.61 debited via Debit Card to Uber on 09-08-2023. Ref: 833338749494.",
+    "merchant": "Uber",
+    "amount": 49667.61,
+    "currency": "INR",
+    "date": "09-08-2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "debited: $21831.26 at Zomato on 05-10-2024 with card ...6454.",
+    "merchant": "Zomato",
+    "amount": 21831.26,
+    "currency": "USD",
+    "date": "05-10-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Transaction: \u20ac26195.72 to McDonald's on 2023-08-18 via Debit Card.",
+    "merchant": "McDonald's",
+    "amount": 26195.72,
+    "currency": "EUR",
+    "date": "2023-08-18",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "withdrawn: $33895.13 at Exxon on 2024-06-14 with card ...2847.",
+    "merchant": "Exxon",
+    "amount": 33895.13,
+    "currency": "USD",
+    "date": "2024-06-14",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$32397.85 spent at Nykaa on 2023-09-06. Card ending in 6135. Balance: $11614.7.",
+    "merchant": "Nykaa",
+    "amount": 32397.85,
+    "currency": "USD",
+    "date": "2023-09-06",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a516650.51 debited at Costco on 2023-12-08. Balance: \u00a588841.77.",
+    "merchant": "Costco",
+    "amount": 16650.51,
+    "currency": "JPY",
+    "date": "2023-12-08",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "\u20ac23775.67 debited at Target on 24-10-2024. Card: ****6931. Balance: \u20ac49004.99.",
+    "merchant": "Target",
+    "amount": 23775.67,
+    "currency": "EUR",
+    "date": "24-10-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "credited of Rs. 40025.68 made at Ola on 2023-06-24. Card ending 6432. Avl Bal: Rs. 15512.22.",
+    "merchant": "Ola",
+    "amount": 40025.68,
+    "currency": "INR",
+    "date": "2023-06-24",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "credited: $13406.65 at Walmart on 2024-11-23 with card ...9468.",
+    "merchant": "Walmart",
+    "amount": 13406.65,
+    "currency": "USD",
+    "date": "2024-11-23",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$25336.15 credited at Whole Foods on 16-03-2024. Card ending in 2734. Balance: $47887.72.",
+    "merchant": "Whole Foods",
+    "amount": 25336.15,
+    "currency": "USD",
+    "date": "16-03-2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u00a544737.03 debited at Amazon on 03/09/2024. Balance: \u00a514879.93.",
+    "merchant": "Amazon",
+    "amount": 44737.03,
+    "currency": "JPY",
+    "date": "03/09/2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 19970.52 credited from A/c **5978 on 2023-11-21 at Paytm. Avl Bal: Rs. 76780.9.",
+    "merchant": "Paytm",
+    "amount": 19970.52,
+    "currency": "INR",
+    "date": "2023-11-21",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "debited: $32790.33 at Domino's on 2024-05-21 with card ...4581.",
+    "merchant": "Domino's",
+    "amount": 32790.33,
+    "currency": "USD",
+    "date": "2024-05-21",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 46132.79 spent from A/c **8358 on 2024-02-26 at Exxon. Avl Bal: Rs. 1762.84.",
+    "merchant": "Exxon",
+    "amount": 46132.79,
+    "currency": "INR",
+    "date": "2024-02-26",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "debited of Rs. 33466.75 made at Walmart on 2024-12-18. Card ending 5910. Avl Bal: Rs. 22535.83.",
+    "merchant": "Walmart",
+    "amount": 33466.75,
+    "currency": "INR",
+    "date": "2024-12-18",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "credited: $9241.76 at Netflix on 06-08-2024 with card ...9261.",
+    "merchant": "Netflix",
+    "amount": 9241.76,
+    "currency": "USD",
+    "date": "06-08-2024",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Transaction: \u20ac17962.09 to Best Buy on 12-11-2024 via Credit Card.",
+    "merchant": "Best Buy",
+    "amount": 17962.09,
+    "currency": "EUR",
+    "date": "12-11-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $13876.48 transaction at BP on 02/06/2024. Available: $36384.76.",
+    "merchant": "BP",
+    "amount": 13876.48,
+    "currency": "USD",
+    "date": "02/06/2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u00a529715.95 spent at MakeMyTrip on 12-03-2023. Balance: \u00a588168.25.",
+    "merchant": "MakeMyTrip",
+    "amount": 29715.95,
+    "currency": "JPY",
+    "date": "12-03-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "Your A/c **6835 credited Rs. 19411.73 on 17-08-2023 at Shell. Balance: Rs. 8313.85.",
+    "merchant": "Shell",
+    "amount": 19411.73,
+    "currency": "INR",
+    "date": "17-08-2023",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$31613.44 withdrawn at KFC on 2024-06-20. Card ending in 6751. Balance: $15830.42.",
+    "merchant": "KFC",
+    "amount": 31613.44,
+    "currency": "USD",
+    "date": "2024-06-20",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Your A/c **1979 debited Rs. 16719.49 on 2023-09-04 at Best Buy. Balance: Rs. 61360.29.",
+    "merchant": "Best Buy",
+    "amount": 16719.49,
+    "currency": "INR",
+    "date": "2023-09-04",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac7192.58 debited at Chevron on 2023-03-24. Card: ****9724. Balance: \u20ac10004.99.",
+    "merchant": "Chevron",
+    "amount": 7192.58,
+    "currency": "EUR",
+    "date": "2023-03-24",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Rs. 5129.69 spent from A/c **2958 on 25/06/2024 at Zomato. Avl Bal: Rs. 78566.6.",
+    "merchant": "Zomato",
+    "amount": 5129.69,
+    "currency": "INR",
+    "date": "25/06/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$7404.0 withdrawn at Pizza Hut on 24-07-2023. Card ending in 3726. Balance: $30654.53.",
+    "merchant": "Pizza Hut",
+    "amount": 7404.0,
+    "currency": "USD",
+    "date": "24-07-2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "debited of Rs. 26623.61 made at Netflix on 2024-07-14. Card ending 3837. Avl Bal: Rs. 14215.96.",
+    "merchant": "Netflix",
+    "amount": 26623.61,
+    "currency": "INR",
+    "date": "2024-07-14",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u00a518864.94 spent at Uber on 24/03/2023. Balance: \u00a591980.48.",
+    "merchant": "Uber",
+    "amount": 18864.94,
+    "currency": "JPY",
+    "date": "24/03/2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$24169.54 withdrawn at Grofers on 2024-04-23. Card ending in 1936. Balance: $9126.62.",
+    "merchant": "Grofers",
+    "amount": 24169.54,
+    "currency": "USD",
+    "date": "2024-04-23",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs. 21281.56 withdrawn from A/c **3723 on 06-11-2023 at AJIO. Avl Bal: Rs. 81588.77.",
+    "merchant": "AJIO",
+    "amount": 21281.56,
+    "currency": "INR",
+    "date": "06-11-2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "$5440.49 credited at KFC on 13-01-2024. Card ending in 5772. Balance: $57524.45.",
+    "merchant": "KFC",
+    "amount": 5440.49,
+    "currency": "USD",
+    "date": "13-01-2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u00a513388.98 debited at Walmart on 02-06-2024. Balance: \u00a52682.18.",
+    "merchant": "Walmart",
+    "amount": 13388.98,
+    "currency": "JPY",
+    "date": "02-06-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a523759.36 at BigBasket on 23/12/2024. Available: \u00a599615.08.",
+    "merchant": "BigBasket",
+    "amount": 23759.36,
+    "currency": "JPY",
+    "date": "23/12/2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "withdrawn: $14603.41 at Target on 01-07-2023 with card ...1992.",
+    "merchant": "Target",
+    "amount": 14603.41,
+    "currency": "USD",
+    "date": "01-07-2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "credited of Rs. 40366.64 made at AJIO on 2023-03-12. Card ending 9549. Avl Bal: Rs. 71283.25.",
+    "merchant": "AJIO",
+    "amount": 40366.64,
+    "currency": "INR",
+    "date": "2023-03-12",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a55227.58 credited at PhonePe on 2023-12-06. Balance: \u00a578864.72.",
+    "merchant": "PhonePe",
+    "amount": 5227.58,
+    "currency": "JPY",
+    "date": "2023-12-06",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Rs. 15973.64 spent from A/c **5244 on 26/12/2024 at Domino's. Avl Bal: Rs. 82923.43.",
+    "merchant": "Domino's",
+    "amount": 15973.64,
+    "currency": "INR",
+    "date": "26/12/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "You made a $21503.49 transaction at Whole Foods on 15/06/2023. Available: $44541.73.",
+    "merchant": "Whole Foods",
+    "amount": 21503.49,
+    "currency": "USD",
+    "date": "15/06/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a536134.89 at Costco on 14/03/2024. Available: \u00a591502.57.",
+    "merchant": "Costco",
+    "amount": 36134.89,
+    "currency": "JPY",
+    "date": "14/03/2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **3506 spent Rs. 16044.31 on 17-01-2024 at McDonald's. Balance: Rs. 84776.03.",
+    "merchant": "McDonald's",
+    "amount": 16044.31,
+    "currency": "INR",
+    "date": "17-01-2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$12243.44 debited at Starbucks on 16-07-2023. Card ending in 4224. Balance: $7846.68.",
+    "merchant": "Starbucks",
+    "amount": 12243.44,
+    "currency": "USD",
+    "date": "16-07-2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u00a522912.34 spent at Paytm on 07-03-2024. Balance: \u00a543185.33.",
+    "merchant": "Paytm",
+    "amount": 22912.34,
+    "currency": "JPY",
+    "date": "07-03-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 1850.64 withdrawn from A/c **4548 on 09-04-2024 at Netflix. Avl Bal: Rs. 60176.92.",
+    "merchant": "Netflix",
+    "amount": 1850.64,
+    "currency": "INR",
+    "date": "09-04-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "withdrawn of Rs. 15135.37 made at Costco on 26/04/2024. Card ending 4797. Avl Bal: Rs. 79538.08.",
+    "merchant": "Costco",
+    "amount": 15135.37,
+    "currency": "INR",
+    "date": "26/04/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **9822 withdrawn Rs. 38706.34 on 27-02-2024 at Nykaa. Balance: Rs. 33845.72.",
+    "merchant": "Nykaa",
+    "amount": 38706.34,
+    "currency": "INR",
+    "date": "27-02-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 42552.79 credited via Net Banking to Shell on 2024-12-07. Ref: 278361299882.",
+    "merchant": "Shell",
+    "amount": 42552.79,
+    "currency": "INR",
+    "date": "2024-12-07",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "$26246.13 credited at Target on 22/10/2024. Card ending in 1963. Balance: $18033.38.",
+    "merchant": "Target",
+    "amount": 26246.13,
+    "currency": "USD",
+    "date": "22/10/2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Rs. 44075.26 withdrawn from A/c **4056 on 07/04/2024 at KFC. Avl Bal: Rs. 83957.14.",
+    "merchant": "KFC",
+    "amount": 44075.26,
+    "currency": "INR",
+    "date": "07/04/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "credited: $938.16 at BP on 15-02-2023 with card ...6521.",
+    "merchant": "BP",
+    "amount": 938.16,
+    "currency": "USD",
+    "date": "15-02-2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 601.7 withdrawn from A/c **2401 on 28-04-2023 at Whole Foods. Avl Bal: Rs. 25135.72.",
+    "merchant": "Whole Foods",
+    "amount": 601.7,
+    "currency": "INR",
+    "date": "28-04-2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "debited of Rs. 19830.82 made at Netflix on 09-08-2023. Card ending 7369. Avl Bal: Rs. 25815.39.",
+    "merchant": "Netflix",
+    "amount": 19830.82,
+    "currency": "INR",
+    "date": "09-08-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a515715.04 at Myntra on 15-04-2023. Available: \u00a557221.59.",
+    "merchant": "Myntra",
+    "amount": 15715.04,
+    "currency": "JPY",
+    "date": "15-04-2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$25276.85 withdrawn at PhonePe on 2024-05-11. Card ending in 6600. Balance: $99134.96.",
+    "merchant": "PhonePe",
+    "amount": 25276.85,
+    "currency": "USD",
+    "date": "2024-05-11",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "You made a $14617.55 transaction at BigBasket on 24/03/2024. Available: $66474.33.",
+    "merchant": "BigBasket",
+    "amount": 14617.55,
+    "currency": "USD",
+    "date": "24/03/2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u20ac2530.06 withdrawn at KFC on 11/05/2024. Card: ****8249. Balance: \u20ac61839.68.",
+    "merchant": "KFC",
+    "amount": 2530.06,
+    "currency": "EUR",
+    "date": "11/05/2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$40897.26 spent at KFC on 11-10-2024. Card ending in 1542. Balance: $47421.91.",
+    "merchant": "KFC",
+    "amount": 40897.26,
+    "currency": "USD",
+    "date": "11-10-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "You made a $8726.84 transaction at Paytm on 2023-05-20. Available: $28366.4.",
+    "merchant": "Paytm",
+    "amount": 8726.84,
+    "currency": "USD",
+    "date": "2023-05-20",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "debited: $24219.04 at Target on 24/04/2024 with card ...6004.",
+    "merchant": "Target",
+    "amount": 24219.04,
+    "currency": "USD",
+    "date": "24/04/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u20ac48695.27 debited at Domino's on 2023-01-08. Card: ****9036. Balance: \u20ac47002.67.",
+    "merchant": "Domino's",
+    "amount": 48695.27,
+    "currency": "EUR",
+    "date": "2023-01-08",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "\u00a539343.87 debited at Target on 2023-01-18. Balance: \u00a544525.85.",
+    "merchant": "Target",
+    "amount": 39343.87,
+    "currency": "JPY",
+    "date": "2023-01-18",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $20613.85 transaction at Spotify on 2024-05-12. Available: $58085.75.",
+    "merchant": "Spotify",
+    "amount": 20613.85,
+    "currency": "USD",
+    "date": "2024-05-12",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "withdrawn of Rs. 1790.87 made at Shell on 2024-07-09. Card ending 9272. Avl Bal: Rs. 76989.59.",
+    "merchant": "Shell",
+    "amount": 1790.87,
+    "currency": "INR",
+    "date": "2024-07-09",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$24682.48 spent at Grofers on 2024-12-11. Card ending in 1850. Balance: $41461.36.",
+    "merchant": "Grofers",
+    "amount": 24682.48,
+    "currency": "USD",
+    "date": "2024-12-11",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Your A/c **9627 debited Rs. 38927.04 on 11-06-2023 at KFC. Balance: Rs. 64413.76.",
+    "merchant": "KFC",
+    "amount": 38927.04,
+    "currency": "INR",
+    "date": "11-06-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **5280 spent Rs. 1762.73 on 13-09-2024 at Flipkart. Balance: Rs. 67463.91.",
+    "merchant": "Flipkart",
+    "amount": 1762.73,
+    "currency": "INR",
+    "date": "13-09-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "$11642.27 credited at Zomato on 10-08-2024. Card ending in 9314. Balance: $92988.83.",
+    "merchant": "Zomato",
+    "amount": 11642.27,
+    "currency": "USD",
+    "date": "10-08-2024",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$32269.36 withdrawn at Costco on 2024-02-01. Card ending in 6487. Balance: $70969.78.",
+    "merchant": "Costco",
+    "amount": 32269.36,
+    "currency": "USD",
+    "date": "2024-02-01",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a530583.69 at Flipkart on 02-10-2023. Available: \u00a532540.5.",
+    "merchant": "Flipkart",
+    "amount": 30583.69,
+    "currency": "JPY",
+    "date": "02-10-2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "withdrawn: $23255.11 at Flipkart on 2023-11-03 with card ...8931.",
+    "merchant": "Flipkart",
+    "amount": 23255.11,
+    "currency": "USD",
+    "date": "2023-11-03",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "spent: $29797.46 at Shell on 08/09/2023 with card ...4650.",
+    "merchant": "Shell",
+    "amount": 29797.46,
+    "currency": "USD",
+    "date": "08/09/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Transaction: \u20ac37646.85 to Starbucks on 2024-08-15 via Net Banking.",
+    "merchant": "Starbucks",
+    "amount": 37646.85,
+    "currency": "EUR",
+    "date": "2024-08-15",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u00a51141.67 spent at Uber on 04-07-2024. Balance: \u00a531478.11.",
+    "merchant": "Uber",
+    "amount": 1141.67,
+    "currency": "JPY",
+    "date": "04-07-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Rs. 43223.6 credited from A/c **2464 on 2023-04-01 at BigBasket. Avl Bal: Rs. 10099.11.",
+    "merchant": "BigBasket",
+    "amount": 43223.6,
+    "currency": "INR",
+    "date": "2023-04-01",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "\u00a529423.13 spent at Chevron on 03/08/2024. Balance: \u00a592851.08.",
+    "merchant": "Chevron",
+    "amount": 29423.13,
+    "currency": "JPY",
+    "date": "03/08/2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "spent of Rs. 44223.54 made at Chevron on 25/09/2024. Card ending 4315. Avl Bal: Rs. 75163.72.",
+    "merchant": "Chevron",
+    "amount": 44223.54,
+    "currency": "INR",
+    "date": "25/09/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **6019 spent Rs. 12875.78 on 21/05/2023 at Best Buy. Balance: Rs. 40162.95.",
+    "merchant": "Best Buy",
+    "amount": 12875.78,
+    "currency": "INR",
+    "date": "21/05/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **1430 credited Rs. 14599.55 on 2024-07-10 at BookMyShow. Balance: Rs. 70240.28.",
+    "merchant": "BookMyShow",
+    "amount": 14599.55,
+    "currency": "INR",
+    "date": "2024-07-10",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "debited: $33397.37 at BP on 16/06/2024 with card ...4732.",
+    "merchant": "BP",
+    "amount": 33397.37,
+    "currency": "USD",
+    "date": "16/06/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$14491.64 debited at Whole Foods on 21-01-2024. Card ending in 1289. Balance: $25120.32.",
+    "merchant": "Whole Foods",
+    "amount": 14491.64,
+    "currency": "USD",
+    "date": "21-01-2024",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "spent of Rs. 2195.6 made at Uber on 01/05/2024. Card ending 1434. Avl Bal: Rs. 73586.22.",
+    "merchant": "Uber",
+    "amount": 2195.6,
+    "currency": "INR",
+    "date": "01/05/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Rs. 49866.89 credited from A/c **9985 on 2023-06-14 at Walmart. Avl Bal: Rs. 42884.1.",
+    "merchant": "Walmart",
+    "amount": 49866.89,
+    "currency": "INR",
+    "date": "2023-06-14",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u00a518126.16 withdrawn at Whole Foods on 26-12-2024. Balance: \u00a539242.01.",
+    "merchant": "Whole Foods",
+    "amount": 18126.16,
+    "currency": "JPY",
+    "date": "26-12-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$6953.53 debited at Uber on 04/05/2023. Card ending in 2914. Balance: $14203.62.",
+    "merchant": "Uber",
+    "amount": 6953.53,
+    "currency": "USD",
+    "date": "04/05/2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 4753.07 withdrawn from A/c **5093 on 12/11/2023 at Zomato. Avl Bal: Rs. 2031.52.",
+    "merchant": "Zomato",
+    "amount": 4753.07,
+    "currency": "INR",
+    "date": "12/11/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "credited: $30733.89 at Nykaa on 2024-09-26 with card ...2286.",
+    "merchant": "Nykaa",
+    "amount": 30733.89,
+    "currency": "USD",
+    "date": "2024-09-26",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **6514 debited Rs. 31267.82 on 15-11-2024 at Target. Balance: Rs. 48777.8.",
+    "merchant": "Target",
+    "amount": 31267.82,
+    "currency": "INR",
+    "date": "15-11-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$5728.25 spent at Whole Foods on 26/03/2024. Card ending in 3076. Balance: $21666.63.",
+    "merchant": "Whole Foods",
+    "amount": 5728.25,
+    "currency": "USD",
+    "date": "26/03/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "debited: $38130.37 at PhonePe on 14-04-2024 with card ...7544.",
+    "merchant": "PhonePe",
+    "amount": 38130.37,
+    "currency": "USD",
+    "date": "14-04-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "\u20ac12430.45 credited at Whole Foods on 10/12/2023. Card: ****7307. Balance: \u20ac76963.87.",
+    "merchant": "Whole Foods",
+    "amount": 12430.45,
+    "currency": "EUR",
+    "date": "10/12/2023",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "\u00a51683.21 debited at Target on 04-08-2023. Balance: \u00a563019.09.",
+    "merchant": "Target",
+    "amount": 1683.21,
+    "currency": "JPY",
+    "date": "04-08-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 28232.78 spent via Net Banking to Target on 28-01-2024. Ref: 846882977702.",
+    "merchant": "Target",
+    "amount": 28232.78,
+    "currency": "INR",
+    "date": "28-01-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "You made a $41108.29 transaction at BookMyShow on 06/08/2023. Available: $96242.65.",
+    "merchant": "BookMyShow",
+    "amount": 41108.29,
+    "currency": "USD",
+    "date": "06/08/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$10755.94 withdrawn at Starbucks on 21-12-2024. Card ending in 9798. Balance: $51174.57.",
+    "merchant": "Starbucks",
+    "amount": 10755.94,
+    "currency": "USD",
+    "date": "21-12-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "Your A/c **5748 withdrawn Rs. 27796.66 on 2023-03-15 at KFC. Balance: Rs. 41133.53.",
+    "merchant": "KFC",
+    "amount": 27796.66,
+    "currency": "INR",
+    "date": "2023-03-15",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "debited: $8448.33 at Shell on 22-11-2023 with card ...9165.",
+    "merchant": "Shell",
+    "amount": 8448.33,
+    "currency": "USD",
+    "date": "22-11-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "debited: $26106.76 at Grofers on 2024-09-18 with card ...9012.",
+    "merchant": "Grofers",
+    "amount": 26106.76,
+    "currency": "USD",
+    "date": "2024-09-18",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Transaction: \u20ac24083.6 to Best Buy on 2023-06-02 via Debit Card.",
+    "merchant": "Best Buy",
+    "amount": 24083.6,
+    "currency": "EUR",
+    "date": "2023-06-02",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac47759.17 spent at PhonePe on 27-02-2024. Card: ****2847. Balance: \u20ac71963.23.",
+    "merchant": "PhonePe",
+    "amount": 47759.17,
+    "currency": "EUR",
+    "date": "27-02-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "You made a $45.99 transaction at STARBUCKS on 02/15/2024",
+    "merchant": "Starbucks",
+    "amount": 45.99,
+    "currency": "USD",
+    "date": "15-02-2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **4337 withdrawn Rs. 21937.68 on 28-03-2023 at Costco. Balance: Rs. 13762.26.",
+    "merchant": "Costco",
+    "amount": 21937.68,
+    "currency": "INR",
+    "date": "28-03-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 16721.38 spent from A/c **2277 on 01/10/2024 at KFC. Avl Bal: Rs. 48404.11.",
+    "merchant": "KFC",
+    "amount": 16721.38,
+    "currency": "INR",
+    "date": "01/10/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Your A/c **4251 spent Rs. 31703.46 on 13-01-2024 at Nykaa. Balance: Rs. 8039.77.",
+    "merchant": "Nykaa",
+    "amount": 31703.46,
+    "currency": "INR",
+    "date": "13-01-2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$16550.78 withdrawn at Domino's on 07-08-2023. Card ending in 5698. Balance: $17524.28.",
+    "merchant": "Domino's",
+    "amount": 16550.78,
+    "currency": "USD",
+    "date": "07-08-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "You made a $30382.49 transaction at Shell on 17-08-2023. Available: $38718.61.",
+    "merchant": "Shell",
+    "amount": 30382.49,
+    "currency": "USD",
+    "date": "17-08-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Transaction: \u20ac22409.65 to Domino's on 03/02/2024 via Debit Card.",
+    "merchant": "Domino's",
+    "amount": 22409.65,
+    "currency": "EUR",
+    "date": "03/02/2024",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$22900.79 debited at Spotify on 17-02-2023. Card ending in 2180. Balance: $30645.04.",
+    "merchant": "Spotify",
+    "amount": 22900.79,
+    "currency": "USD",
+    "date": "17-02-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "You made a $44924.3 transaction at Uber on 06/03/2023. Available: $81045.75.",
+    "merchant": "Uber",
+    "amount": 44924.3,
+    "currency": "USD",
+    "date": "06/03/2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "credited of Rs. 34682.39 made at Swiggy on 2024-12-25. Card ending 5804. Avl Bal: Rs. 46729.61.",
+    "merchant": "Swiggy",
+    "amount": 34682.39,
+    "currency": "INR",
+    "date": "2024-12-25",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "\u20ac36768.88 spent at BP on 10-12-2023. Card: ****8941. Balance: \u20ac34730.37.",
+    "merchant": "BP",
+    "amount": 36768.88,
+    "currency": "EUR",
+    "date": "10-12-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "\u00a524410.51 spent at Chevron on 12-10-2023. Balance: \u00a581742.01.",
+    "merchant": "Chevron",
+    "amount": 24410.51,
+    "currency": "JPY",
+    "date": "12-10-2023",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "debited of Rs. 9875.4 made at KFC on 05-03-2024. Card ending 2120. Avl Bal: Rs. 80325.22.",
+    "merchant": "KFC",
+    "amount": 9875.4,
+    "currency": "INR",
+    "date": "05-03-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "INR 26624.4 credited via Net Banking to Target on 23-04-2024. Ref: 697363921203.",
+    "merchant": "Target",
+    "amount": 26624.4,
+    "currency": "INR",
+    "date": "23-04-2024",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "$17986.89 withdrawn at McDonald's on 2024-07-08. Card ending in 1582. Balance: $6520.86.",
+    "merchant": "McDonald's",
+    "amount": 17986.89,
+    "currency": "USD",
+    "date": "2024-07-08",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "INR 18873.35 debited via Credit Card to Amazon on 2024-01-24. Ref: 996947253408.",
+    "merchant": "Amazon",
+    "amount": 18873.35,
+    "currency": "INR",
+    "date": "2024-01-24",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Your A/c **1892 credited Rs. 18925.56 on 28/11/2024 at PhonePe. Balance: Rs. 12215.74.",
+    "merchant": "PhonePe",
+    "amount": 18925.56,
+    "currency": "INR",
+    "date": "28/11/2024",
+    "type": "credit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "credited: $12909.16 at PhonePe on 12/12/2024 with card ...8629.",
+    "merchant": "PhonePe",
+    "amount": 12909.16,
+    "currency": "USD",
+    "date": "12/12/2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "debited of Rs. 1415.14 made at Chevron on 11-10-2023. Card ending 5790. Avl Bal: Rs. 61975.03.",
+    "merchant": "Chevron",
+    "amount": 1415.14,
+    "currency": "INR",
+    "date": "11-10-2023",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 9089.12 credited via Net Banking to PhonePe on 05-01-2024. Ref: 662784363309.",
+    "merchant": "PhonePe",
+    "amount": 9089.12,
+    "currency": "INR",
+    "date": "05-01-2024",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "spent: $20437.62 at Uber on 20-10-2024 with card ...4305.",
+    "merchant": "Uber",
+    "amount": 20437.62,
+    "currency": "USD",
+    "date": "20-10-2024",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $347.73 transaction at Shell on 2023-04-19. Available: $93318.22.",
+    "merchant": "Shell",
+    "amount": 347.73,
+    "currency": "USD",
+    "date": "2023-04-19",
+    "type": "debit",
+    "bank": "HDFC"
+  },
+  {
+    "sms": "$22640.2 credited at Grofers on 21-03-2024. Card ending in 5040. Balance: $61917.51.",
+    "merchant": "Grofers",
+    "amount": 22640.2,
+    "currency": "USD",
+    "date": "21-03-2024",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Your A/c **1784 credited Rs. 17564.61 on 04/03/2023 at BigBasket. Balance: Rs. 56200.36.",
+    "merchant": "BigBasket",
+    "amount": 17564.61,
+    "currency": "INR",
+    "date": "04/03/2023",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "You made a $5770.34 transaction at Swiggy on 22-05-2023. Available: $69927.09.",
+    "merchant": "Swiggy",
+    "amount": 5770.34,
+    "currency": "USD",
+    "date": "22-05-2023",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "$7030.67 withdrawn at Target on 11-11-2023. Card ending in 9337. Balance: $24697.35.",
+    "merchant": "Target",
+    "amount": 7030.67,
+    "currency": "USD",
+    "date": "11-11-2023",
+    "type": "debit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "You made a $8515.15 transaction at Swiggy on 2024-02-12. Available: $57274.75.",
+    "merchant": "Swiggy",
+    "amount": 8515.15,
+    "currency": "USD",
+    "date": "2024-02-12",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "$33490.7 debited at AJIO on 14-03-2024. Card ending in 6604. Balance: $55705.11.",
+    "merchant": "AJIO",
+    "amount": 33490.7,
+    "currency": "USD",
+    "date": "14-03-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "INR 11243.34 debited via Debit Card to Paytm on 15-03-2023. Ref: 884070738343.",
+    "merchant": "Paytm",
+    "amount": 11243.34,
+    "currency": "INR",
+    "date": "15-03-2023",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "INR 8152.67 withdrawn via Debit Card to Grofers on 2024-03-07. Ref: 556466734206.",
+    "merchant": "Grofers",
+    "amount": 8152.67,
+    "currency": "INR",
+    "date": "2024-03-07",
+    "type": "debit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "Transaction: \u20ac1125.62 to Walmart on 02-07-2024 via Net Banking.",
+    "merchant": "Walmart",
+    "amount": 1125.62,
+    "currency": "EUR",
+    "date": "02-07-2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "You made a $1372.39 transaction at Ola on 08/03/2024. Available: $84657.42.",
+    "merchant": "Ola",
+    "amount": 1372.39,
+    "currency": "USD",
+    "date": "08/03/2024",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "INR 26611.7 spent via UPI to Target on 2023-06-01. Ref: 828586261503.",
+    "merchant": "Target",
+    "amount": 26611.7,
+    "currency": "INR",
+    "date": "2023-06-01",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "You made a $39054.37 transaction at Ola on 14-10-2024. Available: $94843.25.",
+    "merchant": "Ola",
+    "amount": 39054.37,
+    "currency": "USD",
+    "date": "14-10-2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "debited: $20115.11 at MakeMyTrip on 24/09/2023 with card ...5709.",
+    "merchant": "MakeMyTrip",
+    "amount": 20115.11,
+    "currency": "USD",
+    "date": "24/09/2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "You made a $42751.55 transaction at Costco on 13/05/2024. Available: $38199.23.",
+    "merchant": "Costco",
+    "amount": 42751.55,
+    "currency": "USD",
+    "date": "13/05/2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$49266.59 credited at Shell on 09/07/2023. Card ending in 2762. Balance: $1664.53.",
+    "merchant": "Shell",
+    "amount": 49266.59,
+    "currency": "USD",
+    "date": "09/07/2023",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Rs. 28857.23 credited from A/c **7617 on 07-09-2023 at Chevron. Avl Bal: Rs. 99295.51.",
+    "merchant": "Chevron",
+    "amount": 28857.23,
+    "currency": "INR",
+    "date": "07-09-2023",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "$44002.93 debited at KFC on 13-10-2023. Card ending in 2478. Balance: $58200.94.",
+    "merchant": "KFC",
+    "amount": 44002.93,
+    "currency": "USD",
+    "date": "13-10-2023",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "You made a $31004.43 transaction at Grofers on 11-11-2023. Available: $31156.26.",
+    "merchant": "Grofers",
+    "amount": 31004.43,
+    "currency": "USD",
+    "date": "11-11-2023",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u20ac44152.21 credited at Spotify on 2023-03-15. Card: ****4500. Balance: \u20ac48081.64.",
+    "merchant": "Spotify",
+    "amount": 44152.21,
+    "currency": "EUR",
+    "date": "2023-03-15",
+    "type": "credit",
+    "bank": "Revolut"
+  },
+  {
+    "sms": "INR 43128.37 withdrawn via Net Banking to Zomato on 22-08-2024. Ref: 211864672471.",
+    "merchant": "Zomato",
+    "amount": 43128.37,
+    "currency": "INR",
+    "date": "22-08-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "\u00a548512.86 withdrawn at Chevron on 01/11/2024. Balance: \u00a550640.5.",
+    "merchant": "Chevron",
+    "amount": 48512.86,
+    "currency": "JPY",
+    "date": "01/11/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "You made a $21228.5 transaction at McDonald's on 09/06/2023. Available: $55360.13.",
+    "merchant": "McDonald's",
+    "amount": 21228.5,
+    "currency": "USD",
+    "date": "09/06/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "\u3054\u5229\u7528\u00a56020.02 at AJIO on 25/08/2023. Available: \u00a530013.22.",
+    "merchant": "AJIO",
+    "amount": 6020.02,
+    "currency": "JPY",
+    "date": "25/08/2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "$26647.05 withdrawn at BP on 20/10/2023. Card ending in 2140. Balance: $13761.92.",
+    "merchant": "BP",
+    "amount": 26647.05,
+    "currency": "USD",
+    "date": "20/10/2023",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "Transaction: \u20ac30902.93 to Grofers on 2024-09-24 via Net Banking.",
+    "merchant": "Grofers",
+    "amount": 30902.93,
+    "currency": "EUR",
+    "date": "2024-09-24",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "INR 45866.34 debited via Net Banking to Target on 2024-01-09. Ref: 697315987764.",
+    "merchant": "Target",
+    "amount": 45866.34,
+    "currency": "INR",
+    "date": "2024-01-09",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "Rs. 36421.8 withdrawn from A/c **6762 on 28/10/2024 at Netflix. Avl Bal: Rs. 65756.82.",
+    "merchant": "Netflix",
+    "amount": 36421.8,
+    "currency": "INR",
+    "date": "28/10/2024",
+    "type": "debit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "credited of Rs. 20632.88 made at AJIO on 07-10-2024. Card ending 6675. Avl Bal: Rs. 6646.24.",
+    "merchant": "AJIO",
+    "amount": 20632.88,
+    "currency": "INR",
+    "date": "07-10-2024",
+    "type": "credit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "$20722.63 credited at Grofers on 04-08-2024. Card ending in 4154. Balance: $66340.6.",
+    "merchant": "Grofers",
+    "amount": 20722.63,
+    "currency": "USD",
+    "date": "04-08-2024",
+    "type": "credit",
+    "bank": "ICICI"
+  },
+  {
+    "sms": "credited: $1943.56 at Chevron on 09/04/2023 with card ...8688.",
+    "merchant": "Chevron",
+    "amount": 1943.56,
+    "currency": "USD",
+    "date": "09/04/2023",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "credited: $2144.22 at AJIO on 2024-02-14 with card ...7480.",
+    "merchant": "AJIO",
+    "amount": 2144.22,
+    "currency": "USD",
+    "date": "2024-02-14",
+    "type": "credit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "INR 39775.15 debited via UPI to Spotify on 08/11/2024. Ref: 101094353669.",
+    "merchant": "Spotify",
+    "amount": 39775.15,
+    "currency": "INR",
+    "date": "08/11/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Your A/c **9993 credited Rs. 34313.56 on 13/10/2023 at Starbucks. Balance: Rs. 44463.92.",
+    "merchant": "Starbucks",
+    "amount": 34313.56,
+    "currency": "INR",
+    "date": "13/10/2023",
+    "type": "credit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "Rs. 33312.89 credited from A/c **3226 on 18/09/2023 at Flipkart. Avl Bal: Rs. 17056.02.",
+    "merchant": "Flipkart",
+    "amount": 33312.89,
+    "currency": "INR",
+    "date": "18/09/2023",
+    "type": "credit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "\u20ac24164.91 debited at Costco on 24/04/2024. Card: ****6220. Balance: \u20ac27143.77.",
+    "merchant": "Costco",
+    "amount": 24164.91,
+    "currency": "EUR",
+    "date": "24/04/2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "\u00a521104.84 withdrawn at Pizza Hut on 09-05-2023. Balance: \u00a578540.23.",
+    "merchant": "Pizza Hut",
+    "amount": 21104.84,
+    "currency": "JPY",
+    "date": "09-05-2023",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Rs. 28795.37 spent from A/c **4105 on 08/09/2024 at Exxon. Avl Bal: Rs. 82222.04.",
+    "merchant": "Exxon",
+    "amount": 28795.37,
+    "currency": "INR",
+    "date": "08/09/2024",
+    "type": "debit",
+    "bank": "Kotak"
+  },
+  {
+    "sms": "Your A/c **4371 spent Rs. 49754.01 on 19-09-2024 at Walmart. Balance: Rs. 22306.83.",
+    "merchant": "Walmart",
+    "amount": 49754.01,
+    "currency": "INR",
+    "date": "19-09-2024",
+    "type": "debit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "Transaction: \u20ac12724.85 to Zomato on 2024-11-21 via Debit Card.",
+    "merchant": "Zomato",
+    "amount": 12724.85,
+    "currency": "EUR",
+    "date": "2024-11-21",
+    "type": "credit",
+    "bank": "Chase"
+  },
+  {
+    "sms": "INR 39317.86 withdrawn via Credit Card to BookMyShow on 12-03-2024. Ref: 522314958423.",
+    "merchant": "BookMyShow",
+    "amount": 39317.86,
+    "currency": "INR",
+    "date": "12-03-2024",
+    "type": "debit",
+    "bank": "SBI"
+  },
+  {
+    "sms": "spent of Rs. 2235.17 made at Exxon on 20/09/2024. Card ending 6919. Avl Bal: Rs. 68392.95.",
+    "merchant": "Exxon",
+    "amount": 2235.17,
+    "currency": "INR",
+    "date": "20/09/2024",
+    "type": "debit",
+    "bank": "Axis"
+  },
+  {
+    "sms": "credited of Rs. 38818.46 made at Myntra on 28/04/2023. Card ending 6713. Avl Bal: Rs. 56730.37.",
+    "merchant": "Myntra",
+    "amount": 38818.46,
+    "currency": "INR",
+    "date": "28/04/2023",
+    "type": "credit",
+    "bank": "Bank of America"
+  },
+  {
+    "sms": "You made a $34519.2 transaction at PhonePe on 27-10-2024. Available: $51099.46.",
+    "merchant": "PhonePe",
+    "amount": 34519.2,
+    "currency": "USD",
+    "date": "27-10-2024",
+    "type": "credit",
+    "bank": "HDFC"
+  }
+]

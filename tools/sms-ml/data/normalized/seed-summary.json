@@ -1,0 +1,25 @@
+{
+  "sourceDataset": "sms_seed_v1",
+  "sourceCommit": "cab99ec",
+  "splits": {
+    "train": {
+      "recordCount": 364,
+      "debitCount": 271,
+      "creditCount": 93,
+      "labeledCategoryCount": 271,
+      "baselineSeedCount": 271
+    },
+    "val": {
+      "recordCount": 91,
+      "debitCount": 66,
+      "creditCount": 25,
+      "labeledCategoryCount": 66,
+      "baselineSeedCount": 66
+    }
+  },
+  "notes": [
+    "The seed dataset started without true expense-category labels.",
+    "target_category becomes labeled only after manual review in seed-label-queue.csv.",
+    "baseline_category_seed comes from the current regex heuristic and is not ground truth."
+  ]
+}
