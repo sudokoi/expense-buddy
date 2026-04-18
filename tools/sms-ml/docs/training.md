@@ -71,6 +71,10 @@ This document tracks the first trainable model path in the SMS ML workspace.
 
 - `yarn ml:train:seed-litert`
 - `yarn ml:benchmark:litert`
+- `yarn ml:train:seed-litert-embed`
+- `yarn ml:benchmark:litert-embed`
+- `yarn ml:train:seed-litert-attention`
+- `yarn ml:benchmark:litert-attention`
 - `yarn ml:export:seed-litert:android`
 
 ## Native-ready artifacts
@@ -93,6 +97,27 @@ This document tracks the first trainable model path in the SMS ML workspace.
 - validation accuracy: `0.8636363636363636`
 - current confidence gate: `0.55`
 - hybrid category accuracy: `0.857566765578635`
+
+## Embedding candidate
+
+- model ID: `seed-litert-embed-v1`
+- feature pipeline: hashed token and bigram IDs into a learned embedding table plus average pooling
+- inference role: offline benchmark candidate for a stronger LiteRT-ready sequence representation
+- training accuracy: `1.0`
+- validation accuracy: `0.9696969696969697`
+- hybrid category accuracy: `0.8724035608308606`
+- current confidence gate: `0.5`
+
+## Attention candidate
+
+- model ID: `seed-litert-attention-v1`
+- feature pipeline: hashed token IDs into an LSTM encoder plus attention pooling and ReLU classification head
+- inference role: offline architecture experiment
+- training accuracy: `1.0`
+- validation accuracy: `0.9545454545454546`
+- hybrid category accuracy: `0.8635014836795252`
+- current confidence gate: `0.5`
+- current limitation: the exported TFLite bundle requires Select TF ops, so this model is not yet drop-in compatible with the current Android runtime
 
 ## Native runtime notes
 

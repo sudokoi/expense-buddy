@@ -1,0 +1,25 @@
+{
+  "dataset": "seed_augmented_v1",
+  "trainPercent": 90,
+  "sourceCounts": {
+    "seedRecords": 455,
+    "additionalRecords": 258,
+    "combinedDedupedRecords": 713
+  },
+  "splits": {
+    "train": {
+      "recordCount": 644,
+      "debitCount": 496,
+      "creditCount": 132,
+      "labeledCategoryCount": 496,
+      "baselineSeedCount": 496
+    },
+    "val": {
+      "recordCount": 69,
+      "debitCount": 51,
+      "creditCount": 16,
+      "labeledCategoryCount": 51,
+      "baselineSeedCount": 51
+    }
+  }
+}

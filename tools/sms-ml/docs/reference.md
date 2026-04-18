@@ -31,6 +31,8 @@ working in the SMS ML workspace.
 - `taxonomy-first`: deterministic category mapper using the explicit merchant and text policy used to seed labels
 - `seed-logreg-v1`: first trainable bootstrap classifier using TF-IDF plus logistic regression over labeled debit SMS text
 - `seed-litert-v1`: first Android-native classifier using hashed token features and a LiteRT-exported softmax model
+- `seed-litert-embed-v1`: stronger LiteRT candidate using hashed token IDs plus learned embeddings and average pooling
+- `seed-litert-attention-v1`: LSTM-plus-attention sequence candidate currently usable as an offline benchmark only
 
 ## Current measured state
 
@@ -38,8 +40,12 @@ working in the SMS ML workspace.
 - `taxonomy-first` category accuracy on the current labeled seed set: `1.0`
 - `seed-logreg-v1` validation accuracy on labeled debit seed data: `0.9393939393939394`
 - `seed-litert-v1` validation accuracy on labeled debit seed data: `0.8636363636363636`
+- `seed-litert-embed-v1` validation accuracy on labeled debit seed data: `0.9696969696969697`
+- `seed-litert-attention-v1` validation accuracy on labeled debit seed data: `0.9545454545454546`
 - `seed-logreg-hybrid` category accuracy on the current labeled seed set: `0.9881305637982196`
 - `seed-litert-hybrid` category accuracy on the current labeled seed set: `0.857566765578635`
+- `seed-litert-embed-hybrid` category accuracy on the current labeled seed set: `0.8724035608308606`
+- `seed-litert-attention-hybrid` category accuracy on the current labeled seed set: `0.8635014836795252`
 
 ## Evaluation warning
 
@@ -73,6 +79,8 @@ working in the SMS ML workspace.
 - Android feature extraction mirrors the Python export contract through shared metadata fields such as feature dimension, hash salt, token limits, and confidence threshold
 - low-confidence native predictions fall back to the existing regex category suggestion in the app bootstrap flow
 - the current Android gate is intentionally conservative: predictions under `0.55` confidence, or predictions of `Other`, do not replace the regex suggestion
+- the embedding candidate is a better next Android-upgrade target because it keeps a small LiteRT contract and does not currently require Select TF ops
+- the attention candidate currently exports with Select TF ops, so it would require runtime changes before Android can load it
 
 ## Public seed-source guidance
 
