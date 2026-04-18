@@ -37,6 +37,7 @@ export interface AppSettings {
   defaultCurrency: string // Default currency code (e.g., "INR")
   language: string // App language (e.g., "en-US", "system")
   enableMathExpressions: boolean // Whether amount inputs accept arithmetic expressions
+  useMlOnlyForSmsImports: boolean // Whether SMS import category suggestions should prefer ML-only inference
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
@@ -57,6 +58,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultCurrency: getSystemCurrency(),
   language: "system",
   enableMathExpressions: true,
+  useMlOnlyForSmsImports: false,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -64,7 +66,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 7,
+  version: 8,
 }
 
 /**
@@ -99,6 +101,10 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     migrated = migrateV6ToV7(migrated as AppSettings)
   }
 
+  if ((typeof migrated.version === "number" ? migrated.version : version) < 8) {
+    migrated = migrateV7ToV8(migrated as AppSettings)
+  }
+
   return {
     theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
     syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
@@ -108,6 +114,8 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     language: (migrated as AppSettings).language ?? DEFAULT_SETTINGS.language,
     enableMathExpressions:
       migrated.enableMathExpressions ?? DEFAULT_SETTINGS.enableMathExpressions,
+    useMlOnlyForSmsImports:
+      migrated.useMlOnlyForSmsImports ?? DEFAULT_SETTINGS.useMlOnlyForSmsImports,
     autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
     autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
     categories: migrated.categories ?? DEFAULT_CATEGORIES,
@@ -238,6 +246,18 @@ function migrateV6ToV7(settings: AppSettings): AppSettings {
 }
 
 /**
+ * Migrate settings from version 7 to version 8
+ * Adds the SMS-import ML-only feature flag
+ */
+function migrateV7ToV8(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    useMlOnlyForSmsImports: settings.useMlOnlyForSmsImports ?? false,
+    version: 8,
+  }
+}
+
+/**
  * Load settings from AsyncStorage
  * Returns DEFAULT_SETTINGS if not found or on error
  * Performs migration from older versions if needed
@@ -275,6 +295,12 @@ export async function loadSettings(): Promise<AppSettings> {
       // Migrate from v6 to v7 (add math entry toggle)
       if (parsed.version < 7) {
         parsed = migrateV6ToV7(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Migrate from v7 to v8 (add ML-only SMS import toggle)
+      if (parsed.version < 8) {
+        parsed = migrateV7ToV8(parsed)
         await saveSettings(parsed)
       }
 
@@ -402,6 +428,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     paymentInstruments: sortedInstruments,
     syncSettings: settings.syncSettings,
     theme: settings.theme,
+    useMlOnlyForSmsImports: settings.useMlOnlyForSmsImports,
     version: settings.version,
     // Note: updatedAt is intentionally excluded from hash
     // so that timestamp changes alone don't trigger re-sync

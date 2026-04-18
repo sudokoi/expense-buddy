@@ -47,6 +47,8 @@ Planned direction:
 
 The current ML model is a first integration milestone, not a final quality claim. It is trained on a small heuristic-shaped seed set and is intentionally gated behind conservative fallback behavior.
 
+For the model-workspace architecture diagrams and the current Android-ready model contract, see `tools/sms-ml/docs/model-architectures.md`.
+
 ## Features
 
 ### SMS Import and Review

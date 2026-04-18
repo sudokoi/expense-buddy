@@ -2,7 +2,7 @@ import { useCallback, useState } from "react"
 import { Platform } from "react-native"
 import { Href, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { useNotifications, useSmsImportReview } from "../stores/hooks"
+import { useNotifications, useSettings, useSmsImportReview } from "../stores/hooks"
 import {
   getSmsPermissionStatus,
   requestSmsPermission,
@@ -20,6 +20,7 @@ export function useSmsImportActions() {
   const router = useRouter()
   const { t } = useTranslation()
   const { addNotification } = useNotifications()
+  const { settings } = useSettings()
   const { items, pendingItems, lastScanCursor, bootstrapCompletedAt, upsertReviewItems } =
     useSmsImportReview()
   const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
@@ -60,6 +61,7 @@ export function useSmsImportActions() {
         existingItems: items,
         lastScanCursor,
         bootstrapCompletedAt,
+        useMlOnlyForSmsImports: settings.useMlOnlyForSmsImports,
       })
 
       upsertReviewItems(result.createdItems, {
@@ -103,6 +105,7 @@ export function useSmsImportActions() {
     items,
     lastScanCursor,
     pendingItems.length,
+    settings.useMlOnlyForSmsImports,
     t,
     upsertReviewItems,
   ])

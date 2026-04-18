@@ -22,6 +22,7 @@ export interface SmsImportBootstrapInput {
   existingItems: SmsImportReviewItem[]
   lastScanCursor: string | null
   bootstrapCompletedAt: string | null
+  useMlOnlyForSmsImports?: boolean
 }
 
 export interface SmsImportBootstrapResult {
@@ -92,10 +93,13 @@ function createParsedBootstrapCandidate(
 
 function createReviewItem(
   candidate: ParsedBootstrapCandidate,
-  categoryPrediction?: Awaited<ReturnType<typeof categorizeSmsImportMessages>>[number]
+  categoryPrediction?: Awaited<ReturnType<typeof categorizeSmsImportMessages>>[number],
+  useMlOnlyForSmsImports = false
 ): SmsImportReviewItem {
   const { fingerprint, message, parsedCandidate } = candidate
-  const useMlCategory = categoryPrediction?.shouldUsePrediction ?? false
+  const useMlCategory = useMlOnlyForSmsImports
+    ? Boolean(categoryPrediction?.category)
+    : (categoryPrediction?.shouldUsePrediction ?? false)
 
   const now = new Date().toISOString()
   return {
@@ -179,7 +183,11 @@ export async function scanSmsImportReviewQueue(
   )
 
   const createdItems = parsedCandidates.map((candidate) =>
-    createReviewItem(candidate, predictionByMessageId.get(candidate.message.messageId))
+    createReviewItem(
+      candidate,
+      predictionByMessageId.get(candidate.message.messageId),
+      input.useMlOnlyForSmsImports
+    )
   )
 
   const bootstrapCompletedAt = input.bootstrapCompletedAt ?? new Date().toISOString()

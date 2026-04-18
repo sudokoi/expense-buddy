@@ -259,4 +259,36 @@ describe("scanSmsImportReviewQueue", () => {
       categorySuggestionModelId: undefined,
     })
   })
+
+  it("can prefer ML suggestions even below the confidence gate when ML-only mode is enabled", async () => {
+    const message = createMessage({
+      body: "INR 250 paid to Uber Trip via credit card",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockCategorizeSmsImportMessages.mockResolvedValue([
+      {
+        messageId: message.messageId,
+        category: "Food",
+        confidence: 0.31,
+        shouldUsePrediction: false,
+        modelId: "seed-litert-embed-augmented-v1",
+      },
+    ])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+      useMlOnlyForSmsImports: true,
+    })
+
+    expect(result.createdItems[0]).toMatchObject({
+      categorySuggestion: "Food",
+      categorySuggestionSource: "ml",
+      categorySuggestionConfidence: 0.31,
+      categorySuggestionModelId: "seed-litert-embed-augmented-v1",
+    })
+  })
 })

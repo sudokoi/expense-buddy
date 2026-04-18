@@ -220,18 +220,29 @@
   },
   "settings": {
     "sections": {
+      "sync": "SYNC",
       "payment": "PAYMENT",
       "defaultPayment": "DEFAULT PAYMENT METHOD",
       "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
       "github": "GITHUB SYNC",
       "localization": "LOCALIZATION",
+      "featureFlags": "FEATURE FLAGS",
       "general": "GENERAL",
       "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
     },
+    "sync": {
+      "description": "Connect GitHub, run manual syncs, and control automatic syncing."
+    },
     "payment": {
-      "description": "Manage your default payment method, saved instruments, and spending categories."
+      "description": "Keep payment defaults, saved instruments, and categories together in one place.",
+      "manageTitle": "Open payment settings",
+      "manageHelp": "Default method, saved instruments, and spending categories live here.",
+      "summary": "Default: {{defaultMethod}} • {{instrumentCount}} saved instruments",
+      "defaultMethodHelp": "Choose the method that should be pre-selected when you add a new expense.",
+      "instrumentsTitle": "Saved instruments",
+      "categoriesTitle": "Spending categories"
     },
     "localization": {
       "description": "Choose how the app reads and formats your data.",
@@ -351,9 +362,14 @@
       }
     },
     "general": {
-      "description": "Adjust display and amount-entry preferences.",
+      "description": "Adjust display preferences.",
       "mathEntry": "Allow mathematical amount entry",
       "mathEntryHelp": "Use expressions like 120+45 in amount fields when enabled."
+    },
+    "featureFlags": {
+      "description": "Experimental and advanced behaviours that can change how the app works.",
+      "mlOnlySmsImports": "Use ML model only for SMS import inferences (experimental)",
+      "mlOnlySmsImportsHelp": "Prefer on-device ML category suggestions for SMS imports instead of regex hints whenever a prediction is available."
     },
     "smsImport": {
       "title": "SMS Import",

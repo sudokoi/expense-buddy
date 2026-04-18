@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultCurrency: "INR",
   language: "system",
   enableMathExpressions: true,
+  useMlOnlyForSmsImports: false,
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -20,7 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 7,
+  version: 8,
 }
 
 // Create a fresh store for each test to avoid state pollution
@@ -142,6 +143,7 @@ describe("Settings Store", () => {
         theme: "dark",
         syncSettings: false,
         enableMathExpressions: true,
+        useMlOnlyForSmsImports: false,
         autoSyncEnabled: false,
         autoSyncTiming: "on_launch",
         categories: DEFAULT_CATEGORIES,
@@ -149,7 +151,7 @@ describe("Settings Store", () => {
         paymentInstruments: [],
         paymentInstrumentsMigrationVersion: 0,
         updatedAt: new Date().toISOString(),
-        version: 7,
+        version: 8,
         defaultCurrency: "INR",
         language: "system",
       }
@@ -243,6 +245,7 @@ describe("Settings Store", () => {
         theme: "light",
         syncSettings: true,
         enableMathExpressions: false,
+        useMlOnlyForSmsImports: true,
         autoSyncEnabled: true,
         autoSyncTiming: "on_change",
         categories: DEFAULT_CATEGORIES,
@@ -250,7 +253,7 @@ describe("Settings Store", () => {
         paymentInstruments: [],
         paymentInstrumentsMigrationVersion: 0,
         updatedAt: new Date().toISOString(),
-        version: 7,
+        version: 8,
         defaultPaymentMethod: "UPI",
         defaultCurrency: "INR",
         language: "system",

@@ -17,6 +17,9 @@ expo-env.d.ts
 !.yarn/sdks
 !.yarn/versions
 
+build/
+.tsc-check.out
+
 .turbo
 
 .ultra.cache.json

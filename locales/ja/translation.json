@@ -220,18 +220,29 @@
   },
   "settings": {
     "sections": {
+      "sync": "同期",
       "payment": "支払い",
       "defaultPayment": "デフォルトの支払方法",
       "paymentInstruments": "支払手段",
       "categories": "カテゴリー",
       "github": "GitHub 同期",
       "localization": "ローカリゼーション",
+      "featureFlags": "機能フラグ",
       "general": "一般",
       "appearance": "外観",
       "about": "アプリ情報"
     },
+    "sync": {
+      "description": "GitHub を接続し、手動同期と自動同期の動作を管理します。"
+    },
     "payment": {
-      "description": "デフォルトの支払方法、保存済みの手段、カテゴリーをまとめて管理します。"
+      "description": "支払いのデフォルト、保存済み手段、カテゴリーを一か所で管理します。",
+      "manageTitle": "支払い設定を開く",
+      "manageHelp": "デフォルトの方法、保存済み手段、支出カテゴリーはここで管理できます。",
+      "summary": "デフォルト: {{defaultMethod}} • 保存済み手段 {{instrumentCount}} 件",
+      "defaultMethodHelp": "新しい支出を追加するときに最初から選ばれる支払方法を設定します。",
+      "instrumentsTitle": "保存済み手段",
+      "categoriesTitle": "支出カテゴリー"
     },
     "localization": {
       "description": "言語や通貨などの表示方法を選びます。",
@@ -351,9 +362,14 @@
       }
     },
     "general": {
-      "description": "表示設定と金額入力の設定を調整します。",
+      "description": "表示に関する設定を調整します。",
       "mathEntry": "数式で金額を入力できるようにする",
       "mathEntryHelp": "有効にすると、金額欄で 120+45 のような式を使えます。"
+    },
+    "featureFlags": {
+      "description": "アプリの挙動を変える可能性がある実験的・高度な設定です。",
+      "mlOnlySmsImports": "SMS インポート推論で ML モデルのみを使う（実験的）",
+      "mlOnlySmsImportsHelp": "予測が利用できる場合は、正規表現のヒントよりも端末上の ML カテゴリー提案を優先します。"
     },
     "smsImport": {
       "title": "SMS インポート",

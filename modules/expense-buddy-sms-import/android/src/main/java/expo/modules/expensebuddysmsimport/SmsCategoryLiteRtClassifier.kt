@@ -8,8 +8,8 @@ import java.nio.ByteOrder
 import java.security.MessageDigest
 import java.util.Locale
 
-private const val MODEL_ASSET_PATH = "sms_ml/seed-litert-v1/model.tflite"
-private const val METADATA_ASSET_PATH = "sms_ml/seed-litert-v1/metadata.json"
+private const val MODEL_ASSET_PATH = "sms_ml/seed-litert-embed-augmented-v1/model.tflite"
+private const val METADATA_ASSET_PATH = "sms_ml/seed-litert-embed-augmented-v1/metadata.json"
 
 data class SmsCategoryPredictionRequest(
   val messageId: String,
@@ -29,9 +29,12 @@ data class SmsCategoryPredictionResult(
 private data class SmsCategoryModelMetadata(
   val modelId: String,
   val labels: List<String>,
-  val featureDimension: Int,
+  val hashBucketSize: Int,
   val hashSalt: String,
+  val minTokenLength: Int,
+  val maxTokenLength: Int,
   val maxTokens: Int,
+  val maxSequenceLength: Int,
   val ngramSeparator: String,
   val minConfidence: Double,
 )
@@ -40,7 +43,6 @@ class SmsCategoryLiteRtClassifier private constructor(
   private val metadata: SmsCategoryModelMetadata,
   private val interpreter: Interpreter,
 ) {
-  private val tokenPattern = Regex("[a-z0-9]{2,32}")
   private val digest = MessageDigest.getInstance("SHA-256")
   private val lock = Any()
 
@@ -51,7 +53,7 @@ class SmsCategoryLiteRtClassifier private constructor(
   }
 
   private fun classify(request: SmsCategoryPredictionRequest): SmsCategoryPredictionResult {
-    val features = buildFeatureVector(request)
+    val features = buildFeatureSequence(request)
     val output = Array(1) { FloatArray(metadata.labels.size) }
 
     synchronized(lock) {
@@ -80,48 +82,45 @@ class SmsCategoryLiteRtClassifier private constructor(
     )
   }
 
-  private fun buildFeatureVector(request: SmsCategoryPredictionRequest): FloatArray {
+  private fun buildFeatureSequence(request: SmsCategoryPredictionRequest): IntArray {
     val featureText = listOf(request.sender, request.merchantName.orEmpty(), request.body)
       .filter { it.isNotBlank() }
       .joinToString(" ")
       .lowercase(Locale.ROOT)
-    val tokens = tokenPattern.findAll(featureText)
-      .map { it.value }
-      .take(metadata.maxTokens)
-      .toList()
-    val features = FloatArray(metadata.featureDimension)
+    val terms = iterTerms(tokenizeText(featureText)).take(metadata.maxSequenceLength)
+    val features = IntArray(metadata.maxSequenceLength)
 
-    for (token in tokens) {
-      features[stableHashIndex(token)] += 1f
-    }
-
-    for (index in 0 until tokens.lastIndex) {
-      val bigram = tokens[index] + metadata.ngramSeparator + tokens[index + 1]
-      features[stableHashIndex(bigram)] += 1f
-    }
-
-    var squaredSum = 0.0
-    for (value in features) {
-      squaredSum += value * value
-    }
-    if (squaredSum > 0.0) {
-      val norm = kotlin.math.sqrt(squaredSum).toFloat()
-      for (index in features.indices) {
-        features[index] /= norm
-      }
+    for ((index, term) in terms.withIndex()) {
+      features[index] = stableHashBucket(term) + 1
     }
 
     return features
   }
 
-  private fun stableHashIndex(term: String): Int {
+  private fun tokenizeText(text: String): List<String> {
+    val tokenPattern = Regex("[a-z0-9]{${metadata.minTokenLength},${metadata.maxTokenLength}}")
+    return tokenPattern.findAll(text)
+      .map { it.value }
+      .take(metadata.maxTokens)
+      .toList()
+  }
+
+  private fun iterTerms(tokens: List<String>): List<String> {
+    val terms = tokens.toMutableList()
+    for (index in 0 until tokens.lastIndex) {
+      terms.add(tokens[index] + metadata.ngramSeparator + tokens[index + 1])
+    }
+    return terms
+  }
+
+  private fun stableHashBucket(term: String): Int {
     val input = (metadata.hashSalt + "\u0000" + term).toByteArray(Charsets.UTF_8)
     val rawHash = synchronized(digest) {
       digest.digest(input)
     }
     val unsignedValue = ByteBuffer.wrap(rawHash, 0, 4).order(ByteOrder.BIG_ENDIAN).int
       .toLong() and 0xffffffffL
-    return (unsignedValue % metadata.featureDimension.toLong()).toInt()
+    return (unsignedValue % metadata.hashBucketSize.toLong()).toInt()
   }
 
   companion object {
@@ -155,9 +154,12 @@ class SmsCategoryLiteRtClassifier private constructor(
       return SmsCategoryModelMetadata(
         modelId = json.getString("model_id"),
         labels = labels,
-        featureDimension = json.getInt("feature_dimension"),
+        hashBucketSize = json.getInt("hash_bucket_size"),
         hashSalt = json.getString("hash_salt"),
+        minTokenLength = json.getInt("min_token_length"),
+        maxTokenLength = json.getInt("max_token_length"),
         maxTokens = json.getInt("max_tokens"),
+        maxSequenceLength = json.getInt("max_sequence_length"),
         ngramSeparator = json.getString("ngram_separator"),
         minConfidence = json.getDouble("min_confidence"),
       )

@@ -1,14 +1,13 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
-import { PaymentMethodType } from "../../types/expense"
+import { ChevronRight } from "@tamagui/lucide-icons"
+import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useExpenses,
   useNotifications,
   useSettings,
-  useCategories,
   useSmsImportReview,
 } from "../../stores/hooks"
 import {
@@ -31,15 +30,10 @@ import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
-import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPaymentMethodSelector"
-import { CategorySection } from "../../components/ui/CategorySection"
-import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
-import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
-import { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
@@ -72,23 +66,22 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: 8,
   } as ViewStyle,
+  menuRow: {
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+  } as ViewStyle,
 }
 
 export default function SettingsScreen() {
+  const router = useRouter()
   const { t } = useTranslation()
 
-  const { state, replaceAllExpenses, clearDirtyDaysAfterSync, reassignExpensesToOther } =
-    useExpenses()
+  const { state, replaceAllExpenses, clearDirtyDaysAfterSync } = useExpenses()
   const { addNotification } = useNotifications()
   const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
-  const {
-    categories,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    reorderCategories,
-    replaceCategories,
-  } = useCategories()
 
   // XState sync machine for the main sync flow
   const syncMachine = useSyncMachine()
@@ -108,10 +101,10 @@ export default function SettingsScreen() {
     syncConfig,
     setTheme,
     setSyncSettings,
-    setDefaultPaymentMethod,
     setDefaultCurrency,
     setLanguage,
     setEnableMathExpressions,
+    updateSettings,
     setAutoSyncEnabled,
     setAutoSyncTiming,
     replaceSettings,
@@ -147,18 +140,18 @@ export default function SettingsScreen() {
     return null
   }, [updateAvailable, latestVersion])
 
-  // Category form modal state
-  const [categoryFormOpen, setCategoryFormOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined)
-
-  // UI state
-  const [defaultPaymentMethodExpanded, setDefaultPaymentMethodExpanded] = useState(false)
   const defaultPaymentMethodLabel = useMemo(() => {
     const value = settings.defaultPaymentMethod
     if (!value) return t("settings.defaultPayment.none")
     const match = PAYMENT_METHODS.find((m) => m.value === value)
     return match?.label ?? value
   }, [settings.defaultPaymentMethod, t])
+  const activePaymentInstrumentCount = useMemo(
+    () =>
+      (settings.paymentInstruments ?? []).filter((instrument) => !instrument.deletedAt)
+        .length,
+    [settings.paymentInstruments]
+  )
 
   const handleScanSmsImports = useCallback(async () => {
     await scanSmsImports()
@@ -338,122 +331,6 @@ export default function SettingsScreen() {
     [setSyncSettings]
   )
 
-  const handleDefaultPaymentMethodChange = useCallback(
-    (paymentMethod: PaymentMethodType | undefined) => {
-      setDefaultPaymentMethod(paymentMethod)
-    },
-    [setDefaultPaymentMethod]
-  )
-
-  // Category CRUD handlers
-  const handleAddCategory = useCallback(() => {
-    setEditingCategory(undefined)
-    setCategoryFormOpen(true)
-  }, [])
-
-  const handleEditCategory = useCallback((category: Category) => {
-    setEditingCategory(category)
-    setCategoryFormOpen(true)
-  }, [])
-
-  const handleCategoryFormClose = useCallback(() => {
-    setCategoryFormOpen(false)
-    setEditingCategory(undefined)
-  }, [])
-
-  const handleCategorySave = useCallback(
-    (categoryData: Omit<Category, "order" | "updatedAt">) => {
-      if (editingCategory) {
-        // Edit mode - update existing category
-        updateCategory(editingCategory.label, {
-          label: categoryData.label,
-          icon: categoryData.icon,
-          color: categoryData.color,
-          isDefault: categoryData.isDefault,
-        })
-        addNotification(
-          t("settings.notifications.categoryUpdated", { label: categoryData.label }),
-          "success"
-        )
-      } else {
-        // Add mode - create new category
-        addCategory(categoryData)
-        addNotification(
-          t("settings.notifications.categoryAdded", { label: categoryData.label }),
-          "success"
-        )
-      }
-    },
-    [editingCategory, updateCategory, addCategory, addNotification, t]
-  )
-
-  const handleCategoryReorder = useCallback(
-    (labels: string[]) => {
-      reorderCategories(labels)
-    },
-    [reorderCategories]
-  )
-
-  // Get existing category labels for uniqueness validation
-  const existingCategoryLabels = useMemo(
-    () => categories.map((c) => c.label),
-    [categories]
-  )
-
-  // Get expense count for a category (for delete confirmation)
-  const getExpenseCountForCategory = useCallback(
-    (label: string): number => {
-      return state.expenses.filter((e) => e.category === label && !e.deletedAt).length
-    },
-    [state.expenses]
-  )
-
-  // Handle category deletion with confirmation and expense reassignment
-  const handleCategoryDelete = useCallback(
-    (label: string) => {
-      // Prevent deletion of "Other" category
-      if (label === "Other") {
-        addNotification(t("settings.notifications.otherDeleteError"), "error")
-        return
-      }
-
-      const expenseCount = getExpenseCountForCategory(label)
-      const message =
-        expenseCount > 0
-          ? t("settings.categories.deleteDialog.messageReassign", {
-              label,
-              count: expenseCount,
-            })
-          : t("settings.categories.deleteDialog.messageSimple", { label })
-
-      Alert.alert(t("settings.categories.deleteDialog.title"), message, [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: () => {
-            // Reassign expenses to "Other" before deleting the category
-            if (expenseCount > 0) {
-              reassignExpensesToOther(label)
-            }
-            deleteCategory(label)
-            addNotification(
-              t("settings.notifications.categoryDeleted", { label }),
-              "success"
-            )
-          },
-        },
-      ])
-    },
-    [
-      getExpenseCountForCategory,
-      reassignExpensesToOther,
-      deleteCategory,
-      addNotification,
-      t,
-    ]
-  )
-
   // Calculate pending count for display on sync button
   const pendingCount = useMemo(() => {
     const uniqueDirtyDays = new Set([...state.dirtyDays, ...state.deletedDays])
@@ -623,8 +500,6 @@ export default function SettingsScreen() {
 
           if (settings.syncSettings && result.syncResult?.mergedSettings) {
             replaceSettings(reconciledSettings)
-          } else if (result.syncResult?.mergedCategories) {
-            replaceCategories(reconciledSettings.categories)
           }
         },
         onInSync: () => {
@@ -649,134 +524,42 @@ export default function SettingsScreen() {
     clearSettingsChangeFlag,
     replaceAllExpenses,
     replaceSettings,
-    replaceCategories,
   ])
 
   return (
     <ScreenContainer>
       <YStack gap="$4" style={layoutStyles.container}>
         <SettingsSection
-          title={t("settings.sections.payment")}
-          description={t("settings.payment.description")}
-          gap="$4"
+          title={t("settings.sections.sync")}
+          description={t("settings.sync.description")}
         >
-          <YStack gap="$2">
-            <Pressable
-              onPress={() => setDefaultPaymentMethodExpanded((prev) => !prev)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: defaultPaymentMethodExpanded }}
-              style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-            >
-              <XStack
-                flex={1}
-                bg="$backgroundHover"
-                style={layoutStyles.collapsibleHeader}
-              >
-                <YStack gap="$1" flex={1} pointerEvents="none">
-                  <Label color="$color" opacity={0.8}>
-                    {t("settings.sections.defaultPayment")}
-                  </Label>
-                  <Text color="$color" opacity={0.6} fontSize="$3">
-                    {defaultPaymentMethodLabel}
-                  </Text>
-                </YStack>
-                {defaultPaymentMethodExpanded ? (
-                  <ChevronUp size={20} color="$color" opacity={0.6} />
-                ) : (
-                  <ChevronDown size={20} color="$color" opacity={0.6} />
-                )}
-              </XStack>
-            </Pressable>
+          <GitHubConfigSection
+            syncConfig={syncConfig}
+            onSaveConfig={handleSaveConfig}
+            onTestConnection={handleTestConnection}
+            onClearConfig={handleClearConfig}
+            isTesting={isTesting}
+            connectionStatus={connectionStatus}
+            onConnectionStatusChange={handleConnectionStatusChange}
+            onNotification={handleNotification}
+          />
 
-            {defaultPaymentMethodExpanded && (
-              <YStack gap="$2" bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
-                <Text color="$color" opacity={0.7} fontSize="$3">
-                  {t("settings.defaultPayment.description")}
-                </Text>
-                <DefaultPaymentMethodSelector
-                  value={settings.defaultPaymentMethod}
-                  onChange={handleDefaultPaymentMethodChange}
-                />
-              </YStack>
-            )}
-          </YStack>
+          {isConfigured && (
+            <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
+              <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
+                {syncButtonText}
+              </Button>
 
-          <YStack
-            style={layoutStyles.groupedContent}
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-          >
-            <PaymentInstrumentsSection />
-          </YStack>
-
-          <YStack
-            style={layoutStyles.groupedContent}
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-          >
-            <CategorySection
-              categories={categories}
-              onAdd={handleAddCategory}
-              onEdit={handleEditCategory}
-              onDelete={handleCategoryDelete}
-              onReorder={handleCategoryReorder}
-              getExpenseCount={getExpenseCountForCategory}
-            />
-          </YStack>
-        </SettingsSection>
-
-        {/* Category Form Modal */}
-        <CategoryFormModal
-          open={categoryFormOpen}
-          onClose={handleCategoryFormClose}
-          category={editingCategory}
-          existingLabels={existingCategoryLabels}
-          onSave={handleCategorySave}
-        />
-
-        <SettingsSection
-          title={t("settings.sections.general")}
-          description={t("settings.general.description")}
-          gap="$4"
-        >
-          <YStack gap="$2">
-            <Label>{t("settings.appearance.theme")}</Label>
-            <YStack bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
-              <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+              <AutoSyncSection
+                autoSyncEnabled={settings.autoSyncEnabled}
+                autoSyncTiming={settings.autoSyncTiming}
+                syncSettings={settings.syncSettings}
+                onAutoSyncEnabledChange={setAutoSyncEnabled}
+                onAutoSyncTimingChange={setAutoSyncTiming}
+                onSyncSettingsChange={handleSyncSettingsToggle}
+              />
             </YStack>
-          </YStack>
-
-          <XStack
-            bg="$backgroundHover"
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-            px="$3"
-            py="$3"
-            style={[
-              layoutStyles.groupedContent,
-              layoutStyles.switchRow,
-              { borderRadius: 16 },
-            ]}
-          >
-            <YStack flex={1} gap="$1">
-              <Label>{t("settings.general.mathEntry")}</Label>
-              <Text color="$color" opacity={0.6} fontSize="$2">
-                {t("settings.general.mathEntryHelp")}
-              </Text>
-            </YStack>
-            <Switch
-              size="$4"
-              checked={settings.enableMathExpressions}
-              onCheckedChange={setEnableMathExpressions}
-              backgroundColor={
-                settings.enableMathExpressions
-                  ? SEMANTIC_COLORS.success
-                  : ("$gray8" as any)
-              }
-            >
-              <Switch.Thumb />
-            </Switch>
-          </XStack>
+          )}
         </SettingsSection>
 
         {Platform.OS === "android" ? (
@@ -809,45 +592,109 @@ export default function SettingsScreen() {
           </SettingsSection>
         ) : null}
 
-        {/* GITHUB SYNC Section */}
         <SettingsSection
-          title={t("settings.sections.github")}
-          description={
-            Platform.OS === "web"
-              ? t("settings.github.descriptionWeb")
-              : t("settings.github.descriptionNative")
-          }
+          title={t("settings.sections.payment")}
+          description={t("settings.payment.description")}
+          gap="$4"
         >
-          {/* GitHub Configuration */}
-          <GitHubConfigSection
-            syncConfig={syncConfig}
-            onSaveConfig={handleSaveConfig}
-            onTestConnection={handleTestConnection}
-            onClearConfig={handleClearConfig}
-            isTesting={isTesting}
-            connectionStatus={connectionStatus}
-            onConnectionStatusChange={handleConnectionStatusChange}
-            onNotification={handleNotification}
-          />
+          <Pressable
+            onPress={() => router.push("/settings/payment" as Href)}
+            accessibilityRole="button"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <XStack bg="$backgroundHover" style={layoutStyles.menuRow}>
+              <YStack gap="$1" flex={1} pointerEvents="none">
+                <Label color="$color" opacity={0.82}>
+                  {t("settings.payment.manageTitle")}
+                </Label>
+                <Text color="$color" opacity={0.62} fontSize="$3">
+                  {t("settings.payment.summary", {
+                    defaultMethod: defaultPaymentMethodLabel,
+                    instrumentCount: activePaymentInstrumentCount,
+                  })}
+                </Text>
+                <Text color="$color" opacity={0.5} fontSize="$2">
+                  {t("settings.payment.manageHelp")}
+                </Text>
+              </YStack>
+              <ChevronRight size={20} color="$color" opacity={0.6} />
+            </XStack>
+          </Pressable>
+        </SettingsSection>
 
-          {/* Sync Button and Auto-Sync Options - only shown when configured */}
-          {isConfigured && (
-            <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
-              <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
-                {syncButtonText}
-              </Button>
-
-              {/* Auto-Sync Section */}
-              <AutoSyncSection
-                autoSyncEnabled={settings.autoSyncEnabled}
-                autoSyncTiming={settings.autoSyncTiming}
-                syncSettings={settings.syncSettings}
-                onAutoSyncEnabledChange={setAutoSyncEnabled}
-                onAutoSyncTimingChange={setAutoSyncTiming}
-                onSyncSettingsChange={handleSyncSettingsToggle}
-              />
+        <SettingsSection
+          title={t("settings.sections.featureFlags")}
+          description={t("settings.featureFlags.description")}
+          gap="$4"
+        >
+          <XStack
+            bg="$backgroundHover"
+            px="$3"
+            py="$3"
+            style={[layoutStyles.switchRow, { borderRadius: 16 }]}
+          >
+            <YStack flex={1} gap="$1">
+              <Label>{t("settings.general.mathEntry")}</Label>
+              <Text color="$color" opacity={0.6} fontSize="$2">
+                {t("settings.general.mathEntryHelp")}
+              </Text>
             </YStack>
-          )}
+            <Switch
+              size="$4"
+              checked={settings.enableMathExpressions}
+              onCheckedChange={setEnableMathExpressions}
+              backgroundColor={
+                settings.enableMathExpressions
+                  ? SEMANTIC_COLORS.success
+                  : ("$gray8" as any)
+              }
+            >
+              <Switch.Thumb />
+            </Switch>
+          </XStack>
+
+          {Platform.OS === "android" ? (
+            <XStack
+              bg="$backgroundHover"
+              px="$3"
+              py="$3"
+              style={[layoutStyles.switchRow, { borderRadius: 16 }]}
+            >
+              <YStack flex={1} gap="$1">
+                <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
+                <Text color="$color" opacity={0.6} fontSize="$2">
+                  {t("settings.featureFlags.mlOnlySmsImportsHelp")}
+                </Text>
+              </YStack>
+              <Switch
+                size="$4"
+                checked={settings.useMlOnlyForSmsImports}
+                onCheckedChange={(checked) =>
+                  updateSettings({ useMlOnlyForSmsImports: checked })
+                }
+                backgroundColor={
+                  settings.useMlOnlyForSmsImports
+                    ? SEMANTIC_COLORS.success
+                    : ("$gray8" as any)
+                }
+              >
+                <Switch.Thumb />
+              </Switch>
+            </XStack>
+          ) : null}
+        </SettingsSection>
+
+        <SettingsSection
+          title={t("settings.sections.general")}
+          description={t("settings.general.description")}
+          gap="$4"
+        >
+          <YStack gap="$2">
+            <Label>{t("settings.appearance.theme")}</Label>
+            <YStack bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
+              <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+            </YStack>
+          </YStack>
         </SettingsSection>
 
         <SettingsSection

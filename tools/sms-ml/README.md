@@ -93,6 +93,7 @@ Current limitation:
 Public-source note:
 
 - direct, reusable public transaction-SMS datasets are scarce; see `docs/public-sources.md` for the reviewed source shortlist and reuse caveats
+- model diagrams and the current Android-ready architecture summary are tracked in `docs/model-architectures.md`
 
 ## Reference Notes
 
@@ -105,3 +106,12 @@ Public-source note:
 - fuel and travel intents are intentionally collapsed into `Transport` because the shipped app taxonomy does not yet expose separate `Fuel` or `Travel` categories
 - because the current seed labels were auto-seeded from the same mapping policy, `taxonomy-first` is a bootstrap sanity-check baseline rather than an unbiased offline winner
 - for the same reason, `seed-logreg-v1` is useful for plumbing and export experiments but not yet for credible product claims
+
+## Architecture Diagrams
+
+See `docs/model-architectures.md` for Mermaid diagrams covering:
+
+- the workspace training-to-export pipeline
+- `seed-litert-v1`
+- the current Android-ready `seed-litert-embed-augmented-v1`
+- the offline-only attention candidate

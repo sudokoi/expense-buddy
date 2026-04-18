@@ -92,6 +92,7 @@ const appSettingsArb = fc.record({
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
   enableMathExpressions: fc.boolean(),
+  useMlOnlyForSmsImports: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -101,7 +102,7 @@ const appSettingsArb = fc.record({
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(7), // Always use latest version to avoid migration in tests
+  version: fc.constant(8), // Always use latest version to avoid migration in tests
 })
 
 describe("Settings Manager Properties", () => {
@@ -185,6 +186,7 @@ describe("Settings Manager Properties", () => {
             loaded.syncSettings === settings.syncSettings &&
             loaded.defaultPaymentMethod === settings.defaultPaymentMethod &&
             loaded.enableMathExpressions === settings.enableMathExpressions &&
+            loaded.useMlOnlyForSmsImports === settings.useMlOnlyForSmsImports &&
             loaded.autoSyncEnabled === settings.autoSyncEnabled &&
             loaded.autoSyncTiming === settings.autoSyncTiming &&
             loaded.paymentInstrumentsMigrationVersion ===
@@ -213,6 +215,7 @@ describe("Settings Manager Properties", () => {
             parsed.syncSettings === settings.syncSettings &&
             parsed.defaultPaymentMethod === settings.defaultPaymentMethod &&
             parsed.enableMathExpressions === settings.enableMathExpressions &&
+            parsed.useMlOnlyForSmsImports === settings.useMlOnlyForSmsImports &&
             parsed.autoSyncEnabled === settings.autoSyncEnabled &&
             parsed.autoSyncTiming === settings.autoSyncTiming &&
             parsed.paymentInstrumentsMigrationVersion ===
@@ -379,12 +382,13 @@ describe("Settings Manager Properties", () => {
       expect(loaded.syncSettings).toBe(false)
       expect(loaded.defaultPaymentMethod).toBeUndefined()
       expect(loaded.enableMathExpressions).toBe(true)
+      expect(loaded.useMlOnlyForSmsImports).toBe(false)
       expect(loaded.autoSyncEnabled).toBe(false)
       expect(loaded.autoSyncTiming).toBe("on_launch")
       expect(loaded.paymentInstruments).toEqual([])
       expect(loaded.paymentInstrumentsMigrationVersion).toBe(0)
       expect(loaded.language).toBe("system")
-      expect(loaded.version).toBe(7)
+      expect(loaded.version).toBe(8)
     })
   })
 
@@ -474,6 +478,22 @@ describe("Settings Manager Properties", () => {
 
       expect(hash1).not.toBe(hash2)
     })
+
+    it("should compute different hashes when useMlOnlyForSmsImports differs", () => {
+      const settings1: AppSettings = {
+        ...DEFAULT_SETTINGS,
+        useMlOnlyForSmsImports: true,
+      }
+      const settings2: AppSettings = {
+        ...DEFAULT_SETTINGS,
+        useMlOnlyForSmsImports: false,
+      }
+
+      const hash1 = computeSettingsHash(settings1)
+      const hash2 = computeSettingsHash(settings2)
+
+      expect(hash1).not.toBe(hash2)
+    })
   })
 
   /**
@@ -557,8 +577,9 @@ describe("Settings Manager Properties", () => {
             // Language should default to "system"
             loaded.language === "system" &&
             loaded.enableMathExpressions === true &&
-            // Version should be upgraded to 7 (v2 -> v3 -> v4 -> v5 -> v6 -> v7)
-            loaded.version === 7
+            loaded.useMlOnlyForSmsImports === false &&
+            // Version should be upgraded to 8 (v2 -> v3 -> v4 -> v5 -> v6 -> v7 -> v8)
+            loaded.version === 8
           )
         }),
         { numRuns: 100 }

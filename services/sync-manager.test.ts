@@ -68,6 +68,7 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
   enableMathExpressions: fc.boolean(),
+  useMlOnlyForSmsImports: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArbitrary,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -75,7 +76,7 @@ const settingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.integer({ min: 0, max: 10 }),
   updatedAt: validIsoDateArbitrary,
-  version: fc.integer({ min: 7, max: 10 }),
+  version: fc.integer({ min: 8, max: 10 }),
   defaultCurrency: fc.constant("INR"),
   language: fc.constant("en-IN"),
 })
@@ -86,6 +87,7 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArbitrary,
   enableMathExpressions: fc.boolean(),
+  useMlOnlyForSmsImports: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArbitrary,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -93,7 +95,7 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
   paymentInstruments: fc.constant([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: validIsoDateArbitrary,
-  version: fc.constant(7),
+  version: fc.constant(8),
   defaultCurrency: fc.constant("INR"),
   language: fc.constant("en-IN"),
 })
@@ -346,6 +348,7 @@ describe("Sync Manager Settings Integration Properties", () => {
             syncSettings: false,
             defaultPaymentMethod: undefined,
             enableMathExpressions: true,
+            useMlOnlyForSmsImports: false,
             autoSyncEnabled: false,
             autoSyncTiming: "on_launch",
             categories: DEFAULT_CATEGORIES,
@@ -353,7 +356,7 @@ describe("Sync Manager Settings Integration Properties", () => {
             paymentInstruments: [],
             paymentInstrumentsMigrationVersion: 0,
             updatedAt: new Date().toISOString(),
-            version: 7,
+            version: 8,
             defaultCurrency: "INR",
             language: "en-IN",
           }
@@ -383,6 +386,20 @@ describe("Sync Manager Settings Integration Properties", () => {
    * **Validates: Requirements 4.1**
    */
   describe("Task 12.1: Settings upload includes new fields", () => {
+    it("should include useMlOnlyForSmsImports in serialized settings JSON", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (settings) => {
+          const json = JSON.stringify(settings, null, 2)
+          const parsed = JSON.parse(json)
+
+          expect(parsed).toHaveProperty("useMlOnlyForSmsImports")
+          expect(typeof parsed.useMlOnlyForSmsImports).toBe("boolean")
+          expect(parsed.useMlOnlyForSmsImports).toBe(settings.useMlOnlyForSmsImports)
+        }),
+        { numRuns: 100 }
+      )
+    })
+
     it("should include autoSyncEnabled in serialized settings JSON", () => {
       fc.assert(
         fc.property(fullSettingsArbitrary, (settings) => {
@@ -466,6 +483,20 @@ describe("Sync Manager Settings Integration Properties", () => {
    * **Validates: Requirements 7.1, 7.2**
    */
   describe("Task 12.2: Settings download applies new fields", () => {
+    it("should apply downloaded useMlOnlyForSmsImports value", () => {
+      fc.assert(
+        fc.property(fullSettingsArbitrary, (remoteSettings) => {
+          const json = JSON.stringify(remoteSettings)
+          const downloaded = JSON.parse(json) as AppSettings
+
+          expect(downloaded.useMlOnlyForSmsImports).toBe(
+            remoteSettings.useMlOnlyForSmsImports
+          )
+        }),
+        { numRuns: 100 }
+      )
+    })
+
     it("should apply downloaded autoSyncEnabled value", () => {
       fc.assert(
         fc.property(fullSettingsArbitrary, (remoteSettings) => {
@@ -546,6 +577,9 @@ describe("Sync Manager Settings Integration Properties", () => {
           expect(downloaded.defaultPaymentMethod).toBe(
             remoteSettings.defaultPaymentMethod
           )
+          expect(downloaded.useMlOnlyForSmsImports).toBe(
+            remoteSettings.useMlOnlyForSmsImports
+          )
           expect(downloaded.autoSyncEnabled).toBe(remoteSettings.autoSyncEnabled)
           expect(downloaded.autoSyncTiming).toBe(remoteSettings.autoSyncTiming)
           expect(downloaded.updatedAt).toBe(remoteSettings.updatedAt)
@@ -577,6 +611,9 @@ describe("Sync Manager Settings Integration Properties", () => {
           expect(deserialized.theme).toBe(settings.theme)
           expect(deserialized.syncSettings).toBe(settings.syncSettings)
           expect(deserialized.defaultPaymentMethod).toBe(settings.defaultPaymentMethod)
+          expect(deserialized.useMlOnlyForSmsImports).toBe(
+            settings.useMlOnlyForSmsImports
+          )
           expect(deserialized.autoSyncEnabled).toBe(settings.autoSyncEnabled)
           expect(deserialized.autoSyncTiming).toBe(settings.autoSyncTiming)
           expect(deserialized.updatedAt).toBe(settings.updatedAt)

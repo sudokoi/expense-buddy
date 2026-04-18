@@ -48,6 +48,7 @@
     "ml:train:seed-litert-attention": "uv run --directory tools/sms-ml --project . python scripts/train_seed_litert_attention.py",
     "ml:benchmark:litert-attention": "uv run --directory tools/sms-ml --project . python scripts/benchmark_seed_litert_attention.py",
     "ml:export:seed-litert:android": "uv run --directory tools/sms-ml --project . python scripts/export_seed_litert_android.py",
+    "ml:export:best-android": "uv run --directory tools/sms-ml --project . python scripts/export_seed_litert_android.py",
     "ml:lint": "uv run --directory tools/sms-ml --project . ruff check .",
     "ml:format": "uv run --directory tools/sms-ml --project . ruff format .",
     "ml:format:check": "uv run --directory tools/sms-ml --project . ruff format --check .",

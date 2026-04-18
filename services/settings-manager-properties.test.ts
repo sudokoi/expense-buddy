@@ -96,6 +96,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   defaultCurrency: fc.constant("INR"),
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
   enableMathExpressions: fc.boolean(),
+  useMlOnlyForSmsImports: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -105,7 +106,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.integer({ min: 7, max: 10 }),
+  version: fc.integer({ min: 8, max: 10 }),
 })
 
 // Operation types for change tracking simulation
@@ -375,6 +376,27 @@ describe("Settings Manager Properties", () => {
             return hash1 === hash2
           }
         ),
+        { numRuns: 100 }
+      )
+    })
+
+    it("should produce different hashes when useMlOnlyForSmsImports differs", () => {
+      fc.assert(
+        fc.property(appSettingsArb, (baseSettings) => {
+          const settings1: AppSettings = {
+            ...baseSettings,
+            useMlOnlyForSmsImports: true,
+          }
+          const settings2: AppSettings = {
+            ...baseSettings,
+            useMlOnlyForSmsImports: false,
+          }
+
+          const hash1 = computeSettingsHash(settings1)
+          const hash2 = computeSettingsHash(settings2)
+
+          return hash1 !== hash2
+        }),
         { numRuns: 100 }
       )
     })
