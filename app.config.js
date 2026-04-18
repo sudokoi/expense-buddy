@@ -132,6 +132,7 @@ export default {
     name: "Expense Buddy",
     slug: "expense-buddy",
     version,
+    newArchEnabled: true,
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "myapp",
@@ -160,22 +161,7 @@ export default {
       output: "static",
       favicon: "./assets/images/favicon.png",
     },
-    plugins: [
-      "expo-router",
-      "expo-font",
-      [
-        "expo-build-properties",
-        {
-          ios: {
-            newArchEnabled: true,
-          },
-          android: {
-            newArchEnabled: true,
-          },
-        },
-      ],
-      "expo-web-browser",
-    ],
+    plugins: ["expo-router", "expo-font", "expo-web-browser"],
     experiments: {
       typedRoutes: true,
     },
