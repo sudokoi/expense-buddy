@@ -89,7 +89,10 @@ export async function categorizeSmsImportMessages(
 
   try {
     return await installedModule.categorizeMessagesAsync(requests)
-  } catch {
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("[android-sms-module] categorizeMessagesAsync failed:", error)
+    }
     return []
   }
 }

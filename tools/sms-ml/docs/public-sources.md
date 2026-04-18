@@ -14,7 +14,7 @@ This note tracks public-source candidates reviewed for expanding the SMS ML seed
 
 ### Direct or near-direct SMS sources
 
-- Bank Transactions SMS datasetss
+- Bank Transactions SMS datasets
   - URL: https://www.kaggle.com/datasets/engreemali/bank-transactions-sms-datasetss
   - Contains: public bank transaction SMS records in spreadsheet form
   - Reuse status: unsuitable for automatic intake until rights are reviewed; the page indicates commercial use is restricted

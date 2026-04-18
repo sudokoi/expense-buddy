@@ -45,6 +45,7 @@ class SmsCategoryLiteRtClassifier private constructor(
 ) {
   private val digest = MessageDigest.getInstance("SHA-256")
   private val lock = Any()
+  private val tokenPattern = Regex("[a-z0-9]{${metadata.minTokenLength},${metadata.maxTokenLength}}")
 
   fun classifyBatch(
     requests: List<SmsCategoryPredictionRequest>,
@@ -98,7 +99,6 @@ class SmsCategoryLiteRtClassifier private constructor(
   }
 
   private fun tokenizeText(text: String): List<String> {
-    val tokenPattern = Regex("[a-z0-9]{${metadata.minTokenLength},${metadata.maxTokenLength}}")
     return tokenPattern.findAll(text)
       .map { it.value }
       .take(metadata.maxTokens)

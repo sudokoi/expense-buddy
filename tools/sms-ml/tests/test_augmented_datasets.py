@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from sms_ml.augmented_datasets import (
     AUGMENTED_DATASET_NAME,
     assign_split_metadata,
+    build_augmented_output_paths,
     dedupe_records,
     split_augmented_records,
+    write_seed_augmented_dataset,
 )
-from sms_ml.datasets import NormalizedSmsRecord
+from sms_ml.datasets import NormalizedSmsRecord, write_jsonl
 
 
 def create_record(record_id: str, sms_text: str) -> NormalizedSmsRecord:
@@ -71,3 +75,44 @@ def test_assign_split_metadata_updates_split_fields() -> None:
         normalized[0].source_path
         == f"normalized/{AUGMENTED_DATASET_NAME}/val.jsonl"
     )
+
+
+def test_write_seed_augmented_dataset_respects_normalized_dir(tmp_path: Path) -> None:
+    normalized_dir = tmp_path / "normalized"
+    additional_dir = tmp_path / "additional"
+    normalized_dir.mkdir(parents=True, exist_ok=True)
+    additional_dir.mkdir(parents=True, exist_ok=True)
+
+    seed_train_records = [
+        create_record(f"seed-train-{index}", f"Train merchant {index}")
+        for index in range(16)
+    ]
+    seed_val_records = [
+        create_record(f"seed-val-{index}", f"Val merchant {index}")
+        for index in range(16)
+    ]
+    additional_records = [
+        create_record(f"additional-{index}", f"Additional merchant {index}")
+        for index in range(8)
+    ]
+
+    write_jsonl(normalized_dir / "seed-train.jsonl", seed_train_records)
+    write_jsonl(normalized_dir / "seed-val.jsonl", seed_val_records)
+    write_jsonl(additional_dir / "extra.jsonl", additional_records)
+
+    train_path, val_path, summary_path = write_seed_augmented_dataset(
+        train_percent=90,
+        normalized_dir=normalized_dir,
+        additional_dir=additional_dir,
+    )
+
+    expected_train_path, expected_val_path, expected_summary_path = (
+        build_augmented_output_paths(normalized_dir)
+    )
+
+    assert train_path == expected_train_path
+    assert val_path == expected_val_path
+    assert summary_path == expected_summary_path
+    assert train_path.exists()
+    assert val_path.exists()
+    assert summary_path.exists()

@@ -1,6 +1,6 @@
 # Google Play Store Listing
 
-Last updated: 2026-04-14
+Last updated: 2026-04-18
 
 Use this file as the source of truth for Google Play Store presence updates.
 
@@ -10,74 +10,65 @@ Expense Buddy
 
 ## Short description
 
-Private expense tracker with SMS import review, charts, and secure sync
+Private expense tracker with review-first SMS import and GitHub sync
 
 ## Full description
 
-Expense Buddy is a privacy-first expense tracker for Android built around one core idea: make expense tracking feel automatic.
+Expense Buddy helps you track spending faster without giving up privacy or control.
 
-The app is designed to turn transaction SMS into expenses with as little manual work as possible. Today, Expense Buddy scans recent transaction messages on-device, prepares likely expenses for review, and lets you confirm the final result before saving.
+You can scan recent transaction SMS messages, turn them into draft expenses, and review everything before saving. The app extracts likely expense details on-device, suggests categories locally, and lets you accept, edit, reject, or dismiss each item. Nothing is imported automatically.
 
-This review-first flow is the current step toward a more automatic future. The product direction is clear: smarter auto-import, less manual cleanup, and on-device intelligence that helps categorize expenses without sending your personal data to a server.
+Why people use Expense Buddy:
 
-Why Expense Buddy:
-
-- SMS-driven expense import as the core app experience
-- Review-first auto-import for recent Android transaction messages
+- Review-first SMS import for recent Android transaction messages
 - Private local storage by default
-- Optional GitHub sync for backup across devices
-- Charts and filters to understand spending trends
+- Charts and filters for spending insights
 - Custom categories, payment methods, and saved instruments
+- Optional GitHub sync for backup across your own devices
 - No ads, no analytics, no forced cloud account
 
-SMS import and review:
+What makes it different:
 
-- Scan recent transaction SMS on Android when you choose
+- SMS scanning happens only when you choose
 - SMS permission is requested only when you start a scan
-- Raw SMS content stays on your device for review
-- Expense Buddy detects likely expenses from recent messages and stages them for confirmation
-- Review, edit, accept, reject, or dismiss detected transactions
-- Only confirmed expenses are added to your expense history
-- Duplicate protection and recent-scan limits help keep imports manageable
+- Raw SMS content stays on your device
+- Only confirmed expenses are added to your history
+- Duplicate protection helps keep imports manageable
 
-Built for smarter import over time:
+Smarter suggestions, still under your control:
 
-- Current release: deterministic on-device parsing with review before save
-- Planned direction: stronger auto-import flows with less manual intervention
-- Planned direction: on-device ML assistance for basic expense categorization
-- Privacy goal: keep categorization and import intelligence on-device
+- Expense extraction stays deterministic and on-device
+- Category suggestions can use a bundled on-device LiteRT model
+- Low-confidence predictions fall back to local rule-based suggestions
+- Review remains the final gate before anything is saved
 
-Expense tracking:
+Track expenses your way:
 
 - Quick add, edit, and delete flows
-- Custom categories with colors and icons
-- Payment method tracking with saved cards and UPI instruments
+- Optional math expression entry for faster manual input
 - Notes, dates, and searchable history
-- Day-wise organization for clean records
+- Day-wise records for clean organization
+- Multi-currency analytics support
 
-Insights and analysis:
+See where your money goes:
 
 - Daily spending charts
-- Category breakdowns
-- Payment method analysis
-- Filters for time range, category, method, and instrument
+- Category and payment-method breakdowns
+- Filters for time range, amount, category, method, and instrument
 
 Optional GitHub sync:
 
 - Sync confirmed expense records to a private repository you own
-- Sign in with GitHub and choose the repository and branch
-- Merge-based sync flow designed to avoid accidental data loss
+- Choose your repository and branch
 - Works offline first and syncs when you decide
-
-Privacy first:
-
-- No analytics or advertising SDKs
-- No backend required to use the app
-- Expense data stays on-device unless you enable sync
 - Raw SMS data and review metadata are not uploaded to GitHub
-- Only expenses you confirm can become part of your synced records
 
-Open source and free:
+Private by design:
+
+- No backend required to use the app
+- No analytics or advertising SDKs
+- Expense data stays on-device unless you enable sync
+- Only expenses you confirm become part of your synced records
 
 Expense Buddy is free and open source. You can report issues from the app's Settings screen or through the GitHub repository.
 

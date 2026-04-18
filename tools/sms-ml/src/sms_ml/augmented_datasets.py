@@ -20,6 +20,16 @@ AUGMENTED_VAL_PATH = NORMALIZED_DATA_DIR / "seed-augmented-val.jsonl"
 AUGMENTED_SUMMARY_PATH = NORMALIZED_DATA_DIR / "seed-augmented-summary.json"
 
 
+def build_augmented_output_paths(
+    normalized_dir: Path = NORMALIZED_DATA_DIR,
+) -> tuple[Path, Path, Path]:
+    return (
+        normalized_dir / AUGMENTED_TRAIN_PATH.name,
+        normalized_dir / AUGMENTED_VAL_PATH.name,
+        normalized_dir / AUGMENTED_SUMMARY_PATH.name,
+    )
+
+
 def list_additional_jsonl_files(
     additional_dir: Path = ADDITIONAL_DATA_DIR,
 ) -> list[Path]:
@@ -148,7 +158,8 @@ def write_seed_augmented_dataset(
         additional_dir=additional_dir,
     )
     normalized_dir.mkdir(parents=True, exist_ok=True)
-    write_jsonl(AUGMENTED_TRAIN_PATH, train_records)
-    write_jsonl(AUGMENTED_VAL_PATH, val_records)
-    AUGMENTED_SUMMARY_PATH.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    return AUGMENTED_TRAIN_PATH, AUGMENTED_VAL_PATH, AUGMENTED_SUMMARY_PATH
+    train_path, val_path, summary_path = build_augmented_output_paths(normalized_dir)
+    write_jsonl(train_path, train_records)
+    write_jsonl(val_path, val_records)
+    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return train_path, val_path, summary_path
