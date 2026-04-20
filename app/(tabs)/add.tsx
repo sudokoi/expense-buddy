@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { YStack, XStack, Text, Input, Button, TextArea, H4, Label } from "tamagui"
+import { YStack, XStack, Text, Input, Button, TextArea, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import {
@@ -293,8 +293,6 @@ export default function AddExpenseScreen() {
         bottomOffset={50}
       >
         <YStack gap="$3" style={layoutStyles.container}>
-          <H4 style={layoutStyles.header}>{t("add.title")}</H4>
-
           {Platform.OS === "android" ? (
             <Button
               size="$4"

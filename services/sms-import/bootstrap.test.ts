@@ -182,7 +182,7 @@ describe("scanSmsImportReviewQueue", () => {
     })
     const duplicateMessage = createMessage({
       messageId: "sms-2",
-      receivedAt: "2026-04-11T10:15:45.000Z",
+      receivedAt: "2026-04-11T10:15:05.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
@@ -196,6 +196,32 @@ describe("scanSmsImportReviewQueue", () => {
 
     expect(result.createdItems).toHaveLength(1)
     expect(result.createdItems[0]?.sourceMessage.messageId).toBe("sms-1")
+  })
+
+  it("keeps distinct messages that share the same text within the same minute", async () => {
+    const firstMessage = createMessage({
+      messageId: "sms-1",
+      receivedAt: "2026-04-11T10:15:05.000Z",
+    })
+    const secondMessage = createMessage({
+      messageId: "sms-2",
+      receivedAt: "2026-04-11T10:15:45.000Z",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.createdItems).toHaveLength(2)
+    expect(result.createdItems.map((item) => item.sourceMessage.messageId)).toEqual([
+      "sms-1",
+      "sms-2",
+    ])
   })
 
   it("prefers the native ML category when the prediction clears the confidence gate", async () => {

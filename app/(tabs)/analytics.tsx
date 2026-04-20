@@ -1,5 +1,5 @@
 import { useState, useCallback, memo, useMemo, useEffect } from "react"
-import { YStack, H4, XStack, Text, Button, ScrollView } from "tamagui"
+import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import {
   useAnalyticsBase,
@@ -95,7 +95,6 @@ const Header = memo(function Header() {
   return (
     <XStack style={styles.headerRow}>
       <YStack>
-        <H4>{t("analytics.title")}</H4>
         <Text color="$color" opacity={0.6}>
           {t("analytics.subtitle")}
         </Text>

@@ -6,6 +6,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 interface ScreenContainerProps {
   children?: ReactNode
   style?: StyleProp<ViewStyle>
+  contentContainerStyle?: React.ComponentProps<
+    typeof ScrollView
+  >["contentContainerStyle"]
 }
 
 /**
@@ -16,6 +19,7 @@ interface ScreenContainerProps {
 export const ScreenContainer = memo(function ScreenContainer({
   children,
   style,
+  contentContainerStyle,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
 
@@ -23,11 +27,12 @@ export const ScreenContainer = memo(function ScreenContainer({
     <ScrollView
       flex={1}
       bg="$background"
-      contentContainerStyle={
+      contentContainerStyle={[
         { padding: 16, paddingBottom: insets.bottom } as React.ComponentProps<
           typeof ScrollView
-        >["contentContainerStyle"]
-      }
+        >["contentContainerStyle"],
+        contentContainerStyle,
+      ]}
       style={style}
       keyboardShouldPersistTaps="handled"
     >

@@ -217,9 +217,6 @@ export default function DashboardScreen() {
       {/* Header */}
       <XStack style={layoutStyles.headerRow}>
         <YStack>
-          <H4 numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-            {t("dashboard.title")}
-          </H4>
           <Text color="$color" opacity={0.6}>
             {t("dashboard.welcome")}
           </Text>

@@ -26,7 +26,7 @@ describe("createSmsImportFingerprint", () => {
     expect(first).toBe(second)
   })
 
-  it("uses minute buckets so messages in the same minute dedupe together", () => {
+  it("treats messages with different timestamps as distinct candidates", () => {
     const first = createSmsImportFingerprint(
       createMessage({ receivedAt: "2026-04-11T10:15:01.000Z" })
     )
@@ -34,17 +34,17 @@ describe("createSmsImportFingerprint", () => {
       createMessage({ receivedAt: "2026-04-11T10:15:59.000Z" })
     )
 
-    expect(first).toBe(second)
+    expect(first).not.toBe(second)
   })
 
-  it("changes when the message falls in a different minute bucket", () => {
+  it("keeps exact duplicates stable", () => {
     const first = createSmsImportFingerprint(
       createMessage({ receivedAt: "2026-04-11T10:15:59.000Z" })
     )
     const second = createSmsImportFingerprint(
-      createMessage({ receivedAt: "2026-04-11T10:16:00.000Z" })
+      createMessage({ receivedAt: "2026-04-11T10:15:59.000Z" })
     )
 
-    expect(first).not.toBe(second)
+    expect(first).toBe(second)
   })
 })

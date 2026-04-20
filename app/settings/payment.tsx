@@ -145,7 +145,7 @@ export default function PaymentSettingsScreen() {
     <>
       <Stack.Screen options={{ title: t("settings.payment.manageTitle") }} />
 
-      <ScreenContainer>
+      <ScreenContainer contentContainerStyle={{ paddingTop: 8 }}>
         <YStack gap="$4" style={layoutStyles.container}>
           <SettingsSection
             title={t("settings.sections.payment")}

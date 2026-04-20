@@ -68,6 +68,28 @@ describe("parseSmsImportCandidate", () => {
     expect(candidate).toBeNull()
   })
 
+  it.each([
+    "OTP 482911 for INR 499 transaction at Amazon. Do not share with anyone.",
+    "Your one-time password for UPI txn of Rs. 250 is 834221. Valid for 10 minutes.",
+    "Verification code 991822 for credit card purchase of INR 820 at Uber. Never share this code.",
+  ])("ignores OTP and authentication messages: %s", (body) => {
+    const candidate = parseSmsImportCandidate(createMessage(body))
+
+    expect(candidate).toBeNull()
+  })
+
+  it.each([
+    "Your available balance is INR 25,430.55 as of 11-04-2026.",
+    "Credit card statement generated. Total due INR 8,220. Minimum due INR 410 by 18-04-2026.",
+    "Card ending 1234 used for e-commerce token registration. If not you, call bank immediately.",
+    "INR 499 transaction at Amazon requires authentication. Approve in app to complete your transaction.",
+    "UPI txn of Rs. 250 failed due to incorrect UPI PIN. No amount debited.",
+  ])("ignores non-expense bank alerts: %s", (body) => {
+    const candidate = parseSmsImportCandidate(createMessage(body))
+
+    expect(candidate).toBeNull()
+  })
+
   it("ignores non-empty messages without a supported amount", () => {
     const candidate = parseSmsImportCandidate(
       createMessage("Your debit card transaction at Swiggy was successful")

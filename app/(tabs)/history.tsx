@@ -3,7 +3,6 @@ import {
   YStack,
   Text,
   XStack,
-  H4,
   Button,
   H6,
   Input,
@@ -842,8 +841,6 @@ export default function HistoryScreen() {
   if (filteredExpenses.length === 0 && hasActive) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
-        <H4 style={layoutStyles.header}>{t("history.title")}</H4>
-
         {/* Filter Button */}
         <XStack style={layoutStyles.filterButtonContainer}>
           <Button
@@ -908,8 +905,6 @@ export default function HistoryScreen() {
 
   return (
     <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
-      <H4 style={layoutStyles.header}>{t("history.title")}</H4>
-
       {/* Filter Button */}
       <XStack style={layoutStyles.filterButtonContainer}>
         <Button
