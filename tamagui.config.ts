@@ -1,41 +1,70 @@
 import { defaultConfig } from "@tamagui/config/v4"
 import { createTamagui, Variable } from "tamagui"
-import { NEUTRAL_COLORS } from "./constants/theme-colors"
+import { NEUTRAL_COLORS, SEMANTIC_COLORS, THEME_COLORS } from "./constants/theme-colors"
+
+const defaultTokens = defaultConfig.tokens as typeof defaultConfig.tokens & {
+  color?: Record<string, string>
+  space?: Record<string, number>
+  radius?: Record<string, number>
+  zIndex?: Record<string, number>
+}
 
 // Extend default config with custom semantic color tokens and kawaii themes
 export const config = createTamagui({
   ...defaultConfig,
   tokens: {
     ...defaultConfig.tokens,
+    space: {
+      ...defaultTokens.space,
+      micro: 4,
+      control: 8,
+      section: 12,
+      gutter: 16,
+      block: 20,
+      empty: 40,
+    },
+    radius: {
+      ...defaultTokens.radius,
+      control: 8,
+      chip: 12,
+      surface: 16,
+      round: 999,
+    },
+    zIndex: {
+      ...defaultTokens.zIndex,
+      banner: 9998,
+      toast: 9999,
+      floating: 10000,
+    },
     color: {
       // Preserve any existing color tokens from default config
-      ...(defaultConfig.tokens as { color?: Record<string, string> }).color,
+      ...defaultTokens.color,
       // Kawaii primary colors
-      kawaiiPink: "#FFB6C1",
-      kawaiiPinkLight: "#FFD1DC",
-      kawaiiPinkDark: "#FF91A4",
-      kawaiiLavender: "#E6E6FA",
-      kawaiiMint: "#98FB98",
+      kawaiiPink: THEME_COLORS.kawaiiPink,
+      kawaiiPinkLight: THEME_COLORS.kawaiiPinkLight,
+      kawaiiPinkDark: THEME_COLORS.kawaiiPinkDark,
+      kawaiiLavender: THEME_COLORS.kawaiiLavender,
+      kawaiiMint: THEME_COLORS.kawaiiMint,
       // Kawaii background colors
-      kawaiiCream: "#FFF8F0",
-      kawaiiSoftWhite: "#FFFAF5",
-      kawaiiDarkPurple: "#1A1625",
-      kawaiiDarkCard: "#252033",
+      kawaiiCream: THEME_COLORS.kawaiiCream,
+      kawaiiSoftWhite: THEME_COLORS.kawaiiSoftWhite,
+      kawaiiDarkPurple: THEME_COLORS.kawaiiDarkPurple,
+      kawaiiDarkCard: THEME_COLORS.kawaiiDarkCard,
       // Kawaii text colors
-      kawaiiSoftDark: "#4A4458",
-      kawaiiMutedPurple: "#8B7B96",
-      kawaiiSoftLight: "#F0E6F6",
-      kawaiiMutedLavender: "#B8A9C9",
+      kawaiiSoftDark: THEME_COLORS.kawaiiSoftDark,
+      kawaiiMutedPurple: THEME_COLORS.kawaiiMutedPurple,
+      kawaiiSoftLight: THEME_COLORS.kawaiiSoftLight,
+      kawaiiMutedLavender: THEME_COLORS.kawaiiMutedLavender,
       // Semantic expense colors (kawaii versions)
-      expenseRed: "#FF8A8A",
+      expenseRed: SEMANTIC_COLORS.error,
       expenseRedLight: "#FFD4D4",
-      incomeGreen: "#7FDBAA",
+      incomeGreen: SEMANTIC_COLORS.success,
       incomeGreenLight: "#C8F7DC",
       // Status colors (kawaii versions)
-      success: "#7FDBAA",
-      error: "#FF8A8A",
-      warning: "#FFD4A0",
-      info: "#87CEEB",
+      success: SEMANTIC_COLORS.success,
+      error: SEMANTIC_COLORS.error,
+      warning: SEMANTIC_COLORS.warning,
+      info: SEMANTIC_COLORS.info,
     },
   },
   themes: {
@@ -43,36 +72,36 @@ export const config = createTamagui({
     // Override light theme with kawaii colors
     light: {
       ...defaultConfig.themes.light,
-      background: "#FFF8F0", // Kawaii cream
-      backgroundHover: "#FFFAF5",
+      background: THEME_COLORS.kawaiiCream,
+      backgroundHover: THEME_COLORS.kawaiiSoftWhite,
       backgroundPress: "#FFE8E0",
-      backgroundFocus: "#FFFAF5",
-      color: "#4A4458", // Soft dark (not pure black)
+      backgroundFocus: THEME_COLORS.kawaiiSoftWhite,
+      color: THEME_COLORS.kawaiiSoftDark,
       colorHover: "#3A3448",
       colorPress: "#2A2438",
-      colorFocus: "#4A4458",
-      borderColor: "#E6E6FA", // Lavender border
+      colorFocus: THEME_COLORS.kawaiiSoftDark,
+      borderColor: THEME_COLORS.kawaiiLavender,
       borderColorHover: "#DDA0DD",
-      borderColorFocus: "#FFB6C1",
+      borderColorFocus: THEME_COLORS.kawaiiPink,
       borderColorPress: "#DDA0DD",
-      placeholderColor: "#8B7B96", // Muted purple
+      placeholderColor: THEME_COLORS.kawaiiMutedPurple,
     },
     // Override dark theme with kawaii colors
     dark: {
       ...defaultConfig.themes.dark,
-      background: "#1A1625", // Dark purple
-      backgroundHover: "#252033",
+      background: THEME_COLORS.kawaiiDarkPurple,
+      backgroundHover: THEME_COLORS.kawaiiDarkCard,
       backgroundPress: "#302840",
-      backgroundFocus: "#252033",
-      color: "#F0E6F6", // Soft light (not pure white)
+      backgroundFocus: THEME_COLORS.kawaiiDarkCard,
+      color: THEME_COLORS.kawaiiSoftLight,
       colorHover: "#FFFFFF",
       colorPress: "#E0D6E6",
-      colorFocus: "#F0E6F6",
+      colorFocus: THEME_COLORS.kawaiiSoftLight,
       borderColor: "#3A3050", // Dark lavender border
       borderColorHover: "#9370DB",
       borderColorFocus: "#FF69B4",
       borderColorPress: "#9370DB",
-      placeholderColor: "#B8A9C9", // Muted lavender
+      placeholderColor: THEME_COLORS.kawaiiMutedLavender,
     },
   },
 })

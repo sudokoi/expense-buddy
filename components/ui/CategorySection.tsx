@@ -5,6 +5,7 @@ import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -12,23 +13,23 @@ const layoutStyles = {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
+    padding: UI_SPACE.section,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   accordionContent: {
-    padding: 8,
-    paddingTop: 12,
+    padding: UI_SPACE.control,
+    paddingTop: UI_SPACE.section,
   } as ViewStyle,
   categoryRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: UI_SPACE.micro,
   } as ViewStyle,
   reorderButtons: {
     flexDirection: "column",
@@ -38,11 +39,11 @@ const layoutStyles = {
     width: 24, // Fix width for alignment
   } as ViewStyle,
   addButtonContainer: {
-    marginTop: 16,
+    marginTop: UI_SPACE.gutter,
   } as ViewStyle,
   otherCategoryContainer: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: UI_SPACE.control,
+    paddingTop: UI_SPACE.control,
     borderTopWidth: 1,
   } as ViewStyle,
 }

@@ -13,44 +13,45 @@ import { getColorValue } from "../../tamagui.config"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
   buttonRow: {
     justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 8,
+    gap: UI_SPACE.section,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
   iconPickerTrigger: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    borderRadius: 8,
+    gap: UI_SPACE.section,
+    padding: UI_SPACE.section,
+    borderRadius: UI_RADIUS.control,
     borderWidth: 2,
   } as ViewStyle,
   iconPreview: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
   } as ViewStyle,
   colorPreview: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    borderRadius: 8,
+    gap: UI_SPACE.section,
+    padding: UI_SPACE.section,
+    borderRadius: UI_RADIUS.control,
     borderWidth: 2,
   } as ViewStyle,
   colorSwatch: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
   sheetFrame: {
-    paddingHorizontal: 16,
+    paddingHorizontal: UI_SPACE.gutter,
   } as ViewStyle,
 }
 
@@ -207,7 +208,7 @@ export function CategoryFormModal({
   const frameStyle = useMemo(
     () => ({
       ...layoutStyles.sheetFrame,
-      paddingBottom: Math.max(insets.bottom, 16),
+      paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
     }),
     [insets.bottom]
   )

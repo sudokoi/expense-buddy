@@ -1,7 +1,9 @@
 import { View as RNView, ViewStyle, Pressable } from "react-native"
 import { Text, Button } from "tamagui"
 import { Download, X } from "@tamagui/lucide-icons"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
+import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../../constants/ui-tokens"
 
 interface UpdateBannerProps {
   /** The version number to display */
@@ -24,20 +26,21 @@ interface UpdateBannerProps {
  * at the top of the screen without blocking interaction.
  */
 export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps) {
+  const insets = useSafeAreaInsets()
   const infoStyles = NOTIFICATION_STYLE_TOKENS.info
 
   const containerStyle: ViewStyle = {
     position: "absolute",
-    top: 50,
-    left: 16,
-    right: 16,
-    zIndex: 9998, // Below NotificationStack (9999)
+    top: insets.top + UI_SPACE.gutter,
+    left: UI_SPACE.gutter,
+    right: UI_SPACE.gutter,
+    zIndex: UI_Z_INDEX.banner,
     backgroundColor: SEMANTIC_COLORS.info,
-    borderRadius: 16,
+    borderRadius: UI_RADIUS.surface,
     borderWidth: 2,
     borderColor: infoStyles.borderColor,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: UI_SPACE.section,
+    paddingHorizontal: UI_SPACE.gutter,
     shadowColor: SEMANTIC_COLORS.info,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -68,7 +71,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
   const actionsStyle: ViewStyle = {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: UI_SPACE.control,
   }
 
   const textColor = infoStyles.textColor
@@ -98,7 +101,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
             bg={infoStyles.actionBg}
             borderWidth={1}
             borderColor={infoStyles.actionBorderColor}
-            style={{ borderRadius: 999 }}
+            style={{ borderRadius: UI_RADIUS.round }}
             pressStyle={{ opacity: 0.8 }}
             onPress={onUpdate}
             testID="update-banner-update-button"
@@ -110,11 +113,11 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
 
           <Pressable
             onPress={onDismiss}
-            hitSlop={8}
+            hitSlop={UI_SPACE.control}
             testID="update-banner-dismiss-button"
             style={({ pressed }) => ({
               opacity: pressed ? 0.6 : 1,
-              padding: 4,
+              padding: UI_SPACE.micro,
             })}
           >
             <X size={18} color={textColor as `#${string}`} />

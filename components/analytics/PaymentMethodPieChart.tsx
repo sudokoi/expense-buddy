@@ -7,6 +7,7 @@ import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { PaymentMethodType } from "../../types/expense"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
@@ -22,7 +23,7 @@ const styles = {
   } as ViewStyle,
   chartContainer: {
     alignItems: "center",
-    gap: 16,
+    gap: UI_SPACE.gutter,
   } as ViewStyle,
   centerLabel: {
     alignItems: "center",
@@ -30,21 +31,21 @@ const styles = {
   legendRow: {
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 8,
-    borderRadius: 4,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
   legendLeft: {
     alignItems: "center",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   legendRight: {
-    gap: 8,
+    gap: UI_SPACE.control,
     alignItems: "center",
   } as ViewStyle,
   colorDot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
 

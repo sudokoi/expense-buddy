@@ -8,6 +8,7 @@ import { ViewStyle, TextStyle } from "react-native"
 import { AnalyticsStatistics } from "../../utils/analytics-calculations"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -16,14 +17,14 @@ interface StatisticsCardsProps {
 
 const styles = {
   container: {
-    gap: 12,
-    marginBottom: 16,
+    gap: UI_SPACE.section,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   row: {
-    gap: 12,
+    gap: UI_SPACE.section,
   } as ViewStyle,
   cardValue: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as TextStyle,
 }
 

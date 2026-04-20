@@ -1,6 +1,7 @@
 import { YStack } from "tamagui"
 import { ViewStyle, StyleProp } from "react-native"
 import { ReactNode } from "react"
+import { UI_RADIUS } from "../../constants/ui-tokens"
 
 type IconSize = "sm" | "md" | "lg"
 
@@ -15,21 +16,21 @@ const sizeStyles: Record<IconSize, ViewStyle> = {
   sm: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: UI_RADIUS.control,
     alignItems: "center",
     justifyContent: "center",
   },
   md: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
   },
   lg: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: UI_RADIUS.surface,
     alignItems: "center",
     justifyContent: "center",
   },

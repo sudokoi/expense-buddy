@@ -19,6 +19,7 @@ import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -32,19 +33,19 @@ import { AppSheetScaffold } from "./AppSheetScaffold"
 const layoutStyles = {
   categoryRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   paymentMethodRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   buttonRow: {
     justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 8,
+    gap: UI_SPACE.section,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
   identifierContainer: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
 }
 

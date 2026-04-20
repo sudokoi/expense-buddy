@@ -5,6 +5,7 @@ import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -15,10 +16,10 @@ interface PaymentMethodFilterProps {
 
 const styles = {
   scrollView: {
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   contentContainer: {
-    paddingHorizontal: 4,
+    paddingHorizontal: UI_SPACE.micro,
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",

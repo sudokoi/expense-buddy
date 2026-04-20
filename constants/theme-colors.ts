@@ -3,6 +3,34 @@
  * Single source of truth for all theme-related colors
  */
 
+export const THEME_COLORS = {
+  kawaiiPink: "#FFB6C1",
+  kawaiiPinkLight: "#FFD1DC",
+  kawaiiPinkDark: "#FF91A4",
+  kawaiiLavender: "#E6E6FA",
+  kawaiiMint: "#98FB98",
+  kawaiiCream: "#FFF8F0",
+  kawaiiSoftWhite: "#FFFAF5",
+  kawaiiDarkPurple: "#1A1625",
+  kawaiiDarkCard: "#252033",
+  kawaiiSoftDark: "#4A4458",
+  kawaiiMutedPurple: "#8B7B96",
+  kawaiiSoftLight: "#F0E6F6",
+  kawaiiMutedLavender: "#B8A9C9",
+  successText: "#1A5A3A",
+  errorText: "#8B2A2A",
+  warningText: "#6B4A1A",
+  infoText: "#1A4A6B",
+  mutedBlue: "#4A90B8",
+  strongBlue: "#2E7DAF",
+  mutedGreen: "#5BA87A",
+  strongGreen: "#4A9668",
+  mutedOrange: "#C88A5A",
+  strongOrange: "#B87A4A",
+  mutedPurple: "#9A7AB8",
+  strongPurple: "#8A6AA8",
+} as const
+
 // Status/notification colors (kawaii versions)
 export const SEMANTIC_COLORS = {
   success: "#7FDBAA", // Soft mint green
@@ -16,28 +44,28 @@ export const SEMANTIC_COLORS = {
 export const NOTIFICATION_STYLE_TOKENS = {
   success: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#1A5A3A",
+    textColor: THEME_COLORS.successText,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   error: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#8B2A2A",
+    textColor: THEME_COLORS.errorText,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   warning: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#6B4A1A",
+    textColor: THEME_COLORS.warningText,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   info: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: "#1A4A6B",
+    textColor: THEME_COLORS.infoText,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
@@ -54,11 +82,11 @@ export const FINANCIAL_COLORS = {
 
 // Primary accent colors
 export const ACCENT_COLORS = {
-  primary: "#FFB6C1", // Kawaii pink
-  primaryLight: "#FFD1DC",
-  primaryDark: "#FF91A4",
-  secondary: "#E6E6FA", // Lavender
-  tertiary: "#98FB98", // Mint
+  primary: THEME_COLORS.kawaiiPink,
+  primaryLight: THEME_COLORS.kawaiiPinkLight,
+  primaryDark: THEME_COLORS.kawaiiPinkDark,
+  secondary: THEME_COLORS.kawaiiLavender,
+  tertiary: THEME_COLORS.kawaiiMint,
 } as const
 
 // Chart/graph colors for dark mode compatibility
@@ -82,13 +110,13 @@ export const CHART_COLORS = {
 // Tooltip/overlay colors
 export const OVERLAY_COLORS = {
   light: {
-    background: "#FFFAF5", // Soft white
-    border: "#E6E6FA", // Lavender
+    background: THEME_COLORS.kawaiiSoftWhite,
+    border: THEME_COLORS.kawaiiLavender,
     shadow: "rgba(74, 68, 88, 0.15)",
   },
   dark: {
-    background: "#252033", // Dark card
-    border: "#3A3050", // Dark lavender
+    background: THEME_COLORS.kawaiiDarkCard,
+    border: "#3A3050",
     shadow: "rgba(0, 0, 0, 0.3)",
   },
 } as const
@@ -97,23 +125,23 @@ export const OVERLAY_COLORS = {
 export const CARD_COLORS = {
   blue: {
     bg: "#E6F3FF", // Soft sky blue
-    text: "#4A90B8", // Muted blue
-    accent: "#2E7DAF",
+    text: THEME_COLORS.mutedBlue,
+    accent: THEME_COLORS.strongBlue,
   },
   green: {
     bg: "#E8F8EE", // Soft mint
-    text: "#5BA87A", // Muted green
-    accent: "#4A9668",
+    text: THEME_COLORS.mutedGreen,
+    accent: THEME_COLORS.strongGreen,
   },
   orange: {
     bg: "#FFF3E6", // Soft peach
-    text: "#C88A5A", // Muted orange
-    accent: "#B87A4A",
+    text: THEME_COLORS.mutedOrange,
+    accent: THEME_COLORS.strongOrange,
   },
   purple: {
     bg: "#F3E8FF", // Soft lavender
-    text: "#9A7AB8", // Muted purple
-    accent: "#8A6AA8",
+    text: THEME_COLORS.mutedPurple,
+    accent: THEME_COLORS.strongPurple,
   },
 } as const
 

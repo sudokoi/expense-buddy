@@ -8,6 +8,7 @@ import {
 } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface CurrencySelectorProps {
   value: string
@@ -28,10 +29,10 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    padding: 8,
-    borderRadius: 8,
-    margin: 2,
+    gap: UI_SPACE.micro,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
+    margin: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
 

@@ -19,17 +19,18 @@ import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
 import { CurrencyFilter } from "./CurrencyFilter"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   sheetFrame: {
-    padding: 16,
+    padding: UI_SPACE.gutter,
   } as ViewStyle,
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
   contentContainer: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
 } as const
 

@@ -29,24 +29,25 @@ import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 const styles = {
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 40,
+    padding: UI_SPACE.empty,
   } as ViewStyle,
   emptyText: {
     textAlign: "center",
   } as TextStyle,
   emptySubtext: {
     textAlign: "center",
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as TextStyle,
 }
 
@@ -547,7 +548,7 @@ export default function AnalyticsScreen() {
               bordered
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
-              style={{ borderRadius: 999 }}
+              style={{ borderRadius: UI_RADIUS.round }}
             >
               <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
             </Button>
@@ -601,7 +602,7 @@ export default function AnalyticsScreen() {
                       onPress={() => setSelectedCurrency(c)}
                       themeInverse={effectiveCurrency === c}
                       bordered={effectiveCurrency !== c}
-                      style={{ borderRadius: 999 }}
+                      style={{ borderRadius: UI_RADIUS.round }}
                     >
                       {c} ({getCurrencySymbol(c)})
                     </Button>

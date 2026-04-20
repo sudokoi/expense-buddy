@@ -12,6 +12,7 @@ import {
   PaymentInstrumentSelectionKey,
   makePaymentInstrumentSelectionKey,
 } from "../../utils/analytics-calculations"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface PaymentInstrumentFilterProps {
   instruments: PaymentInstrument[]
@@ -22,10 +23,10 @@ interface PaymentInstrumentFilterProps {
 
 const styles = {
   scrollView: {
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   contentContainer: {
-    paddingHorizontal: 4,
+    paddingHorizontal: UI_SPACE.micro,
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",

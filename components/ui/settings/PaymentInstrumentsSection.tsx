@@ -10,6 +10,7 @@ import {
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -22,19 +23,19 @@ const layoutStyles = {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingHorizontal: UI_SPACE.section,
+    paddingVertical: UI_SPACE.section - 2,
+    borderRadius: UI_RADIUS.chip,
   } as ViewStyle,
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   accordionContent: {
-    padding: 8,
-    paddingTop: 12,
+    padding: UI_SPACE.control,
+    paddingTop: UI_SPACE.section,
   } as ViewStyle,
 }
 
@@ -185,7 +186,7 @@ export function PaymentInstrumentsSection() {
                   gap="$4"
                   bg="$backgroundHover"
                   p="$3"
-                  style={{ borderRadius: 16 }}
+                  style={{ borderRadius: UI_RADIUS.surface }}
                 >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
@@ -207,7 +208,7 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$3"
                             py="$2.5"
-                            style={[layoutStyles.row, { borderRadius: 16 }]}
+                            style={[layoutStyles.row, { borderRadius: UI_RADIUS.surface }]}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

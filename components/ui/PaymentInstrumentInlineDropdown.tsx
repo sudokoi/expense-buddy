@@ -17,6 +17,7 @@ import {
 } from "../../services/payment-instruments"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { getColorValue } from "../../tamagui.config"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Only use style prop for layout properties that Tamagui View doesn't support directly
 const styles = {
@@ -27,14 +28,14 @@ const styles = {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+    paddingVertical: UI_SPACE.section,
+    paddingHorizontal: UI_SPACE.section,
+    borderRadius: UI_RADIUS.chip,
   } as ViewStyle,
   rowLabel: {
     flex: 1,
     flexShrink: 1,
-    paddingRight: 12,
+    paddingRight: UI_SPACE.section,
     textAlign: "left",
   } as TextStyle,
 } as const
@@ -386,7 +387,7 @@ export function PaymentInstrumentInlineDropdown({
           gap="$2"
           borderWidth={1}
           borderColor="$borderColor"
-          style={{ padding: 8, borderRadius: 12 }}
+          style={{ padding: UI_SPACE.control, borderRadius: UI_RADIUS.chip }}
         >
           <YStack gap="$1">
             <Label color="$color" opacity={0.8}>

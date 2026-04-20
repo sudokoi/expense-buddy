@@ -18,6 +18,7 @@ import {
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
 import type { PaymentMethodType } from "../../types/expense"
+import { UI_RADIUS } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   container: {
@@ -30,7 +31,7 @@ const layoutStyles = {
   } as ViewStyle,
   summaryCard: {
     minWidth: 160,
-    borderRadius: 16,
+    borderRadius: UI_RADIUS.surface,
   } as ViewStyle,
 } as const
 
@@ -206,7 +207,11 @@ export default function PaymentSettingsScreen() {
           >
             <YStack gap="$2">
               <Label>{t("settings.sections.defaultPayment")}</Label>
-              <YStack bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
+              <YStack
+                bg="$backgroundHover"
+                p="$3"
+                style={{ borderRadius: UI_RADIUS.surface }}
+              >
                 <DefaultPaymentMethodSelector
                   value={settings.defaultPaymentMethod}
                   onChange={(paymentMethod) =>

@@ -3,6 +3,7 @@ import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
 import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface ThemeSelectorProps {
   value: ThemePreference
@@ -22,9 +23,9 @@ const styles = {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    padding: 8,
-    borderRadius: 8,
+    gap: UI_SPACE.control,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
 

@@ -3,6 +3,7 @@ import { Globe, Languages } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface LanguageSelectorProps {
   value: string
@@ -23,10 +24,10 @@ const styles = {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    padding: 8,
-    borderRadius: 8,
-    margin: 2,
+    gap: UI_SPACE.control,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
+    margin: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
 

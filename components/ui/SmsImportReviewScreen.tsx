@@ -40,6 +40,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 type EditableSmsImportDraft = {
   amount: string
@@ -61,18 +62,18 @@ const layoutStyles = {
   } as ViewStyle,
   categoryRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   paymentMethodRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   identifierContainer: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
   actionRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
 } as const
 

@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"
+import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
 
 interface LocalizationSectionProps {
   languagePreference: string
@@ -17,9 +18,9 @@ const layoutStyles = {
   collapsibleHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: UI_SPACE.section - 2,
+    paddingHorizontal: UI_SPACE.section,
+    borderRadius: UI_RADIUS.chip,
   } as ViewStyle,
 }
 
@@ -85,7 +86,7 @@ export function LocalizationSection({
           mt="$1"
           bg="$backgroundHover"
           p="$3"
-          style={{ borderRadius: 16 }}
+          style={{ borderRadius: UI_RADIUS.surface }}
         >
           <YStack gap="$1.5">
             <Label color="$color" opacity={0.8} fontSize="$2">

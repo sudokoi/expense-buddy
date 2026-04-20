@@ -17,16 +17,17 @@ import {
 } from "../../services/payment-instruments"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   methodRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   buttonRow: {
     justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 8,
+    gap: UI_SPACE.section,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
 }
 

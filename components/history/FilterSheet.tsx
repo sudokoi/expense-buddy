@@ -30,6 +30,7 @@ import {
   getActivePaymentInstruments,
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface FilterSheetProps {
   open: boolean
@@ -60,16 +61,16 @@ interface FilterSheetProps {
 
 const layoutStyles = {
   sheetFrame: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: UI_SPACE.gutter,
+    paddingTop: UI_SPACE.gutter,
   } as ViewStyle,
   contentContainer: {
-    gap: 12,
+    gap: UI_SPACE.section,
   } as ViewStyle,
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
 }
 

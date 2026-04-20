@@ -3,6 +3,7 @@ import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   headerRow: {
@@ -66,10 +67,13 @@ export function AppSheetScaffold({
       dismissOnSnapToBottom={dismissOnSnapToBottom}
     >
       <Sheet.Overlay />
-      <Sheet.Frame style={[{ padding: 16 } as ViewStyle, frameStyle]} bg="$background">
+      <Sheet.Frame
+        style={[{ padding: UI_SPACE.gutter } as ViewStyle, frameStyle]}
+        bg="$background"
+      >
         <Sheet.Handle />
 
-        <YStack gap="$4" mt={8} flex={1}>
+        <YStack gap="$4" mt={UI_SPACE.control} flex={1}>
           <XStack style={layoutStyles.headerRow}>
             <YStack>
               <H4>{title}</H4>

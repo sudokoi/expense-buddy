@@ -4,6 +4,7 @@ import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import * as LucideIcons from "@tamagui/lucide-icons"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -12,10 +13,10 @@ interface CategoryFilterProps {
 
 const styles = {
   scrollView: {
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   contentContainer: {
-    paddingHorizontal: 4,
+    paddingHorizontal: UI_SPACE.micro,
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",

@@ -9,6 +9,7 @@ import {
 } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface DefaultPaymentMethodSelectorProps {
   value?: PaymentMethodType
@@ -27,9 +28,9 @@ const styles = {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    padding: 8,
-    borderRadius: 8,
+    gap: UI_SPACE.control,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
 

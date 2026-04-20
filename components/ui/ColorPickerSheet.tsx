@@ -6,19 +6,20 @@ import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
   colorGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: UI_SPACE.section,
     justifyContent: "center",
   } as ViewStyle,
   colorButton: {
     width: 56,
     height: 56,
-    borderRadius: 12,
+    borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,

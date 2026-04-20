@@ -36,6 +36,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -289,7 +290,10 @@ export default function AddExpenseScreen() {
   return (
     <YStack flex={1} bg="$background">
       <KeyboardAwareScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom }}
+        contentContainerStyle={{
+          padding: UI_SPACE.gutter,
+          paddingBottom: insets.bottom || UI_SPACE.gutter,
+        }}
         bottomOffset={50}
       >
         <YStack gap="$3" style={layoutStyles.container}>

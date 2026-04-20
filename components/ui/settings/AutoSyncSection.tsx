@@ -3,6 +3,7 @@ import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
 
 /**
  * Props for the AutoSyncSection component
@@ -32,16 +33,16 @@ const layoutStyles = {
   autoSyncRow: {
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: UI_SPACE.section,
+    paddingVertical: UI_SPACE.section,
+    borderRadius: UI_RADIUS.chip,
   } as ViewStyle,
   radioRow: {
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: UI_SPACE.control,
   } as ViewStyle,
   helperText: {
-    marginTop: 4,
+    marginTop: UI_SPACE.micro,
   },
 }
 
@@ -72,7 +73,7 @@ export function AutoSyncSection({
       gap="$3"
       borderTopWidth={1}
       borderTopColor="$borderColor"
-      style={{ paddingTop: 16 }}
+      style={{ paddingTop: UI_SPACE.gutter }}
     >
       <Text fontSize="$3" fontWeight="700" color="$color" opacity={0.8}>
         {t("settings.autoSync.title")}
@@ -128,7 +129,7 @@ export function AutoSyncSection({
       {autoSyncEnabled && (
         <YStack
           gap="$2"
-          style={{ marginTop: 4, borderRadius: 16 }}
+          style={{ marginTop: UI_SPACE.micro, borderRadius: UI_RADIUS.surface }}
           bg="$backgroundHover"
           p="$3"
         >

@@ -22,37 +22,38 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
 import { useSettings } from "../../stores/hooks"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   summaryCardsRow: {
-    gap: 12,
-    marginBottom: 20,
+    gap: UI_SPACE.section,
+    marginBottom: UI_SPACE.block,
   } as ViewStyle,
   chartSection: {
-    marginBottom: 20,
+    marginBottom: UI_SPACE.block,
   } as ViewStyle,
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: UI_SPACE.block,
   } as ViewStyle,
   transactionsHeader: {
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
   transactionDetails: {
-    gap: 12,
+    gap: UI_SPACE.section,
     alignItems: "center",
   } as ViewStyle,
   cardValue: {
-    marginTop: 8,
-    height: 40, // Fixed height to ensure alignment across cards
+    marginTop: UI_SPACE.control,
+    height: UI_SPACE.empty,
     justifyContent: "center", // Center content vertically within the fixed height
   } as TextStyle,
 }
@@ -240,7 +241,7 @@ export default function DashboardScreen() {
               onPress={() => setSelectedCurrency(c)}
               themeInverse={effectiveCurrency === c}
               bordered={effectiveCurrency !== c}
-              style={{ borderRadius: 999 }}
+                      style={{ borderRadius: UI_RADIUS.round }}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>

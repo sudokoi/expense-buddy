@@ -1,12 +1,14 @@
 import React from "react"
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
   SEMANTIC_COLORS,
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
+import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
 
 /**
  * Global sync status indicator
@@ -20,6 +22,7 @@ import {
  */
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
+  const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme() ?? "light"
   const overlayColors = getOverlayColors(colorScheme)
 
@@ -32,12 +35,12 @@ export const SyncIndicator: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       position: "absolute",
-      top: 50,
-      right: 20,
-      zIndex: 10000,
+      top: insets.top + UI_SPACE.gutter,
+      right: UI_SPACE.block,
+      zIndex: UI_Z_INDEX.floating,
       backgroundColor: overlayColors.background,
-      borderRadius: 20,
-      padding: 8,
+      borderRadius: UI_RADIUS.surface,
+      padding: UI_SPACE.control,
       shadowColor: overlayColors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,

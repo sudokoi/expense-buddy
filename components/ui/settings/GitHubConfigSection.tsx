@@ -11,6 +11,7 @@ import { useRouter, usePathname } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
 
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
@@ -52,14 +53,14 @@ const layoutStyles = {
   accordionTrigger: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 8,
+    padding: UI_SPACE.section,
+    borderRadius: UI_RADIUS.control,
   } as ViewStyle,
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    gap: 8,
+    gap: UI_SPACE.control,
     minWidth: 0,
     maxWidth: "85%", // prevent overlapping chevron
   } as ViewStyle,
@@ -71,8 +72,8 @@ const layoutStyles = {
     minWidth: 0,
   } as ViewStyle,
   accordionContent: {
-    padding: 8,
-    paddingTop: 12,
+    padding: UI_SPACE.control,
+    paddingTop: UI_SPACE.section,
   } as ViewStyle,
 }
 

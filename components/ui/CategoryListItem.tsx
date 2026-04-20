@@ -7,21 +7,22 @@ import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { getReadableTextColor } from "../../constants/theme-colors"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
   container: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    borderRadius: 8,
-    gap: 8,
+    padding: UI_SPACE.control,
+    borderRadius: UI_RADIUS.control,
+    gap: UI_SPACE.control,
     minHeight: 56,
   } as ViewStyle,
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -33,7 +34,7 @@ const layoutStyles = {
   actionsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: UI_SPACE.micro / 2,
     flexShrink: 0,
   } as ViewStyle,
   colorIndicator: {
@@ -45,12 +46,12 @@ const layoutStyles = {
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: UI_SPACE.micro,
   } as ViewStyle,
   colorRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: UI_SPACE.micro,
   } as ViewStyle,
 }
 

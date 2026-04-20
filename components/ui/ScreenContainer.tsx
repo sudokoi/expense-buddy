@@ -1,14 +1,13 @@
 import { ScrollView } from "tamagui"
 import { ReactNode, memo } from "react"
-import { StyleProp, ViewStyle } from "react-native"
+import { StyleProp, StyleSheet, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface ScreenContainerProps {
   children?: ReactNode
   style?: StyleProp<ViewStyle>
-  contentContainerStyle?: React.ComponentProps<
-    typeof ScrollView
-  >["contentContainerStyle"]
+  contentContainerStyle?: StyleProp<ViewStyle>
 }
 
 /**
@@ -22,17 +21,21 @@ export const ScreenContainer = memo(function ScreenContainer({
   contentContainerStyle,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
+  const resolvedContentContainerStyle = StyleSheet.flatten([
+    {
+      padding: UI_SPACE.gutter,
+      paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+    },
+    contentContainerStyle,
+  ])
+  const tamaguiContentContainerStyle =
+    resolvedContentContainerStyle as React.ComponentProps<typeof ScrollView>["contentContainerStyle"]
 
   return (
     <ScrollView
       flex={1}
       bg="$background"
-      contentContainerStyle={[
-        { padding: 16, paddingBottom: insets.bottom } as React.ComponentProps<
-          typeof ScrollView
-        >["contentContainerStyle"],
-        contentContainerStyle,
-      ]}
+      contentContainerStyle={tamaguiContentContainerStyle}
       style={style}
       keyboardShouldPersistTaps="handled"
     >

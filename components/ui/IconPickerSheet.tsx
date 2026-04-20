@@ -7,29 +7,30 @@ import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-color
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
   groupContainer: {
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as ViewStyle,
   iconGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   iconButton: {
     width: 56,
     height: 56,
-    borderRadius: 12,
+    borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
   } as ViewStyle,
   selectedIndicator: {
     position: "absolute",
-    top: 2,
-    right: 2,
+    top: UI_SPACE.micro / 2,
+    right: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
 

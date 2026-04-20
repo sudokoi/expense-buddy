@@ -12,6 +12,7 @@ import {
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -44,8 +45,8 @@ export const LineChartSection = memo(function LineChartSection({
       } as ViewStyle,
       tooltipContainer: {
         backgroundColor: overlayColors.background,
-        padding: 8,
-        borderRadius: 4,
+        padding: UI_SPACE.control,
+        borderRadius: UI_RADIUS.control,
         borderWidth: 1,
         borderColor: overlayColors.border,
         shadowColor: overlayColors.shadow,

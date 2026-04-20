@@ -37,6 +37,7 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -46,7 +47,7 @@ const layoutStyles = {
     width: "100%",
   } as ViewStyle,
   syncButtonsContainer: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
   groupedContent: {
     paddingTop: 14,
@@ -54,9 +55,9 @@ const layoutStyles = {
   collapsibleHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: UI_SPACE.section - 2,
+    paddingHorizontal: UI_SPACE.section,
+    borderRadius: UI_RADIUS.chip,
   } as ViewStyle,
   switchRow: {
     alignItems: "center",
@@ -64,14 +65,14 @@ const layoutStyles = {
   } as ViewStyle,
   actionRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   menuRow: {
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingHorizontal: UI_SPACE.section,
+    paddingVertical: UI_SPACE.section,
+    borderRadius: UI_RADIUS.surface,
   } as ViewStyle,
 }
 
@@ -631,7 +632,7 @@ export default function SettingsScreen() {
             bg="$backgroundHover"
             px="$3"
             py="$3"
-            style={[layoutStyles.switchRow, { borderRadius: 16 }]}
+            style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
           >
             <YStack flex={1} gap="$1">
               <Label>{t("settings.general.mathEntry")}</Label>
@@ -658,7 +659,7 @@ export default function SettingsScreen() {
               bg="$backgroundHover"
               px="$3"
               py="$3"
-              style={[layoutStyles.switchRow, { borderRadius: 16 }]}
+              style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
             >
               <YStack flex={1} gap="$1">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
@@ -691,7 +692,11 @@ export default function SettingsScreen() {
         >
           <YStack gap="$2">
             <Label>{t("settings.appearance.theme")}</Label>
-            <YStack bg="$backgroundHover" p="$3" style={{ borderRadius: 16 }}>
+            <YStack
+              bg="$backgroundHover"
+              p="$3"
+              style={{ borderRadius: UI_RADIUS.surface }}
+            >
               <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
             </YStack>
           </YStack>

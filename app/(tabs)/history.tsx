@@ -71,6 +71,7 @@ import {
   getAvailableMonths,
   isTimeWindowCovered,
 } from "../../utils/analytics/time"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -80,32 +81,32 @@ const layoutStyles = {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    padding: UI_SPACE.gutter,
   } as ViewStyle,
   emptyText: {
     fontSize: 24,
   } as TextStyle,
   emptySubtext: {
     fontSize: 16,
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as TextStyle,
   mainContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: UI_SPACE.gutter,
+    paddingTop: UI_SPACE.gutter,
   } as ViewStyle,
   header: {
-    marginBottom: 16,
+    marginBottom: UI_SPACE.gutter,
   } as TextStyle,
   dialogButtonRow: {
     justifyContent: "flex-end",
   } as ViewStyle,
   editDialogButtonRow: {
     justifyContent: "flex-end",
-    marginTop: 16,
+    marginTop: UI_SPACE.gutter,
   } as ViewStyle,
   sectionHeader: {
-    paddingVertical: 8,
+    paddingVertical: UI_SPACE.control,
   } as ViewStyle,
   expenseDetails: {
     alignItems: "center",
@@ -114,7 +115,7 @@ const layoutStyles = {
     alignItems: "center",
   } as ViewStyle,
   loadMoreContainer: {
-    padding: 16,
+    padding: UI_SPACE.gutter,
     alignItems: "center",
   } as ViewStyle,
   categoryRow: {
@@ -128,28 +129,15 @@ const layoutStyles = {
   filterButtonContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
+    gap: UI_SPACE.control,
+    marginBottom: UI_SPACE.section,
   } as ViewStyle,
   chipsContainer: {
     flexDirection: "row",
-    marginBottom: 12,
-  } as ViewStyle,
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-  } as ViewStyle,
-  chipText: {
-    fontSize: 13,
-    marginRight: 4,
+    marginBottom: UI_SPACE.section,
   } as TextStyle,
   sheetFrame: {
-    padding: 16,
+    padding: UI_SPACE.gutter,
   } as ViewStyle,
   headerRow: {
     justifyContent: "space-between",
@@ -173,7 +161,7 @@ const FilterChip = React.memo(function FilterChip({
       size="$2"
       bordered
       onPress={onRemove}
-      style={{ borderRadius: 999 }}
+      style={{ borderRadius: UI_RADIUS.round }}
       iconAfter={X}
     >
       <Button.Text numberOfLines={1}>{label}</Button.Text>
@@ -851,7 +839,7 @@ export default function HistoryScreen() {
           >
             {t("common.filters")}
             {activeCount > 0 && (
-              <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: 4 }}>
+              <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: UI_SPACE.micro }}>
                 ({activeCount})
               </Text>
             )}
@@ -876,7 +864,7 @@ export default function HistoryScreen() {
           <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
             {t("history.noResultsSubtitle")}
           </Text>
-          <Button size="$4" onPress={handleResetFilters} style={{ marginTop: 16 }}>
+          <Button size="$4" onPress={handleResetFilters} style={{ marginTop: UI_SPACE.gutter }}>
             {t("common.clearFilters")}
           </Button>
         </YStack>
@@ -915,7 +903,7 @@ export default function HistoryScreen() {
         >
           {t("common.filters")}
           {activeCount > 0 && (
-            <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: 4 }}>
+            <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: UI_SPACE.micro }}>
               ({activeCount})
             </Text>
           )}
@@ -927,7 +915,7 @@ export default function HistoryScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8 } as any}
-        style={{ marginBottom: 12, flexGrow: 0 }}
+        style={{ marginBottom: UI_SPACE.section, flexGrow: 0 }}
       >
         {filterChips.map((chip, index) => (
           <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
