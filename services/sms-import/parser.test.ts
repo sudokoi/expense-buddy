@@ -32,6 +32,7 @@ describe("parseSmsImportCandidate", () => {
   it.each([
     ["INR 499 spent at Amazon Marketplace using debit card", "Other", "Debit Card"],
     ["INR 820 paid to Uber Trip via credit card", "Transport", "Credit Card"],
+    ["INR 820 paid to Uber Trip via Amex", "Transport", "Credit Card"],
     ["INR 1499 paid for Jio recharge", "Utilities", undefined],
     ["INR 899 spent at Apollo Pharmacy", "Health", undefined],
     ["INR 550 spent at BigBasket", "Groceries", undefined],

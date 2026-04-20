@@ -29,7 +29,9 @@ export const ScreenContainer = memo(function ScreenContainer({
     contentContainerStyle,
   ])
   const tamaguiContentContainerStyle =
-    resolvedContentContainerStyle as React.ComponentProps<typeof ScrollView>["contentContainerStyle"]
+    resolvedContentContainerStyle as React.ComponentProps<
+      typeof ScrollView
+    >["contentContainerStyle"]
 
   return (
     <ScrollView

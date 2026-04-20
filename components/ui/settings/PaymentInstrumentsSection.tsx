@@ -208,7 +208,10 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$3"
                             py="$2.5"
-                            style={[layoutStyles.row, { borderRadius: UI_RADIUS.surface }]}
+                            style={[
+                              layoutStyles.row,
+                              { borderRadius: UI_RADIUS.surface },
+                            ]}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

@@ -6,7 +6,14 @@ import {
   findActiveInstrumentByMethodAndLastDigits,
   getActivePaymentInstruments,
   isPaymentInstrumentMethod,
+  normalizeNickname,
 } from "../payment-instruments"
+import {
+  hasCardBrandHint,
+  hasCreditCardHint,
+  hasDebitCardHint,
+  hasUpiHint,
+} from "./payment-method-hints"
 
 type CategoryMatchingRule = {
   contentPattern: RegExp
@@ -111,14 +118,31 @@ function extractIdentifierFromBody(
 function bodyHintsMethod(body: string, type: PaymentMethod["type"]): boolean {
   switch (type) {
     case "UPI":
-      return /\bupi\b/i.test(body)
+      return hasUpiHint(body)
     case "Credit Card":
-      return /credit card|credit a\/c|credit acct|card/i.test(body)
+      return hasCreditCardHint(body) || hasCardBrandHint(body) || /card/i.test(body)
     case "Debit Card":
-      return /debit card|debit a\/c|debited from a\/c|debited from acct|card/i.test(body)
+      return hasDebitCardHint(body) || hasCardBrandHint(body) || /card/i.test(body)
     default:
       return false
   }
+}
+
+function bodyContainsInstrumentNickname(body: string, nickname: string): boolean {
+  const normalizedNickname = normalizeNickname(nickname)
+  if (normalizedNickname.length < 4) {
+    return false
+  }
+
+  const nicknamePattern = new RegExp(
+    `\\b${normalizedNickname
+      .split(/\s+/)
+      .map((part) => escapeRegExp(part))
+      .join("\\s+")}\\b`,
+    "i"
+  )
+
+  return nicknamePattern.test(body)
 }
 
 function bodyContainsInstrumentDigits(body: string, lastDigits: string): boolean {
@@ -200,6 +224,27 @@ export function resolveSmsImportPaymentSuggestion(
         ...baseSuggestion,
         identifier,
       }
+    }
+  }
+
+  const nicknameMatches = activeInstruments.filter((instrument) => {
+    if (baseSuggestion?.type && instrument.method !== baseSuggestion.type) {
+      return false
+    }
+
+    if (!baseSuggestion?.type && !bodyHintsMethod(body, instrument.method)) {
+      return false
+    }
+
+    return bodyContainsInstrumentNickname(body, instrument.nickname)
+  })
+
+  if (nicknameMatches.length === 1) {
+    const matchedInstrument = nicknameMatches[0]
+    return {
+      type: matchedInstrument.method,
+      identifier: matchedInstrument.lastDigits,
+      instrumentId: matchedInstrument.id,
     }
   }
 

@@ -241,7 +241,7 @@ export default function DashboardScreen() {
               onPress={() => setSelectedCurrency(c)}
               themeInverse={effectiveCurrency === c}
               bordered={effectiveCurrency !== c}
-                      style={{ borderRadius: UI_RADIUS.round }}
+              style={{ borderRadius: UI_RADIUS.round }}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>

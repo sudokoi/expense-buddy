@@ -1,6 +1,7 @@
 import { PaymentMethod } from "../../types/expense"
 import { SmsImportRawMessage } from "../../types/sms-import"
 import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
+import { inferPaymentMethodFromBody } from "./payment-method-hints"
 
 export interface ParsedSmsImportCandidate {
   amount: number
@@ -77,19 +78,7 @@ function parseAmount(body: string): number | null {
 }
 
 function inferPaymentMethod(body: string): PaymentMethod | undefined {
-  if (/\bupi\b/i.test(body)) {
-    return { type: "UPI" }
-  }
-
-  if (/credit card|credit a\/c|credit acct/i.test(body)) {
-    return { type: "Credit Card" }
-  }
-
-  if (/debit card|debit a\/c|debited from a\/c|debited from acct/i.test(body)) {
-    return { type: "Debit Card" }
-  }
-
-  return undefined
+  return inferPaymentMethodFromBody(body)
 }
 
 function inferMerchant(body: string): string | undefined {

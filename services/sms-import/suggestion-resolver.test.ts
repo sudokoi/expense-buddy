@@ -126,6 +126,68 @@ describe("resolveSmsImportPaymentSuggestion", () => {
     })
   })
 
+  it("matches a uniquely named saved card when the SMS references Amex", () => {
+    const item = createItem({
+      sourceMessage: {
+        messageId: "sms-4",
+        sender: "AX-AMEX",
+        body: "INR 499 spent at Airline Portal via Amex",
+        receivedAt: "2026-04-11T10:15:30.000Z",
+      },
+      paymentMethodSuggestion: undefined,
+    })
+
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument({
+          id: "inst-amex",
+          method: "Credit Card",
+          nickname: "Amex",
+          lastDigits: "9876",
+        }),
+      ])
+    ).toEqual({
+      type: "Credit Card",
+      identifier: "9876",
+      instrumentId: "inst-amex",
+    })
+  })
+
+  it.each([
+    ["Visa", "Credit Card"],
+    ["Mastercard", "Credit Card"],
+    ["RuPay", "Debit Card"],
+    ["Maestro", "Debit Card"],
+  ])(
+    "matches a uniquely named saved card when the SMS references %s",
+    (nickname, method) => {
+      const item = createItem({
+        sourceMessage: {
+          messageId: `sms-${nickname.toLowerCase()}`,
+          sender: "VK-BANK",
+          body: `INR 499 spent at Merchant Portal via ${nickname}`,
+          receivedAt: "2026-04-11T10:15:30.000Z",
+        },
+        paymentMethodSuggestion: undefined,
+      })
+
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [
+          createInstrument({
+            id: `inst-${nickname.toLowerCase()}`,
+            method: method as "Credit Card" | "Debit Card",
+            nickname,
+            lastDigits: "9876",
+          }),
+        ])
+      ).toEqual({
+        type: method,
+        identifier: "9876",
+        instrumentId: `inst-${nickname.toLowerCase()}`,
+      })
+    }
+  )
+
   it("keeps the inferred payment method when no instrument can be resolved", () => {
     expect(resolveSmsImportPaymentSuggestion(createItem(), [])).toEqual({
       type: "Debit Card",

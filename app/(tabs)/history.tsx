@@ -839,7 +839,11 @@ export default function HistoryScreen() {
           >
             {t("common.filters")}
             {activeCount > 0 && (
-              <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: UI_SPACE.micro }}>
+              <Text
+                fontSize="$2"
+                fontWeight="bold"
+                style={{ marginLeft: UI_SPACE.micro }}
+              >
                 ({activeCount})
               </Text>
             )}
@@ -864,7 +868,11 @@ export default function HistoryScreen() {
           <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
             {t("history.noResultsSubtitle")}
           </Text>
-          <Button size="$4" onPress={handleResetFilters} style={{ marginTop: UI_SPACE.gutter }}>
+          <Button
+            size="$4"
+            onPress={handleResetFilters}
+            style={{ marginTop: UI_SPACE.gutter }}
+          >
             {t("common.clearFilters")}
           </Button>
         </YStack>
