@@ -11,5 +11,6 @@ export * from "./use-github-auth-machine"
 // Update/Changelog hooks
 export * from "./use-update-check"
 export * from "./use-changelog-on-update"
+export * from "./use-play-store-review"
 export * from "./changelog-gating"
 export * from "./use-sms-import-actions"

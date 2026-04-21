@@ -14,6 +14,7 @@ import { UpdateBanner } from "../components/ui/UpdateBanner"
 import { ChangelogSheet } from "../components/ui/ChangelogSheet"
 import { useUpdateCheck } from "../hooks/use-update-check"
 import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
+import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useThemeSettings } from "../stores/hooks"
 import { useSettings } from "../stores/hooks"
@@ -83,6 +84,10 @@ function UpdateAndChangelogOverlays() {
     updateAvailable,
     updateCheckCompleted,
   })
+  const review = usePlayStoreReview({
+    updateAvailable,
+    updateCheckCompleted,
+  })
 
   return (
     <>
@@ -100,7 +105,10 @@ function UpdateAndChangelogOverlays() {
         version={changelog.version}
         releaseNotes={changelog.releaseNotes}
         onClose={() => {
-          void changelog.close()
+          void (async () => {
+            await changelog.close()
+            await review.markReviewEligibleForCurrentVersion()
+          })()
         }}
         onViewFullReleaseNotes={() => {
           void changelog.viewFullReleaseNotes()

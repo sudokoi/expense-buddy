@@ -35,6 +35,11 @@ jest.mock("react-native", () => ({
   })),
 }))
 
+jest.mock("../modules/expense-buddy-play-core", () => ({
+  __esModule: true,
+  default: null,
+}))
+
 // Mock notification store
 jest.mock("../stores/notification-store", () => ({
   notificationStore: {

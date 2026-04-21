@@ -28,6 +28,11 @@ jest.mock("react-native", () => ({
   },
 }))
 
+jest.mock("../modules/expense-buddy-play-core", () => ({
+  __esModule: true,
+  default: null,
+}))
+
 import {
   decodeVersionCode,
   getDismissedVersion,
