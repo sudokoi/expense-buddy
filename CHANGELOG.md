@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 3.2.0
+
+### Minor Changes
+
+- [#56](https://github.com/sudokoi/expense-buddy/pull/56) [`7b1c816`](https://github.com/sudokoi/expense-buddy/commit/7b1c81683ed8f2ae9ce70fe17257d36363535e3a) Thanks [@sudokoi](https://github.com/sudokoi)! - Improve SMS import accuracy for card-brand aliases and debit messages that include card-ending details, harden Android SMS review defaults, and clean up screen chrome and spacing across the app with shared UI theme tokens, including restored inline padding for chips, filter actions, and the add-expense amount field.
+
 ## 3.1.0
 
 ### Minor Changes
