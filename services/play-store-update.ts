@@ -1,46 +1,12 @@
-import { NativeEventEmitter, NativeModules, Platform } from "react-native"
+import { Platform } from "react-native"
+import ExpenseBuddyPlayCoreModule, {
+  type ExpenseBuddyPlayCoreNativeModule,
+  type NativePlayStoreUpdateInfo,
+  type PlayStoreInstallStatus,
+  type PlayStoreUpdateAvailability,
+} from "../modules/expense-buddy-play-core"
 
-export type PlayStoreUpdateAvailability =
-  | "available"
-  | "in_progress"
-  | "not_available"
-  | "unknown"
-
-export type PlayStoreInstallStatus =
-  | "accepted"
-  | "canceled"
-  | "downloaded"
-  | "downloading"
-  | "failed"
-  | "installed"
-  | "installing"
-  | "pending"
-  | "requires_ui_intent"
-  | "unknown"
-
-interface NativePlayStoreUpdateInfo {
-  availableVersionCode?: number | null
-  clientVersionStalenessDays?: number | null
-  installStatus?: string | null
-  isFlexibleUpdateAllowed?: boolean | null
-  isImmediateUpdateAllowed?: boolean | null
-  updateAvailability?: string | null
-  updatePriority?: number | null
-}
-
-interface NativePlayStoreStatusEvent {
-  bytesDownloaded?: number | null
-  status?: string | null
-  totalBytesToDownload?: number | null
-}
-
-interface PlayStoreUpdateModuleShape {
-  addListener(eventName: string): void
-  completeUpdate(): Promise<void>
-  getUpdateInfo(): Promise<NativePlayStoreUpdateInfo>
-  removeListeners(count: number): void
-  startFlexibleUpdate(): Promise<void>
-}
+export type { PlayStoreInstallStatus, PlayStoreUpdateAvailability }
 
 export interface PlayStoreUpdateInfo {
   availableVersionCode?: number
@@ -58,18 +24,25 @@ export interface PlayStoreUpdateStatusEvent {
   totalBytesToDownload?: number
 }
 
-const STATUS_EVENT_NAME = "playStoreUpdateStatus"
+let moduleOverride: ExpenseBuddyPlayCoreNativeModule | null = null
 
-const playStoreUpdateModule = NativeModules?.PlayStoreUpdateModule as
-  | PlayStoreUpdateModuleShape
-  | undefined
+export function setPlayStoreCoreModuleForTesting(
+  nextModule: ExpenseBuddyPlayCoreNativeModule | null
+): void {
+  moduleOverride = nextModule
+}
 
-function getModule(): PlayStoreUpdateModuleShape {
-  if (Platform.OS !== "android" || !playStoreUpdateModule) {
+function getModule(): ExpenseBuddyPlayCoreNativeModule {
+  if (Platform.OS !== "android") {
     throw new Error("Play Store in-app updates are unavailable in this build")
   }
 
-  return playStoreUpdateModule
+  const installedModule = moduleOverride ?? ExpenseBuddyPlayCoreModule
+  if (!installedModule) {
+    throw new Error("Play Store core module is not registered yet")
+  }
+
+  return installedModule
 }
 
 function normalizeAvailability(
@@ -126,44 +99,36 @@ function normalizeUpdateInfo(rawInfo: NativePlayStoreUpdateInfo): PlayStoreUpdat
 }
 
 export async function getPlayStoreUpdateInfo(): Promise<PlayStoreUpdateInfo> {
-  const nativeInfo = await getModule().getUpdateInfo()
+  const nativeInfo = await getModule().getUpdateInfoAsync()
   return normalizeUpdateInfo(nativeInfo)
 }
 
 export async function startPlayStoreFlexibleUpdate(): Promise<void> {
-  await getModule().startFlexibleUpdate()
+  await getModule().startFlexibleUpdateAsync()
 }
 
 export async function completePlayStoreUpdate(): Promise<void> {
-  await getModule().completeUpdate()
+  await getModule().completeUpdateAsync()
 }
 
 export function subscribeToPlayStoreUpdateStatus(
   listener: (event: PlayStoreUpdateStatusEvent) => void
 ): () => void {
-  if (Platform.OS !== "android" || !playStoreUpdateModule) {
+  if (Platform.OS !== "android") {
     return () => {}
   }
 
-  if (typeof NativeEventEmitter !== "function") {
-    return () => {}
-  }
-
-  const emitter = new NativeEventEmitter(playStoreUpdateModule)
-  const subscription = emitter.addListener(
-    STATUS_EVENT_NAME,
-    (event: NativePlayStoreStatusEvent) => {
-      listener({
-        bytesDownloaded:
-          typeof event.bytesDownloaded === "number" ? event.bytesDownloaded : undefined,
-        status: normalizeInstallStatus(event.status),
-        totalBytesToDownload:
-          typeof event.totalBytesToDownload === "number"
-            ? event.totalBytesToDownload
-            : undefined,
-      })
-    }
-  )
+  const subscription = getModule().addListener("onUpdateStatus", (event) => {
+    listener({
+      bytesDownloaded:
+        typeof event.bytesDownloaded === "number" ? event.bytesDownloaded : undefined,
+      status: normalizeInstallStatus(event.status),
+      totalBytesToDownload:
+        typeof event.totalBytesToDownload === "number"
+          ? event.totalBytesToDownload
+          : undefined,
+    })
+  })
 
   return () => {
     subscription.remove()
