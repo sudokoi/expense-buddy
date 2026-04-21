@@ -90,6 +90,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 - Works on Android, iOS, and Web for core expense tracking
 - SMS import is Android-only and requires a native build
+- Play-installed Android builds support native in-app update checks and flexible downloads
+- In-app review prompts are Play-only and conservatively gated to avoid repeated interruptions
 - Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
 - Dark mode, changelog gating, update notifications, and reusable Tamagui UI primitives
 
@@ -165,6 +167,7 @@ Key implementation details:
 - service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
 - native Android SMS module bridged through `services/sms-import/`
 - property-based and unit tests across storage, sync, parsing, and store behavior
+- tracked Expo native modules for Android SMS import and Play Core integrations
 
 For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -217,7 +220,8 @@ expense-buddy/
 │   ├── ui-state-store.ts
 │   └── store-provider.tsx
 ├── modules/
-│   └── expense-buddy-sms-import/  # native Android SMS module
+│   ├── expense-buddy-play-core/   # Play Store update and review native module
+│   └── expense-buddy-sms-import/  # Android SMS import native module
 ├── locales/                    # en-US, en-GB, en-IN, hi, ja
 ├── decisions/                  # ADRs and technical decisions
 ├── assets/

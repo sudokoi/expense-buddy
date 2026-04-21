@@ -14,15 +14,15 @@ This document focuses on the current architecture shape, the reasons behind the 
 
 ## Runtime Layers
 
-| Layer              | Responsibility                                           | Main locations                               |
-| ------------------ | -------------------------------------------------------- | -------------------------------------------- |
-| Routes             | Screen composition and navigation                        | `app/`                                       |
-| Components         | Reusable presentational building blocks                  | `components/`                                |
-| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                     |
-| Stores             | Long-lived application state                             | `stores/`                                    |
-| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                  |
-| Native module      | Android SMS access                                       | `modules/expense-buddy-sms-import/`          |
-| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/` |
+| Layer              | Responsibility                                           | Main locations                                                          |
+| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Routes             | Screen composition and navigation                        | `app/`                                                                  |
+| Components         | Reusable presentational building blocks                  | `components/`                                                           |
+| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                                                |
+| Stores             | Long-lived application state                             | `stores/`                                                               |
+| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                                             |
+| Native modules     | Android SMS access and Play Core integrations            | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-play-core/` |
+| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/`                            |
 
 The main dependency direction is:
 
@@ -30,7 +30,7 @@ The main dependency direction is:
 2. Hooks read from stores and invoke service-layer actions.
 3. Stores hold durable state and expose explicit update events.
 4. Services handle I/O, parsing, merging, persistence, and sync.
-5. The native SMS module is accessed through the SMS import service layer rather than directly from screens.
+5. Native modules are accessed through service-layer wrappers rather than directly from screens.
 
 ## State Model
 
@@ -145,6 +145,29 @@ Optimization strategy:
 - batched writes keep uploads atomic at the commit level
 
 The sync engine is designed so a user can stay productive offline and reconcile later without losing the edit history needed for conflict handling.
+
+## Update and Review Architecture
+
+App update and in-app review behavior is split by install source.
+
+- Play-installed Android builds use the local `expense-buddy-play-core` Expo module.
+- Non-Play Android builds keep the GitHub Releases fallback for update discovery and the release-page update action.
+- In-app review is requested only on Play installs and only after local gating conditions are met.
+
+Runtime flow:
+
+1. `services/update-checker.ts` determines whether the current install should use Play Core or GitHub Releases.
+2. `services/play-store-update.ts` wraps the Play Core Expo module for update availability, flexible update start, completion, and status events.
+3. `hooks/use-update-check.ts` owns banner visibility and chooses between Play Core actions and GitHub release URLs.
+4. `services/play-store-review.ts` wraps the same Play Core module for in-app review requests.
+5. `hooks/use-play-store-review.ts` stores conservative local gating state so prompts are delayed, version-scoped, and rate-limited.
+6. `app/_layout.tsx` marks the current version review-eligible only after the changelog flow finishes, which avoids stacking a review prompt immediately after an update notice.
+
+Why this shape:
+
+- keeps native Play integrations in tracked source instead of generated Android output
+- preserves sideload and non-Play behavior without forking the app shell
+- keeps review prompting conservative so Play quota and user experience constraints are both respected
 
 ## Analytics Architecture
 

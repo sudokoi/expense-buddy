@@ -179,7 +179,10 @@ export function usePlayStoreReview({
 
     const initialize = async () => {
       const now = Date.now()
-      const state = advancePlayStoreReviewSession(await loadPlayStoreReviewState(now), now)
+      const state = advancePlayStoreReviewSession(
+        await loadPlayStoreReviewState(now),
+        now
+      )
       await persistPlayStoreReviewState(state)
 
       const fromPlayStore = await isPlayStoreInstall()
