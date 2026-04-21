@@ -19,12 +19,14 @@ export interface AppInfoSectionProps {
   currentVersion: string
   /** Update information from GitHub releases check */
   updateInfo: UpdateInfo | null
+  /** Whether the update payload has already downloaded */
+  isUpdateReadyToInstall: boolean
   /** Whether an update check is in progress */
   isCheckingUpdate: boolean
   /** Callback to check for updates */
   onCheckForUpdates: () => Promise<void>
-  /** Callback to open the release page */
-  onOpenRelease: () => void
+  /** Callback to start or complete the update */
+  onStartUpdate: () => void
   /** Callback to open the GitHub repository */
   onOpenGitHub: () => void
   /** Callback to open the issue reporting page */
@@ -56,9 +58,10 @@ const successColor = SEMANTIC_COLORS.success
 export function AppInfoSection({
   currentVersion,
   updateInfo,
+  isUpdateReadyToInstall,
   isCheckingUpdate,
   onCheckForUpdates,
-  onOpenRelease,
+  onStartUpdate,
   onOpenGitHub,
   onReportIssue,
 }: AppInfoSectionProps) {
@@ -75,7 +78,7 @@ export function AppInfoSection({
       </XStack>
 
       {/* Update Info */}
-      {updateInfo && !updateInfo.error && (
+      {updateInfo?.latestVersion && !updateInfo.error && (
         <XStack style={layoutStyles.versionRow}>
           <Text color="$color" opacity={0.8}>
             {t("settings.about.latestVersion")}
@@ -104,8 +107,12 @@ export function AppInfoSection({
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
-        <Button size="$control" themeInverse onPress={onOpenRelease} icon={ExternalLink}>
-          {t("settings.about.download", { version: updateInfo.latestVersion })}
+        <Button size="$control" themeInverse onPress={onStartUpdate} icon={ExternalLink}>
+          {isUpdateReadyToInstall
+            ? t("settings.about.installUpdate")
+            : updateInfo.latestVersion
+              ? t("settings.about.download", { version: updateInfo.latestVersion })
+              : t("settings.about.updateNow")}
         </Button>
       )}
 

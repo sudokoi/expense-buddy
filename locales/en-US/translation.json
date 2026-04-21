@@ -402,6 +402,8 @@
       "checkForUpdates": "Check for Updates",
       "checking": "Checking...",
       "download": "Download v{{version}}",
+      "installUpdate": "Install Update",
+      "updateNow": "Update Now",
       "reportIssue": "Report an Issue",
       "viewGitHub": "View on GitHub"
     }

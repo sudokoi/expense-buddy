@@ -10,17 +10,30 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Linking } from "react-native"
+import { APP_CONFIG } from "../constants/app-config"
 import {
   checkForUpdatesOnLaunch,
   checkForUpdates,
   getDismissedVersion,
   setDismissedVersion,
   shouldShowUpdateNotification,
-  isPlayStoreInstall,
   UpdateInfo,
 } from "../services/update-checker"
-import { APP_CONFIG } from "../constants/app-config"
+import {
+  completePlayStoreUpdate,
+  PlayStoreInstallStatus,
+  startPlayStoreFlexibleUpdate,
+  subscribeToPlayStoreUpdateStatus,
+} from "../services/play-store-update"
 import { notificationStore } from "../stores/notification-store"
+
+export type UpdateSource = "github" | "play-store"
+
+export interface PerformUpdateActionOptions {
+  installStatus: PlayStoreInstallStatus
+  releaseUrl?: string
+  updateSource: UpdateSource | null
+}
 
 export interface UseUpdateCheckResult {
   /** Whether an update is available */
@@ -31,6 +44,8 @@ export interface UseUpdateCheckResult {
   showBanner: boolean
   /** Whether the automatic update check has completed at least once this session */
   updateCheckCompleted: boolean
+  /** Whether the downloaded update is ready to install */
+  isUpdateReadyToInstall: boolean
   /** Handle user tapping the Update button */
   handleUpdate: () => Promise<void>
   /** Handle user dismissing the update notification */
@@ -39,19 +54,46 @@ export interface UseUpdateCheckResult {
   checkForUpdates: () => Promise<void>
 }
 
-/**
- * Get the appropriate update URL based on install source
- * Returns Play Store URL for Play Store installs, GitHub releases URL otherwise
- */
-export async function getUpdateUrl(releaseUrl?: string): Promise<string> {
-  const fromPlayStore = await isPlayStoreInstall()
+export async function performUpdateAction({
+  installStatus,
+  releaseUrl,
+  updateSource,
+}: PerformUpdateActionOptions): Promise<void> {
+  if (updateSource === "github") {
+    const targetUrl = releaseUrl || `${APP_CONFIG.github.url}/releases`
+    const canOpen = await Linking.canOpenURL(targetUrl)
 
-  if (fromPlayStore && APP_CONFIG.playStore?.url) {
-    return APP_CONFIG.playStore.url
+    if (!canOpen) {
+      notificationStore.trigger.addNotification({
+        message: `Could not open release page. Please visit: ${targetUrl}`,
+        notificationType: "error",
+        duration: 8000,
+      })
+      return
+    }
+
+    await Linking.openURL(targetUrl)
+    return
   }
 
-  // Fall back to GitHub releases URL or default GitHub URL
-  return releaseUrl || `${APP_CONFIG.github.url}/releases`
+  if (installStatus === "downloaded") {
+    await completePlayStoreUpdate()
+    return
+  }
+
+  if (
+    installStatus === "downloading" ||
+    installStatus === "installing" ||
+    installStatus === "pending"
+  ) {
+    notificationStore.trigger.addNotification({
+      message: "Update is already downloading in the background.",
+      notificationType: "info",
+    })
+    return
+  }
+
+  await startPlayStoreFlexibleUpdate()
 }
 
 /**
@@ -60,8 +102,10 @@ export async function getUpdateUrl(releaseUrl?: string): Promise<string> {
 export function useUpdateCheck(): UseUpdateCheckResult {
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [latestVersion, setLatestVersion] = useState<string | null>(null)
-  const [showBanner, setShowBanner] = useState(false)
   const [releaseUrl, setReleaseUrl] = useState<string | undefined>(undefined)
+  const [showBanner, setShowBanner] = useState(false)
+  const [installStatus, setInstallStatus] = useState<PlayStoreInstallStatus>("unknown")
+  const [updateSource, setUpdateSource] = useState<UpdateSource | null>(null)
   const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false)
 
   // Track if initial check has been performed
@@ -75,7 +119,9 @@ export function useUpdateCheck(): UseUpdateCheckResult {
       if (updateInfo.hasUpdate && updateInfo.latestVersion) {
         setUpdateAvailable(true)
         setLatestVersion(updateInfo.latestVersion)
+        setInstallStatus(updateInfo.installStatus ?? "unknown")
         setReleaseUrl(updateInfo.releaseUrl)
+        setUpdateSource(updateInfo.source ?? null)
 
         if (bypassDismissal) {
           // Manual check - always show banner
@@ -86,14 +132,52 @@ export function useUpdateCheck(): UseUpdateCheckResult {
           const shouldShow = shouldShowUpdateNotification(updateInfo, dismissedVersion)
           setShowBanner(shouldShow)
         }
+      } else if (updateInfo.hasUpdate) {
+        setUpdateAvailable(true)
+        setLatestVersion(null)
+        setInstallStatus(updateInfo.installStatus ?? "unknown")
+        setReleaseUrl(updateInfo.releaseUrl)
+        setUpdateSource(updateInfo.source ?? null)
+
+        if (bypassDismissal) {
+          setShowBanner(true)
+        } else {
+          const dismissedVersion = await getDismissedVersion()
+          const shouldShow = shouldShowUpdateNotification(updateInfo, dismissedVersion)
+          setShowBanner(shouldShow || !updateInfo.latestVersion)
+        }
       } else {
         setUpdateAvailable(false)
         setLatestVersion(null)
+        setReleaseUrl(undefined)
+        setInstallStatus("unknown")
+        setUpdateSource(null)
         setShowBanner(false)
       }
     },
     []
   )
+
+  useEffect(() => {
+    return subscribeToPlayStoreUpdateStatus((event) => {
+      setInstallStatus(event.status)
+
+      if (event.status === "downloaded") {
+        notificationStore.trigger.addNotification({
+          message: "Update downloaded. Tap update again to install it.",
+          notificationType: "info",
+          duration: 6000,
+        })
+      }
+
+      if (event.status === "failed") {
+        notificationStore.trigger.addNotification({
+          message: "Play Store update failed. Please try again.",
+          notificationType: "error",
+        })
+      }
+    })
+  }, [])
 
   /**
    * Check for updates on mount (once per session)
@@ -120,31 +204,26 @@ export function useUpdateCheck(): UseUpdateCheckResult {
 
   /**
    * Handle user tapping the Update button
-   * Opens Play Store for Play Store installs, GitHub releases otherwise
+   * Starts a Play Store flexible update, or installs a downloaded update
    */
   const handleUpdate = useCallback(async () => {
     try {
-      const url = await getUpdateUrl(releaseUrl)
-      const canOpen = await Linking.canOpenURL(url)
-
-      if (canOpen) {
-        await Linking.openURL(url)
-      } else {
-        // Show error notification with URL for manual copying
-        notificationStore.trigger.addNotification({
-          message: `Could not open URL. Please visit: ${url}`,
-          notificationType: "error",
-          duration: 8000,
-        })
-      }
+      await performUpdateAction({
+        installStatus,
+        releaseUrl,
+        updateSource,
+      })
     } catch (error) {
-      console.error("Failed to open update URL:", error)
+      console.error("Failed to handle update action:", error)
       notificationStore.trigger.addNotification({
-        message: "Failed to open update page. Please try again.",
+        message:
+          updateSource === "github"
+            ? "Failed to open the release page. Please try again."
+            : "Failed to start the Play Store update. Please try again.",
         notificationType: "error",
       })
     }
-  }, [releaseUrl])
+  }, [installStatus, releaseUrl, updateSource])
 
   /**
    * Handle user dismissing the update notification
@@ -190,6 +269,7 @@ export function useUpdateCheck(): UseUpdateCheckResult {
     latestVersion,
     showBanner,
     updateCheckCompleted,
+    isUpdateReadyToInstall: installStatus === "downloaded",
     handleUpdate,
     handleDismiss,
     checkForUpdates: manualCheckForUpdates,

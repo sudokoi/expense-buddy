@@ -402,6 +402,8 @@
       "checkForUpdates": "अपडेट के लिए जांचें",
       "checking": "जांच हो रही है...",
       "download": "v{{version}} डाउनलोड करें",
+      "installUpdate": "अपडेट इंस्टॉल करें",
+      "updateNow": "अभी अपडेट करें",
       "reportIssue": "समस्या की रिपोर्ट करें",
       "viewGitHub": "गिटहब पर देखें"
     }

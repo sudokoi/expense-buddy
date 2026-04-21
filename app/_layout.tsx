@@ -74,6 +74,7 @@ function UpdateAndChangelogOverlays() {
     latestVersion,
     showBanner,
     updateCheckCompleted,
+    isUpdateReadyToInstall,
     handleUpdate,
     handleDismiss,
   } = useUpdateCheck()
@@ -85,9 +86,10 @@ function UpdateAndChangelogOverlays() {
 
   return (
     <>
-      {showBanner && latestVersion ? (
+      {showBanner ? (
         <UpdateBanner
           version={latestVersion}
+          readyToInstall={isUpdateReadyToInstall}
           onUpdate={handleUpdate}
           onDismiss={handleDismiss}
         />

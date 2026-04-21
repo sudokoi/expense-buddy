@@ -1,9 +1,8 @@
 /**
- * Property-based tests for useUpdateCheck hook
+ * Property-based tests for the update-checking flow.
  * Feature: in-app-update
  *
- * These tests verify the URL selection logic and manual check behavior
- * for the update check hook.
+ * These tests cover version-code decoding and dismissal bypass behavior.
  */
 
 import * as fc from "fast-check"
@@ -30,19 +29,11 @@ jest.mock("react-native", () => ({
     canOpenURL: jest.fn().mockResolvedValue(true),
     openURL: jest.fn().mockResolvedValue(undefined),
   },
+  NativeModules: {},
+  NativeEventEmitter: jest.fn().mockImplementation(() => ({
+    addListener: jest.fn(() => ({ remove: jest.fn() })),
+  })),
 }))
-
-// Track mock state for isPlayStoreInstall
-let mockIsPlayStoreInstall = false
-
-// Mock the update-checker module
-jest.mock("../services/update-checker", () => {
-  const actual = jest.requireActual("../services/update-checker")
-  return {
-    ...actual,
-    isPlayStoreInstall: jest.fn(() => Promise.resolve(mockIsPlayStoreInstall)),
-  }
-})
 
 // Mock notification store
 jest.mock("../stores/notification-store", () => ({
@@ -53,8 +44,7 @@ jest.mock("../stores/notification-store", () => ({
   },
 }))
 
-import { getUpdateUrl } from "./use-update-check"
-import { APP_CONFIG } from "../constants/app-config"
+import { decodeVersionCode } from "../services/update-checker"
 import {
   setDismissedVersion,
   getDismissedVersion,
@@ -65,84 +55,22 @@ import {
 describe("useUpdateCheck Properties", () => {
   beforeEach(() => {
     mockStorage.clear()
-    mockIsPlayStoreInstall = false
     jest.clearAllMocks()
   })
 
   /**
-   * Property 3: Update URL Selection
-   * For any install source (Play Store or direct), when the user taps "Update",
-   * the correct URL SHALL be opened: Play Store URL for Play Store installs,
-   * GitHub releases URL for direct installs.
+   * Property 3: Android version codes remain decodable for UI display.
    */
-  describe("Property 3: Update URL Selection", () => {
-    // Arbitrary for generating valid GitHub release URLs
-    const releaseUrlArb = fc
-      .tuple(fc.webSegment(), fc.webSegment())
-      .map(([owner, repo]) => `https://github.com/${owner}/${repo}/releases/tag/v1.0.0`)
-
-    it("Play Store installs SHALL return Play Store URL", async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.option(releaseUrlArb, { nil: undefined }),
-          async (releaseUrl) => {
-            // Set up as Play Store install
-            mockIsPlayStoreInstall = true
-
-            const url = await getUpdateUrl(releaseUrl)
-
-            // Should return Play Store URL
-            expect(url).toBe(APP_CONFIG.playStore.url)
-
-            return true
-          }
-        ),
-        { numRuns: 100 }
-      )
-    })
-
-    it("non-Play Store installs SHALL return GitHub releases URL when provided", async () => {
-      await fc.assert(
-        fc.asyncProperty(releaseUrlArb, async (releaseUrl) => {
-          // Set up as non-Play Store install
-          mockIsPlayStoreInstall = false
-
-          const url = await getUpdateUrl(releaseUrl)
-
-          // Should return the provided release URL
-          expect(url).toBe(releaseUrl)
-
-          return true
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("non-Play Store installs SHALL return default GitHub URL when no release URL provided", async () => {
-      // Set up as non-Play Store install
-      mockIsPlayStoreInstall = false
-
-      const url = await getUpdateUrl(undefined)
-
-      // Should return default GitHub releases URL
-      expect(url).toBe(`${APP_CONFIG.github.url}/releases`)
-    })
-
-    it("URL selection SHALL be deterministic for the same install source", async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.boolean(),
-          fc.option(releaseUrlArb, { nil: undefined }),
-          async (isPlayStore, releaseUrl) => {
-            mockIsPlayStoreInstall = isPlayStore
-
-            // Call twice with same parameters
-            const url1 = await getUpdateUrl(releaseUrl)
-            const url2 = await getUpdateUrl(releaseUrl)
-
-            // Should return the same URL
-            expect(url1).toBe(url2)
-
+  describe("Property 3: Version Code Decoding", () => {
+    it("stable version codes SHALL decode to a displayable semantic version", () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 0, max: 99 }),
+          fc.integer({ min: 0, max: 99 }),
+          fc.integer({ min: 0, max: 99 }),
+          (major, minor, patch) => {
+            const versionCode = major * 10000000 + minor * 100000 + patch * 1000 + 999
+            expect(decodeVersionCode(versionCode)).toBe(`${major}.${minor}.${patch}`)
             return true
           }
         ),

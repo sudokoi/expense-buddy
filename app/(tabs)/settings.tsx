@@ -92,8 +92,9 @@ export default function SettingsScreen() {
   const {
     updateAvailable,
     latestVersion,
+    isUpdateReadyToInstall,
     checkForUpdates: manualCheckForUpdates,
-    handleUpdate: openUpdateUrl,
+    handleUpdate: startUpdate,
   } = useUpdateCheck()
 
   const {
@@ -131,11 +132,11 @@ export default function SettingsScreen() {
 
   // Derive updateInfo from hook state for AppInfoSection compatibility
   const updateInfo: UpdateInfo | null = useMemo(() => {
-    if (latestVersion) {
+    if (latestVersion || updateAvailable) {
       return {
         hasUpdate: updateAvailable,
         currentVersion: APP_CONFIG.version,
-        latestVersion,
+        latestVersion: latestVersion ?? undefined,
       }
     }
     return null
@@ -289,11 +290,10 @@ export default function SettingsScreen() {
     }
   }, [manualCheckForUpdates])
 
-  // Use hook's handleUpdate for opening the release page
-  // This correctly handles Play Store vs GitHub based on install source
-  const handleOpenRelease = useCallback(async () => {
-    await openUpdateUrl()
-  }, [openUpdateUrl])
+  // Use hook's handleUpdate for the Play Store in-app update flow.
+  const handleStartUpdate = useCallback(async () => {
+    await startUpdate()
+  }, [startUpdate])
 
   const handleOpenGitHub = useCallback(() => {
     Linking.openURL(APP_CONFIG.github.url)
@@ -724,9 +724,10 @@ export default function SettingsScreen() {
           <AppInfoSection
             currentVersion={APP_CONFIG.version}
             updateInfo={updateInfo}
+            isUpdateReadyToInstall={isUpdateReadyToInstall}
             isCheckingUpdate={isCheckingUpdate}
             onCheckForUpdates={handleCheckForUpdates}
-            onOpenRelease={handleOpenRelease}
+            onStartUpdate={handleStartUpdate}
             onOpenGitHub={handleOpenGitHub}
             onReportIssue={handleReportIssue}
           />
