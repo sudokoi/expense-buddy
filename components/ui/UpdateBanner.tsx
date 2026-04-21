@@ -98,6 +98,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
         <RNView style={actionsStyle}>
           <Button
             size="$chip"
+            px="$control"
             bg={infoStyles.actionBg}
             borderWidth={1}
             borderColor={infoStyles.actionBorderColor}

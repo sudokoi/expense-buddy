@@ -240,10 +240,13 @@ export default function DashboardScreen() {
             <Button
               key={c}
               size="$chip"
+              px="$control"
               onPress={() => setSelectedCurrency(c)}
               themeInverse={effectiveCurrency === c}
               bordered={effectiveCurrency !== c}
-              style={{ borderRadius: UI_RADIUS.round }}
+              style={{
+                borderRadius: UI_RADIUS.round,
+              }}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>
@@ -317,7 +320,7 @@ export default function DashboardScreen() {
           <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
           </YStack>
-          <Button chromeless size="$chip" onPress={handleAnalyticsPress}>
+          <Button chromeless size="$chip" px="$control" onPress={handleAnalyticsPress}>
             {t("dashboard.viewAnalytics")}
           </Button>
         </XStack>
@@ -366,7 +369,7 @@ export default function DashboardScreen() {
           <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
           </YStack>
-          <Button chromeless size="$chip" onPress={handleHistoryPress}>
+          <Button chromeless size="$chip" px="$control" onPress={handleHistoryPress}>
             {t("common.seeAll")}
           </Button>
         </XStack>

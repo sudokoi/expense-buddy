@@ -126,6 +126,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       <XStack gap="$control">
         <Button
           size="$chip"
+          px="$control"
           themeInverse={isAllSelected}
           bordered={!isAllSelected}
           onPress={handleAllPress}
@@ -139,6 +140,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
             <Button
               key={item.key}
               size="$chip"
+              px="$control"
               themeInverse={isSelected}
               bordered={!isSelected}
               onPress={() => handleToggle(item.key)}

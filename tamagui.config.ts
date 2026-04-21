@@ -31,6 +31,16 @@ const semanticBodyFontSize = {
   screenTitle: defaultFonts.body.size["7"],
 }
 
+const semanticControlBodyFontSize = {
+  icon: semanticBodyFontSize.micro,
+  chip: semanticBodyFontSize.caption,
+  compact: semanticBodyFontSize.body,
+  control: semanticBodyFontSize.label,
+  prominent: semanticBodyFontSize.title,
+  dialog: semanticBodyFontSize.sectionTitle,
+  hero: semanticBodyFontSize.screenTitle,
+}
+
 const semanticBodyLineHeight = {
   micro: defaultFonts.body.lineHeight["1"],
   caption: defaultFonts.body.lineHeight["2"],
@@ -39,6 +49,16 @@ const semanticBodyLineHeight = {
   title: defaultFonts.body.lineHeight["5"],
   sectionTitle: defaultFonts.body.lineHeight["6"],
   screenTitle: defaultFonts.body.lineHeight["7"],
+}
+
+const semanticControlBodyLineHeight = {
+  icon: semanticBodyLineHeight.micro,
+  chip: semanticBodyLineHeight.caption,
+  compact: semanticBodyLineHeight.body,
+  control: semanticBodyLineHeight.label,
+  prominent: semanticBodyLineHeight.title,
+  dialog: semanticBodyLineHeight.sectionTitle,
+  hero: semanticBodyLineHeight.screenTitle,
 }
 
 const semanticHeadingFontSize = {
@@ -51,6 +71,16 @@ const semanticHeadingFontSize = {
   screenTitle: defaultFonts.heading.size["7"],
 }
 
+const semanticControlHeadingFontSize = {
+  icon: semanticHeadingFontSize.micro,
+  chip: semanticHeadingFontSize.caption,
+  compact: semanticHeadingFontSize.body,
+  control: semanticHeadingFontSize.label,
+  prominent: semanticHeadingFontSize.title,
+  dialog: semanticHeadingFontSize.sectionTitle,
+  hero: semanticHeadingFontSize.screenTitle,
+}
+
 const semanticHeadingLineHeight = {
   micro: defaultFonts.heading.lineHeight["1"],
   caption: defaultFonts.heading.lineHeight["2"],
@@ -59,6 +89,16 @@ const semanticHeadingLineHeight = {
   title: defaultFonts.heading.lineHeight["5"],
   sectionTitle: defaultFonts.heading.lineHeight["6"],
   screenTitle: defaultFonts.heading.lineHeight["7"],
+}
+
+const semanticControlHeadingLineHeight = {
+  icon: semanticHeadingLineHeight.micro,
+  chip: semanticHeadingLineHeight.caption,
+  compact: semanticHeadingLineHeight.body,
+  control: semanticHeadingLineHeight.label,
+  prominent: semanticHeadingLineHeight.title,
+  dialog: semanticHeadingLineHeight.sectionTitle,
+  hero: semanticHeadingLineHeight.screenTitle,
 }
 
 // Extend default config with custom semantic color tokens and kawaii themes
@@ -136,10 +176,12 @@ export const config = createTamagui({
       size: {
         ...defaultFonts.body.size,
         ...semanticBodyFontSize,
+        ...semanticControlBodyFontSize,
       },
       lineHeight: {
         ...defaultFonts.body.lineHeight,
         ...semanticBodyLineHeight,
+        ...semanticControlBodyLineHeight,
       },
     },
     heading: {
@@ -147,10 +189,12 @@ export const config = createTamagui({
       size: {
         ...defaultFonts.heading.size,
         ...semanticHeadingFontSize,
+        ...semanticControlHeadingFontSize,
       },
       lineHeight: {
         ...defaultFonts.heading.lineHeight,
         ...semanticHeadingLineHeight,
+        ...semanticControlHeadingLineHeight,
       },
     },
   },

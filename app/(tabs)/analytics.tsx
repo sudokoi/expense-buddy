@@ -545,6 +545,7 @@ export default function AnalyticsScreen() {
             <Button
               key={chip.key}
               size="$chip"
+              px="$control"
               bordered
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
@@ -601,6 +602,7 @@ export default function AnalyticsScreen() {
                     <Button
                       key={c}
                       size="$chip"
+                      px="$control"
                       onPress={() => setSelectedCurrency(c)}
                       themeInverse={effectiveCurrency === c}
                       bordered={effectiveCurrency !== c}

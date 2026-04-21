@@ -329,6 +329,7 @@ export default function AddExpenseScreen() {
               <Input
                 flex={1}
                 size="$prominent"
+                px="$section"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")

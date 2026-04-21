@@ -159,9 +159,12 @@ const FilterChip = React.memo(function FilterChip({
   return (
     <Button
       size="$chip"
+      px="$control"
       bordered
       onPress={onRemove}
-      style={{ borderRadius: UI_RADIUS.round }}
+      style={{
+        borderRadius: UI_RADIUS.round,
+      }}
       iconAfter={X}
     >
       <Button.Text numberOfLines={1}>{label}</Button.Text>
@@ -833,6 +836,7 @@ export default function HistoryScreen() {
         <XStack style={layoutStyles.filterButtonContainer}>
           <Button
             size="$compact"
+            px="$section"
             icon={Filter}
             onPress={handleOpenFilterSheet}
             themeInverse={activeCount > 0}
@@ -905,6 +909,7 @@ export default function HistoryScreen() {
       <XStack style={layoutStyles.filterButtonContainer}>
         <Button
           size="$compact"
+          px="$section"
           icon={Filter}
           onPress={handleOpenFilterSheet}
           themeInverse={activeCount > 0}

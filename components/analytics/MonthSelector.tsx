@@ -38,6 +38,7 @@ export const MonthSelector = memo(function MonthSelector({
       <XStack gap="$control" mb="$gutter" style={layoutStyles.container}>
         <Button
           size="$compact"
+          px="$section"
           themeInverse={value === null}
           bordered={value !== null}
           onPress={() => onChange(null)}
@@ -51,6 +52,7 @@ export const MonthSelector = memo(function MonthSelector({
             <Button
               key={monthKey}
               size="$compact"
+              px="$section"
               themeInverse={isSelected}
               bordered={!isSelected}
               onPress={() => onChange(monthKey)}

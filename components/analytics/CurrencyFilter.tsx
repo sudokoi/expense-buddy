@@ -1,6 +1,5 @@
 import { XStack, Button } from "tamagui"
 import { getCurrencySymbol } from "../../utils/currency"
-
 interface CurrencyFilterProps {
   availableCurrencies: string[]
   selectedCurrency: string | null
@@ -27,6 +26,7 @@ export function CurrencyFilter({
           <Button
             key={currency}
             size="$compact"
+            px="$section"
             themeInverse={isSelected}
             onPress={() => onChange(currency)}
             bordered
