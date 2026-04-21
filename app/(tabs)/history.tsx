@@ -95,9 +95,6 @@ const layoutStyles = {
     paddingHorizontal: UI_SPACE.gutter,
     paddingTop: UI_SPACE.gutter,
   } as ViewStyle,
-  header: {
-    marginBottom: UI_SPACE.gutter,
-  } as TextStyle,
   dialogButtonRow: {
     justifyContent: "flex-end",
   } as ViewStyle,

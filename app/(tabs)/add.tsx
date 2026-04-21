@@ -13,7 +13,7 @@ import {
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
-import { ViewStyle, TextStyle, Keyboard, Platform } from "react-native"
+import { ViewStyle, Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -47,10 +47,6 @@ const layoutStyles = {
     alignSelf: "center",
     width: "100%",
   } as ViewStyle,
-  header: {
-    textAlign: "center",
-    marginBottom: UI_SPACE.control,
-  } as TextStyle,
   amountRow: {
     alignItems: "center",
   } as ViewStyle,

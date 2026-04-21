@@ -17,11 +17,14 @@ export interface ParsedSmsImportCandidate {
 
 const amountPattern = /(?:INR|RS\.?|₹)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
 const debitKeywords = /debited|spent|withdrawn|paid|purchase|txn|transaction|upi/i
+const settledDebitKeywords = /debited|spent|withdrawn|paid|purchase/i
 const creditOnlyKeywords = /credited|received/i
 const otpKeywords =
   /\botp\b|one[ -]?time password|verification code|security code|auth(?:entication)? code|passcode|do not share|never share|valid for \d+ (?:minute|min|minutes|mins)/i
-const nonExpenseAlertKeywords =
-  /available balance|avl(?:\.|\s)?bal|a\/c balance|account balance|balance is|ledger balance|min(?:imum)? due|total due|payment due|due date|bill(?:ing)? statement|statement generated|statement ready|e-?statement|autopay|auto-debit mandate|standing instruction|card ending|card blocked|card hotlisted|card limit|credit limit|cash limit|cvv|pin|mpin|tpin|token(?:isation|ization)?|token generated|registered for e-?com|e-?commerce|online usage enabled|international usage enabled|contactless usage enabled|declined due to|was declined|failed due to|unsuccessful|reversed|reversal|refund initiated|chargeback/i
+const nonExpenseInfoKeywords =
+  /available balance|avl(?:\.|\s)?bal|a\/c balance|account balance|balance is|ledger balance|min(?:imum)? due|total due|payment due|due date|bill(?:ing)? statement|statement generated|statement ready|e-?statement|autopay|auto-debit mandate|standing instruction|card ending|card blocked|card hotlisted|card limit|credit limit|cash limit|cvv|pin|mpin|tpin|token(?:isation|ization)?|token generated|registered for e-?com|e-?commerce|online usage enabled|international usage enabled|contactless usage enabled/i
+const nonExpenseTransactionOutcomeKeywords =
+  /declined due to|was declined|failed due to|unsuccessful|reversed|reversal|refund initiated|chargeback|no amount debited/i
 const approvalPromptKeywords =
   /if not you|if this wasn'?t you|approve|approval|authenticate|authorize|authorise|confirm this transaction|complete this transaction|to complete your transaction|to proceed/i
 const merchantPattern = /\b(?:at|to|merchant)\s+([A-Za-z0-9&._\-/ ]{2,40})/i
@@ -110,9 +113,14 @@ function inferCategory(body: string, merchantName?: string): string {
 }
 
 function isNegativeBankAlert(body: string): boolean {
+  const hasDebitSignal = debitKeywords.test(body) && !creditOnlyKeywords.test(body)
+  const hasSettledDebitSignal =
+    settledDebitKeywords.test(body) && !creditOnlyKeywords.test(body)
+
   return (
-    nonExpenseAlertKeywords.test(body) ||
-    (approvalPromptKeywords.test(body) && !/debited|spent|paid|withdrawn/i.test(body))
+    nonExpenseTransactionOutcomeKeywords.test(body) ||
+    (!hasDebitSignal && nonExpenseInfoKeywords.test(body)) ||
+    (approvalPromptKeywords.test(body) && !hasSettledDebitSignal)
   )
 }
 

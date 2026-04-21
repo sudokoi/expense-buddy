@@ -61,6 +61,20 @@ describe("parseSmsImportCandidate", () => {
     expect(candidate?.categorySuggestion).toBe("Other")
   })
 
+  it("parses debit messages that mention card ending details", () => {
+    const candidate = parseSmsImportCandidate(
+      createMessage("INR 499 spent at Amazon using debit card ending 1234")
+    )
+
+    expect(candidate).toEqual(
+      expect.objectContaining({
+        amount: 499,
+        categorySuggestion: "Other",
+        paymentMethodSuggestion: { type: "Debit Card" },
+      })
+    )
+  })
+
   it("ignores credited messages", () => {
     const candidate = parseSmsImportCandidate(
       createMessage("INR 500 credited to your account from employer")
