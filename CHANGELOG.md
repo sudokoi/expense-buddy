@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.2.1
+
+### Patch Changes
+
+- [#58](https://github.com/sudokoi/expense-buddy/pull/58) [`3e651f7`](https://github.com/sudokoi/expense-buddy/commit/3e651f70f2be18f5c430ac22298ef7988a1faff4) Thanks [@sudokoi](https://github.com/sudokoi)! - Move Play Store update and in-app review support into a tracked local Expo module.
+
+  Play-installed Android builds now use native Play Core flows for in-app update checks, background download/install handoff, and conservative in-app review prompts, while non-Play builds keep the GitHub-release fallback behavior.
+
 ## 3.2.0
 
 ### Minor Changes
