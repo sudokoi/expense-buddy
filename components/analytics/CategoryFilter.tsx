@@ -80,10 +80,10 @@ export const CategoryFilter = memo(function CategoryFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$2">
+      <XStack gap="$control">
         {/* All button */}
         <Button
-          size="$2"
+          size="$chip"
           themeInverse={isAllSelected}
           bordered={!isAllSelected}
           onPress={handleAllPress}
@@ -98,7 +98,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           return (
             <Button
               key={cat.label}
-              size="$2"
+              size="$chip"
               bordered={!isSelected}
               style={isSelected ? { backgroundColor: cat.color } : undefined}
               onPress={() => handleCategoryPress(cat.label)}

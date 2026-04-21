@@ -233,19 +233,19 @@ export function EditExpenseModal({
         snapPoints={[95]}
         scroll
       >
-        <YStack gap="$4" pb="$6">
+        <YStack gap="$gutter" pb="$block">
           {/* Amount Input */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("history.editDialog.fields.amount")}
             </Label>
-            <XStack style={{ alignItems: "center" }} gap="$2">
-              <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
+            <XStack style={{ alignItems: "center" }} gap="$control">
+              <Text fontSize="$label" fontWeight="bold" color="$color" opacity={0.8}>
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
                 flex={1}
-                size="$4"
+                size="$control"
                 placeholder={t("add.amountPlaceholder")}
                 keyboardType="numeric"
                 value={amount}
@@ -267,14 +267,14 @@ export function EditExpenseModal({
               />
             </XStack>
             {errors.amount && (
-              <Text fontSize="$2" color="$red10">
+              <Text fontSize="$caption" color="$red10">
                 {errors.amount}
               </Text>
             )}
           </YStack>
 
           {/* Category Selection */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("history.editDialog.fields.category")}
             </Label>
@@ -296,7 +296,7 @@ export function EditExpenseModal({
           </YStack>
 
           {/* Note Input */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("history.editDialog.fields.note")}
             </Label>
@@ -309,7 +309,7 @@ export function EditExpenseModal({
           </YStack>
 
           {/* Payment Method Selection */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("history.editDialog.fields.paymentMethod")}
             </Label>
@@ -326,8 +326,8 @@ export function EditExpenseModal({
 
             {/* Identifier input for cards/UPI/Other */}
             {selectedPaymentConfig?.hasIdentifier && (
-              <YStack gap="$1" style={layoutStyles.identifierContainer}>
-                <Label color="$color" opacity={0.6} fontSize="$2">
+              <YStack gap="$micro" style={layoutStyles.identifierContainer}>
+                <Label color="$color" opacity={0.6} fontSize="$caption">
                   {selectedPaymentConfig.identifierLabel} {t("common.optional")}
                 </Label>
 
@@ -359,7 +359,7 @@ export function EditExpenseModal({
                   />
                 ) : (
                   <Input
-                    size="$4"
+                    size="$control"
                     placeholder={
                       paymentMethodType === "Other"
                         ? t("history.editDialog.fields.otherPlaceholder")
@@ -379,14 +379,14 @@ export function EditExpenseModal({
 
           {/* Action Buttons */}
           <XStack style={layoutStyles.buttonRow}>
-            <Button size="$4" chromeless onPress={handleClose}>
+            <Button size="$control" chromeless onPress={handleClose}>
               {t("common.cancel")}
             </Button>
             <Button
-              size="$4"
+              size="$control"
               themeInverse
               onPress={handleSave}
-              icon={<Check size="$1" />}
+              icon={<Check size="$icon" />}
               fontWeight="bold"
             >
               {t("common.save")}

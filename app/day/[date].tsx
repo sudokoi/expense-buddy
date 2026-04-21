@@ -13,35 +13,36 @@ import { formatCurrency } from "../../utils/currency"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { formatDate } from "../../utils/date"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: UI_SPACE.gutter,
+    paddingTop: UI_SPACE.gutter,
+    paddingBottom: UI_SPACE.control,
     alignItems: "center",
     justifyContent: "space-between",
   } as ViewStyle,
   dateNav: {
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: UI_SPACE.gutter,
+    paddingBottom: UI_SPACE.gutter,
   } as ViewStyle,
   summary: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: UI_SPACE.gutter,
+    paddingBottom: UI_SPACE.gutter,
     alignItems: "center",
     justifyContent: "center",
   } as ViewStyle,
   listContent: {
-    paddingBottom: 40,
+    paddingBottom: UI_SPACE.empty,
   } as ViewStyle,
   emptyContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 40,
+    padding: UI_SPACE.empty,
   } as ViewStyle,
 }
 
@@ -122,35 +123,35 @@ export default function DayViewScreen() {
       {/* Header */}
       <XStack style={layoutStyles.header}>
         <Button
-          size="$3"
+          size="$compact"
           chromeless
           icon={ChevronLeft}
           onPress={() => router.back()}
           color="$color"
         />
         <YStack style={{ alignItems: "center" }}>
-          <Text fontSize="$5" fontWeight="bold">
+          <Text fontSize="$title" fontWeight="bold">
             {dayTitle}
           </Text>
-          <Text fontSize="$2" color="$color" opacity={0.6}>
+          <Text fontSize="$caption" color="$color" opacity={0.6}>
             {fullDate}
           </Text>
         </YStack>
-        <Button size="$3" chromeless icon={null} disabled />
+        <Button size="$compact" chromeless icon={null} disabled />
       </XStack>
 
       {/* Date Nav */}
       <XStack style={layoutStyles.dateNav}>
-        <Button size="$3" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
-        <Text fontSize="$6" fontWeight="bold" color="$color">
+        <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
+        <Text fontSize="$sectionTitle" fontWeight="bold" color="$color">
           {formatCurrency(totalSpent)}
         </Text>
-        <Button size="$3" chromeless icon={ArrowRight} onPress={handleNextDay} />
+        <Button size="$compact" chromeless icon={ArrowRight} onPress={handleNextDay} />
       </XStack>
 
       <Text
-        style={{ textAlign: "center", marginBottom: 16 }}
-        fontSize="$2"
+        style={{ textAlign: "center", marginBottom: UI_SPACE.gutter }}
+        fontSize="$caption"
         color="$color"
         opacity={0.6}
       >

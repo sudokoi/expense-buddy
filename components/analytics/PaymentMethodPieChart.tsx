@@ -128,10 +128,10 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   const CenterLabel = useCallback(
     () => (
       <YStack style={styles.centerLabel}>
-        <Text fontSize="$2" color="$color" opacity={0.6}>
+        <Text fontSize="$caption" color="$color" opacity={0.6}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text fontWeight="bold" fontSize="$4">
+        <Text fontWeight="bold" fontSize="$label">
           ₹{total.toFixed(0)}
         </Text>
       </YStack>
@@ -169,7 +169,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
           />
         </View>
 
-        <YStack width="100%" gap="$2">
+        <YStack width="100%" gap="$control">
           {data.map((item) => (
             <LegendItem
               key={item.paymentMethodType}

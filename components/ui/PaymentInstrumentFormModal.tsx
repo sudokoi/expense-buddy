@@ -191,8 +191,8 @@ function PaymentInstrumentForm({
   }, [method, nickname, lastDigits, existingInstruments, instrument, onSave, onClose])
 
   return (
-    <YStack gap="$4">
-      <YStack gap="$2">
+    <YStack gap="$gutter">
+      <YStack gap="$control">
         <Label color="$color" opacity={0.8}>
           {t("instruments.form.paymentMethod")}
         </Label>
@@ -215,12 +215,12 @@ function PaymentInstrumentForm({
         </XStack>
       </YStack>
 
-      <YStack gap="$2">
+      <YStack gap="$control">
         <Label color="$color" opacity={0.8}>
           {t("instruments.form.nickname")}
         </Label>
         <Input
-          size="$4"
+          size="$control"
           placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
@@ -232,18 +232,18 @@ function PaymentInstrumentForm({
           }}
         />
         {errors.nickname && (
-          <Text fontSize="$2" color="$red10">
+          <Text fontSize="$caption" color="$red10">
             {errors.nickname}
           </Text>
         )}
       </YStack>
 
-      <YStack gap="$2">
+      <YStack gap="$control">
         <Label color="$color" opacity={0.8}>
           {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
         </Label>
         <Input
-          size="$4"
+          size="$control"
           placeholder={t("instruments.form.identifierPlaceholder", {
             count: getLastDigitsLength(method),
           })}
@@ -258,21 +258,21 @@ function PaymentInstrumentForm({
           }}
         />
         {errors.lastDigits && (
-          <Text fontSize="$2" color="$red10">
+          <Text fontSize="$caption" color="$red10">
             {errors.lastDigits}
           </Text>
         )}
       </YStack>
 
       <XStack style={layoutStyles.buttonRow}>
-        <Button size="$4" chromeless onPress={onClose}>
+        <Button size="$control" chromeless onPress={onClose}>
           {t("common.cancel")}
         </Button>
         <Button
-          size="$4"
+          size="$control"
           themeInverse
           onPress={handleSave}
-          icon={<Check size="$1" />}
+          icon={<Check size="$icon" />}
           fontWeight="bold"
         >
           {isEditMode ? t("common.save") : t("common.add")}

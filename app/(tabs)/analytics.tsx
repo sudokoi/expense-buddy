@@ -531,20 +531,20 @@ export default function AnalyticsScreen() {
       <Header />
 
       <XStack
-        mb="$4"
-        gap="$2"
+        mb="$gutter"
+        gap="$control"
         style={{ alignItems: "center", justifyContent: "space-between" } as ViewStyle}
       >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 } as any}
+          contentContainerStyle={{ gap: UI_SPACE.control } as any}
           flex={1}
         >
           {appliedChips.map((chip) => (
             <Button
               key={chip.key}
-              size="$2"
+              size="$chip"
               bordered
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
@@ -556,7 +556,7 @@ export default function AnalyticsScreen() {
         </ScrollView>
 
         <Button
-          size="$3"
+          size="$compact"
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
@@ -592,13 +592,15 @@ export default function AnalyticsScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8, paddingBottom: 16 } as any}
-                  style={{ marginBottom: 4 }}
+                  contentContainerStyle={
+                    { gap: UI_SPACE.control, paddingBottom: UI_SPACE.gutter } as any
+                  }
+                  style={{ marginBottom: UI_SPACE.micro }}
                 >
                   {availableCurrencies.map((c) => (
                     <Button
                       key={c}
-                      size="$2"
+                      size="$chip"
                       onPress={() => setSelectedCurrency(c)}
                       themeInverse={effectiveCurrency === c}
                       bordered={effectiveCurrency !== c}

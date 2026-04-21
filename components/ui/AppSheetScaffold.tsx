@@ -73,19 +73,19 @@ export function AppSheetScaffold({
       >
         <Sheet.Handle />
 
-        <YStack gap="$4" mt={UI_SPACE.control} flex={1}>
+        <YStack gap="$gutter" mt={UI_SPACE.control} flex={1}>
           <XStack style={layoutStyles.headerRow}>
             <YStack>
               <H4>{title}</H4>
               {subtitle ? (
-                <Text fontSize="$3" opacity={0.7} color="$color">
+                <Text fontSize="$body" opacity={0.7} color="$color">
                   {subtitle}
                 </Text>
               ) : null}
             </YStack>
 
             <Button
-              size="$3"
+              size="$compact"
               chromeless
               icon={X}
               onPress={onClose}
@@ -101,7 +101,7 @@ export function AppSheetScaffold({
             children
           )}
 
-          {footer ? <YStack gap="$2">{footer}</YStack> : null}
+          {footer ? <YStack gap="$control">{footer}</YStack> : null}
         </YStack>
       </Sheet.Frame>
     </Sheet>

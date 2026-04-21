@@ -529,7 +529,7 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer>
-      <YStack gap="$4" style={layoutStyles.container}>
+      <YStack gap="$gutter" style={layoutStyles.container}>
         <SettingsSection
           title={t("settings.sections.sync")}
           description={t("settings.sync.description")}
@@ -546,8 +546,13 @@ export default function SettingsScreen() {
           />
 
           {isConfigured && (
-            <YStack gap="$4" style={layoutStyles.syncButtonsContainer}>
-              <Button size="$4" onPress={handleSync} disabled={isSyncing} themeInverse>
+            <YStack gap="$gutter" style={layoutStyles.syncButtonsContainer}>
+              <Button
+                size="$control"
+                onPress={handleSync}
+                disabled={isSyncing}
+                themeInverse
+              >
                 {syncButtonText}
               </Button>
 
@@ -567,7 +572,7 @@ export default function SettingsScreen() {
           <SettingsSection
             title={t("settings.smsImport.title")}
             description={t("settings.smsImport.description")}
-            gap="$4"
+            gap="$gutter"
           >
             <XStack style={layoutStyles.actionRow}>
               <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
@@ -587,7 +592,7 @@ export default function SettingsScreen() {
               </XStack>
             ) : null}
 
-            <Text color="$color" opacity={0.65} fontSize="$2">
+            <Text color="$color" opacity={0.65} fontSize="$caption">
               {t("settings.smsImport.helper")}
             </Text>
           </SettingsSection>
@@ -596,7 +601,7 @@ export default function SettingsScreen() {
         <SettingsSection
           title={t("settings.sections.payment")}
           description={t("settings.payment.description")}
-          gap="$4"
+          gap="$gutter"
         >
           <Pressable
             onPress={() => router.push("/settings/payment" as Href)}
@@ -604,17 +609,17 @@ export default function SettingsScreen() {
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
             <XStack bg="$backgroundHover" style={layoutStyles.menuRow}>
-              <YStack gap="$1" flex={1} pointerEvents="none">
+              <YStack gap="$micro" flex={1} pointerEvents="none">
                 <Label color="$color" opacity={0.82}>
                   {t("settings.payment.manageTitle")}
                 </Label>
-                <Text color="$color" opacity={0.62} fontSize="$3">
+                <Text color="$color" opacity={0.62} fontSize="$body">
                   {t("settings.payment.summary", {
                     defaultMethod: defaultPaymentMethodLabel,
                     instrumentCount: activePaymentInstrumentCount,
                   })}
                 </Text>
-                <Text color="$color" opacity={0.5} fontSize="$2">
+                <Text color="$color" opacity={0.5} fontSize="$caption">
                   {t("settings.payment.manageHelp")}
                 </Text>
               </YStack>
@@ -626,22 +631,22 @@ export default function SettingsScreen() {
         <SettingsSection
           title={t("settings.sections.featureFlags")}
           description={t("settings.featureFlags.description")}
-          gap="$4"
+          gap="$gutter"
         >
           <XStack
             bg="$backgroundHover"
-            px="$3"
-            py="$3"
+            px="$section"
+            py="$section"
             style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
           >
-            <YStack flex={1} gap="$1">
+            <YStack flex={1} gap="$micro">
               <Label>{t("settings.general.mathEntry")}</Label>
-              <Text color="$color" opacity={0.6} fontSize="$2">
+              <Text color="$color" opacity={0.6} fontSize="$caption">
                 {t("settings.general.mathEntryHelp")}
               </Text>
             </YStack>
             <Switch
-              size="$4"
+              size="$control"
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
               backgroundColor={
@@ -657,18 +662,18 @@ export default function SettingsScreen() {
           {Platform.OS === "android" ? (
             <XStack
               bg="$backgroundHover"
-              px="$3"
-              py="$3"
+              px="$section"
+              py="$section"
               style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
             >
-              <YStack flex={1} gap="$1">
+              <YStack flex={1} gap="$micro">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
-                <Text color="$color" opacity={0.6} fontSize="$2">
+                <Text color="$color" opacity={0.6} fontSize="$caption">
                   {t("settings.featureFlags.mlOnlySmsImportsHelp")}
                 </Text>
               </YStack>
               <Switch
-                size="$4"
+                size="$control"
                 checked={settings.useMlOnlyForSmsImports}
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
@@ -688,13 +693,13 @@ export default function SettingsScreen() {
         <SettingsSection
           title={t("settings.sections.general")}
           description={t("settings.general.description")}
-          gap="$4"
+          gap="$gutter"
         >
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label>{t("settings.appearance.theme")}</Label>
             <YStack
               bg="$backgroundHover"
-              p="$3"
+              p="$section"
               style={{ borderRadius: UI_RADIUS.surface }}
             >
               <ThemeSelector value={settings.theme} onChange={handleThemeChange} />

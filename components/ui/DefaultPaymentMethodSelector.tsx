@@ -84,7 +84,7 @@ export function DefaultPaymentMethodSelector({
             opacity={isSelected ? 1 : 0.7}
           />
           <Text
-            fontSize="$2"
+            fontSize="$caption"
             fontWeight={isSelected ? "600" : "400"}
             color="$color"
             opacity={isSelected ? 1 : 0.7}
@@ -97,8 +97,8 @@ export function DefaultPaymentMethodSelector({
   }
 
   return (
-    <Card bordered padding="$2" borderRadius="$4" gap="$2">
-      <XStack flexWrap="wrap" gap="$2">
+    <Card bordered padding="$control" borderRadius="$control" gap="$control">
+      <XStack flexWrap="wrap" gap="$control">
         {/* None option */}
         {renderOption("none", "None", Ban, value === undefined)}
 

@@ -230,9 +230,9 @@ export function PaymentInstrumentInlineDropdown({
   ])
 
   return (
-    <YStack gap="$2">
+    <YStack gap="$control">
       <Button
-        size="$4"
+        size="$control"
         chromeless
         borderWidth={1}
         borderColor="$borderColor"
@@ -244,7 +244,7 @@ export function PaymentInstrumentInlineDropdown({
       </Button>
 
       {open && (
-        <Card bordered padding="$1" borderRadius="$4" gap="$1">
+        <Card bordered padding="$micro" borderRadius="$control" gap="$micro">
           <Pressable
             onPress={handleSelectNone}
             accessibilityRole="button"
@@ -349,7 +349,7 @@ export function PaymentInstrumentInlineDropdown({
 
           {onCreateInstrument && (
             <Button
-              size="$4"
+              size="$control"
               themeInverse
               icon={Plus}
               onPress={handleStartAdd}
@@ -365,12 +365,12 @@ export function PaymentInstrumentInlineDropdown({
       )}
 
       {kind === "manual" && (
-        <YStack gap="$1">
-          <Label color="$color" opacity={0.6} fontSize="$2">
+        <YStack gap="$micro">
+          <Label color="$color" opacity={0.6} fontSize="$caption">
             {effectiveIdentifierLabel} (Optional)
           </Label>
           <Input
-            size="$4"
+            size="$control"
             placeholder={t("settings.instruments.form.identifierPlaceholder", {
               count: effectiveMaxLength,
             })}
@@ -384,17 +384,17 @@ export function PaymentInstrumentInlineDropdown({
 
       {showAdd && onCreateInstrument && (
         <YStack
-          gap="$2"
+          gap="$control"
           borderWidth={1}
           borderColor="$borderColor"
           style={{ padding: UI_SPACE.control, borderRadius: UI_RADIUS.chip }}
         >
-          <YStack gap="$1">
+          <YStack gap="$micro">
             <Label color="$color" opacity={0.8}>
               {t("instruments.form.nickname")}
             </Label>
             <Input
-              size="$4"
+              size="$control"
               placeholder={t("instruments.form.nicknamePlaceholder")}
               value={nickname}
               onChangeText={(t) => {
@@ -414,18 +414,18 @@ export function PaymentInstrumentInlineDropdown({
               }}
             />
             {addErrors.nickname && (
-              <Text fontSize="$2" color="$red10">
+              <Text fontSize="$caption" color="$red10">
                 {addErrors.nickname}
               </Text>
             )}
           </YStack>
 
-          <YStack gap="$1">
+          <YStack gap="$micro">
             <Label color="$color" opacity={0.8}>
               {effectiveIdentifierLabel}
             </Label>
             <Input
-              size="$4"
+              size="$control"
               placeholder={t("settings.instruments.form.identifierPlaceholder", {
                 count: getLastDigitsLength(method),
               })}
@@ -449,17 +449,17 @@ export function PaymentInstrumentInlineDropdown({
               }}
             />
             {addErrors.lastDigits && (
-              <Text fontSize="$2" color="$red10">
+              <Text fontSize="$caption" color="$red10">
                 {addErrors.lastDigits}
               </Text>
             )}
           </YStack>
 
-          <XStack gap="$2" style={{ justifyContent: "flex-end" }}>
-            <Button size="$4" chromeless onPress={handleStartAdd}>
+          <XStack gap="$control" style={{ justifyContent: "flex-end" }}>
+            <Button size="$control" chromeless onPress={handleStartAdd}>
               {t("common.cancel")}
             </Button>
-            <Button size="$4" themeInverse onPress={handleSaveNew}>
+            <Button size="$control" themeInverse onPress={handleSaveNew}>
               {t("common.save")}
             </Button>
           </XStack>

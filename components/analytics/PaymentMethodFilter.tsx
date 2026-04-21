@@ -92,9 +92,9 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$2">
+      <XStack gap="$control">
         <Button
-          size="$2"
+          size="$chip"
           themeInverse={isAllSelected}
           bordered={!isAllSelected}
           onPress={handleAllPress}
@@ -112,7 +112,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           return (
             <Button
               key={item.key}
-              size="$2"
+              size="$chip"
               bordered={!isSelected}
               style={isSelected ? { backgroundColor: color } : undefined}
               onPress={() => handleToggle(item.key)}

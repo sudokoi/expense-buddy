@@ -56,7 +56,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
   const theme = useTheme()
 
   return (
-    <Card bordered padding="$1" borderRadius="$4" style={styles.container}>
+    <Card bordered padding="$micro" borderRadius="$control" style={styles.container}>
       {currencyOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
@@ -83,7 +83,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
                 opacity={isSelected ? 1 : 0.7}
               />
               <Text
-                fontSize="$2"
+                fontSize="$caption"
                 fontWeight={isSelected ? "600" : "400"}
                 color="$color"
                 opacity={isSelected ? 1 : 0.7}

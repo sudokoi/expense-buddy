@@ -226,14 +226,14 @@ export function CategoryFormModal({
         snapPoints={[90]}
         frameStyle={frameStyle}
       >
-        <YStack gap="$4">
+        <YStack gap="$gutter">
           {/* Label Input */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("settings.categories.form.nameLabel")}
             </Label>
             <Input
-              size="$4"
+              size="$control"
               placeholder={t("settings.categories.form.namePlaceholder")}
               value={label}
               onChangeText={handleLabelChange}
@@ -245,11 +245,11 @@ export function CategoryFormModal({
               }}
             />
             {errors.label && (
-              <Text fontSize="$2" color="$red10">
+              <Text fontSize="$caption" color="$red10">
                 {errors.label}
               </Text>
             )}
-            <Text fontSize="$2" color="$color" opacity={0.5}>
+            <Text fontSize="$caption" color="$color" opacity={0.5}>
               {t("settings.categories.form.characterCount", {
                 count: label.length,
                 max: 30,
@@ -258,7 +258,7 @@ export function CategoryFormModal({
           </YStack>
 
           {/* Icon Picker Trigger */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("settings.categories.form.iconLabel")}
             </Label>
@@ -275,7 +275,7 @@ export function CategoryFormModal({
                 </YStack>
                 <YStack flex={1}>
                   <Text fontWeight="500">{icon}</Text>
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                  <Text fontSize="$caption" color="$color" opacity={0.6}>
                     {t("settings.categories.form.iconHelp")}
                   </Text>
                 </YStack>
@@ -284,7 +284,7 @@ export function CategoryFormModal({
           </YStack>
 
           {/* Color Picker Trigger */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("settings.categories.form.colorLabel")}
             </Label>
@@ -299,7 +299,7 @@ export function CategoryFormModal({
                 />
                 <YStack flex={1}>
                   <Text fontWeight="500">{color}</Text>
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                  <Text fontSize="$caption" color="$color" opacity={0.6}>
                     {t("settings.categories.form.colorHelp")}
                   </Text>
                 </YStack>
@@ -309,14 +309,14 @@ export function CategoryFormModal({
 
           {/* Action Buttons */}
           <XStack style={layoutStyles.buttonRow}>
-            <Button size="$4" chromeless onPress={handleClose}>
+            <Button size="$control" chromeless onPress={handleClose}>
               {t("common.cancel")}
             </Button>
             <Button
-              size="$4"
+              size="$control"
               themeInverse
               onPress={handleSave}
-              icon={<Check size="$1" />}
+              icon={<Check size="$icon" />}
               fontWeight="bold"
             >
               {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}

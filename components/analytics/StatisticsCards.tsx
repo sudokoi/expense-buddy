@@ -53,11 +53,11 @@ export const StatisticsCards = memo(function StatisticsCards({
     <YStack style={styles.container}>
       {/* First row */}
       <XStack style={styles.row}>
-        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.blue.bg}>
+        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.blue.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$2"
+            fontSize="$caption"
             color={CARD_COLORS.blue.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -77,11 +77,11 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
         </Card>
 
-        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.green.bg}>
+        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.green.bg}>
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$2"
+            fontSize="$caption"
             color={CARD_COLORS.green.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -104,11 +104,16 @@ export const StatisticsCards = memo(function StatisticsCards({
 
       {/* Second row */}
       <XStack style={styles.row}>
-        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.orange.bg}>
+        <Card
+          flex={1}
+          bordered
+          padding="$section"
+          backgroundColor={CARD_COLORS.orange.bg}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$2"
+            fontSize="$caption"
             color={CARD_COLORS.orange.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -128,18 +133,23 @@ export const StatisticsCards = memo(function StatisticsCards({
               : (statistics.highestCategory?.category ?? "—")}
           </H4>
           {statistics.highestCategory && (
-            <Text fontSize="$2" color={CARD_COLORS.orange.text}>
+            <Text fontSize="$caption" color={CARD_COLORS.orange.text}>
               {symbol}
               {statistics.highestCategory.amount.toFixed(2)}
             </Text>
           )}
         </Card>
 
-        <Card flex={1} bordered padding="$3" backgroundColor={CARD_COLORS.purple.bg}>
+        <Card
+          flex={1}
+          bordered
+          padding="$section"
+          backgroundColor={CARD_COLORS.purple.bg}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$2"
+            fontSize="$caption"
             color={CARD_COLORS.purple.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -157,7 +167,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {statistics.highestDay ? formatDateStr(statistics.highestDay.date) : "—"}
           </H4>
           {statistics.highestDay && (
-            <Text fontSize="$2" color={CARD_COLORS.purple.text}>
+            <Text fontSize="$caption" color={CARD_COLORS.purple.text}>
               {symbol}
               {statistics.highestDay.amount.toFixed(2)}
             </Text>

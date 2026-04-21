@@ -49,21 +49,21 @@ const layoutStyles = {
   } as ViewStyle,
   header: {
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: UI_SPACE.control,
   } as TextStyle,
   amountRow: {
     alignItems: "center",
   } as ViewStyle,
   categoryRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   paymentMethodRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   saveButton: {
-    marginTop: 16,
+    marginTop: UI_SPACE.gutter,
   } as ViewStyle,
   expandHeader: {
     justifyContent: "space-between",
@@ -296,10 +296,10 @@ export default function AddExpenseScreen() {
         }}
         bottomOffset={50}
       >
-        <YStack gap="$3" style={layoutStyles.container}>
+        <YStack gap="$section" style={layoutStyles.container}>
           {Platform.OS === "android" ? (
             <Button
-              size="$4"
+              size="$control"
               bordered
               onPress={() => {
                 void handleOpenSmsImport()
@@ -318,17 +318,17 @@ export default function AddExpenseScreen() {
           ) : null}
 
           {/* Amount Input */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("add.amount")}
             </Label>
-            <XStack style={{ alignItems: "center" }} gap="$2">
-              <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
+            <XStack style={{ alignItems: "center" }} gap="$control">
+              <Text fontSize="$label" fontWeight="bold" color="$color" opacity={0.8}>
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
                 flex={1}
-                size="$5"
+                size="$prominent"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -355,19 +355,19 @@ export default function AddExpenseScreen() {
               />
             </XStack>
             {errors.amount && (
-              <Text fontSize="$2" color="$red10">
+              <Text fontSize="$caption" color="$red10">
                 {errors.amount}
               </Text>
             )}
             {expressionPreview && !errors.amount && (
-              <Text fontSize="$3" color="$color" opacity={0.7}>
+              <Text fontSize="$body" color="$color" opacity={0.7}>
                 {t("add.preview", { amount: expressionPreview })}
               </Text>
             )}
           </YStack>
 
           {/* Category Selection */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("add.category")}
             </Label>
@@ -389,13 +389,13 @@ export default function AddExpenseScreen() {
           </YStack>
 
           {/* Date Picker */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("add.date")}
             </Label>
             <Button
-              icon={<Calendar size="$1" />}
-              size="$4"
+              icon={<Calendar size="$icon" />}
+              size="$control"
               onPress={() => setShowDatePicker(true)}
               chromeless
               borderWidth={1}
@@ -414,7 +414,7 @@ export default function AddExpenseScreen() {
           </YStack>
 
           {/* Note Input */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Label color="$color" opacity={0.8}>
               {t("add.note")}
             </Label>
@@ -427,7 +427,7 @@ export default function AddExpenseScreen() {
           </YStack>
 
           {/* Payment Method Selection - Collapsible */}
-          <YStack gap="$2">
+          <YStack gap="$control">
             <Button
               chromeless
               onPress={togglePaymentMethodSection}
@@ -446,7 +446,7 @@ export default function AddExpenseScreen() {
             </Button>
 
             {paymentMethodSectionExpanded && (
-              <YStack gap="$2">
+              <YStack gap="$control">
                 <XStack style={layoutStyles.paymentMethodRow}>
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard
@@ -460,8 +460,8 @@ export default function AddExpenseScreen() {
 
                 {/* Identifier input for cards/UPI/Other */}
                 {selectedPaymentConfig?.hasIdentifier && (
-                  <YStack gap="$1" style={{ marginTop: 8 }}>
-                    <Label color="$color" opacity={0.6} fontSize="$2">
+                  <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
+                    <Label color="$color" opacity={0.6} fontSize="$caption">
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
                       {t("common.optional")}
@@ -496,7 +496,7 @@ export default function AddExpenseScreen() {
                       />
                     ) : (
                       <Input
-                        size="$4"
+                        size="$control"
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
@@ -519,23 +519,23 @@ export default function AddExpenseScreen() {
           </YStack>
 
           {/* Save Buttons */}
-          <XStack style={layoutStyles.saveButton} gap="$2">
+          <XStack style={layoutStyles.saveButton} gap="$control">
             <Button
               flex={1}
-              size="$4"
+              size="$control"
               bordered
               onPress={() => handleSave({ stayOnAdd: true })}
-              icon={<Plus size="$1" />}
+              icon={<Plus size="$icon" />}
               fontWeight="bold"
             >
               {t("add.addAnother")}
             </Button>
             <Button
               flex={1}
-              size="$4"
+              size="$control"
               themeInverse
               onPress={() => handleSave({ stayOnAdd: false })}
-              icon={<Check size="$1" />}
+              icon={<Check size="$icon" />}
               fontWeight="bold"
             >
               {t("add.save")}

@@ -127,19 +127,19 @@ export function PaymentInstrumentsSection() {
 
   return (
     <>
-      <YStack gap="$3">
+      <YStack gap="$section">
         <XStack style={layoutStyles.row}>
-          <YStack flex={1} gap="$1">
-            <Text fontSize="$4" fontWeight="600">
+          <YStack flex={1} gap="$micro">
+            <Text fontSize="$label" fontWeight="600">
               {t("instruments.title")}
             </Text>
-            <Text color="$color" opacity={0.64} fontSize="$3">
+            <Text color="$color" opacity={0.64} fontSize="$body">
               {active.length > 0
                 ? t("instruments.manage") + ` (${active.length})`
                 : t("instruments.description")}
             </Text>
           </YStack>
-          <Button size="$3" icon={Plus} onPress={handleAdd}>
+          <Button size="$compact" icon={Plus} onPress={handleAdd}>
             {t("instruments.add")}
           </Button>
         </XStack>
@@ -168,7 +168,7 @@ export function PaymentInstrumentsSection() {
                   <>
                     <XStack style={layoutStyles.accordionTriggerInner}>
                       <Text fontWeight="500">{t("instruments.manage")}</Text>
-                      <Text fontSize="$2" color="$color" opacity={0.6}>
+                      <Text fontSize="$caption" color="$color" opacity={0.6}>
                         ({active.length})
                       </Text>
                     </XStack>
@@ -183,31 +183,31 @@ export function PaymentInstrumentsSection() {
 
               <Accordion.Content style={layoutStyles.accordionContent}>
                 <YStack
-                  gap="$4"
+                  gap="$gutter"
                   bg="$backgroundHover"
-                  p="$3"
+                  p="$section"
                   style={{ borderRadius: UI_RADIUS.surface }}
                 >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
                     if (list.length === 0) return null
                     return (
-                      <YStack key={method} gap="$2.5">
+                      <YStack key={method} gap="$section">
                         <Text
                           fontWeight="700"
                           color="$color"
                           opacity={0.55}
-                          fontSize="$2"
+                          fontSize="$caption"
                         >
                           {method}
                         </Text>
                         {list.map((inst) => (
                           <XStack
                             key={inst.id}
-                            gap="$2"
+                            gap="$control"
                             bg="$background"
-                            px="$3"
-                            py="$2.5"
+                            px="$section"
+                            py="$section"
                             style={[
                               layoutStyles.row,
                               { borderRadius: UI_RADIUS.surface },
@@ -217,7 +217,7 @@ export function PaymentInstrumentsSection() {
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
                             <Button
-                              size="$2"
+                              size="$chip"
                               chromeless
                               icon={Edit3}
                               onPress={() => handleEdit(inst)}
@@ -226,7 +226,7 @@ export function PaymentInstrumentsSection() {
                               })}
                             />
                             <Button
-                              size="$2"
+                              size="$chip"
                               chromeless
                               icon={Trash}
                               onPress={() => handleDelete(inst)}

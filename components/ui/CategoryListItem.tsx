@@ -40,7 +40,7 @@ const layoutStyles = {
   colorIndicator: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: UI_SPACE.micro - 1,
     flexShrink: 0,
   } as ViewStyle,
   labelRow: {
@@ -114,9 +114,9 @@ export const CategoryListItem = memo(function CategoryListItem({
   // Calculate font size based on label length to fit text
   const labelFontSize = useMemo(() => {
     const len = category.label.length
-    if (len <= 8) return "$4"
-    if (len <= 12) return "$3"
-    return "$2"
+    if (len <= 8) return "$label"
+    if (len <= 12) return "$body"
+    return "$caption"
   }, [category.label.length])
 
   return (
@@ -142,7 +142,12 @@ export const CategoryListItem = memo(function CategoryListItem({
                 : category.label}
             </Text>
             {category.isDefault && (
-              <Text fontSize="$1" color="$color" opacity={0.5} style={{ flexShrink: 0 }}>
+              <Text
+                fontSize="$micro"
+                color="$color"
+                opacity={0.5}
+                style={{ flexShrink: 0 }}
+              >
                 (default)
               </Text>
             )}
@@ -151,7 +156,7 @@ export const CategoryListItem = memo(function CategoryListItem({
             <YStack
               style={[layoutStyles.colorIndicator, { backgroundColor: resolvedColor }]}
             />
-            <Text fontSize="$1" color="$color" opacity={0.6} numberOfLines={1}>
+            <Text fontSize="$micro" color="$color" opacity={0.6} numberOfLines={1}>
               {category.color}
             </Text>
           </XStack>
@@ -160,7 +165,7 @@ export const CategoryListItem = memo(function CategoryListItem({
         {/* Action buttons */}
         <XStack style={layoutStyles.actionsContainer}>
           <Button
-            size="$2"
+            size="$chip"
             chromeless
             icon={<Pencil size={16} />}
             onPress={handleEdit}
@@ -168,7 +173,7 @@ export const CategoryListItem = memo(function CategoryListItem({
           />
           {canDelete && (
             <Button
-              size="$2"
+              size="$chip"
               chromeless
               icon={<Trash2 size={16} />}
               onPress={handleDelete}

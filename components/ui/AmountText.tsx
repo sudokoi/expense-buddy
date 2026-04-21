@@ -17,7 +17,7 @@ export function AmountText({ type = "expense", ...props }: AmountTextProps) {
     neutral: "$color",
   }
 
-  return <Text fontWeight="bold" fontSize="$5" color={colorMap[type]} {...props} />
+  return <Text fontWeight="bold" fontSize="$title" color={colorMap[type]} {...props} />
 }
 
 export type { AmountTextProps }

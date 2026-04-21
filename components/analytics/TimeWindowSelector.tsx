@@ -3,6 +3,7 @@ import { memo, useCallback } from "react"
 import { ScrollView, ViewStyle } from "react-native"
 import { TimeWindow } from "../../utils/analytics-calculations"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -24,7 +25,7 @@ const layoutStyles = {
     justifyContent: "center",
   } as ViewStyle,
   scrollContent: {
-    paddingHorizontal: 2,
+    paddingHorizontal: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
 
@@ -53,13 +54,13 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$2" mb="$4" style={layoutStyles.container}>
+      <XStack gap="$control" mb="$gutter" style={layoutStyles.container}>
         {TIME_WINDOWS.map((window) => {
           const isSelected = value === window.value
           return (
             <Button
               key={window.value}
-              size="$3"
+              size="$compact"
               themeInverse={isSelected}
               bordered={!isSelected}
               onPress={() => handlePress(window.value)}

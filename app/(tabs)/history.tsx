@@ -120,11 +120,11 @@ const layoutStyles = {
   } as ViewStyle,
   categoryRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   paymentMethodRow: {
     flexWrap: "wrap",
-    gap: 8,
+    gap: UI_SPACE.control,
   } as ViewStyle,
   filterButtonContainer: {
     flexDirection: "row",
@@ -144,7 +144,7 @@ const layoutStyles = {
     alignItems: "center",
   } as ViewStyle,
   contentContainer: {
-    marginTop: 8,
+    marginTop: UI_SPACE.control,
   } as ViewStyle,
 }
 
@@ -158,7 +158,7 @@ const FilterChip = React.memo(function FilterChip({
 }) {
   return (
     <Button
-      size="$2"
+      size="$chip"
       bordered
       onPress={onRemove}
       style={{ borderRadius: UI_RADIUS.round }}
@@ -674,7 +674,7 @@ export default function HistoryScreen() {
       shouldShowLoadMore ? (
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
-            size="$4"
+            size="$control"
             themeInverse
             onPress={handleLoadMore}
             disabled={isLoadingMore}
@@ -832,7 +832,7 @@ export default function HistoryScreen() {
         {/* Filter Button */}
         <XStack style={layoutStyles.filterButtonContainer}>
           <Button
-            size="$3"
+            size="$compact"
             icon={Filter}
             onPress={handleOpenFilterSheet}
             themeInverse={activeCount > 0}
@@ -840,7 +840,7 @@ export default function HistoryScreen() {
             {t("common.filters")}
             {activeCount > 0 && (
               <Text
-                fontSize="$2"
+                fontSize="$caption"
                 fontWeight="bold"
                 style={{ marginLeft: UI_SPACE.micro }}
               >
@@ -854,7 +854,7 @@ export default function HistoryScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 } as any}
+          contentContainerStyle={{ gap: UI_SPACE.control } as any}
         >
           {filterChips.map((chip, index) => (
             <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
@@ -869,7 +869,7 @@ export default function HistoryScreen() {
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
-            size="$4"
+            size="$control"
             onPress={handleResetFilters}
             style={{ marginTop: UI_SPACE.gutter }}
           >
@@ -904,14 +904,18 @@ export default function HistoryScreen() {
       {/* Filter Button */}
       <XStack style={layoutStyles.filterButtonContainer}>
         <Button
-          size="$3"
+          size="$compact"
           icon={Filter}
           onPress={handleOpenFilterSheet}
           themeInverse={activeCount > 0}
         >
           {t("common.filters")}
           {activeCount > 0 && (
-            <Text fontSize="$2" fontWeight="bold" style={{ marginLeft: UI_SPACE.micro }}>
+            <Text
+              fontSize="$caption"
+              fontWeight="bold"
+              style={{ marginLeft: UI_SPACE.micro }}
+            >
               ({activeCount})
             </Text>
           )}
@@ -922,7 +926,7 @@ export default function HistoryScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8 } as any}
+        contentContainerStyle={{ gap: UI_SPACE.control } as any}
         style={{ marginBottom: UI_SPACE.section, flexGrow: 0 }}
       >
         {filterChips.map((chip, index) => (
@@ -951,16 +955,18 @@ export default function HistoryScreen() {
       >
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
-          <Dialog.Content bordered elevate key="content" gap="$4">
-            <Dialog.Title size="$6">{t("history.deleteDialog.title")}</Dialog.Title>
+          <Dialog.Content bordered elevate key="content" gap="$gutter">
+            <Dialog.Title size="$sectionTitle">
+              {t("history.deleteDialog.title")}
+            </Dialog.Title>
             <Dialog.Description>
               {t("history.deleteDialog.description")}
             </Dialog.Description>
-            <XStack gap="$3" style={layoutStyles.dialogButtonRow}>
+            <XStack gap="$section" style={layoutStyles.dialogButtonRow}>
               <Dialog.Close asChild>
-                <Button size="$4">{t("common.cancel")}</Button>
+                <Button size="$control">{t("common.cancel")}</Button>
               </Dialog.Close>
-              <Button size="$4" theme="red" onPress={confirmDelete}>
+              <Button size="$control" theme="red" onPress={confirmDelete}>
                 {t("common.delete")}
               </Button>
             </XStack>
@@ -985,22 +991,24 @@ export default function HistoryScreen() {
             elevate
             key="content"
             style={{ maxHeight: "80%" }}
-            gap="$4"
+            gap="$gutter"
           >
-            <Dialog.Title size="$6">{t("history.editDialog.title")}</Dialog.Title>
+            <Dialog.Title size="$sectionTitle">
+              {t("history.editDialog.title")}
+            </Dialog.Title>
             <Dialog.Description>{t("history.editDialog.description")}</Dialog.Description>
 
             <KeyboardAwareScrollView
               bottomOffset={20}
               contentContainerStyle={{ paddingBottom: insets.bottom }}
             >
-              <YStack gap="$3">
-                <YStack gap="$2">
+              <YStack gap="$section">
+                <YStack gap="$control">
                   <Label color="$color" opacity={0.8} htmlFor="date">
                     {t("history.editDialog.fields.date")}
                   </Label>
                   <Button
-                    size="$4"
+                    size="$control"
                     onPress={() => setShowDatePicker(true)}
                     icon={Calendar}
                   >
@@ -1040,25 +1048,30 @@ export default function HistoryScreen() {
                     />
                   )}
                   {showDatePicker && Platform.OS === "ios" && (
-                    <Button size="$4" onPress={() => setShowDatePicker(false)}>
+                    <Button size="$control" onPress={() => setShowDatePicker(false)}>
                       {t("common.done")}
                     </Button>
                   )}
                 </YStack>
 
-                <YStack gap="$2">
+                <YStack gap="$control">
                   <Label color="$color" opacity={0.8} htmlFor="amount">
                     {t("history.editDialog.fields.amount")}
                   </Label>
-                  <XStack style={{ alignItems: "center" }} gap="$2">
-                    <Text fontSize="$4" fontWeight="bold" color="$color" opacity={0.8}>
+                  <XStack style={{ alignItems: "center" }} gap="$control">
+                    <Text
+                      fontSize="$label"
+                      fontWeight="bold"
+                      color="$color"
+                      opacity={0.8}
+                    >
                       {getCurrencySymbol(
                         editingExpense?.currency || getFallbackCurrency()
                       )}
                     </Text>
                     <Input
                       flex={1}
-                      size="$4"
+                      size="$control"
                       id="amount"
                       value={editingExpense?.amount || ""}
                       onChangeText={(text) =>
@@ -1076,7 +1089,7 @@ export default function HistoryScreen() {
                     />
                   </XStack>
                   {expressionPreview && (
-                    <Text fontSize="$3" color="$color" opacity={0.7}>
+                    <Text fontSize="$body" color="$color" opacity={0.7}>
                       {t("history.editDialog.fields.preview", {
                         amount: expressionPreview,
                       })}
@@ -1084,7 +1097,7 @@ export default function HistoryScreen() {
                   )}
                 </YStack>
 
-                <YStack gap="$2">
+                <YStack gap="$control">
                   <Label color="$color" opacity={0.8}>
                     {t("history.editDialog.fields.category")}
                   </Label>
@@ -1105,7 +1118,7 @@ export default function HistoryScreen() {
                   </XStack>
                 </YStack>
 
-                <YStack gap="$2">
+                <YStack gap="$control">
                   <Label color="$color" opacity={0.8} htmlFor="note">
                     {t("history.editDialog.fields.note")}
                   </Label>
@@ -1120,7 +1133,7 @@ export default function HistoryScreen() {
                 </YStack>
 
                 {/* Payment Method Selection */}
-                <YStack gap="$2">
+                <YStack gap="$control">
                   <Label color="$color" opacity={0.8}>
                     {t("history.editDialog.fields.paymentMethod")}
                   </Label>
@@ -1137,8 +1150,8 @@ export default function HistoryScreen() {
 
                   {/* Identifier input for cards/UPI/Other */}
                   {selectedPaymentConfig?.hasIdentifier && (
-                    <YStack gap="$1" style={{ marginTop: 8 }}>
-                      <Label color="$color" opacity={0.6} fontSize="$2">
+                    <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
+                      <Label color="$color" opacity={0.6} fontSize="$caption">
                         {selectedPaymentConfig.identifierLabel ||
                           t("history.editDialog.fields.identifier")}
                       </Label>
@@ -1181,7 +1194,7 @@ export default function HistoryScreen() {
                         />
                       ) : (
                         <Input
-                          size="$4"
+                          size="$control"
                           placeholder={
                             editingExpense?.paymentMethodType === "Other"
                               ? t("history.editDialog.fields.otherPlaceholder")
@@ -1204,11 +1217,11 @@ export default function HistoryScreen() {
                 </YStack>
               </YStack>
 
-              <XStack gap="$3" style={layoutStyles.editDialogButtonRow}>
+              <XStack gap="$section" style={layoutStyles.editDialogButtonRow}>
                 <Dialog.Close asChild>
-                  <Button size="$4">{t("common.cancel")}</Button>
+                  <Button size="$control">{t("common.cancel")}</Button>
                 </Dialog.Close>
-                <Button size="$4" themeInverse onPress={handleSaveEdit}>
+                <Button size="$control" themeInverse onPress={handleSaveEdit}>
                   {t("common.save")}
                 </Button>
               </XStack>

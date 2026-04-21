@@ -58,28 +58,28 @@ export const ExpenseRow = memo(function ExpenseRow({
 
   return (
     <ExpenseCard>
-      <XStack flex={1} gap="$3" style={layoutStyles.expenseDetails}>
+      <XStack flex={1} gap="$section" style={layoutStyles.expenseDetails}>
         <DynamicCategoryIcon
           name={categoryInfo.icon}
           size={subtitleMode === "time" ? 20 : 16}
           color={categoryInfo.color as `#${string}`}
         />
         <YStack flex={1}>
-          <Text fontWeight="bold" fontSize="$4">
+          <Text fontWeight="bold" fontSize="$label">
             {expense.note || categoryLabel}
           </Text>
-          <Text color="$color" opacity={0.6} fontSize="$2">
+          <Text color="$color" opacity={0.6} fontSize="$caption">
             {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
-            <Text color="$color" opacity={0.5} fontSize="$2">
+            <Text color="$color" opacity={0.5} fontSize="$caption">
               {paymentMethodDisplay}
             </Text>
           ) : null}
         </YStack>
       </XStack>
 
-      <XStack gap="$3" style={layoutStyles.actionButtons}>
+      <XStack gap="$section" style={layoutStyles.actionButtons}>
         <AmountText type="expense">
           -{formatCurrency(expense.amount, expense.currency)}
         </AmountText>
@@ -87,14 +87,14 @@ export const ExpenseRow = memo(function ExpenseRow({
         {showActions ? (
           <>
             <Button
-              size="$2"
+              size="$chip"
               icon={Edit3}
               chromeless
               onPress={() => onEdit?.(expense)}
               aria-label={t("common.edit")}
             />
             <Button
-              size="$2"
+              size="$chip"
               icon={Trash}
               chromeless
               onPress={() => onDelete?.(expense.id)}

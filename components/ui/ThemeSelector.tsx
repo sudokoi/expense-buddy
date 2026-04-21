@@ -56,7 +56,13 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
   const theme = useTheme()
 
   return (
-    <Card bordered padding="$1" borderRadius="$4" gap="$1" style={styles.container}>
+    <Card
+      bordered
+      padding="$micro"
+      borderRadius="$control"
+      gap="$micro"
+      style={styles.container}
+    >
       {themeOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
@@ -83,7 +89,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
                 opacity={isSelected ? 1 : 0.7}
               />
               <Text
-                fontSize="$3"
+                fontSize="$body"
                 fontWeight={isSelected ? "600" : "400"}
                 color="$color"
                 opacity={isSelected ? 1 : 0.7}

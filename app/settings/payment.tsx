@@ -18,7 +18,7 @@ import {
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
 import type { PaymentMethodType } from "../../types/expense"
-import { UI_RADIUS } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   container: {
@@ -146,25 +146,25 @@ export default function PaymentSettingsScreen() {
     <>
       <Stack.Screen options={{ title: t("settings.payment.manageTitle") }} />
 
-      <ScreenContainer contentContainerStyle={{ paddingTop: 8 }}>
-        <YStack gap="$4" style={layoutStyles.container}>
+      <ScreenContainer contentContainerStyle={{ paddingTop: UI_SPACE.control }}>
+        <YStack gap="$gutter" style={layoutStyles.container}>
           <SettingsSection
             title={t("settings.sections.payment")}
             description={t("settings.payment.manageHelp")}
-            gap="$4"
+            gap="$gutter"
           >
-            <XStack gap="$3" style={layoutStyles.summaryRow}>
+            <XStack gap="$section" style={layoutStyles.summaryRow}>
               <YStack
                 flex={1}
                 bg="$backgroundHover"
-                p="$3"
-                gap="$1"
+                p="$section"
+                gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$2" fontWeight="700">
+                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
                   {t("settings.defaultPayment.label")}
                 </Text>
-                <Text color="$color" fontSize="$5" fontWeight="700" numberOfLines={2}>
+                <Text color="$color" fontSize="$title" fontWeight="700" numberOfLines={2}>
                   {defaultPaymentMethodLabel}
                 </Text>
               </YStack>
@@ -172,14 +172,14 @@ export default function PaymentSettingsScreen() {
               <YStack
                 flex={1}
                 bg="$backgroundHover"
-                p="$3"
-                gap="$1"
+                p="$section"
+                gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$2" fontWeight="700">
+                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
                   {t("settings.payment.instrumentsTitle")}
                 </Text>
-                <Text color="$color" fontSize="$5" fontWeight="700">
+                <Text color="$color" fontSize="$title" fontWeight="700">
                   {activePaymentInstrumentCount}
                 </Text>
               </YStack>
@@ -187,14 +187,14 @@ export default function PaymentSettingsScreen() {
               <YStack
                 flex={1}
                 bg="$backgroundHover"
-                p="$3"
-                gap="$1"
+                p="$section"
+                gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$2" fontWeight="700">
+                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
                   {t("settings.payment.categoriesTitle")}
                 </Text>
-                <Text color="$color" fontSize="$5" fontWeight="700">
+                <Text color="$color" fontSize="$title" fontWeight="700">
                   {categories.length}
                 </Text>
               </YStack>
@@ -205,11 +205,11 @@ export default function PaymentSettingsScreen() {
             title={t("settings.sections.defaultPayment")}
             description={t("settings.defaultPayment.description")}
           >
-            <YStack gap="$2">
+            <YStack gap="$control">
               <Label>{t("settings.sections.defaultPayment")}</Label>
               <YStack
                 bg="$backgroundHover"
-                p="$3"
+                p="$section"
                 style={{ borderRadius: UI_RADIUS.surface }}
               >
                 <DefaultPaymentMethodSelector
@@ -221,7 +221,7 @@ export default function PaymentSettingsScreen() {
                   }
                 />
               </YStack>
-              <Text color="$color" opacity={0.58} fontSize="$2">
+              <Text color="$color" opacity={0.58} fontSize="$caption">
                 {t("settings.payment.defaultMethodHelp")}
               </Text>
             </YStack>

@@ -74,7 +74,7 @@ export function IconPickerSheet({
       unmountWhenClosed
       scroll
     >
-      <YStack gap="$4" pb="$8">
+      <YStack gap="$gutter" pb="$empty">
         {CATEGORY_ICON_GROUPS.map((group) => (
           <IconGroup
             key={group.name}
@@ -107,9 +107,9 @@ const IconGroup = memo(function IconGroup({
   onSelect,
 }: IconGroupProps) {
   return (
-    <YStack gap="$2" style={layoutStyles.groupContainer}>
+    <YStack gap="$control" style={layoutStyles.groupContainer}>
       <Text
-        fontSize="$3"
+        fontSize="$body"
         fontWeight="600"
         color="$color"
         opacity={0.7}

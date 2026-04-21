@@ -163,7 +163,7 @@ export default function DashboardScreen() {
           return {
             value: dayExpenses[cat],
             color: categoryConfig?.color || CATEGORY_COLORS.Other,
-            marginBottom: 2,
+            marginBottom: UI_SPACE.micro / 2,
           }
         })
 
@@ -222,7 +222,7 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$4" themeInverse onPress={handleAddPress}>
+        <Button size="$control" themeInverse onPress={handleAddPress}>
           {t("common.add")}
         </Button>
       </XStack>
@@ -232,12 +232,14 @@ export default function DashboardScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingBottom: 16 } as any}
+          contentContainerStyle={
+            { gap: UI_SPACE.control, paddingBottom: UI_SPACE.gutter } as any
+          }
         >
           {availableCurrencies.map((c) => (
             <Button
               key={c}
-              size="$2"
+              size="$chip"
               onPress={() => setSelectedCurrency(c)}
               themeInverse={effectiveCurrency === c}
               bordered={effectiveCurrency !== c}
@@ -254,14 +256,14 @@ export default function DashboardScreen() {
         <Card
           flex={1}
           bordered
-          padding="$4"
+          padding="$block"
           backgroundColor={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$3"
+            fontSize="$body"
             color={CARD_COLORS.blue.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -282,14 +284,14 @@ export default function DashboardScreen() {
         <Card
           flex={1}
           bordered
-          padding="$4"
+          padding="$block"
           backgroundColor={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
         >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
-            fontSize="$3"
+            fontSize="$body"
             color={CARD_COLORS.green.text}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -310,12 +312,12 @@ export default function DashboardScreen() {
       </XStack>
 
       {/* Chart Section */}
-      <YStack gap="$4" style={layoutStyles.chartSection}>
+      <YStack gap="$gutter" style={layoutStyles.chartSection}>
         <XStack style={layoutStyles.transactionsHeader}>
-          <YStack flex={1} mr="$2">
+          <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
           </YStack>
-          <Button chromeless size="$2" onPress={handleAnalyticsPress}>
+          <Button chromeless size="$chip" onPress={handleAnalyticsPress}>
             {t("dashboard.viewAnalytics")}
           </Button>
         </XStack>
@@ -346,7 +348,7 @@ export default function DashboardScreen() {
         ) : (
           <Card
             bordered
-            padding="$4"
+            padding="$gutter"
             alignItems="center"
             justifyContent="center"
             height={150}
@@ -361,10 +363,10 @@ export default function DashboardScreen() {
       {/* Recent Transactions List (Mini) */}
       <YStack>
         <XStack style={layoutStyles.transactionsHeader}>
-          <YStack flex={1} mr="$2">
+          <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
           </YStack>
-          <Button chromeless size="$2" onPress={handleHistoryPress}>
+          <Button chromeless size="$chip" onPress={handleHistoryPress}>
             {t("common.seeAll")}
           </Button>
         </XStack>

@@ -65,7 +65,7 @@ export function AppInfoSection({
   const { t } = useTranslation()
 
   return (
-    <YStack gap="$3">
+    <YStack gap="$section">
       {/* Current Version */}
       <XStack style={layoutStyles.versionRow}>
         <Text color="$color" opacity={0.8}>
@@ -92,7 +92,7 @@ export function AppInfoSection({
 
       {/* Check for Updates Button */}
       <Button
-        size="$4"
+        size="$control"
         onPress={onCheckForUpdates}
         disabled={isCheckingUpdate}
         icon={Download}
@@ -104,18 +104,18 @@ export function AppInfoSection({
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
-        <Button size="$4" themeInverse onPress={onOpenRelease} icon={ExternalLink}>
+        <Button size="$control" themeInverse onPress={onOpenRelease} icon={ExternalLink}>
           {t("settings.about.download", { version: updateInfo.latestVersion })}
         </Button>
       )}
 
       {/* Report an Issue */}
-      <Button size="$3" chromeless onPress={onReportIssue} icon={Bug}>
+      <Button size="$compact" chromeless onPress={onReportIssue} icon={Bug}>
         {t("settings.about.reportIssue")}
       </Button>
 
       {/* GitHub Link */}
-      <Button size="$3" chromeless onPress={onOpenGitHub} icon={ExternalLink}>
+      <Button size="$compact" chromeless onPress={onOpenGitHub} icon={ExternalLink}>
         {t("settings.about.viewGitHub")}
       </Button>
     </YStack>

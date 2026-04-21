@@ -56,7 +56,7 @@ export function LocalizationSection({
   const summary = `${languageLabel} • ${currencyLabel}`
 
   return (
-    <YStack gap="$2">
+    <YStack gap="$control">
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
         accessibilityRole="button"
@@ -64,11 +64,16 @@ export function LocalizationSection({
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
         <XStack flex={1} bg="$backgroundHover" style={layoutStyles.collapsibleHeader}>
-          <YStack flex={1} gap="$0.5">
-            <Text fontSize="$2" color="$color" opacity={0.5} textTransform="uppercase">
+          <YStack flex={1} gap="$micro">
+            <Text
+              fontSize="$caption"
+              color="$color"
+              opacity={0.5}
+              textTransform="uppercase"
+            >
               {t("settings.sections.localization")}
             </Text>
-            <Text color="$color" opacity={0.72} fontSize="$3">
+            <Text color="$color" opacity={0.72} fontSize="$body">
               {summary}
             </Text>
           </YStack>
@@ -82,21 +87,21 @@ export function LocalizationSection({
 
       {expanded && (
         <YStack
-          gap="$3"
-          mt="$1"
+          gap="$section"
+          mt="$micro"
           bg="$backgroundHover"
-          p="$3"
+          p="$section"
           style={{ borderRadius: UI_RADIUS.surface }}
         >
-          <YStack gap="$1.5">
-            <Label color="$color" opacity={0.8} fontSize="$2">
+          <YStack gap="$micro">
+            <Label color="$color" opacity={0.8} fontSize="$caption">
               {t("settings.localization.language")}
             </Label>
             <LanguageSelector value={languagePreference} onChange={onLanguageChange} />
           </YStack>
 
-          <YStack gap="$1.5">
-            <Label color="$color" opacity={0.8} fontSize="$2">
+          <YStack gap="$micro">
+            <Label color="$color" opacity={0.8} fontSize="$caption">
               {t("settings.localization.currency")}
             </Label>
             <CurrencySelector value={defaultCurrency} onChange={onCurrencyChange} />

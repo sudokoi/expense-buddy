@@ -102,7 +102,7 @@ export const LineChartSection = memo(function LineChartSection({
       if (!item) return null
       return (
         <Card style={styles.tooltipContainer}>
-          <Text fontWeight="bold" fontSize="$3">
+          <Text fontWeight="bold" fontSize="$body">
             {symbol}
             {item.value.toFixed(2)}
           </Text>

@@ -43,8 +43,8 @@ export function AmountRangeFilter({
   }
 
   return (
-    <YStack gap="$2">
-      <XStack gap="$2" style={{ alignItems: "center" }}>
+    <YStack gap="$control">
+      <XStack gap="$control" style={{ alignItems: "center" }}>
         <Input
           flex={1}
           value={min}
@@ -66,7 +66,7 @@ export function AmountRangeFilter({
         />
       </XStack>
       {error && (
-        <Text color="$red10" fontSize="$2">
+        <Text color="$red10" fontSize="$caption">
           {error}
         </Text>
       )}

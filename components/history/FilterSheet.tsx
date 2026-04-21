@@ -256,17 +256,17 @@ export const FilterSheet = React.memo(function FilterSheet({
         <Sheet.Handle />
 
         <YStack
-          gap="$3"
+          gap="$section"
           style={{ ...layoutStyles.contentContainer, flex: 1 } as ViewStyle}
         >
           <XStack style={layoutStyles.headerRow}>
             <H4>{t("history.filterSheet.title")}</H4>
-            <XStack gap="$2" style={{ alignItems: "center" } as ViewStyle}>
-              <Button size="$3" chromeless onPress={handleResetDraft}>
+            <XStack gap="$control" style={{ alignItems: "center" } as ViewStyle}>
+              <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("common.reset")}
               </Button>
               <Button
-                size="$3"
+                size="$compact"
                 chromeless
                 icon={X}
                 onPress={handleApply}
@@ -276,9 +276,9 @@ export const FilterSheet = React.memo(function FilterSheet({
           </XStack>
 
           <ScrollView showsVerticalScrollIndicator={false} flex={1}>
-            <YStack gap="$2" pb="$6">
+            <YStack gap="$control" pb="$block">
               {!isHydrated && (
-                <Text color="$color" opacity={0.6} fontSize="$3">
+                <Text color="$color" opacity={0.6} fontSize="$body">
                   {t("history.filterSheet.loading")}
                 </Text>
               )}
@@ -341,16 +341,16 @@ export const FilterSheet = React.memo(function FilterSheet({
           </ScrollView>
 
           <XStack
-            gap="$2"
+            gap="$control"
             style={
               {
                 justifyContent: "flex-end",
-                paddingBottom: Math.max(insets.bottom, 8),
-                paddingTop: 8,
+                paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
+                paddingTop: UI_SPACE.control,
               } as ViewStyle
             }
           >
-            <Button size="$4" themeInverse onPress={handleApply}>
+            <Button size="$control" themeInverse onPress={handleApply}>
               {t("common.apply")}
             </Button>
           </XStack>

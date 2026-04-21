@@ -6,7 +6,7 @@ export default function ModalScreen() {
   const { t } = useTranslation()
   return (
     <View flex={1} items="center" justify="center">
-      <XStack gap="$2">
+      <XStack gap="$control">
         <Paragraph text="center">{t("common.madeBy")}</Paragraph>
         <Anchor
           color={ACCENT_COLORS.primary}

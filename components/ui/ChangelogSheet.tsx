@@ -42,17 +42,22 @@ export function ChangelogSheet({
       scroll
       footer={
         <>
-          <Button size="$4" onPress={onViewFullReleaseNotes} themeInverse>
+          <Button size="$control" onPress={onViewFullReleaseNotes} themeInverse>
             {t("changelog.viewFull")}
           </Button>
-          <Button size="$4" onPress={onClose}>
+          <Button size="$control" onPress={onClose}>
             {t("common.close") || "Close"}
           </Button>
         </>
       }
     >
-      <YStack pb="$4">
-        <Text fontSize="$4" lineHeight={22} color="$color" style={layoutStyles.notesText}>
+      <YStack pb="$gutter">
+        <Text
+          fontSize="$label"
+          lineHeight={22}
+          color="$color"
+          style={layoutStyles.notesText}
+        >
           {normalizedNotes}
         </Text>
       </YStack>

@@ -6,7 +6,59 @@ const defaultTokens = defaultConfig.tokens as typeof defaultConfig.tokens & {
   color?: Record<string, string>
   space?: Record<string, number>
   radius?: Record<string, number>
+  size?: Record<string, number>
   zIndex?: Record<string, number>
+}
+
+const defaultFonts = defaultConfig.fonts as typeof defaultConfig.fonts & {
+  body: {
+    size: Record<string, number>
+    lineHeight: Record<string, number>
+  }
+  heading: {
+    size: Record<string, number>
+    lineHeight: Record<string, number>
+  }
+}
+
+const semanticBodyFontSize = {
+  micro: defaultFonts.body.size["1"],
+  caption: defaultFonts.body.size["2"],
+  body: defaultFonts.body.size["3"],
+  label: defaultFonts.body.size["4"],
+  title: defaultFonts.body.size["5"],
+  sectionTitle: defaultFonts.body.size["6"],
+  screenTitle: defaultFonts.body.size["7"],
+}
+
+const semanticBodyLineHeight = {
+  micro: defaultFonts.body.lineHeight["1"],
+  caption: defaultFonts.body.lineHeight["2"],
+  body: defaultFonts.body.lineHeight["3"],
+  label: defaultFonts.body.lineHeight["4"],
+  title: defaultFonts.body.lineHeight["5"],
+  sectionTitle: defaultFonts.body.lineHeight["6"],
+  screenTitle: defaultFonts.body.lineHeight["7"],
+}
+
+const semanticHeadingFontSize = {
+  micro: defaultFonts.heading.size["1"],
+  caption: defaultFonts.heading.size["2"],
+  body: defaultFonts.heading.size["3"],
+  label: defaultFonts.heading.size["4"],
+  title: defaultFonts.heading.size["5"],
+  sectionTitle: defaultFonts.heading.size["6"],
+  screenTitle: defaultFonts.heading.size["7"],
+}
+
+const semanticHeadingLineHeight = {
+  micro: defaultFonts.heading.lineHeight["1"],
+  caption: defaultFonts.heading.lineHeight["2"],
+  body: defaultFonts.heading.lineHeight["3"],
+  label: defaultFonts.heading.lineHeight["4"],
+  title: defaultFonts.heading.lineHeight["5"],
+  sectionTitle: defaultFonts.heading.lineHeight["6"],
+  screenTitle: defaultFonts.heading.lineHeight["7"],
 }
 
 // Extend default config with custom semantic color tokens and kawaii themes
@@ -29,6 +81,16 @@ export const config = createTamagui({
       chip: 12,
       surface: 16,
       round: 999,
+    },
+    size: {
+      ...defaultTokens.size,
+      icon: defaultTokens.size?.["$1"] ?? 20,
+      chip: defaultTokens.size?.["$2"] ?? 28,
+      compact: defaultTokens.size?.["$3"] ?? 36,
+      control: defaultTokens.size?.["$4"] ?? 44,
+      prominent: defaultTokens.size?.["$5"] ?? 52,
+      dialog: defaultTokens.size?.["$6"] ?? 64,
+      hero: defaultTokens.size?.["$7"] ?? 74,
     },
     zIndex: {
       ...defaultTokens.zIndex,
@@ -65,6 +127,31 @@ export const config = createTamagui({
       error: SEMANTIC_COLORS.error,
       warning: SEMANTIC_COLORS.warning,
       info: SEMANTIC_COLORS.info,
+    },
+  },
+  fonts: {
+    ...defaultConfig.fonts,
+    body: {
+      ...defaultFonts.body,
+      size: {
+        ...defaultFonts.body.size,
+        ...semanticBodyFontSize,
+      },
+      lineHeight: {
+        ...defaultFonts.body.lineHeight,
+        ...semanticBodyLineHeight,
+      },
+    },
+    heading: {
+      ...defaultFonts.heading,
+      size: {
+        ...defaultFonts.heading.size,
+        ...semanticHeadingFontSize,
+      },
+      lineHeight: {
+        ...defaultFonts.heading.lineHeight,
+        ...semanticHeadingLineHeight,
+      },
     },
   },
   themes: {

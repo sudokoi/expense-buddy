@@ -1,6 +1,14 @@
 import { Card, YStack, Text } from "tamagui"
 import { ReactNode } from "react"
 
+type SemanticSpaceToken =
+  | "$micro"
+  | "$control"
+  | "$section"
+  | "$gutter"
+  | "$block"
+  | "$empty"
+
 interface SettingsSectionProps {
   /** Section title displayed as uppercase header */
   title: string
@@ -8,8 +16,8 @@ interface SettingsSectionProps {
   description?: string
   /** Content to render inside the section */
   children: ReactNode
-  /** Optional gap between children, defaults to $3 */
-  gap?: string
+  /** Optional gap between children, defaults to $section */
+  gap?: SemanticSpaceToken
 }
 
 /**
@@ -31,20 +39,25 @@ export function SettingsSection({
   title,
   description,
   children,
-  gap = "$3",
+  gap = "$section",
 }: SettingsSectionProps) {
   return (
     <Card
       bordered
-      padding="$4"
-      borderRadius="$6"
+      padding="$gutter"
+      borderRadius="$surface"
       backgroundColor="$color1"
       borderColor="$borderColor"
     >
-      <YStack gap={gap as "$3"}>
-        <YStack gap="$1.5" pb="$2" borderBottomWidth={1} borderBottomColor="$borderColor">
+      <YStack gap={gap}>
+        <YStack
+          gap="$micro"
+          pb="$control"
+          borderBottomWidth={1}
+          borderBottomColor="$borderColor"
+        >
           <Text
-            fontSize="$2"
+            fontSize="$caption"
             fontWeight="700"
             color="$color"
             opacity={0.52}
@@ -54,7 +67,7 @@ export function SettingsSection({
             {title}
           </Text>
           {description ? (
-            <Text fontSize="$3" color="$color" opacity={0.72} lineHeight={20}>
+            <Text fontSize="$body" color="$color" opacity={0.72} lineHeight={20}>
               {description}
             </Text>
           ) : null}

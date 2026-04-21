@@ -20,8 +20,8 @@ export function SectionHeader({ children }: SectionHeaderProps) {
   }>
   return (
     <H4Component
-      fontSize="$5"
-      marginBottom="$4"
+      fontSize="$title"
+      marginBottom="$gutter"
       numberOfLines={1}
       adjustsFontSizeToFit
       minimumFontScale={0.4}

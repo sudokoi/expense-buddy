@@ -66,7 +66,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   }))
 
   return (
-    <Card bordered padding="$1" borderRadius="$4" style={styles.container}>
+    <Card bordered padding="$micro" borderRadius="$control" style={styles.container}>
       {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
@@ -93,7 +93,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
                 opacity={isSelected ? 1 : 0.7}
               />
               <Text
-                fontSize="$3"
+                fontSize="$body"
                 fontWeight={isSelected ? "600" : "400"}
                 color="$color"
                 opacity={isSelected ? 1 : 0.7}

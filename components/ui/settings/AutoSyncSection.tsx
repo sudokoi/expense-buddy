@@ -70,12 +70,12 @@ export function AutoSyncSection({
 
   return (
     <YStack
-      gap="$3"
+      gap="$section"
       borderTopWidth={1}
       borderTopColor="$borderColor"
       style={{ paddingTop: UI_SPACE.gutter }}
     >
-      <Text fontSize="$3" fontWeight="700" color="$color" opacity={0.8}>
+      <Text fontSize="$body" fontWeight="700" color="$color" opacity={0.8}>
         {t("settings.autoSync.title")}
       </Text>
 
@@ -84,7 +84,7 @@ export function AutoSyncSection({
         <YStack flex={1}>
           <Label>{t("settings.autoSync.enable")}</Label>
           <Text
-            fontSize="$2"
+            fontSize="$caption"
             color="$color"
             opacity={0.6}
             style={layoutStyles.helperText}
@@ -93,7 +93,7 @@ export function AutoSyncSection({
           </Text>
         </YStack>
         <Switch
-          size="$4"
+          size="$control"
           checked={autoSyncEnabled}
           onCheckedChange={onAutoSyncEnabledChange}
           backgroundColor={autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)}
@@ -107,7 +107,7 @@ export function AutoSyncSection({
         <YStack flex={1}>
           <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text
-            fontSize="$2"
+            fontSize="$caption"
             color="$color"
             opacity={0.6}
             style={layoutStyles.helperText}
@@ -116,7 +116,7 @@ export function AutoSyncSection({
           </Text>
         </YStack>
         <Switch
-          size="$4"
+          size="$control"
           checked={syncSettings}
           onCheckedChange={onSyncSettingsChange}
           backgroundColor={syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)}
@@ -128,32 +128,32 @@ export function AutoSyncSection({
       {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
         <YStack
-          gap="$2"
+          gap="$control"
           style={{ marginTop: UI_SPACE.micro, borderRadius: UI_RADIUS.surface }}
           bg="$backgroundHover"
-          p="$3"
+          p="$section"
         >
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
-            <XStack gap="$2" style={layoutStyles.radioRow}>
-              <RadioGroup.Item value="on_launch" id="on_launch" size="$4">
+            <XStack gap="$control" style={layoutStyles.radioRow}>
+              <RadioGroup.Item value="on_launch" id="on_launch" size="$control">
                 <RadioGroup.Indicator />
               </RadioGroup.Item>
               <YStack flex={1}>
                 <Label htmlFor="on_launch">{t("settings.autoSync.onLaunch")}</Label>
-                <Text fontSize="$2" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={0.6}>
                   {t("settings.autoSync.onLaunchHelp")}
                 </Text>
               </YStack>
             </XStack>
 
-            <XStack gap="$2" style={layoutStyles.radioRow}>
-              <RadioGroup.Item value="on_change" id="on_change" size="$4">
+            <XStack gap="$control" style={layoutStyles.radioRow}>
+              <RadioGroup.Item value="on_change" id="on_change" size="$control">
                 <RadioGroup.Indicator />
               </RadioGroup.Item>
               <YStack flex={1}>
                 <Label htmlFor="on_change">{t("settings.autoSync.onChange")}</Label>
-                <Text fontSize="$2" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={0.6}>
                   {t("settings.autoSync.onChangeHelp")}
                 </Text>
               </YStack>

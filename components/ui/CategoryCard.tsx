@@ -38,8 +38,8 @@ export const CategoryCard = memo(function CategoryCard({
       bordered
       backgroundColor={isSelected ? resolvedColor : "$background"}
       borderColor={isSelected ? resolvedColor : "$borderColor"}
-      padding={compact ? "$2" : "$3"}
-      borderRadius={compact ? "$3" : "$4"}
+      padding={compact ? "$control" : "$section"}
+      borderRadius={compact ? "$control" : "$chip"}
       width={compact ? "22%" : "30%"}
       alignItems="center"
       justifyContent="center"
@@ -48,7 +48,7 @@ export const CategoryCard = memo(function CategoryCard({
       <Text
         fontWeight={isSelected ? "bold" : "normal"}
         color={isSelected ? selectedTextColor : "$color"}
-        fontSize={compact ? "$1" : "$3"}
+        fontSize={compact ? "$micro" : "$body"}
         numberOfLines={1}
       >
         {displayLabel}

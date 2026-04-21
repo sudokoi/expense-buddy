@@ -123,11 +123,11 @@ export const CategorySection = memo(function CategorySection({
   )
 
   return (
-    <YStack gap="$3">
-      <Text fontSize="$4" fontWeight="600" color="$color">
+    <YStack gap="$section">
+      <Text fontSize="$label" fontWeight="600" color="$color">
         {t("settings.sections.categories")}
       </Text>
-      <Text color="$color" opacity={0.7} fontSize="$3">
+      <Text color="$color" opacity={0.7} fontSize="$body">
         {t("settings.categories.description")}
       </Text>
 
@@ -138,7 +138,7 @@ export const CategorySection = memo(function CategorySection({
               <>
                 <XStack style={layoutStyles.accordionTriggerInner}>
                   <Text fontWeight="500">{t("settings.categories.manage")}</Text>
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                  <Text fontSize="$caption" color="$color" opacity={0.6}>
                     ({categories.length})
                   </Text>
                 </XStack>
@@ -151,15 +151,15 @@ export const CategorySection = memo(function CategorySection({
             )}
           </Accordion.Trigger>
           <Accordion.Content style={layoutStyles.accordionContent}>
-            <YStack gap="$2">
+            <YStack gap="$control">
               {/* Reorderable category list */}
-              <YStack gap="$2">
+              <YStack gap="$control">
                 {reorderableCategories.map((category, index) => (
                   <XStack key={category.label} style={layoutStyles.categoryRow}>
                     {/* Reorder buttons */}
                     <YStack style={layoutStyles.reorderButtons}>
                       <Button
-                        size="$2"
+                        size="$chip"
                         chromeless
                         icon={<ChevronUp size={16} />}
                         onPress={() => handleMoveUp(index)}
@@ -168,7 +168,7 @@ export const CategorySection = memo(function CategorySection({
                         aria-label={`Move ${category.label} up`}
                       />
                       <Button
-                        size="$2"
+                        size="$chip"
                         chromeless
                         icon={<ChevronDown size={16} />}
                         onPress={() => handleMoveDown(index)}
@@ -216,7 +216,12 @@ export const CategorySection = memo(function CategorySection({
                       />
                     </YStack>
                   </XStack>
-                  <Text fontSize="$1" color="$color" opacity={0.4} pl="$8">
+                  <Text
+                    fontSize="$micro"
+                    color="$color"
+                    opacity={0.4}
+                    style={{ paddingLeft: UI_SPACE.block + UI_SPACE.micro }}
+                  >
                     {t("settings.categories.otherHelp")}
                   </Text>
                 </YStack>
@@ -225,7 +230,7 @@ export const CategorySection = memo(function CategorySection({
               {/* Add Category button */}
               <YStack style={layoutStyles.addButtonContainer}>
                 <Button
-                  size="$4"
+                  size="$control"
                   onPress={onAdd}
                   icon={<Plus size={18} />}
                   themeInverse

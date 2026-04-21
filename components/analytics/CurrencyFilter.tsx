@@ -17,7 +17,7 @@ export function CurrencyFilter({
   if (availableCurrencies.length <= 1) return null
 
   return (
-    <XStack flexWrap="wrap" gap="$2">
+    <XStack flexWrap="wrap" gap="$control">
       {availableCurrencies.map((currency) => {
         const isSelected =
           selectedCurrency === currency ||
@@ -26,7 +26,7 @@ export function CurrencyFilter({
         return (
           <Button
             key={currency}
-            size="$3"
+            size="$compact"
             themeInverse={isSelected}
             onPress={() => onChange(currency)}
             bordered

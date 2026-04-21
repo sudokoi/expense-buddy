@@ -4,6 +4,7 @@ import { ScrollView, ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface MonthSelectorProps {
   value: string | null
@@ -16,7 +17,7 @@ const layoutStyles = {
     justifyContent: "center",
   } as ViewStyle,
   scrollContent: {
-    paddingHorizontal: 2,
+    paddingHorizontal: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
 
@@ -34,9 +35,9 @@ export const MonthSelector = memo(function MonthSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$2" mb="$4" style={layoutStyles.container}>
+      <XStack gap="$control" mb="$gutter" style={layoutStyles.container}>
         <Button
-          size="$3"
+          size="$compact"
           themeInverse={value === null}
           bordered={value !== null}
           onPress={() => onChange(null)}
@@ -49,7 +50,7 @@ export const MonthSelector = memo(function MonthSelector({
           return (
             <Button
               key={monthKey}
-              size="$3"
+              size="$compact"
               themeInverse={isSelected}
               bordered={!isSelected}
               onPress={() => onChange(monthKey)}

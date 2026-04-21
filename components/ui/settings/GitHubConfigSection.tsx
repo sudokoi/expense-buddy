@@ -67,7 +67,7 @@ const layoutStyles = {
   connectedBadge: {
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: 2,
+    gap: UI_SPACE.micro / 2,
     flexShrink: 1,
     minWidth: 0,
   } as ViewStyle,
@@ -300,16 +300,22 @@ export function GitHubConfigSection({
                 {isConfigured && (
                   <YStack style={layoutStyles.connectedBadge}>
                     <XStack
-                      style={{ minWidth: 0, alignItems: "center", gap: 4 } as ViewStyle}
+                      style={
+                        {
+                          minWidth: 0,
+                          alignItems: "center",
+                          gap: UI_SPACE.micro,
+                        } as ViewStyle
+                      }
                     >
                       <Check size={14} color={successColor} />
-                      <Text fontSize="$2" color={successColor}>
+                      <Text fontSize="$caption" color={successColor}>
                         {t("settings.github.connected")}
                       </Text>
                     </XStack>
                     {repo ? (
                       <Text
-                        fontSize="$2"
+                        fontSize="$caption"
                         color="$color"
                         opacity={0.7}
                         numberOfLines={1}
@@ -331,35 +337,35 @@ export function GitHubConfigSection({
           )}
         </Accordion.Trigger>
         <Accordion.Content style={layoutStyles.accordionContent}>
-          <YStack gap="$3">
+          <YStack gap="$section">
             {/* Auth */}
             {isWeb ? (
-              <YStack gap="$2">
+              <YStack gap="$control">
                 <Label>{t("settings.github.tokenLabel")}</Label>
                 <Input
                   secureTextEntry
                   placeholder={t("settings.github.tokenPlaceholder")}
                   value={token}
                   onChangeText={handleTokenChange}
-                  size="$4"
+                  size="$control"
                   borderWidth={2}
                   borderColor={configErrors.token ? "$red10" : "$borderColor"}
                 />
                 {configErrors.token ? (
-                  <Text fontSize="$2" color="$red10">
+                  <Text fontSize="$caption" color="$red10">
                     {configErrors.token}
                   </Text>
                 ) : (
-                  <Text fontSize="$2" color="$color" opacity={0.6}>
+                  <Text fontSize="$caption" color="$color" opacity={0.6}>
                     {t("settings.github.tokenHelp")}
                   </Text>
                 )}
               </YStack>
             ) : (
-              <YStack gap="$2">
+              <YStack gap="$control">
                 <Label>{t("settings.github.loginLabel")}</Label>
                 <Button
-                  size="$4"
+                  size="$control"
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
                   disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
                   themeInverse
@@ -376,28 +382,31 @@ export function GitHubConfigSection({
                       : t("settings.github.signIn")}
                 </Button>
                 {!githubOAuthStatus.ok && (
-                  <Text fontSize="$2" color="$red10">
+                  <Text fontSize="$caption" color="$red10">
                     {githubOAuthStatus.error}
                   </Text>
                 )}
                 {auth.deviceCode && (
-                  <YStack gap="$2" style={{ paddingTop: 4 } as ViewStyle}>
-                    <Text fontSize="$2" color="$color" opacity={0.8}>
+                  <YStack
+                    gap="$control"
+                    style={{ paddingTop: UI_SPACE.micro } as ViewStyle}
+                  >
+                    <Text fontSize="$caption" color="$color" opacity={0.8}>
                       {t("settings.github.deviceCode")}
                     </Text>
                     <XStack
-                      gap="$2"
+                      gap="$control"
                       style={{ alignItems: "center", flexWrap: "wrap" } as ViewStyle}
                     >
-                      <Text fontSize="$6" fontWeight="700">
+                      <Text fontSize="$sectionTitle" fontWeight="700">
                         {auth.deviceCode.user_code}
                       </Text>
-                      <Button size="$3" onPress={() => void handleCopyDeviceCode()}>
+                      <Button size="$compact" onPress={() => void handleCopyDeviceCode()}>
                         {t("settings.github.copyCode")}
                       </Button>
                     </XStack>
                     <Button
-                      size="$3"
+                      size="$compact"
                       onPress={() => {
                         const url =
                           auth.deviceCode?.verification_uri_complete ||
@@ -409,42 +418,42 @@ export function GitHubConfigSection({
                     >
                       {t("settings.github.openBrowser")}
                     </Button>
-                    <Text fontSize="$2" color="$color" opacity={0.8}>
+                    <Text fontSize="$caption" color="$color" opacity={0.8}>
                       {t("settings.github.browserHelp", {
                         url: auth.deviceCode.verification_uri,
                       })}
                     </Text>
                   </YStack>
                 )}
-                <Text fontSize="$2" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={0.6}>
                   {t("settings.github.loginHelp")}
                 </Text>
               </YStack>
             )}
 
             {/* Repository */}
-            <YStack gap="$2">
+            <YStack gap="$control">
               <Label>{t("settings.github.repoLabel")}</Label>
               {isWeb ? (
                 <Input
                   placeholder={t("settings.github.repoPlaceholderWeb")}
                   value={repo}
                   onChangeText={handleRepoChange}
-                  size="$4"
+                  size="$control"
                   borderWidth={2}
                   borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                 />
               ) : (
-                <YStack gap="$2">
+                <YStack gap="$control">
                   <Input
                     placeholder={t("settings.github.repoPlaceholderNative")}
                     value={repo}
                     editable={false}
-                    size="$4"
+                    size="$control"
                     borderWidth={2}
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                   />
-                  <Button size="$3" onPress={handleChooseRepo} disabled={!token}>
+                  <Button size="$compact" onPress={handleChooseRepo} disabled={!token}>
                     {repo
                       ? t("settings.github.editRepo")
                       : t("settings.github.chooseRepo")}
@@ -452,38 +461,38 @@ export function GitHubConfigSection({
                 </YStack>
               )}
               {configErrors.repo && (
-                <Text fontSize="$2" color="$red10">
+                <Text fontSize="$caption" color="$red10">
                   {configErrors.repo}
                 </Text>
               )}
             </YStack>
 
             {/* Branch */}
-            <YStack gap="$2">
+            <YStack gap="$control">
               <Label>{t("settings.github.branchLabel")}</Label>
               <Input
                 placeholder="main"
                 value={branch}
                 onChangeText={handleBranchChange}
-                size="$4"
+                size="$control"
                 borderWidth={2}
                 borderColor={configErrors.branch ? "$red10" : "$borderColor"}
               />
               {configErrors.branch && (
-                <Text fontSize="$2" color="$red10">
+                <Text fontSize="$caption" color="$red10">
                   {configErrors.branch}
                 </Text>
               )}
             </YStack>
 
             {/* Action Buttons */}
-            <XStack gap="$3" style={layoutStyles.buttonRow}>
-              <Button flex={1} size="$4" onPress={handleSaveConfig} themeInverse>
+            <XStack gap="$section" style={layoutStyles.buttonRow}>
+              <Button flex={1} size="$control" onPress={handleSaveConfig} themeInverse>
                 {t("settings.github.saveConfig")}
               </Button>
               <Button
                 flex={1}
-                size="$4"
+                size="$control"
                 onPress={handleTestConnection}
                 disabled={isTesting || !token || !repo}
                 icon={
@@ -510,11 +519,11 @@ export function GitHubConfigSection({
             {/* Clear Configuration Button */}
             {isConfigured && (
               <Button
-                size="$3"
+                size="$compact"
                 color="white"
                 onPress={handleClearConfig}
                 icon={X}
-                style={{ marginTop: 12, backgroundColor: errorColor }}
+                style={{ marginTop: UI_SPACE.section, backgroundColor: errorColor }}
               >
                 {t("settings.github.clearConfig")}
               </Button>

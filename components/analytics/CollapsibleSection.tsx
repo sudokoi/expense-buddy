@@ -2,6 +2,7 @@ import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
 import { Pressable, ViewStyle } from "react-native"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CollapsibleSectionProps {
   title: string
@@ -11,13 +12,13 @@ interface CollapsibleSectionProps {
 
 const styles = {
   header: {
-    padding: 10,
+    padding: UI_SPACE.section - 2,
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
   content: {
-    padding: 10,
-    paddingTop: 6,
+    padding: UI_SPACE.section - 2,
+    paddingTop: UI_SPACE.control - 2,
   } as ViewStyle,
 }
 
@@ -43,12 +44,12 @@ export const CollapsibleSection = memo(function CollapsibleSection({
         <XStack
           style={styles.header}
           bg="$backgroundHover"
-          borderTopLeftRadius="$4"
-          borderTopRightRadius="$4"
-          borderBottomLeftRadius={isExpanded ? 0 : "$4"}
-          borderBottomRightRadius={isExpanded ? 0 : "$4"}
+          borderTopLeftRadius="$surface"
+          borderTopRightRadius="$surface"
+          borderBottomLeftRadius={isExpanded ? 0 : "$surface"}
+          borderBottomRightRadius={isExpanded ? 0 : "$surface"}
         >
-          <Text fontWeight="bold" fontSize="$4">
+          <Text fontWeight="bold" fontSize="$label">
             {title}
           </Text>
           {isExpanded ? (

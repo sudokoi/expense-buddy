@@ -2,6 +2,7 @@ import { Link, Stack } from "expo-router"
 import { StyleSheet } from "react-native"
 import { View, Text } from "tamagui"
 import { SEMANTIC_COLORS } from "../constants/theme-colors"
+import { UI_SPACE } from "../constants/ui-tokens"
 
 export default function NotFoundScreen() {
   return (
@@ -22,15 +23,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 8,
+    padding: UI_SPACE.control,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
   },
   link: {
-    marginTop: 15,
-    paddingVertical: 15,
+    marginTop: UI_SPACE.gutter - 1,
+    paddingVertical: UI_SPACE.gutter - 1,
   },
   linkText: {
     fontSize: 14,

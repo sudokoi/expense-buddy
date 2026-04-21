@@ -5,6 +5,7 @@ import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 type GitHubUser = { login: string }
 
@@ -27,7 +28,7 @@ const BRANCH_KEY = "github_branch"
 
 const layoutStyles = {
   container: {
-    padding: 16,
+    padding: UI_SPACE.gutter,
     maxWidth: 700,
     alignSelf: "center",
     width: "100%",
@@ -41,7 +42,7 @@ const layoutStyles = {
   } as ViewStyle,
   repoButton: {
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: UI_SPACE.control,
   } as ViewStyle,
   repoButtonInner: {
     flex: 1,
@@ -222,7 +223,7 @@ export default function GitHubRepoPickerScreen() {
   const renderItem = useCallback(
     ({ item }: { item: GitHubRepo }) => (
       <Button
-        size="$4"
+        size="$control"
         onPress={() => void handleSelect(item)}
         style={layoutStyles.repoButton}
       >
@@ -243,19 +244,19 @@ export default function GitHubRepoPickerScreen() {
         renderItem={renderItem}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          padding: 16,
+          padding: UI_SPACE.gutter,
           paddingBottom: insets.bottom,
           maxWidth: 700,
           alignSelf: "center",
           width: "100%",
         }}
         ListHeaderComponent={
-          <YStack gap="$4">
+          <YStack gap="$gutter">
             <XStack style={layoutStyles.headerRow}>
-              <Text fontSize="$7" fontWeight="700">
+              <Text fontSize="$screenTitle" fontWeight="700">
                 {t("repoPicker.title")}
               </Text>
-              <Button size="$3" onPress={() => router.back()}>
+              <Button size="$compact" onPress={() => router.back()}>
                 {t("common.cancel")}
               </Button>
             </XStack>
@@ -265,16 +266,16 @@ export default function GitHubRepoPickerScreen() {
             {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
 
             {isLoading ? (
-              <XStack gap="$3" style={layoutStyles.loadingRow}>
+              <XStack gap="$section" style={layoutStyles.loadingRow}>
                 <Spinner />
                 <Text>{t("repoPicker.loading")}</Text>
               </XStack>
             ) : null}
 
             {error ? (
-              <YStack gap="$2">
+              <YStack gap="$control">
                 <Text color="$red10">{error}</Text>
-                <Button size="$3" onPress={load}>
+                <Button size="$compact" onPress={load}>
                   {t("common.save")}
                 </Button>
               </YStack>

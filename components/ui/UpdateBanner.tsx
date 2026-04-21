@@ -52,20 +52,20 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: UI_SPACE.section - 2,
   }
 
   const leftContentStyle: ViewStyle = {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: UI_SPACE.section - 2,
     flex: 1,
   }
 
   const iconContainerStyle: ViewStyle = {
     backgroundColor: infoStyles.iconBg,
-    borderRadius: 20,
-    padding: 6,
+    borderRadius: UI_RADIUS.surface + UI_SPACE.micro,
+    padding: UI_SPACE.control - 2,
   }
 
   const actionsStyle: ViewStyle = {
@@ -97,7 +97,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
 
         <RNView style={actionsStyle}>
           <Button
-            size="$2"
+            size="$chip"
             bg={infoStyles.actionBg}
             borderWidth={1}
             borderColor={infoStyles.actionBorderColor}

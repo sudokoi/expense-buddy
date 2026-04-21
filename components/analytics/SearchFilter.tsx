@@ -28,7 +28,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
   }, [value])
 
   return (
-    <XStack gap="$2" style={{ alignItems: "center" }}>
+    <XStack gap="$control" style={{ alignItems: "center" }}>
       <Input
         flex={1}
         value={inputValue}
@@ -37,7 +37,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
       />
       {inputValue.length > 0 && (
         <Button
-          size="$2"
+          size="$chip"
           circular
           icon={X}
           onPress={() => {
