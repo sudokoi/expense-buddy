@@ -2,6 +2,7 @@ import { APP_CONFIG } from "../constants/app-config"
 import { Platform } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { extractChangelogSection } from "./changelog-parser"
+import { getPlayStoreUpdateInfo, PlayStoreInstallStatus } from "./play-store-update"
 
 // AsyncStorage key for dismissed update version
 const DISMISSED_VERSION_KEY = "@expense-buddy/dismissed-update-version"
@@ -19,10 +20,15 @@ export function resetSessionTracking(): void {
 export interface UpdateInfo {
   hasUpdate: boolean
   currentVersion: string
+  availableVersionCode?: number
+  clientVersionStalenessDays?: number | null
+  installStatus?: PlayStoreInstallStatus
   latestVersion?: string
   releaseUrl?: string
   releaseNotes?: string
   publishedAt?: string
+  source?: "github" | "play-store"
+  updatePriority?: number
   error?: string
 }
 
@@ -34,10 +40,6 @@ export interface ReleaseNotesInfo {
   publishedAt?: string
   error?: string
 }
-
-// Minimum time (in ms) since release before showing update notification for Play Store installs
-// This gives time for the release to propagate to Play Store
-const PLAY_STORE_DELAY_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * Check if the app was installed from Google Play Store
@@ -72,10 +74,65 @@ function isExpoGo(): boolean {
   }
 }
 
-/**
- * Compare two semantic versions
- * Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
- */
+export function decodeVersionCode(versionCode: number): string | null {
+  if (!Number.isInteger(versionCode) || versionCode <= 0) {
+    return null
+  }
+
+  const major = Math.floor(versionCode / 10000000)
+  const minor = Math.floor(versionCode / 100000) % 100
+  const patch = Math.floor(versionCode / 1000) % 100
+  const suffix = versionCode % 1000
+
+  if (minor < 0 || minor > 99 || patch < 0 || patch > 99) {
+    return null
+  }
+
+  const baseVersion = `${major}.${minor}.${patch}`
+  if (suffix === 999) {
+    return baseVersion
+  }
+
+  const stageLabels: Record<number, string> = {
+    0: "dev",
+    1: "alpha",
+    2: "beta",
+    3: "rc",
+    4: "preview",
+    5: "prerelease",
+  }
+
+  const stage = Math.floor(suffix / 100)
+  const sequence = suffix % 100
+  const label = stageLabels[stage]
+
+  if (!label) {
+    return baseVersion
+  }
+
+  return sequence > 0 ? `${baseVersion}-${label}.${sequence}` : `${baseVersion}-${label}`
+}
+
+export function resolveUpdateSource({
+  installerPackageName,
+  isExpoGo,
+  platformOs,
+}: {
+  installerPackageName?: string | null
+  isExpoGo: boolean
+  platformOs: string
+}): "github" | "play-store" {
+  if (platformOs !== "android") {
+    return "github"
+  }
+
+  if (isExpoGo) {
+    return "github"
+  }
+
+  return installerPackageName === "com.android.vending" ? "play-store" : "github"
+}
+
 function compareVersions(v1: string, v2: string): number {
   const parts1 = v1.replace(/^v/, "").split(".").map(Number)
   const parts2 = v2.replace(/^v/, "").split(".").map(Number)
@@ -91,75 +148,89 @@ function compareVersions(v1: string, v2: string): number {
   return 0
 }
 
-/**
- * Check if a release is old enough to be available on Play Store
- * Returns true if the release was published more than PLAY_STORE_DELAY_MS ago
- */
-export function isReleaseOldEnough(publishedAt: string, now: Date = new Date()): boolean {
-  const releaseDate = new Date(publishedAt)
-  const timeSinceRelease = now.getTime() - releaseDate.getTime()
-  return timeSinceRelease >= PLAY_STORE_DELAY_MS
+export async function checkForGitHubUpdates(currentVersion: string): Promise<UpdateInfo> {
+  const { owner, repo } = APP_CONFIG.github
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`
+
+  const response = await fetch(apiUrl, {
+    headers: {
+      Accept: "application/vnd.github.v3+json",
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return {
+        hasUpdate: false,
+        currentVersion,
+        source: "github",
+        error: "No releases found",
+      }
+    }
+
+    throw new Error(`GitHub API error: ${response.status}`)
+  }
+
+  const release = await response.json()
+  const latestVersion = release.tag_name.replace(/^v/, "")
+
+  return {
+    hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
+    currentVersion,
+    latestVersion,
+    publishedAt: release.published_at || "",
+    releaseNotes: release.body || "",
+    releaseUrl: release.html_url || `${APP_CONFIG.github.url}/releases`,
+    source: "github",
+  }
+}
+
+export async function checkForPlayStoreUpdates(
+  currentVersion: string
+): Promise<UpdateInfo> {
+  const playStoreUpdate = await getPlayStoreUpdateInfo()
+  const latestVersion = playStoreUpdate.availableVersionCode
+    ? decodeVersionCode(playStoreUpdate.availableVersionCode)
+    : undefined
+  const hasUpdate =
+    playStoreUpdate.updateAvailability === "available" ||
+    playStoreUpdate.updateAvailability === "in_progress" ||
+    playStoreUpdate.installStatus === "downloaded"
+
+  return {
+    hasUpdate,
+    availableVersionCode: playStoreUpdate.availableVersionCode,
+    clientVersionStalenessDays: playStoreUpdate.clientVersionStalenessDays,
+    currentVersion,
+    installStatus: playStoreUpdate.installStatus,
+    latestVersion: latestVersion ?? undefined,
+    source: "play-store",
+    updatePriority: playStoreUpdate.updatePriority,
+  }
 }
 
 /**
- * Check for app updates from GitHub releases
- * Uses GitHub as the source of truth for version info.
- * For Play Store installs, applies a delay to ensure the update is available on Play Store.
+ * Check for app updates.
+ * Play-installed Android builds use Google Play In-App Updates.
+ * Non-Play builds retain the GitHub releases flow.
  */
 export async function checkForUpdates(): Promise<UpdateInfo> {
   const currentVersion = APP_CONFIG.version
 
   try {
-    // Determine if this is a Play Store install (for URL override and delay logic)
-    const fromPlayStore = !isExpoGo() && (await isPlayStoreInstall())
-
-    const { owner, repo } = APP_CONFIG.github
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`
-
-    const response = await fetch(apiUrl, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-      },
+    const updateSource = resolveUpdateSource({
+      installerPackageName: await (Platform.OS === "android"
+        ? getInstallerPackageName()
+        : null),
+      isExpoGo: isExpoGo(),
+      platformOs: Platform.OS,
     })
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return {
-          hasUpdate: false,
-          currentVersion,
-          error: "No releases found",
-        }
-      }
-      throw new Error(`GitHub API error: ${response.status}`)
+    if (updateSource === "play-store") {
+      return await checkForPlayStoreUpdates(currentVersion)
     }
 
-    const release = await response.json()
-    const latestVersion = release.tag_name.replace(/^v/, "")
-    const releaseNotes = release.body || ""
-    const publishedAt = release.published_at || ""
-
-    // Determine if there's a newer version
-    const isNewerVersion = compareVersions(latestVersion, currentVersion) > 0
-
-    // For Play Store installs, only show update if release is old enough
-    // This gives time for the release to propagate to Play Store
-    // If publishedAt is missing, be conservative and don't show the update
-    let hasUpdate = isNewerVersion
-    if (fromPlayStore && isNewerVersion) {
-      hasUpdate = publishedAt ? isReleaseOldEnough(publishedAt) : false
-    }
-
-    // Use Play Store URL for Play Store installs, GitHub URL otherwise
-    const releaseUrl = fromPlayStore ? APP_CONFIG.playStore?.url : release.html_url
-
-    return {
-      hasUpdate,
-      currentVersion,
-      latestVersion,
-      releaseUrl,
-      releaseNotes,
-      publishedAt,
-    }
+    return await checkForGitHubUpdates(currentVersion)
   } catch (error) {
     console.error("Update check failed:", error)
     return {
@@ -167,6 +238,19 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
       currentVersion,
       error: error instanceof Error ? error.message : "Failed to check for updates",
     }
+  }
+}
+
+async function getInstallerPackageName(): Promise<string | null> {
+  if (Platform.OS !== "android") {
+    return null
+  }
+
+  try {
+    const DeviceInfo = await import("react-native-device-info")
+    return await DeviceInfo.default.getInstallerPackageName()
+  } catch {
+    return null
   }
 }
 

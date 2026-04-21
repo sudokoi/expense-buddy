@@ -7,7 +7,9 @@ import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../../constants/ui-tokens"
 
 interface UpdateBannerProps {
   /** The version number to display */
-  version: string
+  version?: string | null
+  /** Whether the update is already downloaded */
+  readyToInstall?: boolean
   /** Callback when user taps the Update button */
   onUpdate: () => void
   /** Callback when user taps the Dismiss button */
@@ -25,7 +27,12 @@ interface UpdateBannerProps {
  * Uses the app's theme colors for consistency and positions
  * at the top of the screen without blocking interaction.
  */
-export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps) {
+export function UpdateBanner({
+  version,
+  readyToInstall = false,
+  onUpdate,
+  onDismiss,
+}: UpdateBannerProps) {
   const insets = useSafeAreaInsets()
   const infoStyles = NOTIFICATION_STYLE_TOKENS.info
 
@@ -91,7 +98,11 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
             numberOfLines={2}
             testID="update-banner-version"
           >
-            Version {version} is available
+            {readyToInstall
+              ? "Update ready to install"
+              : version
+                ? `Version ${version} is available`
+                : "An update is available"}
           </Text>
         </RNView>
 
@@ -108,7 +119,7 @@ export function UpdateBanner({ version, onUpdate, onDismiss }: UpdateBannerProps
             testID="update-banner-update-button"
           >
             <Text fontSize={12} fontWeight="600" color={textColor}>
-              Update
+              {readyToInstall ? "Install" : "Update"}
             </Text>
           </Button>
 

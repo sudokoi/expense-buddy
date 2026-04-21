@@ -402,6 +402,8 @@
       "checkForUpdates": "アップデートを確認",
       "checking": "確認中...",
       "download": "v{{version}} をダウンロード",
+      "installUpdate": "アップデートをインストール",
+      "updateNow": "今すぐアップデート",
       "reportIssue": "問題を報告",
       "viewGitHub": "GitHubで見る"
     }
