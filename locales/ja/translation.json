@@ -422,6 +422,7 @@
         "saveAndImport": "保存して取り込む",
         "hideResolved": "処理済みを隠す",
         "showResolved": "処理済みを表示",
+        "rejectAllSuggested": "提案をすべて拒否する",
         "acceptAllSuggested": "提案をすべて受け入れる",
         "clearResolved": "処理済みをクリア"
       },
@@ -468,6 +469,7 @@
         "invalidAmount": "取り込む前に有効な金額を入力してください。",
         "importedOne": "SMS取引を支出として取り込みました。",
         "noPendingReady": "取り込み可能な保留中SMS項目はありません。",
+        "rejectedMany": "{{count}}件の提案されたSMS項目を拒否しました。",
         "importedMany": "{{count}}件のSMS取引を取り込みました。",
         "importedPartial": "{{count}}件のSMS取引を取り込みました。まだ確認が必要な項目があります。"
       },

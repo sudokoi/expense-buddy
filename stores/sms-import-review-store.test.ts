@@ -190,6 +190,23 @@ describe("smsImportReviewStore", () => {
     expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
   })
 
+  it("marks multiple items rejected with a single persisted snapshot", async () => {
+    smsImportReviewStore.trigger.upsertReviewItems({
+      items: [createItem("older"), createItem("newer")],
+    })
+    await flushEffects()
+    jest.clearAllMocks()
+
+    smsImportReviewStore.trigger.markItemsRejected({
+      ids: ["older", "newer"],
+    })
+    await flushEffects()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items.every((item) => item.status === "rejected")).toBe(true)
+    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
+  })
+
   it("prunes expired resolved items when a later mutation persists the queue", async () => {
     jest.useFakeTimers()
     try {

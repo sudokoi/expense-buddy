@@ -238,6 +238,7 @@ export function SmsImportReviewScreen() {
     resolvedItems,
     markItemAccepted,
     markItemsAccepted,
+    markItemsRejected,
     markItemRejected,
     dismissItem,
     clearResolvedItems,
@@ -365,6 +366,21 @@ export function SmsImportReviewScreen() {
     t,
   ])
 
+  const handleRejectAllSuggested = useCallback(() => {
+    if (pendingItems.length === 0) {
+      addNotification(t("smsImport.sheet.notifications.noPendingReady"), "error")
+      return
+    }
+
+    markItemsRejected(pendingItems.map((item) => item.id))
+    addNotification(
+      t("smsImport.sheet.notifications.rejectedMany", {
+        count: pendingItems.length,
+      }),
+      "info"
+    )
+  }, [addNotification, markItemsRejected, pendingItems, t])
+
   const subtitle = useMemo(() => {
     if (editingItem) {
       return t("smsImport.sheet.subtitle.editing")
@@ -449,11 +465,14 @@ export function SmsImportReviewScreen() {
       </Button>
     </XStack>
   ) : pendingItems.length > 1 ? (
-    <XStack justify="space-between" gap="$control">
+    <XStack justify="space-between" gap="$control" style={layoutStyles.actionRow}>
       <Button onPress={() => setShowResolvedItems((current) => !current)}>
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
           : t("smsImport.sheet.footer.showResolved")}
+      </Button>
+      <Button theme="red" onPress={handleRejectAllSuggested}>
+        {t("smsImport.sheet.footer.rejectAllSuggested")}
       </Button>
       <Button themeInverse onPress={handleAcceptAllSuggested}>
         {t("smsImport.sheet.footer.acceptAllSuggested")}

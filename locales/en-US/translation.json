@@ -422,6 +422,7 @@
         "saveAndImport": "Save and Import",
         "hideResolved": "Hide resolved",
         "showResolved": "Show resolved",
+        "rejectAllSuggested": "Reject All Suggested",
         "acceptAllSuggested": "Accept All Suggested",
         "clearResolved": "Clear resolved"
       },
@@ -468,6 +469,7 @@
         "invalidAmount": "Enter a valid amount before importing.",
         "importedOne": "Imported SMS transaction as an expense.",
         "noPendingReady": "No pending SMS items are ready to import.",
+        "rejectedMany": "Rejected {{count}} suggested SMS items.",
         "importedMany": "Imported {{count}} SMS transactions.",
         "importedPartial": "Imported {{count}} SMS transactions. Some items still need review."
       },

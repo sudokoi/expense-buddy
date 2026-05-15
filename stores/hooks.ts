@@ -488,6 +488,13 @@ export const useSmsImportReview = () => {
     [smsImportReviewStore]
   )
 
+  const markItemsRejected = useCallback(
+    (ids: string[]) => {
+      smsImportReviewStore.trigger.markItemsRejected({ ids })
+    },
+    [smsImportReviewStore]
+  )
+
   const markItemRejected = useCallback(
     (id: string) => {
       smsImportReviewStore.trigger.markItemRejected({ id })
@@ -530,6 +537,7 @@ export const useSmsImportReview = () => {
     upsertReviewItems,
     markItemAccepted,
     markItemsAccepted,
+    markItemsRejected,
     markItemRejected,
     dismissItem,
     clearResolvedItems,

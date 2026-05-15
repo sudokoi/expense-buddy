@@ -201,6 +201,34 @@ export function createSmsImportReviewStore() {
         return applyQueueSnapshot(context, snapshot)
       },
 
+      markItemsRejected: (context, event: { ids: string[] }, enqueue) => {
+        if (event.ids.length === 0) {
+          return context
+        }
+
+        const rejectedIds = new Set(event.ids)
+        const now = new Date().toISOString()
+        const snapshot = createQueueSnapshot({
+          items: context.items.map((item) =>
+            rejectedIds.has(item.id)
+              ? {
+                  ...item,
+                  status: "rejected" as const,
+                  updatedAt: now,
+                }
+              : item
+          ),
+          lastScanCursor: context.lastScanCursor,
+          bootstrapCompletedAt: context.bootstrapCompletedAt,
+        })
+
+        enqueue.effect(async () => {
+          await persistQueueState(snapshot)
+        })
+
+        return applyQueueSnapshot(context, snapshot)
+      },
+
       markItemRejected: (context, event: { id: string }, enqueue) => {
         const now = new Date().toISOString()
         const snapshot = createQueueSnapshot({
