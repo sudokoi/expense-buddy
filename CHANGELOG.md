@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 3.2.2
+
+### Patch Changes
+
+- [`63c827e`](https://github.com/sudokoi/expense-buddy/commit/63c827ea47ea97125a2b051eb21f2e46f912172c) Thanks [@sudokoi](https://github.com/sudokoi)! - Add a bulk reject action for suggested SMS imports in the review screen.
+
 ## 3.2.1
 
 ### Patch Changes
