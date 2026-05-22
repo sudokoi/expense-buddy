@@ -84,7 +84,7 @@ function UpdateAndChangelogOverlays() {
     updateAvailable,
     updateCheckCompleted,
   })
-  const review = usePlayStoreReview({
+  usePlayStoreReview({
     updateAvailable,
     updateCheckCompleted,
   })
@@ -105,10 +105,7 @@ function UpdateAndChangelogOverlays() {
         version={changelog.version}
         releaseNotes={changelog.releaseNotes}
         onClose={() => {
-          void (async () => {
-            await changelog.close()
-            await review.markReviewEligibleForCurrentVersion()
-          })()
+          void changelog.close()
         }}
         onViewFullReleaseNotes={() => {
           void changelog.viewFullReleaseNotes()

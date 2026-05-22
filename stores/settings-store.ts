@@ -638,7 +638,9 @@ Appearance.addChangeListener(({ colorScheme }) => {
 })
 
 // Exported initialization function - call from React component tree
-export async function initializeSettingsStore(): Promise<void> {
+export async function initializeSettingsStore(
+  store: SettingsStore = settingsStore
+): Promise<void> {
   try {
     // Load all settings in parallel
     const [settings, syncedSettingsHash, syncConfig] = await Promise.all([
@@ -651,7 +653,7 @@ export async function initializeSettingsStore(): Promise<void> {
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
     await setBackgroundSmsEnabled(Boolean(settings.backgroundSmsImportEnabled))
 
-    settingsStore.trigger.loadSettings({
+    store.trigger.loadSettings({
       settings,
       settingsSyncState,
       syncedSettingsHash,
@@ -659,7 +661,7 @@ export async function initializeSettingsStore(): Promise<void> {
     })
   } catch (error) {
     console.warn("Failed to initialize settings store:", error)
-    settingsStore.trigger.loadSettings({
+    store.trigger.loadSettings({
       settings: DEFAULT_SETTINGS,
       settingsSyncState: "synced",
       syncedSettingsHash: null,

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { APP_CONFIG } from "../constants/app-config"
 import { requestPlayStoreReview } from "../services/play-store-review"
 import { isPlayStoreInstall } from "../services/update-checker"
@@ -41,10 +41,6 @@ export type PlayStoreReviewEligibilityReason =
 export interface UsePlayStoreReviewOptions {
   updateAvailable: boolean
   updateCheckCompleted: boolean
-}
-
-export interface UsePlayStoreReviewResult {
-  markReviewEligibleForCurrentVersion: () => Promise<void>
 }
 
 function createDefaultReviewState(now: number): PlayStoreReviewState {
@@ -175,7 +171,7 @@ export function getPlayStoreReviewEligibilityReason({
 export function usePlayStoreReview({
   updateAvailable,
   updateCheckCompleted,
-}: UsePlayStoreReviewOptions): UsePlayStoreReviewResult {
+}: UsePlayStoreReviewOptions): void {
   const [reviewState, setReviewState] = useState<PlayStoreReviewState | null>(null)
   const [playStoreInstall, setPlayStoreInstall] = useState<boolean | null>(null)
   const hasAttemptedThisSession = useRef(false)
@@ -229,20 +225,6 @@ export function usePlayStoreReview({
       return
     }
 
-    if (
-      !shouldAttemptPlayStoreReview({
-        currentVersion: APP_CONFIG.version,
-        isDev: __DEV__,
-        isPlayStoreInstall: playStoreInstall === true,
-        now,
-        state: reviewState,
-        updateAvailable,
-        updateCheckCompleted,
-      })
-    ) {
-      return
-    }
-
     hasAttemptedThisSession.current = true
 
     const run = async () => {
@@ -264,12 +246,5 @@ export function usePlayStoreReview({
     run()
   }, [playStoreInstall, reviewState, updateAvailable, updateCheckCompleted])
 
-  const markReviewEligibleForCurrentVersion = useCallback(async () => {
-    // Eligibility is now derived from usage history and Play availability.
-    // Keep the method as a no-op so existing call sites remain harmless.
-  }, [])
-
-  return {
-    markReviewEligibleForCurrentVersion,
-  }
+  return
 }

@@ -31,6 +31,13 @@ import {
   initializeSmsImportReviewStore,
 } from "./sms-import-review-store"
 import {
+  cleanupUpdateStore,
+  initializeUpdateStore,
+  runLaunchUpdateCheck,
+  updateStore as defaultUpdateStore,
+  UpdateStore,
+} from "./update-store"
+import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
 } from "./notification-store"
@@ -45,6 +52,7 @@ interface StoreContextValue {
   notificationStore: NotificationStore
   uiStateStore: UIStateStore
   smsImportReviewStore: SmsImportReviewStore
+  updateStore: UpdateStore
   syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
@@ -59,6 +67,7 @@ interface StoreProviderProps {
   notificationStore?: NotificationStore
   uiStateStore?: UIStateStore
   smsImportReviewStore?: SmsImportReviewStore
+  updateStore?: UpdateStore
   syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
   // Skip initialization (for testing)
@@ -72,6 +81,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   notificationStore = defaultNotificationStore,
   uiStateStore = defaultUIStateStore,
   smsImportReviewStore = defaultSmsImportReviewStore,
+  updateStore = defaultUpdateStore,
   syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
@@ -103,6 +113,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       if (githubAuthActorRef.current) {
         githubAuthActorRef.current.stop()
       }
+      cleanupUpdateStore()
     }
   }, [])
 
@@ -120,10 +131,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         console.warn("Payment instrument migration failed:", error)
       }
 
-      await initializeSettingsStore()
-      await initializeExpenseStore()
-      await initializeUIStateStore()
+      await initializeSettingsStore(settingsStore)
+      await initializeExpenseStore(expenseStore)
+      await initializeUIStateStore(uiStateStore)
       await initializeSmsImportReviewStore(smsImportReviewStore)
+      initializeUpdateStore(updateStore)
+      await runLaunchUpdateCheck(updateStore)
 
       try {
         const reviewSnapshot = smsImportReviewStore.getSnapshot().context
@@ -142,7 +155,14 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         console.warn("SMS import bootstrap failed:", error)
       }
     })()
-  }, [skipInitialization, smsImportReviewStore])
+  }, [
+    expenseStore,
+    settingsStore,
+    skipInitialization,
+    smsImportReviewStore,
+    uiStateStore,
+    updateStore,
+  ])
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(
@@ -177,6 +197,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       notificationStore,
       uiStateStore,
       smsImportReviewStore,
+      updateStore,
       syncActor,
       githubAuthActor,
     }),
@@ -186,6 +207,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       notificationStore,
       uiStateStore,
       smsImportReviewStore,
+      updateStore,
       syncActor,
       githubAuthActor,
     ]

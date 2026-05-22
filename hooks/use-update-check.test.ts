@@ -30,7 +30,7 @@ jest.mock("../stores/notification-store", () => ({
 }))
 
 import { APP_CONFIG } from "../constants/app-config"
-import { performUpdateAction } from "./use-update-check"
+import { performUpdateAction } from "../stores/update-store"
 
 describe("performUpdateAction regression routing", () => {
   beforeEach(() => {

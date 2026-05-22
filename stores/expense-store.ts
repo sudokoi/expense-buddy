@@ -439,7 +439,9 @@ export const expenseStore = createStore({
 })
 
 // Exported initialization function - call from React component tree
-export async function initializeExpenseStore(): Promise<void> {
+export async function initializeExpenseStore(
+  store: ExpenseStore = expenseStore
+): Promise<void> {
   try {
     const loaded = await loadAllExpensesFromStorage()
     const expenses = loaded.expenses
@@ -452,7 +454,7 @@ export async function initializeExpenseStore(): Promise<void> {
 
     const dirtyDaysResult = await loadDirtyDays()
 
-    expenseStore.trigger.loadExpenses({
+    store.trigger.loadExpenses({
       expenses,
       dirtyDays: dirtyDaysResult.state.dirtyDays,
       deletedDays: dirtyDaysResult.state.deletedDays,
@@ -462,7 +464,7 @@ export async function initializeExpenseStore(): Promise<void> {
     await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
   } catch (error) {
     console.warn("Failed to initialize expense store:", error)
-    expenseStore.trigger.loadExpenses({ expenses: [] })
+    store.trigger.loadExpenses({ expenses: [] })
   }
 }
 

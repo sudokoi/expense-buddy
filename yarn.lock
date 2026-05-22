@@ -5659,6 +5659,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xstate/store-react@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@xstate/store-react@npm:1.0.1"
+  dependencies:
+    "@xstate/store": "npm:^3.15.0"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+  checksum: 10/89e9f215e5603e9c708392e40707b8733fcc5c4bc4001ebd98e0abc8b2c4f745e4a1eedf6539456b102272bf0813e41c78b70ffcddd25b1c70a03e24a6e35c97
+  languageName: node
+  linkType: hard
+
 "@xstate/store@npm:^3.15.0":
   version: 3.15.0
   resolution: "@xstate/store@npm:3.15.0"
@@ -5671,6 +5682,21 @@ __metadata:
     solid-js:
       optional: true
   checksum: 10/76318d973d978f2e777972a230b266a2d4072045954e9cd8c208dd2bef12d2714c7a9c4fff988b95658dd4a5384790449038049add8eb53007f97aff9bbbfe78
+  languageName: node
+  linkType: hard
+
+"@xstate/store@npm:^3.17.5":
+  version: 3.17.5
+  resolution: "@xstate/store@npm:3.17.5"
+  peerDependencies:
+    react: ^18.2.0 || ^19.0.0
+    solid-js: ^1.7.6
+  peerDependenciesMeta:
+    react:
+      optional: true
+    solid-js:
+      optional: true
+  checksum: 10/ccd7baacfb9fe2f4b80e99ee917dee5453fabda9b9a531d681d794b814b4aac3b2296401176ecdd6dbadb8ce390ddc7cc10791c62009ee784ed54c496c525757
   languageName: node
   linkType: hard
 
@@ -8197,7 +8223,8 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.53.1"
     "@typescript-eslint/parser": "npm:^8.53.1"
     "@xstate/react": "npm:^6.0.0"
-    "@xstate/store": "npm:^3.15.0"
+    "@xstate/store": "npm:^3.17.5"
+    "@xstate/store-react": "npm:^1.0.1"
     babel-preset-expo: "npm:~54.0.10"
     burnt: "npm:^0.12.2"
     date-fns: "npm:^4.1.0"

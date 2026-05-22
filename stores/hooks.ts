@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react"
-import { useSelector } from "@xstate/store/react"
+import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "./store-provider"
 import {
   selectEffectiveTheme,

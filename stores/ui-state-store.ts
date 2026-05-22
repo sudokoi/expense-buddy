@@ -82,21 +82,23 @@ export const uiStateStore = createStore({
 /**
  * Initialize the UI state store by loading persisted values
  */
-export async function initializeUIStateStore(): Promise<void> {
+export async function initializeUIStateStore(
+  store: UIStateStore = uiStateStore
+): Promise<void> {
   try {
     const [expandedValue, instrumentsExpanded] = await Promise.all([
       AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
       AsyncStorage.getItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY),
     ])
 
-    uiStateStore.trigger.loadUIState({
+    store.trigger.loadUIState({
       paymentMethodSectionExpanded: expandedValue === "true",
       paymentInstrumentsSectionExpanded: instrumentsExpanded === "true",
     })
   } catch (error) {
     console.warn("Failed to initialize UI state store:", error)
     // Use default values (false)
-    uiStateStore.trigger.loadUIState({
+    store.trigger.loadUIState({
       paymentMethodSectionExpanded: false,
       paymentInstrumentsSectionExpanded: false,
     })
