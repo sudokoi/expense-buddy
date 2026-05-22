@@ -1,6 +1,6 @@
 # Google Play Store Listing
 
-Last updated: 2026-04-18
+Last updated: 2026-05-22
 
 Use this file as the source of truth for Google Play Store presence updates.
 
@@ -16,11 +16,12 @@ Private expense tracker with review-first SMS import and GitHub sync
 
 Expense Buddy helps you track spending faster without giving up privacy or control.
 
-You can scan recent transaction SMS messages, turn them into draft expenses, and review everything before saving. The app extracts likely expense details on-device, suggests categories locally, and lets you accept, edit, reject, or dismiss each item. Nothing is imported automatically.
+You can scan recent transaction SMS messages, turn them into draft expenses, and review everything before saving. You can also enable optional background alerts on Android so newly received transaction SMS matches show up as local notifications that reopen the same review flow. The app extracts likely expense details on-device, suggests categories locally, and lets you accept, edit, reject, or dismiss each item. Nothing is imported automatically.
 
 Why people use Expense Buddy:
 
 - Review-first SMS import for recent Android transaction messages
+- Optional background alerts for new matched Android transaction SMS messages
 - Private local storage by default
 - Charts and filters for spending insights
 - Custom categories, payment methods, and saved instruments
@@ -29,8 +30,9 @@ Why people use Expense Buddy:
 
 What makes it different:
 
-- SMS scanning happens only when you choose
-- SMS permission is requested only when you start a scan
+- Recent-message scanning happens only when you choose
+- Background SMS alerts are optional and stay review-first
+- SMS permissions are requested from explicit Settings actions, not at first launch
 - Raw SMS content stays on your device
 - Only confirmed expenses are added to your history
 - Duplicate protection helps keep imports manageable
@@ -79,8 +81,10 @@ Privacy Policy: https://github.com/sudokoi/expense-buddy/blob/main/PRIVACY.md
 Keep these claims accurate in Play Store updates:
 
 - Describe SMS import as Android-only.
-- Describe SMS import as manual, recent-message scanning and review-first.
+- Describe SMS import as review-first.
+- Describe recent-message scanning as manual and user-triggered.
+- Describe background SMS alerts as optional, Android-only, local notifications behind an explicit Settings toggle.
 - If future direction is mentioned, clearly label it as planned and not current behavior.
-- Do not imply background SMS monitoring or automatic expense creation.
+- Do not imply silent automatic expense creation.
 - Keep GitHub sync clearly optional.
 - Keep privacy claims aligned with [PRIVACY.md](./../PRIVACY.md).
