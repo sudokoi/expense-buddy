@@ -2,6 +2,7 @@ const mockAddNotification = jest.fn()
 const mockCanOpenUrl = jest.fn()
 const mockOpenUrl = jest.fn()
 const mockCompletePlayStoreUpdate = jest.fn()
+const mockStartPlayStoreImmediateUpdate = jest.fn()
 const mockStartPlayStoreFlexibleUpdate = jest.fn()
 
 jest.mock("react-native", () => ({
@@ -13,6 +14,8 @@ jest.mock("react-native", () => ({
 
 jest.mock("../services/play-store-update", () => ({
   completePlayStoreUpdate: (...args: unknown[]) => mockCompletePlayStoreUpdate(...args),
+  startPlayStoreImmediateUpdate: (...args: unknown[]) =>
+    mockStartPlayStoreImmediateUpdate(...args),
   startPlayStoreFlexibleUpdate: (...args: unknown[]) =>
     mockStartPlayStoreFlexibleUpdate(...args),
   subscribeToPlayStoreUpdateStatus: jest.fn(() => () => {}),
@@ -35,6 +38,7 @@ describe("performUpdateAction regression routing", () => {
     mockCanOpenUrl.mockResolvedValue(true)
     mockOpenUrl.mockResolvedValue(undefined)
     mockCompletePlayStoreUpdate.mockResolvedValue(undefined)
+    mockStartPlayStoreImmediateUpdate.mockResolvedValue(undefined)
     mockStartPlayStoreFlexibleUpdate.mockResolvedValue(undefined)
   })
 
@@ -49,6 +53,7 @@ describe("performUpdateAction regression routing", () => {
 
     expect(mockCanOpenUrl).toHaveBeenCalledWith(releaseUrl)
     expect(mockOpenUrl).toHaveBeenCalledWith(releaseUrl)
+    expect(mockStartPlayStoreImmediateUpdate).not.toHaveBeenCalled()
     expect(mockStartPlayStoreFlexibleUpdate).not.toHaveBeenCalled()
     expect(mockCompletePlayStoreUpdate).not.toHaveBeenCalled()
   })
@@ -63,13 +68,28 @@ describe("performUpdateAction regression routing", () => {
     expect(mockOpenUrl).toHaveBeenCalledWith(`${APP_CONFIG.github.url}/releases`)
   })
 
-  it("starts the Play flexible update flow for Play Store builds", async () => {
+  it("starts the Play immediate update flow for Play Store builds when supported", async () => {
     await performUpdateAction({
       installStatus: "unknown",
+      supportsImmediateUpdate: true,
+      updateSource: "play-store",
+    })
+
+    expect(mockStartPlayStoreImmediateUpdate).toHaveBeenCalledTimes(1)
+    expect(mockStartPlayStoreFlexibleUpdate).not.toHaveBeenCalled()
+    expect(mockOpenUrl).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the Play flexible update flow when immediate is unavailable", async () => {
+    await performUpdateAction({
+      installStatus: "unknown",
+      supportsFlexibleUpdate: true,
+      supportsImmediateUpdate: false,
       updateSource: "play-store",
     })
 
     expect(mockStartPlayStoreFlexibleUpdate).toHaveBeenCalledTimes(1)
+    expect(mockStartPlayStoreImmediateUpdate).not.toHaveBeenCalled()
     expect(mockOpenUrl).not.toHaveBeenCalled()
   })
 
@@ -80,7 +100,19 @@ describe("performUpdateAction regression routing", () => {
     })
 
     expect(mockCompletePlayStoreUpdate).toHaveBeenCalledTimes(1)
+    expect(mockStartPlayStoreImmediateUpdate).not.toHaveBeenCalled()
     expect(mockStartPlayStoreFlexibleUpdate).not.toHaveBeenCalled()
     expect(mockOpenUrl).not.toHaveBeenCalled()
+  })
+
+  it("throws when no Play Store update mode is supported", async () => {
+    await expect(
+      performUpdateAction({
+        installStatus: "unknown",
+        supportsFlexibleUpdate: false,
+        supportsImmediateUpdate: false,
+        updateSource: "play-store",
+      })
+    ).rejects.toThrow("No supported Play Store update flow is currently available.")
   })
 })

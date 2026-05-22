@@ -6,16 +6,14 @@ import { isPlayStoreInstall } from "../services/update-checker"
 
 const REVIEW_STATE_KEY = "@expense-buddy/play-store-review-state"
 
-const MIN_DAYS_SINCE_FIRST_USE = 14
-const MIN_SESSIONS_BEFORE_PROMPT = 8
-const MIN_DAYS_BETWEEN_REVIEW_ATTEMPTS = 120
+const MIN_DAYS_SINCE_FIRST_USE = 7
+const MIN_SESSIONS_BEFORE_PROMPT = 4
+const MIN_DAYS_BETWEEN_REVIEW_ATTEMPTS = 30
 
 interface PlayStoreReviewState {
   firstSeenAt: number
   lastAttemptAt?: number
   lastAttemptedVersion?: string
-  pendingMarkedAt?: number
-  pendingVersion?: string
   sessionCount: number
 }
 
@@ -24,11 +22,21 @@ interface ReviewEligibilityInput {
   isDev: boolean
   isPlayStoreInstall: boolean
   now: number
-  sessionStartedAt: number
   state: PlayStoreReviewState
   updateAvailable: boolean
   updateCheckCompleted: boolean
 }
+
+export type PlayStoreReviewEligibilityReason =
+  | "eligible"
+  | "dev_build"
+  | "not_play_store_install"
+  | "update_check_pending"
+  | "update_available"
+  | "already_attempted_for_version"
+  | "not_enough_sessions"
+  | "too_soon_since_first_use"
+  | "cooldown_active"
 
 export interface UsePlayStoreReviewOptions {
   updateAvailable: boolean
@@ -62,10 +70,6 @@ async function loadPlayStoreReviewState(now: number): Promise<PlayStoreReviewSta
         typeof parsed.lastAttemptedVersion === "string"
           ? parsed.lastAttemptedVersion
           : undefined,
-      pendingMarkedAt:
-        typeof parsed.pendingMarkedAt === "number" ? parsed.pendingMarkedAt : undefined,
-      pendingVersion:
-        typeof parsed.pendingVersion === "string" ? parsed.pendingVersion : undefined,
       sessionCount:
         typeof parsed.sessionCount === "number" && parsed.sessionCount >= 0
           ? parsed.sessionCount
@@ -91,18 +95,6 @@ export function advancePlayStoreReviewSession(
   }
 }
 
-export function markPlayStoreReviewPending(
-  state: PlayStoreReviewState,
-  version: string,
-  now: number
-): PlayStoreReviewState {
-  return {
-    ...state,
-    pendingMarkedAt: now,
-    pendingVersion: version,
-  }
-}
-
 export function recordPlayStoreReviewAttempt(
   state: PlayStoreReviewState,
   version: string,
@@ -112,8 +104,6 @@ export function recordPlayStoreReviewAttempt(
     ...state,
     lastAttemptAt: now,
     lastAttemptedVersion: version,
-    pendingMarkedAt: undefined,
-    pendingVersion: undefined,
   }
 }
 
@@ -122,47 +112,64 @@ export function shouldAttemptPlayStoreReview({
   isDev,
   isPlayStoreInstall,
   now,
-  sessionStartedAt,
   state,
   updateAvailable,
   updateCheckCompleted,
 }: ReviewEligibilityInput): boolean {
+  return (
+    getPlayStoreReviewEligibilityReason({
+      currentVersion,
+      isDev,
+      isPlayStoreInstall,
+      now,
+      state,
+      updateAvailable,
+      updateCheckCompleted,
+    }) === "eligible"
+  )
+}
+
+export function getPlayStoreReviewEligibilityReason({
+  currentVersion,
+  isDev,
+  isPlayStoreInstall,
+  now,
+  state,
+  updateAvailable,
+  updateCheckCompleted,
+}: ReviewEligibilityInput): PlayStoreReviewEligibilityReason {
   if (isDev || !isPlayStoreInstall) {
-    return false
+    return isDev ? "dev_build" : "not_play_store_install"
   }
 
-  if (!updateCheckCompleted || updateAvailable) {
-    return false
+  if (!updateCheckCompleted) {
+    return "update_check_pending"
   }
 
-  if (!state.pendingVersion || state.pendingVersion !== currentVersion) {
-    return false
-  }
-
-  if (!state.pendingMarkedAt || state.pendingMarkedAt >= sessionStartedAt) {
-    return false
+  if (updateAvailable) {
+    return "update_available"
   }
 
   if (state.lastAttemptedVersion === currentVersion) {
-    return false
+    return "already_attempted_for_version"
   }
 
   if (state.sessionCount < MIN_SESSIONS_BEFORE_PROMPT) {
-    return false
+    return "not_enough_sessions"
   }
 
   if (now - state.firstSeenAt < MIN_DAYS_SINCE_FIRST_USE * 24 * 60 * 60 * 1000) {
-    return false
+    return "too_soon_since_first_use"
   }
 
   if (
     state.lastAttemptAt &&
     now - state.lastAttemptAt < MIN_DAYS_BETWEEN_REVIEW_ATTEMPTS * 24 * 60 * 60 * 1000
   ) {
-    return false
+    return "cooldown_active"
   }
 
-  return true
+  return "eligible"
 }
 
 export function usePlayStoreReview({
@@ -171,7 +178,6 @@ export function usePlayStoreReview({
 }: UsePlayStoreReviewOptions): UsePlayStoreReviewResult {
   const [reviewState, setReviewState] = useState<PlayStoreReviewState | null>(null)
   const [playStoreInstall, setPlayStoreInstall] = useState<boolean | null>(null)
-  const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null)
   const hasAttemptedThisSession = useRef(false)
 
   useEffect(() => {
@@ -193,7 +199,6 @@ export function usePlayStoreReview({
 
       setReviewState(state)
       setPlayStoreInstall(fromPlayStore)
-      setSessionStartedAt(now)
     }
 
     initialize()
@@ -204,18 +209,32 @@ export function usePlayStoreReview({
   }, [])
 
   useEffect(() => {
-    if (!reviewState || !sessionStartedAt || hasAttemptedThisSession.current) {
+    if (!reviewState || hasAttemptedThisSession.current) {
       return
     }
 
     const now = Date.now()
+    const eligibilityReason = getPlayStoreReviewEligibilityReason({
+      currentVersion: APP_CONFIG.version,
+      isDev: __DEV__,
+      isPlayStoreInstall: playStoreInstall === true,
+      now,
+      state: reviewState,
+      updateAvailable,
+      updateCheckCompleted,
+    })
+
+    if (eligibilityReason !== "eligible") {
+      console.info("Play Store review skipped:", eligibilityReason)
+      return
+    }
+
     if (
       !shouldAttemptPlayStoreReview({
         currentVersion: APP_CONFIG.version,
         isDev: __DEV__,
         isPlayStoreInstall: playStoreInstall === true,
         now,
-        sessionStartedAt,
         state: reviewState,
         updateAvailable,
         updateCheckCompleted,
@@ -238,34 +257,17 @@ export function usePlayStoreReview({
         setReviewState(nextState)
       } catch {
         // Play review flows may no-op or fail transiently; do not change app flow.
+        console.warn("Play Store review request failed")
       }
     }
 
     run()
-  }, [
-    playStoreInstall,
-    reviewState,
-    sessionStartedAt,
-    updateAvailable,
-    updateCheckCompleted,
-  ])
+  }, [playStoreInstall, reviewState, updateAvailable, updateCheckCompleted])
 
   const markReviewEligibleForCurrentVersion = useCallback(async () => {
-    if (__DEV__) {
-      return
-    }
-
-    const fromPlayStore = playStoreInstall ?? (await isPlayStoreInstall())
-    if (!fromPlayStore) {
-      return
-    }
-
-    const now = Date.now()
-    const currentState = reviewState ?? (await loadPlayStoreReviewState(now))
-    const nextState = markPlayStoreReviewPending(currentState, APP_CONFIG.version, now)
-    await persistPlayStoreReviewState(nextState)
-    setReviewState(nextState)
-  }, [playStoreInstall, reviewState])
+    // Eligibility is now derived from usage history and Play availability.
+    // Keep the method as a no-op so existing call sites remain harmless.
+  }, [])
 
   return {
     markReviewEligibleForCurrentVersion,

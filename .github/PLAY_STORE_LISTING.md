@@ -32,6 +32,7 @@ What makes it different:
 
 - Recent-message scanning happens only when you choose
 - Background SMS alerts are optional and stay review-first
+- Play-installed builds use native Google Play in-app updates
 - SMS permissions are requested from explicit Settings actions, not at first launch
 - Raw SMS content stays on your device
 - Only confirmed expenses are added to your history
@@ -84,6 +85,7 @@ Keep these claims accurate in Play Store updates:
 - Describe SMS import as review-first.
 - Describe recent-message scanning as manual and user-triggered.
 - Describe background SMS alerts as optional, Android-only, local notifications behind an explicit Settings toggle.
+- Describe Play-installed updates as native Google Play in-app updates.
 - If future direction is mentioned, clearly label it as planned and not current behavior.
 - Do not imply silent automatic expense creation.
 - Keep GitHub sync clearly optional.

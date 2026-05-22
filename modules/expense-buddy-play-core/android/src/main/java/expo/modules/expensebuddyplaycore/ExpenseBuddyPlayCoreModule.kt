@@ -81,7 +81,11 @@ class ExpenseBuddyPlayCoreModule : Module() {
     }
 
     AsyncFunction("startFlexibleUpdateAsync") { promise: Promise ->
-      startFlexibleUpdate(promise)
+      startUpdate(promise, AppUpdateType.FLEXIBLE)
+    }
+
+    AsyncFunction("startImmediateUpdateAsync") { promise: Promise ->
+      startUpdate(promise, AppUpdateType.IMMEDIATE)
     }
 
     AsyncFunction("completeUpdateAsync") { promise: Promise ->
@@ -107,7 +111,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
     }
   }
 
-  private fun startFlexibleUpdate(promise: Promise) {
+  private fun startUpdate(promise: Promise, updateType: Int) {
     val activity = appContext.currentActivity ?: run {
       promise.reject(PlayCoreCurrentActivityUnavailableException())
       return
@@ -120,11 +124,14 @@ class ExpenseBuddyPlayCoreModule : Module() {
           availability == UpdateAvailability.UPDATE_AVAILABLE ||
             availability == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
 
-        if (!isAvailable || !appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+        val updateTypeLabel =
+          if (updateType == AppUpdateType.IMMEDIATE) "immediate" else "flexible"
+
+        if (!isAvailable || !appUpdateInfo.isUpdateTypeAllowed(updateType)) {
           promise.reject(
             CodedException(
               code = "ERR_PLAY_STORE_UPDATE_NOT_AVAILABLE",
-              message = "No flexible Play Store update is currently available.",
+              message = "No ${updateTypeLabel} Play Store update is currently available.",
               cause = null,
             )
           )
@@ -138,7 +145,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
             appUpdateManager.startUpdateFlowForResult(
               appUpdateInfo,
               activity,
-              AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
+              AppUpdateOptions.newBuilder(updateType).build(),
               UPDATE_REQUEST_CODE,
             )
 

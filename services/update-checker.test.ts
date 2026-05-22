@@ -59,6 +59,8 @@ describe("checkForUpdates regression routing", () => {
     expect(global.fetch).not.toHaveBeenCalled()
     expect(result.source).toBe("play-store")
     expect(result.hasUpdate).toBe(true)
+    expect(result.isFlexibleUpdateAllowed).toBe(true)
+    expect(result.isImmediateUpdateAllowed).toBe(true)
     expect(result.latestVersion).toBe("3.2.0")
   })
 

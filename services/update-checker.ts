@@ -23,6 +23,8 @@ export interface UpdateInfo {
   availableVersionCode?: number
   clientVersionStalenessDays?: number | null
   installStatus?: PlayStoreInstallStatus
+  isFlexibleUpdateAllowed?: boolean
+  isImmediateUpdateAllowed?: boolean
   latestVersion?: string
   releaseUrl?: string
   releaseNotes?: string
@@ -203,6 +205,8 @@ export async function checkForPlayStoreUpdates(
     clientVersionStalenessDays: playStoreUpdate.clientVersionStalenessDays,
     currentVersion,
     installStatus: playStoreUpdate.installStatus,
+    isFlexibleUpdateAllowed: playStoreUpdate.isFlexibleUpdateAllowed,
+    isImmediateUpdateAllowed: playStoreUpdate.isImmediateUpdateAllowed,
     latestVersion: latestVersion ?? undefined,
     source: "play-store",
     updatePriority: playStoreUpdate.updatePriority,

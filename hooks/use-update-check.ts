@@ -22,6 +22,7 @@ import {
 import {
   completePlayStoreUpdate,
   PlayStoreInstallStatus,
+  startPlayStoreImmediateUpdate,
   startPlayStoreFlexibleUpdate,
   subscribeToPlayStoreUpdateStatus,
 } from "../services/play-store-update"
@@ -31,6 +32,8 @@ export type UpdateSource = "github" | "play-store"
 
 export interface PerformUpdateActionOptions {
   installStatus: PlayStoreInstallStatus
+  supportsFlexibleUpdate?: boolean
+  supportsImmediateUpdate?: boolean
   releaseUrl?: string
   updateSource: UpdateSource | null
 }
@@ -56,6 +59,8 @@ export interface UseUpdateCheckResult {
 
 export async function performUpdateAction({
   installStatus,
+  supportsFlexibleUpdate,
+  supportsImmediateUpdate,
   releaseUrl,
   updateSource,
 }: PerformUpdateActionOptions): Promise<void> {
@@ -93,7 +98,17 @@ export async function performUpdateAction({
     return
   }
 
-  await startPlayStoreFlexibleUpdate()
+  if (supportsImmediateUpdate !== false) {
+    await startPlayStoreImmediateUpdate()
+    return
+  }
+
+  if (supportsFlexibleUpdate) {
+    await startPlayStoreFlexibleUpdate()
+    return
+  }
+
+  throw new Error("No supported Play Store update flow is currently available.")
 }
 
 /**
@@ -107,6 +122,8 @@ export function useUpdateCheck(): UseUpdateCheckResult {
   const [installStatus, setInstallStatus] = useState<PlayStoreInstallStatus>("unknown")
   const [updateSource, setUpdateSource] = useState<UpdateSource | null>(null)
   const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false)
+  const [supportsFlexibleUpdate, setSupportsFlexibleUpdate] = useState(false)
+  const [supportsImmediateUpdate, setSupportsImmediateUpdate] = useState(false)
 
   // Track if initial check has been performed
   const hasPerformedInitialCheck = useRef(false)
@@ -122,6 +139,14 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         setInstallStatus(updateInfo.installStatus ?? "unknown")
         setReleaseUrl(updateInfo.releaseUrl)
         setUpdateSource(updateInfo.source ?? null)
+        setSupportsFlexibleUpdate(
+          updateInfo.source === "play-store" &&
+            updateInfo.isFlexibleUpdateAllowed === true
+        )
+        setSupportsImmediateUpdate(
+          updateInfo.source === "play-store" &&
+            updateInfo.isImmediateUpdateAllowed === true
+        )
 
         if (bypassDismissal) {
           // Manual check - always show banner
@@ -138,6 +163,14 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         setInstallStatus(updateInfo.installStatus ?? "unknown")
         setReleaseUrl(updateInfo.releaseUrl)
         setUpdateSource(updateInfo.source ?? null)
+        setSupportsFlexibleUpdate(
+          updateInfo.source === "play-store" &&
+            updateInfo.isFlexibleUpdateAllowed === true
+        )
+        setSupportsImmediateUpdate(
+          updateInfo.source === "play-store" &&
+            updateInfo.isImmediateUpdateAllowed === true
+        )
 
         if (bypassDismissal) {
           setShowBanner(true)
@@ -153,6 +186,8 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         setInstallStatus("unknown")
         setUpdateSource(null)
         setShowBanner(false)
+        setSupportsFlexibleUpdate(false)
+        setSupportsImmediateUpdate(false)
       }
     },
     []
@@ -210,6 +245,8 @@ export function useUpdateCheck(): UseUpdateCheckResult {
     try {
       await performUpdateAction({
         installStatus,
+        supportsFlexibleUpdate,
+        supportsImmediateUpdate,
         releaseUrl,
         updateSource,
       })
@@ -223,7 +260,13 @@ export function useUpdateCheck(): UseUpdateCheckResult {
         notificationType: "error",
       })
     }
-  }, [installStatus, releaseUrl, updateSource])
+  }, [
+    installStatus,
+    releaseUrl,
+    supportsFlexibleUpdate,
+    supportsImmediateUpdate,
+    updateSource,
+  ])
 
   /**
    * Handle user dismissing the update notification

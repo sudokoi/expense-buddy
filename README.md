@@ -95,8 +95,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 - Works on Android, iOS, and Web for core expense tracking
 - SMS import is Android-only and requires a native build
-- Play-installed Android builds support native in-app update checks and flexible downloads
-- In-app review prompts are Play-only and conservatively gated to avoid repeated interruptions
+- Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
+- In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
 - Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
 - Dark mode, changelog gating, update notifications, and reusable Tamagui UI primitives
 

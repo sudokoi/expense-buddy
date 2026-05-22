@@ -171,7 +171,10 @@ export default function SettingsScreen() {
 
       const permissionResult = await requestBackgroundSmsPermissions()
       if (!permissionResult.granted) {
-        addNotification(t("settings.smsImport.notifications.backgroundPermissionRequired"), "error")
+        addNotification(
+          t("settings.smsImport.notifications.backgroundPermissionRequired"),
+          "error"
+        )
         setBackgroundSmsImportEnabled(false)
         return
       }

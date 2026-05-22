@@ -5,7 +5,7 @@ jest.mock("../modules/expense-buddy-play-core", () => ({
 
 import {
   advancePlayStoreReviewSession,
-  markPlayStoreReviewPending,
+  getPlayStoreReviewEligibilityReason,
   recordPlayStoreReviewAttempt,
   shouldAttemptPlayStoreReview,
 } from "./use-play-store-review"
@@ -21,11 +21,8 @@ describe("usePlayStoreReview gating", () => {
         isDev: false,
         isPlayStoreInstall: false,
         now,
-        sessionStartedAt: now,
         state: {
           firstSeenAt: now - 40 * dayMs,
-          pendingMarkedAt: now - dayMs,
-          pendingVersion: "3.2.0",
           sessionCount: 20,
         },
         updateAvailable: false,
@@ -34,22 +31,19 @@ describe("usePlayStoreReview gating", () => {
     ).toBe(false)
   })
 
-  it("does not attempt a review in the same session that the version became eligible", () => {
+  it("does not attempt a review before the update check completes", () => {
     expect(
       shouldAttemptPlayStoreReview({
         currentVersion: "3.2.0",
         isDev: false,
         isPlayStoreInstall: true,
         now,
-        sessionStartedAt: now - 5 * 60 * 1000,
         state: {
           firstSeenAt: now - 40 * dayMs,
-          pendingMarkedAt: now - 60 * 1000,
-          pendingVersion: "3.2.0",
           sessionCount: 20,
         },
         updateAvailable: false,
-        updateCheckCompleted: true,
+        updateCheckCompleted: false,
       })
     ).toBe(false)
   })
@@ -61,11 +55,8 @@ describe("usePlayStoreReview gating", () => {
         isDev: false,
         isPlayStoreInstall: true,
         now,
-        sessionStartedAt: now,
         state: {
           firstSeenAt: now - 3 * dayMs,
-          pendingMarkedAt: now - 2 * dayMs,
-          pendingVersion: "3.2.0",
           sessionCount: 2,
         },
         updateAvailable: false,
@@ -81,12 +72,9 @@ describe("usePlayStoreReview gating", () => {
         isDev: false,
         isPlayStoreInstall: true,
         now,
-        sessionStartedAt: now,
         state: {
           firstSeenAt: now - 300 * dayMs,
-          lastAttemptAt: now - 30 * dayMs,
-          pendingMarkedAt: now - 2 * dayMs,
-          pendingVersion: "3.3.0",
+          lastAttemptAt: now - 29 * dayMs,
           sessionCount: 40,
         },
         updateAvailable: false,
@@ -95,19 +83,16 @@ describe("usePlayStoreReview gating", () => {
     ).toBe(false)
   })
 
-  it("attempts a review only after a previous session marks the current version eligible", () => {
+  it("attempts a review once usage thresholds are met and no update is pending", () => {
     expect(
       shouldAttemptPlayStoreReview({
         currentVersion: "3.2.0",
         isDev: false,
         isPlayStoreInstall: true,
         now,
-        sessionStartedAt: now - 2 * 60 * 60 * 1000,
         state: {
           firstSeenAt: now - 200 * dayMs,
           lastAttemptAt: now - 180 * dayMs,
-          pendingMarkedAt: now - 7 * dayMs,
-          pendingVersion: "3.2.0",
           sessionCount: 25,
         },
         updateAvailable: false,
@@ -116,21 +101,50 @@ describe("usePlayStoreReview gating", () => {
     ).toBe(true)
   })
 
-  it("records the session and clears pending review state after an attempt", () => {
+  it("records the session after an attempt", () => {
     const initialState = {
       firstSeenAt: now - 200 * dayMs,
-      pendingMarkedAt: now - 7 * dayMs,
-      pendingVersion: "3.2.0",
       sessionCount: 24,
     }
 
     const nextSession = advancePlayStoreReviewSession(initialState, now)
-    const pendingState = markPlayStoreReviewPending(nextSession, "3.2.0", now)
-    const attemptedState = recordPlayStoreReviewAttempt(pendingState, "3.2.0", now)
+    const attemptedState = recordPlayStoreReviewAttempt(nextSession, "3.2.0", now)
 
     expect(nextSession.sessionCount).toBe(25)
-    expect(pendingState.pendingVersion).toBe("3.2.0")
     expect(attemptedState.lastAttemptedVersion).toBe("3.2.0")
-    expect(attemptedState.pendingVersion).toBeUndefined()
+  })
+
+  it("exposes the specific ineligibility reason", () => {
+    expect(
+      getPlayStoreReviewEligibilityReason({
+        currentVersion: "3.2.0",
+        isDev: false,
+        isPlayStoreInstall: true,
+        now,
+        state: {
+          firstSeenAt: now - 2 * dayMs,
+          sessionCount: 2,
+        },
+        updateAvailable: false,
+        updateCheckCompleted: true,
+      })
+    ).toBe("not_enough_sessions")
+  })
+
+  it("blocks review while an update is available", () => {
+    expect(
+      getPlayStoreReviewEligibilityReason({
+        currentVersion: "3.2.0",
+        isDev: false,
+        isPlayStoreInstall: true,
+        now,
+        state: {
+          firstSeenAt: now - 40 * dayMs,
+          sessionCount: 20,
+        },
+        updateAvailable: true,
+        updateCheckCompleted: true,
+      })
+    ).toBe("update_available")
   })
 })

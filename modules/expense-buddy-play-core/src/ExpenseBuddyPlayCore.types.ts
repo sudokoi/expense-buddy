@@ -42,5 +42,6 @@ export interface ExpenseBuddyPlayCoreNativeModule extends NativeModule {
   completeUpdateAsync(): Promise<void>
   getUpdateInfoAsync(): Promise<NativePlayStoreUpdateInfo>
   requestReviewAsync(): Promise<void>
+  startImmediateUpdateAsync(): Promise<void>
   startFlexibleUpdateAsync(): Promise<void>
 }

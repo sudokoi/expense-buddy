@@ -107,6 +107,10 @@ export async function startPlayStoreFlexibleUpdate(): Promise<void> {
   await getModule().startFlexibleUpdateAsync()
 }
 
+export async function startPlayStoreImmediateUpdate(): Promise<void> {
+  await getModule().startImmediateUpdateAsync()
+}
+
 export async function completePlayStoreUpdate(): Promise<void> {
   await getModule().completeUpdateAsync()
 }

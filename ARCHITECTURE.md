@@ -159,22 +159,23 @@ App update and in-app review behavior is split by install source.
 
 - Play-installed Android builds use the local `expense-buddy-play-core` Expo module.
 - Non-Play Android builds keep the GitHub Releases fallback for update discovery and the release-page update action.
-- In-app review is requested only on Play installs and only after local gating conditions are met.
+- In-app review is requested only on Play installs and only after lightweight local gating conditions are met.
 
 Runtime flow:
 
 1. `services/update-checker.ts` determines whether the current install should use Play Core or GitHub Releases.
-2. `services/play-store-update.ts` wraps the Play Core Expo module for update availability, flexible update start, completion, and status events.
+2. `services/play-store-update.ts` wraps the Play Core Expo module for update availability, immediate update start, flexible fallback support, completion, and status events.
 3. `hooks/use-update-check.ts` owns banner visibility and chooses between Play Core actions and GitHub release URLs.
 4. `services/play-store-review.ts` wraps the same Play Core module for in-app review requests.
-5. `hooks/use-play-store-review.ts` stores conservative local gating state so prompts are delayed, version-scoped, and rate-limited.
-6. `app/_layout.tsx` marks the current version review-eligible only after the changelog flow finishes, which avoids stacking a review prompt immediately after an update notice.
+5. `hooks/use-play-store-review.ts` stores lightweight local gating state so prompts are delayed until a user has some usage history and are not retried too aggressively.
+6. Google Play still decides whether the review dialog actually appears after the request is made, so the app logs eligibility outcomes and treats the flow as best effort.
 
 Why this shape:
 
 - keeps native Play integrations in tracked source instead of generated Android output
 - preserves sideload and non-Play behavior without forking the app shell
-- keeps review prompting conservative so Play quota and user experience constraints are both respected
+- gives Play-installed builds the standard full-screen Android update UX while keeping a flexible fallback path available
+- keeps review prompting conservative enough to avoid obvious spam while acknowledging that final review display is controlled by Play
 
 ## Analytics Architecture
 

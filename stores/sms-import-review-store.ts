@@ -342,7 +342,9 @@ export async function initializeSmsImportReviewStore(
       loadBackgroundSmsReviewQueueSnapshot(),
     ])
 
-    const parsed = rawValue ? (JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>) : null
+    const parsed = rawValue
+      ? (JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>)
+      : null
     const storedSnapshot = {
       items: Array.isArray(parsed?.items) ? parsed!.items : [],
       lastScanCursor: parsed?.lastScanCursor ?? null,

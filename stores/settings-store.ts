@@ -148,7 +148,11 @@ export const settingsStore = createStore({
 
     setEnableMathExpressions: createSettingUpdater("enableMathExpressions"),
 
-    setBackgroundSmsImportEnabled: (context, event: { backgroundSmsImportEnabled: boolean }, enqueue) => {
+    setBackgroundSmsImportEnabled: (
+      context,
+      event: { backgroundSmsImportEnabled: boolean },
+      enqueue
+    ) => {
       const newSettings = {
         ...context.settings,
         backgroundSmsImportEnabled: event.backgroundSmsImportEnabled,
