@@ -1,6 +1,6 @@
 # Android Phone Smoke Test
 
-Use this after building the internal APK to verify the settings revamp, GitHub settings sync, and the new on-device SMS ML toggle on a real phone.
+Use this after building the internal APK to verify the settings revamp, GitHub settings sync, the on-device SMS ML toggle, and Android background SMS alerts on a real phone.
 
 ## Install
 
@@ -25,12 +25,22 @@ Use this after building the internal APK to verify the settings revamp, GitHub s
 4. Enable the ML-only flag and scan again with the same or similar transaction messages.
 5. Confirm the review queue still opens and that category suggestions now prefer the native ML result when a prediction exists.
 
+## Background SMS Alerts
+
+1. On Android, enable the background SMS alerts toggle from Settings.
+2. Confirm the app requests `RECEIVE_SMS` and notification permission only from that toggle flow.
+3. Send a transaction SMS to the device while the app is fully backgrounded.
+4. Confirm a local notification appears for the new matched transaction.
+5. If only one pending item exists, tap the notification and confirm the review screen opens with that item focused and its editor expanded.
+6. If multiple pending items exist, tap the notification and confirm the review queue opens instead of auto-opening a different item.
+7. Bring the app to the foreground and send another matching SMS. Confirm the queue updates without showing a system notification.
+
 ## GitHub Settings Sync
 
 1. Configure GitHub sync and enable `Also sync settings`.
 2. Change at least these settings: theme, default payment method, `Allow mathematical amount entry`, and the ML-only SMS flag.
 3. Tap `Sync Now` and confirm the success notification.
-4. In the synced repository, inspect `settings.json` and verify it includes `version: 8` and `useMlOnlyForSmsImports`.
+4. In the synced repository, inspect `settings.json` and verify it includes `version: 9`, `useMlOnlyForSmsImports`, and `backgroundSmsImportEnabled`.
 5. On a second install, another device, or after clearing local app data, sync down and confirm the settings are restored.
 
 ## Model Wiring Sanity Check

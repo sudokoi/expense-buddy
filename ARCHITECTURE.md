@@ -14,15 +14,15 @@ This document focuses on the current architecture shape, the reasons behind the 
 
 ## Runtime Layers
 
-| Layer              | Responsibility                                           | Main locations                                                          |
-| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Routes             | Screen composition and navigation                        | `app/`                                                                  |
-| Components         | Reusable presentational building blocks                  | `components/`                                                           |
-| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                                                |
-| Stores             | Long-lived application state                             | `stores/`                                                               |
-| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                                             |
-| Native modules     | Android SMS access and Play Core integrations            | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-play-core/` |
-| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/`                            |
+| Layer              | Responsibility                                           | Main locations                                                                                                   |
+| ------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Routes             | Screen composition and navigation                        | `app/`                                                                                                           |
+| Components         | Reusable presentational building blocks                  | `components/`                                                                                                    |
+| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                                                                                         |
+| Stores             | Long-lived application state                             | `stores/`                                                                                                        |
+| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                                                                                      |
+| Native modules     | Android SMS access, background SMS alerts, and Play Core | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-background-sms/`, `modules/expense-buddy-play-core/` |
+| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/`                                                                     |
 
 The main dependency direction is:
 
@@ -75,6 +75,7 @@ Current constraints:
 
 - Android only
 - Recent-window scanning rather than full historical inbox import
+- Receiver-driven new-message detection rather than polling or scheduled background work
 - Deterministic extraction for explainable matches
 - Native LiteRT category suggestions with regex fallback
 - Review-first staging before an expense is created
@@ -85,13 +86,17 @@ Runtime flow:
 1. The app checks SMS permission status on startup without prompting.
 2. If permission was already granted, bootstrap logic can scan the bounded recent window.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
-4. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
-5. `services/sms-import/bootstrap.ts` batches eligible messages through the Android native module for LiteRT category inference.
-6. The native module mirrors the Python export contract with deterministic hashed token features and replaces the category suggestion only when the model clears its confidence gate.
-7. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
-8. Parsed candidates are stored in the SMS Import Review Store.
-9. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
-10. Only accepted items are converted into normal expense records and enter the regular sync flow.
+4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
+5. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
+6. `services/sms-import/bootstrap.ts` batches eligible messages through the Android native module for LiteRT category inference.
+7. The native module mirrors the Python export contract with deterministic hashed token features and replaces the category suggestion only when the model clears its confidence gate.
+8. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
+9. Parsed candidates are stored in the SMS Import Review Store.
+10. The review store mirrors a pending-item snapshot into `expense-buddy-background-sms` so the receiver and notification router can stay offline.
+11. When an `SMS_RECEIVED` broadcast arrives, the background module parses the message locally, updates its pending snapshot, and posts a local notification only if the app is not foregrounded.
+12. Notification taps route into `/sms/review`, targeting a single item directly when possible.
+13. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
+14. Only accepted items are converted into normal expense records and enter the regular sync flow.
 
 Why this hybrid shape:
 
@@ -99,6 +104,7 @@ Why this hybrid shape:
 - easier to explain to users in a review-first flow
 - keeps deterministic extraction on the JS side while moving actual category inference off the JS thread
 - lets the app ship a native model bundle without requiring server-side parsing or on-device training
+- adds near-real-time alerts without introducing polling, scheduled jobs, or a foreground service
 
 Planned direction:
 
@@ -113,6 +119,7 @@ Related decisions:
 
 - [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
 - [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
+- [ADR-005: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-005-background-sms-alerts.md)
 - [On-Device ML SMS Categorization Proposal](./decisions/proposal-on-device-ml-sms-categorization.md)
 
 ## GitHub Sync Architecture
@@ -205,6 +212,7 @@ This keeps startup lean while ensuring notifications, labels, and formatting rem
 - Analytics filtering is single-pass to reduce intermediate allocations.
 - History views rely on list virtualization for large datasets.
 - Sync minimizes API calls through SHA caching and dirty-day tracking.
+- Background SMS alerts avoid polling and only do lightweight receiver-driven work when Android delivers new messages.
 - Dynamic locale loading avoids bundling every language into the initial startup path.
 
 ## Testing Strategy
@@ -231,4 +239,4 @@ Before adding new architecture layers, prefer extending the existing seams:
 - keep screen hooks as orchestration layers, not persistence layers
 - prefer explicit ADRs for changes that alter sync, import, or platform scope
 
-If a future change introduces on-device ML parsing, background ingestion, or a new sync target, that change should be documented in a new ADR before it is treated as the default architecture.
+If a future change introduces on-device ML parsing beyond the current category suggestion path or a new sync target, that change should be documented in a new ADR before it is treated as the default architecture.

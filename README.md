@@ -20,6 +20,7 @@ Manual entry, analytics, multi-currency support, and GitHub sync are all there, 
 ## Why Expense Buddy
 
 - Auto-detect likely expenses from Android transaction SMS messages
+- Surface new matched transactions with local Android notifications that reopen the review flow
 - Keep raw SMS content on-device and out of GitHub sync
 - Review, edit, reject, or dismiss imported items before they become expenses
 - Sync confirmed expenses across devices using your own private GitHub repository
@@ -33,6 +34,7 @@ Expense Buddy ships a hybrid SMS import pipeline for Android. Transaction detect
 Today, the import system:
 
 - scans a recent SMS window on Android
+- can detect newly received transaction SMS messages in the background on Android
 - uses deterministic rules for transaction extraction
 - runs a bundled native LiteRT classifier for default-category suggestions
 - falls back to the regex category suggestion when model confidence is low
@@ -54,8 +56,11 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 ### SMS Import and Review
 
 - Android-only SMS import using the native `expense-buddy-sms-import` module
+- Android-only background transaction alerts using the native `expense-buddy-background-sms` module
 - Inline `READ_SMS` permission handling from Settings
+- Optional Settings toggle for background SMS alerts with `RECEIVE_SMS` and `POST_NOTIFICATIONS` gating
 - Review queue where each staged item can be accepted, edited, rejected, or dismissed
+- Local notifications route back into the existing review queue instead of silently creating expenses
 - Native LiteRT category suggestion with regex fallback for low-confidence predictions
 - Conservative category suggestion resolver built around shipped default categories
 - Local-only processing with no backend parsing
@@ -97,13 +102,14 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ## How the SMS Import Flow Works
 
-1. Open Settings and scan recent messages.
-2. Expense Buddy reads recent Android transaction SMS messages on-device.
+1. Open Settings and scan recent messages, or enable background SMS alerts on Android.
+2. Expense Buddy reads recent Android transaction SMS messages on-device or parses newly received SMS messages locally in the background.
 3. The parser extracts likely transaction details and a regex fallback category locally.
 4. The native Android module can score the same messages with a bundled LiteRT category model.
 5. The app stages the candidate with the ML category only when the model is confident enough.
-6. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
-7. Only accepted items become normal expense records and participate in optional GitHub sync.
+6. If a new background match arrives while the app is not foregrounded, a local notification opens the existing review flow.
+7. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
+8. Only accepted items become normal expense records and participate in optional GitHub sync.
 
 This review-first model is deliberate. The app aims to reduce manual entry without hiding how an import decision was made.
 
@@ -165,9 +171,9 @@ Key implementation details:
 - file-based routing under `app/`
 - XState stores for expenses, settings, filters, notifications, UI state, and SMS review state
 - service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
-- native Android SMS module bridged through `services/sms-import/`
+- native Android SMS modules bridged through `services/sms-import/` and `services/background-sms/`
 - property-based and unit tests across storage, sync, parsing, and store behavior
-- tracked Expo native modules for Android SMS import and Play Core integrations
+- tracked Expo native modules for Android SMS import, Android background SMS alerts, and Play Core integrations
 
 For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -203,6 +209,9 @@ expense-buddy/
 │   │   ├── bootstrap.ts
 │   │   ├── parser.ts
 │   │   └── suggestion-resolver.ts
+│   ├── background-sms/
+│   │   ├── android-background-sms-module.ts
+│   │   └── background-sms-permissions.ts
 │   ├── github-sync.ts          # GitHub API client
 │   ├── sync-machine.ts         # sync state machine
 │   ├── sync-manager.ts         # sync orchestration
@@ -220,8 +229,9 @@ expense-buddy/
 │   ├── ui-state-store.ts
 │   └── store-provider.tsx
 ├── modules/
-│   ├── expense-buddy-play-core/   # Play Store update and review native module
-│   └── expense-buddy-sms-import/  # Android SMS import native module
+│   ├── expense-buddy-background-sms/ # Android background SMS alerts native module
+│   ├── expense-buddy-play-core/      # Play Store update and review native module
+│   └── expense-buddy-sms-import/     # Android SMS import native module
 ├── locales/                    # en-US, en-GB, en-IN, hi, ja
 ├── decisions/                  # ADRs and technical decisions
 ├── assets/

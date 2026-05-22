@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** April 11, 2026
+**Last Updated:** May 22, 2026
 
 ## Overview
 
@@ -37,6 +37,16 @@ If you enable SMS import on Android:
 
 The current SMS import flow is review-first. Messages that match supported transaction patterns are staged locally until you accept, reject, dismiss, or clear them.
 
+If you enable background SMS alerts on Android:
+
+- **The app requests `RECEIVE_SMS` only when you explicitly enable the Settings toggle for background alerts**
+- **The app requests `POST_NOTIFICATIONS` so Android can show a local notification for new matched transactions**
+- **Incoming SMS messages are parsed on-device only when Android delivers an `SMS_RECEIVED` broadcast**
+- **No matched SMS content is sent to any server, push provider, or third-party notification service**
+- **Notifications open the existing local review flow; they do not create expenses automatically**
+- **No notification is shown while the app is already in the foreground**
+- **A local pending-review snapshot is kept on-device so notification taps can reopen the right review state offline**
+
 ## GitHub Sync (Optional)
 
 If you choose to use the optional GitHub sync feature:
@@ -62,6 +72,8 @@ The app may request the following permissions:
 - **Internet Access**: Required only for the optional GitHub sync feature
 - **Secure Storage**: To safely store your GitHub token on your device
 - **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import; the app requests it when you manually start a scan from Settings
+- **Background SMS Access (`RECEIVE_SMS`)**: Required only if you explicitly enable Android background SMS alerts from Settings
+- **Notifications (`POST_NOTIFICATIONS`)**: Required only if you explicitly enable Android background SMS alerts and allow local notifications
 
 ## Children's Privacy
 
