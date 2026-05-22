@@ -108,7 +108,12 @@ export async function performUpdateAction({
     return
   }
 
-  throw new Error("No supported Play Store update flow is currently available.")
+  const canOpenPlayStore = await Linking.canOpenURL(APP_CONFIG.playStore.url)
+  if (!canOpenPlayStore) {
+    throw new Error("No supported Play Store update flow is currently available.")
+  }
+
+  await Linking.openURL(APP_CONFIG.playStore.url)
 }
 
 /**

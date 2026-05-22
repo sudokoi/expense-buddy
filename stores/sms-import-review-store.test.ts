@@ -124,6 +124,22 @@ describe("smsImportReviewStore", () => {
     expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
   })
 
+  it("keeps a valid native snapshot when AsyncStorage contains corrupt JSON", async () => {
+    storage.set(STORAGE_KEY, "{not valid json")
+    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
+      items: [createItem("native")],
+      lastScanCursor: "2026-04-11T10:20:00.000Z",
+      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
+    })
+
+    await initializeSmsImportReviewStore()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items.map((item) => item.id)).toEqual(["native"])
+    expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
+    expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
+  })
+
   it("prunes resolved items older than 7 days but keeps pending items", async () => {
     const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
     const snapshot: SmsImportReviewQueueSnapshot = {

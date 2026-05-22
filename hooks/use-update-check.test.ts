@@ -105,7 +105,23 @@ describe("performUpdateAction regression routing", () => {
     expect(mockOpenUrl).not.toHaveBeenCalled()
   })
 
-  it("throws when no Play Store update mode is supported", async () => {
+  it("falls back to the Play Store listing when no in-app update mode is supported", async () => {
+    await performUpdateAction({
+      installStatus: "unknown",
+      supportsFlexibleUpdate: false,
+      supportsImmediateUpdate: false,
+      updateSource: "play-store",
+    })
+
+    expect(mockCanOpenUrl).toHaveBeenCalledWith(APP_CONFIG.playStore.url)
+    expect(mockOpenUrl).toHaveBeenCalledWith(APP_CONFIG.playStore.url)
+    expect(mockStartPlayStoreImmediateUpdate).not.toHaveBeenCalled()
+    expect(mockStartPlayStoreFlexibleUpdate).not.toHaveBeenCalled()
+  })
+
+  it("still throws when no Play Store update mode is supported and the store URL cannot open", async () => {
+    mockCanOpenUrl.mockResolvedValue(false)
+
     await expect(
       performUpdateAction({
         installStatus: "unknown",

@@ -231,7 +231,9 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
-        await setBackgroundSmsEnabled(Boolean(newSettings.backgroundSmsImportEnabled))
+        if (Object.hasOwn(event.updates, "backgroundSmsImportEnabled")) {
+          await setBackgroundSmsEnabled(Boolean(newSettings.backgroundSmsImportEnabled))
+        }
         await enqueueSyncOp({
           type: "settings.patch",
           updates: event.updates,

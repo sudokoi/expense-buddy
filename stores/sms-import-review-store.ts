@@ -342,9 +342,15 @@ export async function initializeSmsImportReviewStore(
       loadBackgroundSmsReviewQueueSnapshot(),
     ])
 
-    const parsed = rawValue
-      ? (JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>)
-      : null
+    let parsed: Partial<SmsImportReviewQueueSnapshot> | null = null
+    if (rawValue) {
+      try {
+        parsed = JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>
+      } catch (error) {
+        console.warn("Failed to parse persisted SMS import review queue state:", error)
+      }
+    }
+
     const storedSnapshot = {
       items: Array.isArray(parsed?.items) ? parsed!.items : [],
       lastScanCursor: parsed?.lastScanCursor ?? null,
