@@ -97,6 +97,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
+  backgroundSmsImportEnabled: fc.boolean(),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),

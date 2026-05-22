@@ -4,12 +4,29 @@ import {
   initializeSmsImportReviewStore,
   smsImportReviewStore,
 } from "./sms-import-review-store"
+import {
+  loadBackgroundSmsReviewQueueSnapshot,
+  saveBackgroundSmsReviewQueueSnapshot,
+} from "../services/background-sms/android-background-sms-module"
 import type {
   SmsImportReviewItem,
   SmsImportReviewQueueSnapshot,
 } from "../types/sms-import"
 
+jest.mock("../services/background-sms/android-background-sms-module", () => ({
+  loadBackgroundSmsReviewQueueSnapshot: jest.fn(async () => null),
+  saveBackgroundSmsReviewQueueSnapshot: jest.fn(async () => undefined),
+}))
+
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>
+const mockLoadBackgroundSmsReviewQueueSnapshot =
+  loadBackgroundSmsReviewQueueSnapshot as jest.MockedFunction<
+    typeof loadBackgroundSmsReviewQueueSnapshot
+  >
+const mockSaveBackgroundSmsReviewQueueSnapshot =
+  saveBackgroundSmsReviewQueueSnapshot as jest.MockedFunction<
+    typeof saveBackgroundSmsReviewQueueSnapshot
+  >
 const storage = new Map<string, string>()
 const STORAGE_KEY = "sms_import_review_queue_state_v1"
 
@@ -57,6 +74,8 @@ describe("smsImportReviewStore", () => {
     mockAsyncStorage.removeItem.mockImplementation(async (key: string) => {
       storage.delete(key)
     })
+    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue(null)
+    mockSaveBackgroundSmsReviewQueueSnapshot.mockResolvedValue(undefined)
 
     smsImportReviewStore.trigger.loadQueueState({
       items: [],
@@ -80,6 +99,29 @@ describe("smsImportReviewStore", () => {
     expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
     expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
     expect(context.isLoading).toBe(false)
+  })
+
+  it("merges the native background snapshot into the review queue on initialization", async () => {
+    storage.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        items: [createItem("older")],
+        lastScanCursor: "2026-04-11T10:10:00.000Z",
+        bootstrapCompletedAt: null,
+      } satisfies SmsImportReviewQueueSnapshot)
+    )
+    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
+      items: [createItem("newer")],
+      lastScanCursor: "2026-04-11T10:20:00.000Z",
+      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
+    })
+
+    await initializeSmsImportReviewStore()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
+    expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
+    expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
   })
 
   it("prunes resolved items older than 7 days but keeps pending items", async () => {
@@ -145,6 +187,12 @@ describe("smsImportReviewStore", () => {
     expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
 
     expect(mockAsyncStorage.setItem).toHaveBeenCalled()
+    expect(mockSaveBackgroundSmsReviewQueueSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastScanCursor: "2026-04-11T10:20:00.000Z",
+        bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
+      })
+    )
     expect(JSON.parse(storage.get(STORAGE_KEY) || "{}")).toMatchObject({
       lastScanCursor: "2026-04-11T10:20:00.000Z",
       bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",

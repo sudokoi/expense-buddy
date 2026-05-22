@@ -24,6 +24,7 @@ import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
 import { changeLanguage } from "../i18n"
 import { getDefaultCurrencyForLanguage } from "../utils/currency"
 import { enqueueSyncOp } from "../services/sync-queue"
+import { setBackgroundSmsEnabled } from "../services/background-sms/android-background-sms-module"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -147,6 +148,37 @@ export const settingsStore = createStore({
 
     setEnableMathExpressions: createSettingUpdater("enableMathExpressions"),
 
+    setBackgroundSmsImportEnabled: (context, event: { backgroundSmsImportEnabled: boolean }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        backgroundSmsImportEnabled: event.backgroundSmsImportEnabled,
+      }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await setBackgroundSmsEnabled(event.backgroundSmsImportEnabled)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: { backgroundSmsImportEnabled: event.backgroundSmsImportEnabled },
+        })
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
     setLanguage: (context, event: { language: string }, enqueue) => {
       const newSettings = {
         ...context.settings,
@@ -195,6 +227,7 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
+        await setBackgroundSmsEnabled(Boolean(newSettings.backgroundSmsImportEnabled))
         await enqueueSyncOp({
           type: "settings.patch",
           updates: event.updates,
@@ -222,6 +255,7 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(event.settings)
+        await setBackgroundSmsEnabled(Boolean(event.settings.backgroundSmsImportEnabled))
         await saveSettingsHash(newHash)
         await clearSettingsChanged()
       })
@@ -609,6 +643,7 @@ export async function initializeSettingsStore(): Promise<void> {
 
     // Compute initial sync state by comparing current settings against synced hash
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
+    await setBackgroundSmsEnabled(Boolean(settings.backgroundSmsImportEnabled))
 
     settingsStore.trigger.loadSettings({
       settings,

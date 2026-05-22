@@ -374,6 +374,8 @@
     "smsImport": {
       "title": "SMS インポート",
       "description": "最近のSMS取引を端末上で取り込み、支出として保存する前に確認できます。",
+      "backgroundAlerts": "バックグラウンド取引アラート",
+      "backgroundAlertsHelp": "受信した取引SMSをオフラインで検出し、通知から直接レビュー画面を開きます。",
       "permissionStatus": "権限の状態",
       "helper": "現在のスキャンは最近のメッセージのみが対象で、生のSMSデータはこの端末内に保持されます。",
       "actions": {
@@ -391,6 +393,9 @@
       "notifications": {
         "androidOnly": "SMSインポートはAndroidでのみ利用できます。",
         "permissionRequired": "最近のメッセージをスキャンするにはSMS権限が必要です。",
+        "backgroundEnabled": "バックグラウンドSMS取引アラートを有効にしました。",
+        "backgroundDisabled": "バックグラウンドSMS取引アラートを無効にしました。",
+        "backgroundPermissionRequired": "バックグラウンドSMSアラートにはSMS受信権限と通知権限が必要です。",
         "readyOne": "1件のSMS取引を確認できます。",
         "readyMany": "{{count}}件のSMS取引を確認できます。",
         "emptyScan": "最近のスキャン範囲では新しいSMS取引は見つかりませんでした。"

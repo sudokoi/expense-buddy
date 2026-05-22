@@ -1,0 +1,196 @@
+package expo.modules.expensebuddybackgroundsms
+
+import android.content.Context
+import org.json.JSONArray
+import org.json.JSONObject
+
+private const val PREFS_NAME = "expense_buddy_background_sms"
+private const val ENABLED_KEY = "enabled"
+private const val REVIEW_QUEUE_SNAPSHOT_KEY = "review_queue_snapshot_json"
+
+object BackgroundSmsPreferences {
+  fun getState(context: Context): BackgroundSmsState {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return BackgroundSmsState(enabled = prefs.getBoolean(ENABLED_KEY, false))
+  }
+
+  fun setEnabled(context: Context, enabled: Boolean) {
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+      .edit()
+      .putBoolean(ENABLED_KEY, enabled)
+      .apply()
+  }
+}
+
+object BackgroundSmsReviewQueueStore {
+  fun loadSnapshot(context: Context): BackgroundSmsReviewQueueSnapshot {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val stored = prefs.getString(REVIEW_QUEUE_SNAPSHOT_KEY, null)
+    if (stored.isNullOrBlank()) {
+      return BackgroundSmsReviewQueueSnapshot(items = emptyList())
+    }
+
+    return try {
+      parseSnapshot(JSONObject(stored))
+    } catch (_: Throwable) {
+      BackgroundSmsReviewQueueSnapshot(items = emptyList())
+    }
+  }
+
+  fun exportSnapshotJson(context: Context): String {
+    return snapshotToJson(loadSnapshot(context)).toString()
+  }
+
+  fun replaceSnapshotJson(context: Context, snapshotJson: String) {
+    val snapshot = try {
+      parseSnapshot(JSONObject(snapshotJson))
+    } catch (_: Throwable) {
+      BackgroundSmsReviewQueueSnapshot(items = emptyList())
+    }
+
+    saveSnapshot(context, snapshot)
+  }
+
+  fun upsertPendingItem(
+    context: Context,
+    item: BackgroundSmsReviewItem,
+  ): BackgroundSmsUpsertResult {
+    val current = loadSnapshot(context)
+    if (current.items.any { existing -> existing.fingerprint == item.fingerprint }) {
+      return BackgroundSmsUpsertResult(snapshot = current, inserted = false)
+    }
+
+    val merged = normalizeSnapshot(
+      current.copy(
+        items = current.items + item,
+      )
+    )
+    saveSnapshot(context, merged)
+    return BackgroundSmsUpsertResult(snapshot = merged, inserted = true)
+  }
+
+  private fun saveSnapshot(context: Context, snapshot: BackgroundSmsReviewQueueSnapshot) {
+    val normalized = normalizeSnapshot(snapshot)
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+      .edit()
+      .putString(REVIEW_QUEUE_SNAPSHOT_KEY, snapshotToJson(normalized).toString())
+      .apply()
+  }
+
+  private fun normalizeSnapshot(snapshot: BackgroundSmsReviewQueueSnapshot): BackgroundSmsReviewQueueSnapshot {
+    val sortedItems = snapshot.items.sortedByDescending { item ->
+      item.sourceMessage.receivedAt
+    }
+
+    return snapshot.copy(items = sortedItems)
+  }
+
+  private fun parseSnapshot(json: JSONObject): BackgroundSmsReviewQueueSnapshot {
+    val itemsJson = json.optJSONArray("items") ?: JSONArray()
+    val items = buildList(itemsJson.length()) {
+      for (index in 0 until itemsJson.length()) {
+        val itemJson = itemsJson.optJSONObject(index) ?: continue
+        add(parseReviewItem(itemJson))
+      }
+    }
+
+    return normalizeSnapshot(
+      BackgroundSmsReviewQueueSnapshot(
+        items = items,
+        lastScanCursor = json.optNullableString("lastScanCursor"),
+        bootstrapCompletedAt = json.optNullableString("bootstrapCompletedAt"),
+      )
+    )
+  }
+
+  private fun parseReviewItem(json: JSONObject): BackgroundSmsReviewItem {
+    val sourceMessageJson = json.optJSONObject("sourceMessage") ?: JSONObject()
+    val paymentJson = json.optJSONObject("paymentMethodSuggestion")
+
+    return BackgroundSmsReviewItem(
+      id = json.optString("id"),
+      fingerprint = json.optString("fingerprint"),
+      sourceMessage = BackgroundSmsRawMessage(
+        messageId = sourceMessageJson.optString("messageId"),
+        sender = sourceMessageJson.optString("sender"),
+        body = sourceMessageJson.optString("body"),
+        receivedAt = sourceMessageJson.optString("receivedAt"),
+      ),
+      amount = json.optNullableDouble("amount"),
+      currency = json.optNullableString("currency"),
+      merchantName = json.optNullableString("merchantName"),
+      categorySuggestion = json.optNullableString("categorySuggestion"),
+      paymentMethodSuggestion = paymentJson?.let {
+        BackgroundSmsPaymentMethod(
+          type = it.optString("type"),
+          identifier = it.optNullableString("identifier"),
+          instrumentId = it.optNullableString("instrumentId"),
+        )
+      },
+      noteSuggestion = json.optNullableString("noteSuggestion"),
+      transactionDate = json.optNullableString("transactionDate"),
+      matchedLocale = json.optNullableString("matchedLocale"),
+      matchedPatternKey = json.optNullableString("matchedPatternKey"),
+      status = json.optString("status", "pending"),
+      acceptedExpenseId = json.optNullableString("acceptedExpenseId"),
+      createdAt = json.optString("createdAt"),
+      updatedAt = json.optString("updatedAt"),
+    )
+  }
+
+  private fun snapshotToJson(snapshot: BackgroundSmsReviewQueueSnapshot): JSONObject {
+    return JSONObject().apply {
+      put("items", JSONArray().apply {
+        snapshot.items.forEach { item -> put(reviewItemToJson(item)) }
+      })
+      put("lastScanCursor", snapshot.lastScanCursor)
+      put("bootstrapCompletedAt", snapshot.bootstrapCompletedAt)
+    }
+  }
+
+  private fun reviewItemToJson(item: BackgroundSmsReviewItem): JSONObject {
+    return JSONObject().apply {
+      put("id", item.id)
+      put("fingerprint", item.fingerprint)
+      put(
+        "sourceMessage",
+        JSONObject().apply {
+          put("messageId", item.sourceMessage.messageId)
+          put("sender", item.sourceMessage.sender)
+          put("body", item.sourceMessage.body)
+          put("receivedAt", item.sourceMessage.receivedAt)
+        }
+      )
+      put("amount", item.amount)
+      put("currency", item.currency)
+      put("merchantName", item.merchantName)
+      put("categorySuggestion", item.categorySuggestion)
+      put(
+        "paymentMethodSuggestion",
+        item.paymentMethodSuggestion?.let { payment ->
+          JSONObject().apply {
+            put("type", payment.type)
+            put("identifier", payment.identifier)
+            put("instrumentId", payment.instrumentId)
+          }
+        }
+      )
+      put("noteSuggestion", item.noteSuggestion)
+      put("transactionDate", item.transactionDate)
+      put("matchedLocale", item.matchedLocale)
+      put("matchedPatternKey", item.matchedPatternKey)
+      put("status", item.status)
+      put("acceptedExpenseId", item.acceptedExpenseId)
+      put("createdAt", item.createdAt)
+      put("updatedAt", item.updatedAt)
+    }
+  }
+}
+
+private fun JSONObject.optNullableString(key: String): String? {
+  return if (isNull(key)) null else optString(key, null)
+}
+
+private fun JSONObject.optNullableDouble(key: String): Double? {
+  return if (isNull(key) || !has(key)) null else optDouble(key)
+}

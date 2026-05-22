@@ -374,6 +374,8 @@
     "smsImport": {
       "title": "SMS Import",
       "description": "Import recent SMS transactions on-device and review them before saving expenses.",
+      "backgroundAlerts": "Background transaction alerts",
+      "backgroundAlertsHelp": "Detect incoming transaction SMS messages offline, then open the review flow directly from a notification.",
       "permissionStatus": "Permission status",
       "helper": "The current scan is limited to recent messages and keeps raw SMS data local to this device.",
       "actions": {
@@ -391,6 +393,9 @@
       "notifications": {
         "androidOnly": "SMS import is only available on Android.",
         "permissionRequired": "SMS permission is required to scan recent messages.",
+        "backgroundEnabled": "Background SMS transaction alerts are enabled.",
+        "backgroundDisabled": "Background SMS transaction alerts are disabled.",
+        "backgroundPermissionRequired": "Receive SMS and notification permissions are required for background SMS alerts.",
         "readyOne": "1 SMS transaction is ready for review.",
         "readyMany": "{{count}} SMS transactions are ready for review.",
         "emptyScan": "No new SMS transactions were found in the recent scan window."

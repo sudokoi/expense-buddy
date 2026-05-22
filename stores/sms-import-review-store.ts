@@ -1,6 +1,10 @@
 import { createStore } from "@xstate/store"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { SmsImportReviewItem, SmsImportReviewQueueSnapshot } from "../types/sms-import"
+import {
+  loadBackgroundSmsReviewQueueSnapshot,
+  saveBackgroundSmsReviewQueueSnapshot,
+} from "../services/background-sms/android-background-sms-module"
 
 const SMS_IMPORT_REVIEW_QUEUE_KEY = "sms_import_review_queue_state_v1"
 const RESOLVED_ITEM_RETENTION_DAYS = 7
@@ -91,6 +95,7 @@ function applyQueueSnapshot(
 
 async function persistQueueState(snapshot: SmsImportReviewQueueSnapshot): Promise<void> {
   await AsyncStorage.setItem(SMS_IMPORT_REVIEW_QUEUE_KEY, JSON.stringify(snapshot))
+  await saveBackgroundSmsReviewQueueSnapshot(snapshot)
 }
 
 export function createSmsImportReviewStore() {
@@ -332,29 +337,31 @@ export async function initializeSmsImportReviewStore(
   store: SmsImportReviewStore = smsImportReviewStore
 ): Promise<void> {
   try {
-    const rawValue = await AsyncStorage.getItem(SMS_IMPORT_REVIEW_QUEUE_KEY)
-    if (!rawValue) {
-      const snapshot = createQueueSnapshot({
-        items: [],
-        lastScanCursor: null,
-        bootstrapCompletedAt: null,
-      })
-      store.trigger.loadQueueState(snapshot)
-      return
+    const [rawValue, nativeSnapshot] = await Promise.all([
+      AsyncStorage.getItem(SMS_IMPORT_REVIEW_QUEUE_KEY),
+      loadBackgroundSmsReviewQueueSnapshot(),
+    ])
+
+    const parsed = rawValue ? (JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>) : null
+    const storedSnapshot = {
+      items: Array.isArray(parsed?.items) ? parsed!.items : [],
+      lastScanCursor: parsed?.lastScanCursor ?? null,
+      bootstrapCompletedAt: parsed?.bootstrapCompletedAt ?? null,
     }
+    const mergedSnapshot = createQueueSnapshot({
+      items: mergeReviewItems(storedSnapshot.items, nativeSnapshot?.items ?? []),
+      lastScanCursor: nativeSnapshot?.lastScanCursor ?? storedSnapshot.lastScanCursor,
+      bootstrapCompletedAt:
+        nativeSnapshot?.bootstrapCompletedAt ?? storedSnapshot.bootstrapCompletedAt,
+    })
 
-    const parsed = JSON.parse(rawValue) as Partial<SmsImportReviewQueueSnapshot>
-    const rawSnapshot = {
-      items: Array.isArray(parsed.items) ? parsed.items : [],
-      lastScanCursor: parsed.lastScanCursor ?? null,
-      bootstrapCompletedAt: parsed.bootstrapCompletedAt ?? null,
-    }
-    const normalizedSnapshot = createQueueSnapshot(rawSnapshot)
+    store.trigger.loadQueueState(mergedSnapshot)
 
-    store.trigger.loadQueueState(normalizedSnapshot)
-
-    if (JSON.stringify(rawSnapshot) !== JSON.stringify(normalizedSnapshot)) {
-      await persistQueueState(normalizedSnapshot)
+    if (
+      JSON.stringify(storedSnapshot) !== JSON.stringify(mergedSnapshot) ||
+      JSON.stringify(nativeSnapshot ?? null) !== JSON.stringify(mergedSnapshot)
+    ) {
+      await persistQueueState(mergedSnapshot)
     }
   } catch (error) {
     console.warn("Failed to initialize SMS import review store:", error)

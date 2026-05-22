@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ViewStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -223,7 +223,11 @@ function buildExpenseFromDraft(
   }
 }
 
-export function SmsImportReviewScreen() {
+export function SmsImportReviewScreen({
+  initialFocusItemId,
+}: {
+  initialFocusItemId?: string | null
+}) {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
@@ -247,6 +251,8 @@ export function SmsImportReviewScreen() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
+  const scrollViewRef = useRef<any>(null)
+  const handledInitialFocusIdRef = useRef<string | null>(null)
 
   const editingItem = useMemo(
     () => items.find((item) => item.id === editingItemId) ?? null,
@@ -265,6 +271,30 @@ export function SmsImportReviewScreen() {
     },
     [categories, paymentInstruments]
   )
+
+  useEffect(() => {
+    if (!initialFocusItemId) {
+      handledInitialFocusIdRef.current = null
+      return
+    }
+
+    if (handledInitialFocusIdRef.current === initialFocusItemId) {
+      return
+    }
+
+    const focusedItem = pendingItems.find((item) => item.id === initialFocusItemId)
+    if (!focusedItem) {
+      return
+    }
+
+    handledInitialFocusIdRef.current = initialFocusItemId
+    requestAnimationFrame(() => {
+      openEditor(focusedItem)
+      requestAnimationFrame(() => {
+        scrollViewRef.current?.scrollTo?.({ y: 0, animated: true })
+      })
+    })
+  }, [initialFocusItemId, openEditor, pendingItems])
 
   const acceptItem = useCallback(
     (item: SmsImportReviewItem, draft: EditableSmsImportDraft) => {
@@ -498,6 +528,7 @@ export function SmsImportReviewScreen() {
   return (
     <YStack flex={1} bg="$background">
       <KeyboardAwareScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         bottomOffset={96}

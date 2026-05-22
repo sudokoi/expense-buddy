@@ -184,6 +184,12 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setBackgroundSmsImportEnabled = useCallback(
+    (backgroundSmsImportEnabled: boolean) =>
+      settingsStore.trigger.setBackgroundSmsImportEnabled({ backgroundSmsImportEnabled }),
+    [settingsStore]
+  )
+
   const setAutoSyncEnabled = useCallback(
     (autoSyncEnabled: boolean) =>
       settingsStore.trigger.setAutoSyncEnabled({ autoSyncEnabled }),
@@ -247,6 +253,7 @@ export const useSettings = () => {
     setSyncSettings,
     setDefaultPaymentMethod,
     setEnableMathExpressions,
+    setBackgroundSmsImportEnabled,
     setAutoSyncEnabled,
     setAutoSyncTiming,
     updateSettings,

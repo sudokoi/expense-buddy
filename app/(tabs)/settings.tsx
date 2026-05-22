@@ -38,6 +38,7 @@ import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -106,6 +107,7 @@ export default function SettingsScreen() {
     setDefaultCurrency,
     setLanguage,
     setEnableMathExpressions,
+    setBackgroundSmsImportEnabled,
     updateSettings,
     setAutoSyncEnabled,
     setAutoSyncTiming,
@@ -158,6 +160,27 @@ export default function SettingsScreen() {
   const handleScanSmsImports = useCallback(async () => {
     await scanSmsImports()
   }, [scanSmsImports])
+
+  const handleBackgroundSmsToggle = useCallback(
+    async (enabled: boolean) => {
+      if (!enabled) {
+        setBackgroundSmsImportEnabled(false)
+        addNotification(t("settings.smsImport.notifications.backgroundDisabled"), "info")
+        return
+      }
+
+      const permissionResult = await requestBackgroundSmsPermissions()
+      if (!permissionResult.granted) {
+        addNotification(t("settings.smsImport.notifications.backgroundPermissionRequired"), "error")
+        setBackgroundSmsImportEnabled(false)
+        return
+      }
+
+      setBackgroundSmsImportEnabled(true)
+      addNotification(t("settings.smsImport.notifications.backgroundEnabled"), "success")
+    },
+    [addNotification, setBackgroundSmsImportEnabled, t]
+  )
 
   // GitHub config handlers
   const handleSaveConfig = useCallback(
@@ -595,6 +618,34 @@ export default function SettingsScreen() {
             <Text color="$color" opacity={0.65} fontSize="$caption">
               {t("settings.smsImport.helper")}
             </Text>
+
+            <XStack
+              bg="$backgroundHover"
+              px="$section"
+              py="$section"
+              style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
+            >
+              <YStack flex={1} gap="$micro">
+                <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
+                <Text color="$color" opacity={0.6} fontSize="$caption">
+                  {t("settings.smsImport.backgroundAlertsHelp")}
+                </Text>
+              </YStack>
+              <Switch
+                size="$control"
+                checked={settings.backgroundSmsImportEnabled}
+                onCheckedChange={(checked) => {
+                  void handleBackgroundSmsToggle(checked)
+                }}
+                backgroundColor={
+                  settings.backgroundSmsImportEnabled
+                    ? SEMANTIC_COLORS.success
+                    : ("$gray8" as any)
+                }
+              >
+                <Switch.Thumb />
+              </Switch>
+            </XStack>
           </SettingsSection>
         ) : null}
 
