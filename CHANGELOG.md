@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.3.0
+
+### Minor Changes
+
+- [#61](https://github.com/sudokoi/expense-buddy/pull/61) [`f823ac6`](https://github.com/sudokoi/expense-buddy/commit/f823ac65a084a8e9f4ae639f2739733856374fdd) Thanks [@sudokoi](https://github.com/sudokoi)! - Add Android-only background SMS transaction alerts that detect new messages offline, post local notifications, and reopen the existing review-first SMS import flow.
+
+  Play-installed Android builds now prefer the standard full-screen Google Play in-app update flow instead of background flexible downloads, with flexible fallback kept for cases where immediate updates are unavailable. The in-app review request path also uses lighter local gating so review prompts are easier to reach on eligible Play installs, while still leaving final dialog display up to Google Play.
+
 ## 3.2.2
 
 ### Patch Changes
