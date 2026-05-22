@@ -396,6 +396,7 @@
         "backgroundEnabled": "バックグラウンドSMS取引アラートを有効にしました。",
         "backgroundDisabled": "バックグラウンドSMS取引アラートを無効にしました。",
         "backgroundPermissionRequired": "バックグラウンドSMSアラートにはSMS受信権限と通知権限が必要です。",
+        "backgroundToggleFailed": "バックグラウンドSMSアラートを更新できませんでした。もう一度お試しください。",
         "readyOne": "1件のSMS取引を確認できます。",
         "readyMany": "{{count}}件のSMS取引を確認できます。",
         "emptyScan": "最近のスキャン範囲では新しいSMS取引は見つかりませんでした。"

@@ -1,6 +1,8 @@
 package expo.modules.expensebuddybackgroundsms
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -11,14 +13,49 @@ private const val REVIEW_QUEUE_SNAPSHOT_KEY = "review_queue_snapshot_json"
 object BackgroundSmsPreferences {
   fun getState(context: Context): BackgroundSmsState {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    return BackgroundSmsState(enabled = prefs.getBoolean(ENABLED_KEY, false))
+    return BackgroundSmsState(
+      enabled =
+        prefs.getBoolean(ENABLED_KEY, false) &&
+          BackgroundSmsReceiverComponent.isEnabled(context)
+    )
   }
 
   fun setEnabled(context: Context, enabled: Boolean) {
+    BackgroundSmsReceiverComponent.setEnabled(context, enabled)
     context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
       .edit()
       .putBoolean(ENABLED_KEY, enabled)
       .apply()
+  }
+}
+
+private object BackgroundSmsReceiverComponent {
+  fun isEnabled(context: Context): Boolean {
+    val componentState = context.packageManager.getComponentEnabledSetting(componentName(context))
+    return componentState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+  }
+
+  fun setEnabled(context: Context, enabled: Boolean) {
+    val targetState =
+      if (enabled) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+      } else {
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+      }
+
+    context.packageManager.setComponentEnabledSetting(
+      componentName(context),
+      targetState,
+      PackageManager.DONT_KILL_APP,
+    )
+
+    check(isEnabled(context) == enabled) {
+      "Failed to sync the background SMS receiver component state."
+    }
+  }
+
+  private fun componentName(context: Context): ComponentName {
+    return ComponentName(context, ExpenseBuddyBackgroundSmsReceiver::class.java)
   }
 }
 

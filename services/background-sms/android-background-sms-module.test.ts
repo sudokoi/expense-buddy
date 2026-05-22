@@ -114,7 +114,7 @@ describe("android-background-sms-module", () => {
     expect(setBackgroundSmsEnabledAsync).toHaveBeenCalledWith(true)
   })
 
-  it("swallows native failures when updating background SMS state", async () => {
+  it("surfaces native failures when updating background SMS state", async () => {
     const setBackgroundSmsEnabledAsync = jest
       .fn()
       .mockRejectedValue(new Error("native unavailable"))
@@ -122,6 +122,6 @@ describe("android-background-sms-module", () => {
       createModuleOverride({ setBackgroundSmsEnabledAsync })
     )
 
-    await expect(setBackgroundSmsEnabled(true)).resolves.toBeUndefined()
+    await expect(setBackgroundSmsEnabled(true)).rejects.toThrow("native unavailable")
   })
 })

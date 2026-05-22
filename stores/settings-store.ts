@@ -70,6 +70,14 @@ function createSettingUpdater<K extends keyof AppSettings>(key: K) {
   }
 }
 
+async function syncBackgroundSmsEnabledBestEffort(enabled: boolean): Promise<void> {
+  try {
+    await setBackgroundSmsEnabled(enabled)
+  } catch (error) {
+    console.warn("Failed to sync background SMS receiver state:", error)
+  }
+}
+
 export const settingsStore = createStore({
   context: {
     settings: DEFAULT_SETTINGS,
@@ -164,7 +172,6 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(newSettings)
-        await setBackgroundSmsEnabled(event.backgroundSmsImportEnabled)
         await enqueueSyncOp({
           type: "settings.patch",
           updates: { backgroundSmsImportEnabled: event.backgroundSmsImportEnabled },
@@ -232,7 +239,9 @@ export const settingsStore = createStore({
       enqueue.effect(async () => {
         await saveSettings(newSettings)
         if (Object.hasOwn(event.updates, "backgroundSmsImportEnabled")) {
-          await setBackgroundSmsEnabled(Boolean(newSettings.backgroundSmsImportEnabled))
+          await syncBackgroundSmsEnabledBestEffort(
+            Boolean(newSettings.backgroundSmsImportEnabled)
+          )
         }
         await enqueueSyncOp({
           type: "settings.patch",
@@ -261,7 +270,9 @@ export const settingsStore = createStore({
 
       enqueue.effect(async () => {
         await saveSettings(event.settings)
-        await setBackgroundSmsEnabled(Boolean(event.settings.backgroundSmsImportEnabled))
+        await syncBackgroundSmsEnabledBestEffort(
+          Boolean(event.settings.backgroundSmsImportEnabled)
+        )
         await saveSettingsHash(newHash)
         await clearSettingsChanged()
       })
@@ -651,7 +662,7 @@ export async function initializeSettingsStore(
 
     // Compute initial sync state by comparing current settings against synced hash
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
-    await setBackgroundSmsEnabled(Boolean(settings.backgroundSmsImportEnabled))
+    await syncBackgroundSmsEnabledBestEffort(Boolean(settings.backgroundSmsImportEnabled))
 
     store.trigger.loadSettings({
       settings,
@@ -668,6 +679,19 @@ export async function initializeSettingsStore(
       syncConfig: null,
     })
   }
+}
+
+export async function setBackgroundSmsImportEnabled(
+  backgroundSmsImportEnabled: boolean,
+  store: SettingsStore = settingsStore
+): Promise<void> {
+  const currentEnabled = store.getSnapshot().context.settings.backgroundSmsImportEnabled
+  if (currentEnabled === backgroundSmsImportEnabled) {
+    return
+  }
+
+  await setBackgroundSmsEnabled(backgroundSmsImportEnabled)
+  store.trigger.setBackgroundSmsImportEnabled({ backgroundSmsImportEnabled })
 }
 
 export type SettingsStore = typeof settingsStore

@@ -37,11 +37,7 @@ export async function setBackgroundSmsEnabled(enabled: boolean): Promise<void> {
     return
   }
 
-  try {
-    await module.setBackgroundSmsEnabledAsync(enabled)
-  } catch {
-    // Keep JS settings flows resilient even if the native mirror cannot be updated.
-  }
+  await module.setBackgroundSmsEnabledAsync(enabled)
 }
 
 export async function loadBackgroundSmsReviewQueueSnapshot(): Promise<SmsImportReviewQueueSnapshot | null> {

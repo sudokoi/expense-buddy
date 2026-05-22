@@ -396,6 +396,7 @@
         "backgroundEnabled": "बैकग्राउंड SMS ट्रांजैक्शन अलर्ट चालू हैं।",
         "backgroundDisabled": "बैकग्राउंड SMS ट्रांजैक्शन अलर्ट बंद हैं।",
         "backgroundPermissionRequired": "बैकग्राउंड SMS अलर्ट के लिए Receive SMS और notification permissions जरूरी हैं।",
+        "backgroundToggleFailed": "बैकग्राउंड SMS अलर्ट अपडेट नहीं किए जा सके। कृपया फिर से कोशिश करें।",
         "readyOne": "1 एसएमएस लेन-देन समीक्षा के लिए तैयार है।",
         "readyMany": "{{count}} एसएमएस लेन-देन समीक्षा के लिए तैयार हैं।",
         "emptyScan": "हाल की स्कैन विंडो में कोई नया एसएमएस लेन-देन नहीं मिला।"

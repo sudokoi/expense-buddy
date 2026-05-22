@@ -163,24 +163,36 @@ export default function SettingsScreen() {
 
   const handleBackgroundSmsToggle = useCallback(
     async (enabled: boolean) => {
-      if (!enabled) {
-        setBackgroundSmsImportEnabled(false)
-        addNotification(t("settings.smsImport.notifications.backgroundDisabled"), "info")
-        return
-      }
+      try {
+        if (!enabled) {
+          await setBackgroundSmsImportEnabled(false)
+          addNotification(
+            t("settings.smsImport.notifications.backgroundDisabled"),
+            "info"
+          )
+          return
+        }
 
-      const permissionResult = await requestBackgroundSmsPermissions()
-      if (!permissionResult.granted) {
+        const permissionResult = await requestBackgroundSmsPermissions()
+        if (!permissionResult.granted) {
+          addNotification(
+            t("settings.smsImport.notifications.backgroundPermissionRequired"),
+            "error"
+          )
+          return
+        }
+
+        await setBackgroundSmsImportEnabled(true)
         addNotification(
-          t("settings.smsImport.notifications.backgroundPermissionRequired"),
+          t("settings.smsImport.notifications.backgroundEnabled"),
+          "success"
+        )
+      } catch {
+        addNotification(
+          t("settings.smsImport.notifications.backgroundToggleFailed"),
           "error"
         )
-        setBackgroundSmsImportEnabled(false)
-        return
       }
-
-      setBackgroundSmsImportEnabled(true)
-      addNotification(t("settings.smsImport.notifications.backgroundEnabled"), "success")
     },
     [addNotification, setBackgroundSmsImportEnabled, t]
   )

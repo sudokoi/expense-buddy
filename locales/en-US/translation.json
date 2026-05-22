@@ -396,6 +396,7 @@
         "backgroundEnabled": "Background SMS transaction alerts are enabled.",
         "backgroundDisabled": "Background SMS transaction alerts are disabled.",
         "backgroundPermissionRequired": "Receive SMS and notification permissions are required for background SMS alerts.",
+        "backgroundToggleFailed": "Couldn't update background SMS alerts. Please try again.",
         "readyOne": "1 SMS transaction is ready for review.",
         "readyMany": "{{count}} SMS transactions are ready for review.",
         "emptyScan": "No new SMS transactions were found in the recent scan window."

@@ -185,15 +185,13 @@ const updateStoreConfig = createStoreConfig<
 
         try {
           const updateInfo = await checkForUpdatesOnLaunch()
-          if (!updateInfo) {
-            return
+          if (updateInfo) {
+            const dismissedVersion = await getDismissedVersion()
+            event.dispatch.applyUpdateInfo({
+              updateInfo,
+              showBanner: shouldShowUpdateNotification(updateInfo, dismissedVersion),
+            })
           }
-
-          const dismissedVersion = await getDismissedVersion()
-          event.dispatch.applyUpdateInfo({
-            updateInfo,
-            showBanner: shouldShowUpdateNotification(updateInfo, dismissedVersion),
-          })
         } catch (caughtError) {
           error = caughtError
         }

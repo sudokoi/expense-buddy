@@ -5,6 +5,7 @@ import {
   selectEffectiveTheme,
   selectHasUnsyncedChanges,
   selectCategoryByLabel,
+  setBackgroundSmsImportEnabled as persistBackgroundSmsImportEnabled,
 } from "./settings-store"
 import { Expense } from "../types/expense"
 import {
@@ -185,8 +186,9 @@ export const useSettings = () => {
   )
 
   const setBackgroundSmsImportEnabled = useCallback(
-    (backgroundSmsImportEnabled: boolean) =>
-      settingsStore.trigger.setBackgroundSmsImportEnabled({ backgroundSmsImportEnabled }),
+    async (backgroundSmsImportEnabled: boolean) => {
+      await persistBackgroundSmsImportEnabled(backgroundSmsImportEnabled, settingsStore)
+    },
     [settingsStore]
   )
 

@@ -5,7 +5,7 @@
   <application>
     <receiver
       android:name=".ExpenseBuddyBackgroundSmsReceiver"
-      android:enabled="true"
+      android:enabled="false"
       android:exported="true"
       android:permission="android.permission.BROADCAST_SMS">
       <intent-filter android:priority="999">
