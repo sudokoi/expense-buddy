@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { startTransition, useCallback, useMemo, useState } from "react"
 import {
   YStack,
   Text,
@@ -74,6 +74,20 @@ import {
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
+
+const FALLBACK_CATEGORY_CACHE = new Map<
+  string,
+  Pick<Category, "label" | "icon" | "color">
+>()
+
+function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
+  let info = FALLBACK_CATEGORY_CACHE.get(label)
+  if (!info) {
+    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
+    FALLBACK_CATEGORY_CACHE.set(label, info)
+  }
+  return info
+}
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -445,14 +459,14 @@ export default function HistoryScreen() {
         label: t("analytics.filters.month", {
           month: formatMonthLabel(filters.selectedMonth),
         }),
-        onRemove: () => setSelectedMonth(null),
+        onRemove: () => startTransition(() => setSelectedMonth(null)),
       })
     } else {
       chips.push({
         label: t("analytics.filters.time", {
           window: t(`analytics.timeWindow.${filters.timeWindow}`),
         }),
-        onRemove: () => setTimeWindow("all"),
+        onRemove: () => startTransition(() => setTimeWindow("all")),
       })
     }
 
@@ -462,21 +476,21 @@ export default function HistoryScreen() {
         label: t("analytics.filters.category", {
           category: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else if (filters.selectedCategories.length === 1) {
       chips.push({
         label: t("analytics.filters.category", {
           category: filters.selectedCategories[0],
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else {
       chips.push({
         label: t("analytics.filters.category", {
           category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories)})`,
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     }
 
@@ -486,7 +500,7 @@ export default function HistoryScreen() {
         label: t("analytics.filters.payment", {
           method: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else if (filters.selectedPaymentMethods.length === 1) {
       const only = filters.selectedPaymentMethods[0]
@@ -494,14 +508,14 @@ export default function HistoryScreen() {
         label: t("analytics.filters.payment", {
           method: paymentMethodLabel(only),
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else {
       chips.push({
         label: t("analytics.filters.payment", {
           method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map(paymentMethodLabel))})`,
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     }
 
@@ -512,7 +526,7 @@ export default function HistoryScreen() {
           label: t("analytics.filters.instrument", {
             instrument: t("analytics.timeWindow.all"),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else if (filters.selectedPaymentInstruments.length === 1) {
         chips.push({
@@ -522,7 +536,7 @@ export default function HistoryScreen() {
               allInstruments
             ),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else {
         chips.push({
@@ -531,7 +545,7 @@ export default function HistoryScreen() {
               filters.selectedPaymentInstruments
             ),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       }
     }
@@ -629,11 +643,7 @@ export default function HistoryScreen() {
 
       const categoryInfo =
         categoryByLabel.get(item.expense.category) ??
-        ({
-          label: item.expense.category,
-          icon: "Circle",
-          color: CATEGORY_COLORS.Other,
-        } satisfies Pick<Category, "label" | "icon" | "color">)
+        getFallbackCategory(item.expense.category)
 
       return (
         <ExpenseRow

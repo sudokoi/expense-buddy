@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
-import * as LucideIcons from "@tamagui/lucide-icons-2"
+import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
@@ -38,14 +38,7 @@ export const CategoryFilter = memo(function CategoryFilter({
   // Memoize category items with icons
   const categoryItems = useMemo(() => {
     return categories.map((cat) => {
-      // Get icon component from Lucide icons
-      const IconComponent =
-        (
-          LucideIcons as Record<
-            string,
-            React.ComponentType<{ size?: number; color?: string }>
-          >
-        )[cat.icon] ?? LucideIcons.Circle
+      const IconComponent = CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle
       return {
         label: cat.label,
         color: cat.color,

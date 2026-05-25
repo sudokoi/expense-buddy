@@ -2,10 +2,8 @@ import { useMemo, useCallback, memo } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
-import type {
-  PaymentInstrumentChartDataItem,
-  PaymentInstrumentSelectionKey,
-} from "../../utils/analytics-calculations"
+import type { PaymentInstrumentChartDataItem } from "../../utils/analytics/aggregations"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"

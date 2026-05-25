@@ -1,12 +1,10 @@
 import { useMemo } from "react"
 import { Expense } from "../types/expense"
 import type { DateRange } from "../types/analytics"
-import {
-  AnalyticsStatistics,
-  TimeWindow,
-  calculateStatistics,
-  getTimeWindowDays,
-} from "../utils/analytics-calculations"
+import type { TimeWindow } from "../utils/analytics/time"
+import { getTimeWindowDays } from "../utils/analytics/time"
+import type { AnalyticsStatistics } from "../utils/analytics/statistics"
+import { calculateStatistics } from "../utils/analytics/statistics"
 
 export interface AnalyticsStatisticsResult {
   statistics: AnalyticsStatistics

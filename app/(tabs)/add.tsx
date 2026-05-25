@@ -89,7 +89,7 @@ export default function AddExpenseScreen() {
 
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState<ExpenseCategory>("Food")
-  const [date, setDate] = useState(new Date())
+  const [date, setDate] = useState(() => new Date())
   const [note, setNote] = useState("")
   const [showDatePicker, setShowDatePicker] = useState(false)
 
@@ -150,6 +150,24 @@ export default function AddExpenseScreen() {
       allowMathExpressions: settings.enableMathExpressions,
     })
   }, [amount, settings.enableMathExpressions])
+
+  const categoryCards = useMemo(
+    () =>
+      categories.map((cat) => {
+        const isSelected = category === cat.label
+        return (
+          <CategoryCard
+            key={cat.label}
+            isSelected={isSelected}
+            categoryColor={cat.color}
+            label={cat.label}
+            onPress={() => handleCategorySelect(cat.label)}
+            compact
+          />
+        )
+      }),
+    [categories, category, handleCategorySelect]
+  )
 
   const handlePaymentMethodSelect = (type: PaymentMethodType) => {
     // Mark that user has interacted with payment method selection
@@ -369,21 +387,7 @@ export default function AddExpenseScreen() {
             <Label color="$color" opacity={0.8}>
               {t("add.category")}
             </Label>
-            <XStack style={layoutStyles.categoryRow}>
-              {categories.map((cat) => {
-                const isSelected = category === cat.label
-                return (
-                  <CategoryCard
-                    key={cat.label}
-                    isSelected={isSelected}
-                    categoryColor={cat.color}
-                    label={cat.label}
-                    onPress={() => handleCategorySelect(cat.label)}
-                    compact
-                  />
-                )
-              })}
-            </XStack>
+            <XStack style={layoutStyles.categoryRow}>{categoryCards}</XStack>
           </YStack>
 
           {/* Date Picker */}

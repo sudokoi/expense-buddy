@@ -8,10 +8,8 @@ import {
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
 import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
-import {
-  PaymentInstrumentSelectionKey,
-  makePaymentInstrumentSelectionKey,
-} from "../../utils/analytics-calculations"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import { makePaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface PaymentInstrumentFilterProps {

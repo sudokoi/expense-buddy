@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useMemo, useEffect } from "react"
+import { useState, startTransition, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import {
@@ -8,12 +8,12 @@ import {
 } from "../../hooks/use-analytics-data"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
-import type { PaymentMethodSelectionKey } from "../../utils/analytics-calculations"
+import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
-import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentMethodType } from "../../types/expense"
 import { formatMonthLabel } from "../../utils/analytics/time"
 import {
@@ -178,7 +178,7 @@ export default function AnalyticsScreen() {
         const newCategories = selectedCategories.includes(category)
           ? selectedCategories.filter((c) => c !== category)
           : [...selectedCategories, category]
-        setSelectedCategories(newCategories)
+        startTransition(() => setSelectedCategories(newCategories))
       }
     },
     [selectedCategories, setSelectedCategories]
@@ -187,7 +187,7 @@ export default function AnalyticsScreen() {
   const handlePaymentInstrumentSelect = useCallback(
     (key: PaymentInstrumentSelectionKey | null) => {
       if (!key) {
-        setSelectedPaymentInstruments([])
+        startTransition(() => setSelectedPaymentInstruments([]))
         return
       }
 
@@ -195,10 +195,18 @@ export default function AnalyticsScreen() {
         selectedPaymentInstruments.length === 1 && selectedPaymentInstruments[0] === key
           ? []
           : [key]
-      setSelectedPaymentInstruments(newInstruments)
+      startTransition(() => setSelectedPaymentInstruments(newInstruments))
     },
     [selectedPaymentInstruments, setSelectedPaymentInstruments]
   )
+
+  const currencyButtons = useMemo(() => {
+    return availableCurrencies.map((c) => ({
+      code: c,
+      isSelected: effectiveCurrency === c,
+      onPress: () => startTransition(() => setSelectedCurrency(c)),
+    }))
+  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency])
 
   const selectedPaymentMethodForChart: PaymentMethodType | null =
     selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
@@ -239,17 +247,19 @@ export default function AnalyticsScreen() {
 
   const handlePaymentMethodsChange = useCallback(
     (next: PaymentMethodSelectionKey[]) => {
-      setSelectedPaymentMethods(next)
-      // When payment methods are reset to "All", reset instruments to "All" too.
-      if (next.length === 0) {
-        setSelectedPaymentInstruments([])
-      } else {
-        const newInstruments = prunePaymentInstrumentSelection(
-          next,
-          selectedPaymentInstruments
-        )
-        setSelectedPaymentInstruments(newInstruments)
-      }
+      startTransition(() => {
+        setSelectedPaymentMethods(next)
+        // When payment methods are reset to "All", reset instruments to "All" too.
+        if (next.length === 0) {
+          setSelectedPaymentInstruments([])
+        } else {
+          const newInstruments = prunePaymentInstrumentSelection(
+            next,
+            selectedPaymentInstruments
+          )
+          setSelectedPaymentInstruments(newInstruments)
+        }
+      })
     },
     [
       prunePaymentInstrumentSelection,
@@ -504,16 +514,18 @@ export default function AnalyticsScreen() {
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
 
       // Apply all filters at once to the store
-      applyFilters({
-        timeWindow: next.timeWindow,
-        selectedMonth: next.selectedMonth,
-        selectedCategories: next.selectedCategories,
-        selectedPaymentMethods: next.selectedPaymentMethods,
-        selectedPaymentInstruments: normalizedPaymentInstruments,
-        selectedCurrency: next.selectedCurrency,
-        searchQuery: filters.searchQuery,
-        minAmount: filters.minAmount,
-        maxAmount: filters.maxAmount,
+      startTransition(() => {
+        applyFilters({
+          timeWindow: next.timeWindow,
+          selectedMonth: next.selectedMonth,
+          selectedCategories: next.selectedCategories,
+          selectedPaymentMethods: next.selectedPaymentMethods,
+          selectedPaymentInstruments: normalizedPaymentInstruments,
+          selectedCurrency: next.selectedCurrency,
+          searchQuery: filters.searchQuery,
+          minAmount: filters.minAmount,
+          maxAmount: filters.maxAmount,
+        })
       })
 
       // Persist to storage
@@ -600,18 +612,18 @@ export default function AnalyticsScreen() {
                   }
                   style={{ marginBottom: UI_SPACE.micro }}
                 >
-                  {availableCurrencies.map((c) => (
+                  {currencyButtons.map(({ code, isSelected, onPress }) => (
                     <Button
-                      key={c}
+                      key={code}
                       size="$chip"
                       px="$control"
-                      onPress={() => setSelectedCurrency(c)}
-                      theme={effectiveCurrency === c ? "accent" : undefined}
+                      onPress={onPress}
+                      theme={isSelected ? "accent" : undefined}
                       borderColor="$borderColor"
-                      borderWidth={effectiveCurrency !== c ? 1 : 0}
+                      borderWidth={isSelected ? 1 : 0}
                       style={{ borderRadius: UI_RADIUS.round }}
                     >
-                      {c} ({getCurrencySymbol(c)})
+                      {code} ({getCurrencySymbol(code)})
                     </Button>
                   ))}
                 </ScrollView>

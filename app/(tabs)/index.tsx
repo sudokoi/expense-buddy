@@ -5,7 +5,7 @@ import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
-import React from "react"
+import React, { startTransition } from "react"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
@@ -20,9 +20,23 @@ import {
   getFallbackCurrency,
   computeEffectiveCurrency,
 } from "../../utils/currency"
-import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
+import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+
+const FALLBACK_CATEGORY_CACHE = new Map<
+  string,
+  Pick<Category, "label" | "icon" | "color">
+>()
+
+function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
+  let info = FALLBACK_CATEGORY_CACHE.get(label)
+  if (!info) {
+    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
+    FALLBACK_CATEGORY_CACHE.set(label, info)
+  }
+  return info
+}
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -241,7 +255,7 @@ export default function DashboardScreen() {
               key={c}
               size="$chip"
               px="$control"
-              onPress={() => setSelectedCurrency(c)}
+              onPress={() => startTransition(() => setSelectedCurrency(c))}
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={effectiveCurrency !== c ? 1 : 0}
@@ -390,11 +404,7 @@ export default function DashboardScreen() {
             expense={expense}
             categoryInfo={
               categoryByLabel.get(expense.category) ??
-              ({
-                label: expense.category,
-                icon: "Circle",
-                color: CATEGORY_COLORS.Other,
-              } satisfies Pick<Category, "label" | "icon" | "color">)
+              getFallbackCategory(expense.category)
             }
           />
         ))}

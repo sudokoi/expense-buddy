@@ -3,17 +3,19 @@ import { useCategories } from "../stores/hooks"
 import { Expense } from "../types/expense"
 import type { PaymentInstrument } from "../types/payment-instrument"
 import type { DateRange } from "../types/analytics"
-import {
+import type {
   PieChartDataItem,
   PaymentMethodChartDataItem,
   PaymentInstrumentChartDataItem,
   LineChartDataItem,
   CategoryColorMap,
+} from "../utils/analytics/aggregations"
+import {
   aggregateByCategory,
   aggregateByPaymentMethod,
   aggregateByPaymentInstrument,
   aggregateByDay,
-} from "../utils/analytics-calculations"
+} from "../utils/analytics/aggregations"
 import { getLocale } from "../utils/date"
 import { TFunction } from "i18next"
 

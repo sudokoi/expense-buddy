@@ -1,4 +1,4 @@
-import React, { memo } from "react"
+import React, { memo, useCallback, useRef } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
 
 import type { ViewStyle } from "react-native"
@@ -48,6 +48,18 @@ export const ExpenseRow = memo(function ExpenseRow({
   onDelete,
 }: ExpenseRowProps) {
   const { t } = useTranslation()
+
+  const expenseRef = useRef(expense)
+  expenseRef.current = expense
+
+  const handleEdit = useCallback(() => {
+    onEdit?.(expenseRef.current)
+  }, [onEdit])
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(expenseRef.current.id)
+  }, [onDelete])
+
   const paymentMethodDisplay = showPaymentMethod
     ? formatPaymentMethodDisplay(expense.paymentMethod, instruments)
     : null
@@ -90,14 +102,14 @@ export const ExpenseRow = memo(function ExpenseRow({
               size="$chip"
               icon={Edit3}
               chromeless
-              onPress={() => onEdit?.(expense)}
+              onPress={handleEdit}
               aria-label={t("common.edit")}
             />
             <Button
               size="$chip"
               icon={Trash}
               chromeless
-              onPress={() => onDelete?.(expense.id)}
+              onPress={handleDelete}
               aria-label={t("common.delete")}
             />
           </>

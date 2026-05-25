@@ -7,10 +7,8 @@
  */
 
 import * as fc from "fast-check"
-import {
-  groupExpensesByCurrency,
-  getDateRangeForTimeWindow,
-} from "../analytics-calculations"
+import { groupExpensesByCurrency } from "./currency"
+import { getDateRangeForTimeWindow } from "./time"
 import type { Expense } from "../../types/expense"
 
 // Helper to generate test expenses

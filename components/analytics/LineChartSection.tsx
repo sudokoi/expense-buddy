@@ -2,7 +2,7 @@ import { useMemo, memo, useCallback } from "react"
 import { YStack, Text, useTheme, Card } from "tamagui"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
-import { LineChartDataItem } from "../../utils/analytics-calculations"
+import type { LineChartDataItem } from "../../utils/analytics/aggregations"
 import { Dimensions, ScrollView, ViewStyle, useColorScheme } from "react-native"
 import {
   ACCENT_COLORS,

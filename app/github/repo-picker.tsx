@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { FlatList, Platform, ViewStyle } from "react-native"
+import { Platform, ViewStyle } from "react-native"
+import { FlashList } from "@shopify/flash-list"
 import { useRouter } from "expo-router"
 import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -238,7 +239,7 @@ export default function GitHubRepoPickerScreen() {
 
   return (
     <YStack flex={1} bg="$background">
-      <FlatList
+      <FlashList
         data={!isLoading && !error ? filtered : []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -292,10 +293,6 @@ export default function GitHubRepoPickerScreen() {
         ListEmptyComponent={
           !isLoading && !error ? <Text opacity={0.7}>{t("repoPicker.empty")}</Text> : null
         }
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={12}
-        windowSize={10}
-        removeClippedSubviews
       />
     </YStack>
   )
