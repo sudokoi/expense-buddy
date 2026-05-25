@@ -35,7 +35,7 @@ export const CategoryFilter = memo(function CategoryFilter({
   const { t } = useTranslation()
   const isAllSelected = selectedCategories.length === 0
 
-  // Memoize category items with icons
+  // Memoize category items with icons and pre-built selected style
   const categoryItems = useMemo(() => {
     return categories.map((cat) => {
       const IconComponent = CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle
@@ -43,6 +43,7 @@ export const CategoryFilter = memo(function CategoryFilter({
         label: cat.label,
         color: cat.color,
         Icon: IconComponent,
+        selectedStyle: { backgroundColor: cat.color } as ViewStyle,
       }
     })
   }, [categories])
@@ -97,7 +98,7 @@ export const CategoryFilter = memo(function CategoryFilter({
               px="$control"
               borderColor="$borderColor"
               borderWidth={!isSelected ? 1 : 0}
-              style={isSelected ? { backgroundColor: cat.color } : undefined}
+              style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >

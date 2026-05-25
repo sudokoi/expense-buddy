@@ -90,7 +90,7 @@ export const NotificationStack: React.FC = () => {
         return (
           <RNView key={notification.id} style={notificationStyle}>
             <NotificationIcon type={notification.type} />
-            <NotificationText style={{ color: styles.textColor }}>
+            <NotificationText color={styles.textColor}>
               {notification.message}
             </NotificationText>
           </RNView>

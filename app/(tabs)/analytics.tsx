@@ -49,6 +49,9 @@ const styles = {
     textAlign: "center",
     marginTop: UI_SPACE.control,
   } as TextStyle,
+  chipRadius: {
+    borderRadius: UI_RADIUS.round,
+  } as ViewStyle,
 }
 
 const INSTRUMENT_OTHERS_ID = "__others__"
@@ -562,7 +565,7 @@ export default function AnalyticsScreen() {
               borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
-              style={{ borderRadius: UI_RADIUS.round }}
+              style={styles.chipRadius}
             >
               <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
             </Button>
@@ -621,7 +624,7 @@ export default function AnalyticsScreen() {
                       theme={isSelected ? "accent" : undefined}
                       borderColor="$borderColor"
                       borderWidth={isSelected ? 1 : 0}
-                      style={{ borderRadius: UI_RADIUS.round }}
+                      style={styles.chipRadius}
                     >
                       {code} ({getCurrencySymbol(code)})
                     </Button>

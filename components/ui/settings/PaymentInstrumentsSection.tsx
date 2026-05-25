@@ -37,6 +37,14 @@ const layoutStyles = {
     padding: UI_SPACE.control,
     paddingTop: UI_SPACE.section,
   } as ViewStyle,
+  yStackRadius: {
+    borderRadius: UI_RADIUS.surface,
+  } as ViewStyle,
+  rowWithRadius: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: UI_RADIUS.surface,
+  } as ViewStyle,
 }
 
 function upsertInstrument(
@@ -186,7 +194,7 @@ export function PaymentInstrumentsSection() {
                   gap="$gutter"
                   bg="$backgroundHover"
                   p="$section"
-                  style={{ borderRadius: UI_RADIUS.surface }}
+                  style={layoutStyles.yStackRadius}
                 >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
@@ -208,10 +216,7 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$section"
                             py="$section"
-                            style={[
-                              layoutStyles.row,
-                              { borderRadius: UI_RADIUS.surface },
-                            ]}
+                            style={layoutStyles.rowWithRadius}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

@@ -68,8 +68,11 @@ const layoutStyles = {
   cardValue: {
     marginTop: UI_SPACE.control,
     height: UI_SPACE.empty,
-    justifyContent: "center", // Center content vertically within the fixed height
+    justifyContent: "center",
   } as TextStyle,
+  roundButton: {
+    borderRadius: UI_RADIUS.round,
+  } as ViewStyle,
 }
 
 // Memoized recent expense item component
@@ -259,9 +262,7 @@ export default function DashboardScreen() {
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={effectiveCurrency !== c ? 1 : 0}
-              style={{
-                borderRadius: UI_RADIUS.round,
-              }}
+              style={layoutStyles.roundButton}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>
