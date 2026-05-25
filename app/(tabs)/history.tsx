@@ -25,6 +25,7 @@ import {
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { parseISO } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
@@ -1092,6 +1093,12 @@ export default function HistoryScreen() {
                     <Input
                       flex={1}
                       size="$control"
+                      bg="$background"
+                      borderWidth={2}
+                      borderColor="$borderColor"
+                      focusStyle={{
+                        borderColor: ACCENT_COLORS.primary,
+                      }}
                       id="amount"
                       value={editingExpense?.amount || ""}
                       onChangeText={(text) =>
@@ -1144,6 +1151,13 @@ export default function HistoryScreen() {
                   </Label>
                   <Input
                     id="note"
+                    bg="$background"
+                    size="$control"
+                    borderWidth={2}
+                    borderColor="$borderColor"
+                    focusStyle={{
+                      borderColor: ACCENT_COLORS.primary,
+                    }}
                     value={editingExpense?.note || ""}
                     onChangeText={(text) =>
                       setEditingExpense((prev) => (prev ? { ...prev, note: text } : null))
@@ -1215,6 +1229,12 @@ export default function HistoryScreen() {
                       ) : (
                         <Input
                           size="$control"
+                          bg="$background"
+                          borderWidth={2}
+                          borderColor="$borderColor"
+                          focusStyle={{
+                            borderColor: ACCENT_COLORS.primary,
+                          }}
                           placeholder={
                             editingExpense?.paymentMethodType === "Other"
                               ? t("history.editDialog.fields.otherPlaceholder")

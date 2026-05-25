@@ -344,12 +344,16 @@ export function GitHubConfigSection({
                 <Label>{t("settings.github.tokenLabel")}</Label>
                 <Input
                   secureTextEntry
+                  bg="$background"
                   placeholder={t("settings.github.tokenPlaceholder")}
                   value={token}
                   onChangeText={handleTokenChange}
                   size="$control"
                   borderWidth={2}
                   borderColor={configErrors.token ? "$red10" : "$borderColor"}
+                  focusStyle={{
+                    borderColor: configErrors.token ? "$red10" : ACCENT_COLORS.primary,
+                  }}
                 />
                 {configErrors.token ? (
                   <Text fontSize="$caption" color="$red10">
@@ -436,22 +440,30 @@ export function GitHubConfigSection({
               <Label>{t("settings.github.repoLabel")}</Label>
               {isWeb ? (
                 <Input
+                  bg="$background"
                   placeholder={t("settings.github.repoPlaceholderWeb")}
                   value={repo}
                   onChangeText={handleRepoChange}
                   size="$control"
                   borderWidth={2}
                   borderColor={configErrors.repo ? "$red10" : "$borderColor"}
+                  focusStyle={{
+                    borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
+                  }}
                 />
               ) : (
                 <YStack gap="$control">
                   <Input
+                    bg="$background"
                     placeholder={t("settings.github.repoPlaceholderNative")}
                     value={repo}
                     readOnly
                     size="$control"
                     borderWidth={2}
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
+                    focusStyle={{
+                      borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
+                    }}
                   />
                   <Button size="$compact" onPress={handleChooseRepo} disabled={!token}>
                     {repo
@@ -471,12 +483,16 @@ export function GitHubConfigSection({
             <YStack gap="$control">
               <Label>{t("settings.github.branchLabel")}</Label>
               <Input
+                bg="$background"
                 placeholder="main"
                 value={branch}
                 onChangeText={handleBranchChange}
                 size="$control"
                 borderWidth={2}
                 borderColor={configErrors.branch ? "$red10" : "$borderColor"}
+                focusStyle={{
+                  borderColor: configErrors.branch ? "$red10" : ACCENT_COLORS.primary,
+                }}
               />
               {configErrors.branch && (
                 <Text fontSize="$caption" color="$red10">

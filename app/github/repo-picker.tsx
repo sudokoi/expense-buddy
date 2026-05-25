@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
 import { UI_SPACE } from "../../constants/ui-tokens"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type GitHubUser = { login: string }
 
@@ -283,6 +284,13 @@ export default function GitHubRepoPickerScreen() {
             ) : null}
 
             <Input
+              bg="$background"
+              size="$control"
+              borderWidth={2}
+              borderColor="$borderColor"
+              focusStyle={{
+                borderColor: ACCENT_COLORS.primary,
+              }}
               placeholder={t("repoPicker.searchPlaceholder")}
               value={query}
               onChangeText={setQuery}

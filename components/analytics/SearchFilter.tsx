@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { XStack, Input, Button } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 interface SearchFilterProps {
   value: string
@@ -31,6 +32,13 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
     <XStack gap="$control" style={{ alignItems: "center" }}>
       <Input
         flex={1}
+        bg="$background"
+        size="$control"
+        borderWidth={2}
+        borderColor="$borderColor"
+        focusStyle={{
+          borderColor: ACCENT_COLORS.primary,
+        }}
         value={inputValue}
         onChangeText={setInputValue}
         placeholder="Search notes, categories, payment methods..."

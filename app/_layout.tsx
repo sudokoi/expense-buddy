@@ -18,6 +18,7 @@ import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useThemeSettings } from "../stores/hooks"
 import { useSettings } from "../stores/hooks"
+import { THEME_COLORS } from "../constants/theme-colors"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -130,11 +131,14 @@ function RootLayoutNav() {
       : "light"
     : effectiveTheme
 
+  const statusBarBackground =
+    resolvedScheme === "dark" ? THEME_COLORS.kawaiiDarkPurple : THEME_COLORS.kawaiiCream
+
   return (
     <ThemeProvider value={resolvedScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StatusBar
         style={resolvedScheme === "dark" ? "light" : "dark"}
-        backgroundColor={theme.background.val}
+        backgroundColor={statusBarBackground}
         translucent={false}
       />
       <Stack key={settings.language}>

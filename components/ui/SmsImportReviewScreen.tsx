@@ -41,6 +41,7 @@ import {
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
 import { UI_SPACE } from "../../constants/ui-tokens"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type EditableSmsImportDraft = {
   amount: string
@@ -584,6 +585,13 @@ export function SmsImportReviewScreen({
                 <Label>{t("smsImport.sheet.fields.amount")}</Label>
                 <Input
                   keyboardType="numeric"
+                  bg="$background"
+                  size="$control"
+                  borderWidth={2}
+                  borderColor="$borderColor"
+                  focusStyle={{
+                    borderColor: ACCENT_COLORS.primary,
+                  }}
                   value={editingDraft.amount}
                   onChangeText={(amount) => {
                     setEditingDraft((current) =>
@@ -681,6 +689,12 @@ export function SmsImportReviewScreen({
                     ) : (
                       <Input
                         size="$control"
+                        bg="$background"
+                        borderWidth={2}
+                        borderColor="$borderColor"
+                        focusStyle={{
+                          borderColor: ACCENT_COLORS.primary,
+                        }}
                         placeholder={
                           editingDraft.paymentMethodType === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
@@ -705,7 +719,13 @@ export function SmsImportReviewScreen({
               <YStack gap="$control">
                 <Label>{t("smsImport.sheet.fields.note")}</Label>
                 <TextArea
+                  bg="$background"
                   minH={100}
+                  borderWidth={2}
+                  borderColor="$borderColor"
+                  focusStyle={{
+                    borderColor: ACCENT_COLORS.primary,
+                  }}
                   value={editingDraft.note}
                   onChangeText={(note) => {
                     setEditingDraft((current) =>

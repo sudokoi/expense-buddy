@@ -18,6 +18,7 @@ import {
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { getColorValue } from "../../tamagui.config"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Only use style prop for layout properties that Tamagui View doesn't support directly
 const styles = {
@@ -377,6 +378,12 @@ export function PaymentInstrumentInlineDropdown({
           </Label>
           <Input
             size="$control"
+            bg="$background"
+            borderWidth={2}
+            borderColor="$borderColor"
+            focusStyle={{
+              borderColor: ACCENT_COLORS.primary,
+            }}
             placeholder={t("settings.instruments.form.identifierPlaceholder", {
               count: effectiveMaxLength,
             })}
@@ -401,6 +408,7 @@ export function PaymentInstrumentInlineDropdown({
             </Label>
             <Input
               size="$control"
+              bg="$background"
               placeholder={t("instruments.form.nicknamePlaceholder")}
               value={nickname}
               onChangeText={(t) => {
@@ -432,6 +440,7 @@ export function PaymentInstrumentInlineDropdown({
             </Label>
             <Input
               size="$control"
+              bg="$background"
               placeholder={t("settings.instruments.form.identifierPlaceholder", {
                 count: getLastDigitsLength(method),
               })}

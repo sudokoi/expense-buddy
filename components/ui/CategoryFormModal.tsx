@@ -234,6 +234,7 @@ export function CategoryFormModal({
             </Label>
             <Input
               size="$control"
+              bg="$background"
               placeholder={t("settings.categories.form.namePlaceholder")}
               value={label}
               onChangeText={handleLabelChange}

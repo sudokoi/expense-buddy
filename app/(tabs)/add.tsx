@@ -345,6 +345,7 @@ export default function AddExpenseScreen() {
                 flex={1}
                 size="$prominent"
                 px="$section"
+                bg="$background"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -425,6 +426,13 @@ export default function AddExpenseScreen() {
               value={note}
               onChangeText={setNote}
               numberOfLines={2}
+              bg="$background"
+              style={{ minHeight: 80 }}
+              borderWidth={2}
+              borderColor="$borderColor"
+              focusStyle={{
+                borderColor: ACCENT_COLORS.primary,
+              }}
             />
           </YStack>
 
@@ -499,6 +507,12 @@ export default function AddExpenseScreen() {
                     ) : (
                       <Input
                         size="$control"
+                        bg="$background"
+                        borderWidth={2}
+                        borderColor="$borderColor"
+                        focusStyle={{
+                          borderColor: ACCENT_COLORS.primary,
+                        }}
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")

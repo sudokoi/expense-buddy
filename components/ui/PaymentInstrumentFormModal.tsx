@@ -221,6 +221,7 @@ function PaymentInstrumentForm({
         </Label>
         <Input
           size="$control"
+          bg="$background"
           placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
@@ -244,6 +245,7 @@ function PaymentInstrumentForm({
         </Label>
         <Input
           size="$control"
+          bg="$background"
           placeholder={t("instruments.form.identifierPlaceholder", {
             count: getLastDigitsLength(method),
           })}

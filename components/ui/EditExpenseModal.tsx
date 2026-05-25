@@ -246,6 +246,7 @@ export function EditExpenseModal({
               <Input
                 flex={1}
                 size="$control"
+                bg="$background"
                 placeholder={t("add.amountPlaceholder")}
                 keyboardType="numeric"
                 value={amount}
@@ -305,6 +306,12 @@ export function EditExpenseModal({
               value={note}
               onChangeText={setNote}
               numberOfLines={2}
+              bg="$background"
+              borderWidth={2}
+              borderColor="$borderColor"
+              focusStyle={{
+                borderColor: ACCENT_COLORS.primary,
+              }}
             />
           </YStack>
 
@@ -360,6 +367,12 @@ export function EditExpenseModal({
                 ) : (
                   <Input
                     size="$control"
+                    bg="$background"
+                    borderWidth={2}
+                    borderColor="$borderColor"
+                    focusStyle={{
+                      borderColor: ACCENT_COLORS.primary,
+                    }}
                     placeholder={
                       paymentMethodType === "Other"
                         ? t("history.editDialog.fields.otherPlaceholder")
