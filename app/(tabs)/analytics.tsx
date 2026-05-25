@@ -546,6 +546,7 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="$chip"
               px="$control"
+              borderWidth={1}
               borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
@@ -561,6 +562,7 @@ export default function AnalyticsScreen() {
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
+          borderWidth={1}
           borderColor="$borderColor"
         >
           {!filtersHydrated

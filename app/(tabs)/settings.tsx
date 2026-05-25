@@ -715,7 +715,7 @@ export default function SettingsScreen() {
               size="$control"
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
-              backgroundColor={
+              bg={
                 settings.enableMathExpressions
                   ? SEMANTIC_COLORS.success
                   : ("$gray8" as any)
@@ -744,7 +744,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
                 }
-                backgroundColor={
+                bg={
                   settings.useMlOnlyForSmsImports
                     ? SEMANTIC_COLORS.success
                     : ("$gray8" as any)

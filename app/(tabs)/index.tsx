@@ -259,8 +259,9 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.summaryCardsRow}>
         <Card
           flex={1}
+          borderWidth={1}
           borderColor="$borderColor"
-          padding="$block"
+          p="$block"
           bg={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
         >
@@ -287,8 +288,9 @@ export default function DashboardScreen() {
         </Card>
         <Card
           flex={1}
+          borderWidth={1}
           borderColor="$borderColor"
-          padding="$block"
+          p="$block"
           bg={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
         >
@@ -351,8 +353,9 @@ export default function DashboardScreen() {
           </YStack>
         ) : (
           <Card
+            borderWidth={1}
             borderColor="$borderColor"
-            padding="$gutter"
+            p="$gutter"
             items="center"
             justify="center"
             height={150}
