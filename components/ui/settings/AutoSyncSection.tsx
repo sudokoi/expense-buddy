@@ -96,7 +96,7 @@ export function AutoSyncSection({
           size="$control"
           checked={autoSyncEnabled}
           onCheckedChange={onAutoSyncEnabledChange}
-          backgroundColor={autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)}
+          bg={autoSyncEnabled ? SEMANTIC_COLORS.success : ("$gray8" as any)}
         >
           <Switch.Thumb />
         </Switch>
@@ -119,7 +119,7 @@ export function AutoSyncSection({
           size="$control"
           checked={syncSettings}
           onCheckedChange={onSyncSettingsChange}
-          backgroundColor={syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)}
+          bg={syncSettings ? SEMANTIC_COLORS.success : ("$gray8" as any)}
         >
           <Switch.Thumb />
         </Switch>

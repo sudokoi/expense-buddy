@@ -69,8 +69,8 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
     <Card
       borderWidth={1}
       borderColor="$borderColor"
-      padding="$micro"
-      borderRadius="$control"
+      p="$micro"
+      rounded="$control"
       style={styles.container}
     >
       {options.map(({ key, label, Icon }) => {

@@ -35,13 +35,13 @@ export const CategoryCard = memo(function CategoryCard({
 
   return (
     <Card
-      backgroundColor={isSelected ? resolvedColor : "$background"}
+      bg={isSelected ? resolvedColor : "$background"}
       borderColor={isSelected ? resolvedColor : "$borderColor"}
-      padding={compact ? "$control" : "$section"}
-      borderRadius={compact ? "$control" : "$chip"}
+      p={compact ? "$control" : "$section"}
+      rounded={compact ? "$control" : "$chip"}
       width={compact ? "22%" : "30%"}
-      alignItems="center"
-      justifyContent="center"
+      items="center"
+      justify="center"
       onPress={onPress}
     >
       <Text

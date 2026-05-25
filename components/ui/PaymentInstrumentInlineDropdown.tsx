@@ -248,8 +248,8 @@ export function PaymentInstrumentInlineDropdown({
         <Card
           borderWidth={1}
           borderColor="$borderColor"
-          padding="$micro"
-          borderRadius="$control"
+          p="$micro"
+          rounded="$control"
           gap="$micro"
         >
           <Pressable

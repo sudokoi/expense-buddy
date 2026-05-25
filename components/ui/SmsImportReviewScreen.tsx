@@ -545,8 +545,8 @@ export function SmsImportReviewScreen({
           <Card
             borderWidth={1}
             borderColor="$borderColor"
-            padding="$section"
-            backgroundColor="$backgroundHover"
+            p="$section"
+            bg="$backgroundHover"
           >
             <YStack gap="$control">
               <H4>
@@ -565,8 +565,8 @@ export function SmsImportReviewScreen({
               <Card
                 borderWidth={1}
                 borderColor="$borderColor"
-                padding="$section"
-                backgroundColor="$backgroundHover"
+                p="$section"
+                bg="$backgroundHover"
               >
                 <YStack gap="$control">
                   <Text fontWeight="700">{t("smsImport.sheet.sourceSms")}</Text>
@@ -753,8 +753,8 @@ export function SmsImportReviewScreen({
             <Card
               borderWidth={1}
               borderColor="$borderColor"
-              padding="$gutter"
-              backgroundColor="$backgroundHover"
+              p="$gutter"
+              bg="$backgroundHover"
             >
               <YStack gap="$control">
                 <Text fontWeight="700">{t("smsImport.sheet.emptyTitle")}</Text>
@@ -776,7 +776,7 @@ export function SmsImportReviewScreen({
                       entering={FadeIn.duration(160)}
                       exiting={FadeOutUp.duration(180)}
                     >
-                      <Card borderWidth={1} borderColor="$borderColor" padding="$section">
+                      <Card borderWidth={1} borderColor="$borderColor" p="$section">
                         <YStack gap="$section">
                           <YStack gap="$micro">
                             <Text fontWeight="700">
@@ -866,7 +866,7 @@ export function SmsImportReviewScreen({
                       <Card
                         borderWidth={1}
                         borderColor="$borderColor"
-                        padding="$section"
+                        p="$section"
                         opacity={0.8}
                       >
                         <YStack gap="$control">
@@ -896,8 +896,8 @@ export function SmsImportReviewScreen({
                 <Card
                   borderWidth={1}
                   borderColor="$borderColor"
-                  padding="$section"
-                  backgroundColor="$backgroundHover"
+                  p="$section"
+                  bg="$backgroundHover"
                 >
                   <Text opacity={0.75}>{t("smsImport.sheet.emptyResolved")}</Text>
                 </Card>

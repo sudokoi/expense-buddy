@@ -57,8 +57,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           flex={1}
           borderWidth={1}
           borderColor="$borderColor"
-          padding="$section"
-          backgroundColor={CARD_COLORS.blue.bg}
+          p="$section"
+          bg={CARD_COLORS.blue.bg}
         >
           <Text
             fontWeight="bold"
@@ -87,8 +87,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           flex={1}
           borderWidth={1}
           borderColor="$borderColor"
-          padding="$section"
-          backgroundColor={CARD_COLORS.green.bg}
+          p="$section"
+          bg={CARD_COLORS.green.bg}
         >
           <Text
             fontWeight="bold"
@@ -120,8 +120,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           flex={1}
           borderWidth={1}
           borderColor="$borderColor"
-          padding="$section"
-          backgroundColor={CARD_COLORS.orange.bg}
+          p="$section"
+          bg={CARD_COLORS.orange.bg}
         >
           <Text
             fontWeight="bold"
@@ -157,8 +157,8 @@ export const StatisticsCards = memo(function StatisticsCards({
           flex={1}
           borderWidth={1}
           borderColor="$borderColor"
-          padding="$section"
-          backgroundColor={CARD_COLORS.purple.bg}
+          p="$section"
+          bg={CARD_COLORS.purple.bg}
         >
           <Text
             fontWeight="bold"

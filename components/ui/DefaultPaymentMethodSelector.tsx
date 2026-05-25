@@ -100,8 +100,8 @@ export function DefaultPaymentMethodSelector({
     <Card
       borderWidth={1}
       borderColor="$borderColor"
-      padding="$control"
-      borderRadius="$control"
+      p="$control"
+      rounded="$control"
       gap="$control"
     >
       <XStack flexWrap="wrap" gap="$control">

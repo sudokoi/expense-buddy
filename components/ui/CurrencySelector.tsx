@@ -59,8 +59,8 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
     <Card
       borderWidth={1}
       borderColor="$borderColor"
-      padding="$micro"
-      borderRadius="$control"
+      p="$micro"
+      rounded="$control"
       style={styles.container}
     >
       {currencyOptions.map(({ key, label, Icon }) => {

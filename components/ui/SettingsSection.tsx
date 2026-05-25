@@ -42,12 +42,7 @@ export function SettingsSection({
   gap = "$section",
 }: SettingsSectionProps) {
   return (
-    <Card
-      padding="$gutter"
-      borderRadius="$surface"
-      backgroundColor="$color1"
-      borderColor="$borderColor"
-    >
+    <Card p="$gutter" rounded="$surface" bg="$color1" borderColor="$borderColor">
       <YStack gap={gap}>
         <YStack
           gap="$micro"
