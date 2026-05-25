@@ -69,9 +69,9 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
           <Pressable
             key={key}
             onPress={() => onChange(key)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={`${label} theme`}
+            role="button"
+            aria-selected={isSelected}
+            aria-label={`${label} theme`}
             style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View

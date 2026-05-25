@@ -63,9 +63,9 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
           <Pressable
             key={key}
             onPress={() => onChange(key)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={`Select ${label}`}
+            role="button"
+            aria-selected={isSelected}
+            aria-label={`Select ${label}`}
             style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View

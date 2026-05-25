@@ -59,8 +59,8 @@ export function LocalizationSection({
     <YStack gap="$control">
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
+        role="button"
+        aria-expanded={expanded}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
         <XStack flex={1} bg="$backgroundHover" style={layoutStyles.collapsibleHeader}>

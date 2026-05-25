@@ -247,8 +247,8 @@ export function PaymentInstrumentInlineDropdown({
         <Card bordered padding="$micro" borderRadius="$control" gap="$micro">
           <Pressable
             onPress={handleSelectNone}
-            accessibilityRole="button"
-            accessibilityState={{ selected: kind === "none" }}
+            role="button"
+            aria-selected={kind === "none"}
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
@@ -279,8 +279,8 @@ export function PaymentInstrumentInlineDropdown({
 
           <Pressable
             onPress={handleSelectManual}
-            accessibilityRole="button"
-            accessibilityState={{ selected: kind === "manual" }}
+            role="button"
+            aria-selected={kind === "manual"}
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
@@ -315,8 +315,8 @@ export function PaymentInstrumentInlineDropdown({
               <Pressable
                 key={inst.id}
                 onPress={() => handleSelectInstrument(inst)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
+                role="button"
+                aria-selected={isSelected}
                 style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
               >
                 <View

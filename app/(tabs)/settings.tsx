@@ -671,7 +671,7 @@ export default function SettingsScreen() {
         >
           <Pressable
             onPress={() => router.push("/settings/payment" as Href)}
-            accessibilityRole="button"
+            role="button"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
             <XStack bg="$backgroundHover" style={layoutStyles.menuRow}>

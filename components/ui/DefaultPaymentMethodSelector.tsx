@@ -67,9 +67,9 @@ export function DefaultPaymentMethodSelector({
       <Pressable
         key={key}
         onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
-        accessibilityRole="button"
-        accessibilityState={{ selected: isSelected }}
-        accessibilityLabel={`${displayLabel} payment method`}
+        role="button"
+        aria-selected={isSelected}
+        aria-label={`${displayLabel} payment method`}
         style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
       >
         <View
