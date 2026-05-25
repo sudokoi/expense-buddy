@@ -85,8 +85,9 @@ export const CategoryFilter = memo(function CategoryFilter({
         <Button
           size="$chip"
           px="$control"
-          theme={isAllSelected ? "inverse" : undefined}
-          bordered={!isAllSelected}
+          theme={isAllSelected ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={!isAllSelected ? 1 : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -101,7 +102,8 @@ export const CategoryFilter = memo(function CategoryFilter({
               key={cat.label}
               size="$chip"
               px="$control"
-              bordered={!isSelected}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? 1 : 0}
               style={isSelected ? { backgroundColor: cat.color } : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}

@@ -10,24 +10,15 @@ This document provides an overview of the Tamagui configuration for this project
 
 All text components will use the "body" font family by default.
 
-### Only Allow Shorthands: `not enforced`
+### Only Allow Shorthands: `true`
 
-Shorthand properties are supported in this project, but full property names are also allowed because `onlyAllowShorthands` is not enabled in the current Tamagui config. Prefer shorthands where they improve readability, but do not assume full property names will error.
+**You MUST use shorthand properties in this project.**
 
-For example:
-
-- ✅ `<Stack w="$10" />` (correct)
-- ✅ `<Stack width="$10" />` (also allowed)
+Full property names are not allowed. For example:
+- ✅ `<View w="$10" />` (correct)
+- ❌ `<View width="$10" />` (will error)
 
 See the Shorthand Properties section below for all available shorthands.
-
-### Theme Class Name on Root: `true`
-
-Theme classes are applied to the root HTML element.
-
-### Max Dark/Light Nesting: `2`
-
-Maximum nesting depth for light/dark theme switching: 2 levels.
 
 ### Web Container Type: `inline-size`
 
@@ -85,36 +76,36 @@ Themes are organized hierarchically and can be combined:
 - accent
 - black
 - blue
+- gray
 - green
+- neutral
+- orange
+- pink
+- purple
 - red
+- surface1
+- surface2
+- teal
 - white
 - yellow
 
 **Component Themes:**
 
 - Button
-- Card
-- Checkbox
 - Input
-- ListItem
 - Progress
 - ProgressIndicator
-- RadioGroupItem
-- SelectTrigger
+- Slider
+- SliderActive
 - SliderThumb
-- SliderTrack
-- SliderTrackActive
 - Switch
 - SwitchThumb
 - TextArea
 - Tooltip
-- TooltipArrow
-- TooltipContent
 
 ### Theme Usage
 
 Themes are combined hierarchically. For example, `light_blue_alt1_Button` combines:
-
 - Base: `light`
 - Color: `blue`
 - Variant: `alt1`
@@ -145,7 +136,7 @@ export default () => (
 Components can access theme values using `$` token syntax:
 
 ```tsx
-<Stack bg="$background" color="$color" />
+<View bg="$background" color="$color" />
 ```
 
 **Special props:**
@@ -215,6 +206,12 @@ Tokens are design system values that can be referenced using the `$` prefix.
 - `18`: 158
 - `19`: 172
 - `20`: 186
+- `block`: 20
+- `control`: 8
+- `empty`: 40
+- `gutter`: 16
+- `micro`: 4
+- `section`: 12
 - `true`: 18
 
 ### Size Tokens
@@ -247,6 +244,13 @@ Tokens are design system values that can be referenced using the `$` prefix.
 - `18`: 244
 - `19`: 264
 - `20`: 284
+- `chip`: 28
+- `compact`: 36
+- `control`: 44
+- `dialog`: 64
+- `hero`: 74
+- `icon`: 20
+- `prominent`: 52
 - `true`: 44
 
 ### Radius Tokens
@@ -264,6 +268,10 @@ Tokens are design system values that can be referenced using the `$` prefix.
 - `10`: 34
 - `11`: 42
 - `12`: 50
+- `chip`: 12
+- `control`: 8
+- `round`: 999
+- `surface`: 16
 - `true`: 9
 
 ### Z-Index Tokens
@@ -274,6 +282,9 @@ Tokens are design system values that can be referenced using the `$` prefix.
 - `3`: 300
 - `4`: 400
 - `5`: 500
+- `banner`: 9998
+- `floating`: 10000
+- `toast`: 9999
 
 ### Color Tokens
 
@@ -305,36 +316,53 @@ Tokens can be used in component props with the `$` prefix:
 
 ```tsx
 // Space tokens - for margin, padding, gap
-<Stack p="$4" gap="$2" m="$3" />
+<View p="$4" gap="$2" m="$3" />
 
 // Size tokens - for width, height, dimensions
-<Stack width="$10" height="$6" />
+<View width="$10" height="$6" />
 
 // Color tokens - for colors and backgrounds
-<Stack bg="$blue5" color="$gray12" />
+<View bg="$blue5" color="$gray12" />
 
 // Radius tokens - for border-radius
-<Stack rounded="$4" />
+<View rounded="$4" />
 ```
 
 ## Media Queries
 
 Available responsive breakpoints:
 
-- **2xl**: {"minWidth":1536}
-- **2xs**: {"minWidth":340}
+- **height-lg**: {"minHeight":1024}
+- **height-md**: {"minHeight":768}
+- **height-sm**: {"minHeight":640}
+- **hoverable**: {"hover":"hover"}
 - **lg**: {"minWidth":1024}
-- **max2Xl**: {"maxWidth":1536}
-- **max2xs**: {"maxWidth":340}
-- **maxLg**: {"maxWidth":1024}
-- **maxMd**: {"maxWidth":768}
-- **maxSm**: {"maxWidth":640}
-- **maxXl**: {"maxWidth":1280}
-- **maxXs**: {"maxWidth":460}
+- **max-100**: {"maxWidth":99.98}
+- **max-200**: {"maxWidth":199.98}
+- **max-height-100**: {"maxHeight":99.98}
+- **max-height-200**: {"maxHeight":199.98}
+- **max-height-lg**: {"maxHeight":1023.98}
+- **max-height-md**: {"maxHeight":767.98}
+- **max-height-sm**: {"maxHeight":639.98}
+- **max-height-xs**: {"maxHeight":459.98}
+- **max-height-xxs**: {"maxHeight":339.98}
+- **max-height-xxxs**: {"maxHeight":259.98}
+- **max-lg**: {"maxWidth":1023.98}
+- **max-md**: {"maxWidth":767.98}
+- **max-sm**: {"maxWidth":639.98}
+- **max-xl**: {"maxWidth":1279.98}
+- **max-xs**: {"maxWidth":459.98}
+- **max-xxl**: {"maxWidth":1535.98}
+- **max-xxs**: {"maxWidth":339.98}
+- **max-xxxs**: {"maxWidth":259.98}
 - **md**: {"minWidth":768}
 - **sm**: {"minWidth":640}
+- **touchable**: {"pointer":"coarse"}
 - **xl**: {"minWidth":1280}
 - **xs**: {"minWidth":460}
+- **xxl**: {"minWidth":1536}
+- **xxs**: {"minWidth":340}
+- **xxxs**: {"minWidth":260}
 
 ### Media Query Usage
 
@@ -342,11 +370,11 @@ Media queries can be used as style props or with the `useMedia` hook:
 
 ```tsx
 // As style props (prefix with $)
-<Stack width="100%" $2xl={{ width: "50%" }} />
+<View width="100%" $height-lg={{ width: "50%" }} />
 
 // Using the useMedia hook
 const media = useMedia()
-if (media.2xl) {
+if (media.height-lg) {
   // Render for this breakpoint
 }
 ```
@@ -362,18 +390,28 @@ Available font families:
 
 Available animation presets:
 
+- 0ms
 - 100ms
 - 200ms
+- 250ms
+- 300ms
+- 400ms
+- 500ms
+- 50ms
 - 75ms
 - bouncy
 - lazy
 - medium
 - quick
+- quickLessBouncy
 - quicker
+- quickerLessBouncy
 - quickest
+- quickestLessBouncy
 - slow
+- slowest
 - superBouncy
-- tooltip
+- superLazy
 
 ## Components
 
@@ -382,6 +420,7 @@ The following components are available:
 - AlertDialogAction
 - AlertDialogCancel
 - AlertDialogDescription
+- AlertDialogDestructive
 - AlertDialogOverlay
 - AlertDialogTitle
 - AlertDialogTrigger
@@ -392,8 +431,6 @@ The following components are available:
   - AvatarFallback.Frame
 - AvatarFrame
 - Button
-  - Button.Frame
-  - Button.Text
 - Card
   - Card.Background
   - Card.Footer
@@ -403,6 +440,10 @@ The following components are available:
   - Checkbox.Frame
   - Checkbox.IndicatorFrame
 - Circle
+- CollapsibleContent
+  - CollapsibleContent.Frame
+- CollapsibleTrigger
+  - CollapsibleTrigger.Frame
 - DialogClose
 - DialogContent
 - DialogDescription
@@ -411,6 +452,7 @@ The following components are available:
 - DialogPortalFrame
 - DialogTitle
 - DialogTrigger
+- Em
 - EnsureFlexed
 - Fieldset
 - Footer
@@ -431,14 +473,9 @@ The following components are available:
 - Heading
 - Image
 - Input
-  - Input.Frame
 - Label
   - Label.Frame
 - ListItem
-  - ListItem.Frame
-  - ListItem.Subtitle
-  - ListItem.Text
-  - ListItem.Title
 - Main
 - Nav
 - Overlay
@@ -462,30 +499,27 @@ The following components are available:
 - SelectIcon
 - SelectSeparator
 - Separator
-- SheetHandleFrame
-- SheetOverlayFrame
 - SizableStack
 - SizableText
+- SliderActiveFrame
 - SliderFrame
 - SliderThumb
   - SliderThumb.Frame
-- SliderTrackActiveFrame
 - SliderTrackFrame
 - Spacer
-- Spacer
+- Span
 - Spinner
 - Square
-- Stack
-- Stack
+- Strong
 - Switch
   - Switch.Frame
   - Switch.Thumb
 - Tabs
 - Text
   - Text.Area
-  - Text.AreaFrame
 - ThemeableStack
 - Thumb
+- Toast
 - View
 - View
 - VisuallyHidden
@@ -494,3 +528,4 @@ The following components are available:
 - YGroup
 - YStack
 - ZStack
+

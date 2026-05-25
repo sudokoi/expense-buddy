@@ -222,7 +222,7 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" theme="inverse" onPress={handleAddPress}>
+        <Button size="$control" theme="accent" onPress={handleAddPress}>
           {t("common.add")}
         </Button>
       </XStack>
@@ -242,8 +242,9 @@ export default function DashboardScreen() {
               size="$chip"
               px="$control"
               onPress={() => setSelectedCurrency(c)}
-              theme={effectiveCurrency === c ? "inverse" : undefined}
-              bordered={effectiveCurrency !== c}
+              theme={effectiveCurrency === c ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={effectiveCurrency !== c ? 1 : 0}
               style={{
                 borderRadius: UI_RADIUS.round,
               }}
@@ -258,7 +259,7 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.summaryCardsRow}>
         <Card
           flex={1}
-          bordered
+          borderColor="$borderColor"
           padding="$block"
           bg={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
@@ -286,7 +287,7 @@ export default function DashboardScreen() {
         </Card>
         <Card
           flex={1}
-          bordered
+          borderColor="$borderColor"
           padding="$block"
           bg={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
@@ -350,7 +351,7 @@ export default function DashboardScreen() {
           </YStack>
         ) : (
           <Card
-            bordered
+            borderColor="$borderColor"
             padding="$gutter"
             items="center"
             justify="center"

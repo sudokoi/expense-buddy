@@ -296,7 +296,8 @@ export default function AddExpenseScreen() {
           {Platform.OS === "android" ? (
             <Button
               size="$control"
-              bordered
+              borderWidth={1}
+              borderColor="$borderColor"
               onPress={() => {
                 void handleOpenSmsImport()
               }}
@@ -520,7 +521,8 @@ export default function AddExpenseScreen() {
             <Button
               flex={1}
               size="$control"
-              bordered
+              borderWidth={1}
+              borderColor="$borderColor"
               onPress={() => handleSave({ stayOnAdd: true })}
               icon={<Plus size="$icon" />}
               fontWeight="bold"
@@ -530,7 +532,7 @@ export default function AddExpenseScreen() {
             <Button
               flex={1}
               size="$control"
-              theme="inverse"
+              theme="accent"
               onPress={() => handleSave({ stayOnAdd: false })}
               icon={<Check size="$icon" />}
               fontWeight="bold"

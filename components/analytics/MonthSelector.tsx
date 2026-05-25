@@ -39,8 +39,9 @@ export const MonthSelector = memo(function MonthSelector({
         <Button
           size="$compact"
           px="$section"
-          theme={value === null ? "inverse" : undefined}
-          bordered={value !== null}
+          theme={value === null ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={value !== null ? 1 : 0}
           onPress={() => onChange(null)}
         >
           {t("common.all")}
@@ -53,8 +54,9 @@ export const MonthSelector = memo(function MonthSelector({
               key={monthKey}
               size="$compact"
               px="$section"
-              theme={isSelected ? "inverse" : undefined}
-              bordered={!isSelected}
+              theme={isSelected ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? 1 : 0}
               onPress={() => onChange(monthKey)}
             >
               {label}

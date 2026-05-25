@@ -39,7 +39,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
   }, [])
 
   return (
-    <Card bordered>
+    <Card borderWidth={1} borderColor="$borderColor">
       <Pressable onPress={toggleExpanded}>
         <XStack
           style={styles.header}

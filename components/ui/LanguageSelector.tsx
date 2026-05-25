@@ -66,7 +66,13 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   }))
 
   return (
-    <Card bordered padding="$micro" borderRadius="$control" style={styles.container}>
+    <Card
+      borderWidth={1}
+      borderColor="$borderColor"
+      padding="$micro"
+      borderRadius="$control"
+      style={styles.container}
+    >
       {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (

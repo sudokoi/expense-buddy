@@ -244,7 +244,13 @@ export function PaymentInstrumentInlineDropdown({
       </Button>
 
       {open && (
-        <Card bordered padding="$micro" borderRadius="$control" gap="$micro">
+        <Card
+          borderWidth={1}
+          borderColor="$borderColor"
+          padding="$micro"
+          borderRadius="$control"
+          gap="$micro"
+        >
           <Pressable
             onPress={handleSelectNone}
             role="button"
@@ -350,7 +356,7 @@ export function PaymentInstrumentInlineDropdown({
           {onCreateInstrument && (
             <Button
               size="$control"
-              theme="inverse"
+              theme="accent"
               icon={Plus}
               onPress={handleStartAdd}
               borderWidth={1}
@@ -459,7 +465,7 @@ export function PaymentInstrumentInlineDropdown({
             <Button size="$control" chromeless onPress={handleStartAdd}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" theme="inverse" onPress={handleSaveNew}>
+            <Button size="$control" theme="accent" onPress={handleSaveNew}>
               {t("common.save")}
             </Button>
           </XStack>

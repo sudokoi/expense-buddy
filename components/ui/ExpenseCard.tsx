@@ -13,7 +13,8 @@ interface ExpenseCardProps extends CardProps {}
 export const ExpenseCard = memo(function ExpenseCard(props: ExpenseCardProps) {
   return (
     <Card
-      bordered
+      borderWidth={1}
+      borderColor="$borderColor"
       p="$section"
       mb="$control"
       flexDirection="row"

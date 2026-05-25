@@ -107,7 +107,12 @@ export function AppInfoSection({
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
-        <Button size="$control" theme="inverse" onPress={onStartUpdate} icon={ExternalLink}>
+        <Button
+          size="$control"
+          theme="accent"
+          onPress={onStartUpdate}
+          icon={ExternalLink}
+        >
           {isUpdateReadyToInstall
             ? t("settings.about.installUpdate")
             : updateInfo.latestVersion

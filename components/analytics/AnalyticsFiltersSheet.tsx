@@ -330,7 +330,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               } as ViewStyle
             }
           >
-            <Button size="$control" theme="inverse" onPress={handleApply}>
+            <Button size="$control" theme="accent" onPress={handleApply}>
               {t("analytics.filtersModal.apply")}
             </Button>
           </XStack>

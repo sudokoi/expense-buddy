@@ -62,8 +62,9 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               key={window.value}
               size="$compact"
               px="$section"
-              theme={isSelected ? "inverse" : undefined}
-              bordered={!isSelected}
+              theme={isSelected ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? 1 : 0}
               onPress={() => handlePress(window.value)}
             >
               {t(`analytics.timeWindow.${window.value}`)}

@@ -368,7 +368,7 @@ export function GitHubConfigSection({
                   size="$control"
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
                   disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
-                  theme="inverse"
+                  theme="accent"
                   style={
                     isSignedIn
                       ? ({ backgroundColor: errorColor } as ViewStyle)
@@ -448,7 +448,7 @@ export function GitHubConfigSection({
                   <Input
                     placeholder={t("settings.github.repoPlaceholderNative")}
                     value={repo}
-                    editable={false}
+                    readOnly
                     size="$control"
                     borderWidth={2}
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
@@ -487,7 +487,7 @@ export function GitHubConfigSection({
 
             {/* Action Buttons */}
             <XStack gap="$section" style={layoutStyles.buttonRow}>
-              <Button flex={1} size="$control" onPress={handleSaveConfig} theme="inverse">
+              <Button flex={1} size="$control" onPress={handleSaveConfig} theme="accent">
                 {t("settings.github.saveConfig")}
               </Button>
               <Button

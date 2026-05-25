@@ -546,7 +546,7 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="$chip"
               px="$control"
-              bordered
+              borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
               style={{ borderRadius: UI_RADIUS.round }}
@@ -561,7 +561,7 @@ export default function AnalyticsScreen() {
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
-          bordered
+          borderColor="$borderColor"
         >
           {!filtersHydrated
             ? t("analytics.filters.button")
@@ -604,8 +604,9 @@ export default function AnalyticsScreen() {
                       size="$chip"
                       px="$control"
                       onPress={() => setSelectedCurrency(c)}
-                      theme={effectiveCurrency === c ? "inverse" : undefined}
-                      bordered={effectiveCurrency !== c}
+                      theme={effectiveCurrency === c ? "accent" : undefined}
+                      borderColor="$borderColor"
+                      borderWidth={effectiveCurrency !== c ? 1 : 0}
                       style={{ borderRadius: UI_RADIUS.round }}
                     >
                       {c} ({getCurrencySymbol(c)})

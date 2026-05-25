@@ -96,8 +96,9 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
         <Button
           size="$chip"
           px="$control"
-          theme={isAllSelected ? "inverse" : undefined}
-          bordered={!isAllSelected}
+          theme={isAllSelected ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={!isAllSelected ? 1 : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -115,7 +116,8 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               key={item.key}
               size="$chip"
               px="$control"
-              bordered={!isSelected}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? 1 : 0}
               style={isSelected ? { backgroundColor: color } : undefined}
               onPress={() => handleToggle(item.key)}
               icon={

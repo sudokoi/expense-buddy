@@ -490,7 +490,7 @@ export function SmsImportReviewScreen({
   const footer = editingItem ? (
     <XStack justify="flex-end" gap="$control">
       <Button onPress={closeEditor}>{t("common.cancel")}</Button>
-      <Button theme="inverse" onPress={handleAcceptEdited}>
+      <Button theme="accent" onPress={handleAcceptEdited}>
         {t("smsImport.sheet.footer.saveAndImport")}
       </Button>
     </XStack>
@@ -504,7 +504,7 @@ export function SmsImportReviewScreen({
       <Button theme="red" onPress={handleRejectAllSuggested}>
         {t("smsImport.sheet.footer.rejectAllSuggested")}
       </Button>
-      <Button theme="inverse" onPress={handleAcceptAllSuggested}>
+      <Button theme="accent" onPress={handleAcceptAllSuggested}>
         {t("smsImport.sheet.footer.acceptAllSuggested")}
       </Button>
     </XStack>
@@ -541,7 +541,12 @@ export function SmsImportReviewScreen({
           pb="$gutter"
           style={layoutStyles.container}
         >
-          <Card bordered padding="$section" backgroundColor="$backgroundHover">
+          <Card
+            borderWidth={1}
+            borderColor="$borderColor"
+            padding="$section"
+            backgroundColor="$backgroundHover"
+          >
             <YStack gap="$control">
               <H4>
                 {editingItem
@@ -556,7 +561,12 @@ export function SmsImportReviewScreen({
 
           {editingItem && editingDraft ? (
             <YStack gap="$gutter" pb="$control">
-              <Card bordered padding="$section" backgroundColor="$backgroundHover">
+              <Card
+                borderWidth={1}
+                borderColor="$borderColor"
+                padding="$section"
+                backgroundColor="$backgroundHover"
+              >
                 <YStack gap="$control">
                   <Text fontWeight="700">{t("smsImport.sheet.sourceSms")}</Text>
                   <Text fontSize="$body" opacity={0.7}>
@@ -720,7 +730,12 @@ export function SmsImportReviewScreen({
               </YStack>
             </YStack>
           ) : items.length === 0 ? (
-            <Card bordered padding="$gutter" backgroundColor="$backgroundHover">
+            <Card
+              borderWidth={1}
+              borderColor="$borderColor"
+              padding="$gutter"
+              backgroundColor="$backgroundHover"
+            >
               <YStack gap="$control">
                 <Text fontWeight="700">{t("smsImport.sheet.emptyTitle")}</Text>
                 <Text opacity={0.75}>{t("smsImport.sheet.emptyDescription")}</Text>
@@ -741,7 +756,7 @@ export function SmsImportReviewScreen({
                       entering={FadeIn.duration(160)}
                       exiting={FadeOutUp.duration(180)}
                     >
-                      <Card bordered padding="$section">
+                      <Card borderWidth={1} borderColor="$borderColor" padding="$section">
                         <YStack gap="$section">
                           <YStack gap="$micro">
                             <Text fontWeight="700">
@@ -789,7 +804,7 @@ export function SmsImportReviewScreen({
 
                           <XStack style={layoutStyles.actionRow}>
                             <Button
-                              theme="inverse"
+                              theme="accent"
                               onPress={() => handleAcceptSuggested(item)}
                             >
                               {t("smsImport.sheet.actions.accept")}
@@ -828,7 +843,12 @@ export function SmsImportReviewScreen({
                       layout={LinearTransition.duration(160)}
                       entering={FadeIn.duration(160)}
                     >
-                      <Card bordered padding="$section" opacity={0.8}>
+                      <Card
+                        borderWidth={1}
+                        borderColor="$borderColor"
+                        padding="$section"
+                        opacity={0.8}
+                      >
                         <YStack gap="$control">
                           <Text fontWeight="700">
                             {item.merchantName || item.sourceMessage.sender}
@@ -853,7 +873,12 @@ export function SmsImportReviewScreen({
               {pendingItems.length === 0 &&
               resolvedItems.length > 0 &&
               !showResolvedItems ? (
-                <Card bordered padding="$section" backgroundColor="$backgroundHover">
+                <Card
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  padding="$section"
+                  backgroundColor="$backgroundHover"
+                >
                   <Text opacity={0.75}>{t("smsImport.sheet.emptyResolved")}</Text>
                 </Card>
               ) : null}

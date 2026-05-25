@@ -233,7 +233,7 @@ export const CategorySection = memo(function CategorySection({
                   size="$control"
                   onPress={onAdd}
                   icon={<Plus size={18} />}
-                  theme="inverse"
+                  theme="accent"
                   pressStyle={{ opacity: 0.7 }}
                 >
                   {t("settings.categories.add")}

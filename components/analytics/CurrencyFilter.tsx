@@ -27,9 +27,10 @@ export function CurrencyFilter({
             key={currency}
             size="$compact"
             px="$section"
-            theme={isSelected ? "inverse" : undefined}
+            theme={isSelected ? "accent" : undefined}
             onPress={() => onChange(currency)}
-            bordered
+            borderWidth={1}
+            borderColor="$borderColor"
           >
             {currency} ({getCurrencySymbol(currency)})
           </Button>

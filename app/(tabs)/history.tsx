@@ -157,7 +157,8 @@ const FilterChip = React.memo(function FilterChip({
     <Button
       size="$chip"
       px="$control"
-      bordered
+      borderWidth={1}
+      borderColor="$borderColor"
       onPress={onRemove}
       style={{
         borderRadius: UI_RADIUS.round,
@@ -675,7 +676,7 @@ export default function HistoryScreen() {
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
             size="$control"
-            theme="inverse"
+            theme="accent"
             onPress={handleLoadMore}
             disabled={isLoadingMore}
           >
@@ -836,7 +837,7 @@ export default function HistoryScreen() {
             px="$section"
             icon={Filter}
             onPress={handleOpenFilterSheet}
-            theme={activeCount > 0 ? "inverse" : undefined}
+            theme={activeCount > 0 ? "accent" : undefined}
           >
             {t("common.filters")}
             {activeCount > 0 && (
@@ -909,7 +910,7 @@ export default function HistoryScreen() {
           px="$section"
           icon={Filter}
           onPress={handleOpenFilterSheet}
-          theme={activeCount > 0 ? "inverse" : undefined}
+          theme={activeCount > 0 ? "accent" : undefined}
         >
           {t("common.filters")}
           {activeCount > 0 && (
@@ -957,7 +958,13 @@ export default function HistoryScreen() {
       >
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
-          <Dialog.Content bordered elevate key="content" gap="$gutter">
+          <Dialog.Content
+            borderWidth={1}
+            borderColor="$borderColor"
+            elevate
+            key="content"
+            gap="$gutter"
+          >
             <Dialog.Title size="$sectionTitle">
               {t("history.deleteDialog.title")}
             </Dialog.Title>
@@ -989,7 +996,8 @@ export default function HistoryScreen() {
         <Dialog.Portal>
           <Dialog.Overlay key="overlay" opacity={0.5} />
           <Dialog.Content
-            bordered
+            borderWidth={1}
+            borderColor="$borderColor"
             elevate
             key="content"
             style={{ maxHeight: "80%" }}
@@ -1223,7 +1231,7 @@ export default function HistoryScreen() {
                 <Dialog.Close asChild>
                   <Button size="$control">{t("common.cancel")}</Button>
                 </Dialog.Close>
-                <Button size="$control" theme="inverse" onPress={handleSaveEdit}>
+                <Button size="$control" theme="accent" onPress={handleSaveEdit}>
                   {t("common.save")}
                 </Button>
               </XStack>

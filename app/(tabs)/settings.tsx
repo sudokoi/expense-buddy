@@ -589,7 +589,7 @@ export default function SettingsScreen() {
                 size="$control"
                 onPress={handleSync}
                 disabled={isSyncing}
-                theme="inverse"
+                theme="accent"
               >
                 {syncButtonText}
               </Button>

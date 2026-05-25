@@ -12,7 +12,7 @@ export function SectionHeader({ children }: SectionHeaderProps) {
   // Using type assertion to work around Tamagui's complex type inference
   const H4Component = H4 as React.ComponentType<{
     fontSize: string
-    marginBottom: string
+    mb: string
     children?: ReactNode
     numberOfLines?: number
     adjustsFontSizeToFit?: boolean

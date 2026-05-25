@@ -97,7 +97,13 @@ export function DefaultPaymentMethodSelector({
   }
 
   return (
-    <Card bordered padding="$control" borderRadius="$control" gap="$control">
+    <Card
+      borderWidth={1}
+      borderColor="$borderColor"
+      padding="$control"
+      borderRadius="$control"
+      gap="$control"
+    >
       <XStack flexWrap="wrap" gap="$control">
         {/* None option */}
         {renderOption("none", "None", Ban, value === undefined)}

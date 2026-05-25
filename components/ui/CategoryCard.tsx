@@ -35,7 +35,6 @@ export const CategoryCard = memo(function CategoryCard({
 
   return (
     <Card
-      bordered
       backgroundColor={isSelected ? resolvedColor : "$background"}
       borderColor={isSelected ? resolvedColor : "$borderColor"}
       padding={compact ? "$control" : "$section"}

@@ -57,7 +57,8 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
 
   return (
     <Card
-      bordered
+      borderWidth={1}
+      borderColor="$borderColor"
       padding="$micro"
       borderRadius="$control"
       gap="$micro"

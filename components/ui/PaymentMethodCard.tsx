@@ -24,7 +24,6 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   const Icon = config.icon
   return (
     <Card
-      bordered
       p="$control"
       px="$section"
       bg={isSelected ? "$color5" : "$background"}

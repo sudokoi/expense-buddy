@@ -43,7 +43,6 @@ export function SettingsSection({
 }: SettingsSectionProps) {
   return (
     <Card
-      bordered
       padding="$gutter"
       borderRadius="$surface"
       backgroundColor="$color1"

@@ -56,7 +56,13 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
   const theme = useTheme()
 
   return (
-    <Card bordered padding="$micro" borderRadius="$control" style={styles.container}>
+    <Card
+      borderWidth={1}
+      borderColor="$borderColor"
+      padding="$micro"
+      borderRadius="$control"
+      style={styles.container}
+    >
       {currencyOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (

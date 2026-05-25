@@ -384,7 +384,7 @@ export function EditExpenseModal({
             </Button>
             <Button
               size="$control"
-              theme="inverse"
+              theme="accent"
               onPress={handleSave}
               icon={<Check size="$icon" />}
               fontWeight="bold"

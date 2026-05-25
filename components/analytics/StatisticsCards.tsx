@@ -53,7 +53,13 @@ export const StatisticsCards = memo(function StatisticsCards({
     <YStack style={styles.container}>
       {/* First row */}
       <XStack style={styles.row}>
-        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.blue.bg}>
+        <Card
+          flex={1}
+          borderWidth={1}
+          borderColor="$borderColor"
+          padding="$section"
+          backgroundColor={CARD_COLORS.blue.bg}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -77,7 +83,13 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
         </Card>
 
-        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.green.bg}>
+        <Card
+          flex={1}
+          borderWidth={1}
+          borderColor="$borderColor"
+          padding="$section"
+          backgroundColor={CARD_COLORS.green.bg}
+        >
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -106,7 +118,8 @@ export const StatisticsCards = memo(function StatisticsCards({
       <XStack style={styles.row}>
         <Card
           flex={1}
-          bordered
+          borderWidth={1}
+          borderColor="$borderColor"
           padding="$section"
           backgroundColor={CARD_COLORS.orange.bg}
         >
@@ -142,7 +155,8 @@ export const StatisticsCards = memo(function StatisticsCards({
 
         <Card
           flex={1}
-          bordered
+          borderWidth={1}
+          borderColor="$borderColor"
           padding="$section"
           backgroundColor={CARD_COLORS.purple.bg}
         >

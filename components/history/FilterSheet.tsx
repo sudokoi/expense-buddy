@@ -350,7 +350,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               } as ViewStyle
             }
           >
-            <Button size="$control" theme="inverse" onPress={handleApply}>
+            <Button size="$control" theme="accent" onPress={handleApply}>
               {t("common.apply")}
             </Button>
           </XStack>
