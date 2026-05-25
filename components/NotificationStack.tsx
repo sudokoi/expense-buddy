@@ -2,7 +2,7 @@ import React from "react"
 import { View as RNView, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Text, YStack, styled } from "tamagui"
-import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
+import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons-2"
 import { useNotifications } from "../stores/hooks"
 import { NotificationType } from "../stores/notification-store"
 import {

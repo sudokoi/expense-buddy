@@ -62,7 +62,7 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               key={window.value}
               size="$compact"
               px="$section"
-              themeInverse={isSelected}
+              theme={isSelected ? "inverse" : undefined}
               bordered={!isSelected}
               onPress={() => handlePress(window.value)}
             >

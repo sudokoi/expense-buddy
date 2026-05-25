@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router"
 import { useTheme } from "tamagui"
-import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons"
+import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, memo } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { ViewStyle } from "react-native"
-import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
 import { useTranslation } from "react-i18next"
@@ -233,7 +233,7 @@ export const CategorySection = memo(function CategorySection({
                   size="$control"
                   onPress={onAdd}
                   icon={<Plus size={18} />}
-                  themeInverse
+                  theme="inverse"
                   pressStyle={{ opacity: 0.7 }}
                 >
                   {t("settings.categories.add")}

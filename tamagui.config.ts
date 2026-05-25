@@ -1,4 +1,5 @@
-import { defaultConfig } from "@tamagui/config/v4"
+import { defaultConfig } from "@tamagui/config/v5"
+import { animations } from "@tamagui/config/v5-reanimated"
 import { createTamagui, Variable } from "tamagui"
 import { NEUTRAL_COLORS, SEMANTIC_COLORS, THEME_COLORS } from "./constants/theme-colors"
 
@@ -104,6 +105,7 @@ const semanticControlHeadingLineHeight = {
 // Extend default config with custom semantic color tokens and kawaii themes
 export const config = createTamagui({
   ...defaultConfig,
+  animations,
   tokens: {
     ...defaultConfig.tokens,
     space: {

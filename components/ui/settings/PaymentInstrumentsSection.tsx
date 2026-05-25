@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { Alert, ViewStyle } from "react-native"
-import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {

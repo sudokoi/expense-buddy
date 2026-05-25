@@ -2,7 +2,7 @@ import React, { memo } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
 
 import type { ViewStyle } from "react-native"
-import { Trash, Edit3 } from "@tamagui/lucide-icons"
+import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
 
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"

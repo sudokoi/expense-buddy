@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { XStack, Input, Button } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
+import { X } from "@tamagui/lucide-icons-2"
 
 interface SearchFilterProps {
   value: string

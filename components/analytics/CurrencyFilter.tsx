@@ -27,7 +27,7 @@ export function CurrencyFilter({
             key={currency}
             size="$compact"
             px="$section"
-            themeInverse={isSelected}
+            theme={isSelected ? "inverse" : undefined}
             onPress={() => onChange(currency)}
             bordered
           >

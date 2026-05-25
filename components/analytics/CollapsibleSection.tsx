@@ -1,6 +1,6 @@
 import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { UI_SPACE } from "../../constants/ui-tokens"
 

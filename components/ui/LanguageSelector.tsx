@@ -1,5 +1,5 @@
 import { Text, Card, View, useTheme } from "tamagui"
-import { Globe, Languages } from "@tamagui/lucide-icons"
+import { Globe, Languages } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"

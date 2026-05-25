@@ -39,7 +39,7 @@ export const MonthSelector = memo(function MonthSelector({
         <Button
           size="$compact"
           px="$section"
-          themeInverse={value === null}
+          theme={value === null ? "inverse" : undefined}
           bordered={value !== null}
           onPress={() => onChange(null)}
         >
@@ -53,7 +53,7 @@ export const MonthSelector = memo(function MonthSelector({
               key={monthKey}
               size="$compact"
               px="$section"
-              themeInverse={isSelected}
+              theme={isSelected ? "inverse" : undefined}
               bordered={!isSelected}
               onPress={() => onChange(monthKey)}
             >

@@ -222,7 +222,7 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" themeInverse onPress={handleAddPress}>
+        <Button size="$control" theme="inverse" onPress={handleAddPress}>
           {t("common.add")}
         </Button>
       </XStack>
@@ -242,7 +242,7 @@ export default function DashboardScreen() {
               size="$chip"
               px="$control"
               onPress={() => setSelectedCurrency(c)}
-              themeInverse={effectiveCurrency === c}
+              theme={effectiveCurrency === c ? "inverse" : undefined}
               bordered={effectiveCurrency !== c}
               style={{
                 borderRadius: UI_RADIUS.round,

@@ -72,7 +72,7 @@ import {
   Calendar,
   Clock,
   MapPin,
-} from "@tamagui/lucide-icons"
+} from "@tamagui/lucide-icons-2"
 
 // Static map of icon name to component - uses typeof to get correct Tamagui icon type
 const ICON_MAP = {

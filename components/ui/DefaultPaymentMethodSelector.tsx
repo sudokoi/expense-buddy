@@ -1,6 +1,6 @@
 import { Text, Card, View, XStack, useTheme } from "tamagui"
 import { Pressable, ViewStyle } from "react-native"
-import { Ban } from "@tamagui/lucide-icons"
+import { Ban } from "@tamagui/lucide-icons-2"
 import { PaymentMethodType } from "../../types/expense"
 import {
   PAYMENT_METHODS,

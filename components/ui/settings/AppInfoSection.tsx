@@ -1,6 +1,6 @@
 import { YStack, XStack, Text, Button } from "tamagui"
 import { ViewStyle } from "react-native"
-import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons"
+import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons-2"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
@@ -107,7 +107,7 @@ export function AppInfoSection({
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
-        <Button size="$control" themeInverse onPress={onStartUpdate} icon={ExternalLink}>
+        <Button size="$control" theme="inverse" onPress={onStartUpdate} icon={ExternalLink}>
           {isUpdateReadyToInstall
             ? t("settings.about.installUpdate")
             : updateInfo.latestVersion

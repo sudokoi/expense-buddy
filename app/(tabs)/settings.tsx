@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
-import { ChevronRight } from "@tamagui/lucide-icons"
+import { ChevronRight } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
@@ -589,7 +589,7 @@ export default function SettingsScreen() {
                 size="$control"
                 onPress={handleSync}
                 disabled={isSyncing}
-                themeInverse
+                theme="inverse"
               >
                 {syncButtonText}
               </Button>

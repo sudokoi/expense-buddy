@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
-import * as LucideIcons from "@tamagui/lucide-icons"
+import * as LucideIcons from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
@@ -85,7 +85,7 @@ export const CategoryFilter = memo(function CategoryFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
+          theme={isAllSelected ? "inverse" : undefined}
           bordered={!isAllSelected}
           onPress={handleAllPress}
         >

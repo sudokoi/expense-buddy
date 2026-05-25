@@ -96,7 +96,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
+          theme={isAllSelected ? "inverse" : undefined}
           bordered={!isAllSelected}
           onPress={handleAllPress}
         >

@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
+import { X } from "@tamagui/lucide-icons-2"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 const layoutStyles = {

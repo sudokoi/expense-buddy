@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PaymentMethodCard } from "./PaymentMethodCard"
@@ -270,7 +270,7 @@ function PaymentInstrumentForm({
         </Button>
         <Button
           size="$control"
-          themeInverse
+          theme="inverse"
           onPress={handleSave}
           icon={<Check size="$icon" />}
           fontWeight="bold"

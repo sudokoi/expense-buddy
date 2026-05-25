@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback, useMemo } from "react"
 import { YStack, XStack, H4, Button, Text, Sheet, ScrollView } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
+import { X } from "@tamagui/lucide-icons-2"
 import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -350,7 +350,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               } as ViewStyle
             }
           >
-            <Button size="$control" themeInverse onPress={handleApply}>
+            <Button size="$control" theme="inverse" onPress={handleApply}>
               {t("common.apply")}
             </Button>
           </XStack>

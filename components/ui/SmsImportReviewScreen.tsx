@@ -490,7 +490,7 @@ export function SmsImportReviewScreen({
   const footer = editingItem ? (
     <XStack justify="flex-end" gap="$control">
       <Button onPress={closeEditor}>{t("common.cancel")}</Button>
-      <Button themeInverse onPress={handleAcceptEdited}>
+      <Button theme="inverse" onPress={handleAcceptEdited}>
         {t("smsImport.sheet.footer.saveAndImport")}
       </Button>
     </XStack>
@@ -504,7 +504,7 @@ export function SmsImportReviewScreen({
       <Button theme="red" onPress={handleRejectAllSuggested}>
         {t("smsImport.sheet.footer.rejectAllSuggested")}
       </Button>
-      <Button themeInverse onPress={handleAcceptAllSuggested}>
+      <Button theme="inverse" onPress={handleAcceptAllSuggested}>
         {t("smsImport.sheet.footer.acceptAllSuggested")}
       </Button>
     </XStack>
@@ -789,7 +789,7 @@ export function SmsImportReviewScreen({
 
                           <XStack style={layoutStyles.actionRow}>
                             <Button
-                              themeInverse
+                              theme="inverse"
                               onPress={() => handleAcceptSuggested(item)}
                             >
                               {t("smsImport.sheet.actions.accept")}

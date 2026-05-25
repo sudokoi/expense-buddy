@@ -1,7 +1,7 @@
 import { useCallback, memo } from "react"
 import { YStack, XStack, useTheme } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
 import { AppSheetScaffold } from "./AppSheetScaffold"

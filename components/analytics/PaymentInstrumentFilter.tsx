@@ -127,7 +127,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
+          theme={isAllSelected ? "inverse" : undefined}
           bordered={!isAllSelected}
           onPress={handleAllPress}
         >
@@ -141,7 +141,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
               key={item.key}
               size="$chip"
               px="$control"
-              themeInverse={isSelected}
+              theme={isSelected ? "inverse" : undefined}
               bordered={!isSelected}
               onPress={() => handleToggle(item.key)}
             >

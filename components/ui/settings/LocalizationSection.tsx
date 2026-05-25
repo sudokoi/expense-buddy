@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { YStack, XStack, Text, Label } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"

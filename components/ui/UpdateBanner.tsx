@@ -1,6 +1,6 @@
 import { View as RNView, ViewStyle, Pressable } from "react-native"
 import { Text, Button } from "tamagui"
-import { Download, X } from "@tamagui/lucide-icons"
+import { Download, X } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
 import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../../constants/ui-tokens"

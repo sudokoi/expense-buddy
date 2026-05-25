@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
 import { Keyboard, ViewStyle, Platform, TextStyle, Linking } from "react-native"
-import { Check, X, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Check, X, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
@@ -368,7 +368,7 @@ export function GitHubConfigSection({
                   size="$control"
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
                   disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
-                  themeInverse
+                  theme="inverse"
                   style={
                     isSignedIn
                       ? ({ backgroundColor: errorColor } as ViewStyle)
@@ -487,7 +487,7 @@ export function GitHubConfigSection({
 
             {/* Action Buttons */}
             <XStack gap="$section" style={layoutStyles.buttonRow}>
-              <Button flex={1} size="$control" onPress={handleSaveConfig} themeInverse>
+              <Button flex={1} size="$control" onPress={handleSaveConfig} theme="inverse">
                 {t("settings.github.saveConfig")}
               </Button>
               <Button

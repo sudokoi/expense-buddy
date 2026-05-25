@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { YStack, XStack, Text, Input, Button, TextArea, Label } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import {
   Expense,
   ExpenseCategory,
@@ -384,7 +384,7 @@ export function EditExpenseModal({
             </Button>
             <Button
               size="$control"
-              themeInverse
+              theme="inverse"
               onPress={handleSave}
               icon={<Check size="$icon" />}
               fontWeight="bold"

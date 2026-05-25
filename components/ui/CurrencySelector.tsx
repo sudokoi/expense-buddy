@@ -5,7 +5,7 @@ import {
   PoundSterling,
   Euro,
   JapaneseYen,
-} from "@tamagui/lucide-icons"
+} from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"

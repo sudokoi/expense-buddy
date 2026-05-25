@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button, Card, Input, Label, Text, View, XStack, YStack, useTheme } from "tamagui"
-import { ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
+import { ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
 import { Pressable, TextStyle, ViewStyle } from "react-native"
 import type {
   PaymentInstrument,
@@ -350,7 +350,7 @@ export function PaymentInstrumentInlineDropdown({
           {onCreateInstrument && (
             <Button
               size="$control"
-              themeInverse
+              theme="inverse"
               icon={Plus}
               onPress={handleStartAdd}
               borderWidth={1}
@@ -459,7 +459,7 @@ export function PaymentInstrumentInlineDropdown({
             <Button size="$control" chromeless onPress={handleStartAdd}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" themeInverse onPress={handleSaveNew}>
+            <Button size="$control" theme="inverse" onPress={handleSaveNew}>
               {t("common.save")}
             </Button>
           </XStack>

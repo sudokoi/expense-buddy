@@ -10,7 +10,7 @@ import {
   Label,
   ScrollView,
 } from "tamagui"
-import { Calendar, Filter, X } from "@tamagui/lucide-icons"
+import { Calendar, Filter, X } from "@tamagui/lucide-icons-2"
 import { Platform, ViewStyle, TextStyle, BackHandler, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -675,7 +675,7 @@ export default function HistoryScreen() {
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
             size="$control"
-            themeInverse
+            theme="inverse"
             onPress={handleLoadMore}
             disabled={isLoadingMore}
           >
@@ -836,7 +836,7 @@ export default function HistoryScreen() {
             px="$section"
             icon={Filter}
             onPress={handleOpenFilterSheet}
-            themeInverse={activeCount > 0}
+            theme={activeCount > 0 ? "inverse" : undefined}
           >
             {t("common.filters")}
             {activeCount > 0 && (
@@ -909,7 +909,7 @@ export default function HistoryScreen() {
           px="$section"
           icon={Filter}
           onPress={handleOpenFilterSheet}
-          themeInverse={activeCount > 0}
+          theme={activeCount > 0 ? "inverse" : undefined}
         >
           {t("common.filters")}
           {activeCount > 0 && (
@@ -1223,7 +1223,7 @@ export default function HistoryScreen() {
                 <Dialog.Close asChild>
                   <Button size="$control">{t("common.cancel")}</Button>
                 </Dialog.Close>
-                <Button size="$control" themeInverse onPress={handleSaveEdit}>
+                <Button size="$control" theme="inverse" onPress={handleSaveEdit}>
                   {t("common.save")}
                 </Button>
               </XStack>

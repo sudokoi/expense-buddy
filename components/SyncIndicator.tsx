@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckCircle, XCircle } from "@tamagui/lucide-icons"
+import { CheckCircle, XCircle } from "@tamagui/lucide-icons-2"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"

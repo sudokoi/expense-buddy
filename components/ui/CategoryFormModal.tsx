@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard, Pressable } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
@@ -314,7 +314,7 @@ export function CategoryFormModal({
             </Button>
             <Button
               size="$control"
-              themeInverse
+              theme="inverse"
               onPress={handleSave}
               icon={<Check size="$icon" />}
               fontWeight="bold"

@@ -23,7 +23,7 @@ import {
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
 import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFiltersSheet"
-import { SlidersHorizontal } from "@tamagui/lucide-icons"
+import { SlidersHorizontal } from "@tamagui/lucide-icons-2"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
@@ -604,7 +604,7 @@ export default function AnalyticsScreen() {
                       size="$chip"
                       px="$control"
                       onPress={() => setSelectedCurrency(c)}
-                      themeInverse={effectiveCurrency === c}
+                      theme={effectiveCurrency === c ? "inverse" : undefined}
                       bordered={effectiveCurrency !== c}
                       style={{ borderRadius: UI_RADIUS.round }}
                     >

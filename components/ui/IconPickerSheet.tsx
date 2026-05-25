@@ -1,7 +1,7 @@
 import { useCallback, memo } from "react"
 import { YStack, XStack, Text } from "tamagui"
 import { ViewStyle, Pressable } from "react-native"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
 import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"

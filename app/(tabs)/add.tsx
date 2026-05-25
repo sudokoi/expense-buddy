@@ -12,7 +12,7 @@ import {
 } from "../../stores/hooks"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons"
+import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
 import { ViewStyle, Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -530,7 +530,7 @@ export default function AddExpenseScreen() {
             <Button
               flex={1}
               size="$control"
-              themeInverse
+              theme="inverse"
               onPress={() => handleSave({ stayOnAdd: false })}
               icon={<Check size="$icon" />}
               fontWeight="bold"
