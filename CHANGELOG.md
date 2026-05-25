@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 3.3.1
+
+### Patch Changes
+
+- [`024af52`](https://github.com/sudokoi/expense-buddy/commit/024af52330d95dac6af2105006934925f9b4e241) Thanks [@sudokoi](https://github.com/sudokoi)! - Update the Android SMS import LiteRT runtime to a 16 KB page-size compatible release for TensorFlow Lite inference.
+
 ## 3.3.0
 
 ### Minor Changes
