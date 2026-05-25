@@ -21,7 +21,7 @@ export function SectionHeader({ children }: SectionHeaderProps) {
   return (
     <H4Component
       fontSize="$title"
-      marginBottom="$gutter"
+      mb="$gutter"
       numberOfLines={1}
       adjustsFontSizeToFit
       minimumFontScale={0.4}

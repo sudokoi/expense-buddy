@@ -652,7 +652,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) => {
                   void handleBackgroundSmsToggle(checked)
                 }}
-                backgroundColor={
+                bg={
                   settings.backgroundSmsImportEnabled
                     ? SEMANTIC_COLORS.success
                     : ("$gray8" as any)

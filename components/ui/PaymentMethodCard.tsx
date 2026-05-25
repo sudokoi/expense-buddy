@@ -25,9 +25,9 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   return (
     <Card
       bordered
-      padding="$control"
-      paddingHorizontal="$section"
-      backgroundColor={isSelected ? "$color5" : "$background"}
+      p="$control"
+      px="$section"
+      bg={isSelected ? "$color5" : "$background"}
       borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
       borderWidth={isSelected ? 2 : 1}
       onPress={onPress}

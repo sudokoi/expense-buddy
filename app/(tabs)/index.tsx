@@ -260,7 +260,7 @@ export default function DashboardScreen() {
           flex={1}
           bordered
           padding="$block"
-          backgroundColor={CARD_COLORS.blue.bg}
+          bg={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
         >
           <Text
@@ -288,7 +288,7 @@ export default function DashboardScreen() {
           flex={1}
           bordered
           padding="$block"
-          backgroundColor={CARD_COLORS.green.bg}
+          bg={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
         >
           <Text
@@ -352,8 +352,8 @@ export default function DashboardScreen() {
           <Card
             bordered
             padding="$gutter"
-            alignItems="center"
-            justifyContent="center"
+            items="center"
+            justify="center"
             height={150}
           >
             <Text color="$color" opacity={0.6}>

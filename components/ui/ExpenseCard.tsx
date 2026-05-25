@@ -14,11 +14,11 @@ export const ExpenseCard = memo(function ExpenseCard(props: ExpenseCardProps) {
   return (
     <Card
       bordered
-      padding="$section"
-      marginBottom="$control"
+      p="$section"
+      mb="$control"
       flexDirection="row"
-      alignItems="center"
-      justifyContent="space-between"
+      items="center"
+      justify="space-between"
       {...props}
     />
   )
