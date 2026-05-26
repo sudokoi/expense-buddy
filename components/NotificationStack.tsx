@@ -18,7 +18,11 @@ import {
   UI_ICON_SIZE,
 } from "../constants/ui-tokens"
 
-const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
+const NotificationIcon = React.memo(function NotificationIcon({
+  type,
+}: {
+  type: NotificationType
+}) {
   const styles = NOTIFICATION_STYLE_TOKENS[type]
   const iconColor = styles.textColor as `#${string}`
   const iconProps = { size: UI_ICON_SIZE.regular, color: iconColor }
@@ -44,7 +48,7 @@ const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
   })()
 
   return <RNView style={iconContainerStyle}>{icon}</RNView>
-}
+})
 
 const NotificationText = styled(Text, {
   name: "NotificationText",
@@ -95,8 +99,8 @@ export const NotificationStack: React.FC = () => {
 
         return (
           <RNView key={notification.id} style={notificationStyle}>
-            <NotificationIcon type={notification.type} />
-            <NotificationText color={styles.textColor}>
+            <NotificationIcon key={`icon-${notification.id}`} type={notification.type} />
+            <NotificationText key={`text-${notification.id}`} color={styles.textColor}>
               {notification.message}
             </NotificationText>
           </RNView>
