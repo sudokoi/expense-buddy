@@ -64,8 +64,8 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               px="$section"
               theme={isSelected ? "accent" : undefined}
               borderColor="$borderColor"
-borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
-               onPress={() => handlePress(window.value)}
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              onPress={() => handlePress(window.value)}
             >
               {t(`analytics.timeWindow.${window.value}`)}
             </Button>

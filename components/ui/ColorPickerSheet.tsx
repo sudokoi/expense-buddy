@@ -6,7 +6,12 @@ import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_ICON_SIZE,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -116,7 +121,11 @@ const ColorButton = memo(function ColorButton({
         ]}
       >
         {isSelected && (
-          <Check size={UI_ICON_SIZE.large} color={checkColor} style={layoutStyles.selectedIndicator} />
+          <Check
+            size={UI_ICON_SIZE.large}
+            color={checkColor}
+            style={layoutStyles.selectedIndicator}
+          />
         )}
       </YStack>
     </Pressable>

@@ -12,7 +12,13 @@ import {
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -47,7 +53,7 @@ export const LineChartSection = memo(function LineChartSection({
         backgroundColor: overlayColors.background,
         padding: UI_SPACE.control,
         borderRadius: UI_RADIUS.control,
-        borderWidth: 1,
+        borderWidth: UI_BORDER_WIDTH.thin,
         borderColor: overlayColors.border,
         shadowColor: overlayColors.shadow,
         shadowOffset: { width: 0, height: 2 },

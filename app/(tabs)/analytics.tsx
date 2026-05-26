@@ -29,7 +29,12 @@ import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const styles = {
   headerRow: {

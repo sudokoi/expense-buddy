@@ -3,7 +3,14 @@ import { Text, Button } from "tamagui"
 import { Download, X } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_Z_INDEX,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface UpdateBannerProps {
   /** The version number to display */
@@ -118,7 +125,11 @@ export function UpdateBanner({
             onPress={onUpdate}
             testID="update-banner-update-button"
           >
-            <Text fontSize="$micro" fontWeight={UI_FONT_WEIGHT.semiBold} color={textColor}>
+            <Text
+              fontSize="$micro"
+              fontWeight={UI_FONT_WEIGHT.semiBold}
+              color={textColor}
+            >
               {readyToInstall ? "Install" : "Update"}
             </Text>
           </Button>

@@ -2,7 +2,12 @@ import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
-import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface CollapsibleSectionProps {
   title: string
@@ -53,9 +58,9 @@ export const CollapsibleSection = memo(function CollapsibleSection({
             {title}
           </Text>
           {isExpanded ? (
-            <ChevronUp size={20} color="$color" />
+            <ChevronUp size={UI_ICON_SIZE.medium} color="$color" />
           ) : (
-            <ChevronDown size={20} color="$color" />
+            <ChevronDown size={UI_ICON_SIZE.medium} color="$color" />
           )}
         </XStack>
       </Pressable>

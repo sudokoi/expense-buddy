@@ -17,7 +17,13 @@ import {
 } from "../../services/payment-instruments"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Only use style prop for layout properties that Tamagui View doesn't support directly
@@ -297,7 +303,9 @@ export function PaymentInstrumentInlineDropdown({
               style={styles.menuRowInner}
             >
               <Text
-                fontWeight={kind === "manual" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
+                fontWeight={
+                  kind === "manual" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium
+                }
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
@@ -327,8 +335,8 @@ export function PaymentInstrumentInlineDropdown({
                 style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
               >
                 <View
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor={isSelected ? focusBorderColor : "$borderColor"}
+                  borderWidth={UI_BORDER_WIDTH.thin}
+                  borderColor={isSelected ? focusBorderColor : "$borderColor"}
                   bg={isSelected ? "$backgroundFocus" : "$backgroundHover"}
                   style={styles.menuRowInner}
                 >

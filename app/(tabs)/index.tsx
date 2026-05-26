@@ -22,7 +22,13 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
   string,

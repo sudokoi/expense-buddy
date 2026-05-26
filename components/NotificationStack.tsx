@@ -9,7 +9,14 @@ import {
   getNotificationColor,
   NOTIFICATION_STYLE_TOKENS,
 } from "../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_Z_INDEX,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../constants/ui-tokens"
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
   const styles = NOTIFICATION_STYLE_TOKENS[type]

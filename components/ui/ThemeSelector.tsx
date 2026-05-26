@@ -3,7 +3,14 @@ import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface ThemeSelectorProps {
   value: ThemePreference
@@ -28,7 +35,6 @@ const styles = {
     borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
-
 
 interface ThemeOption {
   key: ThemePreference

@@ -3,7 +3,13 @@ import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../../constants/ui-tokens"
 
 /**
  * Props for the AutoSyncSection component
@@ -71,11 +77,16 @@ export function AutoSyncSection({
   return (
     <YStack
       gap="$section"
-      borderTopWidth={1}
+      borderTopWidth={UI_BORDER_WIDTH.thin}
       borderTopColor="$borderColor"
       style={{ paddingTop: UI_SPACE.gutter }}
     >
-      <Text fontSize="$body" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
+      <Text
+        fontSize="$body"
+        fontWeight={UI_FONT_WEIGHT.bold}
+        color="$color"
+        opacity={UI_OPACITY.strong}
+      >
         {t("settings.autoSync.title")}
       </Text>
 

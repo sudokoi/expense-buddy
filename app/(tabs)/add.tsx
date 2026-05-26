@@ -36,7 +36,13 @@ import {
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -338,7 +344,12 @@ export default function AddExpenseScreen() {
               {t("add.amount")}
             </Label>
             <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
+              <Text
+                fontSize="$label"
+                fontWeight={UI_FONT_WEIGHT.bold}
+                color="$color"
+                opacity={UI_OPACITY.strong}
+              >
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
@@ -447,9 +458,17 @@ export default function AddExpenseScreen() {
                   {t("add.paymentMethod")}
                 </Label>
                 {paymentMethodSectionExpanded ? (
-                  <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                  <ChevronUp
+                    size={UI_ICON_SIZE.medium}
+                    color="$color"
+                    opacity={UI_OPACITY.subtle}
+                  />
                 ) : (
-                  <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                  <ChevronDown
+                    size={UI_ICON_SIZE.medium}
+                    color="$color"
+                    opacity={UI_OPACITY.subtle}
+                  />
                 )}
               </XStack>
             </Button>

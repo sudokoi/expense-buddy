@@ -57,7 +57,7 @@ export const MonthSelector = memo(function MonthSelector({
               theme={isSelected ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
-               onPress={() => onChange(monthKey)}
+              onPress={() => onChange(monthKey)}
             >
               {label}
             </Button>

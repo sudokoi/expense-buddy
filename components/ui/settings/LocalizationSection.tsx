@@ -5,7 +5,12 @@ import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY } from "../../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_ICON_SIZE,
+} from "../../../constants/ui-tokens"
 
 interface LocalizationSectionProps {
   languagePreference: string
@@ -78,9 +83,17 @@ export function LocalizationSection({
             </Text>
           </YStack>
           {expanded ? (
-            <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
+            <ChevronUp
+              size={UI_ICON_SIZE.medium}
+              color="$color"
+              opacity={UI_OPACITY.subtle}
+            />
           ) : (
-            <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
+            <ChevronDown
+              size={UI_ICON_SIZE.medium}
+              color="$color"
+              opacity={UI_OPACITY.subtle}
+            />
           )}
         </XStack>
       </Pressable>

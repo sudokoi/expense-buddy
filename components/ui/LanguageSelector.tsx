@@ -3,7 +3,14 @@ import { Globe, Languages } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface LanguageSelectorProps {
   value: string
@@ -30,7 +37,6 @@ const styles = {
     margin: UI_SPACE.micro / 2,
   } as ViewStyle,
 }
-
 
 interface LanguageOption {
   key: string

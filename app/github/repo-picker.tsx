@@ -6,7 +6,12 @@ import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type GitHubUser = { login: string }
@@ -265,7 +270,9 @@ export default function GitHubRepoPickerScreen() {
 
             <Text opacity={UI_OPACITY.medium}>{t("repoPicker.subtitle")}</Text>
 
-            {viewerLogin ? <Text opacity={UI_OPACITY.medium}>Signed in as {viewerLogin}</Text> : null}
+            {viewerLogin ? (
+              <Text opacity={UI_OPACITY.medium}>Signed in as {viewerLogin}</Text>
+            ) : null}
 
             {isLoading ? (
               <XStack gap="$section" style={layoutStyles.loadingRow}>
@@ -299,7 +306,9 @@ export default function GitHubRepoPickerScreen() {
           </YStack>
         }
         ListEmptyComponent={
-          !isLoading && !error ? <Text opacity={UI_OPACITY.medium}>{t("repoPicker.empty")}</Text> : null
+          !isLoading && !error ? (
+            <Text opacity={UI_OPACITY.medium}>{t("repoPicker.empty")}</Text>
+          ) : null
         }
       />
     </YStack>

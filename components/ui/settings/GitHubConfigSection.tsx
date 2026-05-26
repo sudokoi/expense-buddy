@@ -11,7 +11,14 @@ import { useRouter, usePathname } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../../constants/ui-tokens"
 
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
@@ -296,7 +303,9 @@ export function GitHubConfigSection({
           {({ open }: { open: boolean }) => (
             <>
               <XStack style={layoutStyles.accordionTriggerInner}>
-                <Text fontWeight={UI_FONT_WEIGHT.medium}>{t("settings.github.configTitle")}</Text>
+                <Text fontWeight={UI_FONT_WEIGHT.medium}>
+                  {t("settings.github.configTitle")}
+                </Text>
                 {isConfigured && (
                   <YStack style={layoutStyles.connectedBadge}>
                     <XStack
@@ -329,9 +338,17 @@ export function GitHubConfigSection({
                 )}
               </XStack>
               {open ? (
-                <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                <ChevronUp
+                  size={UI_ICON_SIZE.medium}
+                  color="$color"
+                  opacity={UI_OPACITY.subtle}
+                />
               ) : (
-                <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                <ChevronDown
+                  size={UI_ICON_SIZE.medium}
+                  color="$color"
+                  opacity={UI_OPACITY.subtle}
+                />
               )}
             </>
           )}

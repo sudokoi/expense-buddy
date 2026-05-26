@@ -6,7 +6,12 @@ import type { PieChartDataItem } from "../../utils/analytics/aggregations"
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+} from "../../constants/ui-tokens"
 
 interface PieChartSectionProps {
   data: PieChartDataItem[]
@@ -69,7 +74,9 @@ const LegendItem = memo(function LegendItem({
       >
         <XStack style={styles.legendLeft}>
           <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-          <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>{item.text}</Text>
+          <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>
+            {item.text}
+          </Text>
         </XStack>
         <XStack style={styles.legendRight}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>

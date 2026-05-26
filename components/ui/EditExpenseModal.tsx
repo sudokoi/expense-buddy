@@ -19,7 +19,12 @@ import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -240,7 +245,12 @@ export function EditExpenseModal({
               {t("history.editDialog.fields.amount")}
             </Label>
             <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
+              <Text
+                fontSize="$label"
+                fontWeight={UI_FONT_WEIGHT.bold}
+                color="$color"
+                opacity={UI_OPACITY.strong}
+              >
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input

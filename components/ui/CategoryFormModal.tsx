@@ -13,7 +13,14 @@ import { getColorValue } from "../../tamagui.config"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -272,7 +279,11 @@ export function CategoryFormModal({
                 <YStack
                   style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
                 >
-                  <DynamicCategoryIcon name={icon} size={UI_ICON_SIZE.large} color={iconColor} />
+                  <DynamicCategoryIcon
+                    name={icon}
+                    size={UI_ICON_SIZE.large}
+                    color={iconColor}
+                  />
                 </YStack>
                 <YStack flex={1}>
                   <Text fontWeight={UI_FONT_WEIGHT.medium}>{icon}</Text>

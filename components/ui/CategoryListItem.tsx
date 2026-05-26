@@ -7,7 +7,13 @@ import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { getReadableTextColor } from "../../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -124,7 +130,11 @@ export const CategoryListItem = memo(function CategoryListItem({
       <XStack style={layoutStyles.container} bg="$backgroundHover">
         {/* Icon with color background */}
         <YStack style={[layoutStyles.iconContainer, { backgroundColor: resolvedColor }]}>
-          <DynamicCategoryIcon name={category.icon} size={UI_ICON_SIZE.medium} color={iconColor} />
+          <DynamicCategoryIcon
+            name={category.icon}
+            size={UI_ICON_SIZE.medium}
+            color={iconColor}
+          />
         </YStack>
 
         {/* Label and color indicator */}
@@ -156,7 +166,12 @@ export const CategoryListItem = memo(function CategoryListItem({
             <YStack
               style={[layoutStyles.colorIndicator, { backgroundColor: resolvedColor }]}
             />
-            <Text fontSize="$micro" color="$color" opacity={UI_OPACITY.subtle} numberOfLines={1}>
+            <Text
+              fontSize="$micro"
+              color="$color"
+              opacity={UI_OPACITY.subtle}
+              numberOfLines={1}
+            >
               {category.color}
             </Text>
           </XStack>

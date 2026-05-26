@@ -17,7 +17,12 @@ import {
 } from "../../services/payment-instruments"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const layoutStyles = {
   methodRow: {

@@ -7,7 +7,14 @@ import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-color
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_ICON_SIZE,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {

@@ -72,7 +72,13 @@ import {
   getAvailableMonths,
   isTimeWindowCovered,
 } from "../../utils/analytics/time"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -830,7 +836,11 @@ export default function HistoryScreen() {
         <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
           {t("history.emptyTitle")}
         </Text>
-        <Text style={layoutStyles.emptySubtext} color="$color" opacity={UI_OPACITY.subtle}>
+        <Text
+          style={layoutStyles.emptySubtext}
+          color="$color"
+          opacity={UI_OPACITY.subtle}
+        >
           {t("history.emptySubtitle")}
         </Text>
       </YStack>
@@ -878,7 +888,11 @@ export default function HistoryScreen() {
           <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
             {t("history.noResultsTitle")}
           </Text>
-          <Text style={layoutStyles.emptySubtext} color="$color" opacity={UI_OPACITY.subtle}>
+          <Text
+            style={layoutStyles.emptySubtext}
+            color="$color"
+            opacity={UI_OPACITY.subtle}
+          >
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
@@ -1185,7 +1199,11 @@ export default function HistoryScreen() {
                   {/* Identifier input for cards/UPI/Other */}
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                      <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+                      <Label
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                        fontSize="$caption"
+                      >
                         {selectedPaymentConfig.identifierLabel ||
                           t("history.editDialog.fields.identifier")}
                       </Label>

@@ -10,7 +10,14 @@ import {
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -175,15 +182,29 @@ export function PaymentInstrumentsSection() {
                 {({ open }: { open: boolean }) => (
                   <>
                     <XStack style={layoutStyles.accordionTriggerInner}>
-                      <Text fontWeight={UI_FONT_WEIGHT.medium}>{t("instruments.manage")}</Text>
-                      <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+                      <Text fontWeight={UI_FONT_WEIGHT.medium}>
+                        {t("instruments.manage")}
+                      </Text>
+                      <Text
+                        fontSize="$caption"
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      >
                         ({active.length})
                       </Text>
                     </XStack>
                     {open ? (
-                      <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                      <ChevronUp
+                        size={UI_ICON_SIZE.medium}
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      />
                     ) : (
-                      <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
+                      <ChevronDown
+                        size={UI_ICON_SIZE.medium}
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      />
                     )}
                   </>
                 )}

@@ -37,7 +37,7 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
@@ -689,7 +689,11 @@ export default function SettingsScreen() {
                   {t("settings.payment.manageHelp")}
                 </Text>
               </YStack>
-              <ChevronRight size={20} color="$color" opacity={UI_OPACITY.subtle} />
+              <ChevronRight
+                size={UI_ICON_SIZE.medium}
+                color="$color"
+                opacity={UI_OPACITY.subtle}
+              />
             </XStack>
           </Pressable>
         </SettingsSection>

@@ -7,7 +7,12 @@ import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filter
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+} from "../../constants/ui-tokens"
 
 interface PaymentInstrumentPieChartProps {
   data: PaymentInstrumentChartDataItem[]

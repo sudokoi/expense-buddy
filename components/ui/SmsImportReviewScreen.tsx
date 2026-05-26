@@ -40,7 +40,12 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type EditableSmsImportDraft = {
@@ -58,7 +63,7 @@ const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 const layoutStyles = {
   container: {
     alignSelf: "center",
-    maxWidth: 720,
+    maxWidth: UI_SPACE.empty * 18,
     width: "100%",
   } as ViewStyle,
   categoryRow: {
@@ -569,7 +574,9 @@ export function SmsImportReviewScreen({
                 bg="$backgroundHover"
               >
                 <YStack gap="$control">
-                  <Text fontWeight={UI_FONT_WEIGHT.bold}>{t("smsImport.sheet.sourceSms")}</Text>
+                  <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                    {t("smsImport.sheet.sourceSms")}
+                  </Text>
                   <Text fontSize="$body" opacity={UI_OPACITY.medium}>
                     {editingItem.sourceMessage.sender ||
                       t("smsImport.sheet.unknownSender")}
@@ -741,7 +748,7 @@ export function SmsImportReviewScreen({
               </YStack>
 
               <YStack
-                borderTopWidth={1}
+                borderTopWidth={UI_BORDER_WIDTH.thin}
                 borderColor="$borderColor"
                 pt="$section"
                 style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
@@ -757,8 +764,12 @@ export function SmsImportReviewScreen({
               bg="$backgroundHover"
             >
               <YStack gap="$control">
-                <Text fontWeight={UI_FONT_WEIGHT.bold}>{t("smsImport.sheet.emptyTitle")}</Text>
-                <Text opacity={UI_OPACITY.medium}>{t("smsImport.sheet.emptyDescription")}</Text>
+                <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                  {t("smsImport.sheet.emptyTitle")}
+                </Text>
+                <Text opacity={UI_OPACITY.medium}>
+                  {t("smsImport.sheet.emptyDescription")}
+                </Text>
               </YStack>
             </Card>
           ) : (
@@ -776,7 +787,11 @@ export function SmsImportReviewScreen({
                       entering={FadeIn.duration(160)}
                       exiting={FadeOutUp.duration(180)}
                     >
-                      <Card borderWidth={UI_BORDER_WIDTH.thin} borderColor="$borderColor" p="$section">
+                      <Card
+                        borderWidth={UI_BORDER_WIDTH.thin}
+                        borderColor="$borderColor"
+                        p="$section"
+                      >
                         <YStack gap="$section">
                           <YStack gap="$micro">
                             <Text fontWeight={UI_FONT_WEIGHT.bold}>
@@ -899,7 +914,9 @@ export function SmsImportReviewScreen({
                   p="$section"
                   bg="$backgroundHover"
                 >
-                  <Text opacity={UI_OPACITY.medium}>{t("smsImport.sheet.emptyResolved")}</Text>
+                  <Text opacity={UI_OPACITY.medium}>
+                    {t("smsImport.sheet.emptyResolved")}
+                  </Text>
                 </Card>
               ) : null}
             </YStack>
@@ -910,7 +927,7 @@ export function SmsImportReviewScreen({
       {editingItem ? null : (
         <YStack
           bg="$background"
-          borderTopWidth={1}
+          borderTopWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
           px="$gutter"
           pt="$section"

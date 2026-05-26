@@ -34,7 +34,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("navigation.dashboard"),
-          tabBarIcon: ({ color }) => <Home color={getColorValue(color)} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color }) => (
+            <Home color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -50,21 +52,27 @@ export default function TabLayout() {
         name="analytics"
         options={{
           title: t("navigation.analytics"),
-          tabBarIcon: ({ color }) => <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color }) => (
+            <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: t("navigation.history"),
-          tabBarIcon: ({ color }) => <Clock color={getColorValue(color)} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color }) => (
+            <Clock color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t("navigation.settings"),
-          tabBarIcon: ({ color }) => <Settings color={getColorValue(color)} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color }) => (
+            <Settings color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
     </Tabs>

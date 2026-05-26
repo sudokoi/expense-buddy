@@ -8,7 +8,14 @@ import {
 } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface CurrencySelectorProps {
   value: string

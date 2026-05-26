@@ -1,6 +1,6 @@
 import { Card, YStack, Text } from "tamagui"
 import { ReactNode } from "react"
-import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import { UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
   | "$micro"
@@ -48,7 +48,7 @@ export function SettingsSection({
         <YStack
           gap="$micro"
           pb="$control"
-          borderBottomWidth={1}
+          borderBottomWidth={UI_BORDER_WIDTH.thin}
           borderBottomColor="$borderColor"
         >
           <Text
@@ -62,7 +62,7 @@ export function SettingsSection({
             {title}
           </Text>
           {description ? (
-            <Text fontSize="$body" color="$color" opacity={0.72} lineHeight={20}>
+            <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
               {description}
             </Text>
           ) : null}
