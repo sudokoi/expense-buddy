@@ -29,6 +29,23 @@ export const THEME_COLORS = {
   strongOrange: "#B87A4A",
   mutedPurple: "#9A7AB8",
   strongPurple: "#8A6AA8",
+  // Light theme specific
+  lightBackgroundPress: "#FFE8E0",
+  lightColorHover: "#3A3448",
+  lightColorPress: "#2A2438",
+  lightBorderHover: "#DDA0DD",
+  lightBorderPress: "#DDA0DD",
+  lightPlaceholder: "#7A6A86",
+  // Dark theme specific
+  darkBackgroundPress: "#302840",
+  darkColorPress: "#E0D6E6",
+  darkBorderColor: "#3A3050",
+  darkBorderHover: "#9370DB",
+  darkBorderFocus: "#FF69B4",
+  darkBorderPress: "#9370DB",
+  // Expense/income light variants
+  expenseRedLight: "#FFD4D4",
+  incomeGreenLight: "#C8F7DC",
 } as const
 
 // Status/notification colors (kawaii versions)
