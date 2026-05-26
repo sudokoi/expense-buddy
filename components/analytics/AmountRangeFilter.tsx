@@ -3,6 +3,8 @@ import { XStack, Input, Text, YStack } from "tamagui"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSettings } from "../../stores/hooks"
 import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface AmountRangeFilterProps {
   minAmount: number | null
@@ -47,6 +49,13 @@ export function AmountRangeFilter({
       <XStack gap="$control" style={{ alignItems: "center" }}>
         <Input
           flex={1}
+          bg="$background"
+          size="$control"
+          borderWidth={UI_BORDER_WIDTH.normal}
+          borderColor="$borderColor"
+          focusStyle={{
+            borderColor: ACCENT_COLORS.primary,
+          }}
           value={min}
           onChangeText={setMin}
           onBlur={handleBlur}
@@ -57,6 +66,13 @@ export function AmountRangeFilter({
         <Text>to</Text>
         <Input
           flex={1}
+          bg="$background"
+          size="$control"
+          borderWidth={UI_BORDER_WIDTH.normal}
+          borderColor="$borderColor"
+          focusStyle={{
+            borderColor: ACCENT_COLORS.primary,
+          }}
           value={max}
           onChangeText={setMax}
           onBlur={handleBlur}

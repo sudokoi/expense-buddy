@@ -1,8 +1,6 @@
 import { Expense } from "../../types/expense"
-import {
-  groupExpensesByCurrency,
-  filterExpensesByTimeWindow,
-} from "../analytics-calculations"
+import { groupExpensesByCurrency } from "../analytics/currency"
+import { filterExpensesByTimeWindow } from "../analytics/time"
 import { getFallbackCurrency } from "../currency"
 
 describe("Analytics Reproduction", () => {

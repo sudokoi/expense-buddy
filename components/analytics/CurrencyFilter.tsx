@@ -1,5 +1,6 @@
 import { XStack, Button } from "tamagui"
 import { getCurrencySymbol } from "../../utils/currency"
+import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 interface CurrencyFilterProps {
   availableCurrencies: string[]
   selectedCurrency: string | null
@@ -27,9 +28,10 @@ export function CurrencyFilter({
             key={currency}
             size="$compact"
             px="$section"
-            themeInverse={isSelected}
+            theme={isSelected ? "accent" : undefined}
             onPress={() => onChange(currency)}
-            bordered
+            borderWidth={UI_BORDER_WIDTH.thin}
+            borderColor="$borderColor"
           >
             {currency} ({getCurrencySymbol(currency)})
           </Button>

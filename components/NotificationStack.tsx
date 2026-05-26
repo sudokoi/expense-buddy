@@ -2,19 +2,30 @@ import React from "react"
 import { View as RNView, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Text, YStack, styled } from "tamagui"
-import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons"
+import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons-2"
 import { useNotifications } from "../stores/hooks"
 import { NotificationType } from "../stores/notification-store"
 import {
   getNotificationColor,
   NOTIFICATION_STYLE_TOKENS,
 } from "../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_Z_INDEX,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../constants/ui-tokens"
 
-const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
+const NotificationIcon = React.memo(function NotificationIcon({
+  type,
+}: {
+  type: NotificationType
+}) {
   const styles = NOTIFICATION_STYLE_TOKENS[type]
   const iconColor = styles.textColor as `#${string}`
-  const iconProps = { size: 18, color: iconColor }
+  const iconProps = { size: UI_ICON_SIZE.regular, color: iconColor }
 
   const iconContainerStyle: ViewStyle = {
     backgroundColor: styles.iconBg,
@@ -37,14 +48,13 @@ const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
   })()
 
   return <RNView style={iconContainerStyle}>{icon}</RNView>
-}
+})
 
 const NotificationText = styled(Text, {
   name: "NotificationText",
-  fontSize: 13,
-  fontWeight: "500",
+  fontSize: "$caption",
+  fontWeight: UI_FONT_WEIGHT.medium,
   flex: 1,
-  lineHeight: 18,
 })
 
 export const NotificationStack: React.FC = () => {
@@ -77,7 +87,7 @@ export const NotificationStack: React.FC = () => {
           paddingHorizontal: UI_SPACE.gutter,
           borderRadius: UI_RADIUS.surface,
           backgroundColor: bgColor,
-          borderWidth: 2,
+          borderWidth: UI_BORDER_WIDTH.normal,
           borderColor: styles.borderColor,
           // Soft shadow for kawaii feel
           shadowColor: bgColor,
@@ -89,8 +99,8 @@ export const NotificationStack: React.FC = () => {
 
         return (
           <RNView key={notification.id} style={notificationStyle}>
-            <NotificationIcon type={notification.type} />
-            <NotificationText style={{ color: styles.textColor }}>
+            <NotificationIcon key={`icon-${notification.id}`} type={notification.type} />
+            <NotificationText key={`text-${notification.id}`} color={styles.textColor}>
               {notification.message}
             </NotificationText>
           </RNView>

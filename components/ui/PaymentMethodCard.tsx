@@ -3,6 +3,7 @@ import { memo } from "react"
 import { PaymentMethodConfig } from "../../constants/payment-methods"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
+import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface PaymentMethodCardProps {
   config: PaymentMethodConfig
@@ -24,17 +25,22 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   const Icon = config.icon
   return (
     <Card
-      bordered
-      padding="$control"
-      paddingHorizontal="$section"
-      backgroundColor={isSelected ? "$color5" : "$background"}
+      p="$control"
+      px="$section"
+      bg={isSelected ? "$color5" : "$background"}
       borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
-      borderWidth={isSelected ? 2 : 1}
+      borderWidth={isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin}
       onPress={onPress}
     >
-      <XStack gap="$control" style={{ alignItems: "center" }}>
-        <Icon size={16} color={isSelected ? ACCENT_COLORS.primary : "$color"} />
-        <Text fontSize="$caption" fontWeight={isSelected ? "bold" : "normal"}>
+      <XStack gap="$control" items="center">
+        <Icon
+          size={UI_ICON_SIZE.small}
+          color={isSelected ? ACCENT_COLORS.primary : "$color"}
+        />
+        <Text
+          fontSize="$caption"
+          fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
+        >
           {t(`paymentMethods.${config.i18nKey}`)}
         </Text>
       </XStack>

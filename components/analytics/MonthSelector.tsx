@@ -4,7 +4,7 @@ import { ScrollView, ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface MonthSelectorProps {
   value: string | null
@@ -39,8 +39,9 @@ export const MonthSelector = memo(function MonthSelector({
         <Button
           size="$compact"
           px="$section"
-          themeInverse={value === null}
-          bordered={value !== null}
+          theme={value === null ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={value !== null ? UI_BORDER_WIDTH.thin : 0}
           onPress={() => onChange(null)}
         >
           {t("common.all")}
@@ -53,8 +54,9 @@ export const MonthSelector = memo(function MonthSelector({
               key={monthKey}
               size="$compact"
               px="$section"
-              themeInverse={isSelected}
-              bordered={!isSelected}
+              theme={isSelected ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
               onPress={() => onChange(monthKey)}
             >
               {label}

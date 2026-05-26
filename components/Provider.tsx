@@ -8,7 +8,10 @@ import { useThemeSettings } from "../stores/hooks"
  * Inner provider component that uses effectiveTheme from settings store
  * This must be inside StoreProvider to access the settings
  */
-function ThemedProvider({ children, ...rest }: Omit<TamaguiProviderProps, "config">) {
+function ThemedProvider({
+  children,
+  ...rest
+}: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
   const { effectiveTheme, isLoading } = useThemeSettings()
   const systemColorScheme = useColorScheme()
 
@@ -30,7 +33,10 @@ function ThemedProvider({ children, ...rest }: Omit<TamaguiProviderProps, "confi
  * Main Provider component that wraps the app with all necessary providers
  * StoreProvider is the outermost to allow ThemedProvider to access settings
  */
-export function Provider({ children, ...rest }: Omit<TamaguiProviderProps, "config">) {
+export function Provider({
+  children,
+  ...rest
+}: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
   return (
     <StoreProvider>
       <ThemedProvider {...rest}>{children}</ThemedProvider>

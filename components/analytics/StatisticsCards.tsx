@@ -5,10 +5,10 @@ import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
 import { getCurrencySymbol } from "../../utils/currency"
 import { ViewStyle, TextStyle } from "react-native"
-import { AnalyticsStatistics } from "../../utils/analytics-calculations"
+import type { AnalyticsStatistics } from "../../utils/analytics/statistics"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -53,9 +53,15 @@ export const StatisticsCards = memo(function StatisticsCards({
     <YStack style={styles.container}>
       {/* First row */}
       <XStack style={styles.row}>
-        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.blue.bg}>
+        <Card
+          flex={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$section"
+          bg={CARD_COLORS.blue.bg}
+        >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$caption"
             color={CARD_COLORS.blue.text}
@@ -77,9 +83,15 @@ export const StatisticsCards = memo(function StatisticsCards({
           </H4>
         </Card>
 
-        <Card flex={1} bordered padding="$section" backgroundColor={CARD_COLORS.green.bg}>
+        <Card
+          flex={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$section"
+          bg={CARD_COLORS.green.bg}
+        >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$caption"
             color={CARD_COLORS.green.text}
@@ -106,12 +118,13 @@ export const StatisticsCards = memo(function StatisticsCards({
       <XStack style={styles.row}>
         <Card
           flex={1}
-          bordered
-          padding="$section"
-          backgroundColor={CARD_COLORS.orange.bg}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$section"
+          bg={CARD_COLORS.orange.bg}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$caption"
             color={CARD_COLORS.orange.text}
@@ -142,12 +155,13 @@ export const StatisticsCards = memo(function StatisticsCards({
 
         <Card
           flex={1}
-          bordered
-          padding="$section"
-          backgroundColor={CARD_COLORS.purple.bg}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$section"
+          bg={CARD_COLORS.purple.bg}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$caption"
             color={CARD_COLORS.purple.text}

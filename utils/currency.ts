@@ -5,6 +5,32 @@ const DEFAULT_CURRENCY = "INR"
 
 const SUPPORTED_CURRENCIES = new Set(["INR", "USD", "GBP", "EUR", "JPY"])
 
+const CURRENCY_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>()
+
+function getCachedCurrencyFormatter(locale: string, currency: string): Intl.NumberFormat {
+  const key = `${locale}::${currency}`
+  let formatter = CURRENCY_FORMATTER_CACHE.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale, { style: "currency", currency })
+    CURRENCY_FORMATTER_CACHE.set(key, formatter)
+  }
+  return formatter
+}
+
+const SYMBOL_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>()
+
+function getCachedSymbolFormatter(currency: string): Intl.NumberFormat {
+  let formatter = SYMBOL_FORMATTER_CACHE.get(currency)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    })
+    SYMBOL_FORMATTER_CACHE.set(currency, formatter)
+  }
+  return formatter
+}
+
 const LANGUAGE_CURRENCY_MAP: Record<string, string> = {
   "en-US": "USD",
   "en-GB": "GBP",
@@ -70,10 +96,7 @@ export function formatCurrency(amount: number, currencyCode?: string): string {
   const language = i18next.language || "en-IN"
 
   try {
-    return new Intl.NumberFormat(language, {
-      style: "currency",
-      currency: effectiveCurrency,
-    }).format(amount)
+    return getCachedCurrencyFormatter(language, effectiveCurrency).format(amount)
   } catch (error) {
     // Fallback if Intl fails
     console.warn(`Failed to format currency ${effectiveCurrency}:`, error)
@@ -92,10 +115,7 @@ export function formatCurrency(amount: number, currencyCode?: string): string {
  */
 export function getCurrencySymbol(currencyCode: string): string {
   try {
-    const parts = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currencyCode,
-    }).formatToParts(0)
+    const parts = getCachedSymbolFormatter(currencyCode).formatToParts(0)
     const symbolPart = parts.find((part) => part.type === "currency")
     return symbolPart ? symbolPart.value : currencyCode
   } catch {

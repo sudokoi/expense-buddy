@@ -2,12 +2,18 @@ import { memo, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { YStack, XStack, Text, Button } from "tamagui"
 import { ViewStyle, Pressable, Alert } from "react-native"
-import { Pencil, Trash2 } from "@tamagui/lucide-icons"
+import { Pencil, Trash2 } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { getReadableTextColor } from "../../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -17,11 +23,11 @@ const layoutStyles = {
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
     gap: UI_SPACE.control,
-    minHeight: 56,
+    minHeight: UI_ICON_SIZE.huge,
   } as ViewStyle,
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: UI_ICON_SIZE.xxlarge,
+    height: UI_ICON_SIZE.xxlarge,
     borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
@@ -124,14 +130,18 @@ export const CategoryListItem = memo(function CategoryListItem({
       <XStack style={layoutStyles.container} bg="$backgroundHover">
         {/* Icon with color background */}
         <YStack style={[layoutStyles.iconContainer, { backgroundColor: resolvedColor }]}>
-          <DynamicCategoryIcon name={category.icon} size={20} color={iconColor} />
+          <DynamicCategoryIcon
+            name={category.icon}
+            size={UI_ICON_SIZE.medium}
+            color={iconColor}
+          />
         </YStack>
 
         {/* Label and color indicator */}
         <YStack style={layoutStyles.labelContainer}>
           <XStack style={layoutStyles.labelRow}>
             <Text
-              fontWeight="500"
+              fontWeight={UI_FONT_WEIGHT.medium}
               fontSize={labelFontSize}
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -145,7 +155,7 @@ export const CategoryListItem = memo(function CategoryListItem({
               <Text
                 fontSize="$micro"
                 color="$color"
-                opacity={0.5}
+                opacity={UI_OPACITY.faint}
                 style={{ flexShrink: 0 }}
               >
                 (default)
@@ -156,7 +166,12 @@ export const CategoryListItem = memo(function CategoryListItem({
             <YStack
               style={[layoutStyles.colorIndicator, { backgroundColor: resolvedColor }]}
             />
-            <Text fontSize="$micro" color="$color" opacity={0.6} numberOfLines={1}>
+            <Text
+              fontSize="$micro"
+              color="$color"
+              opacity={UI_OPACITY.subtle}
+              numberOfLines={1}
+            >
               {category.color}
             </Text>
           </XStack>
@@ -167,7 +182,7 @@ export const CategoryListItem = memo(function CategoryListItem({
           <Button
             size="$chip"
             chromeless
-            icon={<Pencil size={16} />}
+            icon={<Pencil size={UI_ICON_SIZE.small} />}
             onPress={handleEdit}
             aria-label={t("common.editLabel", { label: category.label })}
           />
@@ -175,7 +190,7 @@ export const CategoryListItem = memo(function CategoryListItem({
             <Button
               size="$chip"
               chromeless
-              icon={<Trash2 size={16} />}
+              icon={<Trash2 size={UI_ICON_SIZE.small} />}
               onPress={handleDelete}
               aria-label={t("common.deleteLabel", { label: category.label })}
             />

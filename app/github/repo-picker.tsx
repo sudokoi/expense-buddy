@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { FlatList, Platform, ViewStyle } from "react-native"
+import { Platform, ViewStyle } from "react-native"
+import { FlashList } from "@shopify/flash-list"
 import { useRouter } from "expo-router"
 import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type GitHubUser = { login: string }
 
@@ -27,26 +34,11 @@ const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
 
 const layoutStyles = {
-  container: {
-    padding: UI_SPACE.gutter,
-    maxWidth: 700,
-    alignSelf: "center",
-    width: "100%",
-  } as ViewStyle,
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
   loadingRow: {
-    alignItems: "center",
-  } as ViewStyle,
-  repoButton: {
-    justifyContent: "space-between",
-    marginBottom: UI_SPACE.control,
-  } as ViewStyle,
-  repoButtonInner: {
-    flex: 1,
-    justifyContent: "space-between",
     alignItems: "center",
   } as ViewStyle,
 }
@@ -224,13 +216,17 @@ export default function GitHubRepoPickerScreen() {
     ({ item }: { item: GitHubRepo }) => (
       <Button
         size="$control"
+        mb="$control"
+        bg="$background"
+        borderWidth={UI_BORDER_WIDTH.thin}
+        borderColor="$borderColor"
         onPress={() => void handleSelect(item)}
-        style={layoutStyles.repoButton}
+        style={{ justifyContent: "space-between" } as ViewStyle}
       >
-        <XStack style={layoutStyles.repoButtonInner}>
-          <Text>{item.full_name}</Text>
-          <Text opacity={0.6}>{item.private ? "Private" : "Public"}</Text>
-        </XStack>
+        <Button.Text numberOfLines={1}>{item.full_name}</Button.Text>
+        <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+          {item.private ? "Private" : "Public"}
+        </Text>
       </Button>
     ),
     [handleSelect]
@@ -238,7 +234,7 @@ export default function GitHubRepoPickerScreen() {
 
   return (
     <YStack flex={1} bg="$background">
-      <FlatList
+      <FlashList
         data={!isLoading && !error ? filtered : []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -246,42 +242,59 @@ export default function GitHubRepoPickerScreen() {
         contentContainerStyle={{
           padding: UI_SPACE.gutter,
           paddingBottom: insets.bottom,
-          maxWidth: 700,
+          maxWidth: 17.5 * UI_SPACE.empty,
           alignSelf: "center",
           width: "100%",
         }}
         ListHeaderComponent={
           <YStack gap="$gutter">
             <XStack style={layoutStyles.headerRow}>
-              <Text fontSize="$screenTitle" fontWeight="700">
+              <Text
+                fontSize="$screenTitle"
+                fontWeight={UI_FONT_WEIGHT.bold}
+                color="$color"
+              >
                 {t("repoPicker.title")}
               </Text>
-              <Button size="$compact" onPress={() => router.back()}>
+              <Button size="$chip" px="$control" chromeless onPress={() => router.back()}>
                 {t("common.cancel")}
               </Button>
             </XStack>
 
-            <Text opacity={0.7}>{t("repoPicker.subtitle")}</Text>
+            <Text color="$color" opacity={UI_OPACITY.medium}>
+              {t("repoPicker.subtitle")}
+            </Text>
 
-            {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
+            {viewerLogin ? (
+              <Text color="$color" opacity={UI_OPACITY.medium}>
+                Signed in as {viewerLogin}
+              </Text>
+            ) : null}
 
             {isLoading ? (
               <XStack gap="$section" style={layoutStyles.loadingRow}>
                 <Spinner />
-                <Text>{t("repoPicker.loading")}</Text>
+                <Text color="$color">{t("repoPicker.loading")}</Text>
               </XStack>
             ) : null}
 
             {error ? (
               <YStack gap="$control">
                 <Text color="$red10">{error}</Text>
-                <Button size="$compact" onPress={load}>
+                <Button size="$chip" px="$control" onPress={load}>
                   {t("common.save")}
                 </Button>
               </YStack>
             ) : null}
 
             <Input
+              bg="$background"
+              size="$control"
+              borderWidth={UI_BORDER_WIDTH.normal}
+              borderColor="$borderColor"
+              focusStyle={{
+                borderColor: ACCENT_COLORS.primary,
+              }}
               placeholder={t("repoPicker.searchPlaceholder")}
               value={query}
               onChangeText={setQuery}
@@ -290,12 +303,12 @@ export default function GitHubRepoPickerScreen() {
           </YStack>
         }
         ListEmptyComponent={
-          !isLoading && !error ? <Text opacity={0.7}>{t("repoPicker.empty")}</Text> : null
+          !isLoading && !error ? (
+            <Text color="$color" opacity={UI_OPACITY.medium}>
+              {t("repoPicker.empty")}
+            </Text>
+          ) : null
         }
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={12}
-        windowSize={10}
-        removeClippedSubviews
       />
     </YStack>
   )

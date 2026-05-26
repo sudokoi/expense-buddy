@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
 import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
-import * as LucideIcons from "@tamagui/lucide-icons"
+import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -35,21 +35,15 @@ export const CategoryFilter = memo(function CategoryFilter({
   const { t } = useTranslation()
   const isAllSelected = selectedCategories.length === 0
 
-  // Memoize category items with icons
+  // Memoize category items with icons and pre-built selected style
   const categoryItems = useMemo(() => {
     return categories.map((cat) => {
-      // Get icon component from Lucide icons
-      const IconComponent =
-        (
-          LucideIcons as Record<
-            string,
-            React.ComponentType<{ size?: number; color?: string }>
-          >
-        )[cat.icon] ?? LucideIcons.Circle
+      const IconComponent = CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle
       return {
         label: cat.label,
         color: cat.color,
         Icon: IconComponent,
+        selectedStyle: { backgroundColor: cat.color } as ViewStyle,
       }
     })
   }, [categories])
@@ -85,8 +79,9 @@ export const CategoryFilter = memo(function CategoryFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
-          bordered={!isAllSelected}
+          theme={isAllSelected ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -101,8 +96,9 @@ export const CategoryFilter = memo(function CategoryFilter({
               key={cat.label}
               size="$chip"
               px="$control"
-              bordered={!isSelected}
-              style={isSelected ? { backgroundColor: cat.color } : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >

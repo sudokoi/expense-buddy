@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router"
 import { useTheme } from "tamagui"
-import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons"
+import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 export default function TabLayout() {
   const theme = useTheme()
@@ -33,7 +34,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("navigation.dashboard"),
-          tabBarIcon: ({ color }) => <Home color={getColorValue(color)} size={24} />,
+          tabBarIcon: ({ color }) => (
+            <Home color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -41,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.add"),
           tabBarIcon: ({ color }) => (
-            <PlusCircle color={getColorValue(color)} size={24} />
+            <PlusCircle color={getColorValue(color)} size={UI_ICON_SIZE.large} />
           ),
         }}
       />
@@ -49,21 +52,27 @@ export default function TabLayout() {
         name="analytics"
         options={{
           title: t("navigation.analytics"),
-          tabBarIcon: ({ color }) => <PieChart color={getColorValue(color)} size={24} />,
+          tabBarIcon: ({ color }) => (
+            <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: t("navigation.history"),
-          tabBarIcon: ({ color }) => <Clock color={getColorValue(color)} size={24} />,
+          tabBarIcon: ({ color }) => (
+            <Clock color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t("navigation.settings"),
-          tabBarIcon: ({ color }) => <Settings color={getColorValue(color)} size={24} />,
+          tabBarIcon: ({ color }) => (
+            <Settings color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+          ),
         }}
       />
     </Tabs>

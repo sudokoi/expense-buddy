@@ -5,7 +5,7 @@ import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions, ViewStyle, TextStyle } from "react-native"
-import React from "react"
+import React, { startTransition } from "react"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
@@ -20,9 +20,29 @@ import {
   getFallbackCurrency,
   computeEffectiveCurrency,
 } from "../../utils/currency"
-import { groupExpensesByCurrency } from "../../utils/analytics-calculations"
+import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
+
+const FALLBACK_CATEGORY_CACHE = new Map<
+  string,
+  Pick<Category, "label" | "icon" | "color">
+>()
+
+function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
+  let info = FALLBACK_CATEGORY_CACHE.get(label)
+  if (!info) {
+    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
+    FALLBACK_CATEGORY_CACHE.set(label, info)
+  }
+  return info
+}
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -54,8 +74,11 @@ const layoutStyles = {
   cardValue: {
     marginTop: UI_SPACE.control,
     height: UI_SPACE.empty,
-    justifyContent: "center", // Center content vertically within the fixed height
+    justifyContent: "center",
   } as TextStyle,
+  roundButton: {
+    borderRadius: UI_RADIUS.round,
+  } as ViewStyle,
 }
 
 // Memoized recent expense item component
@@ -218,11 +241,11 @@ export default function DashboardScreen() {
       {/* Header */}
       <XStack style={layoutStyles.headerRow}>
         <YStack>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" themeInverse onPress={handleAddPress}>
+        <Button size="$control" theme="accent" onPress={handleAddPress}>
           {t("common.add")}
         </Button>
       </XStack>
@@ -241,12 +264,11 @@ export default function DashboardScreen() {
               key={c}
               size="$chip"
               px="$control"
-              onPress={() => setSelectedCurrency(c)}
-              themeInverse={effectiveCurrency === c}
-              bordered={effectiveCurrency !== c}
-              style={{
-                borderRadius: UI_RADIUS.round,
-              }}
+              onPress={() => startTransition(() => setSelectedCurrency(c))}
+              theme={effectiveCurrency === c ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}
+              style={layoutStyles.roundButton}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>
@@ -258,13 +280,14 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.summaryCardsRow}>
         <Card
           flex={1}
-          bordered
-          padding="$block"
-          backgroundColor={CARD_COLORS.blue.bg}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$block"
+          bg={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$body"
             color={CARD_COLORS.blue.text}
@@ -286,13 +309,14 @@ export default function DashboardScreen() {
         </Card>
         <Card
           flex={1}
-          bordered
-          padding="$block"
-          backgroundColor={CARD_COLORS.green.bg}
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
+          p="$block"
+          bg={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$body"
             color={CARD_COLORS.green.text}
@@ -350,13 +374,14 @@ export default function DashboardScreen() {
           </YStack>
         ) : (
           <Card
-            bordered
-            padding="$gutter"
-            alignItems="center"
-            justifyContent="center"
+            borderWidth={UI_BORDER_WIDTH.thin}
+            borderColor="$borderColor"
+            p="$gutter"
+            items="center"
+            justify="center"
             height={150}
           >
-            <Text color="$color" opacity={0.6}>
+            <Text color="$color" opacity={UI_OPACITY.subtle}>
               {t("dashboard.noData")}
             </Text>
           </Card>
@@ -375,7 +400,7 @@ export default function DashboardScreen() {
         </XStack>
 
         {recentExpenses.length === 0 && (
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.noRecent")}
           </Text>
         )}
@@ -386,11 +411,7 @@ export default function DashboardScreen() {
             expense={expense}
             categoryInfo={
               categoryByLabel.get(expense.category) ??
-              ({
-                label: expense.category,
-                icon: "Circle",
-                color: CATEGORY_COLORS.Other,
-              } satisfies Pick<Category, "label" | "icon" | "color">)
+              getFallbackCategory(expense.category)
             }
           />
         ))}

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { ViewStyle, Keyboard } from "react-native"
-import { Check } from "@tamagui/lucide-icons"
+import { Check } from "@tamagui/lucide-icons-2"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PaymentMethodCard } from "./PaymentMethodCard"
@@ -17,7 +17,12 @@ import {
 } from "../../services/payment-instruments"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const layoutStyles = {
   methodRow: {
@@ -193,7 +198,7 @@ function PaymentInstrumentForm({
   return (
     <YStack gap="$gutter">
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {t("instruments.form.paymentMethod")}
         </Label>
         <XStack style={layoutStyles.methodRow}>
@@ -216,16 +221,17 @@ function PaymentInstrumentForm({
       </YStack>
 
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {t("instruments.form.nickname")}
         </Label>
         <Input
           size="$control"
+          bg="$background"
           placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
           maxLength={30}
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor={errors.nickname ? "$red10" : "$borderColor"}
           focusStyle={{
             borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
@@ -239,11 +245,12 @@ function PaymentInstrumentForm({
       </YStack>
 
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
         </Label>
         <Input
           size="$control"
+          bg="$background"
           placeholder={t("instruments.form.identifierPlaceholder", {
             count: getLastDigitsLength(method),
           })}
@@ -251,7 +258,7 @@ function PaymentInstrumentForm({
           value={lastDigits}
           onChangeText={handleLastDigitsChange}
           maxLength={getLastDigitsLength(method)}
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor={errors.lastDigits ? "$red10" : "$borderColor"}
           focusStyle={{
             borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
@@ -270,10 +277,10 @@ function PaymentInstrumentForm({
         </Button>
         <Button
           size="$control"
-          themeInverse
+          theme="accent"
           onPress={handleSave}
           icon={<Check size="$icon" />}
-          fontWeight="bold"
+          fontWeight={UI_FONT_WEIGHT.bold}
         >
           {isEditMode ? t("common.save") : t("common.add")}
         </Button>

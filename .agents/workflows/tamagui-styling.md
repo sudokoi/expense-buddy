@@ -122,7 +122,7 @@ const bgColor = getColorValue(theme.backgroundFocus)
 ### Cards with Sections
 
 ```tsx
-<Card bordered padding="$4" borderRadius="$4">
+<Card borderWidth={1} borderColor="$borderColor" padding="$4" borderRadius="$4">
   <SectionHeader>Title</SectionHeader>
   <YStack gap="$3">{/* content */}</YStack>
 </Card>
@@ -146,7 +146,7 @@ When combining React Native's `Pressable` with Tamagui components:
 ### Icons from @tamagui/lucide-icons
 
 ```tsx
-import { Sun, Moon, Check } from "@tamagui/lucide-icons"
+import { Sun, Moon, Check } from "@tamagui/lucide-icons-2"
 
 // Use with theme colors
 const theme = useTheme()

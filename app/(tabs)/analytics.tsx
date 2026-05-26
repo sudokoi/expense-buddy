@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useMemo, useEffect } from "react"
+import { useState, startTransition, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 import { ViewStyle, TextStyle } from "react-native"
 import {
@@ -8,12 +8,12 @@ import {
 } from "../../hooks/use-analytics-data"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
-import type { PaymentMethodSelectionKey } from "../../utils/analytics-calculations"
+import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
 import { PieChartSection } from "../../components/analytics/PieChartSection"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
-import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentMethodType } from "../../types/expense"
 import { formatMonthLabel } from "../../utils/analytics/time"
 import {
@@ -23,13 +23,18 @@ import {
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
 import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFiltersSheet"
-import { SlidersHorizontal } from "@tamagui/lucide-icons"
+import { SlidersHorizontal } from "@tamagui/lucide-icons-2"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const styles = {
   headerRow: {
@@ -49,6 +54,9 @@ const styles = {
     textAlign: "center",
     marginTop: UI_SPACE.control,
   } as TextStyle,
+  chipRadius: {
+    borderRadius: UI_RADIUS.round,
+  } as ViewStyle,
 }
 
 const INSTRUMENT_OTHERS_ID = "__others__"
@@ -80,10 +88,10 @@ const EmptyState = memo(function EmptyState({
 }) {
   return (
     <YStack style={styles.emptyContainer}>
-      <Text color="$color" opacity={0.6} style={styles.emptyText}>
+      <Text color="$color" opacity={UI_OPACITY.subtle} style={styles.emptyText}>
         {title}
       </Text>
-      <Text color="$color" opacity={0.4} style={styles.emptySubtext}>
+      <Text color="$color" opacity={UI_OPACITY.ghost} style={styles.emptySubtext}>
         {subtitle}
       </Text>
     </YStack>
@@ -96,7 +104,7 @@ const Header = memo(function Header() {
   return (
     <XStack style={styles.headerRow}>
       <YStack>
-        <Text color="$color" opacity={0.6}>
+        <Text color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.subtitle")}
         </Text>
       </YStack>
@@ -178,7 +186,7 @@ export default function AnalyticsScreen() {
         const newCategories = selectedCategories.includes(category)
           ? selectedCategories.filter((c) => c !== category)
           : [...selectedCategories, category]
-        setSelectedCategories(newCategories)
+        startTransition(() => setSelectedCategories(newCategories))
       }
     },
     [selectedCategories, setSelectedCategories]
@@ -187,7 +195,7 @@ export default function AnalyticsScreen() {
   const handlePaymentInstrumentSelect = useCallback(
     (key: PaymentInstrumentSelectionKey | null) => {
       if (!key) {
-        setSelectedPaymentInstruments([])
+        startTransition(() => setSelectedPaymentInstruments([]))
         return
       }
 
@@ -195,10 +203,18 @@ export default function AnalyticsScreen() {
         selectedPaymentInstruments.length === 1 && selectedPaymentInstruments[0] === key
           ? []
           : [key]
-      setSelectedPaymentInstruments(newInstruments)
+      startTransition(() => setSelectedPaymentInstruments(newInstruments))
     },
     [selectedPaymentInstruments, setSelectedPaymentInstruments]
   )
+
+  const currencyButtons = useMemo(() => {
+    return availableCurrencies.map((c) => ({
+      code: c,
+      isSelected: effectiveCurrency === c,
+      onPress: () => startTransition(() => setSelectedCurrency(c)),
+    }))
+  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency])
 
   const selectedPaymentMethodForChart: PaymentMethodType | null =
     selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
@@ -239,17 +255,19 @@ export default function AnalyticsScreen() {
 
   const handlePaymentMethodsChange = useCallback(
     (next: PaymentMethodSelectionKey[]) => {
-      setSelectedPaymentMethods(next)
-      // When payment methods are reset to "All", reset instruments to "All" too.
-      if (next.length === 0) {
-        setSelectedPaymentInstruments([])
-      } else {
-        const newInstruments = prunePaymentInstrumentSelection(
-          next,
-          selectedPaymentInstruments
-        )
-        setSelectedPaymentInstruments(newInstruments)
-      }
+      startTransition(() => {
+        setSelectedPaymentMethods(next)
+        // When payment methods are reset to "All", reset instruments to "All" too.
+        if (next.length === 0) {
+          setSelectedPaymentInstruments([])
+        } else {
+          const newInstruments = prunePaymentInstrumentSelection(
+            next,
+            selectedPaymentInstruments
+          )
+          setSelectedPaymentInstruments(newInstruments)
+        }
+      })
     },
     [
       prunePaymentInstrumentSelection,
@@ -504,16 +522,18 @@ export default function AnalyticsScreen() {
         next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
 
       // Apply all filters at once to the store
-      applyFilters({
-        timeWindow: next.timeWindow,
-        selectedMonth: next.selectedMonth,
-        selectedCategories: next.selectedCategories,
-        selectedPaymentMethods: next.selectedPaymentMethods,
-        selectedPaymentInstruments: normalizedPaymentInstruments,
-        selectedCurrency: next.selectedCurrency,
-        searchQuery: filters.searchQuery,
-        minAmount: filters.minAmount,
-        maxAmount: filters.maxAmount,
+      startTransition(() => {
+        applyFilters({
+          timeWindow: next.timeWindow,
+          selectedMonth: next.selectedMonth,
+          selectedCategories: next.selectedCategories,
+          selectedPaymentMethods: next.selectedPaymentMethods,
+          selectedPaymentInstruments: normalizedPaymentInstruments,
+          selectedCurrency: next.selectedCurrency,
+          searchQuery: filters.searchQuery,
+          minAmount: filters.minAmount,
+          maxAmount: filters.maxAmount,
+        })
       })
 
       // Persist to storage
@@ -546,10 +566,11 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="$chip"
               px="$control"
-              bordered
+              borderWidth={UI_BORDER_WIDTH.thin}
+              borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
-              style={{ borderRadius: UI_RADIUS.round }}
+              style={styles.chipRadius}
             >
               <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
             </Button>
@@ -557,11 +578,13 @@ export default function AnalyticsScreen() {
         </ScrollView>
 
         <Button
-          size="$compact"
+          size="$chip"
+          px="$control"
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
-          bordered
+          borderWidth={UI_BORDER_WIDTH.thin}
+          borderColor="$borderColor"
         >
           {!filtersHydrated
             ? t("analytics.filters.button")
@@ -598,17 +621,18 @@ export default function AnalyticsScreen() {
                   }
                   style={{ marginBottom: UI_SPACE.micro }}
                 >
-                  {availableCurrencies.map((c) => (
+                  {currencyButtons.map(({ code, isSelected, onPress }) => (
                     <Button
-                      key={c}
+                      key={code}
                       size="$chip"
                       px="$control"
-                      onPress={() => setSelectedCurrency(c)}
-                      themeInverse={effectiveCurrency === c}
-                      bordered={effectiveCurrency !== c}
-                      style={{ borderRadius: UI_RADIUS.round }}
+                      onPress={onPress}
+                      theme={isSelected ? "accent" : undefined}
+                      borderColor="$borderColor"
+                      borderWidth={isSelected ? UI_BORDER_WIDTH.thin : 0}
+                      style={styles.chipRadius}
                     >
-                      {c} ({getCurrencySymbol(c)})
+                      {code} ({getCurrencySymbol(code)})
                     </Button>
                   ))}
                 </ScrollView>

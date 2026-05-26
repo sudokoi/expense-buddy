@@ -1,9 +1,16 @@
 import { View as RNView, ViewStyle, Pressable } from "react-native"
 import { Text, Button } from "tamagui"
-import { Download, X } from "@tamagui/lucide-icons"
+import { Download, X } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_Z_INDEX,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface UpdateBannerProps {
   /** The version number to display */
@@ -44,7 +51,7 @@ export function UpdateBanner({
     zIndex: UI_Z_INDEX.banner,
     backgroundColor: SEMANTIC_COLORS.info,
     borderRadius: UI_RADIUS.surface,
-    borderWidth: 2,
+    borderWidth: UI_BORDER_WIDTH.normal,
     borderColor: infoStyles.borderColor,
     paddingVertical: UI_SPACE.section,
     paddingHorizontal: UI_SPACE.gutter,
@@ -88,11 +95,11 @@ export function UpdateBanner({
       <RNView style={contentStyle}>
         <RNView style={leftContentStyle}>
           <RNView style={iconContainerStyle}>
-            <Download size={18} color={textColor as `#${string}`} />
+            <Download size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
           </RNView>
           <Text
-            fontSize={13}
-            fontWeight="500"
+            fontSize="$caption"
+            fontWeight={UI_FONT_WEIGHT.medium}
             color={textColor}
             flex={1}
             numberOfLines={2}
@@ -111,14 +118,18 @@ export function UpdateBanner({
             size="$chip"
             px="$control"
             bg={infoStyles.actionBg}
-            borderWidth={1}
+            borderWidth={UI_BORDER_WIDTH.thin}
             borderColor={infoStyles.actionBorderColor}
             style={{ borderRadius: UI_RADIUS.round }}
             pressStyle={{ opacity: 0.8 }}
             onPress={onUpdate}
             testID="update-banner-update-button"
           >
-            <Text fontSize={12} fontWeight="600" color={textColor}>
+            <Text
+              fontSize="$micro"
+              fontWeight={UI_FONT_WEIGHT.semiBold}
+              color={textColor}
+            >
               {readyToInstall ? "Install" : "Update"}
             </Text>
           </Button>
@@ -132,7 +143,7 @@ export function UpdateBanner({
               padding: UI_SPACE.micro,
             })}
           >
-            <X size={18} color={textColor as `#${string}`} />
+            <X size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
           </Pressable>
         </RNView>
       </RNView>

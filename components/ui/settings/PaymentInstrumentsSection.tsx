@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { Alert, ViewStyle } from "react-native"
-import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
@@ -10,7 +10,14 @@ import {
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -36,6 +43,14 @@ const layoutStyles = {
   accordionContent: {
     padding: UI_SPACE.control,
     paddingTop: UI_SPACE.section,
+  } as ViewStyle,
+  yStackRadius: {
+    borderRadius: UI_RADIUS.surface,
+  } as ViewStyle,
+  rowWithRadius: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: UI_RADIUS.surface,
   } as ViewStyle,
 }
 
@@ -130,10 +145,10 @@ export function PaymentInstrumentsSection() {
       <YStack gap="$section">
         <XStack style={layoutStyles.row}>
           <YStack flex={1} gap="$micro">
-            <Text fontSize="$label" fontWeight="600">
+            <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold}>
               {t("instruments.title")}
             </Text>
-            <Text color="$color" opacity={0.64} fontSize="$body">
+            <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
               {active.length > 0
                 ? t("instruments.manage") + ` (${active.length})`
                 : t("instruments.description")}
@@ -145,7 +160,7 @@ export function PaymentInstrumentsSection() {
         </XStack>
 
         {active.length === 0 ? (
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("instruments.empty")}
           </Text>
         ) : (
@@ -160,22 +175,36 @@ export function PaymentInstrumentsSection() {
             <Accordion.Item value="payment-instruments">
               <Accordion.Trigger
                 bg="$backgroundHover"
-                borderWidth={1}
+                borderWidth={UI_BORDER_WIDTH.thin}
                 borderColor="$borderColor"
                 style={layoutStyles.accordionTrigger}
               >
                 {({ open }: { open: boolean }) => (
                   <>
                     <XStack style={layoutStyles.accordionTriggerInner}>
-                      <Text fontWeight="500">{t("instruments.manage")}</Text>
-                      <Text fontSize="$caption" color="$color" opacity={0.6}>
+                      <Text fontWeight={UI_FONT_WEIGHT.medium}>
+                        {t("instruments.manage")}
+                      </Text>
+                      <Text
+                        fontSize="$caption"
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      >
                         ({active.length})
                       </Text>
                     </XStack>
                     {open ? (
-                      <ChevronUp size={20} color="$color" opacity={0.6} />
+                      <ChevronUp
+                        size={UI_ICON_SIZE.medium}
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      />
                     ) : (
-                      <ChevronDown size={20} color="$color" opacity={0.6} />
+                      <ChevronDown
+                        size={UI_ICON_SIZE.medium}
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                      />
                     )}
                   </>
                 )}
@@ -186,7 +215,7 @@ export function PaymentInstrumentsSection() {
                   gap="$gutter"
                   bg="$backgroundHover"
                   p="$section"
-                  style={{ borderRadius: UI_RADIUS.surface }}
+                  style={layoutStyles.yStackRadius}
                 >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
@@ -194,9 +223,9 @@ export function PaymentInstrumentsSection() {
                     return (
                       <YStack key={method} gap="$section">
                         <Text
-                          fontWeight="700"
+                          fontWeight={UI_FONT_WEIGHT.bold}
                           color="$color"
-                          opacity={0.55}
+                          opacity={UI_OPACITY.faint}
                           fontSize="$caption"
                         >
                           {method}
@@ -208,10 +237,7 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$section"
                             py="$section"
-                            style={[
-                              layoutStyles.row,
-                              { borderRadius: UI_RADIUS.surface },
-                            ]}
+                            style={layoutStyles.rowWithRadius}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

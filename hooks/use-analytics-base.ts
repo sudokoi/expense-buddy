@@ -4,16 +4,18 @@ import { Expense } from "../types/expense"
 import { isWithinInterval, parseISO } from "date-fns"
 import type { PaymentInstrument } from "../types/payment-instrument"
 import type { DateRange } from "../types/analytics"
-import {
-  TimeWindow,
+import type { TimeWindow } from "../utils/analytics/time"
+import { getDateRangeForFilters } from "../utils/analytics/time"
+import type {
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
+} from "../utils/analytics/filters"
+import {
   filterExpensesByCategories,
   filterExpensesByPaymentMethods,
   filterExpensesByPaymentInstruments,
-  groupExpensesByCurrency,
-  getDateRangeForFilters,
-} from "../utils/analytics-calculations"
+} from "../utils/analytics/filters"
+import { groupExpensesByCurrency } from "../utils/analytics/currency"
 import {
   filterExpensesByTimeWindow,
   getDateRangeForMonth,

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { startTransition, useCallback, useMemo, useState } from "react"
 import {
   YStack,
   Text,
@@ -10,7 +10,7 @@ import {
   Label,
   ScrollView,
 } from "tamagui"
-import { Calendar, Filter, X } from "@tamagui/lucide-icons"
+import { Calendar, Filter, X } from "@tamagui/lucide-icons-2"
 import { Platform, ViewStyle, TextStyle, BackHandler, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -25,6 +25,7 @@ import {
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { parseISO } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
@@ -71,9 +72,29 @@ import {
   getAvailableMonths,
   isTimeWindowCovered,
 } from "../../utils/analytics/time"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
+
+const FALLBACK_CATEGORY_CACHE = new Map<
+  string,
+  Pick<Category, "label" | "icon" | "color">
+>()
+
+function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
+  let info = FALLBACK_CATEGORY_CACHE.get(label)
+  if (!info) {
+    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
+    FALLBACK_CATEGORY_CACHE.set(label, info)
+  }
+  return info
+}
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
@@ -157,7 +178,8 @@ const FilterChip = React.memo(function FilterChip({
     <Button
       size="$chip"
       px="$control"
-      bordered
+      borderWidth={UI_BORDER_WIDTH.thin}
+      borderColor="$borderColor"
       onPress={onRemove}
       style={{
         borderRadius: UI_RADIUS.round,
@@ -444,14 +466,14 @@ export default function HistoryScreen() {
         label: t("analytics.filters.month", {
           month: formatMonthLabel(filters.selectedMonth),
         }),
-        onRemove: () => setSelectedMonth(null),
+        onRemove: () => startTransition(() => setSelectedMonth(null)),
       })
     } else {
       chips.push({
         label: t("analytics.filters.time", {
           window: t(`analytics.timeWindow.${filters.timeWindow}`),
         }),
-        onRemove: () => setTimeWindow("all"),
+        onRemove: () => startTransition(() => setTimeWindow("all")),
       })
     }
 
@@ -461,21 +483,21 @@ export default function HistoryScreen() {
         label: t("analytics.filters.category", {
           category: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else if (filters.selectedCategories.length === 1) {
       chips.push({
         label: t("analytics.filters.category", {
           category: filters.selectedCategories[0],
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else {
       chips.push({
         label: t("analytics.filters.category", {
           category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories)})`,
         }),
-        onRemove: () => setSelectedCategories([]),
+        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     }
 
@@ -485,7 +507,7 @@ export default function HistoryScreen() {
         label: t("analytics.filters.payment", {
           method: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else if (filters.selectedPaymentMethods.length === 1) {
       const only = filters.selectedPaymentMethods[0]
@@ -493,14 +515,14 @@ export default function HistoryScreen() {
         label: t("analytics.filters.payment", {
           method: paymentMethodLabel(only),
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else {
       chips.push({
         label: t("analytics.filters.payment", {
           method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map(paymentMethodLabel))})`,
         }),
-        onRemove: () => setSelectedPaymentMethods([]),
+        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     }
 
@@ -511,7 +533,7 @@ export default function HistoryScreen() {
           label: t("analytics.filters.instrument", {
             instrument: t("analytics.timeWindow.all"),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else if (filters.selectedPaymentInstruments.length === 1) {
         chips.push({
@@ -521,7 +543,7 @@ export default function HistoryScreen() {
               allInstruments
             ),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else {
         chips.push({
@@ -530,7 +552,7 @@ export default function HistoryScreen() {
               filters.selectedPaymentInstruments
             ),
           }),
-          onRemove: () => setSelectedPaymentInstruments([]),
+          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       }
     }
@@ -619,7 +641,7 @@ export default function HistoryScreen() {
       if (item.type === "header") {
         return (
           <YStack background="$background" style={layoutStyles.sectionHeader}>
-            <H6 color="$color" opacity={0.8}>
+            <H6 color="$color" opacity={UI_OPACITY.strong}>
               {item.title}
             </H6>
           </YStack>
@@ -628,11 +650,7 @@ export default function HistoryScreen() {
 
       const categoryInfo =
         categoryByLabel.get(item.expense.category) ??
-        ({
-          label: item.expense.category,
-          icon: "Circle",
-          color: CATEGORY_COLORS.Other,
-        } satisfies Pick<Category, "label" | "icon" | "color">)
+        getFallbackCategory(item.expense.category)
 
       return (
         <ExpenseRow
@@ -675,7 +693,7 @@ export default function HistoryScreen() {
         <YStack style={layoutStyles.loadMoreContainer}>
           <Button
             size="$control"
-            themeInverse
+            theme="accent"
             onPress={handleLoadMore}
             disabled={isLoadingMore}
           >
@@ -815,10 +833,14 @@ export default function HistoryScreen() {
   if (state.activeExpenses.length === 0) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
-        <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
+        <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
           {t("history.emptyTitle")}
         </Text>
-        <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
+        <Text
+          style={layoutStyles.emptySubtext}
+          color="$color"
+          opacity={UI_OPACITY.subtle}
+        >
           {t("history.emptySubtitle")}
         </Text>
       </YStack>
@@ -832,17 +854,17 @@ export default function HistoryScreen() {
         {/* Filter Button */}
         <XStack style={layoutStyles.filterButtonContainer}>
           <Button
-            size="$compact"
-            px="$section"
+            size="$chip"
+            px="$control"
             icon={Filter}
             onPress={handleOpenFilterSheet}
-            themeInverse={activeCount > 0}
+            theme={activeCount > 0 ? "accent" : undefined}
           >
             {t("common.filters")}
             {activeCount > 0 && (
               <Text
                 fontSize="$caption"
-                fontWeight="bold"
+                fontWeight={UI_FONT_WEIGHT.bold}
                 style={{ marginLeft: UI_SPACE.micro }}
               >
                 ({activeCount})
@@ -863,10 +885,14 @@ export default function HistoryScreen() {
         </ScrollView>
 
         <YStack flex={1} style={layoutStyles.emptyContainer}>
-          <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
+          <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
             {t("history.noResultsTitle")}
           </Text>
-          <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
+          <Text
+            style={layoutStyles.emptySubtext}
+            color="$color"
+            opacity={UI_OPACITY.subtle}
+          >
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
@@ -905,17 +931,17 @@ export default function HistoryScreen() {
       {/* Filter Button */}
       <XStack style={layoutStyles.filterButtonContainer}>
         <Button
-          size="$compact"
-          px="$section"
+          size="$chip"
+          px="$control"
           icon={Filter}
           onPress={handleOpenFilterSheet}
-          themeInverse={activeCount > 0}
+          theme={activeCount > 0 ? "accent" : undefined}
         >
           {t("common.filters")}
           {activeCount > 0 && (
             <Text
               fontSize="$caption"
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
               style={{ marginLeft: UI_SPACE.micro }}
             >
               ({activeCount})
@@ -956,8 +982,14 @@ export default function HistoryScreen() {
         onOpenChange={(open) => !open && setDeletingExpenseId(null)}
       >
         <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={0.5} />
-          <Dialog.Content bordered elevate key="content" gap="$gutter">
+          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
+          <Dialog.Content
+            borderWidth={UI_BORDER_WIDTH.thin}
+            borderColor="$borderColor"
+            elevate
+            key="content"
+            gap="$gutter"
+          >
             <Dialog.Title size="$sectionTitle">
               {t("history.deleteDialog.title")}
             </Dialog.Title>
@@ -987,9 +1019,10 @@ export default function HistoryScreen() {
         }}
       >
         <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={0.5} />
+          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
           <Dialog.Content
-            bordered
+            borderWidth={UI_BORDER_WIDTH.thin}
+            borderColor="$borderColor"
             elevate
             key="content"
             style={{ maxHeight: "80%" }}
@@ -1006,7 +1039,7 @@ export default function HistoryScreen() {
             >
               <YStack gap="$section">
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="date">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="date">
                     {t("history.editDialog.fields.date")}
                   </Label>
                   <Button
@@ -1057,15 +1090,15 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="amount">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="amount">
                     {t("history.editDialog.fields.amount")}
                   </Label>
                   <XStack style={{ alignItems: "center" }} gap="$control">
                     <Text
                       fontSize="$label"
-                      fontWeight="bold"
+                      fontWeight={UI_FONT_WEIGHT.bold}
                       color="$color"
-                      opacity={0.8}
+                      opacity={UI_OPACITY.strong}
                     >
                       {getCurrencySymbol(
                         editingExpense?.currency || getFallbackCurrency()
@@ -1074,6 +1107,12 @@ export default function HistoryScreen() {
                     <Input
                       flex={1}
                       size="$control"
+                      bg="$background"
+                      borderWidth={UI_BORDER_WIDTH.normal}
+                      borderColor="$borderColor"
+                      focusStyle={{
+                        borderColor: ACCENT_COLORS.primary,
+                      }}
                       id="amount"
                       value={editingExpense?.amount || ""}
                       onChangeText={(text) =>
@@ -1091,7 +1130,7 @@ export default function HistoryScreen() {
                     />
                   </XStack>
                   {expressionPreview && (
-                    <Text fontSize="$body" color="$color" opacity={0.7}>
+                    <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
                       {t("history.editDialog.fields.preview", {
                         amount: expressionPreview,
                       })}
@@ -1100,7 +1139,7 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8}>
+                  <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.category")}
                   </Label>
                   <XStack style={layoutStyles.categoryRow}>
@@ -1121,11 +1160,18 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="note">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="note">
                     {t("history.editDialog.fields.note")}
                   </Label>
                   <Input
                     id="note"
+                    bg="$background"
+                    size="$control"
+                    borderWidth={UI_BORDER_WIDTH.normal}
+                    borderColor="$borderColor"
+                    focusStyle={{
+                      borderColor: ACCENT_COLORS.primary,
+                    }}
                     value={editingExpense?.note || ""}
                     onChangeText={(text) =>
                       setEditingExpense((prev) => (prev ? { ...prev, note: text } : null))
@@ -1136,7 +1182,7 @@ export default function HistoryScreen() {
 
                 {/* Payment Method Selection */}
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8}>
+                  <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.paymentMethod")}
                   </Label>
                   <XStack style={layoutStyles.paymentMethodRow}>
@@ -1153,7 +1199,11 @@ export default function HistoryScreen() {
                   {/* Identifier input for cards/UPI/Other */}
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                      <Label color="$color" opacity={0.6} fontSize="$caption">
+                      <Label
+                        color="$color"
+                        opacity={UI_OPACITY.subtle}
+                        fontSize="$caption"
+                      >
                         {selectedPaymentConfig.identifierLabel ||
                           t("history.editDialog.fields.identifier")}
                       </Label>
@@ -1197,6 +1247,12 @@ export default function HistoryScreen() {
                       ) : (
                         <Input
                           size="$control"
+                          bg="$background"
+                          borderWidth={UI_BORDER_WIDTH.normal}
+                          borderColor="$borderColor"
+                          focusStyle={{
+                            borderColor: ACCENT_COLORS.primary,
+                          }}
                           placeholder={
                             editingExpense?.paymentMethodType === "Other"
                               ? t("history.editDialog.fields.otherPlaceholder")
@@ -1223,7 +1279,7 @@ export default function HistoryScreen() {
                 <Dialog.Close asChild>
                   <Button size="$control">{t("common.cancel")}</Button>
                 </Dialog.Close>
-                <Button size="$control" themeInverse onPress={handleSaveEdit}>
+                <Button size="$control" theme="accent" onPress={handleSaveEdit}>
                   {t("common.save")}
                 </Button>
               </XStack>

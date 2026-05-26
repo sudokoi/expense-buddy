@@ -2,14 +2,17 @@ import { useMemo, useCallback, memo } from "react"
 import { YStack, XStack, Text, View } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
-import type {
-  PaymentInstrumentChartDataItem,
-  PaymentInstrumentSelectionKey,
-} from "../../utils/analytics-calculations"
+import type { PaymentInstrumentChartDataItem } from "../../utils/analytics/aggregations"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+} from "../../constants/ui-tokens"
 
 interface PaymentInstrumentPieChartProps {
   data: PaymentInstrumentChartDataItem[]
@@ -77,17 +80,17 @@ const LegendItem = memo(function LegendItem({
         <XStack style={styles.legendLeft}>
           <View style={[styles.colorDot, { backgroundColor: item.color }]} />
           <Text
-            fontWeight={isSelected ? "bold" : "normal"}
+            fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
             style={{ flexShrink: 1, flexWrap: "wrap" }}
           >
             {item.text}
           </Text>
         </XStack>
         <XStack style={styles.legendRight}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text fontWeight="bold">₹{item.value.toFixed(2)}</Text>
+          <Text fontWeight={UI_FONT_WEIGHT.bold}>₹{item.value.toFixed(2)}</Text>
         </XStack>
       </XStack>
     </Pressable>
@@ -134,10 +137,10 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   const CenterLabel = useCallback(
     () => (
       <YStack style={styles.centerLabel}>
-        <Text fontSize="$caption" color="$color" opacity={0.6}>
+        <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text fontWeight="bold" fontSize="$label">
+        <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
           ₹{total.toFixed(0)}
         </Text>
       </YStack>
@@ -149,7 +152,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
     return (
       <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
         <YStack style={styles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.paymentInstrument.noData")}
           </Text>
         </YStack>

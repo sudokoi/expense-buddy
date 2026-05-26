@@ -1,9 +1,16 @@
 import { Text, Card, View, useTheme } from "tamagui"
-import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons"
+import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface ThemeSelectorProps {
   value: ThemePreference
@@ -28,8 +35,6 @@ const styles = {
     borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
-
-const ICON_SIZE = 18
 
 interface ThemeOption {
   key: ThemePreference
@@ -57,9 +62,10 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
 
   return (
     <Card
-      bordered
-      padding="$micro"
-      borderRadius="$control"
+      borderWidth={UI_BORDER_WIDTH.thin}
+      borderColor="$borderColor"
+      p="$micro"
+      rounded="$control"
       gap="$micro"
       style={styles.container}
     >
@@ -69,14 +75,14 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
           <Pressable
             key={key}
             onPress={() => onChange(key)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={`${label} theme`}
+            role="button"
+            aria-selected={isSelected}
+            aria-label={`${label} theme`}
             style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
               flex={1}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               bg={isSelected ? "$backgroundFocus" : "transparent"}
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
@@ -84,15 +90,15 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               style={styles.segmentInner}
             >
               <Icon
-                size={ICON_SIZE}
+                size={UI_ICON_SIZE.regular}
                 color={getColorValue(theme.color)}
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               />
               <Text
                 fontSize="$body"
-                fontWeight={isSelected ? "600" : "400"}
+                fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
                 color="$color"
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               >
                 {label}
               </Text>

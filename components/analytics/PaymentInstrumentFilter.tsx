@@ -8,11 +8,9 @@ import {
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
 import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
-import {
-  PaymentInstrumentSelectionKey,
-  makePaymentInstrumentSelectionKey,
-} from "../../utils/analytics-calculations"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import { makePaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface PaymentInstrumentFilterProps {
   instruments: PaymentInstrument[]
@@ -127,8 +125,9 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
-          bordered={!isAllSelected}
+          theme={isAllSelected ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
           onPress={handleAllPress}
         >
           All
@@ -141,8 +140,9 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
               key={item.key}
               size="$chip"
               px="$control"
-              themeInverse={isSelected}
-              bordered={!isSelected}
+              theme={isSelected ? "accent" : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
               onPress={() => handleToggle(item.key)}
             >
               {item.label}

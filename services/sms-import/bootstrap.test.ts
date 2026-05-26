@@ -198,7 +198,7 @@ describe("scanSmsImportReviewQueue", () => {
     expect(result.createdItems[0]?.sourceMessage.messageId).toBe("sms-1")
   })
 
-  it("keeps distinct messages that share the same text within the same minute", async () => {
+  it("dedupes messages that share the same text within the same 3-minute window", async () => {
     const firstMessage = createMessage({
       messageId: "sms-1",
       receivedAt: "2026-04-11T10:15:05.000Z",
@@ -206,6 +206,28 @@ describe("scanSmsImportReviewQueue", () => {
     const secondMessage = createMessage({
       messageId: "sms-2",
       receivedAt: "2026-04-11T10:15:45.000Z",
+    })
+
+    mockGetSmsPermissionStatus.mockResolvedValue("granted")
+    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+
+    const result = await scanSmsImportReviewQueue({
+      existingItems: [],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    expect(result.createdItems).toHaveLength(1)
+  })
+
+  it("keeps distinct messages that share the same text across different 3-minute windows", async () => {
+    const firstMessage = createMessage({
+      messageId: "sms-1",
+      receivedAt: "2026-04-11T10:12:01.000Z",
+    })
+    const secondMessage = createMessage({
+      messageId: "sms-2",
+      receivedAt: "2026-04-11T10:15:01.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")

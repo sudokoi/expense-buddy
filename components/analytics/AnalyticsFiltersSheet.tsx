@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useRef, useState } from "react"
 import { YStack, XStack, Button, Sheet, H4, ScrollView, Text } from "tamagui"
 import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { X } from "@tamagui/lucide-icons"
-import type { TimeWindow } from "../../utils/analytics-calculations"
-import type { PaymentInstrumentSelectionKey } from "../../utils/analytics-calculations"
+import { X } from "@tamagui/lucide-icons-2"
+import type { TimeWindow } from "../../utils/analytics/time"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
@@ -19,7 +19,7 @@ import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
 import { CurrencyFilter } from "./CurrencyFilter"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   sheetFrame: {
@@ -262,7 +262,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
           <ScrollView showsVerticalScrollIndicator={false} flex={1}>
             <YStack gap="$control" pb="$block">
               {isHydrating ? (
-                <Text color="$color" opacity={0.6} fontSize="$body">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
                   {t("analytics.filtersModal.loading")}
                 </Text>
               ) : null}
@@ -330,7 +330,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               } as ViewStyle
             }
           >
-            <Button size="$control" themeInverse onPress={handleApply}>
+            <Button size="$control" theme="accent" onPress={handleApply}>
               {t("analytics.filtersModal.apply")}
             </Button>
           </XStack>

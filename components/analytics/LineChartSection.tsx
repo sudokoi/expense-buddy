@@ -2,7 +2,7 @@ import { useMemo, memo, useCallback } from "react"
 import { YStack, Text, useTheme, Card } from "tamagui"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
-import { LineChartDataItem } from "../../utils/analytics-calculations"
+import type { LineChartDataItem } from "../../utils/analytics/aggregations"
 import { Dimensions, ScrollView, ViewStyle, useColorScheme } from "react-native"
 import {
   ACCENT_COLORS,
@@ -12,7 +12,13 @@ import {
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -47,7 +53,7 @@ export const LineChartSection = memo(function LineChartSection({
         backgroundColor: overlayColors.background,
         padding: UI_SPACE.control,
         borderRadius: UI_RADIUS.control,
-        borderWidth: 1,
+        borderWidth: UI_BORDER_WIDTH.thin,
         borderColor: overlayColors.border,
         shadowColor: overlayColors.shadow,
         shadowOffset: { width: 0, height: 2 },
@@ -102,7 +108,7 @@ export const LineChartSection = memo(function LineChartSection({
       if (!item) return null
       return (
         <Card style={styles.tooltipContainer}>
-          <Text fontWeight="bold" fontSize="$body">
+          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$body">
             {symbol}
             {item.value.toFixed(2)}
           </Text>
@@ -133,7 +139,7 @@ export const LineChartSection = memo(function LineChartSection({
     return (
       <CollapsibleSection title={t("analytics.charts.trend.title")}>
         <YStack style={styles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.common.noData")}
           </Text>
         </YStack>

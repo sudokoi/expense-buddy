@@ -1,11 +1,18 @@
 import { useCallback, useMemo, memo } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { ViewStyle } from "react-native"
-import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons"
+import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -44,7 +51,7 @@ const layoutStyles = {
   otherCategoryContainer: {
     marginTop: UI_SPACE.control,
     paddingTop: UI_SPACE.control,
-    borderTopWidth: 1,
+    borderTopWidth: UI_BORDER_WIDTH.thin,
   } as ViewStyle,
 }
 
@@ -124,10 +131,10 @@ export const CategorySection = memo(function CategorySection({
 
   return (
     <YStack gap="$section">
-      <Text fontSize="$label" fontWeight="600" color="$color">
+      <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold} color="$color">
         {t("settings.sections.categories")}
       </Text>
-      <Text color="$color" opacity={0.7} fontSize="$body">
+      <Text color="$color" opacity={UI_OPACITY.medium} fontSize="$body">
         {t("settings.categories.description")}
       </Text>
 
@@ -137,15 +144,25 @@ export const CategorySection = memo(function CategorySection({
             {({ open }: { open: boolean }) => (
               <>
                 <XStack style={layoutStyles.accordionTriggerInner}>
-                  <Text fontWeight="500">{t("settings.categories.manage")}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={0.6}>
+                  <Text fontWeight={UI_FONT_WEIGHT.medium}>
+                    {t("settings.categories.manage")}
+                  </Text>
+                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                     ({categories.length})
                   </Text>
                 </XStack>
                 {open ? (
-                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                  <ChevronUp
+                    size={UI_ICON_SIZE.medium}
+                    color="$color"
+                    opacity={UI_OPACITY.subtle}
+                  />
                 ) : (
-                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                  <ChevronDown
+                    size={UI_ICON_SIZE.medium}
+                    color="$color"
+                    opacity={UI_OPACITY.subtle}
+                  />
                 )}
               </>
             )}
@@ -161,19 +178,23 @@ export const CategorySection = memo(function CategorySection({
                       <Button
                         size="$chip"
                         chromeless
-                        icon={<ChevronUp size={16} />}
+                        icon={<ChevronUp size={UI_ICON_SIZE.small} />}
                         onPress={() => handleMoveUp(index)}
                         disabled={index === 0}
-                        opacity={index === 0 ? 0.3 : 0.7}
+                        opacity={index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium}
                         aria-label={`Move ${category.label} up`}
                       />
                       <Button
                         size="$chip"
                         chromeless
-                        icon={<ChevronDown size={16} />}
+                        icon={<ChevronDown size={UI_ICON_SIZE.small} />}
                         onPress={() => handleMoveDown(index)}
                         disabled={index === reorderableCategories.length - 1}
-                        opacity={index === reorderableCategories.length - 1 ? 0.3 : 0.7}
+                        opacity={
+                          index === reorderableCategories.length - 1
+                            ? UI_OPACITY.minimal
+                            : UI_OPACITY.medium
+                        }
                         aria-label={`Move ${category.label} down`}
                       />
                     </YStack>
@@ -200,9 +221,12 @@ export const CategorySection = memo(function CategorySection({
                 >
                   <XStack style={layoutStyles.categoryRow}>
                     {/* Empty space where reorder buttons would be */}
-                    <YStack style={layoutStyles.reorderButtons} opacity={0.2}>
-                      <ChevronUp size={16} />
-                      <ChevronDown size={16} />
+                    <YStack
+                      style={layoutStyles.reorderButtons}
+                      opacity={UI_OPACITY.minimal}
+                    >
+                      <ChevronUp size={UI_ICON_SIZE.small} />
+                      <ChevronDown size={UI_ICON_SIZE.small} />
                     </YStack>
 
                     {/* Category item */}
@@ -219,7 +243,7 @@ export const CategorySection = memo(function CategorySection({
                   <Text
                     fontSize="$micro"
                     color="$color"
-                    opacity={0.4}
+                    opacity={UI_OPACITY.ghost}
                     style={{ paddingLeft: UI_SPACE.block + UI_SPACE.micro }}
                   >
                     {t("settings.categories.otherHelp")}
@@ -232,9 +256,9 @@ export const CategorySection = memo(function CategorySection({
                 <Button
                   size="$control"
                   onPress={onAdd}
-                  icon={<Plus size={18} />}
-                  themeInverse
-                  pressStyle={{ opacity: 0.7 }}
+                  icon={<Plus size={UI_ICON_SIZE.regular} />}
+                  theme="accent"
+                  pressStyle={{ opacity: UI_OPACITY.medium }}
                 >
                   {t("settings.categories.add")}
                 </Button>

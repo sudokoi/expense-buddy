@@ -1,5 +1,6 @@
 import { Card, YStack, Text } from "tamagui"
 import { ReactNode } from "react"
+import { UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
   | "$micro"
@@ -42,32 +43,26 @@ export function SettingsSection({
   gap = "$section",
 }: SettingsSectionProps) {
   return (
-    <Card
-      bordered
-      padding="$gutter"
-      borderRadius="$surface"
-      backgroundColor="$color1"
-      borderColor="$borderColor"
-    >
+    <Card p="$gutter" rounded="$surface" bg="$color1" borderColor="$borderColor">
       <YStack gap={gap}>
         <YStack
           gap="$micro"
           pb="$control"
-          borderBottomWidth={1}
+          borderBottomWidth={UI_BORDER_WIDTH.thin}
           borderBottomColor="$borderColor"
         >
           <Text
             fontSize="$caption"
-            fontWeight="700"
+            fontWeight={UI_FONT_WEIGHT.bold}
             color="$color"
-            opacity={0.52}
+            opacity={UI_OPACITY.faint}
             textTransform="uppercase"
             letterSpacing={1}
           >
             {title}
           </Text>
           {description ? (
-            <Text fontSize="$body" color="$color" opacity={0.72} lineHeight={20}>
+            <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
               {description}
             </Text>
           ) : null}

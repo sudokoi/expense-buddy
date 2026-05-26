@@ -5,7 +5,7 @@ import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -50,11 +50,17 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       label: string
       i18nKey?: string
       Icon?: React.ComponentType<{ size?: number; color?: string }>
+      selectedStyle: ViewStyle
     }> = []
 
-    items.push({ key: NONE_KEY, label: "None" }) // Label handled in render or getLabelForKey if used elsewhere, but here logic differs
+    items.push({
+      key: NONE_KEY,
+      label: "None",
+      selectedStyle: { backgroundColor: getColorForKey(NONE_KEY) } as ViewStyle,
+    })
 
     for (const method of PAYMENT_METHODS) {
+      const color = getColorForKey(method.value)
       items.push({
         key: method.value,
         label: method.label,
@@ -63,6 +69,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           size?: number
           color?: string
         }>,
+        selectedStyle: { backgroundColor: color } as ViewStyle,
       })
     }
 
@@ -96,8 +103,9 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
         <Button
           size="$chip"
           px="$control"
-          themeInverse={isAllSelected}
-          bordered={!isAllSelected}
+          theme={isAllSelected ? "accent" : undefined}
+          borderColor="$borderColor"
+          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -105,7 +113,6 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
 
         {chipItems.map((item) => {
           const isSelected = selected.includes(item.key)
-          const color = getColorForKey(item.key)
           const Icon = item.Icon
           const label =
             item.key === NONE_KEY ? t("common.none") : t(`paymentMethods.${item.i18nKey}`)
@@ -115,8 +122,9 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               key={item.key}
               size="$chip"
               px="$control"
-              bordered={!isSelected}
-              style={isSelected ? { backgroundColor: color } : undefined}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              style={isSelected ? item.selectedStyle : undefined}
               onPress={() => handleToggle(item.key)}
               icon={
                 Icon ? (

@@ -2,8 +2,8 @@ import type { ReactNode } from "react"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { X } from "@tamagui/lucide-icons-2"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   headerRow: {
@@ -78,7 +78,7 @@ export function AppSheetScaffold({
             <YStack>
               <H4>{title}</H4>
               {subtitle ? (
-                <Text fontSize="$body" opacity={0.7} color="$color">
+                <Text fontSize="$body" opacity={UI_OPACITY.medium} color="$color">
                   {subtitle}
                 </Text>
               ) : null}

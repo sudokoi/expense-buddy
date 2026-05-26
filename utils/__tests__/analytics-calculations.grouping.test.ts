@@ -1,4 +1,4 @@
-import { groupExpensesByCurrency } from "../analytics-calculations"
+import { groupExpensesByCurrency } from "../analytics/currency"
 import { Expense } from "../../types/expense"
 
 describe("groupExpensesByCurrency", () => {

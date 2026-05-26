@@ -1,8 +1,8 @@
-import React, { memo } from "react"
+import React, { memo, useCallback, useRef } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
 
 import type { ViewStyle } from "react-native"
-import { Trash, Edit3 } from "@tamagui/lucide-icons"
+import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
 
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
@@ -14,6 +14,7 @@ import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
+import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   expenseDetails: {
@@ -48,6 +49,18 @@ export const ExpenseRow = memo(function ExpenseRow({
   onDelete,
 }: ExpenseRowProps) {
   const { t } = useTranslation()
+
+  const expenseRef = useRef(expense)
+  expenseRef.current = expense
+
+  const handleEdit = useCallback(() => {
+    onEdit?.(expenseRef.current)
+  }, [onEdit])
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(expenseRef.current.id)
+  }, [onDelete])
+
   const paymentMethodDisplay = showPaymentMethod
     ? formatPaymentMethodDisplay(expense.paymentMethod, instruments)
     : null
@@ -65,14 +78,14 @@ export const ExpenseRow = memo(function ExpenseRow({
           color={categoryInfo.color as `#${string}`}
         />
         <YStack flex={1}>
-          <Text fontWeight="bold" fontSize="$label">
+          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
             {expense.note || categoryLabel}
           </Text>
-          <Text color="$color" opacity={0.6} fontSize="$caption">
+          <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
             {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
-            <Text color="$color" opacity={0.5} fontSize="$caption">
+            <Text color="$color" opacity={UI_OPACITY.faint} fontSize="$caption">
               {paymentMethodDisplay}
             </Text>
           ) : null}
@@ -90,14 +103,14 @@ export const ExpenseRow = memo(function ExpenseRow({
               size="$chip"
               icon={Edit3}
               chromeless
-              onPress={() => onEdit?.(expense)}
+              onPress={handleEdit}
               aria-label={t("common.edit")}
             />
             <Button
               size="$chip"
               icon={Trash}
               chromeless
-              onPress={() => onDelete?.(expense.id)}
+              onPress={handleDelete}
               aria-label={t("common.delete")}
             />
           </>

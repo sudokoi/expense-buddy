@@ -18,6 +18,7 @@ import { NotificationType } from "./notification-store"
 import { SyncConfig } from "../services/sync-manager"
 import { Category } from "../types/category"
 import { SmsImportReviewItem } from "../types/sms-import"
+import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
 
 // Import for helper function only
 import { getActiveExpenses } from "./expense-store"
@@ -210,8 +211,16 @@ export const useSettings = () => {
   )
 
   const replaceSettings = useCallback(
-    (newSettings: AppSettings) =>
-      settingsStore.trigger.replaceSettings({ settings: newSettings }),
+    async (newSettings: AppSettings) => {
+      let settingsToApply = newSettings
+      if (newSettings.backgroundSmsImportEnabled) {
+        const result = await requestBackgroundSmsPermissions()
+        if (!result.granted) {
+          settingsToApply = { ...newSettings, backgroundSmsImportEnabled: false }
+        }
+      }
+      settingsStore.trigger.replaceSettings({ settings: settingsToApply })
+    },
     [settingsStore]
   )
 

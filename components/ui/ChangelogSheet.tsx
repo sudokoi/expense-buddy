@@ -42,7 +42,7 @@ export function ChangelogSheet({
       scroll
       footer={
         <>
-          <Button size="$control" onPress={onViewFullReleaseNotes} themeInverse>
+          <Button size="$control" onPress={onViewFullReleaseNotes} theme="accent">
             {t("changelog.viewFull")}
           </Button>
           <Button size="$control" onPress={onClose}>

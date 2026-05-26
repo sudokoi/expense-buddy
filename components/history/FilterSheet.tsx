@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback, useMemo } from "react"
 import { YStack, XStack, H4, Button, Text, Sheet, ScrollView } from "tamagui"
-import { X } from "@tamagui/lucide-icons"
+import { X } from "@tamagui/lucide-icons-2"
 import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -30,7 +30,7 @@ import {
   getActivePaymentInstruments,
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 interface FilterSheetProps {
   open: boolean
@@ -278,7 +278,7 @@ export const FilterSheet = React.memo(function FilterSheet({
           <ScrollView showsVerticalScrollIndicator={false} flex={1}>
             <YStack gap="$control" pb="$block">
               {!isHydrated && (
-                <Text color="$color" opacity={0.6} fontSize="$body">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
                   {t("history.filterSheet.loading")}
                 </Text>
               )}
@@ -350,7 +350,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               } as ViewStyle
             }
           >
-            <Button size="$control" themeInverse onPress={handleApply}>
+            <Button size="$control" theme="accent" onPress={handleApply}>
               {t("common.apply")}
             </Button>
           </XStack>

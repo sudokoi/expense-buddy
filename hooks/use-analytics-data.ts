@@ -5,11 +5,11 @@ import {
   useAnalyticsStatistics,
   AnalyticsStatisticsResult,
 } from "./use-analytics-statistics"
-import {
-  TimeWindow,
+import type { TimeWindow } from "../utils/analytics/time"
+import type {
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
-} from "../utils/analytics-calculations"
+} from "../utils/analytics/filters"
 
 /**
  * Combined analytics data interface (for backward compatibility)

@@ -40,8 +40,8 @@ jest.mock("react-native", () => ({
   Text: "Text",
 }))
 
-// Mock @tamagui/lucide-icons
-jest.mock("@tamagui/lucide-icons", () => {
+// Mock @tamagui/lucide-icons-2
+jest.mock("@tamagui/lucide-icons-2", () => {
   const React = require("react")
   const MockIcon = (props: any) => React.createElement("View", props)
   return {

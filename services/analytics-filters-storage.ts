@@ -1,8 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { z } from "zod"
-import type { TimeWindow } from "../utils/analytics-calculations"
-import type { PaymentInstrumentSelectionKey } from "../utils/analytics-calculations"
-import type { PaymentMethodSelectionKey } from "../utils/analytics-calculations"
+import type { TimeWindow } from "../utils/analytics/time"
+import type {
+  PaymentInstrumentSelectionKey,
+  PaymentMethodSelectionKey,
+} from "../utils/analytics/filters"
 import { PAYMENT_METHOD_COLORS } from "../constants/payment-method-colors"
 
 const ANALYTICS_FILTERS_KEY = "analytics_filters_v1"

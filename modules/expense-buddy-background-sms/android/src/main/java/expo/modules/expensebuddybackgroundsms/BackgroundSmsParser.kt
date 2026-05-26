@@ -1,6 +1,7 @@
 package expo.modules.expensebuddybackgroundsms
 
 import android.telephony.SmsMessage
+import java.text.Normalizer
 import java.time.Instant
 import java.util.Locale
 import kotlin.math.absoluteValue
@@ -30,6 +31,14 @@ private val creditCardHintPattern = Regex("credit card|credit a/c|credit acct|\\
 private val debitCardHintPattern = Regex("debit card|debit a/c|debited from a/c|debited from acct", RegexOption.IGNORE_CASE)
 
 object BackgroundSmsParser {
+  private fun normalizeUnicode(text: String): String {
+    return try {
+      Normalizer.normalize(text, Normalizer.Form.NFKD)
+    } catch (_: Exception) {
+      text
+    }
+  }
+
   fun parseIncomingMessage(messages: Array<SmsMessage>): BackgroundSmsReviewItem? {
     val combined = toRawMessage(messages) ?: return null
     return parseRawMessage(combined)
@@ -63,7 +72,7 @@ object BackgroundSmsParser {
   }
 
   private fun parseRawMessage(message: BackgroundSmsRawMessage): BackgroundSmsReviewItem? {
-    val body = message.body.trim()
+    val body = normalizeUnicode(message.body).trim()
     if (body.isEmpty()) {
       return null
     }
@@ -148,10 +157,25 @@ object BackgroundSmsParser {
       (approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal)
   }
 
+  private fun getTimeWindow(receivedAt: String): Long {
+    val timestamp = try {
+      Instant.parse(receivedAt).toEpochMilli()
+    } catch (_: Exception) {
+      return 0L
+    }
+
+    val windowMs = 3 * 60 * 1000L
+    return (timestamp / windowMs) * windowMs
+  }
+
   private fun createFingerprint(sender: String, body: String, receivedAt: String): String {
     val normalizedSender = sender.replace(Regex("\\s+"), " ").trim().lowercase(Locale.ROOT)
-    val normalizedBody = body.replace(Regex("\\s+"), " ").trim().lowercase(Locale.ROOT)
-    return "sms_${hashString("$normalizedSender|$normalizedBody|$receivedAt")}" 
+    val normalizedBody = normalizeUnicode(body)
+      .replace(Regex("\\s+"), " ")
+      .trim()
+      .lowercase(Locale.ROOT)
+    val timeWindow = getTimeWindow(receivedAt)
+    return "sms_${hashString("$normalizedSender|$normalizedBody|$timeWindow")}"
   }
 
   private fun hashString(value: String): String {

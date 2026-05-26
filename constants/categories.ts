@@ -7,7 +7,7 @@ import {
   Circle,
   ShoppingCart,
   Building,
-} from "@tamagui/lucide-icons"
+} from "@tamagui/lucide-icons-2"
 import { ComponentProps, JSX } from "react"
 import { CATEGORY_COLORS } from "./category-colors"
 

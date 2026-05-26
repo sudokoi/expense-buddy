@@ -1,4 +1,5 @@
 import { Card, CardProps } from "tamagui"
+import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 import { memo } from "react"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -13,12 +14,13 @@ interface ExpenseCardProps extends CardProps {}
 export const ExpenseCard = memo(function ExpenseCard(props: ExpenseCardProps) {
   return (
     <Card
-      bordered
-      padding="$section"
-      marginBottom="$control"
+      borderWidth={UI_BORDER_WIDTH.thin}
+      borderColor="$borderColor"
+      p="$section"
+      mb="$control"
       flexDirection="row"
-      alignItems="center"
-      justifyContent="space-between"
+      items="center"
+      justify="space-between"
       {...props}
     />
   )

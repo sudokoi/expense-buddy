@@ -3,9 +3,10 @@ import { YStack, Text, XStack, Button } from "tamagui"
 import { useExpenses } from "../../stores/hooks"
 import { useMemo, useCallback } from "react"
 import { parseISO, isSameDay, addDays, subDays } from "date-fns"
-import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons"
+import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons-2"
 import { SectionList, ViewStyle } from "react-native"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import type { Expense } from "../../types/expense"
 import { Category } from "../../types/category"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
@@ -13,7 +14,21 @@ import { formatCurrency } from "../../utils/currency"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { formatDate } from "../../utils/date"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+
+const FALLBACK_CATEGORY_CACHE = new Map<
+  string,
+  Pick<Category, "label" | "icon" | "color">
+>()
+
+function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
+  let info = FALLBACK_CATEGORY_CACHE.get(label)
+  if (!info) {
+    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
+    FALLBACK_CATEGORY_CACHE.set(label, info)
+  }
+  return info
+}
 
 const layoutStyles = {
   header: {
@@ -117,6 +132,26 @@ export default function DayViewScreen() {
 
   const fullDate = formatDate(targetDate.toISOString(), "MMMM d, yyyy")
 
+  const keyExtractor = useCallback((item: Expense) => item.id, [])
+
+  const renderItem = useCallback(
+    ({ item }: { item: Expense }) => {
+      const categoryInfo =
+        categoryByLabel.get(item.category) ?? getFallbackCategory(item.category)
+
+      return (
+        <ExpenseRow
+          expense={item}
+          categoryInfo={categoryInfo}
+          subtitleMode="time"
+          instruments={settings.paymentInstruments ?? []}
+          showActions={false}
+        />
+      )
+    },
+    [categoryByLabel, settings.paymentInstruments]
+  )
+
   return (
     <YStack flex={1} bg="$background" style={{ paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -130,10 +165,10 @@ export default function DayViewScreen() {
           color="$color"
         />
         <YStack style={{ alignItems: "center" }}>
-          <Text fontSize="$title" fontWeight="bold">
+          <Text fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
             {dayTitle}
           </Text>
-          <Text fontSize="$caption" color="$color" opacity={0.6}>
+          <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
             {fullDate}
           </Text>
         </YStack>
@@ -143,7 +178,7 @@ export default function DayViewScreen() {
       {/* Date Nav */}
       <XStack style={layoutStyles.dateNav}>
         <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
-        <Text fontSize="$sectionTitle" fontWeight="bold" color="$color">
+        <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}
         </Text>
         <Button size="$compact" chromeless icon={ArrowRight} onPress={handleNextDay} />
@@ -153,7 +188,7 @@ export default function DayViewScreen() {
         style={{ textAlign: "center", marginBottom: UI_SPACE.gutter }}
         fontSize="$caption"
         color="$color"
-        opacity={0.6}
+        opacity={UI_OPACITY.subtle}
       >
         {t("dayView.totalSpent")}
       </Text>
@@ -161,33 +196,15 @@ export default function DayViewScreen() {
       {/* Expenses List */}
       {dailyExpenses.length === 0 ? (
         <YStack style={layoutStyles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dayView.empty")}
           </Text>
         </YStack>
       ) : (
         <SectionList
           sections={[{ title: "Expenses", data: dailyExpenses }]}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            const categoryInfo =
-              categoryByLabel.get(item.category) ??
-              ({
-                label: item.category,
-                icon: "Circle",
-                color: CATEGORY_COLORS.Other,
-              } satisfies Pick<Category, "label" | "icon" | "color">)
-
-            return (
-              <ExpenseRow
-                expense={item}
-                categoryInfo={categoryInfo}
-                subtitleMode="time"
-                instruments={settings.paymentInstruments ?? []}
-                showActions={false}
-              />
-            )
-          }}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
           contentContainerStyle={layoutStyles.listContent}
         />
       )}

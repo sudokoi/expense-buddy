@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
-import { ChevronRight } from "@tamagui/lucide-icons"
+import { ChevronRight } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
@@ -37,13 +37,13 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
   container: {
-    maxWidth: 600,
+    maxWidth: UI_SPACE.empty * 15,
     alignSelf: "center",
     width: "100%",
   } as ViewStyle,
@@ -589,7 +589,7 @@ export default function SettingsScreen() {
                 size="$control"
                 onPress={handleSync}
                 disabled={isSyncing}
-                themeInverse
+                theme="accent"
               >
                 {syncButtonText}
               </Button>
@@ -630,7 +630,7 @@ export default function SettingsScreen() {
               </XStack>
             ) : null}
 
-            <Text color="$color" opacity={0.65} fontSize="$caption">
+            <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
               {t("settings.smsImport.helper")}
             </Text>
 
@@ -642,7 +642,7 @@ export default function SettingsScreen() {
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
-                <Text color="$color" opacity={0.6} fontSize="$caption">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                   {t("settings.smsImport.backgroundAlertsHelp")}
                 </Text>
               </YStack>
@@ -652,7 +652,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) => {
                   void handleBackgroundSmsToggle(checked)
                 }}
-                backgroundColor={
+                bg={
                   settings.backgroundSmsImportEnabled
                     ? SEMANTIC_COLORS.success
                     : ("$gray8" as any)
@@ -671,25 +671,29 @@ export default function SettingsScreen() {
         >
           <Pressable
             onPress={() => router.push("/settings/payment" as Href)}
-            accessibilityRole="button"
+            role="button"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
             <XStack bg="$backgroundHover" style={layoutStyles.menuRow}>
               <YStack gap="$micro" flex={1} pointerEvents="none">
-                <Label color="$color" opacity={0.82}>
+                <Label color="$color" opacity={UI_OPACITY.strong}>
                   {t("settings.payment.manageTitle")}
                 </Label>
-                <Text color="$color" opacity={0.62} fontSize="$body">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
                   {t("settings.payment.summary", {
                     defaultMethod: defaultPaymentMethodLabel,
                     instrumentCount: activePaymentInstrumentCount,
                   })}
                 </Text>
-                <Text color="$color" opacity={0.5} fontSize="$caption">
+                <Text color="$color" opacity={UI_OPACITY.faint} fontSize="$caption">
                   {t("settings.payment.manageHelp")}
                 </Text>
               </YStack>
-              <ChevronRight size={20} color="$color" opacity={0.6} />
+              <ChevronRight
+                size={UI_ICON_SIZE.medium}
+                color="$color"
+                opacity={UI_OPACITY.subtle}
+              />
             </XStack>
           </Pressable>
         </SettingsSection>
@@ -707,7 +711,7 @@ export default function SettingsScreen() {
           >
             <YStack flex={1} gap="$micro">
               <Label>{t("settings.general.mathEntry")}</Label>
-              <Text color="$color" opacity={0.6} fontSize="$caption">
+              <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                 {t("settings.general.mathEntryHelp")}
               </Text>
             </YStack>
@@ -715,7 +719,7 @@ export default function SettingsScreen() {
               size="$control"
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
-              backgroundColor={
+              bg={
                 settings.enableMathExpressions
                   ? SEMANTIC_COLORS.success
                   : ("$gray8" as any)
@@ -734,7 +738,7 @@ export default function SettingsScreen() {
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
-                <Text color="$color" opacity={0.6} fontSize="$caption">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                   {t("settings.featureFlags.mlOnlySmsImportsHelp")}
                 </Text>
               </YStack>
@@ -744,7 +748,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
                 }
-                backgroundColor={
+                bg={
                   settings.useMlOnlyForSmsImports
                     ? SEMANTIC_COLORS.success
                     : ("$gray8" as any)

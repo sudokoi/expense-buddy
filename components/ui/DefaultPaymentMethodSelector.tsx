@@ -1,6 +1,6 @@
 import { Text, Card, View, XStack, useTheme } from "tamagui"
 import { Pressable, ViewStyle } from "react-native"
-import { Ban } from "@tamagui/lucide-icons"
+import { Ban } from "@tamagui/lucide-icons-2"
 import { PaymentMethodType } from "../../types/expense"
 import {
   PAYMENT_METHODS,
@@ -9,7 +9,14 @@ import {
 } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  UI_RADIUS,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
 
 interface DefaultPaymentMethodSelectorProps {
   value?: PaymentMethodType
@@ -33,8 +40,6 @@ const styles = {
     borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
-
-const ICON_SIZE = 16
 
 /**
  * DefaultPaymentMethodSelector - A selector for choosing default payment method in settings
@@ -67,27 +72,27 @@ export function DefaultPaymentMethodSelector({
       <Pressable
         key={key}
         onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
-        accessibilityRole="button"
-        accessibilityState={{ selected: isSelected }}
-        accessibilityLabel={`${displayLabel} payment method`}
+        role="button"
+        aria-selected={isSelected}
+        aria-label={`${displayLabel} payment method`}
         style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
       >
         <View
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           bg={isSelected ? "$backgroundFocus" : "transparent"}
           borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
           style={styles.optionInner}
         >
           <Icon
-            size={ICON_SIZE}
+            size={UI_ICON_SIZE.small}
             color={getColorValue(theme.color)}
-            opacity={isSelected ? 1 : 0.7}
+            opacity={isSelected ? 1 : UI_OPACITY.medium}
           />
           <Text
             fontSize="$caption"
-            fontWeight={isSelected ? "600" : "400"}
+            fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
             color="$color"
-            opacity={isSelected ? 1 : 0.7}
+            opacity={isSelected ? 1 : UI_OPACITY.medium}
           >
             {displayLabel}
           </Text>
@@ -97,7 +102,13 @@ export function DefaultPaymentMethodSelector({
   }
 
   return (
-    <Card bordered padding="$control" borderRadius="$control" gap="$control">
+    <Card
+      borderWidth={UI_BORDER_WIDTH.thin}
+      borderColor="$borderColor"
+      p="$control"
+      rounded="$control"
+      gap="$control"
+    >
       <XStack flexWrap="wrap" gap="$control">
         {/* None option */}
         {renderOption("none", "None", Ban, value === undefined)}
