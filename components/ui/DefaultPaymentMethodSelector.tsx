@@ -9,7 +9,7 @@ import {
 } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface DefaultPaymentMethodSelectorProps {
   value?: PaymentMethodType
@@ -33,8 +33,6 @@ const styles = {
     borderRadius: UI_RADIUS.control,
   } as ViewStyle,
 }
-
-const ICON_SIZE = 16
 
 /**
  * DefaultPaymentMethodSelector - A selector for choosing default payment method in settings
@@ -73,21 +71,21 @@ export function DefaultPaymentMethodSelector({
         style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
       >
         <View
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           bg={isSelected ? "$backgroundFocus" : "transparent"}
           borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
           style={styles.optionInner}
         >
           <Icon
-            size={ICON_SIZE}
+            size={UI_ICON_SIZE.small}
             color={getColorValue(theme.color)}
-            opacity={isSelected ? 1 : 0.7}
+            opacity={isSelected ? 1 : UI_OPACITY.medium}
           />
           <Text
             fontSize="$caption"
-            fontWeight={isSelected ? "600" : "400"}
+            fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
             color="$color"
-            opacity={isSelected ? 1 : 0.7}
+            opacity={isSelected ? 1 : UI_OPACITY.medium}
           >
             {displayLabel}
           </Text>
@@ -98,7 +96,7 @@ export function DefaultPaymentMethodSelector({
 
   return (
     <Card
-      borderWidth={1}
+      borderWidth={UI_BORDER_WIDTH.thin}
       borderColor="$borderColor"
       p="$control"
       rounded="$control"

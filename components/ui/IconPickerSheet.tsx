@@ -7,7 +7,7 @@ import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-color
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -20,12 +20,12 @@ const layoutStyles = {
     gap: UI_SPACE.control,
   } as ViewStyle,
   iconButton: {
-    width: 56,
-    height: 56,
+    width: UI_ICON_SIZE.huge,
+    height: UI_ICON_SIZE.huge,
     borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: UI_BORDER_WIDTH.normal,
   } as ViewStyle,
   selectedIndicator: {
     position: "absolute",
@@ -110,9 +110,9 @@ const IconGroup = memo(function IconGroup({
     <YStack gap="$control" style={layoutStyles.groupContainer}>
       <Text
         fontSize="$body"
-        fontWeight="600"
+        fontWeight={UI_FONT_WEIGHT.semiBold}
         color="$color"
-        opacity={0.7}
+        opacity={UI_OPACITY.medium}
         textTransform="uppercase"
         letterSpacing={0.5}
       >
@@ -163,12 +163,12 @@ const IconButton = memo(function IconButton({
       >
         <DynamicCategoryIcon
           name={iconName}
-          size={24}
+          size={UI_ICON_SIZE.large}
           color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (
           <YStack style={layoutStyles.selectedIndicator as ViewStyle}>
-            <Check size={12} color={selectedFg} />
+            <Check size={UI_ICON_SIZE.micro} color={selectedFg} />
           </YStack>
         )}
       </YStack>

@@ -4,7 +4,7 @@ import { ScrollView, ViewStyle } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -81,7 +81,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           px="$control"
           theme={isAllSelected ? "accent" : undefined}
           borderColor="$borderColor"
-          borderWidth={!isAllSelected ? 1 : 0}
+          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -97,7 +97,7 @@ export const CategoryFilter = memo(function CategoryFilter({
               size="$chip"
               px="$control"
               borderColor="$borderColor"
-              borderWidth={!isSelected ? 1 : 0}
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
               style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}

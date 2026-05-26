@@ -5,7 +5,7 @@ import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -105,7 +105,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           px="$control"
           theme={isAllSelected ? "accent" : undefined}
           borderColor="$borderColor"
-          borderWidth={!isAllSelected ? 1 : 0}
+          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
           onPress={handleAllPress}
         >
           {t("common.all")}
@@ -123,7 +123,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               size="$chip"
               px="$control"
               borderColor="$borderColor"
-              borderWidth={!isSelected ? 1 : 0}
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
               style={isSelected ? item.selectedStyle : undefined}
               onPress={() => handleToggle(item.key)}
               icon={

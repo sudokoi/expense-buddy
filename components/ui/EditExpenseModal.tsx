@@ -19,7 +19,7 @@ import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -236,11 +236,11 @@ export function EditExpenseModal({
         <YStack gap="$gutter" pb="$block">
           {/* Amount Input */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.amount")}
             </Label>
             <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text fontSize="$label" fontWeight="bold" color="$color" opacity={0.8}>
+              <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
@@ -260,7 +260,7 @@ export function EditExpenseModal({
                     })
                   }
                 }}
-                borderWidth={2}
+                borderWidth={UI_BORDER_WIDTH.normal}
                 borderColor={errors.amount ? "$red10" : "$borderColor"}
                 focusStyle={{
                   borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
@@ -276,7 +276,7 @@ export function EditExpenseModal({
 
           {/* Category Selection */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.category")}
             </Label>
             <XStack style={layoutStyles.categoryRow}>
@@ -298,7 +298,7 @@ export function EditExpenseModal({
 
           {/* Note Input */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.note")}
             </Label>
             <TextArea
@@ -307,7 +307,7 @@ export function EditExpenseModal({
               onChangeText={setNote}
               numberOfLines={2}
               bg="$background"
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor="$borderColor"
               focusStyle={{
                 borderColor: ACCENT_COLORS.primary,
@@ -317,7 +317,7 @@ export function EditExpenseModal({
 
           {/* Payment Method Selection */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.paymentMethod")}
             </Label>
             <XStack style={layoutStyles.paymentMethodRow}>
@@ -334,7 +334,7 @@ export function EditExpenseModal({
             {/* Identifier input for cards/UPI/Other */}
             {selectedPaymentConfig?.hasIdentifier && (
               <YStack gap="$micro" style={layoutStyles.identifierContainer}>
-                <Label color="$color" opacity={0.6} fontSize="$caption">
+                <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                   {selectedPaymentConfig.identifierLabel} {t("common.optional")}
                 </Label>
 
@@ -368,7 +368,7 @@ export function EditExpenseModal({
                   <Input
                     size="$control"
                     bg="$background"
-                    borderWidth={2}
+                    borderWidth={UI_BORDER_WIDTH.normal}
                     borderColor="$borderColor"
                     focusStyle={{
                       borderColor: ACCENT_COLORS.primary,
@@ -400,7 +400,7 @@ export function EditExpenseModal({
               theme="accent"
               onPress={handleSave}
               icon={<Check size="$icon" />}
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
             >
               {t("common.save")}
             </Button>

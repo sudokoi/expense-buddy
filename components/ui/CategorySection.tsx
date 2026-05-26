@@ -5,7 +5,7 @@ import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -124,10 +124,10 @@ export const CategorySection = memo(function CategorySection({
 
   return (
     <YStack gap="$section">
-      <Text fontSize="$label" fontWeight="600" color="$color">
+      <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold} color="$color">
         {t("settings.sections.categories")}
       </Text>
-      <Text color="$color" opacity={0.7} fontSize="$body">
+      <Text color="$color" opacity={UI_OPACITY.medium} fontSize="$body">
         {t("settings.categories.description")}
       </Text>
 
@@ -137,15 +137,15 @@ export const CategorySection = memo(function CategorySection({
             {({ open }: { open: boolean }) => (
               <>
                 <XStack style={layoutStyles.accordionTriggerInner}>
-                  <Text fontWeight="500">{t("settings.categories.manage")}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={0.6}>
+                  <Text fontWeight={UI_FONT_WEIGHT.medium}>{t("settings.categories.manage")}</Text>
+                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                     ({categories.length})
                   </Text>
                 </XStack>
                 {open ? (
-                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                  <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
                 ) : (
-                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                  <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
                 )}
               </>
             )}
@@ -164,7 +164,7 @@ export const CategorySection = memo(function CategorySection({
                         icon={<ChevronUp size={16} />}
                         onPress={() => handleMoveUp(index)}
                         disabled={index === 0}
-                        opacity={index === 0 ? 0.3 : 0.7}
+                        opacity={index === 0 ? 0.3 : UI_OPACITY.medium}
                         aria-label={`Move ${category.label} up`}
                       />
                       <Button
@@ -173,7 +173,7 @@ export const CategorySection = memo(function CategorySection({
                         icon={<ChevronDown size={16} />}
                         onPress={() => handleMoveDown(index)}
                         disabled={index === reorderableCategories.length - 1}
-                        opacity={index === reorderableCategories.length - 1 ? 0.3 : 0.7}
+                        opacity={index === reorderableCategories.length - 1 ? 0.3 : UI_OPACITY.medium}
                         aria-label={`Move ${category.label} down`}
                       />
                     </YStack>
@@ -200,7 +200,7 @@ export const CategorySection = memo(function CategorySection({
                 >
                   <XStack style={layoutStyles.categoryRow}>
                     {/* Empty space where reorder buttons would be */}
-                    <YStack style={layoutStyles.reorderButtons} opacity={0.2}>
+                    <YStack style={layoutStyles.reorderButtons} opacity={UI_OPACITY.minimal}>
                       <ChevronUp size={16} />
                       <ChevronDown size={16} />
                     </YStack>
@@ -219,7 +219,7 @@ export const CategorySection = memo(function CategorySection({
                   <Text
                     fontSize="$micro"
                     color="$color"
-                    opacity={0.4}
+                    opacity={UI_OPACITY.ghost}
                     style={{ paddingLeft: UI_SPACE.block + UI_SPACE.micro }}
                   >
                     {t("settings.categories.otherHelp")}

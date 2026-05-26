@@ -8,7 +8,7 @@ import {
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_ICON_SIZE } from "../constants/ui-tokens"
 
 /**
  * Global sync status indicator
@@ -54,10 +54,10 @@ export const SyncIndicator: React.FC = () => {
       return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
     }
     if (isSuccess) {
-      return <CheckCircle size={24} color={SEMANTIC_COLORS.success} />
+      return <CheckCircle size={UI_ICON_SIZE.large} color={SEMANTIC_COLORS.success} />
     }
     if (isError) {
-      return <XCircle size={24} color={SEMANTIC_COLORS.error} />
+      return <XCircle size={UI_ICON_SIZE.large} color={SEMANTIC_COLORS.error} />
     }
     return null
   }

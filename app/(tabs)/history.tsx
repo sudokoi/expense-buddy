@@ -72,7 +72,7 @@ import {
   getAvailableMonths,
   isTimeWindowCovered,
 } from "../../utils/analytics/time"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -172,7 +172,7 @@ const FilterChip = React.memo(function FilterChip({
     <Button
       size="$chip"
       px="$control"
-      borderWidth={1}
+      borderWidth={UI_BORDER_WIDTH.thin}
       borderColor="$borderColor"
       onPress={onRemove}
       style={{
@@ -635,7 +635,7 @@ export default function HistoryScreen() {
       if (item.type === "header") {
         return (
           <YStack background="$background" style={layoutStyles.sectionHeader}>
-            <H6 color="$color" opacity={0.8}>
+            <H6 color="$color" opacity={UI_OPACITY.strong}>
               {item.title}
             </H6>
           </YStack>
@@ -827,10 +827,10 @@ export default function HistoryScreen() {
   if (state.activeExpenses.length === 0) {
     return (
       <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
-        <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
+        <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
           {t("history.emptyTitle")}
         </Text>
-        <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
+        <Text style={layoutStyles.emptySubtext} color="$color" opacity={UI_OPACITY.subtle}>
           {t("history.emptySubtitle")}
         </Text>
       </YStack>
@@ -854,7 +854,7 @@ export default function HistoryScreen() {
             {activeCount > 0 && (
               <Text
                 fontSize="$caption"
-                fontWeight="bold"
+                fontWeight={UI_FONT_WEIGHT.bold}
                 style={{ marginLeft: UI_SPACE.micro }}
               >
                 ({activeCount})
@@ -875,10 +875,10 @@ export default function HistoryScreen() {
         </ScrollView>
 
         <YStack flex={1} style={layoutStyles.emptyContainer}>
-          <Text style={layoutStyles.emptyText} color="$color" opacity={0.8}>
+          <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
             {t("history.noResultsTitle")}
           </Text>
-          <Text style={layoutStyles.emptySubtext} color="$color" opacity={0.6}>
+          <Text style={layoutStyles.emptySubtext} color="$color" opacity={UI_OPACITY.subtle}>
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
@@ -927,7 +927,7 @@ export default function HistoryScreen() {
           {activeCount > 0 && (
             <Text
               fontSize="$caption"
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
               style={{ marginLeft: UI_SPACE.micro }}
             >
               ({activeCount})
@@ -968,9 +968,9 @@ export default function HistoryScreen() {
         onOpenChange={(open) => !open && setDeletingExpenseId(null)}
       >
         <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={0.5} />
+          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
           <Dialog.Content
-            borderWidth={1}
+            borderWidth={UI_BORDER_WIDTH.thin}
             borderColor="$borderColor"
             elevate
             key="content"
@@ -1005,9 +1005,9 @@ export default function HistoryScreen() {
         }}
       >
         <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={0.5} />
+          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
           <Dialog.Content
-            borderWidth={1}
+            borderWidth={UI_BORDER_WIDTH.thin}
             borderColor="$borderColor"
             elevate
             key="content"
@@ -1025,7 +1025,7 @@ export default function HistoryScreen() {
             >
               <YStack gap="$section">
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="date">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="date">
                     {t("history.editDialog.fields.date")}
                   </Label>
                   <Button
@@ -1076,15 +1076,15 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="amount">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="amount">
                     {t("history.editDialog.fields.amount")}
                   </Label>
                   <XStack style={{ alignItems: "center" }} gap="$control">
                     <Text
                       fontSize="$label"
-                      fontWeight="bold"
+                      fontWeight={UI_FONT_WEIGHT.bold}
                       color="$color"
-                      opacity={0.8}
+                      opacity={UI_OPACITY.strong}
                     >
                       {getCurrencySymbol(
                         editingExpense?.currency || getFallbackCurrency()
@@ -1094,7 +1094,7 @@ export default function HistoryScreen() {
                       flex={1}
                       size="$control"
                       bg="$background"
-                      borderWidth={2}
+                      borderWidth={UI_BORDER_WIDTH.normal}
                       borderColor="$borderColor"
                       focusStyle={{
                         borderColor: ACCENT_COLORS.primary,
@@ -1116,7 +1116,7 @@ export default function HistoryScreen() {
                     />
                   </XStack>
                   {expressionPreview && (
-                    <Text fontSize="$body" color="$color" opacity={0.7}>
+                    <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
                       {t("history.editDialog.fields.preview", {
                         amount: expressionPreview,
                       })}
@@ -1125,7 +1125,7 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8}>
+                  <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.category")}
                   </Label>
                   <XStack style={layoutStyles.categoryRow}>
@@ -1146,14 +1146,14 @@ export default function HistoryScreen() {
                 </YStack>
 
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8} htmlFor="note">
+                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="note">
                     {t("history.editDialog.fields.note")}
                   </Label>
                   <Input
                     id="note"
                     bg="$background"
                     size="$control"
-                    borderWidth={2}
+                    borderWidth={UI_BORDER_WIDTH.normal}
                     borderColor="$borderColor"
                     focusStyle={{
                       borderColor: ACCENT_COLORS.primary,
@@ -1168,7 +1168,7 @@ export default function HistoryScreen() {
 
                 {/* Payment Method Selection */}
                 <YStack gap="$control">
-                  <Label color="$color" opacity={0.8}>
+                  <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.paymentMethod")}
                   </Label>
                   <XStack style={layoutStyles.paymentMethodRow}>
@@ -1185,7 +1185,7 @@ export default function HistoryScreen() {
                   {/* Identifier input for cards/UPI/Other */}
                   {selectedPaymentConfig?.hasIdentifier && (
                     <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                      <Label color="$color" opacity={0.6} fontSize="$caption">
+                      <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                         {selectedPaymentConfig.identifierLabel ||
                           t("history.editDialog.fields.identifier")}
                       </Label>
@@ -1230,7 +1230,7 @@ export default function HistoryScreen() {
                         <Input
                           size="$control"
                           bg="$background"
-                          borderWidth={2}
+                          borderWidth={UI_BORDER_WIDTH.normal}
                           borderColor="$borderColor"
                           focusStyle={{
                             borderColor: ACCENT_COLORS.primary,

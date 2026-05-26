@@ -13,7 +13,7 @@ import { getColorValue } from "../../tamagui.config"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 // Layout styles
 const layoutStyles = {
@@ -28,11 +28,11 @@ const layoutStyles = {
     gap: UI_SPACE.section,
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
-    borderWidth: 2,
+    borderWidth: UI_BORDER_WIDTH.normal,
   } as ViewStyle,
   iconPreview: {
-    width: 48,
-    height: 48,
+    width: UI_ICON_SIZE.xxxlarge,
+    height: UI_ICON_SIZE.xxxlarge,
     borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
@@ -43,11 +43,11 @@ const layoutStyles = {
     gap: UI_SPACE.section,
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
-    borderWidth: 2,
+    borderWidth: UI_BORDER_WIDTH.normal,
   } as ViewStyle,
   colorSwatch: {
-    width: 32,
-    height: 32,
+    width: UI_ICON_SIZE.xlarge,
+    height: UI_ICON_SIZE.xlarge,
     borderRadius: UI_RADIUS.control,
   } as ViewStyle,
   sheetFrame: {
@@ -229,7 +229,7 @@ export function CategoryFormModal({
         <YStack gap="$gutter">
           {/* Label Input */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("settings.categories.form.nameLabel")}
             </Label>
             <Input
@@ -239,7 +239,7 @@ export function CategoryFormModal({
               value={label}
               onChangeText={handleLabelChange}
               maxLength={30}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor={errors.label ? "$red10" : "$borderColor"}
               focusStyle={{
                 borderColor: errors.label ? "$red10" : ACCENT_COLORS.primary,
@@ -250,7 +250,7 @@ export function CategoryFormModal({
                 {errors.label}
               </Text>
             )}
-            <Text fontSize="$caption" color="$color" opacity={0.5}>
+            <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.faint}>
               {t("settings.categories.form.characterCount", {
                 count: label.length,
                 max: 30,
@@ -260,7 +260,7 @@ export function CategoryFormModal({
 
           {/* Icon Picker Trigger */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("settings.categories.form.iconLabel")}
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
@@ -272,11 +272,11 @@ export function CategoryFormModal({
                 <YStack
                   style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
                 >
-                  <DynamicCategoryIcon name={icon} size={24} color={iconColor} />
+                  <DynamicCategoryIcon name={icon} size={UI_ICON_SIZE.large} color={iconColor} />
                 </YStack>
                 <YStack flex={1}>
-                  <Text fontWeight="500">{icon}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={0.6}>
+                  <Text fontWeight={UI_FONT_WEIGHT.medium}>{icon}</Text>
+                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                     {t("settings.categories.form.iconHelp")}
                   </Text>
                 </YStack>
@@ -286,7 +286,7 @@ export function CategoryFormModal({
 
           {/* Color Picker Trigger */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable onPress={handleOpenColorPicker}>
@@ -299,8 +299,8 @@ export function CategoryFormModal({
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
                 />
                 <YStack flex={1}>
-                  <Text fontWeight="500">{color}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={0.6}>
+                  <Text fontWeight={UI_FONT_WEIGHT.medium}>{color}</Text>
+                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                     {t("settings.categories.form.colorHelp")}
                   </Text>
                 </YStack>
@@ -318,7 +318,7 @@ export function CategoryFormModal({
               theme="accent"
               onPress={handleSave}
               icon={<Check size="$icon" />}
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
             >
               {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
             </Button>

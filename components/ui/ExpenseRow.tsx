@@ -14,6 +14,7 @@ import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
+import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   expenseDetails: {
@@ -77,14 +78,14 @@ export const ExpenseRow = memo(function ExpenseRow({
           color={categoryInfo.color as `#${string}`}
         />
         <YStack flex={1}>
-          <Text fontWeight="bold" fontSize="$label">
+          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
             {expense.note || categoryLabel}
           </Text>
-          <Text color="$color" opacity={0.6} fontSize="$caption">
+          <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
             {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
-            <Text color="$color" opacity={0.5} fontSize="$caption">
+            <Text color="$color" opacity={UI_OPACITY.faint} fontSize="$caption">
               {paymentMethodDisplay}
             </Text>
           ) : null}

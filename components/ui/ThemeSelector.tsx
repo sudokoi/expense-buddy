@@ -3,7 +3,7 @@ import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface ThemeSelectorProps {
   value: ThemePreference
@@ -29,7 +29,6 @@ const styles = {
   } as ViewStyle,
 }
 
-const ICON_SIZE = 18
 
 interface ThemeOption {
   key: ThemePreference
@@ -57,7 +56,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
 
   return (
     <Card
-      borderWidth={1}
+      borderWidth={UI_BORDER_WIDTH.thin}
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
@@ -77,7 +76,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
           >
             <View
               flex={1}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               bg={isSelected ? "$backgroundFocus" : "transparent"}
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
@@ -85,15 +84,15 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               style={styles.segmentInner}
             >
               <Icon
-                size={ICON_SIZE}
+                size={UI_ICON_SIZE.regular}
                 color={getColorValue(theme.color)}
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               />
               <Text
                 fontSize="$body"
-                fontWeight={isSelected ? "600" : "400"}
+                fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
                 color="$color"
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               >
                 {label}
               </Text>

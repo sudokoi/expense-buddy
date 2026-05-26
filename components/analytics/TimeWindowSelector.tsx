@@ -3,7 +3,7 @@ import { memo, useCallback } from "react"
 import { ScrollView, ViewStyle } from "react-native"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -64,8 +64,8 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               px="$section"
               theme={isSelected ? "accent" : undefined}
               borderColor="$borderColor"
-              borderWidth={!isSelected ? 1 : 0}
-              onPress={() => handlePress(window.value)}
+borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+               onPress={() => handlePress(window.value)}
             >
               {t(`analytics.timeWindow.${window.value}`)}
             </Button>

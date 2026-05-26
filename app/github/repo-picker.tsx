@@ -6,7 +6,7 @@ import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { secureStorage } from "../../services/secure-storage"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 type GitHubUser = { login: string }
@@ -31,7 +31,7 @@ const BRANCH_KEY = "github_branch"
 const layoutStyles = {
   container: {
     padding: UI_SPACE.gutter,
-    maxWidth: 700,
+    maxWidth: 17.5 * UI_SPACE.empty,
     alignSelf: "center",
     width: "100%",
   } as ViewStyle,
@@ -231,7 +231,7 @@ export default function GitHubRepoPickerScreen() {
       >
         <XStack style={layoutStyles.repoButtonInner}>
           <Text>{item.full_name}</Text>
-          <Text opacity={0.6}>{item.private ? "Private" : "Public"}</Text>
+          <Text opacity={UI_OPACITY.subtle}>{item.private ? "Private" : "Public"}</Text>
         </XStack>
       </Button>
     ),
@@ -248,14 +248,14 @@ export default function GitHubRepoPickerScreen() {
         contentContainerStyle={{
           padding: UI_SPACE.gutter,
           paddingBottom: insets.bottom,
-          maxWidth: 700,
+          maxWidth: 17.5 * UI_SPACE.empty,
           alignSelf: "center",
           width: "100%",
         }}
         ListHeaderComponent={
           <YStack gap="$gutter">
             <XStack style={layoutStyles.headerRow}>
-              <Text fontSize="$screenTitle" fontWeight="700">
+              <Text fontSize="$screenTitle" fontWeight={UI_FONT_WEIGHT.bold}>
                 {t("repoPicker.title")}
               </Text>
               <Button size="$compact" onPress={() => router.back()}>
@@ -263,9 +263,9 @@ export default function GitHubRepoPickerScreen() {
               </Button>
             </XStack>
 
-            <Text opacity={0.7}>{t("repoPicker.subtitle")}</Text>
+            <Text opacity={UI_OPACITY.medium}>{t("repoPicker.subtitle")}</Text>
 
-            {viewerLogin ? <Text opacity={0.7}>Signed in as {viewerLogin}</Text> : null}
+            {viewerLogin ? <Text opacity={UI_OPACITY.medium}>Signed in as {viewerLogin}</Text> : null}
 
             {isLoading ? (
               <XStack gap="$section" style={layoutStyles.loadingRow}>
@@ -286,7 +286,7 @@ export default function GitHubRepoPickerScreen() {
             <Input
               bg="$background"
               size="$control"
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor="$borderColor"
               focusStyle={{
                 borderColor: ACCENT_COLORS.primary,
@@ -299,7 +299,7 @@ export default function GitHubRepoPickerScreen() {
           </YStack>
         }
         ListEmptyComponent={
-          !isLoading && !error ? <Text opacity={0.7}>{t("repoPicker.empty")}</Text> : null
+          !isLoading && !error ? <Text opacity={UI_OPACITY.medium}>{t("repoPicker.empty")}</Text> : null
         }
       />
     </YStack>

@@ -1,4 +1,5 @@
 import { Text, TextProps, ColorTokens } from "tamagui"
+import { UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 type AmountType = "expense" | "income" | "neutral"
 
@@ -17,7 +18,7 @@ export function AmountText({ type = "expense", ...props }: AmountTextProps) {
     neutral: "$color",
   }
 
-  return <Text fontWeight="bold" fontSize="$title" color={colorMap[type]} {...props} />
+  return <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$title" color={colorMap[type]} {...props} />
 }
 
 export type { AmountTextProps }

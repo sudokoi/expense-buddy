@@ -2,7 +2,7 @@ import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CollapsibleSectionProps {
   title: string
@@ -39,7 +39,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
   }, [])
 
   return (
-    <Card borderWidth={1} borderColor="$borderColor">
+    <Card borderWidth={UI_BORDER_WIDTH.thin} borderColor="$borderColor">
       <Pressable onPress={toggleExpanded}>
         <XStack
           style={styles.header}
@@ -49,7 +49,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
           borderBottomLeftRadius={isExpanded ? 0 : "$surface"}
           borderBottomRightRadius={isExpanded ? 0 : "$surface"}
         >
-          <Text fontWeight="bold" fontSize="$label">
+          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
             {title}
           </Text>
           {isExpanded ? (

@@ -8,7 +8,7 @@ import {
 } from "@tamagui/lucide-icons-2"
 import { Pressable, ViewStyle } from "react-native"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface CurrencySelectorProps {
   value: string
@@ -36,8 +36,6 @@ const styles = {
   } as ViewStyle,
 }
 
-const ICON_SIZE = 18
-
 interface CurrencyOption {
   key: string
   label: string
@@ -57,7 +55,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
 
   return (
     <Card
-      borderWidth={1}
+      borderWidth={UI_BORDER_WIDTH.thin}
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
@@ -76,7 +74,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
           >
             <View
               flex={1}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               bg={isSelected ? "$backgroundFocus" : "transparent"}
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
@@ -84,15 +82,15 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
               style={styles.segmentInner}
             >
               <Icon
-                size={ICON_SIZE}
+                size={UI_ICON_SIZE.regular}
                 color={getColorValue(theme.color)}
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               />
               <Text
                 fontSize="$caption"
-                fontWeight={isSelected ? "600" : "400"}
+                fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
                 color="$color"
-                opacity={isSelected ? 1 : 0.7}
+                opacity={isSelected ? 1 : UI_OPACITY.medium}
               >
                 {label}
               </Text>

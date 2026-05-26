@@ -17,7 +17,7 @@ import {
 } from "../../services/payment-instruments"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { getColorValue } from "../../tamagui.config"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 
 // Only use style prop for layout properties that Tamagui View doesn't support directly
@@ -235,7 +235,7 @@ export function PaymentInstrumentInlineDropdown({
       <Button
         size="$control"
         chromeless
-        borderWidth={1}
+        borderWidth={UI_BORDER_WIDTH.thin}
         borderColor="$borderColor"
         background={open ? "$backgroundFocus" : "transparent"}
         onPress={() => setOpen((v) => !v)}
@@ -246,7 +246,7 @@ export function PaymentInstrumentInlineDropdown({
 
       {open && (
         <Card
-          borderWidth={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
           p="$micro"
           rounded="$control"
@@ -259,25 +259,25 @@ export function PaymentInstrumentInlineDropdown({
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
               bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
               style={styles.menuRowInner}
             >
               <Text
-                fontWeight={kind === "none" ? "700" : "500"}
+                fontWeight={kind === "none" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.none")}
               </Text>
               {kind === "none" && (
-                <Text color={focusBorderColor} fontWeight="700">
+                <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "none" && (
-                <Text opacity={0} fontWeight="700">
+                <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -291,25 +291,25 @@ export function PaymentInstrumentInlineDropdown({
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor={kind === "manual" ? focusBorderColor : "$borderColor"}
               bg={kind === "manual" ? "$backgroundFocus" : "$backgroundHover"}
               style={styles.menuRowInner}
             >
               <Text
-                fontWeight={kind === "manual" ? "700" : "500"}
+                fontWeight={kind === "manual" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.others")}
               </Text>
               {kind === "manual" && (
-                <Text color={focusBorderColor} fontWeight="700">
+                <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "manual" && (
-                <Text opacity={0} fontWeight="700">
+                <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -327,25 +327,25 @@ export function PaymentInstrumentInlineDropdown({
                 style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
               >
                 <View
-                  borderWidth={1}
-                  borderColor={isSelected ? focusBorderColor : "$borderColor"}
+              borderWidth={UI_BORDER_WIDTH.thin}
+              borderColor={isSelected ? focusBorderColor : "$borderColor"}
                   bg={isSelected ? "$backgroundFocus" : "$backgroundHover"}
                   style={styles.menuRowInner}
                 >
                   <Text
-                    fontWeight={isSelected ? "700" : "500"}
+                    fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
                     style={styles.rowLabel}
                     numberOfLines={1}
                   >
                     {formatPaymentInstrumentLabel(inst)}
                   </Text>
                   {isSelected && (
-                    <Text color={focusBorderColor} fontWeight="700">
+                    <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
                       {t("instruments.dropdown.selected")}
                     </Text>
                   )}
                   {!isSelected && (
-                    <Text opacity={0} fontWeight="700">
+                    <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
                       {t("instruments.dropdown.selected")}
                     </Text>
                   )}
@@ -360,7 +360,7 @@ export function PaymentInstrumentInlineDropdown({
               theme="accent"
               icon={Plus}
               onPress={handleStartAdd}
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
             >
               {showAdd
@@ -373,13 +373,13 @@ export function PaymentInstrumentInlineDropdown({
 
       {kind === "manual" && (
         <YStack gap="$micro">
-          <Label color="$color" opacity={0.6} fontSize="$caption">
+          <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
             {effectiveIdentifierLabel} (Optional)
           </Label>
           <Input
             size="$control"
             bg="$background"
-            borderWidth={2}
+            borderWidth={UI_BORDER_WIDTH.normal}
             borderColor="$borderColor"
             focusStyle={{
               borderColor: ACCENT_COLORS.primary,
@@ -398,12 +398,12 @@ export function PaymentInstrumentInlineDropdown({
       {showAdd && onCreateInstrument && (
         <YStack
           gap="$control"
-          borderWidth={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
           style={{ padding: UI_SPACE.control, borderRadius: UI_RADIUS.chip }}
         >
           <YStack gap="$micro">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("instruments.form.nickname")}
             </Label>
             <Input
@@ -421,7 +421,7 @@ export function PaymentInstrumentInlineDropdown({
                 }
               }}
               maxLength={30}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor={addErrors.nickname ? "$red10" : "$borderColor"}
               focusStyle={{
                 borderColor: addErrors.nickname ? "$red10" : focusBorderColor,
@@ -435,7 +435,7 @@ export function PaymentInstrumentInlineDropdown({
           </YStack>
 
           <YStack gap="$micro">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {effectiveIdentifierLabel}
             </Label>
             <Input
@@ -457,7 +457,7 @@ export function PaymentInstrumentInlineDropdown({
                 }
               }}
               maxLength={getLastDigitsLength(method)}
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor={addErrors.lastDigits ? "$red10" : "$borderColor"}
               focusStyle={{
                 borderColor: addErrors.lastDigits ? "$red10" : focusBorderColor,

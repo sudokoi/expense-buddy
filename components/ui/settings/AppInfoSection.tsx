@@ -4,6 +4,7 @@ import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons-2"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
+import { UI_OPACITY, UI_FONT_WEIGHT } from "../../../constants/ui-tokens"
 
 /**
  * Props for the AppInfoSection component
@@ -71,22 +72,22 @@ export function AppInfoSection({
     <YStack gap="$section">
       {/* Current Version */}
       <XStack style={layoutStyles.versionRow}>
-        <Text color="$color" opacity={0.8}>
+        <Text color="$color" opacity={UI_OPACITY.strong}>
           {t("settings.about.currentVersion")}
         </Text>
-        <Text fontWeight="bold">v{currentVersion}</Text>
+        <Text fontWeight={UI_FONT_WEIGHT.bold}>v{currentVersion}</Text>
       </XStack>
 
       {/* Update Info */}
       {updateInfo?.latestVersion && !updateInfo.error && (
         <XStack style={layoutStyles.versionRow}>
-          <Text color="$color" opacity={0.8}>
+          <Text color="$color" opacity={UI_OPACITY.strong}>
             {t("settings.about.latestVersion")}
           </Text>
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             color={updateInfo.hasUpdate ? successColor : "$color"}
-            opacity={updateInfo.hasUpdate ? 1 : 0.8}
+            opacity={updateInfo.hasUpdate ? 1 : UI_OPACITY.strong}
           >
             v{updateInfo.latestVersion}
           </Text>

@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"
-import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY } from "../../../constants/ui-tokens"
 
 interface LocalizationSectionProps {
   languagePreference: string
@@ -68,19 +68,19 @@ export function LocalizationSection({
             <Text
               fontSize="$caption"
               color="$color"
-              opacity={0.5}
+              opacity={UI_OPACITY.faint}
               textTransform="uppercase"
             >
               {t("settings.sections.localization")}
             </Text>
-            <Text color="$color" opacity={0.72} fontSize="$body">
+            <Text color="$color" opacity={UI_OPACITY.medium} fontSize="$body">
               {summary}
             </Text>
           </YStack>
           {expanded ? (
-            <ChevronUp size={20} color="$color" opacity={0.6} />
+            <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
           ) : (
-            <ChevronDown size={20} color="$color" opacity={0.6} />
+            <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
           )}
         </XStack>
       </Pressable>
@@ -94,14 +94,14 @@ export function LocalizationSection({
           style={{ borderRadius: UI_RADIUS.surface }}
         >
           <YStack gap="$micro">
-            <Label color="$color" opacity={0.8} fontSize="$caption">
+            <Label color="$color" opacity={UI_OPACITY.strong} fontSize="$caption">
               {t("settings.localization.language")}
             </Label>
             <LanguageSelector value={languagePreference} onChange={onLanguageChange} />
           </YStack>
 
           <YStack gap="$micro">
-            <Label color="$color" opacity={0.8} fontSize="$caption">
+            <Label color="$color" opacity={UI_OPACITY.strong} fontSize="$caption">
               {t("settings.localization.currency")}
             </Label>
             <CurrencySelector value={defaultCurrency} onChange={onCurrencyChange} />

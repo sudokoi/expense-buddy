@@ -7,7 +7,7 @@ import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { PaymentMethodType } from "../../types/expense"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
@@ -71,13 +71,13 @@ const LegendItem = memo(function LegendItem({
       >
         <XStack style={styles.legendLeft}>
           <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-          <Text fontWeight={isSelected ? "bold" : "normal"}>{item.text}</Text>
+          <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>{item.text}</Text>
         </XStack>
         <XStack style={styles.legendRight}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text fontWeight="bold">₹{item.value.toFixed(2)}</Text>
+          <Text fontWeight={UI_FONT_WEIGHT.bold}>₹{item.value.toFixed(2)}</Text>
         </XStack>
       </XStack>
     </Pressable>
@@ -128,10 +128,10 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   const CenterLabel = useCallback(
     () => (
       <YStack style={styles.centerLabel}>
-        <Text fontSize="$caption" color="$color" opacity={0.6}>
+        <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text fontWeight="bold" fontSize="$label">
+        <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
           ₹{total.toFixed(0)}
         </Text>
       </YStack>
@@ -143,7 +143,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
     return (
       <CollapsibleSection title={t("analytics.charts.paymentMethod.title")}>
         <YStack style={styles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.common.noData")}
           </Text>
         </YStack>

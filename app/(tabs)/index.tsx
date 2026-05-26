@@ -22,7 +22,7 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
   string,
@@ -235,7 +235,7 @@ export default function DashboardScreen() {
       {/* Header */}
       <XStack style={layoutStyles.headerRow}>
         <YStack>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.welcome")}
           </Text>
         </YStack>
@@ -261,7 +261,7 @@ export default function DashboardScreen() {
               onPress={() => startTransition(() => setSelectedCurrency(c))}
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
-              borderWidth={effectiveCurrency !== c ? 1 : 0}
+              borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}
               style={layoutStyles.roundButton}
             >
               {c} ({getCurrencySymbol(c)})
@@ -274,14 +274,14 @@ export default function DashboardScreen() {
       <XStack style={layoutStyles.summaryCardsRow}>
         <Card
           flex={1}
-          borderWidth={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
           p="$block"
           bg={CARD_COLORS.blue.bg}
           onPress={handleAnalyticsPress}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$body"
             color={CARD_COLORS.blue.text}
@@ -303,14 +303,14 @@ export default function DashboardScreen() {
         </Card>
         <Card
           flex={1}
-          borderWidth={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
           p="$block"
           bg={CARD_COLORS.green.bg}
           onPress={handleHistoryPress}
         >
           <Text
-            fontWeight="bold"
+            fontWeight={UI_FONT_WEIGHT.bold}
             textTransform="uppercase"
             fontSize="$body"
             color={CARD_COLORS.green.text}
@@ -368,14 +368,14 @@ export default function DashboardScreen() {
           </YStack>
         ) : (
           <Card
-            borderWidth={1}
+            borderWidth={UI_BORDER_WIDTH.thin}
             borderColor="$borderColor"
             p="$gutter"
             items="center"
             justify="center"
             height={150}
           >
-            <Text color="$color" opacity={0.6}>
+            <Text color="$color" opacity={UI_OPACITY.subtle}>
               {t("dashboard.noData")}
             </Text>
           </Card>
@@ -394,7 +394,7 @@ export default function DashboardScreen() {
         </XStack>
 
         {recentExpenses.length === 0 && (
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.noRecent")}
           </Text>
         )}

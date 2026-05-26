@@ -14,7 +14,7 @@ import { formatCurrency } from "../../utils/currency"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { formatDate } from "../../utils/date"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
   string,
@@ -165,10 +165,10 @@ export default function DayViewScreen() {
           color="$color"
         />
         <YStack style={{ alignItems: "center" }}>
-          <Text fontSize="$title" fontWeight="bold">
+          <Text fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
             {dayTitle}
           </Text>
-          <Text fontSize="$caption" color="$color" opacity={0.6}>
+          <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
             {fullDate}
           </Text>
         </YStack>
@@ -178,7 +178,7 @@ export default function DayViewScreen() {
       {/* Date Nav */}
       <XStack style={layoutStyles.dateNav}>
         <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
-        <Text fontSize="$sectionTitle" fontWeight="bold" color="$color">
+        <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}
         </Text>
         <Button size="$compact" chromeless icon={ArrowRight} onPress={handleNextDay} />
@@ -188,7 +188,7 @@ export default function DayViewScreen() {
         style={{ textAlign: "center", marginBottom: UI_SPACE.gutter }}
         fontSize="$caption"
         color="$color"
-        opacity={0.6}
+        opacity={UI_OPACITY.subtle}
       >
         {t("dayView.totalSpent")}
       </Text>
@@ -196,7 +196,7 @@ export default function DayViewScreen() {
       {/* Expenses List */}
       {dailyExpenses.length === 0 ? (
         <YStack style={layoutStyles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dayView.empty")}
           </Text>
         </YStack>

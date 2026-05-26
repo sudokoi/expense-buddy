@@ -18,7 +18,7 @@ import {
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
 import type { PaymentMethodType } from "../../types/expense"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   container: {
@@ -161,10 +161,10 @@ export default function PaymentSettingsScreen() {
                 gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption" fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("settings.defaultPayment.label")}
                 </Text>
-                <Text color="$color" fontSize="$title" fontWeight="700" numberOfLines={2}>
+                <Text color="$color" fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold} numberOfLines={2}>
                   {defaultPaymentMethodLabel}
                 </Text>
               </YStack>
@@ -176,10 +176,10 @@ export default function PaymentSettingsScreen() {
                 gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption" fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("settings.payment.instrumentsTitle")}
                 </Text>
-                <Text color="$color" fontSize="$title" fontWeight="700">
+                <Text color="$color" fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
                   {activePaymentInstrumentCount}
                 </Text>
               </YStack>
@@ -191,10 +191,10 @@ export default function PaymentSettingsScreen() {
                 gap="$micro"
                 style={layoutStyles.summaryCard}
               >
-                <Text color="$color" opacity={0.58} fontSize="$caption" fontWeight="700">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption" fontWeight={UI_FONT_WEIGHT.bold}>
                   {t("settings.payment.categoriesTitle")}
                 </Text>
-                <Text color="$color" fontSize="$title" fontWeight="700">
+                <Text color="$color" fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
                   {categories.length}
                 </Text>
               </YStack>
@@ -221,7 +221,7 @@ export default function PaymentSettingsScreen() {
                   }
                 />
               </YStack>
-              <Text color="$color" opacity={0.58} fontSize="$caption">
+              <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                 {t("settings.payment.defaultMethodHelp")}
               </Text>
             </YStack>

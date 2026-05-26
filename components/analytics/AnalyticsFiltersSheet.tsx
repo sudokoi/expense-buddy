@@ -19,7 +19,7 @@ import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
 import { CurrencyFilter } from "./CurrencyFilter"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   sheetFrame: {
@@ -262,7 +262,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
           <ScrollView showsVerticalScrollIndicator={false} flex={1}>
             <YStack gap="$control" pb="$block">
               {isHydrating ? (
-                <Text color="$color" opacity={0.6} fontSize="$body">
+                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
                   {t("analytics.filtersModal.loading")}
                 </Text>
               ) : null}

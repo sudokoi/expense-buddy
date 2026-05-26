@@ -1,5 +1,6 @@
 import { Card, YStack, Text } from "tamagui"
 import { ReactNode } from "react"
+import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
   | "$micro"
@@ -52,9 +53,9 @@ export function SettingsSection({
         >
           <Text
             fontSize="$caption"
-            fontWeight="700"
+            fontWeight={UI_FONT_WEIGHT.bold}
             color="$color"
-            opacity={0.52}
+            opacity={UI_OPACITY.faint}
             textTransform="uppercase"
             letterSpacing={1}
           >

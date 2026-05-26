@@ -4,6 +4,7 @@ import { getCurrencySymbol } from "../../utils/currency"
 import { useSettings } from "../../stores/hooks"
 import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface AmountRangeFilterProps {
   minAmount: number | null
@@ -50,7 +51,7 @@ export function AmountRangeFilter({
           flex={1}
           bg="$background"
           size="$control"
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor="$borderColor"
           focusStyle={{
             borderColor: ACCENT_COLORS.primary,
@@ -67,7 +68,7 @@ export function AmountRangeFilter({
           flex={1}
           bg="$background"
           size="$control"
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor="$borderColor"
           focusStyle={{
             borderColor: ACCENT_COLORS.primary,

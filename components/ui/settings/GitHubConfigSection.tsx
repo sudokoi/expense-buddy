@@ -11,7 +11,7 @@ import { useRouter, usePathname } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../../constants/ui-tokens"
 
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
@@ -296,7 +296,7 @@ export function GitHubConfigSection({
           {({ open }: { open: boolean }) => (
             <>
               <XStack style={layoutStyles.accordionTriggerInner}>
-                <Text fontWeight="500">{t("settings.github.configTitle")}</Text>
+                <Text fontWeight={UI_FONT_WEIGHT.medium}>{t("settings.github.configTitle")}</Text>
                 {isConfigured && (
                   <YStack style={layoutStyles.connectedBadge}>
                     <XStack
@@ -317,7 +317,7 @@ export function GitHubConfigSection({
                       <Text
                         fontSize="$caption"
                         color="$color"
-                        opacity={0.7}
+                        opacity={UI_OPACITY.medium}
                         numberOfLines={1}
                         ellipsizeMode="middle"
                         style={{ flexShrink: 1, minWidth: 0 } as TextStyle}
@@ -329,9 +329,9 @@ export function GitHubConfigSection({
                 )}
               </XStack>
               {open ? (
-                <ChevronUp size={20} color="$color" opacity={0.6} />
+                <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
               ) : (
-                <ChevronDown size={20} color="$color" opacity={0.6} />
+                <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
               )}
             </>
           )}
@@ -349,7 +349,7 @@ export function GitHubConfigSection({
                   value={token}
                   onChangeText={handleTokenChange}
                   size="$control"
-                  borderWidth={2}
+                  borderWidth={UI_BORDER_WIDTH.normal}
                   borderColor={configErrors.token ? "$red10" : "$borderColor"}
                   focusStyle={{
                     borderColor: configErrors.token ? "$red10" : ACCENT_COLORS.primary,
@@ -360,7 +360,7 @@ export function GitHubConfigSection({
                     {configErrors.token}
                   </Text>
                 ) : (
-                  <Text fontSize="$caption" color="$color" opacity={0.6}>
+                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                     {t("settings.github.tokenHelp")}
                   </Text>
                 )}
@@ -395,14 +395,14 @@ export function GitHubConfigSection({
                     gap="$control"
                     style={{ paddingTop: UI_SPACE.micro } as ViewStyle}
                   >
-                    <Text fontSize="$caption" color="$color" opacity={0.8}>
+                    <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.strong}>
                       {t("settings.github.deviceCode")}
                     </Text>
                     <XStack
                       gap="$control"
                       style={{ alignItems: "center", flexWrap: "wrap" } as ViewStyle}
                     >
-                      <Text fontSize="$sectionTitle" fontWeight="700">
+                      <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold}>
                         {auth.deviceCode.user_code}
                       </Text>
                       <Button size="$compact" onPress={() => void handleCopyDeviceCode()}>
@@ -422,14 +422,14 @@ export function GitHubConfigSection({
                     >
                       {t("settings.github.openBrowser")}
                     </Button>
-                    <Text fontSize="$caption" color="$color" opacity={0.8}>
+                    <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.strong}>
                       {t("settings.github.browserHelp", {
                         url: auth.deviceCode.verification_uri,
                       })}
                     </Text>
                   </YStack>
                 )}
-                <Text fontSize="$caption" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                   {t("settings.github.loginHelp")}
                 </Text>
               </YStack>
@@ -445,7 +445,7 @@ export function GitHubConfigSection({
                   value={repo}
                   onChangeText={handleRepoChange}
                   size="$control"
-                  borderWidth={2}
+                  borderWidth={UI_BORDER_WIDTH.normal}
                   borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                   focusStyle={{
                     borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
@@ -459,7 +459,7 @@ export function GitHubConfigSection({
                     value={repo}
                     readOnly
                     size="$control"
-                    borderWidth={2}
+                    borderWidth={UI_BORDER_WIDTH.normal}
                     borderColor={configErrors.repo ? "$red10" : "$borderColor"}
                     focusStyle={{
                       borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
@@ -488,7 +488,7 @@ export function GitHubConfigSection({
                 value={branch}
                 onChangeText={handleBranchChange}
                 size="$control"
-                borderWidth={2}
+                borderWidth={UI_BORDER_WIDTH.normal}
                 borderColor={configErrors.branch ? "$red10" : "$borderColor"}
                 focusStyle={{
                   borderColor: configErrors.branch ? "$red10" : ACCENT_COLORS.primary,

@@ -17,7 +17,7 @@ import {
 } from "../../services/payment-instruments"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   methodRow: {
@@ -193,7 +193,7 @@ function PaymentInstrumentForm({
   return (
     <YStack gap="$gutter">
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {t("instruments.form.paymentMethod")}
         </Label>
         <XStack style={layoutStyles.methodRow}>
@@ -216,7 +216,7 @@ function PaymentInstrumentForm({
       </YStack>
 
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {t("instruments.form.nickname")}
         </Label>
         <Input
@@ -226,7 +226,7 @@ function PaymentInstrumentForm({
           value={nickname}
           onChangeText={handleNicknameChange}
           maxLength={30}
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor={errors.nickname ? "$red10" : "$borderColor"}
           focusStyle={{
             borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
@@ -240,7 +240,7 @@ function PaymentInstrumentForm({
       </YStack>
 
       <YStack gap="$control">
-        <Label color="$color" opacity={0.8}>
+        <Label color="$color" opacity={UI_OPACITY.strong}>
           {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
         </Label>
         <Input
@@ -253,7 +253,7 @@ function PaymentInstrumentForm({
           value={lastDigits}
           onChangeText={handleLastDigitsChange}
           maxLength={getLastDigitsLength(method)}
-          borderWidth={2}
+          borderWidth={UI_BORDER_WIDTH.normal}
           borderColor={errors.lastDigits ? "$red10" : "$borderColor"}
           focusStyle={{
             borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
@@ -275,7 +275,7 @@ function PaymentInstrumentForm({
           theme="accent"
           onPress={handleSave}
           icon={<Check size="$icon" />}
-          fontWeight="bold"
+          fontWeight={UI_FONT_WEIGHT.bold}
         >
           {isEditMode ? t("common.save") : t("common.add")}
         </Button>

@@ -29,7 +29,7 @@ import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const styles = {
   headerRow: {
@@ -83,10 +83,10 @@ const EmptyState = memo(function EmptyState({
 }) {
   return (
     <YStack style={styles.emptyContainer}>
-      <Text color="$color" opacity={0.6} style={styles.emptyText}>
+      <Text color="$color" opacity={UI_OPACITY.subtle} style={styles.emptyText}>
         {title}
       </Text>
-      <Text color="$color" opacity={0.4} style={styles.emptySubtext}>
+      <Text color="$color" opacity={UI_OPACITY.ghost} style={styles.emptySubtext}>
         {subtitle}
       </Text>
     </YStack>
@@ -99,7 +99,7 @@ const Header = memo(function Header() {
   return (
     <XStack style={styles.headerRow}>
       <YStack>
-        <Text color="$color" opacity={0.6}>
+        <Text color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.subtitle")}
         </Text>
       </YStack>
@@ -561,7 +561,7 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="$chip"
               px="$control"
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
@@ -577,7 +577,7 @@ export default function AnalyticsScreen() {
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
-          borderWidth={1}
+          borderWidth={UI_BORDER_WIDTH.thin}
           borderColor="$borderColor"
         >
           {!filtersHydrated
@@ -623,7 +623,7 @@ export default function AnalyticsScreen() {
                       onPress={onPress}
                       theme={isSelected ? "accent" : undefined}
                       borderColor="$borderColor"
-                      borderWidth={isSelected ? 1 : 0}
+                      borderWidth={isSelected ? UI_BORDER_WIDTH.thin : 0}
                       style={styles.chipRadius}
                     >
                       {code} ({getCurrencySymbol(code)})

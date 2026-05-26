@@ -36,14 +36,14 @@ import {
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 // Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
   container: {
-    maxWidth: 600,
+    maxWidth: UI_SPACE.empty * 15,
     alignSelf: "center",
     width: "100%",
   } as ViewStyle,
@@ -314,13 +314,13 @@ export default function AddExpenseScreen() {
           {Platform.OS === "android" ? (
             <Button
               size="$control"
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
               onPress={() => {
                 void handleOpenSmsImport()
               }}
               disabled={isScanningSmsImports}
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
             >
               {isScanningSmsImports
                 ? t("settings.smsImport.actions.scanning")
@@ -334,11 +334,11 @@ export default function AddExpenseScreen() {
 
           {/* Amount Input */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.amount")}
             </Label>
             <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text fontSize="$label" fontWeight="bold" color="$color" opacity={0.8}>
+              <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
@@ -364,7 +364,7 @@ export default function AddExpenseScreen() {
                     })
                   }
                 }}
-                borderWidth={2}
+                borderWidth={UI_BORDER_WIDTH.normal}
                 borderColor={errors.amount ? "$red10" : "$borderColor"}
                 focusStyle={{
                   borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
@@ -377,7 +377,7 @@ export default function AddExpenseScreen() {
               </Text>
             )}
             {expressionPreview && !errors.amount && (
-              <Text fontSize="$body" color="$color" opacity={0.7}>
+              <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
                 {t("add.preview", { amount: expressionPreview })}
               </Text>
             )}
@@ -385,7 +385,7 @@ export default function AddExpenseScreen() {
 
           {/* Category Selection */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.category")}
             </Label>
             <XStack style={layoutStyles.categoryRow}>{categoryCards}</XStack>
@@ -393,7 +393,7 @@ export default function AddExpenseScreen() {
 
           {/* Date Picker */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.date")}
             </Label>
             <Button
@@ -401,7 +401,7 @@ export default function AddExpenseScreen() {
               size="$control"
               onPress={() => setShowDatePicker(true)}
               chromeless
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
             >
               {date.toLocaleDateString()}
             </Button>
@@ -418,7 +418,7 @@ export default function AddExpenseScreen() {
 
           {/* Note Input */}
           <YStack gap="$control">
-            <Label color="$color" opacity={0.8}>
+            <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.note")}
             </Label>
             <TextArea
@@ -427,7 +427,7 @@ export default function AddExpenseScreen() {
               onChangeText={setNote}
               numberOfLines={2}
               bg="$background"
-              borderWidth={2}
+              borderWidth={UI_BORDER_WIDTH.normal}
               borderColor="$borderColor"
               focusStyle={{
                 borderColor: ACCENT_COLORS.primary,
@@ -443,13 +443,13 @@ export default function AddExpenseScreen() {
               style={{ paddingHorizontal: 0, paddingVertical: 0 }}
             >
               <XStack flex={1} style={layoutStyles.expandHeader}>
-                <Label color="$color" opacity={0.8} pointerEvents="none">
+                <Label color="$color" opacity={UI_OPACITY.strong} pointerEvents="none">
                   {t("add.paymentMethod")}
                 </Label>
                 {paymentMethodSectionExpanded ? (
-                  <ChevronUp size={20} color="$color" opacity={0.6} />
+                  <ChevronUp size={20} color="$color" opacity={UI_OPACITY.subtle} />
                 ) : (
-                  <ChevronDown size={20} color="$color" opacity={0.6} />
+                  <ChevronDown size={20} color="$color" opacity={UI_OPACITY.subtle} />
                 )}
               </XStack>
             </Button>
@@ -470,7 +470,7 @@ export default function AddExpenseScreen() {
                 {/* Identifier input for cards/UPI/Other */}
                 {selectedPaymentConfig?.hasIdentifier && (
                   <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                    <Label color="$color" opacity={0.6} fontSize="$caption">
+                    <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
                       {t("common.optional")}
@@ -507,7 +507,7 @@ export default function AddExpenseScreen() {
                       <Input
                         size="$control"
                         bg="$background"
-                        borderWidth={2}
+                        borderWidth={UI_BORDER_WIDTH.normal}
                         borderColor="$borderColor"
                         focusStyle={{
                           borderColor: ACCENT_COLORS.primary,
@@ -538,11 +538,11 @@ export default function AddExpenseScreen() {
             <Button
               flex={1}
               size="$control"
-              borderWidth={1}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
               onPress={() => handleSave({ stayOnAdd: true })}
               icon={<Plus size="$icon" />}
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
             >
               {t("add.addAnother")}
             </Button>
@@ -552,7 +552,7 @@ export default function AddExpenseScreen() {
               theme="accent"
               onPress={() => handleSave({ stayOnAdd: false })}
               icon={<Check size="$icon" />}
-              fontWeight="bold"
+              fontWeight={UI_FONT_WEIGHT.bold}
             >
               {t("add.save")}
             </Button>

@@ -12,7 +12,7 @@ import {
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -102,7 +102,7 @@ export const LineChartSection = memo(function LineChartSection({
       if (!item) return null
       return (
         <Card style={styles.tooltipContainer}>
-          <Text fontWeight="bold" fontSize="$body">
+          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$body">
             {symbol}
             {item.value.toFixed(2)}
           </Text>
@@ -133,7 +133,7 @@ export const LineChartSection = memo(function LineChartSection({
     return (
       <CollapsibleSection title={t("analytics.charts.trend.title")}>
         <YStack style={styles.emptyContainer}>
-          <Text color="$color" opacity={0.6}>
+          <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.common.noData")}
           </Text>
         </YStack>

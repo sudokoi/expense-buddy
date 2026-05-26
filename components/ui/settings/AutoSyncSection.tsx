@@ -3,7 +3,7 @@ import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_RADIUS, UI_SPACE } from "../../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../../constants/ui-tokens"
 
 /**
  * Props for the AutoSyncSection component
@@ -75,7 +75,7 @@ export function AutoSyncSection({
       borderTopColor="$borderColor"
       style={{ paddingTop: UI_SPACE.gutter }}
     >
-      <Text fontSize="$body" fontWeight="700" color="$color" opacity={0.8}>
+      <Text fontSize="$body" fontWeight={UI_FONT_WEIGHT.bold} color="$color" opacity={UI_OPACITY.strong}>
         {t("settings.autoSync.title")}
       </Text>
 
@@ -86,7 +86,7 @@ export function AutoSyncSection({
           <Text
             fontSize="$caption"
             color="$color"
-            opacity={0.6}
+            opacity={UI_OPACITY.subtle}
             style={layoutStyles.helperText}
           >
             {t("settings.autoSync.enableHelp")}
@@ -109,7 +109,7 @@ export function AutoSyncSection({
           <Text
             fontSize="$caption"
             color="$color"
-            opacity={0.6}
+            opacity={UI_OPACITY.subtle}
             style={layoutStyles.helperText}
           >
             {t("settings.autoSync.syncSettingsHelp")}
@@ -141,7 +141,7 @@ export function AutoSyncSection({
               </RadioGroup.Item>
               <YStack flex={1}>
                 <Label htmlFor="on_launch">{t("settings.autoSync.onLaunch")}</Label>
-                <Text fontSize="$caption" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                   {t("settings.autoSync.onLaunchHelp")}
                 </Text>
               </YStack>
@@ -153,7 +153,7 @@ export function AutoSyncSection({
               </RadioGroup.Item>
               <YStack flex={1}>
                 <Label htmlFor="on_change">{t("settings.autoSync.onChange")}</Label>
-                <Text fontSize="$caption" color="$color" opacity={0.6}>
+                <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                   {t("settings.autoSync.onChangeHelp")}
                 </Text>
               </YStack>
