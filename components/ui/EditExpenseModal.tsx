@@ -235,7 +235,7 @@ export function EditExpenseModal({
         open={open}
         onClose={handleClose}
         title={t("history.editDialog.title")}
-        snapPoints={[95]}
+        snapPoints={[100]}
         scroll
       >
         <YStack gap="$gutter" pb="$block">
