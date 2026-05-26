@@ -15,6 +15,14 @@ export interface ParsedSmsImportCandidate {
   matchedPatternKey: string
 }
 
+function normalizeUnicodeMathematicalAlphanumerics(text: string): string {
+  try {
+    return text.normalize("NFKD")
+  } catch {
+    return text
+  }
+}
+
 const amountPattern = /(?:INR|RS\.?|₹)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
 const debitKeywords = /debited|spent|withdrawn|paid|purchase|txn|transaction|upi/i
 const settledDebitKeywords = /debited|spent|withdrawn|paid|purchase/i
@@ -127,7 +135,7 @@ function isNegativeBankAlert(body: string): boolean {
 export function parseSmsImportCandidate(
   message: SmsImportRawMessage
 ): ParsedSmsImportCandidate | null {
-  const body = message.body.trim()
+  const body = normalizeUnicodeMathematicalAlphanumerics(message.body).trim()
   if (body.length === 0) {
     return null
   }

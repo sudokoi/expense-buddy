@@ -427,7 +427,6 @@ export default function AddExpenseScreen() {
               onChangeText={setNote}
               numberOfLines={2}
               bg="$background"
-              style={{ minHeight: 80 }}
               borderWidth={2}
               borderColor="$borderColor"
               focusStyle={{

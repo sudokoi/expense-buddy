@@ -64,7 +64,21 @@ function mergeReviewItems(
     byId.set(item.id, item)
   }
 
-  return normalizeReviewItems(Array.from(byId.values()))
+  // Deduplicate by fingerprint: if two items share the same fingerprint
+  // (same SMS content) but have different IDs (e.g. native bg vs JS bootstrap),
+  // keep only the one with the latest updatedAt timestamp.
+  const byFingerprint = new Map<string, SmsImportReviewItem>()
+  for (const item of Array.from(byId.values())) {
+    const existing = byFingerprint.get(item.fingerprint)
+    if (
+      !existing ||
+      new Date(item.updatedAt).getTime() > new Date(existing.updatedAt).getTime()
+    ) {
+      byFingerprint.set(item.fingerprint, item)
+    }
+  }
+
+  return normalizeReviewItems(Array.from(byFingerprint.values()))
 }
 
 function createQueueSnapshot(
