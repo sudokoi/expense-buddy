@@ -217,7 +217,7 @@ export const config = createTamagui({
       borderColorHover: "#DDA0DD",
       borderColorFocus: THEME_COLORS.kawaiiPink,
       borderColorPress: "#DDA0DD",
-      placeholderColor: THEME_COLORS.kawaiiMutedPurple,
+      placeholderColor: "#7A6A86",
     },
     // Override dark theme with kawaii colors
     dark: {
