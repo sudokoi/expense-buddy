@@ -854,8 +854,8 @@ export default function HistoryScreen() {
         {/* Filter Button */}
         <XStack style={layoutStyles.filterButtonContainer}>
           <Button
-            size="$compact"
-            px="$section"
+            size="$chip"
+            px="$control"
             icon={Filter}
             onPress={handleOpenFilterSheet}
             theme={activeCount > 0 ? "accent" : undefined}
@@ -931,8 +931,8 @@ export default function HistoryScreen() {
       {/* Filter Button */}
       <XStack style={layoutStyles.filterButtonContainer}>
         <Button
-          size="$compact"
-          px="$section"
+          size="$chip"
+          px="$control"
           icon={Filter}
           onPress={handleOpenFilterSheet}
           theme={activeCount > 0 ? "accent" : undefined}

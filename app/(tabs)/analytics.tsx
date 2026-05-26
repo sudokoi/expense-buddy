@@ -578,7 +578,8 @@ export default function AnalyticsScreen() {
         </ScrollView>
 
         <Button
-          size="$compact"
+          size="$chip"
+          px="$control"
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={SlidersHorizontal}
