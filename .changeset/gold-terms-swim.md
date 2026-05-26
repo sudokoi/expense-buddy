@@ -23,6 +23,12 @@ Upgrade Tamagui from v1 to v2 and migrate all component APIs to v5 shorthands.
 - Extract hardcoded view values into reusable constants: `UI_OPACITY`, `UI_FONT_WEIGHT`, `UI_BORDER_WIDTH`, `UI_ICON_SIZE` in `constants/ui-tokens.ts`
 - Replace ~250 hardcoded values (opacity, fontWeight, borderWidth, icon sizes, maxWidth) across 55+ files with token constants
 - Second pass: replace remaining 42 values across 13 files (CategorySection, FilterSheet, LineChartSection, SmsImportReviewScreen, settings, etc.)
+- Move all 14 remaining hardcoded hex colors from `tamagui.config.ts` into `THEME_COLORS` constants in `constants/theme-colors.ts`
+- Darken light-mode `placeholderColor` from `#8B7B96` to `#7A6A86` for WCAG contrast (3.36:1 → ~4.1:1)
+- Replace `TextArea` with `Input` (`size="$control"`) for note fields in add, edit, and SMS import flows
+- Theme-ify GitHub repo picker screen: add `color="$color"` to all Text elements, add themed border/bg to repo buttons, shrink buttons to `$chip`
+- Expand edit expense sheet to full screen (`snapPoints` 95 → 100)
+- Shrink filter buttons in history and analytics to `$chip`/`$control` sizing matching existing filter chips
 
 ### SMS Import — Dedup Reliability
 

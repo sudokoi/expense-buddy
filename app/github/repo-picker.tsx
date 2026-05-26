@@ -249,7 +249,11 @@ export default function GitHubRepoPickerScreen() {
         ListHeaderComponent={
           <YStack gap="$gutter">
             <XStack style={layoutStyles.headerRow}>
-              <Text fontSize="$screenTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
+              <Text
+                fontSize="$screenTitle"
+                fontWeight={UI_FONT_WEIGHT.bold}
+                color="$color"
+              >
                 {t("repoPicker.title")}
               </Text>
               <Button size="$chip" px="$control" chromeless onPress={() => router.back()}>
@@ -257,7 +261,9 @@ export default function GitHubRepoPickerScreen() {
               </Button>
             </XStack>
 
-            <Text color="$color" opacity={UI_OPACITY.medium}>{t("repoPicker.subtitle")}</Text>
+            <Text color="$color" opacity={UI_OPACITY.medium}>
+              {t("repoPicker.subtitle")}
+            </Text>
 
             {viewerLogin ? (
               <Text color="$color" opacity={UI_OPACITY.medium}>
@@ -298,7 +304,9 @@ export default function GitHubRepoPickerScreen() {
         }
         ListEmptyComponent={
           !isLoading && !error ? (
-            <Text color="$color" opacity={UI_OPACITY.medium}>{t("repoPicker.empty")}</Text>
+            <Text color="$color" opacity={UI_OPACITY.medium}>
+              {t("repoPicker.empty")}
+            </Text>
           ) : null
         }
       />
