@@ -45,6 +45,7 @@ import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 import { bootstrapSmsImportOnLaunch } from "../services/sms-import/bootstrap"
+import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -183,9 +184,17 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   }, [handleSyncNotification])
 
   // Apply downloaded settings from background auto-sync into the settings store.
+  // If the synced settings enable background SMS, request permission first.
   useEffect(() => {
-    const unsubscribe = onSettingsDownloaded((downloaded) => {
-      settingsStore.trigger.replaceSettings({ settings: downloaded })
+    const unsubscribe = onSettingsDownloaded(async (downloaded) => {
+      let settingsToApply = downloaded
+      if (downloaded.backgroundSmsImportEnabled) {
+        const result = await requestBackgroundSmsPermissions()
+        if (!result.granted) {
+          settingsToApply = { ...downloaded, backgroundSmsImportEnabled: false }
+        }
+      }
+      settingsStore.trigger.replaceSettings({ settings: settingsToApply })
     })
     return unsubscribe
   }, [settingsStore])
