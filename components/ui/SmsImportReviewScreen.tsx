@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
-import { Button, Card, H4, Input, Label, Text, TextArea, XStack, YStack } from "tamagui"
+import { Button, Card, H4, Input, Label, Text, XStack, YStack } from "tamagui"
 import {
   PaymentMethodType,
   type Expense,
@@ -725,9 +725,9 @@ export function SmsImportReviewScreen({
 
               <YStack gap="$control">
                 <Label>{t("smsImport.sheet.fields.note")}</Label>
-                <TextArea
+                <Input
                   bg="$background"
-                  minH={100}
+                  size="$control"
                   borderWidth={UI_BORDER_WIDTH.normal}
                   borderColor="$borderColor"
                   focusStyle={{

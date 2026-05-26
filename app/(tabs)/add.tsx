@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { YStack, XStack, Text, Input, Button, TextArea, Label } from "tamagui"
+import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import {
@@ -432,12 +432,12 @@ export default function AddExpenseScreen() {
             <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.note")}
             </Label>
-            <TextArea
+            <Input
               placeholder={t("add.notePlaceholder")}
               value={note}
               onChangeText={setNote}
-              numberOfLines={2}
               bg="$background"
+              size="$control"
               borderWidth={UI_BORDER_WIDTH.normal}
               borderColor="$borderColor"
               focusStyle={{
