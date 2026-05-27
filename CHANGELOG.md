@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 3.4.1
+
+### Patch Changes
+
+- [#67](https://github.com/sudokoi/expense-buddy/pull/67) [`fb22c7e`](https://github.com/sudokoi/expense-buddy/commit/fb22c7e18a9caa3dcd6f81e7a2091c972c223bb7) Thanks [@sudokoi](https://github.com/sudokoi)! - fix: Switch activeStyle for checked state (bg was silently overridden by $backgroundActive)
+
+  chore: replace all as ViewStyle/as TextStyle/as any casts with as const on style objects; remove 23 unused ViewStyle/TextStyle imports
+
+  refactor: inline 130+ style={layoutStyles.xxx} usages as direct Tamagui component props (items, justify, p, px, py, rounded, etc.) across 38 files; remove ~30 empty const style objects
+
 ## 3.4.0
 
 ### Minor Changes
