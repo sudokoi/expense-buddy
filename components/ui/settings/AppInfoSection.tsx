@@ -1,6 +1,5 @@
 import { YStack, XStack, Text, Button } from "tamagui"
 
-
 import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons-2"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
@@ -34,8 +33,6 @@ export interface AppInfoSectionProps {
   /** Callback to open the issue reporting page */
   onReportIssue: () => void
 }
-
-
 
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success

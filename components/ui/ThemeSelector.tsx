@@ -75,7 +75,12 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control}
+              flexDirection="row"
+              items="center"
+              justify="center"
+              gap={UI_SPACE.control}
+              p={UI_SPACE.control}
+              rounded={UI_RADIUS.control}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}

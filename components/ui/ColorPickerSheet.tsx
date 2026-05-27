@@ -13,8 +13,6 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-
-
 interface ColorPickerSheetProps {
   /** Whether the sheet is open */
   open: boolean
@@ -105,11 +103,7 @@ const ColorButton = memo(function ColorButton({
         }}
       >
         {isSelected && (
-          <Check
-            size={UI_ICON_SIZE.large}
-            color={checkColor}
-            position="absolute"
-          />
+          <Check size={UI_ICON_SIZE.large} color={checkColor} position="absolute" />
         )}
       </YStack>
     </Pressable>

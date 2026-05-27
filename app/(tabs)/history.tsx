@@ -792,7 +792,13 @@ export default function HistoryScreen() {
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
-      <YStack flex={1} bg="$background" items="center" justify="center" p={UI_SPACE.gutter}>
+      <YStack
+        flex={1}
+        bg="$background"
+        items="center"
+        justify="center"
+        p={UI_SPACE.gutter}
+      >
         <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
           {t("history.emptyTitle")}
         </Text>
@@ -812,7 +818,12 @@ export default function HistoryScreen() {
     return (
       <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
         {/* Filter Button */}
-        <XStack flexDirection="row" items="center" gap={UI_SPACE.control} mb={UI_SPACE.section}>
+        <XStack
+          flexDirection="row"
+          items="center"
+          gap={UI_SPACE.control}
+          mb={UI_SPACE.section}
+        >
           <Button
             size="$chip"
             px="$control"
@@ -889,7 +900,12 @@ export default function HistoryScreen() {
   return (
     <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
       {/* Filter Button */}
-      <XStack flexDirection="row" items="center" gap={UI_SPACE.control} mb={UI_SPACE.section}>
+      <XStack
+        flexDirection="row"
+        items="center"
+        gap={UI_SPACE.control}
+        mb={UI_SPACE.section}
+      >
         <Button
           size="$chip"
           px="$control"

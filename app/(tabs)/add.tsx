@@ -372,7 +372,9 @@ export default function AddExpenseScreen() {
             <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.category")}
             </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>{categoryCards}</XStack>
+            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+              {categoryCards}
+            </XStack>
           </YStack>
 
           {/* Date Picker */}

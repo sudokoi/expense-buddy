@@ -52,8 +52,6 @@ export interface GitHubConfigSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
 }
 
-
-
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
@@ -269,23 +267,40 @@ export function GitHubConfigSection({
   return (
     <Accordion type="single" collapsible defaultValue={undefined}>
       <Accordion.Item value="github-config">
-        <Accordion.Trigger bg="$backgroundHover" flexDirection="row" justify="space-between" p={UI_SPACE.section} rounded={UI_RADIUS.control}>
+        <Accordion.Trigger
+          bg="$backgroundHover"
+          flexDirection="row"
+          justify="space-between"
+          p={UI_SPACE.section}
+          rounded={UI_RADIUS.control}
+        >
           {({ open }: { open: boolean }) => (
             <>
-              <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control} minW={0} maxW="85%">
+              <XStack
+                flexDirection="row"
+                items="center"
+                flex={1}
+                gap={UI_SPACE.control}
+                minW={0}
+                maxW="85%"
+              >
                 <Text fontWeight={UI_FONT_WEIGHT.medium}>
                   {t("settings.github.configTitle")}
                 </Text>
                 {isConfigured && (
-                  <YStack flexDirection="column" items="flex-start" gap={UI_SPACE.micro / 2} shrink={1} minW={0}>
+                  <YStack
+                    flexDirection="column"
+                    items="flex-start"
+                    gap={UI_SPACE.micro / 2}
+                    shrink={1}
+                    minW={0}
+                  >
                     <XStack
-                      style={
-                        {
-                          minWidth: 0,
-                          alignItems: "center",
-                          gap: UI_SPACE.micro,
-                        }
-                      }
+                      style={{
+                        minWidth: 0,
+                        alignItems: "center",
+                        gap: UI_SPACE.micro,
+                      }}
                     >
                       <Check size={14} color={successColor} />
                       <Text fontSize="$caption" color={successColor}>
@@ -360,11 +375,7 @@ export function GitHubConfigSection({
                   onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
                   disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
                   theme="accent"
-                  style={
-                    isSignedIn
-                      ? ({ backgroundColor: errorColor })
-                      : undefined
-                  }
+                  style={isSignedIn ? { backgroundColor: errorColor } : undefined}
                 >
                   {auth.isSigningIn
                     ? t("settings.github.signingIn")
@@ -378,10 +389,7 @@ export function GitHubConfigSection({
                   </Text>
                 )}
                 {auth.deviceCode && (
-                  <YStack
-                    gap="$control"
-                    style={{ paddingTop: UI_SPACE.micro }}
-                  >
+                  <YStack gap="$control" style={{ paddingTop: UI_SPACE.micro }}>
                     <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.strong}>
                       {t("settings.github.deviceCode")}
                     </Text>

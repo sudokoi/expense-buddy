@@ -250,7 +250,12 @@ export function CategoryFormModal({
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
               <XStack
-                flexDirection="row" items="center" gap={UI_SPACE.section} p={UI_SPACE.section} rounded={UI_RADIUS.control} borderWidth={UI_BORDER_WIDTH.normal}
+                flexDirection="row"
+                items="center"
+                gap={UI_SPACE.section}
+                p={UI_SPACE.section}
+                rounded={UI_RADIUS.control}
+                borderWidth={UI_BORDER_WIDTH.normal}
                 bg="$backgroundHover"
                 borderColor="$borderColor"
               >
@@ -279,9 +284,7 @@ export function CategoryFormModal({
               {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable onPress={handleOpenColorPicker}>
-              <XStack
-                justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}
-              >
+              <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
                 <YStack
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
                 />

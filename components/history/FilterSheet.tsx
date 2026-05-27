@@ -8,7 +8,6 @@
 import React, { useState, useCallback, useMemo } from "react"
 import { YStack, XStack, H4, Button, Text, Sheet, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
-import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import type {
@@ -67,7 +66,6 @@ const layoutStyles = {
   contentContainer: {
     gap: UI_SPACE.section,
   },
-
 }
 
 export const FilterSheet = React.memo(function FilterSheet({
@@ -251,10 +249,7 @@ export const FilterSheet = React.memo(function FilterSheet({
       <Sheet.Frame style={layoutStyles.sheetFrame} bg="$background">
         <Sheet.Handle />
 
-        <YStack
-          gap="$section"
-          style={{ ...layoutStyles.contentContainer, flex: 1 }}
-        >
+        <YStack gap="$section" style={{ ...layoutStyles.contentContainer, flex: 1 }}>
           <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
             <H4>{t("history.filterSheet.title")}</H4>
             <XStack gap="$control" style={{ alignItems: "center" }}>
@@ -338,13 +333,11 @@ export const FilterSheet = React.memo(function FilterSheet({
 
           <XStack
             gap="$control"
-            style={
-              {
-                justifyContent: "flex-end",
-                paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
-                paddingTop: UI_SPACE.control,
-              }
-            }
+            style={{
+              justifyContent: "flex-end",
+              paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
+              paddingTop: UI_SPACE.control,
+            }}
           >
             <Button size="$control" theme="accent" onPress={handleApply}>
               {t("common.apply")}

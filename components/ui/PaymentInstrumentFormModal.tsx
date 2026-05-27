@@ -24,8 +24,6 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-
-
 const INSTRUMENT_METHODS: PaymentInstrumentMethod[] = ["Credit Card", "Debit Card", "UPI"]
 
 function getInstrumentMethodConfig(method: PaymentInstrumentMethod) {

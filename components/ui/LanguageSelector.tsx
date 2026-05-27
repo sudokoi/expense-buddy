@@ -17,8 +17,6 @@ interface LanguageSelectorProps {
   onChange: (lang: string) => void
 }
 
-
-
 interface LanguageOption {
   key: string
   label: string
@@ -57,7 +55,8 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
-      flexDirection="row" flexWrap="wrap"
+      flexDirection="row"
+      flexWrap="wrap"
     >
       {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
@@ -68,7 +67,10 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
-            style={({ pressed }) => [{ flexBasis: "50%", minHeight: 44 }, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [
+              { flexBasis: "50%", minHeight: 44 },
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
           >
             <View
               flex={1}
@@ -77,7 +79,13 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control} m={UI_SPACE.micro / 2}
+              flexDirection="row"
+              items="center"
+              justify="center"
+              gap={UI_SPACE.control}
+              p={UI_SPACE.control}
+              rounded={UI_RADIUS.control}
+              m={UI_SPACE.micro / 2}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}

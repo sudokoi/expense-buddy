@@ -19,8 +19,6 @@ interface LocalizationSectionProps {
   onCurrencyChange: (currency: string) => void
 }
 
-
-
 // Map of language codes to labels (matching LanguageSelector)
 const languageLabels: Record<string, string> = {
   "en-US": "English (US)",
@@ -60,7 +58,15 @@ export function LocalizationSection({
         aria-expanded={expanded}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
-        <XStack flex={1} bg="$backgroundHover" justify="space-between" items="center" py={UI_SPACE.section - 2} px={UI_SPACE.section} rounded={UI_RADIUS.chip}>
+        <XStack
+          flex={1}
+          bg="$backgroundHover"
+          justify="space-between"
+          items="center"
+          py={UI_SPACE.section - 2}
+          px={UI_SPACE.section}
+          rounded={UI_RADIUS.chip}
+        >
           <YStack flex={1} gap="$micro">
             <Text
               fontSize="$caption"

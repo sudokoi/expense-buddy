@@ -149,7 +149,8 @@ export default function PaymentSettingsScreen() {
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                minW={120} rounded={UI_RADIUS.chip}
+                minW={120}
+                rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"
@@ -174,7 +175,8 @@ export default function PaymentSettingsScreen() {
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                minW={120} rounded={UI_RADIUS.chip}
+                minW={120}
+                rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"
@@ -194,7 +196,8 @@ export default function PaymentSettingsScreen() {
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                minW={120} rounded={UI_RADIUS.chip}
+                minW={120}
+                rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"

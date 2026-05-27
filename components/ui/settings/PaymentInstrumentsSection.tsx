@@ -21,8 +21,6 @@ import {
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
-
-
 function upsertInstrument(
   list: PaymentInstrument[],
   inst: PaymentInstrument
@@ -146,11 +144,21 @@ export function PaymentInstrumentsSection() {
                 bg="$backgroundHover"
                 borderWidth={UI_BORDER_WIDTH.thin}
                 borderColor="$borderColor"
-                flexDirection="row" justify="space-between" items="center" px={UI_SPACE.section} py={UI_SPACE.section - 2} rounded={UI_RADIUS.chip}
+                flexDirection="row"
+                justify="space-between"
+                items="center"
+                px={UI_SPACE.section}
+                py={UI_SPACE.section - 2}
+                rounded={UI_RADIUS.chip}
               >
                 {({ open }: { open: boolean }) => (
                   <>
-                    <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control}>
+                    <XStack
+                      flexDirection="row"
+                      items="center"
+                      flex={1}
+                      gap={UI_SPACE.control}
+                    >
                       <Text fontWeight={UI_FONT_WEIGHT.medium}>
                         {t("instruments.manage")}
                       </Text>
@@ -206,7 +214,9 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$section"
                             py="$section"
-                            justify="space-between" items="center" rounded={UI_RADIUS.surface}
+                            justify="space-between"
+                            items="center"
+                            rounded={UI_RADIUS.surface}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

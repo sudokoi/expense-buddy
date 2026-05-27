@@ -3,7 +3,7 @@ import { YStack, XStack, Text, View } from "tamagui"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PieChartDataItem } from "../../utils/analytics/aggregations"
-import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
+import { Dimensions, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
 import {
@@ -40,7 +40,12 @@ const LegendItem = memo(function LegendItem({
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
         <XStack items="center" gap={UI_SPACE.control}>
-          <View width={12} height={12} rounded={UI_RADIUS.control} style={{ backgroundColor: item.color }} />
+          <View
+            width={12}
+            height={12}
+            rounded={UI_RADIUS.control}
+            style={{ backgroundColor: item.color }}
+          />
           <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>
             {item.text}
           </Text>

@@ -1,6 +1,6 @@
 import { XStack, Button } from "tamagui"
 import { memo, useCallback } from "react"
-import { ScrollView, ViewStyle } from "react-native"
+import { ScrollView } from "react-native"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
 import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"

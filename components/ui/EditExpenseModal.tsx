@@ -34,8 +34,6 @@ import {
 } from "./PaymentInstrumentInlineDropdown"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 
-
-
 interface EditExpenseModalProps {
   expense: Expense
   open: boolean

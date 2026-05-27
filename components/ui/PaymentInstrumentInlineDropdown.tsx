@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button, Card, Input, Label, Text, View, XStack, YStack, useTheme } from "tamagui"
 import { ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
-import { Pressable, TextStyle, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
@@ -256,12 +256,17 @@ export function PaymentInstrumentInlineDropdown({
             aria-selected={kind === "none"}
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
-              <View
-                borderWidth={UI_BORDER_WIDTH.thin}
-                borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
-                bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
-                flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
-              >
+            <View
+              borderWidth={UI_BORDER_WIDTH.thin}
+              borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
+              bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
+              flexDirection="row"
+              items="center"
+              justify="space-between"
+              py={UI_SPACE.section}
+              px={UI_SPACE.section}
+              rounded={UI_RADIUS.chip}
+            >
               <Text
                 fontWeight={kind === "none" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
                 style={styles.rowLabel}
@@ -292,7 +297,12 @@ export function PaymentInstrumentInlineDropdown({
               borderWidth={UI_BORDER_WIDTH.thin}
               borderColor={kind === "manual" ? focusBorderColor : "$borderColor"}
               bg={kind === "manual" ? "$backgroundFocus" : "$backgroundHover"}
-              flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
+              flexDirection="row"
+              items="center"
+              justify="space-between"
+              py={UI_SPACE.section}
+              px={UI_SPACE.section}
+              rounded={UI_RADIUS.chip}
             >
               <Text
                 fontWeight={
@@ -330,7 +340,12 @@ export function PaymentInstrumentInlineDropdown({
                   borderWidth={UI_BORDER_WIDTH.thin}
                   borderColor={isSelected ? focusBorderColor : "$borderColor"}
                   bg={isSelected ? "$backgroundFocus" : "$backgroundHover"}
-                  flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
+                  flexDirection="row"
+                  items="center"
+                  justify="space-between"
+                  py={UI_SPACE.section}
+                  px={UI_SPACE.section}
+                  rounded={UI_RADIUS.chip}
                 >
                   <Text
                     fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}

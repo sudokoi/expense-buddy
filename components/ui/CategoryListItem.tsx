@@ -15,8 +15,6 @@ import {
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
-
-
 interface CategoryListItemProps {
   /** The category to display */
   category: Category
@@ -83,9 +81,25 @@ export const CategoryListItem = memo(function CategoryListItem({
 
   return (
     <Pressable onPress={handleEdit}>
-      <XStack flexDirection="row" items="center" p={UI_SPACE.control} rounded={UI_RADIUS.control} gap={UI_SPACE.control} minH={UI_ICON_SIZE.huge} bg="$backgroundHover">
+      <XStack
+        flexDirection="row"
+        items="center"
+        p={UI_SPACE.control}
+        rounded={UI_RADIUS.control}
+        gap={UI_SPACE.control}
+        minH={UI_ICON_SIZE.huge}
+        bg="$backgroundHover"
+      >
         {/* Icon with color background */}
-        <YStack width={UI_ICON_SIZE.xxlarge} height={UI_ICON_SIZE.xxlarge} rounded={UI_RADIUS.chip} items="center" justify="center" shrink={0} style={{ backgroundColor: resolvedColor }}>
+        <YStack
+          width={UI_ICON_SIZE.xxlarge}
+          height={UI_ICON_SIZE.xxlarge}
+          rounded={UI_RADIUS.chip}
+          items="center"
+          justify="center"
+          shrink={0}
+          style={{ backgroundColor: resolvedColor }}
+        >
           <DynamicCategoryIcon
             name={category.icon}
             size={UI_ICON_SIZE.medium}
@@ -120,7 +134,10 @@ export const CategoryListItem = memo(function CategoryListItem({
           </XStack>
           <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
             <YStack
-              width={6} height={6} rounded={UI_SPACE.micro - 1} shrink={0}
+              width={6}
+              height={6}
+              rounded={UI_SPACE.micro - 1}
+              shrink={0}
               style={{ backgroundColor: resolvedColor }}
             />
             <Text

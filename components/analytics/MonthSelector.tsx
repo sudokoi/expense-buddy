@@ -1,6 +1,6 @@
 import { memo } from "react"
 import { XStack, Button } from "tamagui"
-import { ScrollView, ViewStyle } from "react-native"
+import { ScrollView } from "react-native"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"

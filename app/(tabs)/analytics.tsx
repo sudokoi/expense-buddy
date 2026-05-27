@@ -1,7 +1,6 @@
 import { useState, startTransition, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 
-
 import {
   useAnalyticsBase,
   useAnalyticsCharts,
@@ -594,9 +593,7 @@ export default function AnalyticsScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={
-                    { gap: UI_SPACE.control, pb: UI_SPACE.gutter }
-                  }
+                  contentContainerStyle={{ gap: UI_SPACE.control, pb: UI_SPACE.gutter }}
                   style={{ marginBottom: UI_SPACE.micro }}
                 >
                   {currencyButtons.map(({ code, isSelected, onPress }) => (

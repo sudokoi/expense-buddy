@@ -69,7 +69,12 @@ export function DefaultPaymentMethodSelector({
           borderWidth={UI_BORDER_WIDTH.normal}
           bg={isSelected ? "$backgroundFocus" : "transparent"}
           borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
-          flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control}
+          flexDirection="row"
+          items="center"
+          justify="center"
+          gap={UI_SPACE.control}
+          p={UI_SPACE.control}
+          rounded={UI_RADIUS.control}
         >
           <Icon
             size={UI_ICON_SIZE.small}

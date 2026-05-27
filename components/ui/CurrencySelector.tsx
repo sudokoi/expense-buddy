@@ -22,8 +22,6 @@ interface CurrencySelectorProps {
   onChange: (currency: string) => void
 }
 
-
-
 interface CurrencyOption {
   key: string
   label: string
@@ -47,7 +45,8 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
-      flexDirection="row" flexWrap="wrap"
+      flexDirection="row"
+      flexWrap="wrap"
     >
       {currencyOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
@@ -58,7 +57,10 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
-            style={({ pressed }) => [{ flexBasis: "25%", minHeight: 44 }, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [
+              { flexBasis: "25%", minHeight: 44 },
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
           >
             <View
               flex={1}
@@ -67,7 +69,13 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              flexDirection="column" items="center" justify="center" gap={UI_SPACE.micro} p={UI_SPACE.control} rounded={UI_RADIUS.control} m={UI_SPACE.micro / 2}
+              flexDirection="column"
+              items="center"
+              justify="center"
+              gap={UI_SPACE.micro}
+              p={UI_SPACE.control}
+              rounded={UI_RADIUS.control}
+              m={UI_SPACE.micro / 2}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}

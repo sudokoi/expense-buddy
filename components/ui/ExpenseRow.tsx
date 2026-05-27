@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useRef } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
 
-
 import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
 
 import type { Expense } from "../../types/expense"
@@ -15,8 +14,6 @@ import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
-
-
 
 export type ExpenseRowSubtitleMode = "time" | "date"
 

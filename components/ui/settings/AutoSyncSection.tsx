@@ -1,6 +1,6 @@
 import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
 import { AutoSyncTiming } from "../../../services/settings-manager"
-import { THEME_COLORS, SEMANTIC_COLORS } from "../../../constants/theme-colors"
+import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
 import {
   UI_RADIUS,
@@ -32,8 +32,6 @@ export interface AutoSyncSectionProps {
   /** Callback when sync settings changes */
   onSyncSettingsChange: (enabled: boolean) => void
 }
-
-
 
 /**
  * AutoSyncSection - Auto-sync options UI
@@ -74,7 +72,14 @@ export function AutoSyncSection({
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
-      <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.chip}>
+      <XStack
+        bg="$backgroundHover"
+        items="center"
+        justify="space-between"
+        px={UI_SPACE.section}
+        py={UI_SPACE.section}
+        rounded={UI_RADIUS.chip}
+      >
         <YStack flex={1}>
           <Label>{t("settings.autoSync.enable")}</Label>
           <Text
@@ -98,7 +103,14 @@ export function AutoSyncSection({
       </XStack>
 
       {/* Also sync settings toggle */}
-      <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.chip}>
+      <XStack
+        bg="$backgroundHover"
+        items="center"
+        justify="space-between"
+        px={UI_SPACE.section}
+        py={UI_SPACE.section}
+        rounded={UI_RADIUS.chip}
+      >
         <YStack flex={1}>
           <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text

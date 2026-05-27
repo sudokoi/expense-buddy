@@ -4,7 +4,7 @@ import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentInstrumentChartDataItem } from "../../utils/analytics/aggregations"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
-import { Dimensions, ViewStyle, Pressable, useColorScheme } from "react-native"
+import { Dimensions, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
 import {
@@ -41,7 +41,12 @@ const LegendItem = memo(function LegendItem({
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
         <XStack items="flex-start" gap={UI_SPACE.control} grow={1} shrink={1} minW={0}>
-          <View width={12} height={12} rounded={UI_RADIUS.control} style={{ backgroundColor: item.color }} />
+          <View
+            width={12}
+            height={12}
+            rounded={UI_RADIUS.control}
+            style={{ backgroundColor: item.color }}
+          />
           <Text
             fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
             shrink={1}

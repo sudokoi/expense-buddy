@@ -16,8 +16,6 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-
-
 interface IconPickerSheetProps {
   /** Whether the sheet is open */
   open: boolean

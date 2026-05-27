@@ -5,8 +5,6 @@ import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
-
-
 type AppSheetScaffoldProps = {
   open: boolean
   onClose: () => void
@@ -62,10 +60,7 @@ export function AppSheetScaffold({
       dismissOnSnapToBottom={dismissOnSnapToBottom}
     >
       <Sheet.Overlay />
-      <Sheet.Frame
-        style={[{ padding: UI_SPACE.gutter }, frameStyle]}
-        bg="$background"
-      >
+      <Sheet.Frame style={[{ padding: UI_SPACE.gutter }, frameStyle]} bg="$background">
         <Sheet.Handle />
 
         <YStack gap="$gutter" mt={UI_SPACE.control} flex={1}>

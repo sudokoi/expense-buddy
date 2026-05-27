@@ -14,8 +14,6 @@ import {
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
-
-
 interface CategorySectionProps {
   /** List of categories to display */
   categories: Category[]
@@ -101,10 +99,22 @@ export const CategorySection = memo(function CategorySection({
 
       <Accordion type="single" collapsible defaultValue={undefined}>
         <Accordion.Item value="category-list">
-          <Accordion.Trigger bg="$backgroundHover" flexDirection="row" justify="space-between" items="center" p={UI_SPACE.section} rounded={UI_RADIUS.control}>
+          <Accordion.Trigger
+            bg="$backgroundHover"
+            flexDirection="row"
+            justify="space-between"
+            items="center"
+            p={UI_SPACE.section}
+            rounded={UI_RADIUS.control}
+          >
             {({ open }: { open: boolean }) => (
               <>
-                <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control}>
+                <XStack
+                  flexDirection="row"
+                  items="center"
+                  flex={1}
+                  gap={UI_SPACE.control}
+                >
                   <Text fontWeight={UI_FONT_WEIGHT.medium}>
                     {t("settings.categories.manage")}
                   </Text>
@@ -133,9 +143,20 @@ export const CategorySection = memo(function CategorySection({
               {/* Reorderable category list */}
               <YStack gap="$control">
                 {reorderableCategories.map((category, index) => (
-                  <XStack key={category.label} flexDirection="row" items="center" gap={UI_SPACE.micro}>
+                  <XStack
+                    key={category.label}
+                    flexDirection="row"
+                    items="center"
+                    gap={UI_SPACE.micro}
+                  >
                     {/* Reorder buttons */}
-                    <YStack flexDirection="column" items="center" justify="center" gap={0} width={24}>
+                    <YStack
+                      flexDirection="column"
+                      items="center"
+                      justify="center"
+                      gap={0}
+                      width={24}
+                    >
                       <Button
                         size="$chip"
                         chromeless
@@ -185,7 +206,11 @@ export const CategorySection = memo(function CategorySection({
                   <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
                     {/* Empty space where reorder buttons would be */}
                     <YStack
-                      flexDirection="column" items="center" justify="center" gap={0} width={24}
+                      flexDirection="column"
+                      items="center"
+                      justify="center"
+                      gap={0}
+                      width={24}
                       opacity={UI_OPACITY.minimal}
                     >
                       <ChevronUp size={UI_ICON_SIZE.small} />

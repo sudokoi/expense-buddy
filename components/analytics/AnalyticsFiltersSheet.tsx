@@ -1,6 +1,5 @@
 import { memo, useCallback, useMemo, useRef, useState } from "react"
 import { YStack, XStack, Button, Sheet, H4, ScrollView, Text } from "tamagui"
-import { ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { X } from "@tamagui/lucide-icons-2"
 import type { TimeWindow } from "../../utils/analytics/time"
@@ -236,10 +235,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
       <Sheet.Frame style={frameStyle} bg="$background">
         <Sheet.Handle />
 
-        <YStack
-          gap="$section"
-          style={{ ...layoutStyles.contentContainer, flex: 1 }}
-        >
+        <YStack gap="$section" style={{ ...layoutStyles.contentContainer, flex: 1 }}>
           <XStack justify="space-between" items="center">
             <H4>{t("analytics.filtersModal.title")}</H4>
             <XStack gap="$control" style={{ alignItems: "center" }}>
@@ -319,13 +315,11 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
 
           <XStack
             gap="$control"
-            style={
-              {
-                justifyContent: "flex-end",
-                paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
-                paddingTop: UI_SPACE.control,
-              }
-            }
+            style={{
+              justifyContent: "flex-end",
+              paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
+              paddingTop: UI_SPACE.control,
+            }}
           >
             <Button size="$control" theme="accent" onPress={handleApply}>
               {t("analytics.filtersModal.apply")}

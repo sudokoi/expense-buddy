@@ -59,8 +59,6 @@ type EditableSmsImportDraft = {
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
-
-
 function formatTimestamp(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -523,7 +521,9 @@ export function SmsImportReviewScreen({
           px="$gutter"
           pt="$gutter"
           pb="$gutter"
-          self="center" maxW={UI_SPACE.empty * 18} width="100%"
+          self="center"
+          maxW={UI_SPACE.empty * 18}
+          width="100%"
         >
           <Card
             borderWidth={UI_BORDER_WIDTH.thin}
@@ -911,7 +911,9 @@ export function SmsImportReviewScreen({
           pt="$section"
           style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
         >
-          <YStack self="center" maxW={UI_SPACE.empty * 18} width="100%">{footer}</YStack>
+          <YStack self="center" maxW={UI_SPACE.empty * 18} width="100%">
+            {footer}
+          </YStack>
         </YStack>
       )}
     </YStack>

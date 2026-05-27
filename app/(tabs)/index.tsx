@@ -218,9 +218,7 @@ export default function DashboardScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={
-            { gap: UI_SPACE.control, pb: UI_SPACE.gutter }
-          }
+          contentContainerStyle={{ gap: UI_SPACE.control, pb: UI_SPACE.gutter }}
         >
           {availableCurrencies.map((c) => (
             <Button
@@ -261,7 +259,9 @@ export default function DashboardScreen() {
             {t("dashboard.totalSpent")}
           </Text>
           <H4
-            mt={UI_SPACE.micro} height={24} justify="center"
+            mt={UI_SPACE.micro}
+            height={24}
+            justify="center"
             color={CARD_COLORS.blue.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -290,7 +290,9 @@ export default function DashboardScreen() {
             {t("dashboard.entries")}
           </Text>
           <H4
-            mt={UI_SPACE.micro} height={24} justify="center"
+            mt={UI_SPACE.micro}
+            height={24}
+            justify="center"
             color={CARD_COLORS.green.accent}
             numberOfLines={1}
             adjustsFontSizeToFit

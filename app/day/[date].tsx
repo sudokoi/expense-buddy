@@ -125,7 +125,13 @@ export default function DayViewScreen() {
     <YStack flex={1} bg="$background" style={{ paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
-      <XStack px={UI_SPACE.gutter} pt={UI_SPACE.gutter} pb={UI_SPACE.control} items="center" justify="center">
+      <XStack
+        px={UI_SPACE.gutter}
+        pt={UI_SPACE.gutter}
+        pb={UI_SPACE.control}
+        items="center"
+        justify="center"
+      >
         <Button
           size="$compact"
           chromeless
@@ -145,7 +151,12 @@ export default function DayViewScreen() {
       </XStack>
 
       {/* Date Nav */}
-      <XStack items="center" justify="space-between" px={UI_SPACE.gutter} pb={UI_SPACE.control}>
+      <XStack
+        items="center"
+        justify="space-between"
+        px={UI_SPACE.gutter}
+        pb={UI_SPACE.control}
+      >
         <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
         <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}

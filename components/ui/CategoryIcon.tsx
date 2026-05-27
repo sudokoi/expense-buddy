@@ -47,11 +47,7 @@ export function CategoryIcon({
   style,
 }: CategoryIconProps) {
   const sizeStyle = sizeStyles[size]
-  return (
-    <YStack style={[sizeStyle, { backgroundColor }, style] }>
-      {children}
-    </YStack>
-  )
+  return <YStack style={[sizeStyle, { backgroundColor }, style]}>{children}</YStack>
 }
 
 export type { CategoryIconProps }

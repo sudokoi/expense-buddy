@@ -35,7 +35,7 @@ import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { useTranslation } from "react-i18next"
-import { THEME_COLORS, SEMANTIC_COLORS } from "../../constants/theme-colors"
+import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -601,7 +601,9 @@ export default function SettingsScreen() {
               bg="$backgroundHover"
               px="$section"
               py="$section"
-              items="center" justify="space-between" rounded={UI_RADIUS.surface}
+              items="center"
+              justify="space-between"
+              rounded={UI_RADIUS.surface}
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
@@ -634,7 +636,14 @@ export default function SettingsScreen() {
             role="button"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
-            <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.surface}>
+            <XStack
+              bg="$backgroundHover"
+              items="center"
+              justify="space-between"
+              px={UI_SPACE.section}
+              py={UI_SPACE.section}
+              rounded={UI_RADIUS.surface}
+            >
               <YStack gap="$micro" flex={1} pointerEvents="none">
                 <Label color="$color" opacity={UI_OPACITY.strong}>
                   {t("settings.payment.manageTitle")}
@@ -667,7 +676,9 @@ export default function SettingsScreen() {
             bg="$backgroundHover"
             px="$section"
             py="$section"
-            items="center" justify="space-between" rounded={UI_RADIUS.surface}
+            items="center"
+            justify="space-between"
+            rounded={UI_RADIUS.surface}
           >
             <YStack flex={1} gap="$micro">
               <Label>{t("settings.general.mathEntry")}</Label>
@@ -691,7 +702,9 @@ export default function SettingsScreen() {
               bg="$backgroundHover"
               px="$section"
               py="$section"
-              items="center" justify="space-between" rounded={UI_RADIUS.surface}
+              items="center"
+              justify="space-between"
+              rounded={UI_RADIUS.surface}
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>

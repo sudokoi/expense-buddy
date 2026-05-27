@@ -55,7 +55,11 @@ export const CollapsibleSection = memo(function CollapsibleSection({
         </XStack>
       </Pressable>
 
-      {isExpanded && <YStack p={UI_SPACE.section - 2} pt={UI_SPACE.control - 2}>{children}</YStack>}
+      {isExpanded && (
+        <YStack p={UI_SPACE.section - 2} pt={UI_SPACE.control - 2}>
+          {children}
+        </YStack>
+      )}
     </Card>
   )
 })
