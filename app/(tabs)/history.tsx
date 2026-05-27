@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from "tamagui"
 import { Calendar, Filter, X } from "@tamagui/lucide-icons-2"
-import { Platform, ViewStyle, TextStyle, BackHandler, View } from "react-native"
+import { Platform, BackHandler, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import DateTimePicker from "@react-native-community/datetimepicker"
@@ -103,68 +103,68 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     padding: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   emptyText: {
     fontSize: 24,
-  } as TextStyle,
+  },
   emptySubtext: {
     fontSize: 16,
     marginTop: UI_SPACE.control,
-  } as TextStyle,
+  },
   mainContainer: {
     flex: 1,
     paddingHorizontal: UI_SPACE.gutter,
     paddingTop: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   dialogButtonRow: {
     justifyContent: "flex-end",
-  } as ViewStyle,
+  },
   editDialogButtonRow: {
     justifyContent: "flex-end",
     marginTop: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   sectionHeader: {
     paddingVertical: UI_SPACE.control,
-  } as ViewStyle,
+  },
   expenseDetails: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   actionButtons: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   loadMoreContainer: {
     padding: UI_SPACE.gutter,
     alignItems: "center",
-  } as ViewStyle,
+  },
   categoryRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   paymentMethodRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   filterButtonContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: UI_SPACE.control,
     marginBottom: UI_SPACE.section,
-  } as ViewStyle,
+  },
   chipsContainer: {
     flexDirection: "row",
     marginBottom: UI_SPACE.section,
-  } as TextStyle,
+  },
   sheetFrame: {
     padding: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   contentContainer: {
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
-}
+  },
+} as const
 
 // Filter chip component
 const FilterChip = React.memo(function FilterChip({

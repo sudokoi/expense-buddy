@@ -30,7 +30,7 @@ import { ACCENT_COLORS } from "../../constants/theme-colors"
 const styles = {
   menuRow: {
     minHeight: 44,
-  } as ViewStyle,
+  },
   menuRowInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -38,13 +38,13 @@ const styles = {
     paddingVertical: UI_SPACE.section,
     paddingHorizontal: UI_SPACE.section,
     borderRadius: UI_RADIUS.chip,
-  } as ViewStyle,
+  },
   rowLabel: {
     flex: 1,
     flexShrink: 1,
     paddingRight: UI_SPACE.section,
     textAlign: "left",
-  } as TextStyle,
+  },
 } as const
 
 export type InstrumentEntryKind = "none" | "manual" | "saved"

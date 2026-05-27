@@ -24,14 +24,14 @@ import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 const layoutStyles = {
   sheetFrame: {
     padding: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   contentContainer: {
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
+  },
 } as const
 
 interface AnalyticsFiltersSheetProps {
@@ -241,11 +241,11 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
 
         <YStack
           gap="$section"
-          style={{ ...layoutStyles.contentContainer, flex: 1 } as ViewStyle}
+          style={{ ...layoutStyles.contentContainer, flex: 1 }}
         >
           <XStack style={layoutStyles.headerRow}>
             <H4>{t("analytics.filtersModal.title")}</H4>
-            <XStack gap="$control" style={{ alignItems: "center" } as ViewStyle}>
+            <XStack gap="$control" style={{ alignItems: "center" }}>
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("analytics.filtersModal.reset")}
               </Button>
@@ -327,7 +327,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
                 justifyContent: "flex-end",
                 paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
                 paddingTop: UI_SPACE.control,
-              } as ViewStyle
+              }
             }
           >
             <Button size="$control" theme="accent" onPress={handleApply}>

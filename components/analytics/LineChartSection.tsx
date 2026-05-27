@@ -48,7 +48,7 @@ export const LineChartSection = memo(function LineChartSection({
         alignItems: "center",
         justifyContent: "center",
         height: 150,
-      } as ViewStyle,
+      },
       tooltipContainer: {
         backgroundColor: overlayColors.background,
         padding: UI_SPACE.control,
@@ -59,7 +59,7 @@ export const LineChartSection = memo(function LineChartSection({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-      } as ViewStyle,
+      },
     }),
     [overlayColors]
   )

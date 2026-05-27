@@ -1,5 +1,6 @@
 import { YStack, XStack, Text, Button } from "tamagui"
-import { ViewStyle } from "react-native"
+
+
 import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons-2"
 import { UpdateInfo } from "../../../services/update-checker"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
@@ -39,7 +40,7 @@ const layoutStyles = {
   versionRow: {
     alignItems: "center",
     justifyContent: "space-between",
-  } as ViewStyle,
+  },
 }
 
 // Memoized theme colors

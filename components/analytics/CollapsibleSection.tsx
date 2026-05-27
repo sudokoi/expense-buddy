@@ -20,11 +20,11 @@ const styles = {
     padding: UI_SPACE.section - 2,
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   content: {
     padding: UI_SPACE.section - 2,
     paddingTop: UI_SPACE.control - 2,
-  } as ViewStyle,
+  },
 }
 
 /**

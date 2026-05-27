@@ -1,7 +1,7 @@
 import { memo, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { YStack, XStack, Text, Button } from "tamagui"
-import { ViewStyle, Pressable, Alert } from "react-native"
+import { Pressable, Alert } from "react-native"
 import { Pencil, Trash2 } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
@@ -24,7 +24,7 @@ const layoutStyles = {
     borderRadius: UI_RADIUS.control,
     gap: UI_SPACE.control,
     minHeight: UI_ICON_SIZE.huge,
-  } as ViewStyle,
+  },
   iconContainer: {
     width: UI_ICON_SIZE.xxlarge,
     height: UI_ICON_SIZE.xxlarge,
@@ -32,34 +32,34 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-  } as ViewStyle,
+  },
   labelContainer: {
     flex: 1,
     minWidth: 0,
-  } as ViewStyle,
+  },
   actionsContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: UI_SPACE.micro / 2,
     flexShrink: 0,
-  } as ViewStyle,
+  },
   colorIndicator: {
     width: 6,
     height: 6,
     borderRadius: UI_SPACE.micro - 1,
     flexShrink: 0,
-  } as ViewStyle,
+  },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: UI_SPACE.micro,
-  } as ViewStyle,
+  },
   colorRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: UI_SPACE.micro,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface CategoryListItemProps {
   /** The category to display */

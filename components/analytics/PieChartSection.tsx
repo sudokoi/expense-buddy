@@ -23,33 +23,33 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     height: 150,
-  } as ViewStyle,
+  },
   chartContainer: {
     alignItems: "center",
     gap: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   centerLabel: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   legendRow: {
     justifyContent: "space-between",
     alignItems: "center",
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
   legendLeft: {
     alignItems: "center",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   legendRight: {
     gap: UI_SPACE.control,
     alignItems: "center",
-  } as ViewStyle,
+  },
   colorDot: {
     width: 12,
     height: 12,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
 }
 
 // Memoized legend item component

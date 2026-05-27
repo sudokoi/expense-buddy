@@ -19,13 +19,13 @@ const styles = {
   container: {
     gap: UI_SPACE.section,
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   row: {
     gap: UI_SPACE.section,
-  } as ViewStyle,
+  },
   cardValue: {
     marginTop: UI_SPACE.control,
-  } as TextStyle,
+  },
 }
 
 /**

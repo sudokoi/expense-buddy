@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, Label, Accordion } from "tamagui"
-import { Keyboard, ViewStyle, Platform, TextStyle, Linking } from "react-native"
+import { Keyboard, Platform, Linking } from "react-native"
 import { Check, X, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
@@ -56,13 +56,13 @@ export interface GitHubConfigSectionProps {
 const layoutStyles = {
   buttonRow: {
     flexWrap: "wrap",
-  } as ViewStyle,
+  },
   accordionTrigger: {
     flexDirection: "row",
     justifyContent: "space-between",
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -70,19 +70,19 @@ const layoutStyles = {
     gap: UI_SPACE.control,
     minWidth: 0,
     maxWidth: "85%", // prevent overlapping chevron
-  } as ViewStyle,
+  },
   connectedBadge: {
     flexDirection: "column",
     alignItems: "flex-start",
     gap: UI_SPACE.micro / 2,
     flexShrink: 1,
     minWidth: 0,
-  } as ViewStyle,
+  },
   accordionContent: {
     padding: UI_SPACE.control,
     paddingTop: UI_SPACE.section,
-  } as ViewStyle,
-}
+  },
+} as const
 
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
@@ -314,7 +314,7 @@ export function GitHubConfigSection({
                           minWidth: 0,
                           alignItems: "center",
                           gap: UI_SPACE.micro,
-                        } as ViewStyle
+                        }
                       }
                     >
                       <Check size={14} color={successColor} />
@@ -329,7 +329,7 @@ export function GitHubConfigSection({
                         opacity={UI_OPACITY.medium}
                         numberOfLines={1}
                         ellipsizeMode="middle"
-                        style={{ flexShrink: 1, minWidth: 0 } as TextStyle}
+                        style={{ flexShrink: 1, minWidth: 0 }}
                       >
                         {repo}
                       </Text>
@@ -392,7 +392,7 @@ export function GitHubConfigSection({
                   theme="accent"
                   style={
                     isSignedIn
-                      ? ({ backgroundColor: errorColor } as ViewStyle)
+                      ? ({ backgroundColor: errorColor })
                       : undefined
                   }
                 >
@@ -410,14 +410,14 @@ export function GitHubConfigSection({
                 {auth.deviceCode && (
                   <YStack
                     gap="$control"
-                    style={{ paddingTop: UI_SPACE.micro } as ViewStyle}
+                    style={{ paddingTop: UI_SPACE.micro }}
                   >
                     <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.strong}>
                       {t("settings.github.deviceCode")}
                     </Text>
                     <XStack
                       gap="$control"
-                      style={{ alignItems: "center", flexWrap: "wrap" } as ViewStyle}
+                      style={{ alignItems: "center", flexWrap: "wrap" }}
                     >
                       <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold}>
                         {auth.deviceCode.user_code}

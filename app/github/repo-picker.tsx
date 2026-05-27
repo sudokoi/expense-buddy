@@ -37,10 +37,10 @@ const layoutStyles = {
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   loadingRow: {
     alignItems: "center",
-  } as ViewStyle,
+  },
 }
 
 function hasWriteAccess(repo: GitHubRepo): boolean {
@@ -221,7 +221,7 @@ export default function GitHubRepoPickerScreen() {
         borderWidth={UI_BORDER_WIDTH.thin}
         borderColor="$borderColor"
         onPress={() => void handleSelect(item)}
-        style={{ justifyContent: "space-between" } as ViewStyle}
+        style={{ justifyContent: "space-between" }}
       >
         <Button.Text numberOfLines={1}>{item.full_name}</Button.Text>
         <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>

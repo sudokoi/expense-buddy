@@ -1,5 +1,5 @@
 import { Text, Card, View, XStack, useTheme } from "tamagui"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import { Ban } from "@tamagui/lucide-icons-2"
 import { PaymentMethodType } from "../../types/expense"
 import {
@@ -27,10 +27,10 @@ const styles = {
   container: {
     flexDirection: "row",
     flexWrap: "wrap",
-  } as ViewStyle,
+  },
   option: {
     minHeight: 44, // Accessibility: minimum touch target
-  } as ViewStyle,
+  },
   optionInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -38,8 +38,8 @@ const styles = {
     gap: UI_SPACE.control,
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
-}
+  },
+} as const
 
 /**
  * DefaultPaymentMethodSelector - A selector for choosing default payment method in settings

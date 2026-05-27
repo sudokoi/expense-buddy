@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { YStack, XStack, Text, Label } from "tamagui"
-import { ViewStyle, Pressable } from "react-native"
+import { Pressable } from "react-native"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
@@ -26,7 +26,7 @@ const layoutStyles = {
     paddingVertical: UI_SPACE.section - 2,
     paddingHorizontal: UI_SPACE.section,
     borderRadius: UI_RADIUS.chip,
-  } as ViewStyle,
+  },
 }
 
 // Map of language codes to labels (matching LanguageSelector)

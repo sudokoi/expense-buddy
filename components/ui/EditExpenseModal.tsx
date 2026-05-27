@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { ViewStyle, Keyboard } from "react-native"
+import { Keyboard } from "react-native"
 import { Check } from "@tamagui/lucide-icons-2"
 import {
   Expense,
@@ -39,20 +39,20 @@ const layoutStyles = {
   categoryRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   paymentMethodRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   buttonRow: {
     justifyContent: "flex-end",
     gap: UI_SPACE.section,
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
+  },
   identifierContainer: {
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface EditExpenseModalProps {
   expense: Expense

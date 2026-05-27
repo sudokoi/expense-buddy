@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
-import { Alert, Linking, ViewStyle, Platform, Pressable } from "react-native"
+import { Alert, Linking, Platform, Pressable } from "react-native"
 import { ChevronRight } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -46,36 +46,36 @@ const layoutStyles = {
     maxWidth: UI_SPACE.empty * 15,
     alignSelf: "center",
     width: "100%",
-  } as ViewStyle,
+  },
   syncButtonsContainer: {
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
+  },
   groupedContent: {
     paddingTop: 14,
-  } as ViewStyle,
+  },
   collapsibleHeader: {
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: UI_SPACE.section - 2,
     paddingHorizontal: UI_SPACE.section,
     borderRadius: UI_RADIUS.chip,
-  } as ViewStyle,
+  },
   switchRow: {
     alignItems: "center",
     justifyContent: "space-between",
-  } as ViewStyle,
+  },
   actionRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   menuRow: {
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: UI_SPACE.section,
     paddingVertical: UI_SPACE.section,
     borderRadius: UI_RADIUS.surface,
-  } as ViewStyle,
-}
+  },
+} as const
 
 export default function SettingsScreen() {
   const router = useRouter()

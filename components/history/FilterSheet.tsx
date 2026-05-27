@@ -63,15 +63,15 @@ const layoutStyles = {
   sheetFrame: {
     paddingHorizontal: UI_SPACE.gutter,
     paddingTop: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   contentContainer: {
     gap: UI_SPACE.section,
-  } as ViewStyle,
+  },
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
 }
 
 export const FilterSheet = React.memo(function FilterSheet({
@@ -257,11 +257,11 @@ export const FilterSheet = React.memo(function FilterSheet({
 
         <YStack
           gap="$section"
-          style={{ ...layoutStyles.contentContainer, flex: 1 } as ViewStyle}
+          style={{ ...layoutStyles.contentContainer, flex: 1 }}
         >
           <XStack style={layoutStyles.headerRow}>
             <H4>{t("history.filterSheet.title")}</H4>
-            <XStack gap="$control" style={{ alignItems: "center" } as ViewStyle}>
+            <XStack gap="$control" style={{ alignItems: "center" }}>
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("common.reset")}
               </Button>
@@ -347,7 +347,7 @@ export const FilterSheet = React.memo(function FilterSheet({
                 justifyContent: "flex-end",
                 paddingBottom: Math.max(insets.bottom, UI_SPACE.control),
                 paddingTop: UI_SPACE.control,
-              } as ViewStyle
+              }
             }
           >
             <Button size="$control" theme="accent" onPress={handleApply}>

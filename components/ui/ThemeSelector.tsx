@@ -1,6 +1,6 @@
 import { Text, Card, View, useTheme } from "tamagui"
 import { Sun, Moon, Smartphone } from "@tamagui/lucide-icons-2"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import { ThemePreference } from "../../services/settings-manager"
 import { getColorValue } from "../../tamagui.config"
 import {
@@ -21,11 +21,11 @@ interface ThemeSelectorProps {
 const styles = {
   container: {
     flexDirection: "row",
-  } as ViewStyle,
+  },
   segment: {
     flex: 1,
     minHeight: 44, // Accessibility: minimum touch target
-  } as ViewStyle,
+  },
   segmentInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -33,8 +33,8 @@ const styles = {
     gap: UI_SPACE.control,
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface ThemeOption {
   key: ThemePreference

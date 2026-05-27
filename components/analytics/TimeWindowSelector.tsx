@@ -23,10 +23,10 @@ const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
 const layoutStyles = {
   container: {
     justifyContent: "center",
-  } as ViewStyle,
+  },
   scrollContent: {
     paddingHorizontal: UI_SPACE.micro / 2,
-  } as ViewStyle,
+  },
 }
 
 /**

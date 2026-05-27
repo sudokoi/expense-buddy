@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { Stack } from "expo-router"
-import { Alert, ViewStyle } from "react-native"
+import { Alert } from "react-native"
 import { Label, Text, XStack, YStack } from "tamagui"
 import { useTranslation } from "react-i18next"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
@@ -30,14 +30,14 @@ const layoutStyles = {
     maxWidth: UI_SPACE.empty * 18,
     alignSelf: "center",
     width: "100%",
-  } as ViewStyle,
+  },
   summaryRow: {
     flexWrap: "wrap",
-  } as ViewStyle,
+  },
   summaryCard: {
     minWidth: 160,
     borderRadius: UI_RADIUS.surface,
-  } as ViewStyle,
+  },
 } as const
 
 export default function PaymentSettingsScreen() {

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
-import { Alert, ViewStyle } from "react-native"
+import { Alert } from "react-native"
 import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
@@ -25,7 +25,7 @@ const layoutStyles = {
   row: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   accordionTrigger: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -33,26 +33,26 @@ const layoutStyles = {
     paddingHorizontal: UI_SPACE.section,
     paddingVertical: UI_SPACE.section - 2,
     borderRadius: UI_RADIUS.chip,
-  } as ViewStyle,
+  },
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   accordionContent: {
     padding: UI_SPACE.control,
     paddingTop: UI_SPACE.section,
-  } as ViewStyle,
+  },
   yStackRadius: {
     borderRadius: UI_RADIUS.surface,
-  } as ViewStyle,
+  },
   rowWithRadius: {
     justifyContent: "space-between",
     alignItems: "center",
     borderRadius: UI_RADIUS.surface,
-  } as ViewStyle,
-}
+  },
+} as const
 
 function upsertInstrument(
   list: PaymentInstrument[],

@@ -15,10 +15,10 @@ interface MonthSelectorProps {
 const layoutStyles = {
   container: {
     justifyContent: "center",
-  } as ViewStyle,
+  },
   scrollContent: {
     paddingHorizontal: UI_SPACE.micro / 2,
-  } as ViewStyle,
+  },
 }
 
 export const MonthSelector = memo(function MonthSelector({

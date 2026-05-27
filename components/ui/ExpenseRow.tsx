@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useRef } from "react"
 import { XStack, YStack, Text, Button } from "tamagui"
 
-import type { ViewStyle } from "react-native"
+
 import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
 
 import type { Expense } from "../../types/expense"
@@ -19,10 +19,10 @@ import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 const layoutStyles = {
   expenseDetails: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   actionButtons: {
     alignItems: "center",
-  } as ViewStyle,
+  },
 }
 
 export type ExpenseRowSubtitleMode = "time" | "date"

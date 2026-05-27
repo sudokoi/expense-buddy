@@ -1,6 +1,6 @@
 import { useCallback, memo } from "react"
 import { YStack, XStack, Text } from "tamagui"
-import { ViewStyle, Pressable } from "react-native"
+import { Pressable } from "react-native"
 import { Check } from "@tamagui/lucide-icons-2"
 import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
 import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
@@ -20,12 +20,12 @@ import {
 const layoutStyles = {
   groupContainer: {
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   iconGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   iconButton: {
     width: UI_ICON_SIZE.huge,
     height: UI_ICON_SIZE.huge,
@@ -33,13 +33,13 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderWidth: UI_BORDER_WIDTH.normal,
-  } as ViewStyle,
+  },
   selectedIndicator: {
     position: "absolute",
     top: UI_SPACE.micro / 2,
     right: UI_SPACE.micro / 2,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface IconPickerSheetProps {
   /** Whether the sheet is open */
@@ -174,7 +174,7 @@ const IconButton = memo(function IconButton({
           color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (
-          <YStack style={layoutStyles.selectedIndicator as ViewStyle}>
+          <YStack style={layoutStyles.selectedIndicator}>
             <Check size={UI_ICON_SIZE.micro} color={selectedFg} />
           </YStack>
         )}

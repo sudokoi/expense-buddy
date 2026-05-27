@@ -25,37 +25,37 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     height: 150,
-  } as ViewStyle,
+  },
   chartContainer: {
     alignItems: "center",
     gap: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   centerLabel: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   legendRow: {
     justifyContent: "space-between",
     alignItems: "center",
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
   legendLeft: {
     alignItems: "flex-start",
     gap: UI_SPACE.control,
     flexGrow: 1,
     flexShrink: 1,
     minWidth: 0,
-  } as ViewStyle,
+  },
   legendRight: {
     gap: UI_SPACE.control,
     alignItems: "center",
     flexShrink: 0,
-  } as ViewStyle,
+  },
   colorDot: {
     width: 12,
     height: 12,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
 }
 
 const LegendItem = memo(function LegendItem({

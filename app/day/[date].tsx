@@ -4,7 +4,7 @@ import { useExpenses } from "../../stores/hooks"
 import { useMemo, useCallback } from "react"
 import { parseISO, isSameDay, addDays, subDays } from "date-fns"
 import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons-2"
-import { SectionList, ViewStyle } from "react-native"
+import { SectionList } from "react-native"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import type { Expense } from "../../types/expense"
 import { Category } from "../../types/category"
@@ -37,28 +37,28 @@ const layoutStyles = {
     paddingBottom: UI_SPACE.control,
     alignItems: "center",
     justifyContent: "space-between",
-  } as ViewStyle,
+  },
   dateNav: {
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: UI_SPACE.gutter,
     paddingBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   summary: {
     paddingHorizontal: UI_SPACE.gutter,
     paddingBottom: UI_SPACE.gutter,
     alignItems: "center",
     justifyContent: "center",
-  } as ViewStyle,
+  },
   listContent: {
     paddingBottom: UI_SPACE.empty,
-  } as ViewStyle,
+  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: UI_SPACE.empty,
-  } as ViewStyle,
+  },
 }
 
 export default function DayViewScreen() {

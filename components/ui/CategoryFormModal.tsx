@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { ViewStyle, Keyboard, Pressable } from "react-native"
+import { Keyboard, Pressable } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Check } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
@@ -28,7 +28,7 @@ const layoutStyles = {
     justifyContent: "flex-end",
     gap: UI_SPACE.section,
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
+  },
   iconPickerTrigger: {
     flexDirection: "row",
     alignItems: "center",
@@ -36,14 +36,14 @@ const layoutStyles = {
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
     borderWidth: UI_BORDER_WIDTH.normal,
-  } as ViewStyle,
+  },
   iconPreview: {
     width: UI_ICON_SIZE.xxxlarge,
     height: UI_ICON_SIZE.xxxlarge,
     borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
-  } as ViewStyle,
+  },
   colorPreview: {
     flexDirection: "row",
     alignItems: "center",
@@ -51,16 +51,16 @@ const layoutStyles = {
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
     borderWidth: UI_BORDER_WIDTH.normal,
-  } as ViewStyle,
+  },
   colorSwatch: {
     width: UI_ICON_SIZE.xlarge,
     height: UI_ICON_SIZE.xlarge,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
   sheetFrame: {
     paddingHorizontal: UI_SPACE.gutter,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface CategoryFormModalProps {
   /** Whether the modal is open */

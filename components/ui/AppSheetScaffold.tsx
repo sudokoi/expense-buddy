@@ -9,7 +9,7 @@ const layoutStyles = {
   headerRow: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
 } as const
 
 type AppSheetScaffoldProps = {
@@ -68,7 +68,7 @@ export function AppSheetScaffold({
     >
       <Sheet.Overlay />
       <Sheet.Frame
-        style={[{ padding: UI_SPACE.gutter } as ViewStyle, frameStyle]}
+        style={[{ padding: UI_SPACE.gutter }, frameStyle]}
         bg="$background"
       >
         <Sheet.Handle />

@@ -42,11 +42,11 @@ const layoutStyles = {
     paddingHorizontal: UI_SPACE.section,
     paddingVertical: UI_SPACE.section,
     borderRadius: UI_RADIUS.chip,
-  } as ViewStyle,
+  },
   radioRow: {
     alignItems: "center",
     marginVertical: UI_SPACE.control,
-  } as ViewStyle,
+  },
   helperText: {
     marginTop: UI_SPACE.micro,
   },

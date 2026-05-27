@@ -1,6 +1,6 @@
 import { useCallback, memo } from "react"
 import { YStack, XStack, useTheme } from "tamagui"
-import { ViewStyle, Pressable } from "react-native"
+import { Pressable } from "react-native"
 import { Check } from "@tamagui/lucide-icons-2"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { getColorValue } from "../../tamagui.config"
@@ -20,7 +20,7 @@ const layoutStyles = {
     flexWrap: "wrap",
     gap: UI_SPACE.section,
     justifyContent: "center",
-  } as ViewStyle,
+  },
   colorButton: {
     width: UI_ICON_SIZE.huge,
     height: UI_ICON_SIZE.huge,
@@ -28,11 +28,11 @@ const layoutStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderWidth: UI_BORDER_WIDTH.thick,
-  } as ViewStyle,
+  },
   selectedIndicator: {
     position: "absolute",
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface ColorPickerSheetProps {
   /** Whether the sheet is open */

@@ -48,7 +48,7 @@ export function CategoryIcon({
 }: CategoryIconProps) {
   const sizeStyle = sizeStyles[size]
   return (
-    <YStack style={[sizeStyle, { backgroundColor }, style] as ViewStyle[]}>
+    <YStack style={[sizeStyle, { backgroundColor }, style] }>
       {children}
     </YStack>
   )

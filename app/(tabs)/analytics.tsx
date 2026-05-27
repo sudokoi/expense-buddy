@@ -1,6 +1,7 @@
 import { useState, startTransition, useCallback, memo, useMemo, useEffect } from "react"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
-import { ViewStyle, TextStyle } from "react-native"
+
+
 import {
   useAnalyticsBase,
   useAnalyticsCharts,
@@ -41,23 +42,23 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
     padding: UI_SPACE.empty,
-  } as ViewStyle,
+  },
   emptyText: {
     textAlign: "center",
-  } as TextStyle,
+  },
   emptySubtext: {
     textAlign: "center",
     marginTop: UI_SPACE.control,
-  } as TextStyle,
+  },
   chipRadius: {
     borderRadius: UI_RADIUS.round,
-  } as ViewStyle,
-}
+  },
+} as const
 
 const INSTRUMENT_OTHERS_ID = "__others__"
 
@@ -553,7 +554,7 @@ export default function AnalyticsScreen() {
       <XStack
         mb="$gutter"
         gap="$control"
-        style={{ alignItems: "center", justifyContent: "space-between" } as ViewStyle}
+        style={{ alignItems: "center", justifyContent: "space-between" }}
       >
         <ScrollView
           horizontal

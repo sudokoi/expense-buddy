@@ -13,7 +13,7 @@ import {
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
-import { ViewStyle, Keyboard, Platform } from "react-native"
+import { Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -52,26 +52,26 @@ const layoutStyles = {
     maxWidth: UI_SPACE.empty * 15,
     alignSelf: "center",
     width: "100%",
-  } as ViewStyle,
+  },
   amountRow: {
     alignItems: "center",
-  } as ViewStyle,
+  },
   categoryRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   paymentMethodRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   saveButton: {
     marginTop: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   expandHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
-}
+  },
+} as const
 
 export default function AddExpenseScreen() {
   const router = useRouter()

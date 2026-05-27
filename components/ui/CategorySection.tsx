@@ -1,6 +1,6 @@
 import { useCallback, useMemo, memo } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
-import { ViewStyle } from "react-native"
+
 import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
@@ -22,38 +22,38 @@ const layoutStyles = {
     alignItems: "center",
     padding: UI_SPACE.section,
     borderRadius: UI_RADIUS.control,
-  } as ViewStyle,
+  },
   accordionTriggerInner: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   accordionContent: {
     padding: UI_SPACE.control,
     paddingTop: UI_SPACE.section,
-  } as ViewStyle,
+  },
   categoryRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: UI_SPACE.micro,
-  } as ViewStyle,
+  },
   reorderButtons: {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     gap: 0,
     width: 24, // Fix width for alignment
-  } as ViewStyle,
+  },
   addButtonContainer: {
     marginTop: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   otherCategoryContainer: {
     marginTop: UI_SPACE.control,
     paddingTop: UI_SPACE.control,
     borderTopWidth: UI_BORDER_WIDTH.thin,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface CategorySectionProps {
   /** List of categories to display */

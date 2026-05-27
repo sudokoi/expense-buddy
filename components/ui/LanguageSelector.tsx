@@ -1,6 +1,6 @@
 import { Text, Card, View, useTheme } from "tamagui"
 import { Globe, Languages } from "@tamagui/lucide-icons-2"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import { useTranslation } from "react-i18next"
 import {
@@ -22,11 +22,11 @@ const styles = {
   container: {
     flexDirection: "row",
     flexWrap: "wrap",
-  } as ViewStyle,
+  },
   segment: {
     flexBasis: "50%", // 2 items per row
     minHeight: 44, // Accessibility: minimum touch target
-  } as ViewStyle,
+  },
   segmentInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -35,8 +35,8 @@ const styles = {
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
     margin: UI_SPACE.micro / 2,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface LanguageOption {
   key: string

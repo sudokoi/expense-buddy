@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from "react"
 import { XStack, Button } from "tamagui"
-import { ScrollView, ViewStyle } from "react-native"
+import { ScrollView } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
@@ -14,14 +14,14 @@ interface CategoryFilterProps {
 const styles = {
   scrollView: {
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   contentContainer: {
     paddingHorizontal: UI_SPACE.micro,
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-  } as ViewStyle,
-}
+  },
+} as const
 
 /**
  * CategoryFilter - Multi-select category chips for filtering analytics
@@ -43,7 +43,7 @@ export const CategoryFilter = memo(function CategoryFilter({
         label: cat.label,
         color: cat.color,
         Icon: IconComponent,
-        selectedStyle: { backgroundColor: cat.color } as ViewStyle,
+        selectedStyle: { backgroundColor: cat.color },
       }
     })
   }, [categories])

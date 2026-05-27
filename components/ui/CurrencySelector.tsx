@@ -6,7 +6,7 @@ import {
   Euro,
   JapaneseYen,
 } from "@tamagui/lucide-icons-2"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import { getColorValue } from "../../tamagui.config"
 import {
   UI_RADIUS,
@@ -27,11 +27,11 @@ const styles = {
   container: {
     flexDirection: "row",
     flexWrap: "wrap",
-  } as ViewStyle,
+  },
   segment: {
     flexBasis: "25%", // 4 items per row
     minHeight: 44,
-  } as ViewStyle,
+  },
   segmentInner: {
     flexDirection: "column",
     alignItems: "center",
@@ -40,8 +40,8 @@ const styles = {
     padding: UI_SPACE.control,
     borderRadius: UI_RADIUS.control,
     margin: UI_SPACE.micro / 2,
-  } as ViewStyle,
-}
+  },
+} as const
 
 interface CurrencyOption {
   key: string

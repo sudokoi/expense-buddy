@@ -50,35 +50,35 @@ const layoutStyles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   summaryCardsRow: {
     gap: UI_SPACE.section,
     marginBottom: UI_SPACE.block,
-  } as ViewStyle,
+  },
   chartSection: {
     marginBottom: UI_SPACE.block,
-  } as ViewStyle,
+  },
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
     marginBottom: UI_SPACE.block,
-  } as ViewStyle,
+  },
   transactionsHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-  } as ViewStyle,
+  },
   transactionDetails: {
     gap: UI_SPACE.section,
     alignItems: "center",
-  } as ViewStyle,
+  },
   cardValue: {
     marginTop: UI_SPACE.control,
     height: UI_SPACE.empty,
     justifyContent: "center",
-  } as TextStyle,
+  },
   roundButton: {
     borderRadius: UI_RADIUS.round,
-  } as ViewStyle,
+  },
 }
 
 // Memoized recent expense item component

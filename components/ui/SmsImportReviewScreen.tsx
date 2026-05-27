@@ -65,22 +65,22 @@ const layoutStyles = {
     alignSelf: "center",
     maxWidth: UI_SPACE.empty * 18,
     width: "100%",
-  } as ViewStyle,
+  },
   categoryRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   paymentMethodRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   identifierContainer: {
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
+  },
   actionRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
 } as const
 
 function formatTimestamp(value: string): string {

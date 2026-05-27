@@ -17,14 +17,14 @@ interface PaymentMethodFilterProps {
 const styles = {
   scrollView: {
     marginBottom: UI_SPACE.gutter,
-  } as ViewStyle,
+  },
   contentContainer: {
     paddingHorizontal: UI_SPACE.micro,
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-  } as ViewStyle,
-}
+  },
+} as const
 
 const NONE_KEY: PaymentMethodSelectionKey = "__none__"
 
@@ -56,7 +56,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
     items.push({
       key: NONE_KEY,
       label: "None",
-      selectedStyle: { backgroundColor: getColorForKey(NONE_KEY) } as ViewStyle,
+      selectedStyle: { backgroundColor: getColorForKey(NONE_KEY) },
     })
 
     for (const method of PAYMENT_METHODS) {
@@ -69,7 +69,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           size?: number
           color?: string
         }>,
-        selectedStyle: { backgroundColor: color } as ViewStyle,
+        selectedStyle: { backgroundColor: color },
       })
     }
 

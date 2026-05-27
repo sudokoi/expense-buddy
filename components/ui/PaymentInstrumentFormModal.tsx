@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { ViewStyle, Keyboard } from "react-native"
+import { Keyboard } from "react-native"
 import { Check } from "@tamagui/lucide-icons-2"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
@@ -28,13 +28,13 @@ const layoutStyles = {
   methodRow: {
     flexWrap: "wrap",
     gap: UI_SPACE.control,
-  } as ViewStyle,
+  },
   buttonRow: {
     justifyContent: "flex-end",
     gap: UI_SPACE.section,
     marginTop: UI_SPACE.control,
-  } as ViewStyle,
-}
+  },
+} as const
 
 const INSTRUMENT_METHODS: PaymentInstrumentMethod[] = ["Credit Card", "Debit Card", "UPI"]
 
