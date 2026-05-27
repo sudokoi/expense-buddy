@@ -3,6 +3,7 @@ package expo.modules.expensebuddybackgroundsms
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import expo.modules.expensebuddylogger.LoggerApi
 import org.json.JSONObject
 
 private const val PREFS_NAME = "expense_buddy_background_sms"
@@ -22,6 +23,7 @@ object BackgroundSmsPreferences {
         context: Context,
         enabled: Boolean,
     ) {
+        LoggerApi.d("SMS_STORAGE", "setEnabled: enabled=$enabled")
         BackgroundSmsReceiverComponent.setEnabled(context, enabled)
         context
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
