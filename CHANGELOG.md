@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 3.4.2
+
+### Patch Changes
+
+- fix dashboard cards height regression
+
 ## 3.4.1
 
 ### Patch Changes
