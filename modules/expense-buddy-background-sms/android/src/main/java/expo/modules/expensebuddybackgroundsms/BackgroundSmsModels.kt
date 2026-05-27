@@ -33,10 +33,27 @@ data class BackgroundSmsReviewItem(
 )
 
 data class BackgroundSmsReviewQueueSnapshot(
-  val items: List<BackgroundSmsReviewItem>,
+  val itemsByFingerprint: Map<String, BackgroundSmsReviewItem>,
   val lastScanCursor: String? = null,
   val bootstrapCompletedAt: String? = null,
-)
+) {
+  val items: List<BackgroundSmsReviewItem>
+    get() = itemsByFingerprint.values.sortedByDescending { it.sourceMessage.receivedAt }
+
+  companion object {
+    fun fromItems(
+      itemList: List<BackgroundSmsReviewItem>,
+      lastScanCursor: String? = null,
+      bootstrapCompletedAt: String? = null,
+    ): BackgroundSmsReviewQueueSnapshot {
+      return BackgroundSmsReviewQueueSnapshot(
+        itemsByFingerprint = itemList.associateBy { it.fingerprint },
+        lastScanCursor = lastScanCursor,
+        bootstrapCompletedAt = bootstrapCompletedAt,
+      )
+    }
+  }
+}
 
 data class BackgroundSmsState(
   val enabled: Boolean,

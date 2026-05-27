@@ -69,13 +69,13 @@ object BackgroundSmsReviewQueueStore {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val stored = prefs.getString(REVIEW_QUEUE_SNAPSHOT_KEY, null)
     if (stored.isNullOrBlank()) {
-      return BackgroundSmsReviewQueueSnapshot(items = emptyList())
+      return BackgroundSmsReviewQueueSnapshot(itemsByFingerprint = emptyMap())
     }
 
     return try {
       parseSnapshot(JSONObject(stored))
     } catch (_: Throwable) {
-      BackgroundSmsReviewQueueSnapshot(items = emptyList())
+      BackgroundSmsReviewQueueSnapshot(itemsByFingerprint = emptyMap())
     }
   }
 
@@ -89,7 +89,7 @@ object BackgroundSmsReviewQueueStore {
         val snapshot = try {
           parseSnapshot(JSONObject(snapshotJson))
         } catch (_: Throwable) {
-          BackgroundSmsReviewQueueSnapshot(items = emptyList())
+          BackgroundSmsReviewQueueSnapshot(itemsByFingerprint = emptyMap())
         }
 
         saveSnapshot(context, snapshot)
@@ -104,13 +104,13 @@ object BackgroundSmsReviewQueueStore {
     return runBlocking {
       mutex.withLock {
         val current = loadSnapshot(context)
-        if (current.items.any { existing -> existing.fingerprint == item.fingerprint }) {
+        if (current.itemsByFingerprint.containsKey(item.fingerprint)) {
           return@withLock BackgroundSmsUpsertResult(snapshot = current, inserted = false)
         }
 
         val merged = normalizeSnapshot(
           current.copy(
-            items = current.items + item,
+            itemsByFingerprint = current.itemsByFingerprint + (item.fingerprint to item),
           )
         )
         saveSnapshot(context, merged)
@@ -128,28 +128,22 @@ object BackgroundSmsReviewQueueStore {
   }
 
   private fun normalizeSnapshot(snapshot: BackgroundSmsReviewQueueSnapshot): BackgroundSmsReviewQueueSnapshot {
-    val sortedItems = snapshot.items.sortedByDescending { item ->
-      item.sourceMessage.receivedAt
-    }
-
-    return snapshot.copy(items = sortedItems)
+    return snapshot
   }
 
   private fun parseSnapshot(json: JSONObject): BackgroundSmsReviewQueueSnapshot {
     val itemsJson = json.optJSONArray("items") ?: JSONArray()
-    val items = buildList(itemsJson.length()) {
-      for (index in 0 until itemsJson.length()) {
-        val itemJson = itemsJson.optJSONObject(index) ?: continue
-        add(parseReviewItem(itemJson))
-      }
+    val itemsByFingerprint = mutableMapOf<String, BackgroundSmsReviewItem>()
+    for (index in 0 until itemsJson.length()) {
+      val itemJson = itemsJson.optJSONObject(index) ?: continue
+      val item = parseReviewItem(itemJson)
+      itemsByFingerprint[item.fingerprint] = item
     }
 
-    return normalizeSnapshot(
-      BackgroundSmsReviewQueueSnapshot(
-        items = items,
-        lastScanCursor = json.optNullableString("lastScanCursor"),
-        bootstrapCompletedAt = json.optNullableString("bootstrapCompletedAt"),
-      )
+    return BackgroundSmsReviewQueueSnapshot(
+      itemsByFingerprint = itemsByFingerprint,
+      lastScanCursor = json.optNullableString("lastScanCursor"),
+      bootstrapCompletedAt = json.optNullableString("bootstrapCompletedAt"),
     )
   }
 
