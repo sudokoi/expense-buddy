@@ -3,6 +3,9 @@ package expo.modules.expensebuddybackgroundsms
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -60,6 +63,8 @@ private object BackgroundSmsReceiverComponent {
 }
 
 object BackgroundSmsReviewQueueStore {
+  private val mutex = Mutex()
+
   fun loadSnapshot(context: Context): BackgroundSmsReviewQueueSnapshot {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val stored = prefs.getString(REVIEW_QUEUE_SNAPSHOT_KEY, null)
@@ -79,31 +84,39 @@ object BackgroundSmsReviewQueueStore {
   }
 
   fun replaceSnapshotJson(context: Context, snapshotJson: String) {
-    val snapshot = try {
-      parseSnapshot(JSONObject(snapshotJson))
-    } catch (_: Throwable) {
-      BackgroundSmsReviewQueueSnapshot(items = emptyList())
-    }
+    runBlocking {
+      mutex.withLock {
+        val snapshot = try {
+          parseSnapshot(JSONObject(snapshotJson))
+        } catch (_: Throwable) {
+          BackgroundSmsReviewQueueSnapshot(items = emptyList())
+        }
 
-    saveSnapshot(context, snapshot)
+        saveSnapshot(context, snapshot)
+      }
+    }
   }
 
   fun upsertPendingItem(
     context: Context,
     item: BackgroundSmsReviewItem,
   ): BackgroundSmsUpsertResult {
-    val current = loadSnapshot(context)
-    if (current.items.any { existing -> existing.fingerprint == item.fingerprint }) {
-      return BackgroundSmsUpsertResult(snapshot = current, inserted = false)
-    }
+    return runBlocking {
+      mutex.withLock {
+        val current = loadSnapshot(context)
+        if (current.items.any { existing -> existing.fingerprint == item.fingerprint }) {
+          return@withLock BackgroundSmsUpsertResult(snapshot = current, inserted = false)
+        }
 
-    val merged = normalizeSnapshot(
-      current.copy(
-        items = current.items + item,
-      )
-    )
-    saveSnapshot(context, merged)
-    return BackgroundSmsUpsertResult(snapshot = merged, inserted = true)
+        val merged = normalizeSnapshot(
+          current.copy(
+            items = current.items + item,
+          )
+        )
+        saveSnapshot(context, merged)
+        BackgroundSmsUpsertResult(snapshot = merged, inserted = true)
+      }
+    }
   }
 
   private fun saveSnapshot(context: Context, snapshot: BackgroundSmsReviewQueueSnapshot) {
