@@ -1,7 +1,9 @@
 package expo.modules.expensebuddybackgroundsms
 
 import android.content.Context
+import expo.modules.expensebuddybackgroundsms.db.ImportJournalDao
 import expo.modules.expensebuddybackgroundsms.db.ImportJournalEntity
+import expo.modules.expensebuddybackgroundsms.db.ReviewQueueDao
 import expo.modules.expensebuddybackgroundsms.db.ReviewQueueEntity
 import expo.modules.expensebuddybackgroundsms.db.SmsReviewQueueDatabase
 import expo.modules.expensebuddylogger.LoggerApi
@@ -17,12 +19,14 @@ private const val STATUS_DISMISSED = "DISMISSED"
 private const val STATUS_FAILED = "FAILED"
 
 class SmsReviewQueueRepository(
-    private val context: Context,
+    private val context: Context? = null,
+    private val injectedDao: ReviewQueueDao? = null,
+    private val injectedJournalDao: ImportJournalDao? = null,
 ) {
     private val mutex = Mutex()
-    private val db by lazy { SmsReviewQueueDatabase.getInstance(context) }
-    private val dao by lazy { db.reviewQueueDao() }
-    private val journalDao by lazy { db.importJournalDao() }
+    private val dbInstance by lazy { context?.let { SmsReviewQueueDatabase.getInstance(it) } }
+    private val dao get() = injectedDao ?: dbInstance!!.reviewQueueDao()
+    private val journalDao get() = injectedJournalDao ?: dbInstance!!.importJournalDao()
 
     suspend fun upsertItem(
         item: ReviewQueueEntity,

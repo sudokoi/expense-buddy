@@ -1,5 +1,5 @@
 ---
-'expense-buddy': patch
+"expense-buddy": patch
 ---
 
 Add on-device structured logging with Room-backed ring buffer and bug report integration
