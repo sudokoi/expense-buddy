@@ -1,7 +1,7 @@
 import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
 import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
-import { THEME_COLORS } from "../../../constants/theme-colors"
+import { THEME_COLORS, SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
 import {
   UI_RADIUS,
@@ -107,7 +107,8 @@ export function AutoSyncSection({
           size="$control"
           checked={autoSyncEnabled}
           onCheckedChange={onAutoSyncEnabledChange}
-          bg={autoSyncEnabled ? THEME_COLORS.toggleActive : ("$gray8" as any)}
+          bg="$gray8"
+          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
         >
           <Switch.Thumb />
         </Switch>
@@ -130,7 +131,8 @@ export function AutoSyncSection({
           size="$control"
           checked={syncSettings}
           onCheckedChange={onSyncSettingsChange}
-          bg={syncSettings ? THEME_COLORS.toggleActive : ("$gray8" as any)}
+          bg="$gray8"
+          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
         >
           <Switch.Thumb />
         </Switch>

@@ -46,8 +46,6 @@ export const THEME_COLORS = {
   // Expense/income light variants
   expenseRedLight: "#FFD4D4",
   incomeGreenLight: "#C8F7DC",
-  // Toggle/Switch active track
-  toggleActive: "#4CD97A",
 } as const
 
 // Status/notification colors (kawaii versions)

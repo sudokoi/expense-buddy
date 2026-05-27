@@ -35,7 +35,7 @@ import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { useTranslation } from "react-i18next"
-import { THEME_COLORS } from "../../constants/theme-colors"
+import { THEME_COLORS, SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -652,11 +652,8 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) => {
                   void handleBackgroundSmsToggle(checked)
                 }}
-                bg={
-                  settings.backgroundSmsImportEnabled
-                    ? THEME_COLORS.toggleActive
-                    : ("$gray8" as any)
-                }
+                bg="$gray8"
+                activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
               >
                 <Switch.Thumb />
               </Switch>
@@ -719,11 +716,8 @@ export default function SettingsScreen() {
               size="$control"
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
-              bg={
-                settings.enableMathExpressions
-                  ? THEME_COLORS.toggleActive
-                  : ("$gray8" as any)
-              }
+              bg="$gray8"
+              activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
             >
               <Switch.Thumb />
             </Switch>
@@ -748,11 +742,8 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
                 }
-                bg={
-                  settings.useMlOnlyForSmsImports
-                    ? THEME_COLORS.toggleActive
-                    : ("$gray8" as any)
-                }
+                bg="$gray8"
+                activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
               >
                 <Switch.Thumb />
               </Switch>
