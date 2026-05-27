@@ -21,7 +21,7 @@ This document focuses on the current architecture shape, the reasons behind the 
 | Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                                                                                         |
 | Stores             | Long-lived application state                             | `stores/`                                                                                                        |
 | Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                                                                                      |
-| Native modules     | Android SMS access, background SMS alerts, and Play Core | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-background-sms/`, `modules/expense-buddy-play-core/` |
+| Native modules     | Android SMS access, background SMS alerts, Play Core, and structured logging | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-background-sms/`, `modules/expense-buddy-play-core/`, `modules/expense-buddy-logger/` |
 | Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/`                                                                     |
 
 The main dependency direction is:
@@ -61,7 +61,7 @@ The sync state machine coordinates fetch, merge, push, conflict, and error state
 | Settings           | AsyncStorage          | Optional `settings.json` in GitHub | Credentials are excluded                     |
 | GitHub credentials | Secure storage        | No                                 | Token and repo configuration stay on-device  |
 | Filters            | AsyncStorage          | No                                 | Shared between History and Analytics locally |
-| SMS review queue   | AsyncStorage          | No                                 | Raw SMS import data stays local              |
+| SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-background-sms` |
 | Dirty-day metadata | AsyncStorage          | No                                 | Used to minimize sync work                   |
 | Remote SHA cache   | AsyncStorage          | No                                 | Used to skip unchanged downloads             |
 
@@ -91,9 +91,9 @@ Runtime flow:
 6. `services/sms-import/bootstrap.ts` batches eligible messages through the Android native module for LiteRT category inference.
 7. The native module mirrors the Python export contract with deterministic hashed token features and replaces the category suggestion only when the model clears its confidence gate.
 8. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
-9. Parsed candidates are stored in the SMS Import Review Store.
-10. The review store mirrors a pending-item snapshot into `expense-buddy-background-sms` so the receiver and notification router can stay offline.
-11. When an `SMS_RECEIVED` broadcast arrives, the background module parses the message locally, updates its pending snapshot, and posts a local notification only if the app is not foregrounded.
+9. Parsed candidates are inserted into a native Room database via `SmsReviewQueueRepository` in `expense-buddy-background-sms`.
+10. The review store subscribes to native `onReviewQueueUpdated` events and refetches a fresh snapshot on each change — it does not own queue state.
+11. When an `SMS_RECEIVED` broadcast arrives, the background module parses the message locally, inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
 12. Notification taps route into `/sms/review`, targeting a single item directly when possible.
 13. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
 14. Only accepted items are converted into normal expense records and enter the regular sync flow.
@@ -120,6 +120,8 @@ Related decisions:
 - [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
 - [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
 - [ADR-005: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-005-background-sms-alerts.md)
+- [ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence](./decisions/adr-006-native-owned-sms-review-queue.md)
+- [ADR-007: On-Device Structured Logging](./decisions/adr-007-device-logging.md)
 - [On-Device ML SMS Categorization Proposal](./decisions/proposal-on-device-ml-sms-categorization.md)
 
 ## GitHub Sync Architecture
@@ -196,6 +198,26 @@ Important architectural decisions in analytics:
 - Search runs late in the filter pipeline because it is the most expensive check.
 
 The result is a predictable path from raw expenses to filtered datasets to charts and summary cards, without duplicating filter logic across screens.
+
+## Device Logging Architecture
+
+All device logging is routed through a single native module (`expense-buddy-logger`) backed by a Room database with auto-pruning.
+
+| Layer | Access path |
+|---|---|
+| Native Kotlin (module APIs, receiver, repository) | `LoggerApi.d/i/w/e(tag, message)` — fire-and-forget |
+| JavaScript (stores, services, wrappers) | Native TurboModule via `services/logger.ts` |
+| `console.warn` / `console.error` (JS) | Auto-routed through logger via global patch |
+
+The log database is capped at 1000 entries. When a new entry pushes the count above the cap, the oldest entries are deleted in the same transaction. This keeps disk usage bounded regardless of app lifetime.
+
+Bug report flow (Settings > About > Report an Issue):
+
+1. A confirmation dialog explains that the last 200 device logs will be attached to the GitHub issue
+2. On user consent, `getLogsAsStringAsync(200)` retrieves formatted entries via the TurboModule
+3. The GitHub new-issue URL opens with logs pre-filled in the body parameter
+
+Related decision: [ADR-007](./decisions/adr-007-device-logging.md)
 
 ## Internationalization and App Shell
 

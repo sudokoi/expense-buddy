@@ -47,6 +47,17 @@ If you enable background SMS alerts on Android:
 - **No notification is shown while the app is already in the foreground**
 - **A local pending-review snapshot is kept on-device so notification taps can reopen the right review state offline**
 
+## Device Logging (Android Only)
+
+Expense Buddy includes an on-device logging system to help debug issues:
+
+- **The app records operational logs** about internal operations, SMS processing, and database interactions
+- **Logs are stored locally** in an app-internal database with a fixed capacity of 1000 entries
+- **Old logs are automatically removed** when the capacity is reached
+- **Logs contain app operation details only** — they do not include raw SMS message content, financial data, passwords, or personal information
+- **Logs never leave your device** unless you voluntarily choose to share them when reporting a bug
+- **If you report a bug from Settings**, the app asks for your explicit permission before attaching log entries to the GitHub issue
+
 ## GitHub Sync (Optional)
 
 If you choose to use the optional GitHub sync feature:
