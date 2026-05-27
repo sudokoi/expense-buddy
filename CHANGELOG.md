@@ -4,7 +4,8 @@
 
 ### Patch Changes
 
-- fix dashboard cards height regression
+- fix: restore dashboard card amount height to 40 (regression from style inlining reduced it to 24)
+- fix: restore missing borderWidth on CategoryCard (regression — unselected category chips had no visible border)
 
 ## 3.4.1
 

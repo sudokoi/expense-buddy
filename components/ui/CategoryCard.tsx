@@ -3,7 +3,7 @@ import { memo, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 import { getReadableTextColor } from "../../constants/theme-colors"
-import { UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
   isSelected: boolean
@@ -38,6 +38,7 @@ export const CategoryCard = memo(function CategoryCard({
     <Card
       bg={isSelected ? resolvedColor : "$background"}
       borderColor={isSelected ? resolvedColor : "$borderColor"}
+      borderWidth={isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin}
       p={compact ? "$control" : "$section"}
       rounded={compact ? "$control" : "$chip"}
       width={compact ? "22%" : "30%"}
