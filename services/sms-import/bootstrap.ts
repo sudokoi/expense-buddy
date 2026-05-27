@@ -166,9 +166,13 @@ export async function scanSmsImportReviewQueue(
         }
   )
 
-  const parsedCandidates = (await Promise.all(
-    messages.map((message) => createParsedBootstrapCandidate(existingFingerprints, message))
-  )).filter((candidate): candidate is ParsedBootstrapCandidate => candidate !== null)
+  const parsedCandidates = (
+    await Promise.all(
+      messages.map((message) =>
+        createParsedBootstrapCandidate(existingFingerprints, message)
+      )
+    )
+  ).filter((candidate): candidate is ParsedBootstrapCandidate => candidate !== null)
 
   const categoryPredictions = await categorizeSmsImportMessages(
     parsedCandidates.map((candidate) => ({

@@ -5,6 +5,7 @@ import android.util.Log
 import expo.modules.expensebuddybackgroundsms.db.ImportJournalEntity
 import expo.modules.expensebuddybackgroundsms.db.ReviewQueueEntity
 import expo.modules.expensebuddybackgroundsms.db.SmsReviewQueueDatabase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
@@ -17,14 +18,20 @@ private const val STATUS_REJECTED = "REJECTED"
 private const val STATUS_DISMISSED = "DISMISSED"
 private const val STATUS_FAILED = "FAILED"
 
-class SmsReviewQueueRepository(private val context: Context) {
-
+class SmsReviewQueueRepository(
+    private val context: Context,
+) {
     private val mutex = Mutex()
     private val db by lazy { SmsReviewQueueDatabase.getInstance(context) }
     private val dao by lazy { db.reviewQueueDao() }
     private val journalDao by lazy { db.importJournalDao() }
 
-    private fun log(action: String, fingerprint: String, source: String, extra: String? = null) {
+    private fun log(
+        action: String,
+        fingerprint: String,
+        source: String,
+        extra: String? = null,
+    ) {
         Log.d(TAG, "fingerprint=$fingerprint action=$action source=$source${extra?.let { " $it" } ?: ""}")
     }
 
@@ -43,7 +50,7 @@ class SmsReviewQueueRepository(private val context: Context) {
                         action = "DEDUPED",
                         timestamp = System.currentTimeMillis(),
                         details = "existing_status=${existing.status}",
-                    )
+                    ),
                 )
                 return@withLock false
             }
@@ -58,7 +65,7 @@ class SmsReviewQueueRepository(private val context: Context) {
                         action = "DEDUPED",
                         timestamp = System.currentTimeMillis(),
                         details = "race_condition_insert_failed",
-                    )
+                    ),
                 )
                 return@withLock false
             }
@@ -71,13 +78,17 @@ class SmsReviewQueueRepository(private val context: Context) {
                     action = "INSERTED",
                     timestamp = System.currentTimeMillis(),
                     details = null,
-                )
+                ),
             )
             true
         }
     }
 
-    suspend fun approveItem(fingerprint: String, source: String, expenseId: String? = null) {
+    suspend fun approveItem(
+        fingerprint: String,
+        source: String,
+        expenseId: String? = null,
+    ) {
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.approveItem(fingerprint, STATUS_APPROVED, expenseId, now)
@@ -89,12 +100,15 @@ class SmsReviewQueueRepository(private val context: Context) {
                     action = "APPROVED",
                     timestamp = now,
                     details = expenseId?.let { "expense_id=$it" },
-                )
+                ),
             )
         }
     }
 
-    suspend fun rejectItem(fingerprint: String, source: String) {
+    suspend fun rejectItem(
+        fingerprint: String,
+        source: String,
+    ) {
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_REJECTED, now)
@@ -106,12 +120,15 @@ class SmsReviewQueueRepository(private val context: Context) {
                     action = "REJECTED",
                     timestamp = now,
                     details = null,
-                )
+                ),
             )
         }
     }
 
-    suspend fun dismissItem(fingerprint: String, source: String) {
+    suspend fun dismissItem(
+        fingerprint: String,
+        source: String,
+    ) {
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_DISMISSED, now)
@@ -123,28 +140,27 @@ class SmsReviewQueueRepository(private val context: Context) {
                     action = "DISMISSED",
                     timestamp = now,
                     details = null,
-                )
+                ),
             )
         }
     }
 
-    suspend fun getPendingItems(): List<ReviewQueueEntity> {
-        return dao.getPendingItems()
-    }
+    suspend fun getPendingItems(): List<ReviewQueueEntity> = dao.getPendingItems()
 
-    suspend fun countPending(): Int {
-        return dao.countPending()
-    }
+    fun observePendingItems(): Flow<List<ReviewQueueEntity>> = dao.observePendingItems()
+
+    suspend fun countPending(): Int = dao.countPending()
 
     fun toReviewQueueEntity(
         item: BackgroundSmsReviewItem,
         importSource: String,
     ): ReviewQueueEntity {
-        val timestamp = try {
-            Instant.parse(item.sourceMessage.receivedAt).toEpochMilli()
-        } catch (_: Exception) {
-            System.currentTimeMillis()
-        }
+        val timestamp =
+            try {
+                Instant.parse(item.sourceMessage.receivedAt).toEpochMilli()
+            } catch (_: Exception) {
+                System.currentTimeMillis()
+            }
 
         return ReviewQueueEntity(
             fingerprint = item.fingerprint,

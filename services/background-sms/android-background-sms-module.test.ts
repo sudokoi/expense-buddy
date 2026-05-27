@@ -10,12 +10,10 @@ jest.mock("../../modules/expense-buddy-background-sms", () => ({
 import type { ExpenseBuddyBackgroundSmsNativeModule } from "../../modules/expense-buddy-background-sms"
 import {
   getBackgroundSmsState,
-  loadBackgroundSmsReviewQueueSnapshot,
-  saveBackgroundSmsReviewQueueSnapshot,
+  getPendingReviewQueueAsync,
   setBackgroundSmsEnabled,
   setBackgroundSmsModuleForTesting,
 } from "./android-background-sms-module"
-import type { SmsImportReviewQueueSnapshot } from "../../types/sms-import"
 
 function createModuleOverride(
   overrides: Partial<ExpenseBuddyBackgroundSmsNativeModule> = {}
@@ -23,9 +21,11 @@ function createModuleOverride(
   return {
     getBackgroundSmsStateAsync: async () => ({ enabled: false }),
     setBackgroundSmsEnabledAsync: async () => undefined,
-    getReviewQueueSnapshotJsonAsync: async () =>
-      JSON.stringify({ items: [], lastScanCursor: null, bootstrapCompletedAt: null }),
-    replaceReviewQueueSnapshotJsonAsync: async () => undefined,
+    getPendingReviewQueueAsync: async () => [],
+    approveReviewItemAsync: async () => undefined,
+    rejectReviewItemAsync: async () => undefined,
+    dismissReviewItemAsync: async () => undefined,
+    insertPendingItemsAsync: async () => undefined,
     ...overrides,
   } as ExpenseBuddyBackgroundSmsNativeModule
 }
@@ -50,57 +50,14 @@ describe("android-background-sms-module", () => {
     await expect(getBackgroundSmsState()).resolves.toEqual({ enabled: true })
   })
 
-  it("parses the mirrored review queue snapshot from native storage", async () => {
-    const snapshot: SmsImportReviewQueueSnapshot = {
-      items: [
-        {
-          id: "sms_1",
-          fingerprint: "sms_fingerprint",
-          sourceMessage: {
-            messageId: "1",
-            sender: "VK-HDFCBK",
-            body: "INR 100 spent at Merchant",
-            receivedAt: "2026-04-11T10:10:00.000Z",
-          },
-          amount: 100,
-          currency: "INR",
-          merchantName: "Merchant",
-          categorySuggestion: "Food",
-          status: "pending",
-          createdAt: "2026-04-11T10:10:00.000Z",
-          updatedAt: "2026-04-11T10:10:00.000Z",
-        },
-      ],
-      lastScanCursor: "2026-04-11T10:10:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:11:00.000Z",
-    }
-
+  it("returns empty array when no pending items exist", async () => {
     setBackgroundSmsModuleForTesting(
       createModuleOverride({
-        getReviewQueueSnapshotJsonAsync: async () => JSON.stringify(snapshot),
+        getPendingReviewQueueAsync: async () => [],
       })
     )
 
-    await expect(loadBackgroundSmsReviewQueueSnapshot()).resolves.toEqual(snapshot)
-  })
-
-  it("writes queue snapshots back to the native mirror", async () => {
-    const replaceReviewQueueSnapshotJsonAsync = jest.fn().mockResolvedValue(undefined)
-    const snapshot: SmsImportReviewQueueSnapshot = {
-      items: [],
-      lastScanCursor: null,
-      bootstrapCompletedAt: null,
-    }
-
-    setBackgroundSmsModuleForTesting(
-      createModuleOverride({ replaceReviewQueueSnapshotJsonAsync })
-    )
-
-    await saveBackgroundSmsReviewQueueSnapshot(snapshot)
-
-    expect(replaceReviewQueueSnapshotJsonAsync).toHaveBeenCalledWith(
-      JSON.stringify(snapshot)
-    )
+    await expect(getPendingReviewQueueAsync()).resolves.toEqual([])
   })
 
   it("enables background SMS processing via native state", async () => {

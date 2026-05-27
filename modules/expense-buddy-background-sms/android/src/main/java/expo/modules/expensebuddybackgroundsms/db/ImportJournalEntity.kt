@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 data class ImportJournalEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     val fingerprint: String,
     val source: String,
     val action: String,

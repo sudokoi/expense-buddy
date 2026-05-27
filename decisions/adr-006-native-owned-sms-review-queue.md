@@ -36,14 +36,14 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
 ### New ownership boundaries
 
-| Responsibility | Owner | Implementation |
-|---|---|---|
-| Queue persistence | Native | Room database (`sms_review_queue` table) |
-| Deduplication | Native | `@PrimaryKey` on fingerprint; `OnConflictStrategy.IGNORE` |
-| Queue mutations | Native | Mutex-guarded repository methods |
-| Event emission | Native | `"onReviewQueueUpdated"` after any mutation |
-| State projection | JS | Snapshot-consumer; refetches on event |
-| Action dispatch | JS | `approveReviewItemAsync(fingerprint)`, etc. |
+| Responsibility    | Owner  | Implementation                                            |
+| ----------------- | ------ | --------------------------------------------------------- |
+| Queue persistence | Native | Room database (`sms_review_queue` table)                  |
+| Deduplication     | Native | `@PrimaryKey` on fingerprint; `OnConflictStrategy.IGNORE` |
+| Queue mutations   | Native | Mutex-guarded repository methods                          |
+| Event emission    | Native | `"onReviewQueueUpdated"` after any mutation               |
+| State projection  | JS     | Snapshot-consumer; refetches on event                     |
+| Action dispatch   | JS     | `approveReviewItemAsync(fingerprint)`, etc.               |
 
 ### Changes required
 

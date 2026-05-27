@@ -38,7 +38,7 @@ async function sha256(value: string): Promise<string> {
 
 export async function createSmsImportFingerprint(
   message: SmsImportRawMessage,
-  amount?: number,
+  amount?: number
 ): Promise<string> {
   const normalizedSender = normalizeWhitespace(message.sender).toLowerCase()
   const normalizedBody = normalizeWhitespace(message.body).toLowerCase()

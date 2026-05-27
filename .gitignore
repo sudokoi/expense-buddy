@@ -23,6 +23,7 @@ build/
 .turbo
 
 .ultra.cache.json
+.cache/
 tmp
 *.tsbuildinfo
 *.tmp.js

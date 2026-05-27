@@ -30,9 +30,3 @@ export interface SmsImportReviewItem {
   createdAt: string
   updatedAt: string
 }
-
-export interface SmsImportReviewQueueSnapshot {
-  items: SmsImportReviewItem[]
-  lastScanCursor: string | null
-  bootstrapCompletedAt: string | null
-}

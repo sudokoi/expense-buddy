@@ -6,7 +6,6 @@ import androidx.room.Query
 
 @Dao
 interface ImportJournalDao {
-
     @Insert
     suspend fun insert(entry: ImportJournalEntity)
 

@@ -1,341 +1,304 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
   createSmsImportReviewStore,
   initializeSmsImportReviewStore,
   smsImportReviewStore,
 } from "./sms-import-review-store"
 import {
-  loadBackgroundSmsReviewQueueSnapshot,
-  saveBackgroundSmsReviewQueueSnapshot,
+  approveReviewItemAsync,
+  dismissReviewItemAsync,
+  insertPendingItemsAsync,
+  rejectReviewItemAsync,
 } from "../services/background-sms/android-background-sms-module"
-import type {
-  SmsImportReviewItem,
-  SmsImportReviewQueueSnapshot,
-} from "../types/sms-import"
+import type { SmsImportReviewItem } from "../types/sms-import"
 
 jest.mock("../services/background-sms/android-background-sms-module", () => ({
-  loadBackgroundSmsReviewQueueSnapshot: jest.fn(async () => null),
-  saveBackgroundSmsReviewQueueSnapshot: jest.fn(async () => undefined),
+  approveReviewItemAsync: jest.fn(async () => undefined),
+  dismissReviewItemAsync: jest.fn(async () => undefined),
+  insertPendingItemsAsync: jest.fn(async () => undefined),
+  rejectReviewItemAsync: jest.fn(async () => undefined),
 }))
 
-const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>
-const mockLoadBackgroundSmsReviewQueueSnapshot =
-  loadBackgroundSmsReviewQueueSnapshot as jest.MockedFunction<
-    typeof loadBackgroundSmsReviewQueueSnapshot
-  >
-const mockSaveBackgroundSmsReviewQueueSnapshot =
-  saveBackgroundSmsReviewQueueSnapshot as jest.MockedFunction<
-    typeof saveBackgroundSmsReviewQueueSnapshot
-  >
-const storage = new Map<string, string>()
-const STORAGE_KEY = "sms_import_review_queue_state_v1"
+const mockApproveReviewItemAsync = approveReviewItemAsync as jest.MockedFunction<
+  typeof approveReviewItemAsync
+>
+const mockDismissReviewItemAsync = dismissReviewItemAsync as jest.MockedFunction<
+  typeof dismissReviewItemAsync
+>
+const mockInsertPendingItemsAsync = insertPendingItemsAsync as jest.MockedFunction<
+  typeof insertPendingItemsAsync
+>
+const mockRejectReviewItemAsync = rejectReviewItemAsync as jest.MockedFunction<
+  typeof rejectReviewItemAsync
+>
 
 function createItem(
-  id: string,
+  suffix: string,
   overrides: Partial<SmsImportReviewItem> = {}
 ): SmsImportReviewItem {
   return {
-    id,
-    fingerprint: `fingerprint_${id}`,
+    id: `id-${suffix}`,
+    fingerprint: `fp-${suffix}`,
     sourceMessage: {
-      messageId: id,
-      sender: "VK-HDFCBK",
-      body: `INR 100 spent at Merchant ${id}`,
-      receivedAt: `2026-04-11T10:${id === "newer" ? "20" : "10"}:00.000Z`,
+      messageId: `msg-${suffix}`,
+      sender: "ACME Corp",
+      body: `Spent $10 at ACME ${suffix}`,
+      receivedAt: new Date(Date.now() - 60 * 1000).toISOString(),
     },
-    amount: 100,
+    amount: 10,
     currency: "INR",
-    merchantName: `Merchant ${id}`,
-    categorySuggestion: "Shopping",
-    noteSuggestion: `SMS import: Merchant ${id}`,
-    transactionDate: `2026-04-11T10:${id === "newer" ? "20" : "10"}:00.000Z`,
+    merchantName: "ACME Corp",
     status: "pending",
-    createdAt: "2026-04-11T10:30:00.000Z",
-    updatedAt: "2026-04-11T10:30:00.000Z",
+    createdAt: new Date(Date.now() - 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 60 * 1000).toISOString(),
     ...overrides,
   }
 }
 
-function flushEffects(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0))
+function resetMocks() {
+  mockApproveReviewItemAsync.mockClear()
+  mockDismissReviewItemAsync.mockClear()
+  mockInsertPendingItemsAsync.mockClear()
+  mockRejectReviewItemAsync.mockClear()
+}
+
+function resetStore() {
+  smsImportReviewStore.trigger.loadQueueState({
+    items: [],
+    lastScanCursor: null,
+    bootstrapCompletedAt: null,
+    isLoading: true,
+  })
 }
 
 describe("smsImportReviewStore", () => {
   beforeEach(() => {
-    storage.clear()
-    jest.clearAllMocks()
-
-    mockAsyncStorage.getItem.mockImplementation(async (key: string) => {
-      return storage.get(key) ?? null
-    })
-    mockAsyncStorage.setItem.mockImplementation(async (key: string, value: string) => {
-      storage.set(key, value)
-    })
-    mockAsyncStorage.removeItem.mockImplementation(async (key: string) => {
-      storage.delete(key)
-    })
-    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue(null)
-    mockSaveBackgroundSmsReviewQueueSnapshot.mockResolvedValue(undefined)
-
-    smsImportReviewStore.trigger.loadQueueState({
-      items: [],
-      lastScanCursor: null,
-      bootstrapCompletedAt: null,
-    })
+    resetMocks()
+    resetStore()
   })
 
-  it("loads a persisted snapshot from AsyncStorage", async () => {
-    const snapshot: SmsImportReviewQueueSnapshot = {
-      items: [createItem("older"), createItem("newer")],
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    }
-    storage.set(STORAGE_KEY, JSON.stringify(snapshot))
-
-    await initializeSmsImportReviewStore()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
-    expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
-    expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
-    expect(context.isLoading).toBe(false)
-  })
-
-  it("merges the native background snapshot into the review queue on initialization", async () => {
-    storage.set(
-      STORAGE_KEY,
-      JSON.stringify({
-        items: [createItem("older")],
-        lastScanCursor: "2026-04-11T10:10:00.000Z",
-        bootstrapCompletedAt: null,
-      } satisfies SmsImportReviewQueueSnapshot)
-    )
-    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
-      items: [createItem("newer")],
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    })
-
-    await initializeSmsImportReviewStore()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
-    expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
-    expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
-  })
-
-  it("prefers rejected status over pending status when merging same fingerprint from native and async", async () => {
-    const now = new Date()
-    const recentUpdatedAt = new Date(now.getTime() - 60 * 1000).toISOString() // 1 min ago
-    const newerUpdatedAt = new Date(now.getTime() - 30 * 1000).toISOString() // 30s ago
-
-    const asyncItem = createItem("async-rejected", {
-      status: "rejected",
-      fingerprint: "fp-1",
-      updatedAt: recentUpdatedAt,
-    })
-    const nativeItem = createItem("native-pending", {
-      status: "pending",
-      fingerprint: "fp-1",
-      updatedAt: newerUpdatedAt, // newer timestamp
-    })
-    storage.set(
-      STORAGE_KEY,
-      JSON.stringify({
-        items: [asyncItem],
-        lastScanCursor: null,
-        bootstrapCompletedAt: null,
-      } satisfies SmsImportReviewQueueSnapshot)
-    )
-    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
-      items: [nativeItem],
-      lastScanCursor: null,
-      bootstrapCompletedAt: null,
-    })
-
-    await initializeSmsImportReviewStore()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items).toHaveLength(1)
-    expect(context.items[0]?.status).toBe("rejected")
-    expect(context.items[0]?.id).toBe("async-rejected")
-  })
-
-  it("keeps a valid native snapshot when AsyncStorage contains corrupt JSON", async () => {
-    storage.set(STORAGE_KEY, "{not valid json")
-    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
-      items: [createItem("native")],
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    })
-
-    await initializeSmsImportReviewStore()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["native"])
-    expect(context.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
-    expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
-  })
-
-  it("prunes resolved items older than 7 days but keeps pending items", async () => {
-    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
-    const snapshot: SmsImportReviewQueueSnapshot = {
-      items: [
-        createItem("old-accepted", {
-          status: "accepted",
-          updatedAt: eightDaysAgo,
-          createdAt: eightDaysAgo,
-        }),
-        createItem("old-pending", {
-          status: "pending",
-          updatedAt: eightDaysAgo,
-          createdAt: eightDaysAgo,
-        }),
-      ],
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    }
-    storage.set(STORAGE_KEY, JSON.stringify(snapshot))
-
-    await initializeSmsImportReviewStore()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["old-pending"])
-    const persistedSnapshot = JSON.parse(
-      storage.get(STORAGE_KEY) || "{}"
-    ) as SmsImportReviewQueueSnapshot
-    expect(persistedSnapshot.items.map((item) => item.id)).toEqual(["old-pending"])
-    expect(persistedSnapshot.lastScanCursor).toBe("2026-04-11T10:20:00.000Z")
-    expect(persistedSnapshot.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
-  })
-
-  it("can initialize an injected review store instance", async () => {
-    const alternateStore = createSmsImportReviewStore()
-    storage.set(
-      STORAGE_KEY,
-      JSON.stringify({
-        items: [createItem("alternate")],
-        lastScanCursor: "2026-04-11T10:20:00.000Z",
-        bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-      } satisfies SmsImportReviewQueueSnapshot)
-    )
-
-    await initializeSmsImportReviewStore(alternateStore)
-
-    const context = alternateStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["alternate"])
-    expect(context.isLoading).toBe(false)
-  })
-
-  it("upserts items in reverse chronological order and persists the snapshot", async () => {
-    smsImportReviewStore.trigger.upsertReviewItems({
-      items: [createItem("older"), createItem("newer")],
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    })
-
-    await flushEffects()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["newer", "older"])
-
-    expect(mockAsyncStorage.setItem).toHaveBeenCalled()
-    expect(mockSaveBackgroundSmsReviewQueueSnapshot).toHaveBeenCalledWith(
-      expect.objectContaining({
-        lastScanCursor: "2026-04-11T10:20:00.000Z",
-        bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-      })
-    )
-    expect(JSON.parse(storage.get(STORAGE_KEY) || "{}")).toMatchObject({
-      lastScanCursor: "2026-04-11T10:20:00.000Z",
-      bootstrapCompletedAt: "2026-04-11T10:30:00.000Z",
-    })
-  })
-
-  it("marks items resolved and clears them when requested", async () => {
-    smsImportReviewStore.trigger.upsertReviewItems({
-      items: [createItem("older"), createItem("newer")],
-    })
-    await flushEffects()
-
-    smsImportReviewStore.trigger.markItemRejected({ id: "older" })
-    await flushEffects()
-    smsImportReviewStore.trigger.clearResolvedItems()
-    await flushEffects()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.map((item) => item.id)).toEqual(["newer"])
-  })
-
-  it("marks multiple items accepted with a single persisted snapshot", async () => {
-    smsImportReviewStore.trigger.upsertReviewItems({
-      items: [createItem("older"), createItem("newer")],
-    })
-    await flushEffects()
-    jest.clearAllMocks()
-
-    smsImportReviewStore.trigger.markItemsAccepted({
-      acceptedItems: [
-        { id: "older", acceptedExpenseId: "expense-1" },
-        { id: "newer", acceptedExpenseId: "expense-2" },
-      ],
-    })
-    await flushEffects()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.every((item) => item.status === "accepted")).toBe(true)
-    expect(context.items.map((item) => item.acceptedExpenseId)).toEqual([
-      "expense-2",
-      "expense-1",
-    ])
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
-  })
-
-  it("marks multiple items rejected with a single persisted snapshot", async () => {
-    smsImportReviewStore.trigger.upsertReviewItems({
-      items: [createItem("older"), createItem("newer")],
-    })
-    await flushEffects()
-    jest.clearAllMocks()
-
-    smsImportReviewStore.trigger.markItemsRejected({
-      ids: ["older", "newer"],
-    })
-    await flushEffects()
-
-    const context = smsImportReviewStore.getSnapshot().context
-    expect(context.items.every((item) => item.status === "rejected")).toBe(true)
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledTimes(1)
-  })
-
-  it("prunes expired resolved items when a later mutation persists the queue", async () => {
-    jest.useFakeTimers()
-    try {
-      jest.setSystemTime(new Date("2026-04-11T10:30:00.000Z"))
-
-      smsImportReviewStore.trigger.loadQueueState({
-        items: [
-          createItem("resolved", {
-            status: "accepted",
-            updatedAt: "2026-04-11T10:30:00.000Z",
-            createdAt: "2026-04-11T10:30:00.000Z",
-          }),
-          createItem("pending"),
-        ],
-        lastScanCursor: null,
-        bootstrapCompletedAt: null,
-      })
-
-      jest.setSystemTime(new Date("2026-04-19T10:30:00.000Z"))
-
-      smsImportReviewStore.trigger.markItemRejected({ id: "pending" })
-      await jest.runAllTimersAsync()
+  describe("initializeSmsImportReviewStore", () => {
+    it("starts with an empty queue and no cursor", async () => {
+      const result = await initializeSmsImportReviewStore()
 
       const context = smsImportReviewStore.getSnapshot().context
-      expect(context.items.map((item) => item.id)).toEqual(["pending"])
-      expect(context.items[0]?.status).toBe("rejected")
-    } finally {
-      jest.useRealTimers()
-    }
+      expect(context.items).toHaveLength(0)
+      expect(context.lastScanCursor).toBeNull()
+      expect(context.bootstrapCompletedAt).toBeNull()
+      expect(context.isLoading).toBe(false)
+      expect(result).toEqual({
+        lastScanCursor: null,
+        bootstrapCompletedAt: null,
+      })
+    })
+
+    it("can initialize an injected store instance", async () => {
+      const alternateStore = createSmsImportReviewStore()
+
+      const result = await initializeSmsImportReviewStore(alternateStore)
+
+      const context = alternateStore.getSnapshot().context
+      expect(context.items).toHaveLength(0)
+      expect(context.lastScanCursor).toBeNull()
+      expect(context.bootstrapCompletedAt).toBeNull()
+      expect(context.isLoading).toBe(false)
+      expect(result).toEqual({
+        lastScanCursor: null,
+        bootstrapCompletedAt: null,
+      })
+    })
+  })
+
+  describe("upsertReviewItems", () => {
+    it("adds new items to the queue", () => {
+      const item = createItem("first")
+
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [item] })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items.map((i) => i.fingerprint)).toEqual(["fp-first"])
+    })
+
+    it("inserts items into native via async effect", () => {
+      const item = createItem("first")
+
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [item] })
+
+      expect(mockInsertPendingItemsAsync).toHaveBeenCalledWith([item])
+    })
+
+    it("merges by fingerprint, preferring newer items", () => {
+      const older = createItem("same-fp", {
+        updatedAt: new Date(Date.now() - 60 * 1000).toISOString(),
+      })
+      const newer = createItem("same-fp", {
+        updatedAt: new Date(Date.now() - 30 * 1000).toISOString(),
+        merchantName: "Updated Corp",
+      })
+
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [older] })
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [newer] })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items).toHaveLength(1)
+      expect(context.items[0]?.merchantName).toBe("Updated Corp")
+    })
+
+    it("prefers resolved status over pending for same fingerprint", () => {
+      const pending = createItem("same-fp", {
+        status: "pending",
+        updatedAt: new Date(Date.now() - 10 * 1000).toISOString(),
+      })
+      const accepted = createItem("same-fp", {
+        status: "accepted",
+        updatedAt: new Date(Date.now() - 60 * 1000).toISOString(), // older timestamp
+      })
+
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [accepted] })
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [pending] })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items).toHaveLength(1)
+      expect(context.items[0]?.status).toBe("accepted")
+    })
+
+    it("sorts items by receivedAt descending", () => {
+      const older = createItem("older", {
+        sourceMessage: {
+          messageId: "msg-older",
+          sender: "ACME Corp",
+          body: "older",
+          receivedAt: new Date(Date.now() - 120 * 1000).toISOString(),
+        },
+      })
+      const newer = createItem("newer", {
+        sourceMessage: {
+          messageId: "msg-newer",
+          sender: "ACME Corp",
+          body: "newer",
+          receivedAt: new Date(Date.now() - 30 * 1000).toISOString(),
+        },
+      })
+
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [older, newer] })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items.map((i) => i.id)).toEqual(["id-newer", "id-older"])
+    })
+  })
+
+  describe("markItemAccepted", () => {
+    it("updates the item status and calls approve async", () => {
+      const item = createItem("test")
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [item] })
+
+      smsImportReviewStore.trigger.markItemAccepted({ fingerprint: "fp-test" })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      const updated = context.items.find((i) => i.fingerprint === "fp-test")
+      expect(updated?.status).toBe("accepted")
+      expect(mockApproveReviewItemAsync).toHaveBeenCalledWith("fp-test")
+    })
+  })
+
+  describe("markItemRejected", () => {
+    it("updates the item status and calls reject async", () => {
+      const item = createItem("test")
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [item] })
+
+      smsImportReviewStore.trigger.markItemRejected({ fingerprint: "fp-test" })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      const updated = context.items.find((i) => i.fingerprint === "fp-test")
+      expect(updated?.status).toBe("rejected")
+      expect(mockRejectReviewItemAsync).toHaveBeenCalledWith("fp-test")
+    })
+  })
+
+  describe("markItemsRejected", () => {
+    it("updates multiple items and calls reject for each", async () => {
+      smsImportReviewStore.trigger.upsertReviewItems({
+        items: [createItem("a"), createItem("b")],
+      })
+
+      smsImportReviewStore.trigger.markItemsRejected({
+        fingerprints: ["fp-a", "fp-b"],
+      })
+
+      await new Promise(setImmediate)
+
+      expect(mockRejectReviewItemAsync).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe("dismissItem", () => {
+    it("updates the item status and calls dismiss async", () => {
+      const item = createItem("test")
+      smsImportReviewStore.trigger.upsertReviewItems({ items: [item] })
+
+      smsImportReviewStore.trigger.dismissItem({ fingerprint: "fp-test" })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      const updated = context.items.find((i) => i.fingerprint === "fp-test")
+      expect(updated?.status).toBe("dismissed")
+      expect(mockDismissReviewItemAsync).toHaveBeenCalledWith("fp-test")
+    })
+  })
+
+  describe("clearResolvedItems", () => {
+    it("removes all resolved items keeping only pending", () => {
+      smsImportReviewStore.trigger.upsertReviewItems({
+        items: [
+          createItem("pending-1"),
+          createItem("accepted", { status: "accepted" }),
+          createItem("rejected", { status: "rejected" }),
+          createItem("dismissed", { status: "dismissed" }),
+        ],
+      })
+
+      smsImportReviewStore.trigger.clearResolvedItems()
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items.map((i) => i.fingerprint)).toEqual(["fp-pending-1"])
+    })
+  })
+
+  describe("loadQueueState", () => {
+    it("replaces the entire queue state", () => {
+      smsImportReviewStore.trigger.upsertReviewItems({
+        items: [createItem("old")],
+      })
+
+      smsImportReviewStore.trigger.loadQueueState({
+        items: [createItem("new")],
+        lastScanCursor: "cursor-2",
+        bootstrapCompletedAt: "2026-05-27T00:00:00.000Z",
+      })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.items.map((i) => i.fingerprint)).toEqual(["fp-new"])
+      expect(context.lastScanCursor).toBe("cursor-2")
+      expect(context.bootstrapCompletedAt).toBe("2026-05-27T00:00:00.000Z")
+      expect(context.isLoading).toBe(false)
+    })
+  })
+
+  describe("setLastScanCursor", () => {
+    it("updates the cursor", () => {
+      smsImportReviewStore.trigger.setLastScanCursor({ cursor: "new-cursor" })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.lastScanCursor).toBe("new-cursor")
+    })
+  })
+
+  describe("setBootstrapCompletedAt", () => {
+    it("updates the bootstrap timestamp", () => {
+      smsImportReviewStore.trigger.setBootstrapCompletedAt({
+        completedAt: "2026-05-27T00:00:00.000Z",
+      })
+
+      const context = smsImportReviewStore.getSnapshot().context
+      expect(context.bootstrapCompletedAt).toBe("2026-05-27T00:00:00.000Z")
+    })
   })
 })

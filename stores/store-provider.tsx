@@ -46,6 +46,8 @@ import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 import { bootstrapSmsImportOnLaunch } from "../services/sms-import/bootstrap"
 import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
+import { getPendingReviewQueueAsync } from "../services/background-sms/android-background-sms-module"
+import ExpenseBuddyBackgroundSmsModule from "../modules/expense-buddy-background-sms"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -140,11 +142,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await runLaunchUpdateCheck(updateStore)
 
       try {
-        const reviewSnapshot = smsImportReviewStore.getSnapshot().context
         const bootstrapResult = await bootstrapSmsImportOnLaunch({
-          existingItems: reviewSnapshot.items,
-          lastScanCursor: reviewSnapshot.lastScanCursor,
-          bootstrapCompletedAt: reviewSnapshot.bootstrapCompletedAt,
+          existingItems: [],
+          lastScanCursor: null,
+          bootstrapCompletedAt: null,
         })
 
         smsImportReviewStore.trigger.upsertReviewItems({
@@ -164,6 +165,30 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     uiStateStore,
     updateStore,
   ])
+
+  // Subscribe to native review queue update events to keep the store in sync
+  useEffect(() => {
+    if (!ExpenseBuddyBackgroundSmsModule) return
+
+    const subscription = ExpenseBuddyBackgroundSmsModule.addListener(
+      "onReviewQueueUpdated",
+      async () => {
+        try {
+          const items = await getPendingReviewQueueAsync()
+          smsImportReviewStore.trigger.loadQueueState({
+            items,
+            lastScanCursor: smsImportReviewStore.getSnapshot().context.lastScanCursor,
+            bootstrapCompletedAt:
+              smsImportReviewStore.getSnapshot().context.bootstrapCompletedAt,
+          })
+        } catch (error) {
+          console.warn("Failed to refresh review queue from native state:", error)
+        }
+      }
+    )
+
+    return () => subscription.remove()
+  }, [smsImportReviewStore])
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(

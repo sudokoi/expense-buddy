@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReviewQueueDao {
-
     @Query("SELECT * FROM sms_review_queue WHERE status = 'PENDING' ORDER BY timestamp DESC")
     suspend fun getPendingItems(): List<ReviewQueueEntity>
 
@@ -22,10 +21,21 @@ interface ReviewQueueDao {
     suspend fun insertIfNotExists(entity: ReviewQueueEntity): Long
 
     @Query("UPDATE sms_review_queue SET status = :status, updatedAt = :now WHERE fingerprint = :fingerprint")
-    suspend fun updateStatus(fingerprint: String, status: String, now: Long)
+    suspend fun updateStatus(
+        fingerprint: String,
+        status: String,
+        now: Long,
+    )
 
-    @Query("UPDATE sms_review_queue SET status = :status, acceptedExpenseId = :expenseId, updatedAt = :now WHERE fingerprint = :fingerprint")
-    suspend fun approveItem(fingerprint: String, status: String, expenseId: String?, now: Long)
+    @Query(
+        "UPDATE sms_review_queue SET status = :status, acceptedExpenseId = :expenseId, updatedAt = :now WHERE fingerprint = :fingerprint",
+    )
+    suspend fun approveItem(
+        fingerprint: String,
+        status: String,
+        expenseId: String?,
+        now: Long,
+    )
 
     @Query("SELECT COUNT(*) FROM sms_review_queue WHERE status = 'PENDING'")
     suspend fun countPending(): Int

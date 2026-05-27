@@ -68,7 +68,7 @@ describe("createSmsImportFingerprint", () => {
 
   it("normalizes amount to two decimal places", async () => {
     const amount499 = await createSmsImportFingerprint(createMessage(), 499)
-    const amount49900 = await createSmsImportFingerprint(createMessage(), 499.00)
+    const amount49900 = await createSmsImportFingerprint(createMessage(), 499.0)
 
     expect(amount499).toBe(amount49900)
   })

@@ -38,7 +38,9 @@ function createMessage(
   }
 }
 
-async function createExistingItem(message: SmsImportRawMessage): Promise<SmsImportReviewItem> {
+async function createExistingItem(
+  message: SmsImportRawMessage
+): Promise<SmsImportReviewItem> {
   const fingerprint = await createSmsImportFingerprint(message, 499)
 
   return {

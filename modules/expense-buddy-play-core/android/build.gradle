@@ -2,7 +2,6 @@ plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
 }
-
 group = 'expo.modules.expensebuddyplaycore'
 version = '1.0.0'
 
