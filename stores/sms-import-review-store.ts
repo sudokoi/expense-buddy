@@ -116,9 +116,19 @@ function applyQueueSnapshot(
   }
 }
 
+let persistSequence = Promise.resolve()
+
 async function persistQueueState(snapshot: SmsImportReviewQueueSnapshot): Promise<void> {
   await AsyncStorage.setItem(SMS_IMPORT_REVIEW_QUEUE_KEY, JSON.stringify(snapshot))
   await saveBackgroundSmsReviewQueueSnapshot(snapshot)
+}
+
+function enqueuePersist(snapshot: SmsImportReviewQueueSnapshot): Promise<void> {
+  persistSequence = persistSequence.then(
+    () => persistQueueState(snapshot),
+    () => persistQueueState(snapshot),
+  )
+  return persistSequence
 }
 
 export function createSmsImportReviewStore() {
@@ -158,7 +168,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -186,7 +196,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -223,7 +233,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -251,7 +261,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -274,7 +284,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -297,7 +307,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -311,7 +321,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -325,7 +335,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -343,7 +353,7 @@ export function createSmsImportReviewStore() {
         })
 
         enqueue.effect(async () => {
-          await persistQueueState(snapshot)
+          await enqueuePersist(snapshot)
         })
 
         return applyQueueSnapshot(context, snapshot)
@@ -392,7 +402,7 @@ export async function initializeSmsImportReviewStore(
       JSON.stringify(storedSnapshot) !== JSON.stringify(mergedSnapshot) ||
       JSON.stringify(nativeSnapshot ?? null) !== JSON.stringify(mergedSnapshot)
     ) {
-      await persistQueueState(mergedSnapshot)
+      await enqueuePersist(mergedSnapshot)
     }
   } catch (error) {
     console.warn("Failed to initialize SMS import review store:", error)
