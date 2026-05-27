@@ -16,14 +16,7 @@ import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 
-const layoutStyles = {
-  expenseDetails: {
-    alignItems: "center",
-  },
-  actionButtons: {
-    alignItems: "center",
-  },
-}
+
 
 export type ExpenseRowSubtitleMode = "time" | "date"
 
@@ -71,7 +64,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 
   return (
     <ExpenseCard>
-      <XStack flex={1} gap="$section" style={layoutStyles.expenseDetails}>
+      <XStack flex={1} gap="$section" items="center">
         <DynamicCategoryIcon
           name={categoryInfo.icon}
           size={subtitleMode === "time" ? 20 : 16}
@@ -92,7 +85,7 @@ export const ExpenseRow = memo(function ExpenseRow({
         </YStack>
       </XStack>
 
-      <XStack gap="$section" style={layoutStyles.actionButtons}>
+      <XStack gap="$section" items="center">
         <AmountText type="expense">
           -{formatCurrency(expense.amount, expense.currency)}
         </AmountText>

@@ -22,35 +22,13 @@ import {
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
-// Layout styles
 const layoutStyles = {
-  buttonRow: {
-    justifyContent: "flex-end",
-    gap: UI_SPACE.section,
-    marginTop: UI_SPACE.control,
-  },
-  iconPickerTrigger: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.section,
-    padding: UI_SPACE.section,
-    borderRadius: UI_RADIUS.control,
-    borderWidth: UI_BORDER_WIDTH.normal,
-  },
   iconPreview: {
     width: UI_ICON_SIZE.xxxlarge,
     height: UI_ICON_SIZE.xxxlarge,
     borderRadius: UI_RADIUS.chip,
     alignItems: "center",
     justifyContent: "center",
-  },
-  colorPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.section,
-    padding: UI_SPACE.section,
-    borderRadius: UI_RADIUS.control,
-    borderWidth: UI_BORDER_WIDTH.normal,
   },
   colorSwatch: {
     width: UI_ICON_SIZE.xlarge,
@@ -272,7 +250,7 @@ export function CategoryFormModal({
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
               <XStack
-                style={layoutStyles.iconPickerTrigger}
+                flexDirection="row" items="center" gap={UI_SPACE.section} p={UI_SPACE.section} rounded={UI_RADIUS.control} borderWidth={UI_BORDER_WIDTH.normal}
                 bg="$backgroundHover"
                 borderColor="$borderColor"
               >
@@ -302,9 +280,7 @@ export function CategoryFormModal({
             </Label>
             <Pressable onPress={handleOpenColorPicker}>
               <XStack
-                style={layoutStyles.colorPreview}
-                bg="$backgroundHover"
-                borderColor="$borderColor"
+                justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}
               >
                 <YStack
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
@@ -320,7 +296,7 @@ export function CategoryFormModal({
           </YStack>
 
           {/* Action Buttons */}
-          <XStack style={layoutStyles.buttonRow}>
+          <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
             <Button size="$control" chromeless onPress={handleClose}>
               {t("common.cancel")}
             </Button>

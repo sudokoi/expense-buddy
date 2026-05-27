@@ -52,37 +52,7 @@ export interface GitHubConfigSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
 }
 
-// Layout styles for the component
-const layoutStyles = {
-  buttonRow: {
-    flexWrap: "wrap",
-  },
-  accordionTrigger: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: UI_SPACE.section,
-    borderRadius: UI_RADIUS.control,
-  },
-  accordionTriggerInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: UI_SPACE.control,
-    minWidth: 0,
-    maxWidth: "85%", // prevent overlapping chevron
-  },
-  connectedBadge: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    gap: UI_SPACE.micro / 2,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  accordionContent: {
-    padding: UI_SPACE.control,
-    paddingTop: UI_SPACE.section,
-  },
-} as const
+
 
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
@@ -299,15 +269,15 @@ export function GitHubConfigSection({
   return (
     <Accordion type="single" collapsible defaultValue={undefined}>
       <Accordion.Item value="github-config">
-        <Accordion.Trigger bg="$backgroundHover" style={layoutStyles.accordionTrigger}>
+        <Accordion.Trigger bg="$backgroundHover" flexDirection="row" justify="space-between" p={UI_SPACE.section} rounded={UI_RADIUS.control}>
           {({ open }: { open: boolean }) => (
             <>
-              <XStack style={layoutStyles.accordionTriggerInner}>
+              <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control} minW={0} maxW="85%">
                 <Text fontWeight={UI_FONT_WEIGHT.medium}>
                   {t("settings.github.configTitle")}
                 </Text>
                 {isConfigured && (
-                  <YStack style={layoutStyles.connectedBadge}>
+                  <YStack flexDirection="column" items="flex-start" gap={UI_SPACE.micro / 2} shrink={1} minW={0}>
                     <XStack
                       style={
                         {
@@ -353,7 +323,7 @@ export function GitHubConfigSection({
             </>
           )}
         </Accordion.Trigger>
-        <Accordion.Content style={layoutStyles.accordionContent}>
+        <Accordion.Content p={UI_SPACE.control} pt={UI_SPACE.section}>
           <YStack gap="$section">
             {/* Auth */}
             {isWeb ? (
@@ -519,7 +489,7 @@ export function GitHubConfigSection({
             </YStack>
 
             {/* Action Buttons */}
-            <XStack gap="$section" style={layoutStyles.buttonRow}>
+            <XStack gap="$section" flexWrap="wrap">
               <Button flex={1} size="$control" onPress={handleSaveConfig} theme="accent">
                 {t("settings.github.saveConfig")}
               </Button>

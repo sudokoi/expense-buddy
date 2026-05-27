@@ -21,38 +21,7 @@ import {
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
-const layoutStyles = {
-  row: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  accordionTrigger: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: UI_SPACE.section,
-    paddingVertical: UI_SPACE.section - 2,
-    borderRadius: UI_RADIUS.chip,
-  },
-  accordionTriggerInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: UI_SPACE.control,
-  },
-  accordionContent: {
-    padding: UI_SPACE.control,
-    paddingTop: UI_SPACE.section,
-  },
-  yStackRadius: {
-    borderRadius: UI_RADIUS.surface,
-  },
-  rowWithRadius: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: UI_RADIUS.surface,
-  },
-} as const
+
 
 function upsertInstrument(
   list: PaymentInstrument[],
@@ -143,7 +112,7 @@ export function PaymentInstrumentsSection() {
   return (
     <>
       <YStack gap="$section">
-        <XStack style={layoutStyles.row}>
+        <XStack justify="space-between" items="center">
           <YStack flex={1} gap="$micro">
             <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold}>
               {t("instruments.title")}
@@ -177,11 +146,11 @@ export function PaymentInstrumentsSection() {
                 bg="$backgroundHover"
                 borderWidth={UI_BORDER_WIDTH.thin}
                 borderColor="$borderColor"
-                style={layoutStyles.accordionTrigger}
+                flexDirection="row" justify="space-between" items="center" px={UI_SPACE.section} py={UI_SPACE.section - 2} rounded={UI_RADIUS.chip}
               >
                 {({ open }: { open: boolean }) => (
                   <>
-                    <XStack style={layoutStyles.accordionTriggerInner}>
+                    <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control}>
                       <Text fontWeight={UI_FONT_WEIGHT.medium}>
                         {t("instruments.manage")}
                       </Text>
@@ -210,12 +179,12 @@ export function PaymentInstrumentsSection() {
                 )}
               </Accordion.Trigger>
 
-              <Accordion.Content style={layoutStyles.accordionContent}>
+              <Accordion.Content p={UI_SPACE.control} pt={UI_SPACE.section}>
                 <YStack
                   gap="$gutter"
                   bg="$backgroundHover"
                   p="$section"
-                  style={layoutStyles.yStackRadius}
+                  rounded={UI_RADIUS.surface}
                 >
                   {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
                     const list = grouped[method] ?? []
@@ -237,7 +206,7 @@ export function PaymentInstrumentsSection() {
                             bg="$background"
                             px="$section"
                             py="$section"
-                            style={layoutStyles.rowWithRadius}
+                            justify="space-between" items="center" rounded={UI_RADIUS.surface}
                           >
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}

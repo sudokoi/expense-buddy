@@ -18,40 +18,6 @@ interface PieChartSectionProps {
   onCategorySelect?: (category: string | null) => void
 }
 
-const styles = {
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 150,
-  },
-  chartContainer: {
-    alignItems: "center",
-    gap: UI_SPACE.gutter,
-  },
-  centerLabel: {
-    alignItems: "center",
-  },
-  legendRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
-  },
-  legendLeft: {
-    alignItems: "center",
-    gap: UI_SPACE.control,
-  },
-  legendRight: {
-    gap: UI_SPACE.control,
-    alignItems: "center",
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: UI_RADIUS.control,
-  },
-}
-
 // Memoized legend item component
 const LegendItem = memo(function LegendItem({
   item,
@@ -67,18 +33,19 @@ const LegendItem = memo(function LegendItem({
   return (
     <Pressable onPress={onPress}>
       <XStack
-        style={[
-          styles.legendRow,
-          isSelected ? { backgroundColor: selectedBgColor } : undefined,
-        ]}
+        justify="space-between"
+        items="center"
+        p={UI_SPACE.control}
+        rounded={UI_RADIUS.control}
+        style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <XStack style={styles.legendLeft}>
-          <View style={[styles.colorDot, { backgroundColor: item.color }]} />
+        <XStack items="center" gap={UI_SPACE.control}>
+          <View width={12} height={12} rounded={UI_RADIUS.control} style={{ backgroundColor: item.color }} />
           <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>
             {item.text}
           </Text>
         </XStack>
-        <XStack style={styles.legendRight}>
+        <XStack gap={UI_SPACE.control} items="center">
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {item.percentage.toFixed(1)}%
           </Text>
@@ -132,7 +99,7 @@ export const PieChartSection = memo(function PieChartSection({
   // Memoize center label component
   const CenterLabel = useCallback(
     () => (
-      <YStack style={styles.centerLabel}>
+      <YStack items="center">
         <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.charts.common.total")}
         </Text>
@@ -147,7 +114,7 @@ export const PieChartSection = memo(function PieChartSection({
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.category.title")}>
-        <YStack style={styles.emptyContainer}>
+        <YStack items="center" justify="center" height={150}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.common.noData")}
           </Text>
@@ -158,7 +125,7 @@ export const PieChartSection = memo(function PieChartSection({
 
   return (
     <CollapsibleSection title={t("analytics.charts.category.title")}>
-      <YStack style={styles.chartContainer}>
+      <YStack items="center" gap={UI_SPACE.gutter}>
         <View>
           <PieChart
             data={chartData}

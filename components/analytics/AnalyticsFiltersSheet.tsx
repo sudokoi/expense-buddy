@@ -25,10 +25,7 @@ const layoutStyles = {
   sheetFrame: {
     padding: UI_SPACE.gutter,
   },
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+
   contentContainer: {
     marginTop: UI_SPACE.control,
   },
@@ -243,7 +240,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
           gap="$section"
           style={{ ...layoutStyles.contentContainer, flex: 1 }}
         >
-          <XStack style={layoutStyles.headerRow}>
+          <XStack justify="space-between" items="center">
             <H4>{t("analytics.filtersModal.title")}</H4>
             <XStack gap="$control" style={{ alignItems: "center" }}>
               <Button size="$compact" chromeless onPress={handleResetDraft}>

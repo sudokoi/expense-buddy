@@ -67,11 +67,7 @@ const layoutStyles = {
   contentContainer: {
     gap: UI_SPACE.section,
   },
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: UI_SPACE.gutter,
-  },
+
 }
 
 export const FilterSheet = React.memo(function FilterSheet({
@@ -259,7 +255,7 @@ export const FilterSheet = React.memo(function FilterSheet({
           gap="$section"
           style={{ ...layoutStyles.contentContainer, flex: 1 }}
         >
-          <XStack style={layoutStyles.headerRow}>
+          <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
             <H4>{t("history.filterSheet.title")}</H4>
             <XStack gap="$control" style={{ alignItems: "center" }}>
               <Button size="$compact" chromeless onPress={handleResetDraft}>

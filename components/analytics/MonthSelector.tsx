@@ -13,9 +13,6 @@ interface MonthSelectorProps {
 }
 
 const layoutStyles = {
-  container: {
-    justifyContent: "center",
-  },
   scrollContent: {
     paddingHorizontal: UI_SPACE.micro / 2,
   },
@@ -35,7 +32,7 @@ export const MonthSelector = memo(function MonthSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$control" mb="$gutter" style={layoutStyles.container}>
+      <XStack gap="$control" mb="$gutter" justify="center">
         <Button
           size="$compact"
           px="$section"

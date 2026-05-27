@@ -24,20 +24,8 @@ interface DefaultPaymentMethodSelectorProps {
 }
 
 const styles = {
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
   option: {
     minHeight: 44, // Accessibility: minimum touch target
-  },
-  optionInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: UI_SPACE.control,
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
   },
 } as const
 
@@ -81,7 +69,7 @@ export function DefaultPaymentMethodSelector({
           borderWidth={UI_BORDER_WIDTH.normal}
           bg={isSelected ? "$backgroundFocus" : "transparent"}
           borderColor={isSelected ? getColorValue(theme.borderColorFocus) : "transparent"}
-          style={styles.optionInner}
+          flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control}
         >
           <Icon
             size={UI_ICON_SIZE.small}

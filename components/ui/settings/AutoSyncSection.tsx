@@ -1,5 +1,4 @@
 import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
-import { ViewStyle } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { THEME_COLORS, SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
@@ -34,23 +33,7 @@ export interface AutoSyncSectionProps {
   onSyncSettingsChange: (enabled: boolean) => void
 }
 
-// Layout styles for the component
-const layoutStyles = {
-  autoSyncRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: UI_SPACE.section,
-    paddingVertical: UI_SPACE.section,
-    borderRadius: UI_RADIUS.chip,
-  },
-  radioRow: {
-    alignItems: "center",
-    marginVertical: UI_SPACE.control,
-  },
-  helperText: {
-    marginTop: UI_SPACE.micro,
-  },
-}
+
 
 /**
  * AutoSyncSection - Auto-sync options UI
@@ -91,14 +74,14 @@ export function AutoSyncSection({
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
-      <XStack bg="$backgroundHover" style={layoutStyles.autoSyncRow}>
+      <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.chip}>
         <YStack flex={1}>
           <Label>{t("settings.autoSync.enable")}</Label>
           <Text
             fontSize="$caption"
             color="$color"
             opacity={UI_OPACITY.subtle}
-            style={layoutStyles.helperText}
+            mt={UI_SPACE.micro}
           >
             {t("settings.autoSync.enableHelp")}
           </Text>
@@ -115,14 +98,14 @@ export function AutoSyncSection({
       </XStack>
 
       {/* Also sync settings toggle */}
-      <XStack bg="$backgroundHover" style={layoutStyles.autoSyncRow}>
+      <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.chip}>
         <YStack flex={1}>
           <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text
             fontSize="$caption"
             color="$color"
             opacity={UI_OPACITY.subtle}
-            style={layoutStyles.helperText}
+            mt={UI_SPACE.micro}
           >
             {t("settings.autoSync.syncSettingsHelp")}
           </Text>
@@ -148,7 +131,7 @@ export function AutoSyncSection({
         >
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
-            <XStack gap="$control" style={layoutStyles.radioRow}>
+            <XStack gap="$control" items="center" my={UI_SPACE.control}>
               <RadioGroup.Item value="on_launch" id="on_launch" size="$control">
                 <RadioGroup.Indicator />
               </RadioGroup.Item>
@@ -160,7 +143,7 @@ export function AutoSyncSection({
               </YStack>
             </XStack>
 
-            <XStack gap="$control" style={layoutStyles.radioRow}>
+            <XStack gap="$control" items="center" my={UI_SPACE.control}>
               <RadioGroup.Item value="on_change" id="on_change" size="$control">
                 <RadioGroup.Indicator />
               </RadioGroup.Item>

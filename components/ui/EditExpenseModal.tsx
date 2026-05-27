@@ -34,25 +34,7 @@ import {
 } from "./PaymentInstrumentInlineDropdown"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 
-// Layout styles that Tamagui's type system doesn't support as direct props
-const layoutStyles = {
-  categoryRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  paymentMethodRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  buttonRow: {
-    justifyContent: "flex-end",
-    gap: UI_SPACE.section,
-    marginTop: UI_SPACE.control,
-  },
-  identifierContainer: {
-    marginTop: UI_SPACE.control,
-  },
-} as const
+
 
 interface EditExpenseModalProps {
   expense: Expense
@@ -289,7 +271,7 @@ export function EditExpenseModal({
             <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.category")}
             </Label>
-            <XStack style={layoutStyles.categoryRow}>
+            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
               {categories.map((cat) => {
                 const isSelected = category === cat.label
                 return (
@@ -330,7 +312,7 @@ export function EditExpenseModal({
             <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("history.editDialog.fields.paymentMethod")}
             </Label>
-            <XStack style={layoutStyles.paymentMethodRow}>
+            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
               {PAYMENT_METHODS.map((pm) => (
                 <PaymentMethodCard
                   key={pm.value}
@@ -343,7 +325,7 @@ export function EditExpenseModal({
 
             {/* Identifier input for cards/UPI/Other */}
             {selectedPaymentConfig?.hasIdentifier && (
-              <YStack gap="$micro" style={layoutStyles.identifierContainer}>
+              <YStack gap="$micro" mt={UI_SPACE.control}>
                 <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                   {selectedPaymentConfig.identifierLabel} {t("common.optional")}
                 </Label>
@@ -401,7 +383,7 @@ export function EditExpenseModal({
           </YStack>
 
           {/* Action Buttons */}
-          <XStack style={layoutStyles.buttonRow}>
+          <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
             <Button size="$control" chromeless onPress={handleClose}>
               {t("common.cancel")}
             </Button>

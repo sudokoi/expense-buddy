@@ -4,7 +4,7 @@ import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "ta
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
-import { Dimensions, ViewStyle, TextStyle } from "react-native"
+import { Dimensions } from "react-native"
 import React, { startTransition } from "react"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
@@ -42,43 +42,6 @@ function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "
     FALLBACK_CATEGORY_CACHE.set(label, info)
   }
   return info
-}
-
-// Layout styles that Tamagui's type system doesn't support as direct props
-const layoutStyles = {
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: UI_SPACE.gutter,
-  },
-  summaryCardsRow: {
-    gap: UI_SPACE.section,
-    marginBottom: UI_SPACE.block,
-  },
-  chartSection: {
-    marginBottom: UI_SPACE.block,
-  },
-  chartContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: UI_SPACE.block,
-  },
-  transactionsHeader: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  transactionDetails: {
-    gap: UI_SPACE.section,
-    alignItems: "center",
-  },
-  cardValue: {
-    marginTop: UI_SPACE.control,
-    height: UI_SPACE.empty,
-    justifyContent: "center",
-  },
-  roundButton: {
-    borderRadius: UI_RADIUS.round,
-  },
 }
 
 // Memoized recent expense item component
@@ -239,7 +202,7 @@ export default function DashboardScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <XStack style={layoutStyles.headerRow}>
+      <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
         <YStack>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.welcome")}
@@ -268,7 +231,7 @@ export default function DashboardScreen() {
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}
-              style={layoutStyles.roundButton}
+              rounded={UI_RADIUS.round}
             >
               {c} ({getCurrencySymbol(c)})
             </Button>
@@ -277,7 +240,7 @@ export default function DashboardScreen() {
       )}
 
       {/* Summary Cards */}
-      <XStack style={layoutStyles.summaryCardsRow}>
+      <XStack gap={UI_SPACE.control} mb={UI_SPACE.section}>
         <Card
           flex={1}
           borderWidth={UI_BORDER_WIDTH.thin}
@@ -298,7 +261,7 @@ export default function DashboardScreen() {
             {t("dashboard.totalSpent")}
           </Text>
           <H4
-            style={layoutStyles.cardValue}
+            mt={UI_SPACE.micro} height={24} justify="center"
             color={CARD_COLORS.blue.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -327,7 +290,7 @@ export default function DashboardScreen() {
             {t("dashboard.entries")}
           </Text>
           <H4
-            style={layoutStyles.cardValue}
+            mt={UI_SPACE.micro} height={24} justify="center"
             color={CARD_COLORS.green.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -339,8 +302,8 @@ export default function DashboardScreen() {
       </XStack>
 
       {/* Chart Section */}
-      <YStack gap="$gutter" style={layoutStyles.chartSection}>
-        <XStack style={layoutStyles.transactionsHeader}>
+      <YStack gap="$gutter" mb={UI_SPACE.section}>
+        <XStack justify="space-between" items="center">
           <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
           </YStack>
@@ -349,7 +312,7 @@ export default function DashboardScreen() {
           </Button>
         </XStack>
         {hasData ? (
-          <YStack style={layoutStyles.chartContainer}>
+          <YStack items="center" justify="center" mb={UI_SPACE.section}>
             {/* BarChart requires raw color values - keeping theme.xxx.val for third-party component */}
             <BarChart
               key={chartKey}
@@ -390,7 +353,7 @@ export default function DashboardScreen() {
 
       {/* Recent Transactions List (Mini) */}
       <YStack>
-        <XStack style={layoutStyles.transactionsHeader}>
+        <XStack justify="space-between" items="center">
           <YStack flex={1} mr="$control">
             <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
           </YStack>

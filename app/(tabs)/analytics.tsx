@@ -37,29 +37,6 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-const styles = {
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: UI_SPACE.gutter,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: UI_SPACE.empty,
-  },
-  emptyText: {
-    textAlign: "center",
-  },
-  emptySubtext: {
-    textAlign: "center",
-    marginTop: UI_SPACE.control,
-  },
-  chipRadius: {
-    borderRadius: UI_RADIUS.round,
-  },
-} as const
-
 const INSTRUMENT_OTHERS_ID = "__others__"
 
 // Moved helper functions outside component or use hooks/t inside
@@ -88,11 +65,11 @@ const EmptyState = memo(function EmptyState({
   subtitle: string
 }) {
   return (
-    <YStack style={styles.emptyContainer}>
-      <Text color="$color" opacity={UI_OPACITY.subtle} style={styles.emptyText}>
+    <YStack items="center" justify="center" p={UI_SPACE.empty}>
+      <Text color="$color" opacity={UI_OPACITY.subtle} text="center">
         {title}
       </Text>
-      <Text color="$color" opacity={UI_OPACITY.ghost} style={styles.emptySubtext}>
+      <Text color="$color" opacity={UI_OPACITY.ghost} text="center" mt={UI_SPACE.control}>
         {subtitle}
       </Text>
     </YStack>
@@ -103,7 +80,7 @@ const EmptyState = memo(function EmptyState({
 const Header = memo(function Header() {
   const { t } = useTranslation()
   return (
-    <XStack style={styles.headerRow}>
+    <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
       <YStack>
         <Text color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.subtitle")}
@@ -571,7 +548,7 @@ export default function AnalyticsScreen() {
               borderColor="$borderColor"
               disabled={!filtersHydrated}
               onPress={() => setFiltersOpen(true)}
-              style={styles.chipRadius}
+              rounded={UI_RADIUS.round}
             >
               <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
             </Button>
@@ -631,7 +608,7 @@ export default function AnalyticsScreen() {
                       theme={isSelected ? "accent" : undefined}
                       borderColor="$borderColor"
                       borderWidth={isSelected ? UI_BORDER_WIDTH.thin : 0}
-                      style={styles.chipRadius}
+                      rounded={UI_RADIUS.round}
                     >
                       {code} ({getCurrencySymbol(code)})
                     </Button>

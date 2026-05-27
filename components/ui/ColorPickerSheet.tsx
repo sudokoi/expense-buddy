@@ -13,26 +13,7 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-// Layout styles
-const layoutStyles = {
-  colorGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: UI_SPACE.section,
-    justifyContent: "center",
-  },
-  colorButton: {
-    width: UI_ICON_SIZE.huge,
-    height: UI_ICON_SIZE.huge,
-    borderRadius: UI_RADIUS.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: UI_BORDER_WIDTH.thick,
-  },
-  selectedIndicator: {
-    position: "absolute",
-  },
-} as const
+
 
 interface ColorPickerSheetProps {
   /** Whether the sheet is open */
@@ -73,7 +54,7 @@ export function ColorPickerSheet({
       snapPoints={[50]}
       unmountWhenClosed
     >
-      <XStack style={layoutStyles.colorGrid}>
+      <XStack flexDirection="row" flexWrap="wrap" gap={UI_SPACE.section} justify="center">
         {CATEGORY_COLOR_PALETTE.map((color) => (
           <ColorButton
             key={color}
@@ -112,19 +93,22 @@ const ColorButton = memo(function ColorButton({
   return (
     <Pressable onPress={handlePress}>
       <YStack
-        style={[
-          layoutStyles.colorButton,
-          {
-            backgroundColor: color,
-            borderColor: isSelected ? selectedBorderColor : "transparent",
-          },
-        ]}
+        width={UI_ICON_SIZE.huge}
+        height={UI_ICON_SIZE.huge}
+        rounded={UI_RADIUS.chip}
+        items="center"
+        justify="center"
+        borderWidth={UI_BORDER_WIDTH.thick}
+        style={{
+          backgroundColor: color,
+          borderColor: isSelected ? selectedBorderColor : "transparent",
+        }}
       >
         {isSelected && (
           <Check
             size={UI_ICON_SIZE.large}
             color={checkColor}
-            style={layoutStyles.selectedIndicator}
+            position="absolute"
           />
         )}
       </YStack>

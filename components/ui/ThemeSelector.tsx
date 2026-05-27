@@ -17,22 +17,10 @@ interface ThemeSelectorProps {
   onChange: (theme: ThemePreference) => void
 }
 
-// Only use style prop for layout properties that Tamagui View doesn't support directly
 const styles = {
-  container: {
-    flexDirection: "row",
-  },
   segment: {
     flex: 1,
     minHeight: 44, // Accessibility: minimum touch target
-  },
-  segmentInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: UI_SPACE.control,
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
   },
 } as const
 
@@ -67,7 +55,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
       p="$micro"
       rounded="$control"
       gap="$micro"
-      style={styles.container}
+      flexDirection="row"
     >
       {themeOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
@@ -87,7 +75,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              style={styles.segmentInner}
+              flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}

@@ -96,14 +96,7 @@ function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "
   return info
 }
 
-// Layout styles that Tamagui's type system doesn't support as direct props
 const layoutStyles = {
-  emptyContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: UI_SPACE.gutter,
-  },
   emptyText: {
     fontSize: 24,
   },
@@ -111,44 +104,11 @@ const layoutStyles = {
     fontSize: 16,
     marginTop: UI_SPACE.control,
   },
-  mainContainer: {
-    flex: 1,
-    paddingHorizontal: UI_SPACE.gutter,
-    paddingTop: UI_SPACE.gutter,
-  },
-  dialogButtonRow: {
-    justifyContent: "flex-end",
-  },
-  editDialogButtonRow: {
-    justifyContent: "flex-end",
-    marginTop: UI_SPACE.gutter,
-  },
-  sectionHeader: {
-    paddingVertical: UI_SPACE.control,
-  },
   expenseDetails: {
     alignItems: "center",
   },
   actionButtons: {
     alignItems: "center",
-  },
-  loadMoreContainer: {
-    padding: UI_SPACE.gutter,
-    alignItems: "center",
-  },
-  categoryRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  paymentMethodRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  filterButtonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.control,
-    marginBottom: UI_SPACE.section,
   },
   chipsContainer: {
     flexDirection: "row",
@@ -640,7 +600,7 @@ export default function HistoryScreen() {
     }) => {
       if (item.type === "header") {
         return (
-          <YStack background="$background" style={layoutStyles.sectionHeader}>
+          <YStack background="$background" py={UI_SPACE.control}>
             <H6 color="$color" opacity={UI_OPACITY.strong}>
               {item.title}
             </H6>
@@ -690,7 +650,7 @@ export default function HistoryScreen() {
   const ListFooterComponent = useMemo(
     () =>
       shouldShowLoadMore ? (
-        <YStack style={layoutStyles.loadMoreContainer}>
+        <YStack p={UI_SPACE.gutter} items="center">
           <Button
             size="$control"
             theme="accent"
@@ -832,7 +792,7 @@ export default function HistoryScreen() {
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
-      <YStack flex={1} bg="$background" style={layoutStyles.emptyContainer}>
+      <YStack flex={1} bg="$background" items="center" justify="center" p={UI_SPACE.gutter}>
         <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
           {t("history.emptyTitle")}
         </Text>
@@ -850,9 +810,9 @@ export default function HistoryScreen() {
   // Filtered empty state
   if (filteredExpenses.length === 0 && hasActive) {
     return (
-      <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
+      <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
         {/* Filter Button */}
-        <XStack style={layoutStyles.filterButtonContainer}>
+        <XStack flexDirection="row" items="center" gap={UI_SPACE.control} mb={UI_SPACE.section}>
           <Button
             size="$chip"
             px="$control"
@@ -884,7 +844,7 @@ export default function HistoryScreen() {
           ))}
         </ScrollView>
 
-        <YStack flex={1} style={layoutStyles.emptyContainer}>
+        <YStack flex={1} items="center" justify="center" p={UI_SPACE.gutter}>
           <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
             {t("history.noResultsTitle")}
           </Text>
@@ -927,9 +887,9 @@ export default function HistoryScreen() {
   }
 
   return (
-    <YStack flex={1} bg="$background" style={layoutStyles.mainContainer}>
+    <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
       {/* Filter Button */}
-      <XStack style={layoutStyles.filterButtonContainer}>
+      <XStack flexDirection="row" items="center" gap={UI_SPACE.control} mb={UI_SPACE.section}>
         <Button
           size="$chip"
           px="$control"
@@ -996,7 +956,7 @@ export default function HistoryScreen() {
             <Dialog.Description>
               {t("history.deleteDialog.description")}
             </Dialog.Description>
-            <XStack gap="$section" style={layoutStyles.dialogButtonRow}>
+            <XStack gap="$section" justify="flex-end">
               <Dialog.Close asChild>
                 <Button size="$control">{t("common.cancel")}</Button>
               </Dialog.Close>
@@ -1142,7 +1102,7 @@ export default function HistoryScreen() {
                   <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.category")}
                   </Label>
-                  <XStack style={layoutStyles.categoryRow}>
+                  <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                     {categories.map((cat) => {
                       const isSelected = editingExpense?.category === cat.label
                       return (
@@ -1185,7 +1145,7 @@ export default function HistoryScreen() {
                   <Label color="$color" opacity={UI_OPACITY.strong}>
                     {t("history.editDialog.fields.paymentMethod")}
                   </Label>
-                  <XStack style={layoutStyles.paymentMethodRow}>
+                  <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                     {PAYMENT_METHODS.map((pm) => (
                       <PaymentMethodCard
                         key={pm.value}
@@ -1275,7 +1235,7 @@ export default function HistoryScreen() {
                 </YStack>
               </YStack>
 
-              <XStack gap="$section" style={layoutStyles.editDialogButtonRow}>
+              <XStack gap="$section" justify="flex-end" mt={UI_SPACE.gutter}>
                 <Dialog.Close asChild>
                   <Button size="$control">{t("common.cancel")}</Button>
                 </Dialog.Close>

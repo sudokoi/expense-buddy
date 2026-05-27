@@ -20,44 +20,6 @@ interface PaymentInstrumentPieChartProps {
   onSelect?: (key: PaymentInstrumentSelectionKey | null) => void
 }
 
-const styles = {
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 150,
-  },
-  chartContainer: {
-    alignItems: "center",
-    gap: UI_SPACE.gutter,
-  },
-  centerLabel: {
-    alignItems: "center",
-  },
-  legendRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
-  },
-  legendLeft: {
-    alignItems: "flex-start",
-    gap: UI_SPACE.control,
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  legendRight: {
-    gap: UI_SPACE.control,
-    alignItems: "center",
-    flexShrink: 0,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: UI_RADIUS.control,
-  },
-}
-
 const LegendItem = memo(function LegendItem({
   item,
   isSelected,
@@ -72,21 +34,23 @@ const LegendItem = memo(function LegendItem({
   return (
     <Pressable onPress={onPress}>
       <XStack
-        style={[
-          styles.legendRow,
-          isSelected ? { backgroundColor: selectedBgColor } : undefined,
-        ]}
+        justify="space-between"
+        items="center"
+        p={UI_SPACE.control}
+        rounded={UI_RADIUS.control}
+        style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <XStack style={styles.legendLeft}>
-          <View style={[styles.colorDot, { backgroundColor: item.color }]} />
+        <XStack items="flex-start" gap={UI_SPACE.control} grow={1} shrink={1} minW={0}>
+          <View width={12} height={12} rounded={UI_RADIUS.control} style={{ backgroundColor: item.color }} />
           <Text
             fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
-            style={{ flexShrink: 1, flexWrap: "wrap" }}
+            shrink={1}
+            flexWrap="wrap"
           >
             {item.text}
           </Text>
         </XStack>
-        <XStack style={styles.legendRight}>
+        <XStack gap={UI_SPACE.control} items="center" shrink={0}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {item.percentage.toFixed(1)}%
           </Text>
@@ -136,7 +100,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
 
   const CenterLabel = useCallback(
     () => (
-      <YStack style={styles.centerLabel}>
+      <YStack items="center">
         <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
           {t("analytics.charts.common.total")}
         </Text>
@@ -151,7 +115,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
-        <YStack style={styles.emptyContainer}>
+        <YStack items="center" justify="center" height={150}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.paymentInstrument.noData")}
           </Text>
@@ -162,7 +126,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
 
   return (
     <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
-      <YStack style={styles.chartContainer}>
+      <YStack items="center" gap={UI_SPACE.gutter}>
         <View>
           <PieChart
             data={chartData}

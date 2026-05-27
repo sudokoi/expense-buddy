@@ -5,12 +5,7 @@ import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
-const layoutStyles = {
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-} as const
+
 
 type AppSheetScaffoldProps = {
   open: boolean
@@ -74,7 +69,7 @@ export function AppSheetScaffold({
         <Sheet.Handle />
 
         <YStack gap="$gutter" mt={UI_SPACE.control} flex={1}>
-          <XStack style={layoutStyles.headerRow}>
+          <XStack justify="space-between" items="center">
             <YStack>
               <H4>{title}</H4>
               {subtitle ? (

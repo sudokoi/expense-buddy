@@ -46,33 +46,6 @@ import {
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
-// Layout styles that Tamagui's type system doesn't support as direct props
-const layoutStyles = {
-  container: {
-    maxWidth: UI_SPACE.empty * 15,
-    alignSelf: "center",
-    width: "100%",
-  },
-  amountRow: {
-    alignItems: "center",
-  },
-  categoryRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  paymentMethodRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  saveButton: {
-    marginTop: UI_SPACE.gutter,
-  },
-  expandHeader: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-} as const
-
 export default function AddExpenseScreen() {
   const router = useRouter()
   const { addExpense } = useExpenses()
@@ -316,7 +289,7 @@ export default function AddExpenseScreen() {
         }}
         bottomOffset={50}
       >
-        <YStack gap="$section" style={layoutStyles.container}>
+        <YStack gap="$section" maxW={UI_SPACE.empty * 15} self="center" width="100%">
           {Platform.OS === "android" ? (
             <Button
               size="$control"
@@ -399,7 +372,7 @@ export default function AddExpenseScreen() {
             <Label color="$color" opacity={UI_OPACITY.strong}>
               {t("add.category")}
             </Label>
-            <XStack style={layoutStyles.categoryRow}>{categoryCards}</XStack>
+            <XStack flexWrap="wrap" gap={UI_SPACE.control}>{categoryCards}</XStack>
           </YStack>
 
           {/* Date Picker */}
@@ -453,7 +426,7 @@ export default function AddExpenseScreen() {
               onPress={togglePaymentMethodSection}
               style={{ paddingHorizontal: 0, paddingVertical: 0 }}
             >
-              <XStack flex={1} style={layoutStyles.expandHeader}>
+              <XStack flex={1} justify="space-between" items="center">
                 <Label color="$color" opacity={UI_OPACITY.strong} pointerEvents="none">
                   {t("add.paymentMethod")}
                 </Label>
@@ -475,7 +448,7 @@ export default function AddExpenseScreen() {
 
             {paymentMethodSectionExpanded && (
               <YStack gap="$control">
-                <XStack style={layoutStyles.paymentMethodRow}>
+                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard
                       key={pm.value}
@@ -553,7 +526,7 @@ export default function AddExpenseScreen() {
           </YStack>
 
           {/* Save Buttons */}
-          <XStack style={layoutStyles.saveButton} gap="$control">
+          <XStack mt={UI_SPACE.gutter} gap="$control">
             <Button
               flex={1}
               size="$control"

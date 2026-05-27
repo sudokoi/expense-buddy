@@ -21,9 +21,6 @@ const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
 ]
 
 const layoutStyles = {
-  container: {
-    justifyContent: "center",
-  },
   scrollContent: {
     paddingHorizontal: UI_SPACE.micro / 2,
   },
@@ -54,7 +51,7 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$control" mb="$gutter" style={layoutStyles.container}>
+      <XStack gap="$control" mb="$gutter" justify="center">
         {TIME_WINDOWS.map((window) => {
           const isSelected = value === window.value
           return (

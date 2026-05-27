@@ -16,30 +16,7 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-// Layout styles
-const layoutStyles = {
-  groupContainer: {
-    marginBottom: UI_SPACE.gutter,
-  },
-  iconGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  iconButton: {
-    width: UI_ICON_SIZE.huge,
-    height: UI_ICON_SIZE.huge,
-    borderRadius: UI_RADIUS.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: UI_BORDER_WIDTH.normal,
-  },
-  selectedIndicator: {
-    position: "absolute",
-    top: UI_SPACE.micro / 2,
-    right: UI_SPACE.micro / 2,
-  },
-} as const
+
 
 interface IconPickerSheetProps {
   /** Whether the sheet is open */
@@ -114,7 +91,7 @@ const IconGroup = memo(function IconGroup({
   onSelect,
 }: IconGroupProps) {
   return (
-    <YStack gap="$control" style={layoutStyles.groupContainer}>
+    <YStack gap="$control" mb={UI_SPACE.gutter}>
       <Text
         fontSize="$body"
         fontWeight={UI_FONT_WEIGHT.semiBold}
@@ -125,7 +102,7 @@ const IconGroup = memo(function IconGroup({
       >
         {name}
       </Text>
-      <XStack style={layoutStyles.iconGrid}>
+      <XStack flexDirection="row" flexWrap="wrap" gap={UI_SPACE.control}>
         {icons.map((iconName) => (
           <IconButton
             key={iconName}
@@ -164,7 +141,12 @@ const IconButton = memo(function IconButton({
   return (
     <Pressable onPress={handlePress}>
       <YStack
-        style={layoutStyles.iconButton}
+        width={UI_ICON_SIZE.huge}
+        height={UI_ICON_SIZE.huge}
+        rounded={UI_RADIUS.chip}
+        items="center"
+        justify="center"
+        borderWidth={UI_BORDER_WIDTH.normal}
         bg={isSelected ? selectedBg : "$backgroundHover"}
         borderColor={isSelected ? selectedBg : "$borderColor"}
       >
@@ -174,7 +156,7 @@ const IconButton = memo(function IconButton({
           color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (
-          <YStack style={layoutStyles.selectedIndicator}>
+          <YStack position="absolute" t={UI_SPACE.micro / 2} r={UI_SPACE.micro / 2}>
             <Check size={UI_ICON_SIZE.micro} color={selectedFg} />
           </YStack>
         )}

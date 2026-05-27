@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Platform, ViewStyle } from "react-native"
+import { Platform } from "react-native"
 import { FlashList } from "@shopify/flash-list"
 import { useRouter } from "expo-router"
 import { YStack, XStack, Text, Input, Button, Spinner } from "tamagui"
@@ -32,16 +32,6 @@ type GitHubRepo = {
 const TOKEN_KEY = "github_pat"
 const REPO_KEY = "github_repo"
 const BRANCH_KEY = "github_branch"
-
-const layoutStyles = {
-  headerRow: {
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  loadingRow: {
-    alignItems: "center",
-  },
-}
 
 function hasWriteAccess(repo: GitHubRepo): boolean {
   return Boolean(
@@ -248,7 +238,7 @@ export default function GitHubRepoPickerScreen() {
         }}
         ListHeaderComponent={
           <YStack gap="$gutter">
-            <XStack style={layoutStyles.headerRow}>
+            <XStack justify="space-between" items="center">
               <Text
                 fontSize="$screenTitle"
                 fontWeight={UI_FONT_WEIGHT.bold}
@@ -272,7 +262,7 @@ export default function GitHubRepoPickerScreen() {
             ) : null}
 
             {isLoading ? (
-              <XStack gap="$section" style={layoutStyles.loadingRow}>
+              <XStack gap="$section" items="center">
                 <Spinner />
                 <Text color="$color">{t("repoPicker.loading")}</Text>
               </XStack>

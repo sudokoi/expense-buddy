@@ -22,26 +22,7 @@ interface CurrencySelectorProps {
   onChange: (currency: string) => void
 }
 
-// Only use style prop for layout properties that Tamagui View doesn't support directly
-const styles = {
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  segment: {
-    flexBasis: "25%", // 4 items per row
-    minHeight: 44,
-  },
-  segmentInner: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: UI_SPACE.micro,
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
-    margin: UI_SPACE.micro / 2,
-  },
-} as const
+
 
 interface CurrencyOption {
   key: string
@@ -66,7 +47,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
-      style={styles.container}
+      flexDirection="row" flexWrap="wrap"
     >
       {currencyOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
@@ -77,7 +58,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
-            style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [{ flexBasis: "25%", minHeight: 44 }, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
               flex={1}
@@ -86,7 +67,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              style={styles.segmentInner}
+              flexDirection="column" items="center" justify="center" gap={UI_SPACE.micro} p={UI_SPACE.control} rounded={UI_RADIUS.control} m={UI_SPACE.micro / 2}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}

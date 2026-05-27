@@ -24,17 +24,7 @@ import {
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-const layoutStyles = {
-  methodRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  buttonRow: {
-    justifyContent: "flex-end",
-    gap: UI_SPACE.section,
-    marginTop: UI_SPACE.control,
-  },
-} as const
+
 
 const INSTRUMENT_METHODS: PaymentInstrumentMethod[] = ["Credit Card", "Debit Card", "UPI"]
 
@@ -201,7 +191,7 @@ function PaymentInstrumentForm({
         <Label color="$color" opacity={UI_OPACITY.strong}>
           {t("instruments.form.paymentMethod")}
         </Label>
-        <XStack style={layoutStyles.methodRow}>
+        <XStack flexWrap="wrap" gap={UI_SPACE.control}>
           {INSTRUMENT_METHODS.map((m) => {
             const config =
               selectedMethodConfig && selectedMethodConfig.value === m
@@ -271,7 +261,7 @@ function PaymentInstrumentForm({
         )}
       </YStack>
 
-      <XStack style={layoutStyles.buttonRow}>
+      <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
         <Button size="$control" chromeless onPress={onClose}>
           {t("common.cancel")}
         </Button>

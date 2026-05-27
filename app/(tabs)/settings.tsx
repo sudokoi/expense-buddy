@@ -40,43 +40,6 @@ import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
-// Layout styles that Tamagui's type system doesn't support as direct props
-const layoutStyles = {
-  container: {
-    maxWidth: UI_SPACE.empty * 15,
-    alignSelf: "center",
-    width: "100%",
-  },
-  syncButtonsContainer: {
-    marginTop: UI_SPACE.control,
-  },
-  groupedContent: {
-    paddingTop: 14,
-  },
-  collapsibleHeader: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: UI_SPACE.section - 2,
-    paddingHorizontal: UI_SPACE.section,
-    borderRadius: UI_RADIUS.chip,
-  },
-  switchRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  actionRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  menuRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: UI_SPACE.section,
-    paddingVertical: UI_SPACE.section,
-    borderRadius: UI_RADIUS.surface,
-  },
-} as const
-
 export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
@@ -567,7 +530,7 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer>
-      <YStack gap="$gutter" style={layoutStyles.container}>
+      <YStack gap="$gutter" maxW={UI_SPACE.empty * 15} self="center" width="100%">
         <SettingsSection
           title={t("settings.sections.sync")}
           description={t("settings.sync.description")}
@@ -584,7 +547,7 @@ export default function SettingsScreen() {
           />
 
           {isConfigured && (
-            <YStack gap="$gutter" style={layoutStyles.syncButtonsContainer}>
+            <YStack gap="$gutter" mt={UI_SPACE.control}>
               <Button
                 size="$control"
                 onPress={handleSync}
@@ -612,7 +575,7 @@ export default function SettingsScreen() {
             description={t("settings.smsImport.description")}
             gap="$gutter"
           >
-            <XStack style={layoutStyles.actionRow}>
+            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
               <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
                 {isScanningSmsImports
                   ? t("settings.smsImport.actions.scanning")
@@ -621,7 +584,7 @@ export default function SettingsScreen() {
             </XStack>
 
             {pendingSmsImportItems.length > 0 ? (
-              <XStack style={layoutStyles.actionRow}>
+              <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                 <Button onPress={openSmsImportReview}>
                   {t("settings.smsImport.actions.reviewWithPending", {
                     count: pendingSmsImportItems.length,
@@ -638,7 +601,7 @@ export default function SettingsScreen() {
               bg="$backgroundHover"
               px="$section"
               py="$section"
-              style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
+              items="center" justify="space-between" rounded={UI_RADIUS.surface}
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
@@ -671,7 +634,7 @@ export default function SettingsScreen() {
             role="button"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
-            <XStack bg="$backgroundHover" style={layoutStyles.menuRow}>
+            <XStack bg="$backgroundHover" items="center" justify="space-between" px={UI_SPACE.section} py={UI_SPACE.section} rounded={UI_RADIUS.surface}>
               <YStack gap="$micro" flex={1} pointerEvents="none">
                 <Label color="$color" opacity={UI_OPACITY.strong}>
                   {t("settings.payment.manageTitle")}
@@ -704,7 +667,7 @@ export default function SettingsScreen() {
             bg="$backgroundHover"
             px="$section"
             py="$section"
-            style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
+            items="center" justify="space-between" rounded={UI_RADIUS.surface}
           >
             <YStack flex={1} gap="$micro">
               <Label>{t("settings.general.mathEntry")}</Label>
@@ -728,7 +691,7 @@ export default function SettingsScreen() {
               bg="$backgroundHover"
               px="$section"
               py="$section"
-              style={[layoutStyles.switchRow, { borderRadius: UI_RADIUS.surface }]}
+              items="center" justify="space-between" rounded={UI_RADIUS.surface}
             >
               <YStack flex={1} gap="$micro">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { ViewStyle } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -60,28 +59,7 @@ type EditableSmsImportDraft = {
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
-const layoutStyles = {
-  container: {
-    alignSelf: "center",
-    maxWidth: UI_SPACE.empty * 18,
-    width: "100%",
-  },
-  categoryRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  paymentMethodRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-  identifierContainer: {
-    marginTop: UI_SPACE.control,
-  },
-  actionRow: {
-    flexWrap: "wrap",
-    gap: UI_SPACE.control,
-  },
-} as const
+
 
 function formatTimestamp(value: string): string {
   const date = new Date(value)
@@ -501,7 +479,7 @@ export function SmsImportReviewScreen({
       </Button>
     </XStack>
   ) : pendingItems.length > 1 ? (
-    <XStack justify="space-between" gap="$control" style={layoutStyles.actionRow}>
+    <XStack justify="space-between" gap="$control" flexWrap="wrap">
       <Button onPress={() => setShowResolvedItems((current) => !current)}>
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
@@ -545,7 +523,7 @@ export function SmsImportReviewScreen({
           px="$gutter"
           pt="$gutter"
           pb="$gutter"
-          style={layoutStyles.container}
+          self="center" maxW={UI_SPACE.empty * 18} width="100%"
         >
           <Card
             borderWidth={UI_BORDER_WIDTH.thin}
@@ -615,7 +593,7 @@ export function SmsImportReviewScreen({
 
               <YStack gap="$control">
                 <Label>{t("smsImport.sheet.fields.category")}</Label>
-                <XStack style={layoutStyles.categoryRow}>
+                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                   {categories.map((category) => (
                     <CategoryCard
                       key={category.label}
@@ -640,7 +618,7 @@ export function SmsImportReviewScreen({
 
               <YStack gap="$control">
                 <Label>{t("smsImport.sheet.fields.paymentMethod")}</Label>
-                <XStack style={layoutStyles.paymentMethodRow}>
+                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                   {PAYMENT_METHODS.map((config) => (
                     <PaymentMethodCard
                       key={config.value}
@@ -652,7 +630,7 @@ export function SmsImportReviewScreen({
                 </XStack>
 
                 {selectedPaymentConfig?.hasIdentifier ? (
-                  <YStack gap="$micro" style={layoutStyles.identifierContainer}>
+                  <YStack gap="$micro" mt={UI_SPACE.control}>
                     <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
@@ -837,7 +815,7 @@ export function SmsImportReviewScreen({
                             </Text>
                           </YStack>
 
-                          <XStack style={layoutStyles.actionRow}>
+                          <XStack flexWrap="wrap" gap={UI_SPACE.control}>
                             <Button
                               theme="accent"
                               onPress={() => handleAcceptSuggested(item)}
@@ -933,7 +911,7 @@ export function SmsImportReviewScreen({
           pt="$section"
           style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
         >
-          <YStack style={layoutStyles.container}>{footer}</YStack>
+          <YStack self="center" maxW={UI_SPACE.empty * 18} width="100%">{footer}</YStack>
         </YStack>
       )}
     </YStack>

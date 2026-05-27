@@ -31,14 +31,6 @@ const styles = {
   menuRow: {
     minHeight: 44,
   },
-  menuRowInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: UI_SPACE.section,
-    paddingHorizontal: UI_SPACE.section,
-    borderRadius: UI_RADIUS.chip,
-  },
   rowLabel: {
     flex: 1,
     flexShrink: 1,
@@ -264,12 +256,12 @@ export function PaymentInstrumentInlineDropdown({
             aria-selected={kind === "none"}
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
-            <View
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
-              bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
-              style={styles.menuRowInner}
-            >
+              <View
+                borderWidth={UI_BORDER_WIDTH.thin}
+                borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
+                bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
+                flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
+              >
               <Text
                 fontWeight={kind === "none" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
                 style={styles.rowLabel}
@@ -300,7 +292,7 @@ export function PaymentInstrumentInlineDropdown({
               borderWidth={UI_BORDER_WIDTH.thin}
               borderColor={kind === "manual" ? focusBorderColor : "$borderColor"}
               bg={kind === "manual" ? "$backgroundFocus" : "$backgroundHover"}
-              style={styles.menuRowInner}
+              flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
             >
               <Text
                 fontWeight={
@@ -338,7 +330,7 @@ export function PaymentInstrumentInlineDropdown({
                   borderWidth={UI_BORDER_WIDTH.thin}
                   borderColor={isSelected ? focusBorderColor : "$borderColor"}
                   bg={isSelected ? "$backgroundFocus" : "$backgroundHover"}
-                  style={styles.menuRowInner}
+                  flexDirection="row" items="center" justify="space-between" py={UI_SPACE.section} px={UI_SPACE.section} rounded={UI_RADIUS.chip}
                 >
                   <Text
                     fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}

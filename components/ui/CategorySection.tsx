@@ -14,46 +14,7 @@ import {
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
-// Layout styles
-const layoutStyles = {
-  accordionTrigger: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: UI_SPACE.section,
-    borderRadius: UI_RADIUS.control,
-  },
-  accordionTriggerInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: UI_SPACE.control,
-  },
-  accordionContent: {
-    padding: UI_SPACE.control,
-    paddingTop: UI_SPACE.section,
-  },
-  categoryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.micro,
-  },
-  reorderButtons: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 0,
-    width: 24, // Fix width for alignment
-  },
-  addButtonContainer: {
-    marginTop: UI_SPACE.gutter,
-  },
-  otherCategoryContainer: {
-    marginTop: UI_SPACE.control,
-    paddingTop: UI_SPACE.control,
-    borderTopWidth: UI_BORDER_WIDTH.thin,
-  },
-} as const
+
 
 interface CategorySectionProps {
   /** List of categories to display */
@@ -140,10 +101,10 @@ export const CategorySection = memo(function CategorySection({
 
       <Accordion type="single" collapsible defaultValue={undefined}>
         <Accordion.Item value="category-list">
-          <Accordion.Trigger bg="$backgroundHover" style={layoutStyles.accordionTrigger}>
+          <Accordion.Trigger bg="$backgroundHover" flexDirection="row" justify="space-between" items="center" p={UI_SPACE.section} rounded={UI_RADIUS.control}>
             {({ open }: { open: boolean }) => (
               <>
-                <XStack style={layoutStyles.accordionTriggerInner}>
+                <XStack flexDirection="row" items="center" flex={1} gap={UI_SPACE.control}>
                   <Text fontWeight={UI_FONT_WEIGHT.medium}>
                     {t("settings.categories.manage")}
                   </Text>
@@ -167,14 +128,14 @@ export const CategorySection = memo(function CategorySection({
               </>
             )}
           </Accordion.Trigger>
-          <Accordion.Content style={layoutStyles.accordionContent}>
+          <Accordion.Content p={UI_SPACE.control} pt={UI_SPACE.section}>
             <YStack gap="$control">
               {/* Reorderable category list */}
               <YStack gap="$control">
                 {reorderableCategories.map((category, index) => (
-                  <XStack key={category.label} style={layoutStyles.categoryRow}>
+                  <XStack key={category.label} flexDirection="row" items="center" gap={UI_SPACE.micro}>
                     {/* Reorder buttons */}
-                    <YStack style={layoutStyles.reorderButtons}>
+                    <YStack flexDirection="column" items="center" justify="center" gap={0} width={24}>
                       <Button
                         size="$chip"
                         chromeless
@@ -216,13 +177,15 @@ export const CategorySection = memo(function CategorySection({
               {/* "Other" category - always at bottom, not reorderable */}
               {otherCategory && (
                 <YStack
-                  style={layoutStyles.otherCategoryContainer}
+                  mt={UI_SPACE.control}
+                  pt={UI_SPACE.control}
+                  borderTopWidth={UI_BORDER_WIDTH.thin}
                   borderColor="$borderColor"
                 >
-                  <XStack style={layoutStyles.categoryRow}>
+                  <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
                     {/* Empty space where reorder buttons would be */}
                     <YStack
-                      style={layoutStyles.reorderButtons}
+                      flexDirection="column" items="center" justify="center" gap={0} width={24}
                       opacity={UI_OPACITY.minimal}
                     >
                       <ChevronUp size={UI_ICON_SIZE.small} />
@@ -252,7 +215,7 @@ export const CategorySection = memo(function CategorySection({
               )}
 
               {/* Add Category button */}
-              <YStack style={layoutStyles.addButtonContainer}>
+              <YStack mt={UI_SPACE.gutter}>
                 <Button
                   size="$control"
                   onPress={onAdd}

@@ -30,37 +30,6 @@ function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "
   return info
 }
 
-const layoutStyles = {
-  header: {
-    paddingHorizontal: UI_SPACE.gutter,
-    paddingTop: UI_SPACE.gutter,
-    paddingBottom: UI_SPACE.control,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dateNav: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: UI_SPACE.gutter,
-    paddingBottom: UI_SPACE.gutter,
-  },
-  summary: {
-    paddingHorizontal: UI_SPACE.gutter,
-    paddingBottom: UI_SPACE.gutter,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  listContent: {
-    paddingBottom: UI_SPACE.empty,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: UI_SPACE.empty,
-  },
-}
-
 export default function DayViewScreen() {
   const { date } = useLocalSearchParams<{ date: string }>()
   const router = useRouter()
@@ -156,7 +125,7 @@ export default function DayViewScreen() {
     <YStack flex={1} bg="$background" style={{ paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
-      <XStack style={layoutStyles.header}>
+      <XStack px={UI_SPACE.gutter} pt={UI_SPACE.gutter} pb={UI_SPACE.control} items="center" justify="center">
         <Button
           size="$compact"
           chromeless
@@ -176,7 +145,7 @@ export default function DayViewScreen() {
       </XStack>
 
       {/* Date Nav */}
-      <XStack style={layoutStyles.dateNav}>
+      <XStack items="center" justify="space-between" px={UI_SPACE.gutter} pb={UI_SPACE.control}>
         <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
         <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}
@@ -195,7 +164,7 @@ export default function DayViewScreen() {
 
       {/* Expenses List */}
       {dailyExpenses.length === 0 ? (
-        <YStack style={layoutStyles.emptyContainer}>
+        <YStack flex={1} items="center" justify="center" p={UI_SPACE.gutter}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dayView.empty")}
           </Text>
@@ -205,7 +174,7 @@ export default function DayViewScreen() {
           sections={[{ title: "Expenses", data: dailyExpenses }]}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
-          contentContainerStyle={layoutStyles.listContent}
+          contentContainerStyle={{ paddingBottom: UI_SPACE.gutter }}
         />
       )}
     </YStack>

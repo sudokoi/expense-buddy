@@ -25,21 +25,6 @@ import {
   UI_FONT_WEIGHT,
 } from "../../constants/ui-tokens"
 
-const layoutStyles = {
-  container: {
-    maxWidth: UI_SPACE.empty * 18,
-    alignSelf: "center",
-    width: "100%",
-  },
-  summaryRow: {
-    flexWrap: "wrap",
-  },
-  summaryCard: {
-    minWidth: 160,
-    borderRadius: UI_RADIUS.surface,
-  },
-} as const
-
 export default function PaymentSettingsScreen() {
   const { t } = useTranslation()
   const { settings, setDefaultPaymentMethod } = useSettings()
@@ -152,19 +137,19 @@ export default function PaymentSettingsScreen() {
       <Stack.Screen options={{ title: t("settings.payment.manageTitle") }} />
 
       <ScreenContainer contentContainerStyle={{ paddingTop: UI_SPACE.control }}>
-        <YStack gap="$gutter" style={layoutStyles.container}>
+        <YStack gap="$gutter" maxW={UI_SPACE.empty * 15} self="center" width="100%">
           <SettingsSection
             title={t("settings.sections.payment")}
             description={t("settings.payment.manageHelp")}
             gap="$gutter"
           >
-            <XStack gap="$section" style={layoutStyles.summaryRow}>
+            <XStack gap="$section" flexWrap="wrap">
               <YStack
                 flex={1}
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                style={layoutStyles.summaryCard}
+                minW={120} rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"
@@ -189,7 +174,7 @@ export default function PaymentSettingsScreen() {
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                style={layoutStyles.summaryCard}
+                minW={120} rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"
@@ -209,7 +194,7 @@ export default function PaymentSettingsScreen() {
                 bg="$backgroundHover"
                 p="$section"
                 gap="$micro"
-                style={layoutStyles.summaryCard}
+                minW={120} rounded={UI_RADIUS.chip}
               >
                 <Text
                   color="$color"

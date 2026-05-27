@@ -15,19 +15,6 @@ interface StatisticsCardsProps {
   currencyCode?: string
 }
 
-const styles = {
-  container: {
-    gap: UI_SPACE.section,
-    marginBottom: UI_SPACE.gutter,
-  },
-  row: {
-    gap: UI_SPACE.section,
-  },
-  cardValue: {
-    marginTop: UI_SPACE.control,
-  },
-}
-
 /**
  * StatisticsCards - Display four summary cards in a 2x2 grid
  * Shows total spending, average daily, highest category, and highest day
@@ -50,9 +37,9 @@ export const StatisticsCards = memo(function StatisticsCards({
   }
 
   return (
-    <YStack style={styles.container}>
+    <YStack gap={UI_SPACE.section} mb={UI_SPACE.gutter}>
       {/* First row */}
-      <XStack style={styles.row}>
+      <XStack gap={UI_SPACE.section}>
         <Card
           flex={1}
           borderWidth={UI_BORDER_WIDTH.thin}
@@ -72,7 +59,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {t("analytics.stats.totalSpent")}
           </Text>
           <H4
-            style={styles.cardValue}
+            mt={UI_SPACE.control}
             color={CARD_COLORS.blue.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -102,7 +89,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {t("analytics.stats.dailyAvg")}
           </Text>
           <H4
-            style={styles.cardValue}
+            mt={UI_SPACE.control}
             color={CARD_COLORS.green.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -115,7 +102,7 @@ export const StatisticsCards = memo(function StatisticsCards({
       </XStack>
 
       {/* Second row */}
-      <XStack style={styles.row}>
+      <XStack gap={UI_SPACE.section}>
         <Card
           flex={1}
           borderWidth={UI_BORDER_WIDTH.thin}
@@ -135,7 +122,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {t("analytics.stats.topCategory")}
           </Text>
           <H4
-            style={styles.cardValue}
+            mt={UI_SPACE.control}
             color={CARD_COLORS.orange.accent}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -172,7 +159,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {t("analytics.stats.peakDay")}
           </Text>
           <H4
-            style={styles.cardValue}
+            mt={UI_SPACE.control}
             color={CARD_COLORS.purple.accent}
             numberOfLines={1}
             adjustsFontSizeToFit

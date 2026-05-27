@@ -1,7 +1,7 @@
 import { useState, ReactNode, memo, useCallback } from "react"
 import { YStack, XStack, Text, Card } from "tamagui"
 import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
-import { Pressable, ViewStyle } from "react-native"
+import { Pressable } from "react-native"
 import {
   UI_SPACE,
   UI_FONT_WEIGHT,
@@ -13,18 +13,6 @@ interface CollapsibleSectionProps {
   title: string
   defaultExpanded?: boolean
   children: ReactNode
-}
-
-const styles = {
-  header: {
-    padding: UI_SPACE.section - 2,
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  content: {
-    padding: UI_SPACE.section - 2,
-    paddingTop: UI_SPACE.control - 2,
-  },
 }
 
 /**
@@ -47,7 +35,9 @@ export const CollapsibleSection = memo(function CollapsibleSection({
     <Card borderWidth={UI_BORDER_WIDTH.thin} borderColor="$borderColor">
       <Pressable onPress={toggleExpanded}>
         <XStack
-          style={styles.header}
+          p={UI_SPACE.section - 2}
+          justify="space-between"
+          items="center"
           bg="$backgroundHover"
           borderTopLeftRadius="$surface"
           borderTopRightRadius="$surface"
@@ -65,7 +55,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
         </XStack>
       </Pressable>
 
-      {isExpanded && <YStack style={styles.content}>{children}</YStack>}
+      {isExpanded && <YStack p={UI_SPACE.section - 2} pt={UI_SPACE.control - 2}>{children}</YStack>}
     </Card>
   )
 })

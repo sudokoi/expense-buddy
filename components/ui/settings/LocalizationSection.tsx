@@ -19,15 +19,7 @@ interface LocalizationSectionProps {
   onCurrencyChange: (currency: string) => void
 }
 
-const layoutStyles = {
-  collapsibleHeader: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: UI_SPACE.section - 2,
-    paddingHorizontal: UI_SPACE.section,
-    borderRadius: UI_RADIUS.chip,
-  },
-}
+
 
 // Map of language codes to labels (matching LanguageSelector)
 const languageLabels: Record<string, string> = {
@@ -68,7 +60,7 @@ export function LocalizationSection({
         aria-expanded={expanded}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
-        <XStack flex={1} bg="$backgroundHover" style={layoutStyles.collapsibleHeader}>
+        <XStack flex={1} bg="$backgroundHover" justify="space-between" items="center" py={UI_SPACE.section - 2} px={UI_SPACE.section} rounded={UI_RADIUS.chip}>
           <YStack flex={1} gap="$micro">
             <Text
               fontSize="$caption"

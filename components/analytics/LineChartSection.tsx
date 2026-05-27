@@ -44,11 +44,6 @@ export const LineChartSection = memo(function LineChartSection({
   // Memoize styles with theme colors
   const styles = useMemo(
     () => ({
-      emptyContainer: {
-        alignItems: "center",
-        justifyContent: "center",
-        height: 150,
-      },
       tooltipContainer: {
         backgroundColor: overlayColors.background,
         padding: UI_SPACE.control,
@@ -138,7 +133,7 @@ export const LineChartSection = memo(function LineChartSection({
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.trend.title")}>
-        <YStack style={styles.emptyContainer}>
+        <YStack items="center" justify="center" height={150}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("analytics.charts.common.noData")}
           </Text>

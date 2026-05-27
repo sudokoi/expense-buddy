@@ -35,13 +35,7 @@ export interface AppInfoSectionProps {
   onReportIssue: () => void
 }
 
-// Layout styles for the component
-const layoutStyles = {
-  versionRow: {
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-}
+
 
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
@@ -72,7 +66,7 @@ export function AppInfoSection({
   return (
     <YStack gap="$section">
       {/* Current Version */}
-      <XStack style={layoutStyles.versionRow}>
+      <XStack items="center" justify="space-between">
         <Text color="$color" opacity={UI_OPACITY.strong}>
           {t("settings.about.currentVersion")}
         </Text>
@@ -81,7 +75,7 @@ export function AppInfoSection({
 
       {/* Update Info */}
       {updateInfo?.latestVersion && !updateInfo.error && (
-        <XStack style={layoutStyles.versionRow}>
+        <XStack items="center" justify="space-between">
           <Text color="$color" opacity={UI_OPACITY.strong}>
             {t("settings.about.latestVersion")}
           </Text>

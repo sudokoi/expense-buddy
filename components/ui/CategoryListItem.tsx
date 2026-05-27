@@ -15,51 +15,7 @@ import {
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
-// Layout styles
-const layoutStyles = {
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
-    gap: UI_SPACE.control,
-    minHeight: UI_ICON_SIZE.huge,
-  },
-  iconContainer: {
-    width: UI_ICON_SIZE.xxlarge,
-    height: UI_ICON_SIZE.xxlarge,
-    borderRadius: UI_RADIUS.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  labelContainer: {
-    flex: 1,
-    minWidth: 0,
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.micro / 2,
-    flexShrink: 0,
-  },
-  colorIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: UI_SPACE.micro - 1,
-    flexShrink: 0,
-  },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.micro,
-  },
-  colorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.micro,
-  },
-} as const
+
 
 interface CategoryListItemProps {
   /** The category to display */
@@ -127,9 +83,9 @@ export const CategoryListItem = memo(function CategoryListItem({
 
   return (
     <Pressable onPress={handleEdit}>
-      <XStack style={layoutStyles.container} bg="$backgroundHover">
+      <XStack flexDirection="row" items="center" p={UI_SPACE.control} rounded={UI_RADIUS.control} gap={UI_SPACE.control} minH={UI_ICON_SIZE.huge} bg="$backgroundHover">
         {/* Icon with color background */}
-        <YStack style={[layoutStyles.iconContainer, { backgroundColor: resolvedColor }]}>
+        <YStack width={UI_ICON_SIZE.xxlarge} height={UI_ICON_SIZE.xxlarge} rounded={UI_RADIUS.chip} items="center" justify="center" shrink={0} style={{ backgroundColor: resolvedColor }}>
           <DynamicCategoryIcon
             name={category.icon}
             size={UI_ICON_SIZE.medium}
@@ -138,8 +94,8 @@ export const CategoryListItem = memo(function CategoryListItem({
         </YStack>
 
         {/* Label and color indicator */}
-        <YStack style={layoutStyles.labelContainer}>
-          <XStack style={layoutStyles.labelRow}>
+        <YStack flex={1} minW={0}>
+          <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
             <Text
               fontWeight={UI_FONT_WEIGHT.medium}
               fontSize={labelFontSize}
@@ -162,9 +118,10 @@ export const CategoryListItem = memo(function CategoryListItem({
               </Text>
             )}
           </XStack>
-          <XStack style={layoutStyles.colorRow}>
+          <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
             <YStack
-              style={[layoutStyles.colorIndicator, { backgroundColor: resolvedColor }]}
+              width={6} height={6} rounded={UI_SPACE.micro - 1} shrink={0}
+              style={{ backgroundColor: resolvedColor }}
             />
             <Text
               fontSize="$micro"
@@ -178,7 +135,7 @@ export const CategoryListItem = memo(function CategoryListItem({
         </YStack>
 
         {/* Action buttons */}
-        <XStack style={layoutStyles.actionsContainer}>
+        <XStack flexDirection="row" items="center" gap={UI_SPACE.micro / 2} shrink={0}>
           <Button
             size="$chip"
             chromeless

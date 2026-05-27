@@ -17,26 +17,7 @@ interface LanguageSelectorProps {
   onChange: (lang: string) => void
 }
 
-// Only use style prop for layout properties that Tamagui View doesn't support directly
-const styles = {
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  segment: {
-    flexBasis: "50%", // 2 items per row
-    minHeight: 44, // Accessibility: minimum touch target
-  },
-  segmentInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: UI_SPACE.control,
-    padding: UI_SPACE.control,
-    borderRadius: UI_RADIUS.control,
-    margin: UI_SPACE.micro / 2,
-  },
-} as const
+
 
 interface LanguageOption {
   key: string
@@ -76,7 +57,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
       borderColor="$borderColor"
       p="$micro"
       rounded="$control"
-      style={styles.container}
+      flexDirection="row" flexWrap="wrap"
     >
       {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
@@ -87,7 +68,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
-            style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [{ flexBasis: "50%", minHeight: 44 }, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
               flex={1}
@@ -96,7 +77,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
               borderColor={
                 isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
               }
-              style={styles.segmentInner}
+              flexDirection="row" items="center" justify="center" gap={UI_SPACE.control} p={UI_SPACE.control} rounded={UI_RADIUS.control} m={UI_SPACE.micro / 2}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}
