@@ -68,16 +68,16 @@ function getNextCursor(
   return new Date(Math.max(0, newestTimestamp - 1)).toISOString()
 }
 
-function createParsedBootstrapCandidate(
+async function createParsedBootstrapCandidate(
   existingFingerprints: Set<string>,
   message: Awaited<ReturnType<typeof scanRecentSmsMessages>>[number]
-): ParsedBootstrapCandidate | null {
+): Promise<ParsedBootstrapCandidate | null> {
   const parsedCandidate = parseSmsImportCandidate(message)
   if (!parsedCandidate) {
     return null
   }
 
-  const fingerprint = createSmsImportFingerprint(message)
+  const fingerprint = await createSmsImportFingerprint(message, parsedCandidate.amount)
   if (existingFingerprints.has(fingerprint)) {
     return null
   }
@@ -166,9 +166,9 @@ export async function scanSmsImportReviewQueue(
         }
   )
 
-  const parsedCandidates = messages
-    .map((message) => createParsedBootstrapCandidate(existingFingerprints, message))
-    .filter((candidate): candidate is ParsedBootstrapCandidate => candidate !== null)
+  const parsedCandidates = (await Promise.all(
+    messages.map((message) => createParsedBootstrapCandidate(existingFingerprints, message))
+  )).filter((candidate): candidate is ParsedBootstrapCandidate => candidate !== null)
 
   const categoryPredictions = await categorizeSmsImportMessages(
     parsedCandidates.map((candidate) => ({

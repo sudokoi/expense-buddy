@@ -1,10 +1,10 @@
 package expo.modules.expensebuddybackgroundsms
 
 import android.telephony.SmsMessage
+import java.security.MessageDigest
 import java.text.Normalizer
 import java.time.Instant
 import java.util.Locale
-import kotlin.math.absoluteValue
 
 private val amountPattern = Regex("(?:INR|RS\\.?|₹)\\s*([0-9][0-9,]*(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
 private val debitKeywords = Regex("debited|spent|withdrawn|paid|purchase|txn|transaction|upi", RegexOption.IGNORE_CASE)
@@ -88,7 +88,7 @@ object BackgroundSmsParser {
     val amount = parseAmount(body) ?: return null
     val merchantName = inferMerchant(body)
     val now = Instant.now().toString()
-    val fingerprint = createFingerprint(message.sender, message.body, message.receivedAt)
+    val fingerprint = createFingerprint(message.sender, message.body, message.receivedAt, amount)
 
     return BackgroundSmsReviewItem(
       id = "${fingerprint}_${message.messageId}",
@@ -168,21 +168,24 @@ object BackgroundSmsParser {
     return (timestamp / windowMs) * windowMs
   }
 
-  private fun createFingerprint(sender: String, body: String, receivedAt: String): String {
+  private fun normalizeAmount(amount: Double?): String {
+    return amount?.let { String.format("%.2f", it) } ?: ""
+  }
+
+  private fun sha256(value: String): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    return digest.digest(value.toByteArray()).joinToString("") { "%02x".format(it) }
+  }
+
+  private fun createFingerprint(sender: String, body: String, receivedAt: String, amount: Double? = null): String {
     val normalizedSender = sender.replace(Regex("\\s+"), " ").trim().lowercase(Locale.ROOT)
     val normalizedBody = normalizeUnicode(body)
       .replace(Regex("\\s+"), " ")
       .trim()
       .lowercase(Locale.ROOT)
+    val normalizedAmount = normalizeAmount(amount)
     val timeWindow = getTimeWindow(receivedAt)
-    return "sms_${hashString("$normalizedSender|$normalizedBody|$timeWindow")}"
-  }
-
-  private fun hashString(value: String): String {
-    var hash = 0
-    value.forEach { character ->
-      hash = (hash shl 5) - hash + character.code
-    }
-    return java.lang.Long.toString(hash.toLong().absoluteValue, 36)
+    val key = "$normalizedSender|$normalizedAmount|$timeWindow|$normalizedBody"
+    return "sms_${sha256(key)}"
   }
 }

@@ -12,16 +12,6 @@ function normalizeWhitespace(value: string): string {
   return normalizeUnicode(value).replace(/\s+/g, " ").trim()
 }
 
-function hashString(value: string): string {
-  let hash = 0
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(index)
-    hash |= 0
-  }
-
-  return Math.abs(hash).toString(36)
-}
-
 function getTimeWindow(receivedAt: string): number {
   const timestamp = new Date(receivedAt).getTime()
   if (Number.isNaN(timestamp)) {
@@ -32,10 +22,30 @@ function getTimeWindow(receivedAt: string): number {
   return Math.floor(timestamp / WINDOW_MS) * WINDOW_MS
 }
 
-export function createSmsImportFingerprint(message: SmsImportRawMessage): string {
+function normalizeAmount(value: number | undefined): string {
+  if (value == null) return ""
+  return value.toFixed(2)
+}
+
+async function sha256(value: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(value)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+}
+
+export async function createSmsImportFingerprint(
+  message: SmsImportRawMessage,
+  amount?: number,
+): Promise<string> {
   const normalizedSender = normalizeWhitespace(message.sender).toLowerCase()
   const normalizedBody = normalizeWhitespace(message.body).toLowerCase()
+  const normalizedAmount = normalizeAmount(amount)
   const timeWindow = getTimeWindow(message.receivedAt)
 
-  return `sms_${hashString(`${normalizedSender}|${normalizedBody}|${timeWindow}`)}`
+  const key = `${normalizedSender}|${normalizedAmount}|${timeWindow}|${normalizedBody}`
+  const hash = await sha256(key)
+  return `sms_${hash}`
 }

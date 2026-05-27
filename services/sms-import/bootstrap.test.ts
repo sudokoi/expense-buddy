@@ -38,8 +38,8 @@ function createMessage(
   }
 }
 
-function createExistingItem(message: SmsImportRawMessage): SmsImportReviewItem {
-  const fingerprint = createSmsImportFingerprint(message)
+async function createExistingItem(message: SmsImportRawMessage): Promise<SmsImportReviewItem> {
+  const fingerprint = await createSmsImportFingerprint(message, 499)
 
   return {
     id: `${fingerprint}_${message.messageId}`,
@@ -96,8 +96,9 @@ describe("scanSmsImportReviewQueue", () => {
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
     mockScanRecentSmsMessages.mockResolvedValue([existingMessage, newerMessage])
 
+    const existingItem = await createExistingItem(existingMessage)
     const result = await scanSmsImportReviewQueue({
-      existingItems: [createExistingItem(existingMessage)],
+      existingItems: [existingItem],
       lastScanCursor: "2026-04-11T10:00:00.000Z",
       bootstrapCompletedAt: null,
     })
