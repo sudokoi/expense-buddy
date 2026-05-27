@@ -66,15 +66,24 @@ function mergeReviewItems(
 
   // Deduplicate by fingerprint: if two items share the same fingerprint
   // (same SMS content) but have different IDs (e.g. native bg vs JS bootstrap),
-  // keep only the one with the latest updatedAt timestamp.
+  // prefer the item with a resolved status (accepted/rejected/dismissed) over
+  // a pending one, regardless of timestamp. If both have the same resolution
+  // status, keep the one with the latest updatedAt.
   const byFingerprint = new Map<string, SmsImportReviewItem>()
   for (const item of Array.from(byId.values())) {
     const existing = byFingerprint.get(item.fingerprint)
-    if (
-      !existing ||
-      new Date(item.updatedAt).getTime() > new Date(existing.updatedAt).getTime()
-    ) {
+    if (!existing) {
       byFingerprint.set(item.fingerprint, item)
+    } else {
+      const existingResolved = existing.status !== "pending"
+      const itemResolved = item.status !== "pending"
+      if (
+        (itemResolved && !existingResolved) ||
+        (itemResolved === existingResolved &&
+          new Date(item.updatedAt).getTime() > new Date(existing.updatedAt).getTime())
+      ) {
+        byFingerprint.set(item.fingerprint, item)
+      }
     }
   }
 

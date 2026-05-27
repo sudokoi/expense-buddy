@@ -124,6 +124,43 @@ describe("smsImportReviewStore", () => {
     expect(context.bootstrapCompletedAt).toBe("2026-04-11T10:30:00.000Z")
   })
 
+  it("prefers rejected status over pending status when merging same fingerprint from native and async", async () => {
+    const now = new Date()
+    const recentUpdatedAt = new Date(now.getTime() - 60 * 1000).toISOString() // 1 min ago
+    const newerUpdatedAt = new Date(now.getTime() - 30 * 1000).toISOString() // 30s ago
+
+    const asyncItem = createItem("async-rejected", {
+      status: "rejected",
+      fingerprint: "fp-1",
+      updatedAt: recentUpdatedAt,
+    })
+    const nativeItem = createItem("native-pending", {
+      status: "pending",
+      fingerprint: "fp-1",
+      updatedAt: newerUpdatedAt, // newer timestamp
+    })
+    storage.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        items: [asyncItem],
+        lastScanCursor: null,
+        bootstrapCompletedAt: null,
+      } satisfies SmsImportReviewQueueSnapshot)
+    )
+    mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({
+      items: [nativeItem],
+      lastScanCursor: null,
+      bootstrapCompletedAt: null,
+    })
+
+    await initializeSmsImportReviewStore()
+
+    const context = smsImportReviewStore.getSnapshot().context
+    expect(context.items).toHaveLength(1)
+    expect(context.items[0]?.status).toBe("rejected")
+    expect(context.items[0]?.id).toBe("async-rejected")
+  })
+
   it("keeps a valid native snapshot when AsyncStorage contains corrupt JSON", async () => {
     storage.set(STORAGE_KEY, "{not valid json")
     mockLoadBackgroundSmsReviewQueueSnapshot.mockResolvedValue({

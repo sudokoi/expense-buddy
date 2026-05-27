@@ -112,4 +112,17 @@ describe("parseSmsImportCandidate", () => {
 
     expect(candidate).toBeNull()
   })
+
+  it("detects SBI Credit Card transaction via UPI with mathematical bold unicode", () => {
+    // Message uses mathematical bold unicode chars that NFKD normalizes to ASCII
+    // Contains both "Credit Card" and "UPI" keywords — payment method should be UPI
+    const body =
+      "Rs.12.00 \uD835\uDE4C\uD835\uDE49\uD835\uDE3E\uD835\uDE47\uD835\uDE4D \uD835\uDE4D\uD835\uDE47 \uD835\uDE42\uD835\uDE4B\uD835\uDE40 \uD835\uDE32\uD835\uDE22\uD835\uDE36 \uD835\uDE22\uD835\uDE40\uD835\uDE3E\uD835\uDE3B\uD835\uDE36\uD835\uDE4D \uD835\uDE22\uD835\uDE30\uD835\uDE40\uD835\uDE3B \uD835\uDE3E\uD835\uDE47\uD835\uDE3B\uD835\uDE36\uD835\uDE47\uD835\uDE44 \uD835\uDE54\uD835\uDE36\uD835\uDE4D\uD835\uDE45 \uD835\uDE45\uD835\uDE36\uD835\uDE4D\uD835\uDE40\uD835\uDE44 5503 at BMTCBUSKA51AK0649 on 27-05-26 via UPI (Ref No. 651338988953). \uD835\uDE33\uD835\uDE40\uD835\uDE51\uD835\uDE47. \uD835\uDE47\uD835\uDE4B\uD835\uDE4D \uD835\uDE3B\uD835\uDE4D\uD835\uDE47\uD835\uDE3E \uD835\uDE2F\uD835\uDE42 \uD835\uDE42\uD835\uDE4B\uD835\uDE42? \uD835\uDE21\uD835\uDE3E\uD835\uDE49\uD835\uDE4B\uD835\uDE4D \uD835\uDE30\uD835\uDE4D https://sbicard.com/Dispute"
+
+    const candidate = parseSmsImportCandidate(createMessage(body))
+
+    expect(candidate).not.toBeNull()
+    expect(candidate?.amount).toBe(12)
+    expect(candidate?.paymentMethodSuggestion).toEqual({ type: "UPI" })
+  })
 })
