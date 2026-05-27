@@ -558,7 +558,7 @@ export default function AnalyticsScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: UI_SPACE.control } as any}
+          contentContainerStyle={{ gap: UI_SPACE.control }}
           flex={1}
         >
           {appliedChips.map((chip) => (
@@ -617,7 +617,7 @@ export default function AnalyticsScreen() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={
-                    { gap: UI_SPACE.control, paddingBottom: UI_SPACE.gutter } as any
+                    { gap: UI_SPACE.control, pb: UI_SPACE.gutter }
                   }
                   style={{ marginBottom: UI_SPACE.micro }}
                 >

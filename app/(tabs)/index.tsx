@@ -256,7 +256,7 @@ export default function DashboardScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={
-            { gap: UI_SPACE.control, paddingBottom: UI_SPACE.gutter } as any
+            { gap: UI_SPACE.control, pb: UI_SPACE.gutter }
           }
         >
           {availableCurrencies.map((c) => (
