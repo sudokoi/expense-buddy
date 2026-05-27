@@ -259,8 +259,8 @@ export default function DashboardScreen() {
             {t("dashboard.totalSpent")}
           </Text>
           <H4
-            mt={UI_SPACE.micro}
-            height={24}
+            mt={UI_SPACE.control}
+            height={UI_SPACE.empty}
             justify="center"
             color={CARD_COLORS.blue.accent}
             numberOfLines={1}
@@ -290,8 +290,8 @@ export default function DashboardScreen() {
             {t("dashboard.entries")}
           </Text>
           <H4
-            mt={UI_SPACE.micro}
-            height={24}
+            mt={UI_SPACE.control}
+            height={UI_SPACE.empty}
             justify="center"
             color={CARD_COLORS.green.accent}
             numberOfLines={1}
