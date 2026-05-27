@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, Platform, Pressable } from "react-native"
+import { getLogsForBugReportAsync } from "../../services/logger"
 import { ChevronRight } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -301,8 +302,36 @@ export default function SettingsScreen() {
   }, [])
 
   const handleReportIssue = useCallback(() => {
-    Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
-  }, [])
+    const openIssue = (logs: string) => {
+      const baseUrl = `${APP_CONFIG.github.url}/issues/new/choose`
+      if (logs) {
+        const body = `## Device Logs\n\n\`\`\`\n${logs.slice(0, 15000)}\n\`\`\``
+        Linking.openURL(`${baseUrl}?body=${encodeURIComponent(body)}`)
+      } else {
+        Linking.openURL(baseUrl)
+      }
+    }
+
+    Alert.alert(
+      t("settings.about.includeLogsTitle") ?? "Include Device Logs?",
+      t("settings.about.includeLogsMessage") ??
+        "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
+      [
+        {
+          text: t("common.cancel") ?? "Cancel",
+          style: "cancel",
+          onPress: () => openIssue(""),
+        },
+        {
+          text: t("settings.about.continueToGitHub") ?? "Continue to GitHub",
+          onPress: async () => {
+            const logs = await getLogsForBugReportAsync(200)
+            openIssue(logs)
+          },
+        },
+      ]
+    )
+  }, [t])
 
   // Theme and settings handlers
   const handleThemeChange = useCallback(

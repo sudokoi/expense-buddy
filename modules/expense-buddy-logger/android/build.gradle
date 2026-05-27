@@ -4,14 +4,14 @@ plugins {
   id 'org.jetbrains.kotlin.kapt'
 }
 
-group = 'expo.modules.expensebuddybackgroundsms'
-version = '1.0.0'
+group = 'expo.modules.expensebuddylogger'
+version = '0.1.0'
 
 android {
-  namespace "expo.modules.expensebuddybackgroundsms"
+  namespace "expo.modules.expensebuddylogger"
   defaultConfig {
     versionCode 1
-    versionName "1.0.0"
+    versionName "0.1.0"
 
     javaCompileOptions {
       annotationProcessorOptions {
@@ -25,15 +25,12 @@ kapt {
   arguments {
     arg("room.schemaLocation", "$projectDir/schemas")
   }
+}
 
 dependencies {
   implementation "androidx.core:core-ktx:1.15.0"
-  implementation "androidx.lifecycle:lifecycle-process:2.8.7"
 
-  // Room
   implementation "androidx.room:room-runtime:2.7.1"
   implementation "androidx.room:room-ktx:2.7.1"
   kapt "androidx.room:room-compiler:2.7.1"
-
-  implementation project(":expense-buddy-logger")
 }

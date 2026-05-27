@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import expo.modules.expensebuddybackgroundsms.db.ReviewQueueEntity
+import expo.modules.expensebuddylogger.LoggerApi
 
 private const val TRANSACTION_IMPORT_NOTIFICATION_ID = 44021
 private const val TRANSACTION_IMPORT_CHANNEL_ID = "transaction_imports"
@@ -82,6 +83,7 @@ object BackgroundSmsNotificationManager {
                 .setNumber(pendingItems.size)
 
         NotificationManagerCompat.from(context).notify(TRANSACTION_IMPORT_NOTIFICATION_ID, builder.build())
+        LoggerApi.d("SMS_NOTIF", "Notification shown: pendingCount=${pendingItems.size} itemId=${itemId ?: "none"}")
     }
 
     private fun ensureChannel(context: Context) {

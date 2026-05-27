@@ -1,5 +1,6 @@
 package expo.modules.expensebuddybackgroundsms
 
+import expo.modules.expensebuddylogger.LoggerApi
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -43,11 +44,14 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
 
             AsyncFunction("getBackgroundSmsStateAsync") {
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                mapOf("enabled" to BackgroundSmsPreferences.getState(reactContext).enabled)
+                val state = BackgroundSmsPreferences.getState(reactContext)
+                LoggerApi.d("SMS_MODULE", "getBackgroundSmsStateAsync: enabled=${state.enabled}")
+                mapOf("enabled" to state.enabled)
             }
 
             AsyncFunction("setBackgroundSmsEnabledAsync") { enabled: Boolean ->
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                LoggerApi.d("SMS_MODULE", "setBackgroundSmsEnabledAsync: enabled=$enabled")
                 BackgroundSmsPreferences.setEnabled(reactContext, enabled)
             }
 
@@ -55,11 +59,14 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
                 startQueueObserver()
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
                 val repo = SmsReviewQueueRepository(reactContext)
-                repo.getPendingItems().map { it.toDto() }
+                val items = repo.getPendingItems()
+                LoggerApi.d("SMS_MODULE", "getPendingReviewQueueAsync: count=${items.size}")
+                items.map { it.toDto() }
             }
 
             AsyncFunction("approveReviewItemAsync") { fingerprint: String ->
                 startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "approveReviewItemAsync: fingerprint=$fingerprint")
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
                 val repo = SmsReviewQueueRepository(reactContext)
                 repo.approveItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
@@ -67,6 +74,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
 
             AsyncFunction("rejectReviewItemAsync") { fingerprint: String ->
                 startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "rejectReviewItemAsync: fingerprint=$fingerprint")
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
                 val repo = SmsReviewQueueRepository(reactContext)
                 repo.rejectItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
@@ -74,6 +82,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
 
             AsyncFunction("dismissReviewItemAsync") { fingerprint: String ->
                 startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "dismissReviewItemAsync: fingerprint=$fingerprint")
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
                 val repo = SmsReviewQueueRepository(reactContext)
                 repo.dismissItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
@@ -81,6 +90,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
 
             AsyncFunction("insertPendingItemsAsync") { itemsJson: String ->
                 startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "insertPendingItemsAsync: itemsJson.length=${itemsJson.length}")
                 val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
                 val repo = SmsReviewQueueRepository(reactContext)
                 val items = parsePendingItemsJson(itemsJson)
@@ -88,6 +98,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
                     val entity = repo.toReviewQueueEntity(item, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                     repo.upsertItem(entity, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
+                LoggerApi.d("SMS_MODULE", "insertPendingItemsAsync: inserted=${items.size}")
             }
         }
 

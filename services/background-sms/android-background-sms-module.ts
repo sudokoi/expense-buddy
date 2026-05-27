@@ -6,6 +6,7 @@ import {
 } from "../../modules/expense-buddy-background-sms"
 import ExpenseBuddyBackgroundSmsModule from "../../modules/expense-buddy-background-sms"
 import { SmsImportReviewItem } from "../../types/sms-import"
+import { logAsync } from "../logger"
 
 let moduleOverride: ExpenseBuddyBackgroundSmsNativeModule | null = null
 
@@ -50,7 +51,13 @@ export async function getPendingReviewQueueAsync(): Promise<SmsImportReviewItem[
   try {
     const items = await module.getPendingReviewQueueAsync()
     return items.map(dtoToReviewItem)
-  } catch {
+  } catch (e) {
+    await logAsync(
+      "ERROR",
+      "JS_MODULE",
+      `getPendingReviewQueueAsync failed: ${e}`,
+      (e as Error)?.stack
+    )
     return []
   }
 }
@@ -61,8 +68,12 @@ export async function approveReviewItemAsync(fingerprint: string): Promise<void>
 
   try {
     await module.approveReviewItemAsync(fingerprint)
-  } catch {
-    // non-critical
+  } catch (e) {
+    await logAsync(
+      "ERROR",
+      "JS_MODULE",
+      `approveReviewItemAsync(${fingerprint}) failed: ${e}`
+    )
   }
 }
 
@@ -72,8 +83,12 @@ export async function rejectReviewItemAsync(fingerprint: string): Promise<void> 
 
   try {
     await module.rejectReviewItemAsync(fingerprint)
-  } catch {
-    // non-critical
+  } catch (e) {
+    await logAsync(
+      "ERROR",
+      "JS_MODULE",
+      `rejectReviewItemAsync(${fingerprint}) failed: ${e}`
+    )
   }
 }
 
@@ -83,8 +98,12 @@ export async function dismissReviewItemAsync(fingerprint: string): Promise<void>
 
   try {
     await module.dismissReviewItemAsync(fingerprint)
-  } catch {
-    // non-critical
+  } catch (e) {
+    await logAsync(
+      "ERROR",
+      "JS_MODULE",
+      `dismissReviewItemAsync(${fingerprint}) failed: ${e}`
+    )
   }
 }
 
@@ -95,9 +114,10 @@ export async function insertPendingItemsAsync(
   if (!module) return
 
   try {
-    await module.insertPendingItemsAsync(JSON.stringify(items.map(reviewItemToDto)))
-  } catch {
-    // non-critical
+    const json = JSON.stringify(items.map(reviewItemToDto))
+    await module.insertPendingItemsAsync(json)
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `insertPendingItemsAsync failed: ${e}`)
   }
 }
 

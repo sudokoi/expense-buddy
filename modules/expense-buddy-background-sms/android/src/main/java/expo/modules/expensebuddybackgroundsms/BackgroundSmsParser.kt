@@ -1,6 +1,7 @@
 package expo.modules.expensebuddybackgroundsms
 
 import android.telephony.SmsMessage
+import expo.modules.expensebuddylogger.LoggerApi
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.time.Instant
@@ -68,7 +69,13 @@ object BackgroundSmsParser {
 
     fun parseIncomingMessage(messages: Array<SmsMessage>): BackgroundSmsReviewItem? {
         val combined = toRawMessage(messages) ?: return null
-        return parseRawMessage(combined)
+        val result = parseRawMessage(combined)
+        if (result == null) {
+            LoggerApi.d("SMS_PARSER", "Skipped message from ${combined.sender}: did not match transaction pattern")
+        } else {
+            LoggerApi.d("SMS_PARSER", "Parsed: fingerprint=${result.fingerprint} amount=${result.amount} merchant=${result.merchantName}")
+        }
+        return result
     }
 
     private fun toRawMessage(messages: Array<SmsMessage>): BackgroundSmsRawMessage? {

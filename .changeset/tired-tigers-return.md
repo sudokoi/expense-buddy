@@ -1,5 +1,5 @@
 ---
-'expense-buddy': patch
+"expense-buddy": patch
 ---
 
 Migrate SMS review queue from JS-owned (AsyncStorage + SharedPreferences) to native-owned Room database with event-driven sync

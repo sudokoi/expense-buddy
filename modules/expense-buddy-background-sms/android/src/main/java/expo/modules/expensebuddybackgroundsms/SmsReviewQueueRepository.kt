@@ -1,16 +1,14 @@
 package expo.modules.expensebuddybackgroundsms
 
 import android.content.Context
-import android.util.Log
 import expo.modules.expensebuddybackgroundsms.db.ImportJournalEntity
 import expo.modules.expensebuddybackgroundsms.db.ReviewQueueEntity
 import expo.modules.expensebuddybackgroundsms.db.SmsReviewQueueDatabase
+import expo.modules.expensebuddylogger.LoggerApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
-
-private val TAG = "SMS_QUEUE"
 
 private const val STATUS_PENDING = "PENDING"
 private const val STATUS_APPROVED = "APPROVED"
@@ -26,15 +24,6 @@ class SmsReviewQueueRepository(
     private val dao by lazy { db.reviewQueueDao() }
     private val journalDao by lazy { db.importJournalDao() }
 
-    private fun log(
-        action: String,
-        fingerprint: String,
-        source: String,
-        extra: String? = null,
-    ) {
-        Log.d(TAG, "fingerprint=$fingerprint action=$action source=$source${extra?.let { " $it" } ?: ""}")
-    }
-
     suspend fun upsertItem(
         item: ReviewQueueEntity,
         source: String,
@@ -42,7 +31,7 @@ class SmsReviewQueueRepository(
         return mutex.withLock {
             val existing = dao.getItemByFingerprint(item.fingerprint)
             if (existing != null) {
-                log("DEDUPED", item.fingerprint, source, "status=${existing.status}")
+                LoggerApi.d("SMS_QUEUE", "DEDUPED fingerprint=${item.fingerprint} source=$source status=${existing.status}")
                 journalDao.insert(
                     ImportJournalEntity(
                         fingerprint = item.fingerprint,
@@ -57,7 +46,7 @@ class SmsReviewQueueRepository(
 
             val inserted = dao.insertIfNotExists(item)
             if (inserted == -1L) {
-                log("DEDUPED", item.fingerprint, source, "race_condition_insert_failed")
+                LoggerApi.d("SMS_QUEUE", "DEDUPED fingerprint=${item.fingerprint} source=$source reason=race_condition_insert_failed")
                 journalDao.insert(
                     ImportJournalEntity(
                         fingerprint = item.fingerprint,
@@ -70,7 +59,7 @@ class SmsReviewQueueRepository(
                 return@withLock false
             }
 
-            log("INSERTED", item.fingerprint, source)
+            LoggerApi.d("SMS_QUEUE", "INSERTED fingerprint=${item.fingerprint} source=$source")
             journalDao.insert(
                 ImportJournalEntity(
                     fingerprint = item.fingerprint,
@@ -92,7 +81,7 @@ class SmsReviewQueueRepository(
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.approveItem(fingerprint, STATUS_APPROVED, expenseId, now)
-            log("APPROVED", fingerprint, source, expenseId?.let { "expense_id=$it" })
+            LoggerApi.d("SMS_QUEUE", "APPROVED fingerprint=$fingerprint source=$source${expenseId?.let { " expense_id=$it" } ?: ""}")
             journalDao.insert(
                 ImportJournalEntity(
                     fingerprint = fingerprint,
@@ -112,7 +101,7 @@ class SmsReviewQueueRepository(
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_REJECTED, now)
-            log("REJECTED", fingerprint, source)
+            LoggerApi.d("SMS_QUEUE", "REJECTED fingerprint=$fingerprint source=$source")
             journalDao.insert(
                 ImportJournalEntity(
                     fingerprint = fingerprint,
@@ -132,7 +121,7 @@ class SmsReviewQueueRepository(
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_DISMISSED, now)
-            log("DISMISSED", fingerprint, source)
+            LoggerApi.d("SMS_QUEUE", "DISMISSED fingerprint=$fingerprint source=$source")
             journalDao.insert(
                 ImportJournalEntity(
                     fingerprint = fingerprint,

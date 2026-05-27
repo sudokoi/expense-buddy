@@ -52,12 +52,12 @@ expense-buddy-logger/
 
 **TurboModule API** (for JS):
 
-| Function | Returns | Description |
-|---|---|---|
-| `logAsync(level, tag, message, stacktrace?)` | `void` | Write a log entry |
-| `getLogsAsync(count)` | `LogEntry[]` | Last N entries |
-| `getLogsAsStringAsync(count)` | `string` | Formatted for bug reports |
-| `clearLogsAsync()` | `void` | Clear all logs |
+| Function                                     | Returns      | Description               |
+| -------------------------------------------- | ------------ | ------------------------- |
+| `logAsync(level, tag, message, stacktrace?)` | `void`       | Write a log entry         |
+| `getLogsAsync(count)`                        | `LogEntry[]` | Last N entries            |
+| `getLogsAsStringAsync(count)`                | `string`     | Formatted for bug reports |
+| `clearLogsAsync()`                           | `void`       | Clear all logs            |
 
 ### JS integration
 

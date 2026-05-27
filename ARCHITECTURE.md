@@ -14,15 +14,15 @@ This document focuses on the current architecture shape, the reasons behind the 
 
 ## Runtime Layers
 
-| Layer              | Responsibility                                           | Main locations                                                                                                   |
-| ------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Routes             | Screen composition and navigation                        | `app/`                                                                                                           |
-| Components         | Reusable presentational building blocks                  | `components/`                                                                                                    |
-| Hooks              | Screen-facing composition, derived state, and view logic | `hooks/`                                                                                                         |
-| Stores             | Long-lived application state                             | `stores/`                                                                                                        |
-| Services           | Persistence, sync, parsing, import, and data transforms  | `services/`                                                                                                      |
+| Layer              | Responsibility                                                               | Main locations                                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Routes             | Screen composition and navigation                                            | `app/`                                                                                                                                            |
+| Components         | Reusable presentational building blocks                                      | `components/`                                                                                                                                     |
+| Hooks              | Screen-facing composition, derived state, and view logic                     | `hooks/`                                                                                                                                          |
+| Stores             | Long-lived application state                                                 | `stores/`                                                                                                                                         |
+| Services           | Persistence, sync, parsing, import, and data transforms                      | `services/`                                                                                                                                       |
 | Native modules     | Android SMS access, background SMS alerts, Play Core, and structured logging | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-background-sms/`, `modules/expense-buddy-play-core/`, `modules/expense-buddy-logger/` |
-| Shared definitions | constants, types, utilities, locale resources            | `constants/`, `types/`, `utils/`, `locales/`                                                                     |
+| Shared definitions | constants, types, utilities, locale resources                                | `constants/`, `types/`, `utils/`, `locales/`                                                                                                      |
 
 The main dependency direction is:
 
@@ -55,15 +55,15 @@ The sync state machine coordinates fetch, merge, push, conflict, and error state
 
 ## Persistence Model
 
-| Data               | Local storage         | Remote storage                     | Notes                                        |
-| ------------------ | --------------------- | ---------------------------------- | -------------------------------------------- |
-| Expenses           | AsyncStorage snapshot | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`  |
-| Settings           | AsyncStorage          | Optional `settings.json` in GitHub | Credentials are excluded                     |
-| GitHub credentials | Secure storage        | No                                 | Token and repo configuration stay on-device  |
-| Filters            | AsyncStorage          | No                                 | Shared between History and Analytics locally |
+| Data               | Local storage          | Remote storage                     | Notes                                                                                                    |
+| ------------------ | ---------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Expenses           | AsyncStorage snapshot  | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`                                                              |
+| Settings           | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                                 |
+| GitHub credentials | Secure storage         | No                                 | Token and repo configuration stay on-device                                                              |
+| Filters            | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                             |
 | SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-background-sms` |
-| Dirty-day metadata | AsyncStorage          | No                                 | Used to minimize sync work                   |
-| Remote SHA cache   | AsyncStorage          | No                                 | Used to skip unchanged downloads             |
+| Dirty-day metadata | AsyncStorage           | No                                 | Used to minimize sync work                                                                               |
+| Remote SHA cache   | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                         |
 
 This split supports offline-first behavior while keeping the sync format small and inspectable.
 
@@ -203,11 +203,11 @@ The result is a predictable path from raw expenses to filtered datasets to chart
 
 All device logging is routed through a single native module (`expense-buddy-logger`) backed by a Room database with auto-pruning.
 
-| Layer | Access path |
-|---|---|
+| Layer                                             | Access path                                         |
+| ------------------------------------------------- | --------------------------------------------------- |
 | Native Kotlin (module APIs, receiver, repository) | `LoggerApi.d/i/w/e(tag, message)` — fire-and-forget |
-| JavaScript (stores, services, wrappers) | Native TurboModule via `services/logger.ts` |
-| `console.warn` / `console.error` (JS) | Auto-routed through logger via global patch |
+| JavaScript (stores, services, wrappers)           | Native TurboModule via `services/logger.ts`         |
+| `console.warn` / `console.error` (JS)             | Auto-routed through logger via global patch         |
 
 The log database is capped at 1000 entries. When a new entry pushes the count above the cap, the oldest entries are deleted in the same transaction. This keeps disk usage bounded regardless of app lifetime.
 
