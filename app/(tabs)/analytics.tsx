@@ -560,6 +560,7 @@ export default function AnalyticsScreen() {
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
           icon={Filter}
+          theme={activeCount > 0 ? "accent" : undefined}
         >
           {!filtersHydrated
             ? t("analytics.filters.button")
