@@ -6,6 +6,7 @@ import { getDayKeyFromFilename } from "./daily-file-manager"
 import { importFromCSV } from "./csv-handler"
 import { getUserFriendlyMessage } from "./error-utils"
 import { format } from "date-fns"
+import { pMap } from "./retry"
 import i18next from "i18next"
 import type { Expense } from "../types/expense"
 import type { SyncConfig } from "../types/sync"
@@ -86,9 +87,7 @@ export async function syncDown(
     const filesToDownload = expenseFiles.slice(0, daysToDownload)
     const hasMore = expenseFiles.length > daysToDownload
 
-    const allExpenses: Expense[] = []
-    let downloadedFiles = 0
-    for (const file of filesToDownload) {
+    const downloadResults = await pMap(filesToDownload, async (file) => {
       const fileData = await downloadCSV(
         config.token,
         config.repo,
@@ -98,10 +97,13 @@ export async function syncDown(
 
       if (fileData) {
         const expenses = importFromCSV(fileData.content)
-        allExpenses.push(...expenses)
-        downloadedFiles++
+        return { expenses, downloaded: true as const }
       }
-    }
+      return { expenses: [] as Expense[], downloaded: false as const }
+    }, 5)
+
+    const allExpenses = downloadResults.flatMap((r) => r.expenses)
+    const downloadedFiles = downloadResults.filter((r) => r.downloaded).length
 
     let downloadedSettings: AppSettings | undefined
     let settingsDownloaded = false
@@ -236,10 +238,7 @@ export async function syncDownMore(
     const filesToDownload = expenseFiles.slice(0, additionalDays)
     const hasMore = expenseFiles.length > additionalDays
 
-    const newExpenses: Expense[] = []
-    let downloadedFiles = 0
-
-    for (const file of filesToDownload) {
+    const downloadResults = await pMap(filesToDownload, async (file) => {
       const fileData = await downloadCSV(
         config.token,
         config.repo,
@@ -249,11 +248,13 @@ export async function syncDownMore(
 
       if (fileData) {
         const expenses = importFromCSV(fileData.content)
-        newExpenses.push(...expenses)
-        downloadedFiles++
+        return { expenses, downloaded: true as const }
       }
-    }
+      return { expenses: [] as Expense[], downloaded: false as const }
+    }, 5)
 
+    const newExpenses = downloadResults.flatMap((r) => r.expenses)
+    const downloadedFiles = downloadResults.filter((r) => r.downloaded).length
     const allExpenses = [...currentExpenses, ...newExpenses]
 
     return {

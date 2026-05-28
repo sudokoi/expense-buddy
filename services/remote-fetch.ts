@@ -1,9 +1,10 @@
 import { loadSyncConfig } from "./sync-config"
 import { getRepositoryTree, listFiles, downloadCSV, GitHubApiError } from "./github-sync"
-import { loadRemoteSHACache, saveRemoteSHACache } from "./remote-sha-cache"
+import { loadRemoteSHACache } from "./remote-sha-cache"
 import { groupExpensesByDay, getDayKeyFromFilename } from "./daily-file-manager"
 import { importFromCSV } from "./csv-handler"
 import { getUserFriendlyMessage } from "./error-utils"
+import { pMap } from "./retry"
 import type { Expense } from "../types/expense"
 import type { SyncConfig, FetchAllRemoteResult } from "../types/sync"
 
@@ -71,7 +72,7 @@ async function fetchWithTree(
     }
   }
 
-  for (const file of changedFiles) {
+  const downloadResults = await pMap(changedFiles, async (file) => {
     try {
       const fileData = await downloadCSV(
         config.token,
@@ -79,27 +80,40 @@ async function fetchWithTree(
         config.branch,
         file.path
       )
-
       if (fileData) {
         const expenses = importFromCSV(fileData.content)
-        allExpenses.push(...expenses)
-        downloadedFiles++
+        return { expenses, ok: true as const }
       }
+      return { expenses: [] as Expense[], ok: true as const }
     } catch (fileError) {
       if (
         fileError instanceof GitHubApiError &&
         (fileError.status === 401 || fileError.status === 403)
       ) {
-        return {
-          success: false,
-          error: fileError.message,
-          authStatus: fileError.status,
-          shouldSignOut: fileError.shouldSignOut,
-        }
+        return { error: fileError, fatal: true as const }
       }
-
       console.warn(`Failed to download ${file.path}:`, fileError)
-      downloadErrors.push(file.path)
+      return { error: fileError, fatal: false as const }
+    }
+  }, 5)
+
+  const fatalError = downloadResults.find((r) => "fatal" in r && r.fatal)
+  if (fatalError && "error" in fatalError) {
+    const err = fatalError.error as GitHubApiError
+    return {
+      success: false,
+      error: err.message,
+      authStatus: err.status as 401 | 403,
+      shouldSignOut: err.shouldSignOut,
+    }
+  }
+
+  for (const r of downloadResults) {
+    if ("ok" in r && r.ok) {
+      allExpenses.push(...r.expenses)
+      downloadedFiles++
+    } else {
+      downloadErrors.push("path" in (r as any) ? (r as any).path : "unknown")
     }
   }
 
@@ -162,11 +176,7 @@ async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteR
     }
   }
 
-  const allExpenses: Expense[] = []
-  let downloadedFiles = 0
-  const downloadErrors: string[] = []
-
-  for (const file of expenseFiles) {
+  const downloadResults = await pMap(expenseFiles, async (file) => {
     try {
       const fileData = await downloadCSV(
         config.token,
@@ -174,34 +184,49 @@ async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteR
         config.branch,
         file.path
       )
-
       if (fileData) {
         const expenses = importFromCSV(fileData.content)
-        allExpenses.push(...expenses)
-        downloadedFiles++
+        return { expenses, ok: true as const }
       }
+      return { expenses: [] as Expense[], ok: true as const }
     } catch (fileError) {
       if (
         fileError instanceof GitHubApiError &&
         (fileError.status === 401 || fileError.status === 403)
       ) {
-        return {
-          success: false,
-          error: fileError.message,
-          authStatus: fileError.status,
-          shouldSignOut: fileError.shouldSignOut,
-        }
+        return { error: fileError, fatal: true as const }
       }
-
       console.warn(`Failed to download ${file.path}:`, fileError)
-      downloadErrors.push(file.path)
+      return { error: fileError, fatal: false as const }
+    }
+  }, 5)
+
+  const fatalError = downloadResults.find((r) => "fatal" in r && r.fatal)
+  if (fatalError && "error" in fatalError) {
+    const err = fatalError.error as GitHubApiError
+    return {
+      success: false,
+      error: err.message,
+      authStatus: err.status as 401 | 403,
+      shouldSignOut: err.shouldSignOut,
+    }
+  }
+
+  const allExpenses: Expense[] = []
+  let downloadedFiles = 0
+
+  for (const r of downloadResults) {
+    if ("ok" in r && r.ok) {
+      allExpenses.push(...r.expenses)
+      downloadedFiles++
     }
   }
 
   if (downloadedFiles === 0 && expenseFiles.length > 0) {
+    const errorCount = downloadResults.filter((r) => !("ok" in r)).length
     return {
       success: false,
-      error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
+      error: `Failed to download any expense files. ${errorCount} file(s) failed.`,
     }
   }
 

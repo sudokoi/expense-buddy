@@ -3,6 +3,7 @@
  */
 
 import i18next from "../i18n"
+import { withRetry, isRetryableFetchError } from "./retry"
 
 interface GitHubFileResponse {
   content: string
@@ -791,95 +792,99 @@ export async function batchCommit(
     return { success: true }
   }
 
-  // Step 1: Get current branch ref (HEAD SHA)
-  const refResult = await getBranchRef(token, repo, branch)
-  if ("error" in refResult) {
-    return {
-      success: false,
-      error: refResult.error,
-      errorCode: refResult.errorCode,
-    }
-  }
-  const headSha = refResult.sha
-
-  // Step 2: Get base tree SHA from commit
-  const treeResult = await getCommitTree(token, repo, headSha)
-  if ("error" in treeResult) {
-    return {
-      success: false,
-      error: treeResult.error,
-      errorCode: treeResult.errorCode,
-    }
-  }
-  const baseTreeSha = treeResult.treeSha
-
-  function sanitizePath(path: string): string {
-    return path.replace(/^\/+/, "")
-  }
-
-  // Step 3: Create blobs for each file to upload
-  const treeEntries: { path: string; sha: string | null }[] = []
-  const blobShas: { [path: string]: string } = {}
-
-  for (const upload of uploads) {
-    const blobResult = await createBlob(token, repo, upload.content)
-    if ("error" in blobResult) {
+  const executeBatch = async (): Promise<BatchCommitResult> => {
+    // Step 1: Get current branch ref (HEAD SHA)
+    const refResult = await getBranchRef(token, repo, branch)
+    if ("error" in refResult) {
       return {
         success: false,
-        error: i18next.t("githubSync.errors.blob", {
-          path: upload.path,
-          error: blobResult.error,
-        }),
-        errorCode: blobResult.errorCode,
+        error: refResult.error,
+        errorCode: refResult.errorCode,
       }
     }
-    const sanitized = sanitizePath(upload.path)
-    treeEntries.push({ path: sanitized, sha: blobResult.sha })
-    blobShas[sanitized] = blobResult.sha
-  }
+    const headSha = refResult.sha
 
-  // Step 4: Add deletions to tree entries (sha: null marks deletion)
-  for (const deletion of deletions) {
-    treeEntries.push({ path: sanitizePath(deletion.path), sha: null })
-  }
+    // Step 2: Get base tree SHA from commit
+    const treeResult = await getCommitTree(token, repo, headSha)
+    if ("error" in treeResult) {
+      return {
+        success: false,
+        error: treeResult.error,
+        errorCode: treeResult.errorCode,
+      }
+    }
+    const baseTreeSha = treeResult.treeSha
 
-  // Step 5: Create new tree with all changes
-  const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries)
-  if ("error" in newTreeResult) {
+    function sanitizePath(path: string): string {
+      return path.replace(/^\/+/, "")
+    }
+
+    // Step 3: Create blobs for each file to upload
+    const treeEntries: { path: string; sha: string | null }[] = []
+    const blobShas: { [path: string]: string } = {}
+
+    for (const upload of uploads) {
+      const blobResult = await createBlob(token, repo, upload.content)
+      if ("error" in blobResult) {
+        return {
+          success: false,
+          error: i18next.t("githubSync.errors.blob", {
+            path: upload.path,
+            error: blobResult.error,
+          }),
+          errorCode: blobResult.errorCode,
+        }
+      }
+      const sanitized = sanitizePath(upload.path)
+      treeEntries.push({ path: sanitized, sha: blobResult.sha })
+      blobShas[sanitized] = blobResult.sha
+    }
+
+    // Step 4: Add deletions to tree entries (sha: null marks deletion)
+    for (const deletion of deletions) {
+      treeEntries.push({ path: sanitizePath(deletion.path), sha: null })
+    }
+
+    // Step 5: Create new tree with all changes
+    const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries)
+    if ("error" in newTreeResult) {
+      return {
+        success: false,
+        error: newTreeResult.error,
+        errorCode: newTreeResult.errorCode,
+      }
+    }
+    const newTreeSha = newTreeResult.sha
+
+    // Step 6: Create commit pointing to new tree
+    const commitResult = await createCommit(token, repo, message, newTreeSha, headSha)
+    if ("error" in commitResult) {
+      return {
+        success: false,
+        error: commitResult.error,
+        errorCode: commitResult.errorCode,
+      }
+    }
+    const newCommitSha = commitResult.sha
+
+    // Step 7: Update branch ref to new commit
+    const updateResult = await updateRef(token, repo, branch, newCommitSha)
+    if ("error" in updateResult) {
+      return {
+        success: false,
+        error: updateResult.error,
+        errorCode: updateResult.errorCode,
+      }
+    }
+
     return {
-      success: false,
-      error: newTreeResult.error,
-      errorCode: newTreeResult.errorCode,
+      success: true,
+      commitSha: newCommitSha,
+      blobShas,
     }
   }
-  const newTreeSha = newTreeResult.sha
 
-  // Step 6: Create commit pointing to new tree
-  const commitResult = await createCommit(token, repo, message, newTreeSha, headSha)
-  if ("error" in commitResult) {
-    return {
-      success: false,
-      error: commitResult.error,
-      errorCode: commitResult.errorCode,
-    }
-  }
-  const newCommitSha = commitResult.sha
-
-  // Step 7: Update branch ref to new commit
-  const updateResult = await updateRef(token, repo, branch, newCommitSha)
-  if ("error" in updateResult) {
-    return {
-      success: false,
-      error: updateResult.error,
-      errorCode: updateResult.errorCode,
-    }
-  }
-
-  return {
-    success: true,
-    commitSha: newCommitSha,
-    blobShas,
-  }
+  return await withRetry(executeBatch, { maxRetries: 3, baseDelayMs: 1000 })
 }
 
 // ============================================================================
@@ -900,13 +905,12 @@ export async function getLatestCommitTimestamp(
   repo: string,
   branch: string
 ): Promise<{ timestamp: string } | { error: string }> {
-  try {
+  const execute = async (): Promise<{ timestamp: string } | { error: string }> => {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
       return { error: i18next.t("githubSync.errors.repoFormat") }
     }
 
-    // Get the latest commit on the branch
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/commits?sha=${branch}&per_page=1`,
       {
@@ -919,7 +923,6 @@ export async function getLatestCommitTimestamp(
     )
 
     if (!response.ok) {
-      // Provide user-friendly error messages for common scenarios
       switch (response.status) {
         case 401:
           return { error: i18next.t("githubSync.errors.invalidToken") }
@@ -941,11 +944,9 @@ export async function getLatestCommitTimestamp(
     const commits = await response.json()
 
     if (!Array.isArray(commits) || commits.length === 0) {
-      // No commits on this branch - treat as fresh repo
       return { timestamp: new Date(0).toISOString() }
     }
 
-    // Return the commit timestamp (author date)
     const latestCommit = commits[0]
     const timestamp =
       latestCommit.commit?.author?.date || latestCommit.commit?.committer?.date
@@ -955,8 +956,11 @@ export async function getLatestCommitTimestamp(
     }
 
     return { timestamp }
+  }
+
+  try {
+    return await withRetry(execute, { maxRetries: 2, baseDelayMs: 500 })
   } catch (error) {
-    // Check for specific network error types
     const errorMessage = String(error)
     if (
       errorMessage.includes("Failed to fetch") ||
@@ -1199,7 +1203,7 @@ export async function downloadCSV(
   branch: string,
   filePath: string = "expenses.csv"
 ): Promise<{ content: string; sha: string } | null> {
-  try {
+  const execute = async (): Promise<{ content: string; sha: string } | null> => {
     const [owner, repoName] = repo.split("/")
 
     const response = await fetch(
@@ -1213,7 +1217,6 @@ export async function downloadCSV(
     )
 
     if (response.status === 404) {
-      // File doesn't exist yet
       return null
     }
 
@@ -1230,6 +1233,10 @@ export async function downloadCSV(
       content: decodedContent,
       sha: data.sha,
     }
+  }
+
+  try {
+    return await withRetry(execute, { maxRetries: 2, baseDelayMs: 500 })
   } catch (error) {
     console.error("Download CSV error:", error)
     throw error
@@ -1245,7 +1252,7 @@ export async function listFiles(
   branch: string,
   path: string = ""
 ): Promise<{ name: string; path: string; sha: string }[]> {
-  try {
+  const execute = async (): Promise<{ name: string; path: string; sha: string }[]> => {
     const [owner, repoName] = repo.split("/")
 
     const response = await fetch(
@@ -1259,7 +1266,6 @@ export async function listFiles(
     )
 
     if (response.status === 404) {
-      // Directory doesn't exist yet
       return []
     }
 
@@ -1269,7 +1275,6 @@ export async function listFiles(
 
     const data = await response.json()
 
-    // Filter for files only (not directories)
     if (Array.isArray(data)) {
       return data
         .filter((item: any) => item.type === "file")
@@ -1281,6 +1286,10 @@ export async function listFiles(
     }
 
     return []
+  }
+
+  try {
+    return await withRetry(execute, { maxRetries: 2, baseDelayMs: 500 })
   } catch (error) {
     console.error("List files error:", error)
     throw error
@@ -1425,7 +1434,7 @@ export async function downloadSettingsFile(
   repo: string,
   branch: string
 ): Promise<{ content: string; sha: string } | null> {
-  try {
+  const execute = async (): Promise<{ content: string; sha: string } | null> => {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
       throw new Error("Invalid repository format")
@@ -1443,7 +1452,6 @@ export async function downloadSettingsFile(
     )
 
     if (response.status === 404) {
-      // File doesn't exist yet
       return null
     }
 
@@ -1460,6 +1468,10 @@ export async function downloadSettingsFile(
       content: decodedContent,
       sha: data.sha,
     }
+  }
+
+  try {
+    return await withRetry(execute, { maxRetries: 2, baseDelayMs: 500 })
   } catch (error) {
     console.error("Download settings error:", error)
     throw error
