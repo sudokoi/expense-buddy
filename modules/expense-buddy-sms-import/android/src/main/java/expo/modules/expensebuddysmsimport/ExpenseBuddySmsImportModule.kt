@@ -281,7 +281,7 @@ class ExpenseBuddySmsImportModule : Module() {
     private fun parseIsoInstantToEpochMillis(value: String): Long =
         try {
             Instant.parse(value).toEpochMilli()
-        } catch (_: Throwable) {
+        } catch (_: Exception) {
             throw InvalidSmsScanOptionsException("since must be a valid ISO-8601 timestamp.")
         }
 }

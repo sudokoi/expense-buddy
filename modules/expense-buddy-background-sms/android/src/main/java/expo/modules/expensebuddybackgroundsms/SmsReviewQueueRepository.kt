@@ -23,6 +23,12 @@ class SmsReviewQueueRepository(
     private val injectedDao: ReviewQueueDao? = null,
     private val injectedJournalDao: ImportJournalDao? = null,
 ) {
+    init {
+        require(injectedDao != null || context != null) {
+            "SmsReviewQueueRepository requires either a Context or an injected ReviewQueueDao"
+        }
+    }
+
     private val mutex = Mutex()
     private val dbInstance by lazy { context?.let { SmsReviewQueueDatabase.getInstance(it) } }
     private val dao get() = injectedDao ?: dbInstance!!.reviewQueueDao()
