@@ -330,13 +330,13 @@ export default function SettingsScreen() {
           }),
           onPress: async () => {
             const token = syncConfig?.token
-            const repo = syncConfig?.repo
-            const logs = await getLogsForBugReportAsync(token && repo ? 200 : 50)
+            const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
+            const logs = await getLogsForBugReportAsync(token ? 200 : 50)
 
-            if (token && repo && logs) {
+            if (token && logs) {
               try {
                 const response = await fetch(
-                  `https://api.github.com/repos/${repo}/issues`,
+                  `https://api.github.com/repos/${appRepo}/issues`,
                   {
                     method: "POST",
                     headers: {
