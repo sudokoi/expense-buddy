@@ -2,6 +2,8 @@ package expo.modules.expensebuddylogger
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 class ExpenseBuddyLoggerModule : Module() {
     override fun definition() =
@@ -24,7 +26,7 @@ class ExpenseBuddyLoggerModule : Module() {
             }
 
             AsyncFunction("getLogsAsync") { count: Int ->
-                LoggerApi.getLast(count).map { entry ->
+                runBlocking(Dispatchers.IO) { LoggerApi.getLast(count) }.map { entry ->
                     mapOf(
                         "timestamp" to entry.timestamp,
                         "level" to entry.level,
@@ -36,11 +38,11 @@ class ExpenseBuddyLoggerModule : Module() {
             }
 
             AsyncFunction("getLogsAsStringAsync") { count: Int ->
-                LoggerApi.getLastAsString(count)
+                runBlocking(Dispatchers.IO) { LoggerApi.getLastAsString(count) }
             }
 
             AsyncFunction("clearLogsAsync") {
-                LoggerApi.clear()
+                runBlocking(Dispatchers.IO) { LoggerApi.clear() }
             }
         }
 }

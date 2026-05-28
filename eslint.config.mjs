@@ -70,7 +70,7 @@ export default [
       ".tamagui/",
       ".yarn/",
       "dist/",
-      "build/",
+      "**/build/",
       "tools/sms-ml/**",
       "scripts/",
       "*.config.js",

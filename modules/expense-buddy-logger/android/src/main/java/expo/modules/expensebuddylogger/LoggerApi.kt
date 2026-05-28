@@ -1,5 +1,6 @@
 package expo.modules.expensebuddylogger
 
+import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,6 +22,22 @@ object LoggerApi {
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val db = LoggerDatabase.getInstance(context)
         dao = db.logDao()
+    }
+
+    @SuppressLint("VisibleForTests")
+    internal fun initializeForTesting(
+        dao: LogDao,
+        capacity: Int = 1000,
+    ) {
+        this.capacity = capacity
+        this.scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        this.dao = dao
+    }
+
+    internal fun resetForTesting() {
+        dao = null
+        scope = null
+        capacity = 1000
     }
 
     fun d(
