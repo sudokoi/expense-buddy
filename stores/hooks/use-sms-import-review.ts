@@ -68,6 +68,13 @@ export const useSmsImportReview = () => {
     [smsImportReviewStore]
   )
 
+  const markItemsDismissed = useCallback(
+    (fingerprints: string[]) => {
+      smsImportReviewStore.trigger.markItemsDismissed({ fingerprints })
+    },
+    [smsImportReviewStore]
+  )
+
   const dismissItem = useCallback(
     (fingerprint: string) => {
       smsImportReviewStore.trigger.dismissItem({ fingerprint })
@@ -105,6 +112,7 @@ export const useSmsImportReview = () => {
     markItemsAccepted,
     markItemsRejected,
     markItemRejected,
+    markItemsDismissed,
     dismissItem,
     clearResolvedItems,
     setLastScanCursor,

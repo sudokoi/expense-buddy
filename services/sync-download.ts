@@ -1,6 +1,12 @@
 import { loadSyncConfig } from "./sync-config"
 import { saveLastSyncTime } from "./sync-direction"
-import { listFiles, downloadCSV, downloadSettingsFile, getLatestCommitTimestamp, GitHubApiError } from "./github-sync"
+import {
+  listFiles,
+  downloadCSV,
+  downloadSettingsFile,
+  getLatestCommitTimestamp,
+  GitHubApiError,
+} from "./github-sync"
 import { AppSettings, hydrateSettingsFromJson } from "./settings-manager"
 import { getDayKeyFromFilename } from "./daily-file-manager"
 import { importFromCSV } from "./csv-handler"
@@ -9,7 +15,6 @@ import { format } from "date-fns"
 import { pMap } from "./retry"
 import i18next from "i18next"
 import type { Expense } from "../types/expense"
-import type { SyncConfig } from "../types/sync"
 
 export async function syncDown(
   daysToDownload: number = 7,
@@ -87,20 +92,24 @@ export async function syncDown(
     const filesToDownload = expenseFiles.slice(0, daysToDownload)
     const hasMore = expenseFiles.length > daysToDownload
 
-    const downloadResults = await pMap(filesToDownload, async (file) => {
-      const fileData = await downloadCSV(
-        config.token,
-        config.repo,
-        config.branch,
-        file.path
-      )
+    const downloadResults = await pMap(
+      filesToDownload,
+      async (file) => {
+        const fileData = await downloadCSV(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path
+        )
 
-      if (fileData) {
-        const expenses = importFromCSV(fileData.content)
-        return { expenses, downloaded: true as const }
-      }
-      return { expenses: [] as Expense[], downloaded: false as const }
-    }, 5)
+        if (fileData) {
+          const expenses = importFromCSV(fileData.content)
+          return { expenses, downloaded: true as const }
+        }
+        return { expenses: [] as Expense[], downloaded: false as const }
+      },
+      5
+    )
 
     const allExpenses = downloadResults.flatMap((r) => r.expenses)
     const downloadedFiles = downloadResults.filter((r) => r.downloaded).length
@@ -238,20 +247,24 @@ export async function syncDownMore(
     const filesToDownload = expenseFiles.slice(0, additionalDays)
     const hasMore = expenseFiles.length > additionalDays
 
-    const downloadResults = await pMap(filesToDownload, async (file) => {
-      const fileData = await downloadCSV(
-        config.token,
-        config.repo,
-        config.branch,
-        file.path
-      )
+    const downloadResults = await pMap(
+      filesToDownload,
+      async (file) => {
+        const fileData = await downloadCSV(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path
+        )
 
-      if (fileData) {
-        const expenses = importFromCSV(fileData.content)
-        return { expenses, downloaded: true as const }
-      }
-      return { expenses: [] as Expense[], downloaded: false as const }
-    }, 5)
+        if (fileData) {
+          const expenses = importFromCSV(fileData.content)
+          return { expenses, downloaded: true as const }
+        }
+        return { expenses: [] as Expense[], downloaded: false as const }
+      },
+      5
+    )
 
     const newExpenses = downloadResults.flatMap((r) => r.expenses)
     const downloadedFiles = downloadResults.filter((r) => r.downloaded).length

@@ -4,6 +4,7 @@ import {
   approveReviewItemAsync,
   approveReviewItemsAsync,
   dismissReviewItemAsync,
+  dismissReviewItemsAsync,
   insertPendingItemsAsync,
   rejectReviewItemAsync,
   rejectReviewItemsAsync,
@@ -188,6 +189,29 @@ export function createSmsImportReviewStore() {
               ? {
                   ...item,
                   status: "rejected" as const,
+                  updatedAt: new Date().toISOString(),
+                }
+              : item
+          ),
+        }
+      },
+
+      markItemsDismissed: (context, event: { fingerprints: string[] }, enqueue) => {
+        if (event.fingerprints.length === 0) return context
+
+        const dismissedFingerprints = new Set(event.fingerprints)
+
+        enqueue.effect(async () => {
+          await dismissReviewItemsAsync(event.fingerprints)
+        })
+
+        return {
+          ...context,
+          items: context.items.map((item) =>
+            dismissedFingerprints.has(item.fingerprint)
+              ? {
+                  ...item,
+                  status: "dismissed" as const,
                   updatedAt: new Date().toISOString(),
                 }
               : item

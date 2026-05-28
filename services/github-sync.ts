@@ -3,7 +3,7 @@
  */
 
 import i18next from "../i18n"
-import { withRetry, isRetryableFetchError } from "./retry"
+import { withRetry } from "./retry"
 
 interface GitHubFileResponse {
   content: string
@@ -792,10 +792,29 @@ export async function batchCommit(
     return { success: true }
   }
 
+  class RetryableApiError extends Error {
+    constructor(
+      message: string,
+      public errorCode: string
+    ) {
+      super(message)
+    }
+  }
+
+  function throwIfRetryable(result: {
+    error: string
+    errorCode: BatchCommitResult["errorCode"]
+  }): void {
+    if (result.errorCode === "CONFLICT" || result.errorCode === "RATE_LIMIT") {
+      throw new RetryableApiError(result.error, result.errorCode)
+    }
+  }
+
   const executeBatch = async (): Promise<BatchCommitResult> => {
     // Step 1: Get current branch ref (HEAD SHA)
     const refResult = await getBranchRef(token, repo, branch)
     if ("error" in refResult) {
+      throwIfRetryable(refResult)
       return {
         success: false,
         error: refResult.error,
@@ -807,6 +826,7 @@ export async function batchCommit(
     // Step 2: Get base tree SHA from commit
     const treeResult = await getCommitTree(token, repo, headSha)
     if ("error" in treeResult) {
+      throwIfRetryable(treeResult)
       return {
         success: false,
         error: treeResult.error,
@@ -826,6 +846,7 @@ export async function batchCommit(
     for (const upload of uploads) {
       const blobResult = await createBlob(token, repo, upload.content)
       if ("error" in blobResult) {
+        throwIfRetryable(blobResult)
         return {
           success: false,
           error: i18next.t("githubSync.errors.blob", {
@@ -848,6 +869,7 @@ export async function batchCommit(
     // Step 5: Create new tree with all changes
     const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries)
     if ("error" in newTreeResult) {
+      throwIfRetryable(newTreeResult)
       return {
         success: false,
         error: newTreeResult.error,
@@ -859,6 +881,7 @@ export async function batchCommit(
     // Step 6: Create commit pointing to new tree
     const commitResult = await createCommit(token, repo, message, newTreeSha, headSha)
     if ("error" in commitResult) {
+      throwIfRetryable(commitResult)
       return {
         success: false,
         error: commitResult.error,
@@ -870,6 +893,7 @@ export async function batchCommit(
     // Step 7: Update branch ref to new commit
     const updateResult = await updateRef(token, repo, branch, newCommitSha)
     if ("error" in updateResult) {
+      throwIfRetryable(updateResult)
       return {
         success: false,
         error: updateResult.error,
@@ -884,7 +908,18 @@ export async function batchCommit(
     }
   }
 
-  return await withRetry(executeBatch, { maxRetries: 3, baseDelayMs: 1000 })
+  try {
+    return await withRetry(executeBatch, { maxRetries: 3, baseDelayMs: 1000 })
+  } catch (error) {
+    if (error instanceof RetryableApiError) {
+      return {
+        success: false,
+        error: error.message,
+        errorCode: error.errorCode as "CONFLICT" | "RATE_LIMIT",
+      }
+    }
+    throw error
+  }
 }
 
 // ============================================================================

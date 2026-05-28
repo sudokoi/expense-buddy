@@ -1,5 +1,5 @@
 import { secureStorage } from "./secure-storage"
-import { getLatestCommitTimestamp, GitHubApiError } from "./github-sync"
+import { getLatestCommitTimestamp } from "./github-sync"
 import { groupExpensesByDay, getFilenameForDay } from "./daily-file-manager"
 import { computeContentHash, loadFileHashes } from "./hash-storage"
 import { loadDirtyDays } from "./expense-dirty-days"
