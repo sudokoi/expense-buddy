@@ -250,34 +250,34 @@
       "currency": "通貨"
     },
     "conflicts": {
-      "title": "{{count}} Conflict{{s}} Found",
-      "message": "Both local and remote have changes to the same expense{{s}}:\n\n{{summary}}\n\nWhich version would you like to keep?",
-      "keepLocal": "Keep Local",
-      "keepRemote": "Keep Remote"
+      "title": "{{count}}件の競合が見つかりました",
+      "message": "ローカルとリモートの両方で同じ支出に変更があります:\n\n{{summary}}\n\nどちらのバージョンを保持しますか？",
+      "keepLocal": "ローカルを保持",
+      "keepRemote": "リモートを保持"
     },
     "downloadPrompt": {
-      "title": "Download Existing Data?",
-      "message": "Would you like to download your expenses from GitHub now?",
-      "notNow": "Not Now",
-      "download": "Download"
+      "title": "既存のデータをダウンロードしますか？",
+      "message": "GitHubから今すぐ支出データをダウンロードしますか？",
+      "notNow": "後で",
+      "download": "ダウンロード"
     },
     "clearDialog": {
-      "title": "Confirm Clear",
-      "message": "Remove sync configuration?",
-      "clear": "Clear"
+      "title": "クリアの確認",
+      "message": "同期設定を削除しますか？",
+      "clear": "クリア"
     },
     "notifications": {
-      "downloaded": "Downloaded {{count}} expenses",
-      "settingsApplied": "Settings applied from GitHub",
-      "autoSyncEnabled": "Auto-sync enabled",
-      "syncComplete": "Sync complete — {{localCount}} local files updated, {{remoteCount}} remote files updated",
-      "pendingChanges": "Pending changes detected. Please sync manually.",
-      "alreadyInSync": "Already in sync - no changes needed",
-      "configCleared": "Configuration cleared",
-      "categoryUpdated": "Category \"{{label}}\" updated",
-      "categoryAdded": "Category \"{{label}}\" added",
-      "categoryDeleted": "Category \"{{label}}\" deleted",
-      "otherDeleteError": "The \"Other\" category cannot be deleted"
+      "downloaded": "{{count}}件の支出をダウンロードしました",
+      "settingsApplied": "GitHubから設定を適用しました",
+      "autoSyncEnabled": "自動同期を有効にしました",
+      "syncComplete": "同期完了 — ローカル{{localCount}}ファイル、リモート{{remoteCount}}ファイルを更新しました",
+      "pendingChanges": "保留中の変更が検出されました。手動で同期してください。",
+      "alreadyInSync": "すでに同期済み - 変更は不要です",
+      "configCleared": "設定をクリアしました",
+      "categoryUpdated": "カテゴリー「{{label}}」を更新しました",
+      "categoryAdded": "カテゴリー「{{label}}」を追加しました",
+      "categoryDeleted": "カテゴリー「{{label}}」を削除しました",
+      "otherDeleteError": "「その他」カテゴリーは削除できません"
     },
     "defaultPayment": {
       "label": "デフォルト",
@@ -529,11 +529,11 @@
       "timestamp": "コミットからタイムスタンプを抽出できませんでした",
       "blob": "{{path}} のblob作成に失敗しました: {{error}}",
       "truncatedTree": "リポジトリツリーが大きすぎて完全に取得できません",
-      "couldNotDetermineUsername": "Could not determine GitHub username",
-      "noWriteAccess": "No write access to this repository. Please choose a repo you can push to.",
-      "uploadFailed": "Upload failed: {{error}}",
-      "deleteFailed": "Delete failed: {{error}}",
-      "uploadSettingsFailed": "Upload settings failed: {{error}}"
+      "couldNotDetermineUsername": "GitHubユーザー名を特定できませんでした",
+      "noWriteAccess": "このリポジトリへの書き込み権限がありません。プッシュ可能なリポジトリを選択してください。",
+      "uploadFailed": "アップロードに失敗しました: {{error}}",
+      "deleteFailed": "削除に失敗しました: {{error}}",
+      "uploadSettingsFailed": "設定のアップロードに失敗しました: {{error}}"
     },
     "manager": {
       "notConfigured": "同期が設定されていません",
@@ -550,55 +550,55 @@
       "syncedExpenses": "{{count}}件の支出を同期しました: {{details}}",
       "downloadedExpenses": "{{files}}ファイルから{{count}}件の支出をダウンロードしました",
       "batchCommitFailed": "バッチコミットに失敗しました",
-      "fetchFailed": "Failed to fetch remote expenses",
-      "conflictsCount": "Sync has {{count}} conflict(s) that require resolution",
-      "conflictsNoHandler": "Conflicts detected but no conflict handler provided",
-      "syncCancelled": "Sync cancelled by user",
-      "cancelledByUser": "User cancelled conflict resolution",
-      "conflictsNotResolvedCount": "{{count}} conflict(s) were not resolved",
-      "conflictsNotResolved": "Not all conflicts were resolved",
-      "downloadSettingsFailed": "Failed to download settings",
-      "pushFailed": "Failed to push merged expenses",
-      "noMoreExpenses": "No more expenses to load",
-      "loadedMoreExpenses": "Loaded {{count}} more expenses from {{files}} file(s)",
-      "loadMoreFailed": "Load more failed",
-      "noOldFileToMigrate": "No old file to migrate",
-      "oldFileEmpty": "Old file is empty",
-      "migrated": "Migrated {{count}} expenses to daily files",
-      "migrationError": "Migration error: {{error}}",
-      "downloadFailedWithCount": "Failed to download any expense files. {{count}} file(s) failed.",
-      "failedToListRemoteWithError": "Failed to list remote files: {{error}}",
-      "conflictManualSync": "Conflict detected - manual sync required"
+      "fetchFailed": "リモート支出の取得に失敗しました",
+      "conflictsCount": "同期に{{count}}件の競合があり、解決が必要です",
+      "conflictsNoHandler": "競合が検出されましたが、競合ハンドラーが提供されていません",
+      "syncCancelled": "ユーザーにより同期がキャンセルされました",
+      "cancelledByUser": "ユーザーが競合解決をキャンセルしました",
+      "conflictsNotResolvedCount": "{{count}}件の競合が解決されませんでした",
+      "conflictsNotResolved": "すべての競合が解決されたわけではありません",
+      "downloadSettingsFailed": "設定のダウンロードに失敗しました",
+      "pushFailed": "マージされた支出のプッシュに失敗しました",
+      "noMoreExpenses": "これ以上ロードする支出はありません",
+      "loadedMoreExpenses": "{{files}}ファイルからさらに{{count}}件の支出をロードしました",
+      "loadMoreFailed": "さらなるロードに失敗しました",
+      "noOldFileToMigrate": "移行する古いファイルがありません",
+      "oldFileEmpty": "古いファイルは空です",
+      "migrated": "{{count}}件の支出を日次ファイルに移行しました",
+      "migrationError": "移行エラー: {{error}}",
+      "downloadFailedWithCount": "支出ファイルのダウンロードに失敗しました。{{count}}ファイルが失敗しました。",
+      "failedToListRemoteWithError": "リモートファイルのリスト取得に失敗しました: {{error}}",
+      "conflictManualSync": "競合が検出されました - 手動同期が必要です"
     }
   },
   "changelog": {
-    "title": "What's New",
-    "subtitle": "Version {{version}}",
-    "viewFull": "View full release notes"
+    "title": "新機能",
+    "subtitle": "バージョン {{version}}",
+    "viewFull": "完全なリリースノートを見る"
   },
   "errors": {
-    "network": "Unable to connect. Please check your internet connection.",
-    "authentication": "Authentication failed. Please check your GitHub token.",
-    "validation": "Invalid input. Please check your data and try again.",
-    "storage": "Unable to save data. Please try again.",
-    "unknown": "An unexpected error occurred. Please try again."
+    "network": "接続できません。インターネット接続を確認してください。",
+    "authentication": "認証に失敗しました。GitHubトークンを確認してください。",
+    "validation": "無効な入力です。データを確認してもう一度お試しください。",
+    "storage": "データを保存できません。もう一度お試しください。",
+    "unknown": "予期しないエラーが発生しました。もう一度お試しください。"
   },
   "updateChecker": {
     "errors": {
-      "noReleases": "No releases found",
-      "apiError": "GitHub API error: {{status}}"
+      "noReleases": "リリースが見つかりません",
+      "apiError": "GitHub API エラー: {{status}}"
     }
   },
   "githubDeviceFlow": {
     "errors": {
-      "codeRequestFailed": "GitHub device code request failed ({{status}}): {{detail}}",
-      "missingFields": "GitHub device code response missing required fields",
-      "tokenRequestFailed": "GitHub device token request failed ({{status}}): {{detail}}",
-      "tokenResponseEmpty": "GitHub device token response was empty",
-      "tokenError": "GitHub device token error: {{error}} {{description}}",
-      "signInExpired": "GitHub sign-in expired. Please try again.",
-      "signInDenied": "GitHub sign-in was denied.",
-      "signInFailed": "Sign-in failed."
+      "codeRequestFailed": "GitHubデバイスコードリクエストに失敗しました ({{status}}): {{detail}}",
+      "missingFields": "GitHubデバイスコードの応答に必須フィールドがありません",
+      "tokenRequestFailed": "GitHubデバイストークンリクエストに失敗しました ({{status}}): {{detail}}",
+      "tokenResponseEmpty": "GitHubデバイストークンの応答が空でした",
+      "tokenError": "GitHubデバイストークンエラー: {{error}} {{description}}",
+      "signInExpired": "GitHubサインインの有効期限が切れました。もう一度お試しください。",
+      "signInDenied": "GitHubサインインが拒否されました。",
+      "signInFailed": "サインインに失敗しました。"
     }
   },
   "validation": {

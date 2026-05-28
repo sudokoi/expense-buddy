@@ -250,34 +250,34 @@
       "currency": "मुद्रा"
     },
     "conflicts": {
-      "title": "{{count}} Conflict{{s}} Found",
-      "message": "Both local and remote have changes to the same expense{{s}}:\n\n{{summary}}\n\nWhich version would you like to keep?",
-      "keepLocal": "Keep Local",
-      "keepRemote": "Keep Remote"
+      "title": "{{count}} विरोध पाए गए",
+      "message": "स्थानीय और रिमोट दोनों में समान खर्च में बदलाव हैं:\n\n{{summary}}\n\nआप कौन सा संस्करण रखना चाहेंगे?",
+      "keepLocal": "स्थानीय रखें",
+      "keepRemote": "रिमोट रखें"
     },
     "downloadPrompt": {
-      "title": "Download Existing Data?",
-      "message": "Would you like to download your expenses from GitHub now?",
-      "notNow": "Not Now",
-      "download": "Download"
+      "title": "मौजूदा डेटा डाउनलोड करें?",
+      "message": "क्या आप अभी GitHub से अपने खर्च डाउनलोड करना चाहेंगे?",
+      "notNow": "अभी नहीं",
+      "download": "डाउनलोड करें"
     },
     "clearDialog": {
-      "title": "Confirm Clear",
-      "message": "Remove sync configuration?",
-      "clear": "Clear"
+      "title": "साफ़ करने की पुष्टि करें",
+      "message": "सिंक कॉन्फ़िगरेशन हटाएं?",
+      "clear": "साफ़ करें"
     },
     "notifications": {
-      "downloaded": "Downloaded {{count}} expenses",
-      "settingsApplied": "Settings applied from GitHub",
-      "autoSyncEnabled": "Auto-sync enabled",
-      "syncComplete": "Sync complete — {{localCount}} local files updated, {{remoteCount}} remote files updated",
-      "pendingChanges": "Pending changes detected. Please sync manually.",
-      "alreadyInSync": "Already in sync - no changes needed",
-      "configCleared": "Configuration cleared",
-      "categoryUpdated": "Category \"{{label}}\" updated",
-      "categoryAdded": "Category \"{{label}}\" added",
-      "categoryDeleted": "Category \"{{label}}\" deleted",
-      "otherDeleteError": "The \"Other\" category cannot be deleted"
+      "downloaded": "{{count}} खर्च डाउनलोड किए गए",
+      "settingsApplied": "GitHub से सेटिंग्स लागू की गईं",
+      "autoSyncEnabled": "ऑटो-सिंक सक्षम किया गया",
+      "syncComplete": "सिंक पूर्ण — {{localCount}} स्थानीय फ़ाइलें अपडेट की गईं, {{remoteCount}} रिमोट फ़ाइलें अपडेट की गईं",
+      "pendingChanges": "लंबित बदलाव पाए गए। कृपया मैन्युअल रूप से सिंक करें।",
+      "alreadyInSync": "पहले से सिंक में है - कोई बदलाव आवश्यक नहीं",
+      "configCleared": "कॉन्फ़िगरेशन साफ़ किया गया",
+      "categoryUpdated": "श्रेणी \"{{label}}\" अपडेट की गई",
+      "categoryAdded": "श्रेणी \"{{label}}\" जोड़ी गई",
+      "categoryDeleted": "श्रेणी \"{{label}}\" हटाई गई",
+      "otherDeleteError": "\"अन्य\" श्रेणी को हटाया नहीं जा सकता"
     },
     "defaultPayment": {
       "label": "डिफ़ॉल्ट",
@@ -529,11 +529,11 @@
       "timestamp": "कमिट से टाइमस्टैम्प निकालने में असमर्थ",
       "blob": "{{path}} के लिए blob बनाने में विफल: {{error}}",
       "truncatedTree": "रिपॉजिटरी ट्री पूरी तरह से लाने के लिए बहुत बड़ी है",
-      "couldNotDetermineUsername": "Could not determine GitHub username",
-      "noWriteAccess": "No write access to this repository. Please choose a repo you can push to.",
-      "uploadFailed": "Upload failed: {{error}}",
-      "deleteFailed": "Delete failed: {{error}}",
-      "uploadSettingsFailed": "Upload settings failed: {{error}}"
+      "couldNotDetermineUsername": "GitHub उपयोगकर्ता नाम निर्धारित नहीं कर सका",
+      "noWriteAccess": "इस रिपॉजिटरी में लिखने की पहुंच नहीं है। कृपया एक ऐसी रेपो चुनें जिसमें आप पुश कर सकें।",
+      "uploadFailed": "अपलोड विफल: {{error}}",
+      "deleteFailed": "हटाने में विफल: {{error}}",
+      "uploadSettingsFailed": "सेटिंग्स अपलोड करने में विफल: {{error}}"
     },
     "manager": {
       "notConfigured": "सिंक कॉन्फ़िगर नहीं है",
@@ -550,55 +550,55 @@
       "syncedExpenses": "सिंक किया गया: {{count}} व्यय: {{details}}",
       "downloadedExpenses": "डाउनलोड किया गया: {{files}} फ़ाइल(ों) से {{count}} व्यय",
       "batchCommitFailed": "बैच कमिट विफल",
-      "fetchFailed": "Failed to fetch remote expenses",
-      "conflictsCount": "Sync has {{count}} conflict(s) that require resolution",
-      "conflictsNoHandler": "Conflicts detected but no conflict handler provided",
-      "syncCancelled": "Sync cancelled by user",
-      "cancelledByUser": "User cancelled conflict resolution",
-      "conflictsNotResolvedCount": "{{count}} conflict(s) were not resolved",
-      "conflictsNotResolved": "Not all conflicts were resolved",
-      "downloadSettingsFailed": "Failed to download settings",
-      "pushFailed": "Failed to push merged expenses",
-      "noMoreExpenses": "No more expenses to load",
-      "loadedMoreExpenses": "Loaded {{count}} more expenses from {{files}} file(s)",
-      "loadMoreFailed": "Load more failed",
-      "noOldFileToMigrate": "No old file to migrate",
-      "oldFileEmpty": "Old file is empty",
-      "migrated": "Migrated {{count}} expenses to daily files",
-      "migrationError": "Migration error: {{error}}",
-      "downloadFailedWithCount": "Failed to download any expense files. {{count}} file(s) failed.",
-      "failedToListRemoteWithError": "Failed to list remote files: {{error}}",
-      "conflictManualSync": "Conflict detected - manual sync required"
+      "fetchFailed": "रिमोट खर्च लाने में विफल",
+      "conflictsCount": "सिंक में {{count}} विरोध हैं जिन्हें हल करने की आवश्यकता है",
+      "conflictsNoHandler": "विरोध पाए गए लेकिन कोई विरोध हैंडलर प्रदान नहीं किया गया",
+      "syncCancelled": "उपयोगकर्ता द्वारा सिंक रद्द किया गया",
+      "cancelledByUser": "उपयोगकर्ता ने विरोध समाधान रद्द किया",
+      "conflictsNotResolvedCount": "{{count}} विरोध हल नहीं किए गए",
+      "conflictsNotResolved": "सभी विरोध हल नहीं किए गए",
+      "downloadSettingsFailed": "सेटिंग्स डाउनलोड करने में विफल",
+      "pushFailed": "मर्ज किए गए खर्चों को पुश करने में विफल",
+      "noMoreExpenses": "लोड करने के लिए और कोई खर्च नहीं",
+      "loadedMoreExpenses": "{{count}} और खर्च {{files}} फ़ाइल(ों) से लोड किए गए",
+      "loadMoreFailed": "और लोड करने में विफल",
+      "noOldFileToMigrate": "माइग्रेट करने के लिए कोई पुरानी फ़ाइल नहीं",
+      "oldFileEmpty": "पुरानी फ़ाइल खाली है",
+      "migrated": "{{count}} खर्च दैनिक फ़ाइलों में माइग्रेट किए गए",
+      "migrationError": "माइग्रेशन त्रुटि: {{error}}",
+      "downloadFailedWithCount": "कोई भी खर्च फ़ाइल डाउनलोड करने में विफल। {{count}} फ़ाइल(ें) विफल रहीं।",
+      "failedToListRemoteWithError": "रिमोट फ़ाइलें सूचीबद्ध करने में विफल: {{error}}",
+      "conflictManualSync": "विरोध पाया गया - मैन्युअल सिंक आवश्यक है"
     }
   },
   "changelog": {
-    "title": "What's New",
-    "subtitle": "Version {{version}}",
-    "viewFull": "View full release notes"
+    "title": "नया क्या है",
+    "subtitle": "संस्करण {{version}}",
+    "viewFull": "पूर्ण रिलीज़ नोट्स देखें"
   },
   "errors": {
-    "network": "Unable to connect. Please check your internet connection.",
-    "authentication": "Authentication failed. Please check your GitHub token.",
-    "validation": "Invalid input. Please check your data and try again.",
-    "storage": "Unable to save data. Please try again.",
-    "unknown": "An unexpected error occurred. Please try again."
+    "network": "कनेक्ट करने में असमर्थ। कृपया अपना इंटरनेट कनेक्शन जांचें।",
+    "authentication": "प्रमाणीकरण विफल। कृपया अपना GitHub टोकन जांचें।",
+    "validation": "अमान्य इनपुट। कृपया अपना डेटा जांचें और पुनः प्रयास करें।",
+    "storage": "डेटा सहेजने में असमर्थ। कृपया पुनः प्रयास करें।",
+    "unknown": "एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।"
   },
   "updateChecker": {
     "errors": {
-      "noReleases": "No releases found",
-      "apiError": "GitHub API error: {{status}}"
+      "noReleases": "कोई रिलीज़ नहीं मिली",
+      "apiError": "GitHub API त्रुटि: {{status}}"
     }
   },
   "githubDeviceFlow": {
     "errors": {
-      "codeRequestFailed": "GitHub device code request failed ({{status}}): {{detail}}",
-      "missingFields": "GitHub device code response missing required fields",
-      "tokenRequestFailed": "GitHub device token request failed ({{status}}): {{detail}}",
-      "tokenResponseEmpty": "GitHub device token response was empty",
-      "tokenError": "GitHub device token error: {{error}} {{description}}",
-      "signInExpired": "GitHub sign-in expired. Please try again.",
-      "signInDenied": "GitHub sign-in was denied.",
-      "signInFailed": "Sign-in failed."
+      "codeRequestFailed": "GitHub डिवाइस कोड अनुरोध विफल ({{status}}): {{detail}}",
+      "missingFields": "GitHub डिवाइस कोड प्रतिक्रिया में आवश्यक फ़ील्ड गायब हैं",
+      "tokenRequestFailed": "GitHub डिवाइस टोकन अनुरोध विफल ({{status}}): {{detail}}",
+      "tokenResponseEmpty": "GitHub डिवाइस टोकन प्रतिक्रिया खाली थी",
+      "tokenError": "GitHub डिवाइस टोकन त्रुटि: {{error}} {{description}}",
+      "signInExpired": "GitHub साइन-इन समाप्त हो गया। कृपया पुनः प्रयास करें।",
+      "signInDenied": "GitHub साइन-इन अस्वीकार कर दिया गया।",
+      "signInFailed": "साइन-इन विफल।"
     }
   },
   "validation": {
