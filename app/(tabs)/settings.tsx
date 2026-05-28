@@ -303,8 +303,11 @@ export default function SettingsScreen() {
   }, [])
 
   const handleReportIssue = useCallback(() => {
-    const openIssue = () => {
+    const openNewIssue = () => {
       Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
+    }
+    const openIssue = (issueNumber: number) => {
+      Linking.openURL(`${APP_CONFIG.github.url}/issues/${issueNumber}`)
     }
 
     Alert.alert(
@@ -319,14 +322,62 @@ export default function SettingsScreen() {
         {
           text: t("common.cancel", { defaultValue: "Cancel" }),
           style: "cancel",
-          onPress: openIssue,
+          onPress: openNewIssue,
         },
         {
           text: t("settings.about.continueToGitHub", {
             defaultValue: "Continue to GitHub",
           }),
           onPress: async () => {
-            const logs = await getLogsForBugReportAsync(200)
+            const token = syncConfig?.token
+            const repo = syncConfig?.repo
+            const logs = await getLogsForBugReportAsync(token && repo ? 200 : 50)
+
+            if (token && repo && logs) {
+              try {
+                const response = await fetch(
+                  `https://api.github.com/repos/${repo}/issues`,
+                  {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      Accept: "application/vnd.github+json",
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      title: `[Bug Report] Expense Buddy v${APP_CONFIG.version}`,
+                      body: [
+                        "## Bug Description",
+                        "",
+                        "_Please describe the bug here._",
+                        "",
+                        "## Device Logs",
+                        "```",
+                        logs,
+                        "```",
+                      ].join("\n"),
+                    }),
+                  }
+                )
+                if (response.ok) {
+                  const issue = (await response.json()) as {
+                    number: number
+                    html_url: string
+                  }
+                  addNotification(
+                    t("settings.about.issueCreated", {
+                      defaultValue: "Issue created. Add details in the browser.",
+                    }),
+                    "success"
+                  )
+                  openIssue(issue.number)
+                  return
+                }
+              } catch {
+                // Fall through to clipboard fallback
+              }
+            }
+
             if (logs) {
               await Clipboard.setStringAsync(logs)
               addNotification(
@@ -336,12 +387,12 @@ export default function SettingsScreen() {
                 "info"
               )
             }
-            openIssue()
+            openNewIssue()
           },
         },
       ]
     )
-  }, [t, addNotification])
+  }, [t, addNotification, syncConfig])
 
   // Theme and settings handlers
   const handleThemeChange = useCallback(
