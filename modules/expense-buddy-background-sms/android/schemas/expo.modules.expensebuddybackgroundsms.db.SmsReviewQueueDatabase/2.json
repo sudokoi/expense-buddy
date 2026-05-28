@@ -152,35 +152,27 @@
         ],
         "primaryKey": {
           "autoGenerate": false,
-          "columnNames": [
-            "fingerprint"
-          ]
+          "columnNames": ["fingerprint"]
         },
         "indices": [
           {
             "name": "index_sms_review_queue_status",
             "unique": false,
-            "columnNames": [
-              "status"
-            ],
+            "columnNames": ["status"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_status` ON `${TABLE_NAME}` (`status`)"
           },
           {
             "name": "index_sms_review_queue_fingerprint",
             "unique": false,
-            "columnNames": [
-              "fingerprint"
-            ],
+            "columnNames": ["fingerprint"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_fingerprint` ON `${TABLE_NAME}` (`fingerprint`)"
           },
           {
             "name": "index_sms_review_queue_timestamp",
             "unique": false,
-            "columnNames": [
-              "timestamp"
-            ],
+            "columnNames": ["timestamp"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
           }
@@ -228,26 +220,20 @@
         ],
         "primaryKey": {
           "autoGenerate": true,
-          "columnNames": [
-            "id"
-          ]
+          "columnNames": ["id"]
         },
         "indices": [
           {
             "name": "index_sms_import_journal_fingerprint",
             "unique": false,
-            "columnNames": [
-              "fingerprint"
-            ],
+            "columnNames": ["fingerprint"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_import_journal_fingerprint` ON `${TABLE_NAME}` (`fingerprint`)"
           },
           {
             "name": "index_sms_import_journal_timestamp",
             "unique": false,
-            "columnNames": [
-              "timestamp"
-            ],
+            "columnNames": ["timestamp"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_import_journal_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
           }

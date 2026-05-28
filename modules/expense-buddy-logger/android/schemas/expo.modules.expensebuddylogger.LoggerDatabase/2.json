@@ -46,17 +46,13 @@
         ],
         "primaryKey": {
           "autoGenerate": true,
-          "columnNames": [
-            "id"
-          ]
+          "columnNames": ["id"]
         },
         "indices": [
           {
             "name": "index_logs_level",
             "unique": false,
-            "columnNames": [
-              "level"
-            ],
+            "columnNames": ["level"],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_logs_level` ON `${TABLE_NAME}` (`level`)"
           }

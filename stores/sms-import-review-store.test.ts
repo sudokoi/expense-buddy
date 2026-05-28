@@ -25,7 +25,7 @@ jest.mock("../services/background-sms/android-background-sms-module", () => ({
 const mockApproveReviewItemAsync = approveReviewItemAsync as jest.MockedFunction<
   typeof approveReviewItemAsync
 >
-const mockApproveReviewItemsAsync = approveReviewItemsAsync as jest.MockedFunction<
+const _mockApproveReviewItemsAsync = approveReviewItemsAsync as jest.MockedFunction<
   typeof approveReviewItemsAsync
 >
 const mockDismissReviewItemAsync = dismissReviewItemAsync as jest.MockedFunction<

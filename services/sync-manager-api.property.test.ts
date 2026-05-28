@@ -108,7 +108,6 @@ describe("Sync Manager API Backward Compatibility", () => {
         SyncManager.determineSyncDirection
       expect(typeof fn).toBe("function")
     })
-
   })
 
   describe("Type export verification", () => {

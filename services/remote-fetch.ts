@@ -72,30 +72,34 @@ async function fetchWithTree(
     }
   }
 
-  const downloadResults = await pMap(changedFiles, async (file) => {
-    try {
-      const fileData = await downloadCSV(
-        config.token,
-        config.repo,
-        config.branch,
-        file.path
-      )
-      if (fileData) {
-        const expenses = importFromCSV(fileData.content)
-        return { expenses, ok: true as const }
+  const downloadResults = await pMap(
+    changedFiles,
+    async (file) => {
+      try {
+        const fileData = await downloadCSV(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path
+        )
+        if (fileData) {
+          const expenses = importFromCSV(fileData.content)
+          return { expenses, ok: true as const }
+        }
+        return { expenses: [] as Expense[], ok: true as const }
+      } catch (fileError) {
+        if (
+          fileError instanceof GitHubApiError &&
+          (fileError.status === 401 || fileError.status === 403)
+        ) {
+          return { error: fileError, fatal: true as const }
+        }
+        console.warn(`Failed to download ${file.path}:`, fileError)
+        return { error: fileError, fatal: false as const }
       }
-      return { expenses: [] as Expense[], ok: true as const }
-    } catch (fileError) {
-      if (
-        fileError instanceof GitHubApiError &&
-        (fileError.status === 401 || fileError.status === 403)
-      ) {
-        return { error: fileError, fatal: true as const }
-      }
-      console.warn(`Failed to download ${file.path}:`, fileError)
-      return { error: fileError, fatal: false as const }
-    }
-  }, 5)
+    },
+    5
+  )
 
   const fatalError = downloadResults.find((r) => "fatal" in r && r.fatal)
   if (fatalError && "error" in fatalError) {
@@ -176,30 +180,34 @@ async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteR
     }
   }
 
-  const downloadResults = await pMap(expenseFiles, async (file) => {
-    try {
-      const fileData = await downloadCSV(
-        config.token,
-        config.repo,
-        config.branch,
-        file.path
-      )
-      if (fileData) {
-        const expenses = importFromCSV(fileData.content)
-        return { expenses, ok: true as const }
+  const downloadResults = await pMap(
+    expenseFiles,
+    async (file) => {
+      try {
+        const fileData = await downloadCSV(
+          config.token,
+          config.repo,
+          config.branch,
+          file.path
+        )
+        if (fileData) {
+          const expenses = importFromCSV(fileData.content)
+          return { expenses, ok: true as const }
+        }
+        return { expenses: [] as Expense[], ok: true as const }
+      } catch (fileError) {
+        if (
+          fileError instanceof GitHubApiError &&
+          (fileError.status === 401 || fileError.status === 403)
+        ) {
+          return { error: fileError, fatal: true as const }
+        }
+        console.warn(`Failed to download ${file.path}:`, fileError)
+        return { error: fileError, fatal: false as const }
       }
-      return { expenses: [] as Expense[], ok: true as const }
-    } catch (fileError) {
-      if (
-        fileError instanceof GitHubApiError &&
-        (fileError.status === 401 || fileError.status === 403)
-      ) {
-        return { error: fileError, fatal: true as const }
-      }
-      console.warn(`Failed to download ${file.path}:`, fileError)
-      return { error: fileError, fatal: false as const }
-    }
-  }, 5)
+    },
+    5
+  )
 
   const fatalError = downloadResults.find((r) => "fatal" in r && r.fatal)
   if (fatalError && "error" in fatalError) {

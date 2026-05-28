@@ -271,6 +271,7 @@
       "settingsApplied": "Settings applied from GitHub",
       "autoSyncEnabled": "Auto-sync enabled",
       "syncComplete": "Sync complete — {{localCount}} local files updated, {{remoteCount}} remote files updated",
+      "pendingChanges": "Pending changes detected. Please sync manually.",
       "alreadyInSync": "Already in sync - no changes needed",
       "configCleared": "Configuration cleared",
       "categoryUpdated": "Category \"{{label}}\" updated",
@@ -540,7 +541,16 @@
       "noChanges": "同期する変更はありません: {{skipped}} ファイルが変更なし",
       "syncedExpenses": "{{count}}件の支出を同期しました: {{details}}",
       "downloadedExpenses": "{{files}}ファイルから{{count}}件の支出をダウンロードしました",
-      "batchCommitFailed": "バッチコミットに失敗しました"
+      "batchCommitFailed": "バッチコミットに失敗しました",
+      "fetchFailed": "Failed to fetch remote expenses",
+      "conflictsCount": "Sync has {{count}} conflict(s) that require resolution",
+      "conflictsNoHandler": "Conflicts detected but no conflict handler provided",
+      "syncCancelled": "Sync cancelled by user",
+      "cancelledByUser": "User cancelled conflict resolution",
+      "conflictsNotResolvedCount": "{{count}} conflict(s) were not resolved",
+      "conflictsNotResolved": "Not all conflicts were resolved",
+      "downloadSettingsFailed": "Failed to download settings",
+      "pushFailed": "Failed to push merged expenses"
     }
   },
   "changelog": {

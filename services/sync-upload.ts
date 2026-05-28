@@ -17,8 +17,17 @@ import {
   saveSettingsHash,
   clearSettingsChanged,
 } from "./settings-manager"
-import { groupExpensesByDay, getFilenameForDay, getDayKeyFromFilename } from "./daily-file-manager"
-import { computeContentHash, loadFileHashes, saveFileHashes, FileHashMap } from "./hash-storage"
+import {
+  groupExpensesByDay,
+  getFilenameForDay,
+  getDayKeyFromFilename,
+} from "./daily-file-manager"
+import {
+  computeContentHash,
+  loadFileHashes,
+  saveFileHashes,
+  FileHashMap,
+} from "./hash-storage"
 import { loadDirtyDays } from "./expense-dirty-days"
 import { getUserFriendlyMessage } from "./error-utils"
 import i18next from "i18next"

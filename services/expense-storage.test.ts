@@ -36,11 +36,9 @@ describe("expense-storage", () => {
         }
       }
     )
-    mockAsyncStorage.multiGet.mockImplementation(
-      async (keys: readonly string[]) => {
-        return keys.map((key) => [key, storage.get(key) ?? null] as [string, string | null])
-      }
-    )
+    mockAsyncStorage.multiGet.mockImplementation(async (keys: readonly string[]) => {
+      return keys.map((key) => [key, storage.get(key) ?? null] as [string, string | null])
+    })
     mockAsyncStorage.removeItem.mockImplementation(async (key: string) => {
       storage.delete(key)
     })

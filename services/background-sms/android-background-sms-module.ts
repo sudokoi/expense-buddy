@@ -122,9 +122,7 @@ export async function insertPendingItemsAsync(
   }
 }
 
-export async function approveReviewItemsAsync(
-  fingerprints: string[]
-): Promise<void> {
+export async function approveReviewItemsAsync(fingerprints: string[]): Promise<void> {
   const module = getBackgroundSmsModule()
   if (!module) return
 
@@ -135,9 +133,7 @@ export async function approveReviewItemsAsync(
   }
 }
 
-export async function rejectReviewItemsAsync(
-  fingerprints: string[]
-): Promise<void> {
+export async function rejectReviewItemsAsync(fingerprints: string[]): Promise<void> {
   const module = getBackgroundSmsModule()
   if (!module) return
 
@@ -148,9 +144,7 @@ export async function rejectReviewItemsAsync(
   }
 }
 
-export async function dismissReviewItemsAsync(
-  fingerprints: string[]
-): Promise<void> {
+export async function dismissReviewItemsAsync(fingerprints: string[]): Promise<void> {
   const module = getBackgroundSmsModule()
   if (!module) return
 

@@ -111,7 +111,9 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     const updatedIds = JSON.parse(indexCall![1])
     expect(updatedIds).toEqual(["e1", "e2"])
 
-    const allMultiSetEntries = multiSetCalls.flatMap((c) => c[0] as Array<[string, string]>)
+    const allMultiSetEntries = multiSetCalls.flatMap(
+      (c) => c[0] as Array<[string, string]>
+    )
     const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
     const e2Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e2")
     expect(e1Entry).toBeTruthy()
@@ -208,7 +210,9 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     expect(saveSettings).not.toHaveBeenCalled()
 
     const multiSetCalls = (AsyncStorage.multiSet as jest.Mock).mock.calls
-    const allMultiSetEntries = multiSetCalls.flatMap((c) => c[0] as Array<[string, string]>)
+    const allMultiSetEntries = multiSetCalls.flatMap(
+      (c) => c[0] as Array<[string, string]>
+    )
     const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
     expect(e1Entry).toBeTruthy()
     const updated = JSON.parse(e1Entry![1])
