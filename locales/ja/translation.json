@@ -412,7 +412,10 @@
       "installUpdate": "アップデートをインストール",
       "updateNow": "今すぐアップデート",
       "reportIssue": "問題を報告",
-      "viewGitHub": "GitHubで見る"
+      "viewGitHub": "GitHubで見る",
+      "includeLogsTitle": "デバイスログを含めますか？",
+      "includeLogsMessage": "問題のデバッグに役立てるため、最新200件のデバイスログが添付されます。これらにはアプリの操作詳細のみ含まれ、SMSの内容、金融データ、個人情報は含まれません。",
+      "continueToGitHub": "GitHubに進む"
     }
   },
   "smsImport": {

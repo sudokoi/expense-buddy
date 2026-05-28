@@ -313,17 +313,23 @@ export default function SettingsScreen() {
     }
 
     Alert.alert(
-      t("settings.about.includeLogsTitle") ?? "Include Device Logs?",
-      t("settings.about.includeLogsMessage") ??
-        "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
+      t("settings.about.includeLogsTitle", {
+        defaultValue: "Include Device Logs?",
+      }),
+      t("settings.about.includeLogsMessage", {
+        defaultValue:
+          "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
+      }),
       [
         {
-          text: t("common.cancel") ?? "Cancel",
+          text: t("common.cancel", { defaultValue: "Cancel" }),
           style: "cancel",
           onPress: () => openIssue(""),
         },
         {
-          text: t("settings.about.continueToGitHub") ?? "Continue to GitHub",
+          text: t("settings.about.continueToGitHub", {
+            defaultValue: "Continue to GitHub",
+          }),
           onPress: async () => {
             const logs = await getLogsForBugReportAsync(200)
             openIssue(logs)
