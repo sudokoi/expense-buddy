@@ -1,9 +1,11 @@
 import { Platform } from "react-native"
 import {
+  BackgroundSmsPermissionStatus,
   BackgroundSmsState,
   ExpenseBuddyBackgroundSmsNativeModule,
   ReviewQueueItemDto,
 } from "../../modules/expense-buddy-background-sms"
+export type { BackgroundSmsPermissionStatus } from "../../modules/expense-buddy-background-sms"
 import ExpenseBuddyBackgroundSmsModule from "../../modules/expense-buddy-background-sms"
 import { SmsImportReviewItem } from "../../types/sms-import"
 import { PaymentMethodType } from "../../types/expense"
@@ -34,6 +36,20 @@ export async function getBackgroundSmsState(): Promise<BackgroundSmsState> {
   return module.getBackgroundSmsStateAsync()
 }
 
+export async function getBackgroundSmsPermissionStatus(): Promise<BackgroundSmsPermissionStatus> {
+  const module = getBackgroundSmsModule()
+  if (!module) return "unavailable"
+  const response = await module.getPermissionStatusAsync()
+  return response.status
+}
+
+export async function requestBackgroundSmsPermission(): Promise<BackgroundSmsPermissionStatus> {
+  const module = getBackgroundSmsModule()
+  if (!module) return "unavailable"
+  const response = await module.requestPermissionAsync()
+  return response.status
+}
+
 export async function setBackgroundSmsEnabled(enabled: boolean): Promise<void> {
   const module = getBackgroundSmsModule()
   if (!module) {
@@ -41,6 +57,18 @@ export async function setBackgroundSmsEnabled(enabled: boolean): Promise<void> {
   }
 
   await module.setBackgroundSmsEnabledAsync(enabled)
+}
+
+export async function syncInboxAsync(useMlOnly: boolean): Promise<number> {
+  const module = getBackgroundSmsModule()
+  if (!module) return 0
+
+  try {
+    return await module.syncInboxAsync(useMlOnly)
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `syncInboxAsync failed: ${e}`)
+    throw e
+  }
 }
 
 export async function getPendingReviewQueueAsync(): Promise<SmsImportReviewItem[]> {
@@ -59,7 +87,7 @@ export async function getPendingReviewQueueAsync(): Promise<SmsImportReviewItem[
       `getPendingReviewQueueAsync failed: ${e}`,
       (e as Error)?.stack
     )
-    return []
+    throw e
   }
 }
 
@@ -75,6 +103,7 @@ export async function approveReviewItemAsync(fingerprint: string): Promise<void>
       "JS_MODULE",
       `approveReviewItemAsync(${fingerprint}) failed: ${e}`
     )
+    throw e
   }
 }
 
@@ -90,6 +119,7 @@ export async function rejectReviewItemAsync(fingerprint: string): Promise<void> 
       "JS_MODULE",
       `rejectReviewItemAsync(${fingerprint}) failed: ${e}`
     )
+    throw e
   }
 }
 
@@ -105,6 +135,7 @@ export async function dismissReviewItemAsync(fingerprint: string): Promise<void>
       "JS_MODULE",
       `dismissReviewItemAsync(${fingerprint}) failed: ${e}`
     )
+    throw e
   }
 }
 
@@ -119,6 +150,7 @@ export async function insertPendingItemsAsync(
     await module.insertPendingItemsAsync(json)
   } catch (e) {
     await logAsync("ERROR", "JS_MODULE", `insertPendingItemsAsync failed: ${e}`)
+    throw e
   }
 }
 
@@ -130,6 +162,7 @@ export async function approveReviewItemsAsync(fingerprints: string[]): Promise<v
     await module.approveItemsAsync(fingerprints)
   } catch (e) {
     await logAsync("ERROR", "JS_MODULE", `approveReviewItemsAsync failed: ${e}`)
+    throw e
   }
 }
 
@@ -141,6 +174,7 @@ export async function rejectReviewItemsAsync(fingerprints: string[]): Promise<vo
     await module.rejectItemsAsync(fingerprints)
   } catch (e) {
     await logAsync("ERROR", "JS_MODULE", `rejectReviewItemsAsync failed: ${e}`)
+    throw e
   }
 }
 
@@ -152,6 +186,7 @@ export async function dismissReviewItemsAsync(fingerprints: string[]): Promise<v
     await module.dismissItemsAsync(fingerprints)
   } catch (e) {
     await logAsync("ERROR", "JS_MODULE", `dismissReviewItemsAsync failed: ${e}`)
+    throw e
   }
 }
 

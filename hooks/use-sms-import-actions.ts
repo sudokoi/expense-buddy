@@ -4,16 +4,16 @@ import { Href, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { useNotifications, useSettings, useSmsImportReview } from "../stores/hooks"
 import {
-  getSmsPermissionStatus,
-  requestSmsPermission,
-  type SmsImportPermissionStatus,
-} from "../services/sms-import/android-sms-module"
-import { scanSmsImportReviewQueue } from "../services/sms-import/bootstrap"
+  syncInboxAsync,
+  getBackgroundSmsPermissionStatus,
+  requestBackgroundSmsPermission,
+  type BackgroundSmsPermissionStatus,
+} from "../services/background-sms/android-background-sms-module"
 
 type ScanSmsImportsResult = {
   createdCount: number
   pendingCount: number
-  permissionStatus: SmsImportPermissionStatus
+  permissionStatus: BackgroundSmsPermissionStatus
 }
 
 export function useSmsImportActions() {
@@ -21,8 +21,7 @@ export function useSmsImportActions() {
   const { t } = useTranslation()
   const { addNotification } = useNotifications()
   const { settings } = useSettings()
-  const { items, pendingItems, lastScanCursor, bootstrapCompletedAt, upsertReviewItems } =
-    useSmsImportReview()
+  const { pendingItems } = useSmsImportReview()
   const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
 
   const openSmsImportReview = useCallback(() => {
@@ -42,10 +41,10 @@ export function useSmsImportActions() {
     setIsScanningSmsImports(true)
 
     try {
-      let permissionStatus = await getSmsPermissionStatus()
+      let permissionStatus = await getBackgroundSmsPermissionStatus()
 
       if (permissionStatus !== "granted") {
-        permissionStatus = await requestSmsPermission()
+        permissionStatus = await requestBackgroundSmsPermission()
       }
 
       if (permissionStatus !== "granted") {
@@ -57,26 +56,16 @@ export function useSmsImportActions() {
         }
       }
 
-      const result = await scanSmsImportReviewQueue({
-        existingItems: items,
-        lastScanCursor,
-        bootstrapCompletedAt,
-        useMlOnlyForSmsImports: settings.useMlOnlyForSmsImports,
-      })
+      const scannedCount = await syncInboxAsync(settings.useMlOnlyForSmsImports ?? false)
 
-      upsertReviewItems(result.createdItems, {
-        lastScanCursor: result.nextCursor,
-        bootstrapCompletedAt: result.bootstrapCompletedAt,
-      })
+      const pendingCount = pendingItems.length + scannedCount
 
-      const pendingCount = pendingItems.length + result.createdItems.length
-
-      if (result.createdItems.length > 0) {
+      if (scannedCount > 0) {
         addNotification(
-          result.createdItems.length === 1
+          scannedCount === 1
             ? t("settings.smsImport.notifications.readyOne")
             : t("settings.smsImport.notifications.readyMany", {
-                count: result.createdItems.length,
+                count: scannedCount,
               }),
           "success"
         )
@@ -85,7 +74,7 @@ export function useSmsImportActions() {
       }
 
       return {
-        createdCount: result.createdItems.length,
+        createdCount: scannedCount,
         pendingCount,
         permissionStatus,
       }
@@ -99,16 +88,7 @@ export function useSmsImportActions() {
     } finally {
       setIsScanningSmsImports(false)
     }
-  }, [
-    addNotification,
-    bootstrapCompletedAt,
-    items,
-    lastScanCursor,
-    pendingItems.length,
-    settings.useMlOnlyForSmsImports,
-    t,
-    upsertReviewItems,
-  ])
+  }, [addNotification, pendingItems.length, settings.useMlOnlyForSmsImports, t])
 
   const startSmsImportFromAdd = useCallback(async () => {
     if (pendingItems.length > 0) {

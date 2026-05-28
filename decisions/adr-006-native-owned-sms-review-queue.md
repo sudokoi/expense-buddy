@@ -160,3 +160,11 @@ This ADR does not change the privacy boundary defined in ADR-003. Raw SMS conten
 - Phase 4 (reliability logging + import source metadata) done. ✓ Complete.
 - Monitor `sms_import_journal` for unexpected dedupe patterns after rollout.
 - Monitor crash rate and ANR frequency after the Room migration.
+
+**Phase 5 — Zero-Hop Architecture (Current State)**
+
+13. **Complete centralization of SMS reading**: Moved `SmsInboxScanner.kt` and all Telephony querying natively into `expense-buddy-background-sms`.
+14. **Direct native sync**: Implemented `syncInboxAsync` directly on `ExpenseBuddyBackgroundSmsModule` that completely bypasses JS orchestration, parsing, and deduplication for manual scans. JS just calls `syncInboxAsync` and native reads, parses, dedupes, and queues items in one hop.
+15. **Consolidate permissions**: Moved all Android `Manifest.permission.READ_SMS` permission checks and methods from `sms-import` to `background-sms`.
+16. **Pure utility module**: `expense-buddy-sms-import` is now entirely decoupled from Android Telephony. It serves purely as a pure Kotlin/ML logic library containing `SmsMessageParser` and `SmsCategoryLiteRtClassifier`.
+17. **Dead code removal**: Deleted the JS state machine orchestrator `bootstrap.ts` completely. JS now just acts as a pure read-projection of the native queue.

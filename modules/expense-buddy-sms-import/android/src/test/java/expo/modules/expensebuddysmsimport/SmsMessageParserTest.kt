@@ -447,4 +447,46 @@ class SmsMessageParserTest {
 
         assertThat(fp1).isEqualTo(fp2)
     }
+
+    @Test
+    fun `detects SBI Credit Card transaction with plain ASCII`() {
+        val result =
+            SmsMessageParser.parseRawMessage(
+                body =
+                    "Rs.4,354.00 spent on your SBI Credit Card ending 1126 at PYUFLIPKARTINTERNET " +
+                        "on 28/05/26. Trxn. not done by you? Report at https://sbicard.com/Dispute",
+                receivedAt = "2026-05-28T10:15:30.000Z",
+            )
+
+        assertThat(result).isNotNull()
+        assertThat(result?.amount).isWithin(1e-9).of(4354.0)
+    }
+
+    @Test
+    fun `detects SBI Credit Card transaction with mathematical sans-serif unicode`() {
+        // Mathematical Sans-Serif Small letters for "spent"
+        val body =
+            "Rs.4,354.00 \uD835\uDDCC\uD835\uDDC9\uD835\uDDBE\uD835\uDDC7\uD835\uDDCD \uD835\uDDC8\uD835\uDDC7 " +
+                "\uD835\uDDCE\uD835\uDDC8\uD835\uDDCE\uD835\uDDCB \uD835\uDDB2\uD835\uDDA1\uD835\uDDA8 " +
+                "\uD835\uDDA2\uD835\uDDCB\uD835\uDDBE\uD835\uDDBD" +
+                "\uD835\uDDC2\uD835\uDDCD " +
+                "\uD835\uDDA2\uD835\uDDBA\uD835\uDDCB\uD835\uDDBD " +
+                "\uD835\uDDBE\uD835\uDDC7\uD835\uDDBD\uD835\uDDC2" +
+                "\uD835\uDDC7\uD835\uDDC0 1126 at PYUFLIPKARTINTERNET on 28/05/26. " +
+                "\uD835\uDDB3\uD835\uDDCB\uD835\uDDC1\uD835\uDDC7. " +
+                "\uD835\uDDC7\uD835\uDDC8\uD835\uDDCD \uD835\uDDBD\uD835\uDDC8\uD835\uDDC7\uD835\uDDBE " +
+                "\uD835\uDDBB\uD835\uDDCE \uD835\uDDCE\uD835\uDDC8\uD835\uDDCE? " +
+                "\uD835\uDDB1\uD835\uDDBE\uD835\uDDC9\uD835\uDDC8\uD835\uDDCB\uD835\uDDCD \uD835\uDDBA\uD835\uDDCD " +
+                "https://sbicard.com/Dispute"
+
+        val result =
+            SmsMessageParser.parseRawMessage(
+                sender = "VK-SBICRD",
+                body = body,
+                receivedAt = "2026-05-28T10:15:30.000Z",
+            )
+
+        assertThat(result).isNotNull()
+        assertThat(result?.amount).isWithin(1e-9).of(4354.0)
+    }
 }

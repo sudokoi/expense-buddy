@@ -26,11 +26,6 @@ import {
   initializeUIStateStore,
 } from "./ui-state-store"
 import {
-  smsImportReviewStore as defaultSmsImportReviewStore,
-  SmsImportReviewStore,
-  initializeSmsImportReviewStore,
-} from "./sms-import-review-store"
-import {
   cleanupUpdateStore,
   initializeUpdateStore,
   runLaunchUpdateCheck,
@@ -44,17 +39,13 @@ import {
 import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
-import { bootstrapSmsImportOnLaunch } from "../services/sms-import/bootstrap"
 import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
-import { getPendingReviewQueueAsync } from "../services/background-sms/android-background-sms-module"
-import ExpenseBuddyBackgroundSmsModule from "../modules/expense-buddy-background-sms"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
   settingsStore: SettingsStore
   notificationStore: NotificationStore
   uiStateStore: UIStateStore
-  smsImportReviewStore: SmsImportReviewStore
   updateStore: UpdateStore
   syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
@@ -69,7 +60,6 @@ interface StoreProviderProps {
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
   uiStateStore?: UIStateStore
-  smsImportReviewStore?: SmsImportReviewStore
   updateStore?: UpdateStore
   syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
@@ -83,7 +73,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   settingsStore = defaultSettingsStore,
   notificationStore = defaultNotificationStore,
   uiStateStore = defaultUIStateStore,
-  smsImportReviewStore = defaultSmsImportReviewStore,
   updateStore = defaultUpdateStore,
   syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
@@ -137,58 +126,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeSettingsStore(settingsStore)
       await initializeExpenseStore(expenseStore)
       await initializeUIStateStore(uiStateStore)
-      await initializeSmsImportReviewStore(smsImportReviewStore)
       initializeUpdateStore(updateStore)
       await runLaunchUpdateCheck(updateStore)
-
-      try {
-        const bootstrapResult = await bootstrapSmsImportOnLaunch({
-          existingItems: [],
-          lastScanCursor: null,
-          bootstrapCompletedAt: null,
-        })
-
-        smsImportReviewStore.trigger.upsertReviewItems({
-          items: bootstrapResult.createdItems,
-          lastScanCursor: bootstrapResult.nextCursor,
-          bootstrapCompletedAt: bootstrapResult.bootstrapCompletedAt,
-        })
-      } catch (error) {
-        console.warn("SMS import bootstrap failed:", error)
-      }
     })()
-  }, [
-    expenseStore,
-    settingsStore,
-    skipInitialization,
-    smsImportReviewStore,
-    uiStateStore,
-    updateStore,
-  ])
-
-  // Subscribe to native review queue update events to keep the store in sync
-  useEffect(() => {
-    if (!ExpenseBuddyBackgroundSmsModule) return
-
-    const subscription = ExpenseBuddyBackgroundSmsModule.addListener(
-      "onReviewQueueUpdated",
-      async () => {
-        try {
-          const items = await getPendingReviewQueueAsync()
-          smsImportReviewStore.trigger.loadQueueState({
-            items,
-            lastScanCursor: smsImportReviewStore.getSnapshot().context.lastScanCursor,
-            bootstrapCompletedAt:
-              smsImportReviewStore.getSnapshot().context.bootstrapCompletedAt,
-          })
-        } catch (error) {
-          console.warn("Failed to refresh review queue from native state:", error)
-        }
-      }
-    )
-
-    return () => subscription.remove()
-  }, [smsImportReviewStore])
+  }, [expenseStore, settingsStore, skipInitialization, uiStateStore, updateStore])
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(
@@ -230,7 +171,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       settingsStore,
       notificationStore,
       uiStateStore,
-      smsImportReviewStore,
       updateStore,
       syncActor,
       githubAuthActor,
@@ -240,7 +180,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       settingsStore,
       notificationStore,
       uiStateStore,
-      smsImportReviewStore,
       updateStore,
       syncActor,
       githubAuthActor,

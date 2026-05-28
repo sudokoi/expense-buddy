@@ -3,6 +3,7 @@ import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { config } from "../tamagui.config"
 import { StoreProvider } from "../stores/store-provider"
 import { useThemeSettings } from "../stores/hooks"
+import { SmsImportReviewProvider } from "../stores/hooks/use-sms-import-review"
 
 /**
  * Inner provider component that uses effectiveTheme from settings store
@@ -39,7 +40,9 @@ export function Provider({
 }: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
   return (
     <StoreProvider>
-      <ThemedProvider {...rest}>{children}</ThemedProvider>
+      <SmsImportReviewProvider>
+        <ThemedProvider {...rest}>{children}</ThemedProvider>
+      </SmsImportReviewProvider>
     </StoreProvider>
   )
 }

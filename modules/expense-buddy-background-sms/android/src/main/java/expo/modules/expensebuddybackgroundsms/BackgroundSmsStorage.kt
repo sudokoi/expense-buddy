@@ -8,6 +8,7 @@ import org.json.JSONObject
 
 private const val PREFS_NAME = "expense_buddy_background_sms"
 private const val ENABLED_KEY = "enabled"
+private const val LAST_SCAN_CURSOR_KEY = "lastScanCursor"
 
 object BackgroundSmsPreferences {
     fun getState(context: Context): BackgroundSmsState {
@@ -29,6 +30,22 @@ object BackgroundSmsPreferences {
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putBoolean(ENABLED_KEY, enabled)
+            .apply()
+    }
+
+    fun getLastScanCursor(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(LAST_SCAN_CURSOR_KEY, null)
+    }
+
+    fun setLastScanCursor(
+        context: Context,
+        cursor: String?,
+    ) {
+        context
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(LAST_SCAN_CURSOR_KEY, cursor)
             .apply()
     }
 }

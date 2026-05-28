@@ -4,6 +4,19 @@ export interface BackgroundSmsState {
   enabled: boolean
 }
 
+export type BackgroundSmsPermissionStatus =
+  | "granted"
+  | "denied"
+  | "undetermined"
+  | "unavailable"
+
+export interface BackgroundSmsPermissionResponse {
+  status: BackgroundSmsPermissionStatus
+  expires: "never" | number
+  granted: boolean
+  canAskAgain: boolean
+}
+
 export interface ReviewQueueItemDto {
   fingerprint: string
   sender: string
@@ -31,6 +44,9 @@ export interface ExpenseBuddyBackgroundSmsNativeModule extends NativeModule {
   addListener(eventName: "onReviewQueueUpdated", listener: () => void): { remove(): void }
   getBackgroundSmsStateAsync(): Promise<BackgroundSmsState>
   setBackgroundSmsEnabledAsync(enabled: boolean): Promise<void>
+  syncInboxAsync(useMlOnly: boolean): Promise<number>
+  getPermissionStatusAsync(): Promise<BackgroundSmsPermissionResponse>
+  requestPermissionAsync(): Promise<BackgroundSmsPermissionResponse>
 
   getPendingReviewQueueAsync(): Promise<ReviewQueueItemDto[]>
   approveReviewItemAsync(fingerprint: string): Promise<void>
