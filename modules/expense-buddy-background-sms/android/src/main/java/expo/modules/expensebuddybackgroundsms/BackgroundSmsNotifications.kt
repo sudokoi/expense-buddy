@@ -110,12 +110,22 @@ object BackgroundSmsNotificationManager {
 
     private fun buildReviewUri(itemId: String?): Uri =
         if (itemId.isNullOrBlank()) {
-            Uri.Builder().scheme(APP_SCHEME).authority("sms").path("review")
-                .appendQueryParameter("source", "notification").build()
-        } else {
-            Uri.Builder().scheme(APP_SCHEME).authority("sms").path("review")
+            Uri
+                .Builder()
+                .scheme(APP_SCHEME)
+                .authority("sms")
+                .path("review")
                 .appendQueryParameter("source", "notification")
-                .appendQueryParameter("itemId", itemId).build()
+                .build()
+        } else {
+            Uri
+                .Builder()
+                .scheme(APP_SCHEME)
+                .authority("sms")
+                .path("review")
+                .appendQueryParameter("source", "notification")
+                .appendQueryParameter("itemId", itemId)
+                .build()
         }
 
     private fun hasNotificationPermission(context: Context): Boolean {
