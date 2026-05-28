@@ -1063,7 +1063,10 @@ export async function validatePAT(
 
     const viewerLogin = String(userData?.login || "").trim()
     if (!viewerLogin) {
-      return { valid: false, error: "Could not determine GitHub username" }
+      return {
+        valid: false,
+        error: i18next.t("githubSync.errors.couldNotDetermineUsername"),
+      }
     }
 
     // Enforce personal-only repos: owner must match the authenticated user
@@ -1145,15 +1148,13 @@ export async function validatePAT(
         if (!hasPushViaPermission) {
           return {
             valid: false,
-            error:
-              "No write access to this repository. Please choose a repo you can push to.",
+            error: i18next.t("githubSync.errors.noWriteAccess"),
           }
         }
       } else {
         return {
           valid: false,
-          error:
-            "No write access to this repository. Please choose a repo you can push to.",
+          error: i18next.t("githubSync.errors.noWriteAccess"),
         }
       }
     }
@@ -1161,7 +1162,7 @@ export async function validatePAT(
     return { valid: true }
   } catch (error) {
     console.error("Connection test error:", error)
-    return { valid: false, error: `Network error: ${error}` }
+    return { valid: false, error: i18next.t("githubSync.errors.network", { error }) }
   }
 }
 
@@ -1225,7 +1226,10 @@ export async function uploadCSV(
 
     return { success: true }
   } catch (error) {
-    return { success: false, error: `Upload failed: ${error}` }
+    return {
+      success: false,
+      error: i18next.t("githubSync.errors.uploadFailed", { error }),
+    }
   }
 }
 
@@ -1371,7 +1375,10 @@ export async function deleteFile(
 
     return { success: true }
   } catch (error) {
-    return { success: false, error: `Delete failed: ${error}` }
+    return {
+      success: false,
+      error: i18next.t("githubSync.errors.deleteFailed", { error }),
+    }
   }
 }
 
@@ -1398,7 +1405,7 @@ export async function uploadSettingsFile(
   try {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      return { success: false, error: "Invalid repository format" }
+      return { success: false, error: i18next.t("githubSync.errors.repoFormat") }
     }
 
     const encodedContent = btoa(unescape(encodeURIComponent(settingsContent)))
@@ -1453,7 +1460,10 @@ export async function uploadSettingsFile(
 
     return { success: true }
   } catch (error) {
-    return { success: false, error: `Upload settings failed: ${error}` }
+    return {
+      success: false,
+      error: i18next.t("githubSync.errors.uploadSettingsFailed", { error }),
+    }
   }
 }
 
@@ -1472,7 +1482,7 @@ export async function downloadSettingsFile(
   const execute = async (): Promise<{ content: string; sha: string } | null> => {
     const [owner, repoName] = repo.split("/")
     if (!owner || !repoName) {
-      throw new Error("Invalid repository format")
+      throw new Error(i18next.t("githubSync.errors.repoFormat"))
     }
 
     const response = await fetch(

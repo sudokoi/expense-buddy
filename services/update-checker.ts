@@ -3,6 +3,7 @@ import { Platform } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { extractChangelogSection } from "./changelog-parser"
 import { getPlayStoreUpdateInfo, PlayStoreInstallStatus } from "./play-store-update"
+import i18next from "i18next"
 
 // AsyncStorage key for dismissed update version
 const DISMISSED_VERSION_KEY = "@expense-buddy/dismissed-update-version"
@@ -166,11 +167,13 @@ export async function checkForGitHubUpdates(currentVersion: string): Promise<Upd
         hasUpdate: false,
         currentVersion,
         source: "github",
-        error: "No releases found",
+        error: i18next.t("updateChecker.errors.noReleases"),
       }
     }
 
-    throw new Error(`GitHub API error: ${response.status}`)
+    throw new Error(
+      i18next.t("updateChecker.errors.apiError", { status: response.status })
+    )
   }
 
   const release = await response.json()
@@ -274,7 +277,9 @@ async function fetchReleaseByTag(tag: string): Promise<any | null> {
     if (response.status === 404) {
       return null
     }
-    throw new Error(`GitHub API error: ${response.status}`)
+    throw new Error(
+      i18next.t("updateChecker.errors.apiError", { status: response.status })
+    )
   }
 
   return response.json()

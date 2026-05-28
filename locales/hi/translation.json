@@ -525,7 +525,12 @@
       "general": "GitHub सिंक विफल ({{status}})",
       "timestamp": "कमिट से टाइमस्टैम्प निकालने में असमर्थ",
       "blob": "{{path}} के लिए blob बनाने में विफल: {{error}}",
-      "truncatedTree": "रिपॉजिटरी ट्री पूरी तरह से लाने के लिए बहुत बड़ी है"
+      "truncatedTree": "रिपॉजिटरी ट्री पूरी तरह से लाने के लिए बहुत बड़ी है",
+      "couldNotDetermineUsername": "Could not determine GitHub username",
+      "noWriteAccess": "No write access to this repository. Please choose a repo you can push to.",
+      "uploadFailed": "Upload failed: {{error}}",
+      "deleteFailed": "Delete failed: {{error}}",
+      "uploadSettingsFailed": "Upload settings failed: {{error}}"
     },
     "manager": {
       "notConfigured": "सिंक कॉन्फ़िगर नहीं है",
@@ -550,13 +555,48 @@
       "conflictsNotResolvedCount": "{{count}} conflict(s) were not resolved",
       "conflictsNotResolved": "Not all conflicts were resolved",
       "downloadSettingsFailed": "Failed to download settings",
-      "pushFailed": "Failed to push merged expenses"
+      "pushFailed": "Failed to push merged expenses",
+      "noMoreExpenses": "No more expenses to load",
+      "loadedMoreExpenses": "Loaded {{count}} more expenses from {{files}} file(s)",
+      "loadMoreFailed": "Load more failed",
+      "noOldFileToMigrate": "No old file to migrate",
+      "oldFileEmpty": "Old file is empty",
+      "migrated": "Migrated {{count}} expenses to daily files",
+      "migrationError": "Migration error: {{error}}",
+      "downloadFailedWithCount": "Failed to download any expense files. {{count}} file(s) failed.",
+      "failedToListRemoteWithError": "Failed to list remote files: {{error}}",
+      "conflictManualSync": "Conflict detected - manual sync required"
     }
   },
   "changelog": {
     "title": "What's New",
     "subtitle": "Version {{version}}",
     "viewFull": "View full release notes"
+  },
+  "errors": {
+    "network": "Unable to connect. Please check your internet connection.",
+    "authentication": "Authentication failed. Please check your GitHub token.",
+    "validation": "Invalid input. Please check your data and try again.",
+    "storage": "Unable to save data. Please try again.",
+    "unknown": "An unexpected error occurred. Please try again."
+  },
+  "updateChecker": {
+    "errors": {
+      "noReleases": "No releases found",
+      "apiError": "GitHub API error: {{status}}"
+    }
+  },
+  "githubDeviceFlow": {
+    "errors": {
+      "codeRequestFailed": "GitHub device code request failed ({{status}}): {{detail}}",
+      "missingFields": "GitHub device code response missing required fields",
+      "tokenRequestFailed": "GitHub device token request failed ({{status}}): {{detail}}",
+      "tokenResponseEmpty": "GitHub device token response was empty",
+      "tokenError": "GitHub device token error: {{error}} {{description}}",
+      "signInExpired": "GitHub sign-in expired. Please try again.",
+      "signInDenied": "GitHub sign-in was denied.",
+      "signInFailed": "Sign-in failed."
+    }
   },
   "validation": {
     "expense": {

@@ -2,6 +2,7 @@ import { loadSyncConfig } from "./sync-config"
 import { downloadCSV } from "./github-sync"
 import { importFromCSV } from "./csv-handler"
 import { syncUp } from "./sync-upload"
+import i18next from "i18next"
 
 export async function migrateToDailyFiles(): Promise<{
   migrated: boolean
@@ -10,7 +11,7 @@ export async function migrateToDailyFiles(): Promise<{
   try {
     const config = await loadSyncConfig()
     if (!config) {
-      return { migrated: false, message: "No sync configuration" }
+      return { migrated: false, message: i18next.t("githubSync.manager.noConfigFound") }
     }
 
     const oldFile = await downloadCSV(
@@ -21,13 +22,16 @@ export async function migrateToDailyFiles(): Promise<{
     )
 
     if (!oldFile) {
-      return { migrated: false, message: "No old file to migrate" }
+      return {
+        migrated: false,
+        message: i18next.t("githubSync.manager.noOldFileToMigrate"),
+      }
     }
 
     const expenses = importFromCSV(oldFile.content)
 
     if (expenses.length === 0) {
-      return { migrated: false, message: "Old file is empty" }
+      return { migrated: false, message: i18next.t("githubSync.manager.oldFileEmpty") }
     }
 
     const result = await syncUp(expenses)
@@ -35,7 +39,7 @@ export async function migrateToDailyFiles(): Promise<{
     if (result.success) {
       return {
         migrated: true,
-        message: `Migrated ${expenses.length} expenses to daily files`,
+        message: i18next.t("githubSync.manager.migrated", { count: expenses.length }),
       }
     } else {
       return {
@@ -46,7 +50,7 @@ export async function migrateToDailyFiles(): Promise<{
   } catch (error) {
     return {
       migrated: false,
-      message: `Migration error: ${String(error)}`,
+      message: i18next.t("githubSync.manager.migrationError", { error: String(error) }),
     }
   }
 }

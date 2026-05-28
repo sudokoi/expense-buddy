@@ -1,3 +1,5 @@
+import i18next from "i18next"
+
 export type GitHubDeviceCode = {
   device_code: string
   user_code: string
@@ -37,10 +39,6 @@ export async function requestGitHubDeviceCode(params: {
   scope: string
 }): Promise<GitHubDeviceCode> {
   const clientId = String(params.clientId || "").trim()
-  const maskedClientId =
-    clientId.length >= 8
-      ? `${clientId.slice(0, 4)}…${clientId.slice(-4)} (len ${clientId.length})`
-      : `${clientId || "<empty>"} (len ${clientId.length})`
 
   const body = new URLSearchParams({
     client_id: clientId,
@@ -60,19 +58,17 @@ export async function requestGitHubDeviceCode(params: {
   if (!response.ok) {
     const text = await response.text().catch(() => "")
 
-    // GitHub returns 404 {"error":"Not Found"} when the OAuth client_id is invalid.
-    const clientHint =
-      response.status === 404 ? ` (check OAuth Client ID: ${maskedClientId})` : ""
     throw new Error(
-      `GitHub device code request failed (${response.status})${clientHint}: ${
-        text || response.statusText
-      }`
+      i18next.t("githubDeviceFlow.errors.codeRequestFailed", {
+        status: response.status,
+        detail: text || response.statusText,
+      })
     )
   }
 
   const data = (await response.json().catch(() => null)) as GitHubDeviceCode | null
   if (!data?.device_code || !data?.user_code || !data?.verification_uri) {
-    throw new Error("GitHub device code response missing required fields")
+    throw new Error(i18next.t("githubDeviceFlow.errors.missingFields"))
   }
 
   return data
@@ -102,7 +98,10 @@ export async function pollGitHubDeviceAccessTokenOnce(params: {
   if (!response.ok) {
     const text = await response.text().catch(() => "")
     throw new Error(
-      `GitHub device token request failed (${response.status}): ${text || response.statusText}`
+      i18next.t("githubDeviceFlow.errors.tokenRequestFailed", {
+        status: response.status,
+        detail: text || response.statusText,
+      })
     )
   }
 
@@ -112,7 +111,10 @@ export async function pollGitHubDeviceAccessTokenOnce(params: {
     | null
 
   if (!data) {
-    return { type: "error", message: "GitHub device token response was empty" }
+    return {
+      type: "error",
+      message: i18next.t("githubDeviceFlow.errors.tokenResponseEmpty"),
+    }
   }
 
   if ("access_token" in data && typeof data.access_token === "string") {
@@ -129,6 +131,9 @@ export async function pollGitHubDeviceAccessTokenOnce(params: {
 
   return {
     type: "error",
-    message: `GitHub device token error: ${error}${description ? ` (${description})` : ""}`,
+    message: i18next.t("githubDeviceFlow.errors.tokenError", {
+      error,
+      description: description || "",
+    }),
   }
 }

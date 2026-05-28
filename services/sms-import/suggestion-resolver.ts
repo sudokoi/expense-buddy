@@ -14,6 +14,7 @@ import {
   hasDebitCardHint,
   hasUpiHint,
 } from "./payment-method-hints"
+import i18next from "i18next"
 
 type CategoryMatchingRule = {
   contentPattern: RegExp
@@ -185,11 +186,11 @@ export function resolveSmsImportCategory(
     }
   }
 
-  if (labels.has("Other")) {
-    return "Other"
+  if (labels.has(i18next.t("categories.other"))) {
+    return i18next.t("categories.other")
   }
 
-  return availableCategories[0]?.label ?? "Other"
+  return availableCategories[0]?.label ?? i18next.t("categories.other")
 }
 
 export function resolveSmsImportPaymentSuggestion(

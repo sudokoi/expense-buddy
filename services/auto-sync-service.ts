@@ -82,14 +82,14 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       if (finalSnapshot.matches("conflict")) {
         return {
           synced: false,
-          error: "Conflict detected - manual sync required",
+          error: i18next.t("githubSync.manager.conflictManualSync"),
         }
       }
 
       if (finalSnapshot.matches("error")) {
         return {
           synced: false,
-          error: context.error || "Sync failed",
+          error: context.error || i18next.t("githubSync.manager.syncFailed"),
         }
       }
 

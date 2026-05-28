@@ -7,6 +7,7 @@ import { getUserFriendlyMessage } from "./error-utils"
 import { pMap } from "./retry"
 import type { Expense } from "../types/expense"
 import type { SyncConfig, FetchAllRemoteResult } from "../types/sync"
+import i18next from "i18next"
 
 export function classifyTreeEntries(
   expenseEntries: { path: string; sha: string }[],
@@ -124,7 +125,9 @@ async function fetchWithTree(
   if (downloadedFiles === 0 && changedFiles.length > 0) {
     return {
       success: false,
-      error: `Failed to download any expense files. ${downloadErrors.length} file(s) failed.`,
+      error: i18next.t("githubSync.manager.downloadFailedWithCount", {
+        count: downloadErrors.length,
+      }),
     }
   }
 
@@ -161,12 +164,14 @@ async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteR
     ) {
       return {
         success: false,
-        error: "No internet connection. Cannot fetch remote expenses.",
+        error: i18next.t("githubSync.errors.noInternet"),
       }
     }
     return {
       success: false,
-      error: `Failed to list remote files: ${errorMessage}`,
+      error: i18next.t("githubSync.manager.failedToListRemoteWithError", {
+        error: errorMessage,
+      }),
     }
   }
 
@@ -234,7 +239,9 @@ async function fetchWithContentsApi(config: SyncConfig): Promise<FetchAllRemoteR
     const errorCount = downloadResults.filter((r) => !("ok" in r)).length
     return {
       success: false,
-      error: `Failed to download any expense files. ${errorCount} file(s) failed.`,
+      error: i18next.t("githubSync.manager.downloadFailedWithCount", {
+        count: errorCount,
+      }),
     }
   }
 
@@ -253,7 +260,7 @@ export async function fetchAllRemoteExpenses(
     if (!config) {
       return {
         success: false,
-        error: "No sync configuration found",
+        error: i18next.t("githubSync.manager.noConfigFound"),
       }
     }
 

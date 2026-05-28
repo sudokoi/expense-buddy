@@ -180,7 +180,7 @@ export async function syncDown(
     ) {
       return {
         success: false,
-        message: "Download failed",
+        message: i18next.t("githubSync.manager.downloadFailed"),
         error: error.message,
         authStatus: error.status,
         shouldSignOut: error.shouldSignOut,
@@ -237,7 +237,7 @@ export async function syncDownMore(
     if (expenseFiles.length === 0) {
       return {
         success: true,
-        message: "No more expenses to load",
+        message: i18next.t("githubSync.manager.noMoreExpenses"),
         expenses: currentExpenses,
         hasMore: false,
         remoteFilesUpdated: 0,
@@ -272,7 +272,10 @@ export async function syncDownMore(
 
     return {
       success: true,
-      message: `Loaded ${newExpenses.length} more expenses from ${downloadedFiles} file(s)`,
+      message: i18next.t("githubSync.manager.loadedMoreExpenses", {
+        count: newExpenses.length,
+        files: downloadedFiles,
+      }),
       expenses: allExpenses,
       hasMore,
       remoteFilesUpdated: downloadedFiles,
@@ -286,7 +289,7 @@ export async function syncDownMore(
     ) {
       return {
         success: false,
-        message: "Load more failed",
+        message: i18next.t("githubSync.manager.loadMoreFailed"),
         error: error.message,
         authStatus: error.status,
         shouldSignOut: error.shouldSignOut,
@@ -295,7 +298,7 @@ export async function syncDownMore(
 
     return {
       success: false,
-      message: "Load more failed",
+      message: i18next.t("githubSync.manager.loadMoreFailed"),
       error: getUserFriendlyMessage(error),
     }
   }

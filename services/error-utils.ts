@@ -6,6 +6,7 @@
  */
 
 import type { ServiceResult } from "../types/service-result"
+import i18next from "i18next"
 
 /**
  * Error categories for classification
@@ -86,10 +87,10 @@ export function getUserFriendlyMessage(error: unknown): string {
 
   switch (category) {
     case "network":
-      return "Unable to connect. Please check your internet connection."
+      return i18next.t("errors.network")
 
     case "authentication":
-      return "Authentication failed. Please check your GitHub token."
+      return i18next.t("errors.authentication")
 
     case "validation":
       // For validation errors, try to preserve the specific message
@@ -103,13 +104,13 @@ export function getUserFriendlyMessage(error: unknown): string {
           return cleaned
         }
       }
-      return "Invalid input. Please check your data and try again."
+      return i18next.t("errors.validation")
 
     case "storage":
-      return "Unable to save data. Please try again."
+      return i18next.t("errors.storage")
 
     default:
-      return "An unexpected error occurred. Please try again."
+      return i18next.t("errors.unknown")
   }
 }
 

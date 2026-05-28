@@ -14,6 +14,19 @@ import {
   ErrorCategory,
 } from "./error-utils"
 
+jest.mock("i18next", () => ({
+  t: (key: string) => {
+    const messages: Record<string, string> = {
+      "errors.network": "Unable to connect. Please check your internet connection.",
+      "errors.authentication": "Authentication failed. Please check your GitHub token.",
+      "errors.validation": "Invalid input. Please check your data and try again.",
+      "errors.storage": "Unable to save data. Please try again.",
+      "errors.unknown": "An unexpected error occurred. Please try again.",
+    }
+    return messages[key] ?? key
+  },
+}))
+
 /**
  * Property 2: Service Error Result Structure
  * For any service function that encounters an error, the returned result

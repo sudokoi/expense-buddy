@@ -6,6 +6,7 @@ import {
   pollGitHubDeviceAccessTokenOnce,
   GitHubDeviceCode,
 } from "./github-device-flow"
+import i18next from "i18next"
 
 const TOKEN_KEY = "github_pat"
 
@@ -220,7 +221,7 @@ export const githubAuthMachine = setup({
             Boolean(context.expiresAtMs) && safeNow() > (context.expiresAtMs || 0),
           target: "error",
           actions: assign({
-            error: () => "GitHub sign-in expired. Please try again.",
+            error: () => i18next.t("githubDeviceFlow.errors.signInExpired"),
             deviceCode: () => null,
             expiresAtMs: () => null,
           }),
@@ -254,7 +255,7 @@ export const githubAuthMachine = setup({
             guard: ({ event }) => event.output.type === "denied",
             target: "error",
             actions: assign({
-              error: () => "GitHub sign-in was denied.",
+              error: () => i18next.t("githubDeviceFlow.errors.signInDenied"),
               deviceCode: () => null,
               expiresAtMs: () => null,
             }),
@@ -264,7 +265,9 @@ export const githubAuthMachine = setup({
             target: "error",
             actions: assign({
               error: ({ event }) =>
-                event.output.type === "error" ? event.output.message : "Sign-in failed.",
+                event.output.type === "error"
+                  ? event.output.message
+                  : i18next.t("githubDeviceFlow.errors.signInFailed"),
               deviceCode: () => null,
               expiresAtMs: () => null,
             }),
@@ -369,7 +372,8 @@ export const githubAuthMachine = setup({
     error: {
       entry: [
         ({ context }) => {
-          const message = context.error || "Sign-in failed."
+          const message =
+            context.error || i18next.t("githubDeviceFlow.errors.signInFailed")
           context.callbacks.onError?.(message)
         },
         assign({ callbacks: () => ({}) }),

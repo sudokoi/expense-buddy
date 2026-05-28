@@ -66,7 +66,7 @@ export async function syncUp(
       ) {
         return {
           success: false,
-          message: "Failed to list remote files",
+          message: i18next.t("githubSync.manager.failedToListRemote"),
           error: error.message,
           authStatus: error.status,
           shouldSignOut: error.shouldSignOut,
@@ -288,7 +288,7 @@ export async function syncUp(
     ) {
       return {
         success: false,
-        message: "Sync failed",
+        message: i18next.t("githubSync.manager.syncFailed"),
         error: error.message,
         authStatus: error.status,
         shouldSignOut: error.shouldSignOut,

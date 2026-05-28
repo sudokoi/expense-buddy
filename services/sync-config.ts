@@ -53,8 +53,8 @@ export async function testConnection(): Promise<SyncResult> {
       if (result.shouldSignOut && result.authStatus) {
         return {
           success: false,
-          message: "Connection failed",
-          error: result.error || "GitHub authentication required",
+          message: i18next.t("githubSync.manager.connectionFailed"),
+          error: result.error || i18next.t("githubSync.manager.authRequired"),
           authStatus: result.authStatus,
           shouldSignOut: true,
         }
@@ -62,7 +62,7 @@ export async function testConnection(): Promise<SyncResult> {
 
       return {
         success: false,
-        message: "Connection failed",
+        message: i18next.t("githubSync.manager.connectionFailed"),
         error: getUserFriendlyMessage(new Error(result.error || "Unknown error")),
       }
     }
@@ -75,7 +75,7 @@ export async function testConnection(): Promise<SyncResult> {
     ) {
       return {
         success: false,
-        message: "Connection failed",
+        message: i18next.t("githubSync.manager.connectionFailed"),
         error: error.message,
         authStatus: error.status,
         shouldSignOut: error.shouldSignOut,
