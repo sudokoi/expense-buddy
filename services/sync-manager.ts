@@ -12,7 +12,7 @@ export { determineSyncDirection, getPendingSyncCount, saveLastSyncTime } from ".
 export { syncUp } from "./sync-upload"
 export { syncDown, syncDownMore } from "./sync-download"
 export { fetchAllRemoteExpenses, classifyTreeEntries } from "./remote-fetch"
-export { mergeExpensesWithTimestamps, smartMerge } from "./sync-merge"
+
 export {
   gitStyleSync,
   ConflictResolution,

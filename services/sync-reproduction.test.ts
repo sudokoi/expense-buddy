@@ -1,4 +1,5 @@
-import { determineSyncDirection, mergeExpensesWithTimestamps } from "./sync-manager"
+import { determineSyncDirection } from "./sync-manager"
+import { mergeExpenses } from "./merge-engine"
 import { Expense } from "../types/expense"
 
 // Mock dependencies
@@ -77,24 +78,19 @@ describe("Sync Logic Reproduction", () => {
     const remoteExpenses = [sampleExpense]
     const localExpenses = [sampleExpense]
 
-    // Use mergeExpensesWithTimestamps directly (since autoSync is removed)
-    // This was the core logic inside autoSync that caused the bug
-    const result = mergeExpensesWithTimestamps(
-      localExpenses,
-      remoteExpenses,
-      lastSyncTime
-    )
+    // Use mergeExpenses directly (was mergeExpensesWithTimestamps in autoSync)
+    const result = mergeExpenses(localExpenses, remoteExpenses)
 
     // Expectation: Should NOT report "1 expense synced" if content is identical
     // If bug exists, one of them > 0
     console.log("Stats:", {
-      new: result.newFromRemote,
-      updated: result.updatedFromRemote,
+      new: result.addedFromRemote.length,
+      updated: result.updatedFromRemote.length,
     })
 
     // Both should be 0 because the expenses are identical
-    expect(result.newFromRemote).toBe(0)
-    expect(result.updatedFromRemote).toBe(0)
+    expect(result.addedFromRemote.length).toBe(0)
+    expect(result.updatedFromRemote.length).toBe(0)
   })
 
   test("Reproduce Bug 2: Conflict reported when adding new expense locally", async () => {

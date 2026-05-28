@@ -49,8 +49,7 @@ describe("Sync Manager API Backward Compatibility", () => {
     "syncDown",
     "syncDownMore",
     "fetchAllRemoteExpenses",
-    "mergeExpensesWithTimestamps",
-    "smartMerge",
+    "classifyTreeEntries",
     "getPendingSyncCount",
     "migrateToDailyFiles",
     "gitStyleSync",
@@ -110,15 +109,6 @@ describe("Sync Manager API Backward Compatibility", () => {
       expect(typeof fn).toBe("function")
     })
 
-    it("mergeExpensesWithTimestamps SHALL be a synchronous function", () => {
-      const fn = SyncManager.mergeExpensesWithTimestamps
-      expect(typeof fn).toBe("function")
-      // Verify it's not async by checking it doesn't return a promise for empty arrays
-      const result = fn([], [], null)
-      expect(result).toHaveProperty("merged")
-      expect(result).toHaveProperty("newFromRemote")
-      expect(result).toHaveProperty("updatedFromRemote")
-    })
   })
 
   describe("Type export verification", () => {
