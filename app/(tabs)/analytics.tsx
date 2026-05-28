@@ -23,7 +23,7 @@ import {
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
 import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFiltersSheet"
-import { SlidersHorizontal } from "@tamagui/lucide-icons-2"
+import { Filter } from "@tamagui/lucide-icons-2"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
@@ -559,9 +559,7 @@ export default function AnalyticsScreen() {
           px="$control"
           disabled={!filtersHydrated}
           onPress={() => setFiltersOpen(true)}
-          icon={SlidersHorizontal}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
+          icon={Filter}
         >
           {!filtersHydrated
             ? t("analytics.filters.button")

@@ -236,6 +236,7 @@ export default function GitHubRepoPickerScreen() {
           alignSelf: "center",
           width: "100%",
         }}
+        ItemSeparatorComponent={() => <YStack style={{ height: UI_SPACE.control }} />}
         ListHeaderComponent={
           <YStack gap="$gutter">
             <XStack justify="space-between" items="center">
@@ -289,6 +290,7 @@ export default function GitHubRepoPickerScreen() {
               value={query}
               onChangeText={setQuery}
               disabled={isLoading || !!error}
+              mb={UI_SPACE.control}
             />
           </YStack>
         }

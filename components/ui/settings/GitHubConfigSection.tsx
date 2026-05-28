@@ -521,7 +521,7 @@ export function GitHubConfigSection({
                         ? errorColor
                         : primaryColor,
                 }}
-                color={connectionStatus === "idle" ? undefined : "white"}
+                color="white"
               >
                 {isTesting ? t("settings.github.testing") : t("settings.github.test")}
               </Button>

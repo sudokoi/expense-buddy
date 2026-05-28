@@ -121,7 +121,7 @@ export function PaymentInstrumentsSection() {
                 : t("instruments.description")}
             </Text>
           </YStack>
-          <Button size="$compact" icon={Plus} onPress={handleAdd}>
+          <Button size="$chip" px="$control" icon={Plus} onPress={handleAdd}>
             {t("instruments.add")}
           </Button>
         </XStack>

@@ -379,18 +379,20 @@ export default function AddExpenseScreen() {
 
           {/* Date Picker */}
           <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {t("add.date")}
-            </Label>
-            <Button
-              icon={<Calendar size="$icon" />}
-              size="$control"
-              onPress={() => setShowDatePicker(true)}
-              chromeless
-              borderWidth={UI_BORDER_WIDTH.thin}
-            >
-              {date.toLocaleDateString()}
-            </Button>
+            <XStack items="center" justify="space-between">
+              <Label color="$color" opacity={UI_OPACITY.strong}>
+                {t("add.date")}
+              </Label>
+              <Button
+                icon={<Calendar size="$icon" />}
+                size="$control"
+                onPress={() => setShowDatePicker(true)}
+                chromeless
+                borderWidth={UI_BORDER_WIDTH.thin}
+              >
+                {date.toLocaleDateString()}
+              </Button>
+            </XStack>
             {showDatePicker && (
               <DateTimePicker
                 testID="dateTimePicker"

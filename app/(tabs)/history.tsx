@@ -1015,18 +1015,20 @@ export default function HistoryScreen() {
             >
               <YStack gap="$section">
                 <YStack gap="$control">
-                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="date">
-                    {t("history.editDialog.fields.date")}
-                  </Label>
-                  <Button
-                    size="$control"
-                    onPress={() => setShowDatePicker(true)}
-                    icon={Calendar}
-                  >
-                    {editingExpense?.date
-                      ? formatDate(editingExpense.date, "dd/MM/yyyy")
-                      : t("history.editDialog.fields.datePlaceholder")}
-                  </Button>
+                  <XStack items="center" justify="space-between">
+                    <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="date">
+                      {t("history.editDialog.fields.date")}
+                    </Label>
+                    <Button
+                      size="$control"
+                      onPress={() => setShowDatePicker(true)}
+                      icon={Calendar}
+                    >
+                      {editingExpense?.date
+                        ? formatDate(editingExpense.date, "dd/MM/yyyy")
+                        : t("history.editDialog.fields.datePlaceholder")}
+                    </Button>
+                  </XStack>
                   {showDatePicker && (
                     <DateTimePicker
                       value={
