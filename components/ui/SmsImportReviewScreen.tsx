@@ -292,7 +292,7 @@ export function SmsImportReviewScreen({
       }
 
       const [createdExpense] = addExpenses([expenseDraft])
-      markItemAccepted(item.id, createdExpense?.id)
+      markItemAccepted(item.fingerprint, createdExpense?.id)
       addNotification(t("smsImport.sheet.notifications.importedOne"), "success")
       return true
     },
@@ -345,7 +345,7 @@ export function SmsImportReviewScreen({
 
     markItemsAccepted(
       acceptedPairs.map((pair, index) => ({
-        id: pair.item.id,
+        fingerprint: pair.item.fingerprint,
         acceptedExpenseId: createdExpenses[index]?.id,
       }))
     )
@@ -384,7 +384,7 @@ export function SmsImportReviewScreen({
       return
     }
 
-    markItemsRejected(pendingItems.map((item) => item.id))
+    markItemsRejected(pendingItems.map((item) => item.fingerprint))
     addNotification(
       t("smsImport.sheet.notifications.rejectedMany", {
         count: pendingItems.length,
@@ -825,10 +825,10 @@ export function SmsImportReviewScreen({
                             <Button onPress={() => openEditor(item)}>
                               {t("common.edit")}
                             </Button>
-                            <Button theme="red" onPress={() => markItemRejected(item.id)}>
+                            <Button theme="red" onPress={() => markItemRejected(item.fingerprint)}>
                               {t("smsImport.sheet.actions.reject")}
                             </Button>
-                            <Button onPress={() => dismissItem(item.id)}>
+                            <Button onPress={() => dismissItem(item.fingerprint)}>
                               {t("smsImport.sheet.actions.dismiss")}
                             </Button>
                           </XStack>

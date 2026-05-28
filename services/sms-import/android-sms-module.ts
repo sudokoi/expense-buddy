@@ -20,7 +20,8 @@ export interface AndroidSmsModule {
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
   scanAndParseMessagesAsync(
-    options: SmsImportScanOptions
+    options: SmsImportScanOptions,
+    useMlOnly?: boolean
   ): Promise<NativeSmsScanParseResult[]>
   categorizeMessagesAsync?(
     requests: NativeSmsCategoryPredictionRequest[]
@@ -80,12 +81,16 @@ export async function scanRecentSmsMessages(
 }
 
 export async function scanAndParseMessages(
-  options: SmsImportScanOptions = {}
+  options: SmsImportScanOptions = {},
+  useMlOnly?: boolean
 ): Promise<NativeSmsScanParseResult[]> {
-  const results = await getAndroidSmsModule().scanAndParseMessagesAsync({
-    lookbackDays: 7,
-    ...options,
-  })
+  const results = await getAndroidSmsModule().scanAndParseMessagesAsync(
+    {
+      lookbackDays: 7,
+      ...options,
+    },
+    useMlOnly
+  )
 
   return results.sort(
     (left, right) =>

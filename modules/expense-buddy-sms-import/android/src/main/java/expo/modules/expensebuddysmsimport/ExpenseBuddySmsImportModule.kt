@@ -69,9 +69,10 @@ class ExpenseBuddySmsImportModule : Module() {
                 queryRecentMessages(options)
             }
 
-            AsyncFunction("scanAndParseMessagesAsync") { options: SmsImportScanOptionsRecord ->
+            AsyncFunction("scanAndParseMessagesAsync") { options: SmsImportScanOptionsRecord, useMlOnly: Boolean? ->
                 ensurePermissionGranted()
-                scanAndParseMessages(options)
+                val classifier = appContext.reactContext?.let { SmsCategoryLiteRtClassifier.getInstance(it) }
+                scanAndParseMessages(options, classifier, useMlOnly ?: false)
             }
 
             AsyncFunction("categorizeMessagesAsync") { requests: List<SmsCategoryPredictionRequestRecord> ->
@@ -87,11 +88,15 @@ class ExpenseBuddySmsImportModule : Module() {
         }
     }
 
-    private fun scanAndParseMessages(options: SmsImportScanOptionsRecord): List<Map<String, Any?>> {
+    internal fun scanAndParseMessages(
+        options: SmsImportScanOptionsRecord,
+        classifier: CategoryClassifier? = null,
+        useMlOnly: Boolean = false,
+    ): List<Map<String, Any?>> {
         val rawMessages = queryRecentMessages(options)
         LoggerApi.d("SMS_MODULE", "scanAndParseMessages: scanned=${rawMessages.size}")
 
-        val results = mutableListOf<Map<String, Any?>>()
+        val parsedList = mutableListOf<Pair<Map<String, String>, SmsParsedMessage>>()
         for (msg in rawMessages) {
             val sender = msg["sender"] ?: continue
             val body = msg["body"] ?: ""
@@ -104,17 +109,50 @@ class ExpenseBuddySmsImportModule : Module() {
                 continue
             }
 
-            results.add(
+            parsedList.add(msg to parsed)
+        }
+
+        val mlPredictions = mutableMapOf<String, SmsCategoryPredictionResult>()
+        if (classifier != null && parsedList.isNotEmpty()) {
+            val requests =
+                parsedList.map { (msg, parsed) ->
+                    SmsCategoryPredictionRequest(
+                        messageId = msg["messageId"] ?: "",
+                        sender = msg["sender"] ?: "",
+                        body = msg["body"] ?: "",
+                        merchantName = parsed.merchantName,
+                    )
+                }
+            for (prediction in classifier.classify(requests)) {
+                mlPredictions[prediction.messageId] = prediction
+            }
+            LoggerApi.d("SMS_MODULE", "scanAndParseMessages: ml_classified=${mlPredictions.size}")
+        }
+
+        val results =
+            parsedList.map { (msg, parsed) ->
+                val messageId = msg["messageId"] ?: ""
+                val prediction = mlPredictions[messageId]
+                val useMlCategory =
+                    if (useMlOnly) {
+                        prediction != null
+                    } else {
+                        prediction?.shouldUsePrediction == true
+                    }
+
                 mapOf(
                     "fingerprint" to parsed.fingerprint,
                     "messageId" to messageId,
-                    "sender" to sender,
-                    "body" to body,
-                    "receivedAt" to receivedAt,
+                    "sender" to msg["sender"],
+                    "body" to msg["body"],
+                    "receivedAt" to msg["receivedAt"],
                     "amount" to parsed.amount,
                     "currency" to parsed.currency,
                     "merchantName" to parsed.merchantName,
-                    "categorySuggestion" to parsed.categorySuggestion,
+                    "categorySuggestion" to if (useMlCategory) prediction!!.category else parsed.categorySuggestion,
+                    "categorySuggestionSource" to if (useMlCategory) "ml" else "regex",
+                    "categorySuggestionConfidence" to if (useMlCategory) prediction!!.confidence else null,
+                    "categorySuggestionModelId" to if (useMlCategory) prediction!!.modelId else null,
                     "paymentMethodType" to parsed.paymentMethodSuggestion?.type,
                     "paymentMethodIdentifier" to parsed.paymentMethodSuggestion?.identifier,
                     "paymentMethodInstrumentId" to parsed.paymentMethodSuggestion?.instrumentId,
@@ -122,9 +160,8 @@ class ExpenseBuddySmsImportModule : Module() {
                     "transactionDate" to parsed.transactionDate,
                     "matchedLocale" to parsed.matchedLocale,
                     "matchedPatternKey" to parsed.matchedPatternKey,
-                ),
-            )
-        }
+                )
+            }
 
         LoggerApi.d("SMS_MODULE", "scanAndParseMessages: parsed=${results.size}")
         return results
@@ -187,7 +224,7 @@ class ExpenseBuddySmsImportModule : Module() {
         val classifier = SmsCategoryLiteRtClassifier.getInstance(reactContext)
 
         return classifier
-            .classifyBatch(
+            .classify(
                 requests.map { request ->
                     SmsCategoryPredictionRequest(
                         messageId = request.messageId,

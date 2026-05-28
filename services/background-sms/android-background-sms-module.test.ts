@@ -2,6 +2,10 @@ jest.mock("react-native", () => ({
   Platform: { OS: "android" },
 }))
 
+jest.mock("../../services/logger", () => ({
+  logAsync: jest.fn(),
+}))
+
 jest.mock("../../modules/expense-buddy-background-sms", () => ({
   __esModule: true,
   default: null,

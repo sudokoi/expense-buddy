@@ -11,21 +11,6 @@ import java.util.Locale
 private const val MODEL_ASSET_PATH = "sms_ml/seed-litert-embed-augmented-v1/model.tflite"
 private const val METADATA_ASSET_PATH = "sms_ml/seed-litert-embed-augmented-v1/metadata.json"
 
-data class SmsCategoryPredictionRequest(
-    val messageId: String,
-    val sender: String,
-    val body: String,
-    val merchantName: String?,
-)
-
-data class SmsCategoryPredictionResult(
-    val messageId: String,
-    val category: String,
-    val confidence: Double,
-    val shouldUsePrediction: Boolean,
-    val modelId: String,
-)
-
 private data class SmsCategoryModelMetadata(
     val modelId: String,
     val labels: List<String>,
@@ -42,12 +27,12 @@ private data class SmsCategoryModelMetadata(
 class SmsCategoryLiteRtClassifier private constructor(
     private val metadata: SmsCategoryModelMetadata,
     private val interpreter: Interpreter,
-) {
+) : CategoryClassifier {
     private val digest = MessageDigest.getInstance("SHA-256")
     private val lock = Any()
     private val tokenPattern = Regex("[a-z0-9]{${metadata.minTokenLength},${metadata.maxTokenLength}}")
 
-    fun classifyBatch(requests: List<SmsCategoryPredictionRequest>): List<SmsCategoryPredictionResult> = requests.map(::classify)
+    override fun classify(requests: List<SmsCategoryPredictionRequest>): List<SmsCategoryPredictionResult> = requests.map(::classify)
 
     private fun classify(request: SmsCategoryPredictionRequest): SmsCategoryPredictionResult {
         val features = buildFeatureSequence(request)

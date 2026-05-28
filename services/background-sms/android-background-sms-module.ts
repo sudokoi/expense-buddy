@@ -6,6 +6,7 @@ import {
 } from "../../modules/expense-buddy-background-sms"
 import ExpenseBuddyBackgroundSmsModule from "../../modules/expense-buddy-background-sms"
 import { SmsImportReviewItem } from "../../types/sms-import"
+import { PaymentMethodType } from "../../types/expense"
 import { logAsync } from "../logger"
 
 let moduleOverride: ExpenseBuddyBackgroundSmsNativeModule | null = null
@@ -140,7 +141,7 @@ function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
       dto.paymentMethodIdentifier ||
       dto.paymentMethodInstrumentId
         ? {
-            type: dto.paymentMethodType ?? "",
+            type: (dto.paymentMethodType ?? "") as PaymentMethodType,
             identifier: dto.paymentMethodIdentifier ?? undefined,
             instrumentId: dto.paymentMethodInstrumentId ?? undefined,
           }

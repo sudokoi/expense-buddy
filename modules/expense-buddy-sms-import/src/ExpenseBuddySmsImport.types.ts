@@ -51,6 +51,9 @@ export interface NativeSmsScanParseResult {
   currency: string | null
   merchantName: string | null
   categorySuggestion: string | null
+  categorySuggestionSource: string | null
+  categorySuggestionConfidence: number | null
+  categorySuggestionModelId: string | null
   paymentMethodType: string | null
   paymentMethodIdentifier: string | null
   paymentMethodInstrumentId: string | null
@@ -65,7 +68,8 @@ export interface ExpenseBuddySmsImportNativeModule extends NativeModule {
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options?: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
   scanAndParseMessagesAsync(
-    options?: SmsImportScanOptions
+    options?: SmsImportScanOptions,
+    useMlOnly?: boolean
   ): Promise<NativeSmsScanParseResult[]>
   categorizeMessagesAsync?(
     requests: NativeSmsCategoryPredictionRequest[]

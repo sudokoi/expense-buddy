@@ -1,11 +1,11 @@
 import { Platform } from "react-native"
 import {
-  categorizeSmsImportMessages,
   getSmsPermissionStatus,
   scanAndParseMessages,
   SmsImportPermissionStatus,
 } from "./android-sms-module"
 import type { NativeSmsScanParseResult } from "../../modules/expense-buddy-sms-import"
+import type { PaymentMethodType } from "../../types/expense"
 import { SmsImportReviewItem } from "../../types/sms-import"
 
 const SMS_IMPORT_SCAN_LOOKBACK_DAYS = 7
@@ -62,31 +62,16 @@ function getNextCursor(
 function createReviewItem(
   parsed: NativeSmsScanParseResult,
   existingFingerprints: Set<string>,
-  categoryPredictions: Map<
-    string,
-    {
-      category: string
-      confidence: number
-      shouldUsePrediction: boolean
-      modelId: string
-    }
-  >,
-  useMlOnlyForSmsImports = false
 ): SmsImportReviewItem | null {
   if (existingFingerprints.has(parsed.fingerprint)) {
     return null
   }
   existingFingerprints.add(parsed.fingerprint)
 
-  const prediction = categoryPredictions.get(parsed.messageId)
-  const useMlCategory = useMlOnlyForSmsImports
-    ? Boolean(prediction?.category)
-    : (prediction?.shouldUsePrediction ?? false)
-
   const now = new Date().toISOString()
   const paymentMethodSuggestion = parsed.paymentMethodType
     ? {
-        type: parsed.paymentMethodType,
+        type: parsed.paymentMethodType as PaymentMethodType,
         ...(parsed.paymentMethodIdentifier
           ? { identifier: parsed.paymentMethodIdentifier }
           : {}),
@@ -108,12 +93,10 @@ function createReviewItem(
     amount: parsed.amount ?? undefined,
     currency: parsed.currency ?? undefined,
     merchantName: parsed.merchantName ?? undefined,
-    categorySuggestion: useMlCategory
-      ? prediction!.category
-      : (parsed.categorySuggestion ?? undefined),
-    categorySuggestionConfidence: useMlCategory ? prediction!.confidence : undefined,
-    categorySuggestionModelId: useMlCategory ? prediction!.modelId : undefined,
-    categorySuggestionSource: useMlCategory ? "ml" : "regex",
+    categorySuggestion: parsed.categorySuggestion ?? undefined,
+    categorySuggestionConfidence: parsed.categorySuggestionConfidence ?? undefined,
+    categorySuggestionModelId: parsed.categorySuggestionModelId ?? undefined,
+    categorySuggestionSource: (parsed.categorySuggestionSource as "regex" | "ml" | undefined) ?? undefined,
     paymentMethodSuggestion,
     noteSuggestion: parsed.noteSuggestion ?? undefined,
     transactionDate: parsed.transactionDate ?? undefined,
@@ -161,29 +144,13 @@ export async function scanSmsImportReviewQueue(
       : {
           lookbackDays: SMS_IMPORT_SCAN_LOOKBACK_DAYS,
           limit: SMS_IMPORT_SCAN_LIMIT,
-        }
-  )
-
-  const categoryPredictions = await categorizeSmsImportMessages(
-    parsedMessages.map((msg) => ({
-      messageId: msg.messageId,
-      sender: msg.sender,
-      body: msg.body,
-      merchantName: msg.merchantName,
-    }))
-  )
-  const predictionByMessageId = new Map(
-    categoryPredictions.map((prediction) => [prediction.messageId, prediction])
+        },
+    input.useMlOnlyForSmsImports
   )
 
   const createdItems: SmsImportReviewItem[] = []
   for (const parsed of parsedMessages) {
-    const item = createReviewItem(
-      parsed,
-      existingFingerprints,
-      predictionByMessageId,
-      input.useMlOnlyForSmsImports
-    )
+    const item = createReviewItem(parsed, existingFingerprints)
     if (item) {
       createdItems.push(item)
     }

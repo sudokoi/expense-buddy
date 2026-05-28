@@ -493,36 +493,36 @@ export const useSmsImportReview = () => {
   )
 
   const markItemAccepted = useCallback(
-    (id: string, acceptedExpenseId?: string) => {
-      smsImportReviewStore.trigger.markItemAccepted({ id, acceptedExpenseId })
+    (fingerprint: string, acceptedExpenseId?: string) => {
+      smsImportReviewStore.trigger.markItemAccepted({ fingerprint, acceptedExpenseId })
     },
     [smsImportReviewStore]
   )
 
   const markItemsAccepted = useCallback(
-    (acceptedItems: Array<{ id: string; acceptedExpenseId?: string }>) => {
+    (acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>) => {
       smsImportReviewStore.trigger.markItemsAccepted({ acceptedItems })
     },
     [smsImportReviewStore]
   )
 
   const markItemsRejected = useCallback(
-    (ids: string[]) => {
-      smsImportReviewStore.trigger.markItemsRejected({ ids })
+    (fingerprints: string[]) => {
+      smsImportReviewStore.trigger.markItemsRejected({ fingerprints })
     },
     [smsImportReviewStore]
   )
 
   const markItemRejected = useCallback(
-    (id: string) => {
-      smsImportReviewStore.trigger.markItemRejected({ id })
+    (fingerprint: string) => {
+      smsImportReviewStore.trigger.markItemRejected({ fingerprint })
     },
     [smsImportReviewStore]
   )
 
   const dismissItem = useCallback(
-    (id: string) => {
-      smsImportReviewStore.trigger.dismissItem({ id })
+    (fingerprint: string) => {
+      smsImportReviewStore.trigger.dismissItem({ fingerprint })
     },
     [smsImportReviewStore]
   )

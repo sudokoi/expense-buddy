@@ -3,22 +3,19 @@ jest.mock("react-native", () => ({
 }))
 
 jest.mock("./android-sms-module", () => ({
-  categorizeSmsImportMessages: jest.fn(),
   getSmsPermissionStatus: jest.fn(),
   scanAndParseMessages: jest.fn(),
 }))
 
 import { scanSmsImportReviewQueue } from "./bootstrap"
 import {
-  categorizeSmsImportMessages,
   getSmsPermissionStatus,
   scanAndParseMessages,
 } from "./android-sms-module"
 import type { NativeSmsScanParseResult } from "../../modules/expense-buddy-sms-import"
+import type { PaymentMethodType } from "../../types/expense"
 import type { SmsImportReviewItem } from "../../types/sms-import"
 
-const mockCategorizeSmsImportMessages =
-  categorizeSmsImportMessages as jest.MockedFunction<typeof categorizeSmsImportMessages>
 const mockGetSmsPermissionStatus = getSmsPermissionStatus as jest.MockedFunction<
   typeof getSmsPermissionStatus
 >
@@ -39,6 +36,9 @@ function createParsedMessage(
     currency: "INR",
     merchantName: "Amazon Marketplace using debit card",
     categorySuggestion: "Other",
+    categorySuggestionSource: null,
+    categorySuggestionConfidence: null,
+    categorySuggestionModelId: null,
     paymentMethodType: "Debit Card",
     paymentMethodIdentifier: null,
     paymentMethodInstrumentId: null,
@@ -65,7 +65,7 @@ function createExistingItem(parsed: NativeSmsScanParseResult): SmsImportReviewIt
     merchantName: parsed.merchantName ?? undefined,
     categorySuggestion: (parsed.categorySuggestion ?? undefined) as "Other" | undefined,
     paymentMethodSuggestion: parsed.paymentMethodType
-      ? { type: parsed.paymentMethodType }
+      ? { type: parsed.paymentMethodType as PaymentMethodType }
       : undefined,
     noteSuggestion: parsed.noteSuggestion ?? undefined,
     transactionDate: parsed.transactionDate ?? undefined,
@@ -80,7 +80,6 @@ function createExistingItem(parsed: NativeSmsScanParseResult): SmsImportReviewIt
 describe("scanSmsImportReviewQueue", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockCategorizeSmsImportMessages.mockResolvedValue([])
   })
 
   it("returns no items when permission is not granted", async () => {
@@ -111,6 +110,7 @@ describe("scanSmsImportReviewQueue", () => {
       amount: 250,
       merchantName: "Uber Trip",
       categorySuggestion: "Transport",
+      categorySuggestionSource: "regex",
       paymentMethodType: "Credit Card",
       noteSuggestion: "SMS import: Uber Trip",
       receivedAt: "2026-04-11T10:20:00.000Z",
@@ -126,11 +126,14 @@ describe("scanSmsImportReviewQueue", () => {
       bootstrapCompletedAt: null,
     })
 
-    expect(mockScanAndParseMessages).toHaveBeenCalledWith({
-      since: "2026-04-11T10:00:00.000Z",
-      lookbackDays: 7,
-      limit: 500,
-    })
+    expect(mockScanAndParseMessages).toHaveBeenCalledWith(
+      {
+        since: "2026-04-11T10:00:00.000Z",
+        lookbackDays: 7,
+        limit: 500,
+      },
+      undefined
+    )
     expect(result.permissionStatus).toBe("granted")
     expect(result.createdItems).toHaveLength(1)
     expect(result.createdItems[0]).toMatchObject({
@@ -174,10 +177,13 @@ describe("scanSmsImportReviewQueue", () => {
       bootstrapCompletedAt: null,
     })
 
-    expect(mockScanAndParseMessages).toHaveBeenCalledWith({
-      lookbackDays: 7,
-      limit: 500,
-    })
+    expect(mockScanAndParseMessages).toHaveBeenCalledWith(
+      {
+        lookbackDays: 7,
+        limit: 500,
+      },
+      undefined
+    )
     expect(result.nextCursor).toBeNull()
   })
 
@@ -287,20 +293,14 @@ describe("scanSmsImportReviewQueue", () => {
   it("prefers the native ML category when the prediction clears the confidence gate", async () => {
     const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
-      categorySuggestion: "Transport",
+      categorySuggestion: "Food",
+      categorySuggestionSource: "ml",
+      categorySuggestionConfidence: 0.92,
+      categorySuggestionModelId: "seed-litert-v1",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
     mockScanAndParseMessages.mockResolvedValue([parsed])
-    mockCategorizeSmsImportMessages.mockResolvedValue([
-      {
-        messageId: parsed.messageId,
-        category: "Food",
-        confidence: 0.92,
-        shouldUsePrediction: true,
-        modelId: "seed-litert-v1",
-      },
-    ])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -320,19 +320,13 @@ describe("scanSmsImportReviewQueue", () => {
     const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
       categorySuggestion: "Transport",
+      categorySuggestionSource: "regex",
+      categorySuggestionConfidence: null,
+      categorySuggestionModelId: null,
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
     mockScanAndParseMessages.mockResolvedValue([parsed])
-    mockCategorizeSmsImportMessages.mockResolvedValue([
-      {
-        messageId: parsed.messageId,
-        category: "Food",
-        confidence: 0.31,
-        shouldUsePrediction: false,
-        modelId: "seed-litert-v1",
-      },
-    ])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -351,20 +345,14 @@ describe("scanSmsImportReviewQueue", () => {
   it("can prefer ML suggestions even below the confidence gate when ML-only mode is enabled", async () => {
     const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
-      categorySuggestion: "Transport",
+      categorySuggestion: "Food",
+      categorySuggestionSource: "ml",
+      categorySuggestionConfidence: 0.31,
+      categorySuggestionModelId: "seed-litert-embed-augmented-v1",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
     mockScanAndParseMessages.mockResolvedValue([parsed])
-    mockCategorizeSmsImportMessages.mockResolvedValue([
-      {
-        messageId: parsed.messageId,
-        category: "Food",
-        confidence: 0.31,
-        shouldUsePrediction: false,
-        modelId: "seed-litert-embed-augmented-v1",
-      },
-    ])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -373,6 +361,13 @@ describe("scanSmsImportReviewQueue", () => {
       useMlOnlyForSmsImports: true,
     })
 
+    expect(mockScanAndParseMessages).toHaveBeenCalledWith(
+      {
+        lookbackDays: 7,
+        limit: 500,
+      },
+      true
+    )
     expect(result.createdItems[0]).toMatchObject({
       categorySuggestion: "Food",
       categorySuggestionSource: "ml",
