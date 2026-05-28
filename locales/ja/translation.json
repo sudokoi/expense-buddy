@@ -417,7 +417,9 @@
       "includeLogsMessage": "問題のデバッグに役立てるため、最新200件のデバイスログが添付されます。これらにはアプリの操作詳細のみ含まれ、SMSの内容、金融データ、個人情報は含まれません。",
       "continueToGitHub": "GitHubに進む",
       "logsCopied": "ログをクリップボードにコピーしました。GitHubのIssueに貼り付けてください。",
-      "issueCreated": "Issueを作成しました。ブラウザで詳細を追加してください。"
+      "issueCreated": "Issueを作成しました。ブラウザで詳細を追加してください。",
+      "dontAttach": "添付しない",
+      "attachLogs": "ログを添付する"
     }
   },
   "smsImport": {

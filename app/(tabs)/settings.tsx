@@ -320,13 +320,8 @@ export default function SettingsScreen() {
       }),
       [
         {
-          text: t("common.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-          onPress: openNewIssue,
-        },
-        {
-          text: t("settings.about.continueToGitHub", {
-            defaultValue: "Continue to GitHub",
+          text: t("settings.about.attachLogs", {
+            defaultValue: "Attach Logs",
           }),
           onPress: async () => {
             const token = syncConfig?.token
@@ -390,6 +385,14 @@ export default function SettingsScreen() {
             }
             openNewIssue()
           },
+        },
+        {
+          text: t("settings.about.dontAttach", { defaultValue: "Don't Attach" }),
+          onPress: openNewIssue,
+        },
+        {
+          text: t("common.cancel", { defaultValue: "Cancel" }),
+          style: "cancel",
         },
       ]
     )
