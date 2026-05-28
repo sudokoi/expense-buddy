@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, Platform, Pressable } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
+import * as Clipboard from "expo-clipboard"
 import { ChevronRight } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -302,14 +303,8 @@ export default function SettingsScreen() {
   }, [])
 
   const handleReportIssue = useCallback(() => {
-    const openIssue = (logs: string) => {
-      const baseUrl = `${APP_CONFIG.github.url}/issues/new/choose`
-      if (logs) {
-        const body = `## Device Logs\n\n\`\`\`\n${logs.slice(0, 15000)}\n\`\`\``
-        Linking.openURL(`${baseUrl}?body=${encodeURIComponent(body)}`)
-      } else {
-        Linking.openURL(baseUrl)
-      }
+    const openIssue = () => {
+      Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
     }
 
     Alert.alert(
@@ -324,7 +319,7 @@ export default function SettingsScreen() {
         {
           text: t("common.cancel", { defaultValue: "Cancel" }),
           style: "cancel",
-          onPress: () => openIssue(""),
+          onPress: openIssue,
         },
         {
           text: t("settings.about.continueToGitHub", {
@@ -332,12 +327,21 @@ export default function SettingsScreen() {
           }),
           onPress: async () => {
             const logs = await getLogsForBugReportAsync(200)
-            openIssue(logs)
+            if (logs) {
+              await Clipboard.setStringAsync(logs)
+              addNotification(
+                t("settings.about.logsCopied", {
+                  defaultValue: "Logs copied to clipboard. Paste them in the GitHub issue.",
+                }),
+                "info"
+              )
+            }
+            openIssue()
           },
         },
       ]
     )
-  }, [t])
+  }, [t, addNotification])
 
   // Theme and settings handlers
   const handleThemeChange = useCallback(

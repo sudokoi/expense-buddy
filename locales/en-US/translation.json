@@ -415,7 +415,8 @@
       "viewGitHub": "View on GitHub",
       "includeLogsTitle": "Include Device Logs?",
       "includeLogsMessage": "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
-      "continueToGitHub": "Continue to GitHub"
+      "continueToGitHub": "Continue to GitHub",
+      "logsCopied": "Logs copied to clipboard. Paste them in the GitHub issue."
     }
   },
   "smsImport": {
