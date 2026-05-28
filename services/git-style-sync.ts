@@ -20,15 +20,28 @@ import {
   clearSettingsChanged,
   hydrateSettingsFromJson,
 } from "./settings-manager"
-import { groupExpensesByDay, getFilenameForDay, getDayKeyFromFilename } from "./daily-file-manager"
-import { computeContentHash, loadFileHashes, saveFileHashes, FileHashMap } from "./hash-storage"
+import {
+  groupExpensesByDay,
+  getFilenameForDay,
+  getDayKeyFromFilename,
+} from "./daily-file-manager"
+import {
+  computeContentHash,
+  loadFileHashes,
+  saveFileHashes,
+  FileHashMap,
+} from "./hash-storage"
 import { loadDirtyDays } from "./expense-dirty-days"
-import { loadRemoteSHACache, saveRemoteSHACache } from "./remote-sha-cache"
-import { mergeExpenses, applyConflictResolutions, MergeResult, TrueConflict } from "./merge-engine"
+import { saveRemoteSHACache } from "./remote-sha-cache"
+import {
+  mergeExpenses,
+  applyConflictResolutions,
+  MergeResult,
+  TrueConflict,
+} from "./merge-engine"
 import { mergeCategories } from "./category-merger"
 import { mergePaymentInstruments } from "./payment-instrument-merger"
 import { getUserFriendlyMessage } from "./error-utils"
-import i18next from "i18next"
 import type { Expense } from "../types/expense"
 import type { Category } from "../types/category"
 
