@@ -42,6 +42,7 @@ import {
 import { mergeCategories } from "./category-merger"
 import { mergePaymentInstruments } from "./payment-instrument-merger"
 import { getUserFriendlyMessage } from "./error-utils"
+import i18next from "i18next"
 import type { Expense } from "../types/expense"
 import type { Category } from "../types/category"
 
@@ -133,8 +134,8 @@ export async function gitStyleSync(
     if (!config) {
       return {
         success: false,
-        message: "Sync not configured",
-        error: "No sync configuration found",
+        message: i18next.t("githubSync.manager.notConfigured"),
+        error: i18next.t("githubSync.manager.noConfigFound"),
         filesUploaded: 0,
         filesSkipped: 0,
       }
@@ -145,7 +146,7 @@ export async function gitStyleSync(
     if (!fetchResult.success) {
       return {
         success: false,
-        message: "Failed to fetch remote expenses",
+        message: i18next.t("githubSync.manager.failedToListRemote"),
         error: fetchResult.error,
         authStatus: fetchResult.authStatus,
         shouldSignOut: fetchResult.shouldSignOut,
@@ -168,8 +169,10 @@ export async function gitStyleSync(
       if (!onConflict) {
         return {
           success: false,
-          message: `Sync has ${mergeResult.trueConflicts.length} conflict(s) that require resolution`,
-          error: "Conflicts detected but no conflict handler provided",
+          message: i18next.t("githubSync.manager.conflictsCount", {
+            count: mergeResult.trueConflicts.length,
+          }),
+          error: i18next.t("githubSync.manager.conflictsNoHandler"),
           mergeResult,
           filesUploaded: 0,
           filesSkipped: 0,
@@ -181,8 +184,8 @@ export async function gitStyleSync(
       if (!resolutions) {
         return {
           success: false,
-          message: "Sync cancelled by user",
-          error: "User cancelled conflict resolution",
+          message: i18next.t("githubSync.manager.syncCancelled"),
+          error: i18next.t("githubSync.manager.cancelledByUser"),
           mergeResult,
           filesUploaded: 0,
           filesSkipped: 0,
@@ -195,8 +198,10 @@ export async function gitStyleSync(
       if (mergeResult.trueConflicts.length > 0) {
         return {
           success: false,
-          message: `${mergeResult.trueConflicts.length} conflict(s) were not resolved`,
-          error: "Not all conflicts were resolved",
+          message: i18next.t("githubSync.manager.conflictsNotResolvedCount", {
+            count: mergeResult.trueConflicts.length,
+          }),
+          error: i18next.t("githubSync.manager.conflictsNotResolved"),
           mergeResult,
           filesUploaded: 0,
           filesSkipped: 0,
@@ -309,7 +314,7 @@ export async function gitStyleSync(
         if (e instanceof GitHubApiError && (e.status === 401 || e.status === 403)) {
           return {
             success: false,
-            message: "Failed to download settings",
+            message: i18next.t("githubSync.manager.downloadSettingsFailed"),
             error: e.message,
             authStatus: e.status,
             shouldSignOut: e.shouldSignOut,
@@ -428,11 +433,11 @@ export async function gitStyleSync(
       if (batchResult.errorCode === "AUTH" || batchResult.errorCode === "PERMISSION") {
         return {
           success: false,
-          message: "Failed to push merged expenses",
+          message: i18next.t("githubSync.manager.pushFailed"),
           error:
             batchResult.errorCode === "AUTH"
-              ? "Your GitHub session is no longer valid. Please sign in again."
-              : "GitHub denied access (403). Please ensure you own the repo and have write access, then sign in again.",
+              ? i18next.t("githubSync.errors.sessionExpired")
+              : i18next.t("githubSync.errors.accessDenied"),
           authStatus: batchResult.errorCode === "AUTH" ? 401 : 403,
           shouldSignOut: true,
           mergeResult,
@@ -443,7 +448,7 @@ export async function gitStyleSync(
 
       return {
         success: false,
-        message: "Failed to push merged expenses",
+        message: i18next.t("githubSync.manager.pushFailed"),
         error: batchResult.error,
         mergeResult,
         filesUploaded: 0,
@@ -550,7 +555,7 @@ export async function gitStyleSync(
     ) {
       return {
         success: false,
-        message: "Sync failed",
+        message: i18next.t("githubSync.manager.syncFailed"),
         error: error.message,
         authStatus: error.status,
         shouldSignOut: error.shouldSignOut,
@@ -562,7 +567,7 @@ export async function gitStyleSync(
 
     return {
       success: false,
-      message: "Sync failed",
+      message: i18next.t("githubSync.manager.syncFailed"),
       error: getUserFriendlyMessage(error),
       filesUploaded: 0,
       filesSkipped: 0,

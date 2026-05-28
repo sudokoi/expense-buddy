@@ -148,7 +148,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           lastNotification = {
             localFilesUpdated: 0,
             remoteFilesUpdated: 0,
-            message: "Pending changes detected. Please sync manually.",
+            message: i18next.t("settings.notifications.pendingChanges"),
           }
         }
         return {
