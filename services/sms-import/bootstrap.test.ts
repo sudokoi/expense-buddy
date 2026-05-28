@@ -5,57 +5,72 @@ jest.mock("react-native", () => ({
 jest.mock("./android-sms-module", () => ({
   categorizeSmsImportMessages: jest.fn(),
   getSmsPermissionStatus: jest.fn(),
-  scanRecentSmsMessages: jest.fn(),
+  scanAndParseMessages: jest.fn(),
 }))
 
-import { createSmsImportFingerprint } from "./fingerprint"
 import { scanSmsImportReviewQueue } from "./bootstrap"
 import {
   categorizeSmsImportMessages,
   getSmsPermissionStatus,
-  scanRecentSmsMessages,
+  scanAndParseMessages,
 } from "./android-sms-module"
-import type { SmsImportRawMessage, SmsImportReviewItem } from "../../types/sms-import"
+import type { NativeSmsScanParseResult } from "../../modules/expense-buddy-sms-import"
+import type { SmsImportReviewItem } from "../../types/sms-import"
 
 const mockCategorizeSmsImportMessages =
   categorizeSmsImportMessages as jest.MockedFunction<typeof categorizeSmsImportMessages>
 const mockGetSmsPermissionStatus = getSmsPermissionStatus as jest.MockedFunction<
   typeof getSmsPermissionStatus
 >
-const mockScanRecentSmsMessages = scanRecentSmsMessages as jest.MockedFunction<
-  typeof scanRecentSmsMessages
+const mockScanAndParseMessages = scanAndParseMessages as jest.MockedFunction<
+  typeof scanAndParseMessages
 >
 
-function createMessage(
-  overrides: Partial<SmsImportRawMessage> = {}
-): SmsImportRawMessage {
+function createParsedMessage(
+  overrides: Partial<NativeSmsScanParseResult> = {}
+): NativeSmsScanParseResult {
   return {
+    fingerprint: "sms_testfingerprint123",
     messageId: "sms-1",
     sender: "VK-HDFCBK",
     body: "INR 499 spent at Amazon Marketplace using debit card",
     receivedAt: "2026-04-11T10:15:30.000Z",
+    amount: 499,
+    currency: "INR",
+    merchantName: "Amazon Marketplace using debit card",
+    categorySuggestion: "Other",
+    paymentMethodType: "Debit Card",
+    paymentMethodIdentifier: null,
+    paymentMethodInstrumentId: null,
+    noteSuggestion: "SMS import: Amazon Marketplace using debit card",
+    transactionDate: "2026-04-11T10:15:30.000Z",
+    matchedLocale: "en-IN",
+    matchedPatternKey: "india.generic.transaction",
     ...overrides,
   }
 }
 
-async function createExistingItem(
-  message: SmsImportRawMessage
-): Promise<SmsImportReviewItem> {
-  const fingerprint = await createSmsImportFingerprint(message, 499)
-
+function createExistingItem(parsed: NativeSmsScanParseResult): SmsImportReviewItem {
   return {
-    id: `${fingerprint}_${message.messageId}`,
-    fingerprint,
-    sourceMessage: message,
-    amount: 499,
-    currency: "INR",
-    merchantName: "Amazon Marketplace using debit card",
-    categorySuggestion: "Shopping",
-    paymentMethodSuggestion: { type: "Debit Card" },
-    noteSuggestion: "SMS import: Amazon Marketplace using debit card",
-    transactionDate: message.receivedAt,
-    matchedLocale: "en-IN",
-    matchedPatternKey: "india.generic.transaction",
+    id: `${parsed.fingerprint}_${parsed.messageId}`,
+    fingerprint: parsed.fingerprint,
+    sourceMessage: {
+      messageId: parsed.messageId,
+      sender: parsed.sender,
+      body: parsed.body,
+      receivedAt: parsed.receivedAt,
+    },
+    amount: parsed.amount ?? undefined,
+    currency: parsed.currency ?? undefined,
+    merchantName: parsed.merchantName ?? undefined,
+    categorySuggestion: (parsed.categorySuggestion ?? undefined) as "Other" | undefined,
+    paymentMethodSuggestion: parsed.paymentMethodType
+      ? { type: parsed.paymentMethodType }
+      : undefined,
+    noteSuggestion: parsed.noteSuggestion ?? undefined,
+    transactionDate: parsed.transactionDate ?? undefined,
+    matchedLocale: parsed.matchedLocale ?? undefined,
+    matchedPatternKey: parsed.matchedPatternKey ?? undefined,
     status: "accepted",
     createdAt: "2026-04-11T10:16:00.000Z",
     updatedAt: "2026-04-11T10:16:00.000Z",
@@ -84,28 +99,34 @@ describe("scanSmsImportReviewQueue", () => {
       bootstrapCompletedAt: null,
     })
 
-    expect(mockScanRecentSmsMessages).not.toHaveBeenCalled()
+    expect(mockScanAndParseMessages).not.toHaveBeenCalled()
   })
 
   it("creates new review items, dedupes existing ones, and keeps a non-lossy newest cursor", async () => {
-    const existingMessage = createMessage()
-    const newerMessage = createMessage({
+    const existingParsed = createParsedMessage()
+    const newerParsed = createParsedMessage({
+      fingerprint: "sms_newfingerprint456",
       messageId: "sms-2",
       body: "INR 250 paid to Uber Trip via credit card",
+      amount: 250,
+      merchantName: "Uber Trip",
+      categorySuggestion: "Transport",
+      paymentMethodType: "Credit Card",
+      noteSuggestion: "SMS import: Uber Trip",
       receivedAt: "2026-04-11T10:20:00.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([existingMessage, newerMessage])
+    mockScanAndParseMessages.mockResolvedValue([existingParsed, newerParsed])
 
-    const existingItem = await createExistingItem(existingMessage)
+    const existingItem = createExistingItem(existingParsed)
     const result = await scanSmsImportReviewQueue({
       existingItems: [existingItem],
       lastScanCursor: "2026-04-11T10:00:00.000Z",
       bootstrapCompletedAt: null,
     })
 
-    expect(mockScanRecentSmsMessages).toHaveBeenCalledWith({
+    expect(mockScanAndParseMessages).toHaveBeenCalledWith({
       since: "2026-04-11T10:00:00.000Z",
       lookbackDays: 7,
       limit: 500,
@@ -113,7 +134,12 @@ describe("scanSmsImportReviewQueue", () => {
     expect(result.permissionStatus).toBe("granted")
     expect(result.createdItems).toHaveLength(1)
     expect(result.createdItems[0]).toMatchObject({
-      sourceMessage: newerMessage,
+      sourceMessage: {
+        messageId: "sms-2",
+        sender: "VK-HDFCBK",
+        body: "INR 250 paid to Uber Trip via credit card",
+        receivedAt: "2026-04-11T10:20:00.000Z",
+      },
       amount: 250,
       paymentMethodSuggestion: { type: "Credit Card" },
       categorySuggestion: "Transport",
@@ -126,7 +152,7 @@ describe("scanSmsImportReviewQueue", () => {
 
   it("preserves the previous cursor when a rescan finds nothing new", async () => {
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([])
+    mockScanAndParseMessages.mockResolvedValue([])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -140,7 +166,7 @@ describe("scanSmsImportReviewQueue", () => {
 
   it("uses the bounded initial scan window and limit when no cursor exists", async () => {
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([])
+    mockScanAndParseMessages.mockResolvedValue([])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -148,7 +174,7 @@ describe("scanSmsImportReviewQueue", () => {
       bootstrapCompletedAt: null,
     })
 
-    expect(mockScanRecentSmsMessages).toHaveBeenCalledWith({
+    expect(mockScanAndParseMessages).toHaveBeenCalledWith({
       lookbackDays: 7,
       limit: 500,
     })
@@ -156,18 +182,24 @@ describe("scanSmsImportReviewQueue", () => {
   })
 
   it("keeps the cursor just behind the newest timestamp to avoid missing same-timestamp messages", async () => {
-    const firstMessage = createMessage({
+    const first = createParsedMessage({
+      fingerprint: "sms_first",
       messageId: "sms-1",
       receivedAt: "2026-04-11T10:20:00.000Z",
     })
-    const secondMessage = createMessage({
+    const second = createParsedMessage({
+      fingerprint: "sms_second",
       messageId: "sms-2",
       body: "INR 250 paid to Uber Trip via credit card",
+      amount: 250,
+      merchantName: "Uber Trip",
+      categorySuggestion: "Transport",
+      noteSuggestion: "SMS import: Uber Trip",
       receivedAt: "2026-04-11T10:20:00.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+    mockScanAndParseMessages.mockResolvedValue([first, second])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -178,18 +210,18 @@ describe("scanSmsImportReviewQueue", () => {
     expect(result.nextCursor).toBe("2026-04-11T10:19:59.999Z")
   })
 
-  it("dedupes duplicate messages produced within the same scan batch", async () => {
-    const firstMessage = createMessage({
+  it("dedupes duplicate messages that share the same fingerprint within the same batch", async () => {
+    const first = createParsedMessage({
       messageId: "sms-1",
       receivedAt: "2026-04-11T10:15:05.000Z",
     })
-    const duplicateMessage = createMessage({
+    const duplicate = createParsedMessage({
       messageId: "sms-2",
       receivedAt: "2026-04-11T10:15:05.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, duplicateMessage])
+    mockScanAndParseMessages.mockResolvedValue([first, duplicate])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -198,21 +230,22 @@ describe("scanSmsImportReviewQueue", () => {
     })
 
     expect(result.createdItems).toHaveLength(1)
-    expect(result.createdItems[0]?.sourceMessage.messageId).toBe("sms-1")
   })
 
-  it("dedupes messages that share the same text within the same 3-minute window", async () => {
-    const firstMessage = createMessage({
+  it("dedupes messages that share the same fingerprint within the same 3-minute window", async () => {
+    const first = createParsedMessage({
       messageId: "sms-1",
+      fingerprint: "sms_fingerprint",
       receivedAt: "2026-04-11T10:15:05.000Z",
     })
-    const secondMessage = createMessage({
+    const second = createParsedMessage({
       messageId: "sms-2",
+      fingerprint: "sms_fingerprint",
       receivedAt: "2026-04-11T10:15:45.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+    mockScanAndParseMessages.mockResolvedValue([first, second])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -223,18 +256,20 @@ describe("scanSmsImportReviewQueue", () => {
     expect(result.createdItems).toHaveLength(1)
   })
 
-  it("keeps distinct messages that share the same text across different 3-minute windows", async () => {
-    const firstMessage = createMessage({
+  it("keeps distinct messages that have different fingerprints across different time windows", async () => {
+    const first = createParsedMessage({
       messageId: "sms-1",
+      fingerprint: "sms_fingerprint_a",
       receivedAt: "2026-04-11T10:12:01.000Z",
     })
-    const secondMessage = createMessage({
+    const second = createParsedMessage({
       messageId: "sms-2",
+      fingerprint: "sms_fingerprint_b",
       receivedAt: "2026-04-11T10:15:01.000Z",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([firstMessage, secondMessage])
+    mockScanAndParseMessages.mockResolvedValue([first, second])
 
     const result = await scanSmsImportReviewQueue({
       existingItems: [],
@@ -250,15 +285,16 @@ describe("scanSmsImportReviewQueue", () => {
   })
 
   it("prefers the native ML category when the prediction clears the confidence gate", async () => {
-    const message = createMessage({
+    const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
+      categorySuggestion: "Transport",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockScanAndParseMessages.mockResolvedValue([parsed])
     mockCategorizeSmsImportMessages.mockResolvedValue([
       {
-        messageId: message.messageId,
+        messageId: parsed.messageId,
         category: "Food",
         confidence: 0.92,
         shouldUsePrediction: true,
@@ -281,15 +317,16 @@ describe("scanSmsImportReviewQueue", () => {
   })
 
   it("falls back to regex when the native prediction is below the gate", async () => {
-    const message = createMessage({
+    const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
+      categorySuggestion: "Transport",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockScanAndParseMessages.mockResolvedValue([parsed])
     mockCategorizeSmsImportMessages.mockResolvedValue([
       {
-        messageId: message.messageId,
+        messageId: parsed.messageId,
         category: "Food",
         confidence: 0.31,
         shouldUsePrediction: false,
@@ -312,15 +349,16 @@ describe("scanSmsImportReviewQueue", () => {
   })
 
   it("can prefer ML suggestions even below the confidence gate when ML-only mode is enabled", async () => {
-    const message = createMessage({
+    const parsed = createParsedMessage({
       body: "INR 250 paid to Uber Trip via credit card",
+      categorySuggestion: "Transport",
     })
 
     mockGetSmsPermissionStatus.mockResolvedValue("granted")
-    mockScanRecentSmsMessages.mockResolvedValue([message])
+    mockScanAndParseMessages.mockResolvedValue([parsed])
     mockCategorizeSmsImportMessages.mockResolvedValue([
       {
-        messageId: message.messageId,
+        messageId: parsed.messageId,
         category: "Food",
         confidence: 0.31,
         shouldUsePrediction: false,

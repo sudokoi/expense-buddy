@@ -1,10 +1,19 @@
-package expo.modules.expensebuddybackgroundsms
+package expo.modules.expensebuddysmsimport
 
-import expo.modules.expensebuddysmsimport.SmsPaymentMethod
-import expo.modules.expensebuddysmsimport.SmsRawMessage
+data class SmsRawMessage(
+    val messageId: String,
+    val sender: String,
+    val body: String,
+    val receivedAt: String,
+)
 
-data class BackgroundSmsReviewItem(
-    val id: String,
+data class SmsPaymentMethod(
+    val type: String,
+    val identifier: String? = null,
+    val instrumentId: String? = null,
+)
+
+data class SmsParsedMessage(
     val fingerprint: String,
     val sourceMessage: SmsRawMessage,
     val amount: Double? = null,
@@ -16,12 +25,4 @@ data class BackgroundSmsReviewItem(
     val transactionDate: String? = null,
     val matchedLocale: String? = null,
     val matchedPatternKey: String? = null,
-    val status: String = "pending",
-    val acceptedExpenseId: String? = null,
-    val createdAt: String,
-    val updatedAt: String,
-)
-
-data class BackgroundSmsState(
-    val enabled: Boolean,
 )

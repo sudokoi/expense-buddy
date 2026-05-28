@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.provider.Telephony
 import androidx.core.content.ContextCompat
+import expo.modules.expensebuddylogger.LoggerApi
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
@@ -68,6 +69,11 @@ class ExpenseBuddySmsImportModule : Module() {
                 queryRecentMessages(options)
             }
 
+            AsyncFunction("scanAndParseMessagesAsync") { options: SmsImportScanOptionsRecord ->
+                ensurePermissionGranted()
+                scanAndParseMessages(options)
+            }
+
             AsyncFunction("categorizeMessagesAsync") { requests: List<SmsCategoryPredictionRequestRecord> ->
                 classifyMessages(requests)
             }
@@ -79,6 +85,49 @@ class ExpenseBuddySmsImportModule : Module() {
         if (status != PackageManager.PERMISSION_GRANTED) {
             throw SmsPermissionMissingException()
         }
+    }
+
+    private fun scanAndParseMessages(options: SmsImportScanOptionsRecord): List<Map<String, Any?>> {
+        val rawMessages = queryRecentMessages(options)
+        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: scanned=${rawMessages.size}")
+
+        val results = mutableListOf<Map<String, Any?>>()
+        for (msg in rawMessages) {
+            val sender = msg["sender"] ?: continue
+            val body = msg["body"] ?: ""
+            val receivedAt = msg["receivedAt"] ?: continue
+            val messageId = msg["messageId"] ?: continue
+
+            val parsed = SmsMessageParser.parseRawMessage(sender, body, receivedAt)
+            if (parsed == null) {
+                LoggerApi.d("SMS_MODULE", "scanAndParseMessages: skipped message=$messageId")
+                continue
+            }
+
+            results.add(
+                mapOf(
+                    "fingerprint" to parsed.fingerprint,
+                    "messageId" to messageId,
+                    "sender" to sender,
+                    "body" to body,
+                    "receivedAt" to receivedAt,
+                    "amount" to parsed.amount,
+                    "currency" to parsed.currency,
+                    "merchantName" to parsed.merchantName,
+                    "categorySuggestion" to parsed.categorySuggestion,
+                    "paymentMethodType" to parsed.paymentMethodSuggestion?.type,
+                    "paymentMethodIdentifier" to parsed.paymentMethodSuggestion?.identifier,
+                    "paymentMethodInstrumentId" to parsed.paymentMethodSuggestion?.instrumentId,
+                    "noteSuggestion" to parsed.noteSuggestion,
+                    "transactionDate" to parsed.transactionDate,
+                    "matchedLocale" to parsed.matchedLocale,
+                    "matchedPatternKey" to parsed.matchedPatternKey,
+                ),
+            )
+        }
+
+        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: parsed=${results.size}")
+        return results
     }
 
     private fun queryRecentMessages(options: SmsImportScanOptionsRecord): List<Map<String, String>> {

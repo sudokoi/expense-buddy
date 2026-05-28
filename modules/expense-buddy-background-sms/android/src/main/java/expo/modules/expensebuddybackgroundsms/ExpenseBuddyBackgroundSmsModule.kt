@@ -1,6 +1,8 @@
 package expo.modules.expensebuddybackgroundsms
 
 import expo.modules.expensebuddylogger.LoggerApi
+import expo.modules.expensebuddysmsimport.SmsPaymentMethod
+import expo.modules.expensebuddysmsimport.SmsRawMessage
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -114,7 +116,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
                     id = obj.optString("id"),
                     fingerprint = obj.optString("fingerprint"),
                     sourceMessage =
-                        BackgroundSmsRawMessage(
+                        SmsRawMessage(
                             messageId = obj.getJSONObject("sourceMessage").optString("messageId"),
                             sender = obj.getJSONObject("sourceMessage").optString("sender"),
                             body = obj.getJSONObject("sourceMessage").optString("body"),
@@ -126,7 +128,7 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
                     categorySuggestion = obj.optNullableString("categorySuggestion"),
                     paymentMethodSuggestion =
                         obj.optJSONObject("paymentMethodSuggestion")?.let {
-                            BackgroundSmsPaymentMethod(
+                            SmsPaymentMethod(
                                 type = it.optString("type"),
                                 identifier = it.optNullableString("identifier"),
                                 instrumentId = it.optNullableString("instrumentId"),

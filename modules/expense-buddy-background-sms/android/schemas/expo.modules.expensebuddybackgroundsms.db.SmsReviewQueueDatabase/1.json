@@ -152,9 +152,7 @@
         ],
         "primaryKey": {
           "autoGenerate": false,
-          "columnNames": [
-            "fingerprint"
-          ]
+          "columnNames": ["fingerprint"]
         }
       },
       {
@@ -199,9 +197,7 @@
         ],
         "primaryKey": {
           "autoGenerate": true,
-          "columnNames": [
-            "id"
-          ]
+          "columnNames": ["id"]
         }
       }
     ],

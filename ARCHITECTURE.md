@@ -87,23 +87,23 @@ Runtime flow:
 2. If permission was already granted, bootstrap logic can scan the bounded recent window.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
 4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
-5. `services/sms-import/parser.ts` extracts amount, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
-6. `services/sms-import/bootstrap.ts` batches eligible messages through the Android native module for LiteRT category inference.
+5. `ExpenseBuddySmsImportModule` provides `scanAndParseMessagesAsync` which queries recent SMS from the ContentProvider and pipes each message through the native `SmsMessageParser` (in the same module) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
+6. `services/sms-import/bootstrap.ts` batches eligible messages through the same native module for LiteRT category inference.
 7. The native module mirrors the Python export contract with deterministic hashed token features and replaces the category suggestion only when the model clears its confidence gate.
-8. `services/sms-import/fingerprint.ts` and related dedupe logic prevent repeated staging of the same transaction.
+8. `SmsMessageParser.createFingerprint` (native, same module) generates a deterministic SHA-256 fingerprint from sender, body, timestamp (quantized to 3-minute windows), and amount for dedup.
 9. Parsed candidates are inserted into a native Room database via `SmsReviewQueueRepository` in `expense-buddy-background-sms`.
 10. The review store subscribes to native `onReviewQueueUpdated` events and refetches a fresh snapshot on each change — it does not own queue state.
-11. When an `SMS_RECEIVED` broadcast arrives, the background module parses the message locally, inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
+11. When an `SMS_RECEIVED` broadcast arrives, the background receiver calls `BackgroundSmsParser.parseIncomingMessage` which delegates to `SmsMessageParser` (from `expense-buddy-sms-import`) for the core regex logic, then inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
 12. Notification taps route into `/sms/review`, targeting a single item directly when possible.
 13. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
 14. Only accepted items are converted into normal expense records and enter the regular sync flow.
 
-Why this hybrid shape:
+Why this shape:
 
 - easier to debug against real SMS fixtures
 - easier to explain to users in a review-first flow
-- keeps deterministic extraction on the JS side while moving actual category inference off the JS thread
-- lets the app ship a native model bundle without requiring server-side parsing or on-device training
+- all deterministic extraction, fingerprinting, and dedup happens in native Kotlin (`SmsMessageParser`) so there is a single source of truth for regex and fingerprint logic
+- category inference runs separately through LiteRT (native ML), and the results are merged in the JS bootstrap layer
 - adds near-real-time alerts without introducing polling, scheduled jobs, or a foreground service
 
 Planned direction:
@@ -114,6 +114,12 @@ Planned direction:
 - add local personalization only after the base on-device model is stable enough to justify it
 
 There is no server-side parsing roadmap. Any future ML-based parser is expected to remain local to the device.
+
+Module dependency structure:
+
+- `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android SDK) and `ExpenseBuddySmsImportModule` (scan + parse API, LiteRT ML)
+- `expense-buddy-background-sms` depends on `expense-buddy-sms-import` for parsing; its `BackgroundSmsParser` converts `android.telephony.SmsMessage[]` to `SmsRawMessage` and delegates to `SmsMessageParser`
+- `expense-buddy-logger` is a dependency of both for structured logging
 
 Related decisions:
 

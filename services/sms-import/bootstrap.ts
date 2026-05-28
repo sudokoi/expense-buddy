@@ -1,22 +1,15 @@
 import { Platform } from "react-native"
-import { createSmsImportFingerprint } from "./fingerprint"
 import {
   categorizeSmsImportMessages,
   getSmsPermissionStatus,
-  scanRecentSmsMessages,
+  scanAndParseMessages,
   SmsImportPermissionStatus,
 } from "./android-sms-module"
-import { parseSmsImportCandidate, ParsedSmsImportCandidate } from "./parser"
+import type { NativeSmsScanParseResult } from "../../modules/expense-buddy-sms-import"
 import { SmsImportReviewItem } from "../../types/sms-import"
 
 const SMS_IMPORT_SCAN_LOOKBACK_DAYS = 7
 const SMS_IMPORT_SCAN_LIMIT = 500
-
-interface ParsedBootstrapCandidate {
-  fingerprint: string
-  message: Awaited<ReturnType<typeof scanRecentSmsMessages>>[number]
-  parsedCandidate: ParsedSmsImportCandidate
-}
 
 export interface SmsImportBootstrapInput {
   existingItems: SmsImportReviewItem[]
@@ -63,65 +56,69 @@ function getNextCursor(
     return previousCursor
   }
 
-  // The native Android query uses DATE > since, so keep the cursor 1 ms behind the
-  // newest scanned message to avoid skipping sibling messages with the same timestamp.
   return new Date(Math.max(0, newestTimestamp - 1)).toISOString()
 }
 
-async function createParsedBootstrapCandidate(
-  existingFingerprints: Set<string>,
-  message: Awaited<ReturnType<typeof scanRecentSmsMessages>>[number]
-): Promise<ParsedBootstrapCandidate | null> {
-  const parsedCandidate = parseSmsImportCandidate(message)
-  if (!parsedCandidate) {
-    return null
-  }
-
-  const fingerprint = await createSmsImportFingerprint(message, parsedCandidate.amount)
-  if (existingFingerprints.has(fingerprint)) {
-    return null
-  }
-
-  existingFingerprints.add(fingerprint)
-
-  return {
-    fingerprint,
-    message,
-    parsedCandidate,
-  }
-}
-
 function createReviewItem(
-  candidate: ParsedBootstrapCandidate,
-  categoryPrediction?: Awaited<ReturnType<typeof categorizeSmsImportMessages>>[number],
+  parsed: NativeSmsScanParseResult,
+  existingFingerprints: Set<string>,
+  categoryPredictions: Map<
+    string,
+    {
+      category: string
+      confidence: number
+      shouldUsePrediction: boolean
+      modelId: string
+    }
+  >,
   useMlOnlyForSmsImports = false
-): SmsImportReviewItem {
-  const { fingerprint, message, parsedCandidate } = candidate
+): SmsImportReviewItem | null {
+  if (existingFingerprints.has(parsed.fingerprint)) {
+    return null
+  }
+  existingFingerprints.add(parsed.fingerprint)
+
+  const prediction = categoryPredictions.get(parsed.messageId)
   const useMlCategory = useMlOnlyForSmsImports
-    ? Boolean(categoryPrediction?.category)
-    : (categoryPrediction?.shouldUsePrediction ?? false)
+    ? Boolean(prediction?.category)
+    : (prediction?.shouldUsePrediction ?? false)
 
   const now = new Date().toISOString()
+  const paymentMethodSuggestion = parsed.paymentMethodType
+    ? {
+        type: parsed.paymentMethodType,
+        ...(parsed.paymentMethodIdentifier
+          ? { identifier: parsed.paymentMethodIdentifier }
+          : {}),
+        ...(parsed.paymentMethodInstrumentId
+          ? { instrumentId: parsed.paymentMethodInstrumentId }
+          : {}),
+      }
+    : undefined
+
   return {
-    id: `${fingerprint}_${message.messageId}`,
-    fingerprint,
-    sourceMessage: message,
-    amount: parsedCandidate.amount,
-    currency: parsedCandidate.currency,
-    merchantName: parsedCandidate.merchantName,
+    id: `${parsed.fingerprint}_${parsed.messageId}`,
+    fingerprint: parsed.fingerprint,
+    sourceMessage: {
+      messageId: parsed.messageId,
+      sender: parsed.sender,
+      body: parsed.body,
+      receivedAt: parsed.receivedAt,
+    },
+    amount: parsed.amount ?? undefined,
+    currency: parsed.currency ?? undefined,
+    merchantName: parsed.merchantName ?? undefined,
     categorySuggestion: useMlCategory
-      ? categoryPrediction?.category
-      : parsedCandidate.categorySuggestion,
-    categorySuggestionConfidence: useMlCategory
-      ? categoryPrediction?.confidence
-      : undefined,
-    categorySuggestionModelId: useMlCategory ? categoryPrediction?.modelId : undefined,
+      ? prediction!.category
+      : (parsed.categorySuggestion ?? undefined),
+    categorySuggestionConfidence: useMlCategory ? prediction!.confidence : undefined,
+    categorySuggestionModelId: useMlCategory ? prediction!.modelId : undefined,
     categorySuggestionSource: useMlCategory ? "ml" : "regex",
-    paymentMethodSuggestion: parsedCandidate.paymentMethodSuggestion,
-    noteSuggestion: parsedCandidate.noteSuggestion,
-    transactionDate: parsedCandidate.transactionDate,
-    matchedLocale: parsedCandidate.matchedLocale,
-    matchedPatternKey: parsedCandidate.matchedPatternKey,
+    paymentMethodSuggestion,
+    noteSuggestion: parsed.noteSuggestion ?? undefined,
+    transactionDate: parsed.transactionDate ?? undefined,
+    matchedLocale: parsed.matchedLocale ?? undefined,
+    matchedPatternKey: parsed.matchedPatternKey ?? undefined,
     status: "pending",
     createdAt: now,
     updatedAt: now,
@@ -153,7 +150,8 @@ export async function scanSmsImportReviewQueue(
   const existingFingerprints = new Set(
     input.existingItems.map((item) => item.fingerprint)
   )
-  const messages = await scanRecentSmsMessages(
+
+  const parsedMessages = await scanAndParseMessages(
     input.lastScanCursor
       ? {
           since: input.lastScanCursor,
@@ -166,40 +164,37 @@ export async function scanSmsImportReviewQueue(
         }
   )
 
-  const parsedCandidates = (
-    await Promise.all(
-      messages.map((message) =>
-        createParsedBootstrapCandidate(existingFingerprints, message)
-      )
-    )
-  ).filter((candidate): candidate is ParsedBootstrapCandidate => candidate !== null)
-
   const categoryPredictions = await categorizeSmsImportMessages(
-    parsedCandidates.map((candidate) => ({
-      messageId: candidate.message.messageId,
-      sender: candidate.message.sender,
-      body: candidate.message.body,
-      merchantName: candidate.parsedCandidate.merchantName,
+    parsedMessages.map((msg) => ({
+      messageId: msg.messageId,
+      sender: msg.sender,
+      body: msg.body,
+      merchantName: msg.merchantName,
     }))
   )
   const predictionByMessageId = new Map(
     categoryPredictions.map((prediction) => [prediction.messageId, prediction])
   )
 
-  const createdItems = parsedCandidates.map((candidate) =>
-    createReviewItem(
-      candidate,
-      predictionByMessageId.get(candidate.message.messageId),
+  const createdItems: SmsImportReviewItem[] = []
+  for (const parsed of parsedMessages) {
+    const item = createReviewItem(
+      parsed,
+      existingFingerprints,
+      predictionByMessageId,
       input.useMlOnlyForSmsImports
     )
-  )
+    if (item) {
+      createdItems.push(item)
+    }
+  }
 
   const bootstrapCompletedAt = input.bootstrapCompletedAt ?? new Date().toISOString()
 
   return {
     permissionStatus,
     createdItems,
-    nextCursor: getNextCursor(messages, input.lastScanCursor),
+    nextCursor: getNextCursor(parsedMessages, input.lastScanCursor),
     bootstrapCompletedAt,
   }
 }

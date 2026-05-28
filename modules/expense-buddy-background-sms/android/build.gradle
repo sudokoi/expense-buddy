@@ -42,6 +42,7 @@ dependencies {
   kapt "androidx.room:room-compiler:2.7.1"
 
   implementation project(":expense-buddy-logger")
+  implementation project(":expense-buddy-sms-import")
 
   // Tests
   testImplementation "junit:junit:4.13.2"

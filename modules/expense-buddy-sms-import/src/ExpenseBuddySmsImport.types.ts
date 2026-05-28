@@ -41,10 +41,32 @@ export interface NativeSmsCategoryPrediction {
   modelId: string
 }
 
+export interface NativeSmsScanParseResult {
+  fingerprint: string
+  messageId: string
+  sender: string
+  body: string
+  receivedAt: string
+  amount: number | null
+  currency: string | null
+  merchantName: string | null
+  categorySuggestion: string | null
+  paymentMethodType: string | null
+  paymentMethodIdentifier: string | null
+  paymentMethodInstrumentId: string | null
+  noteSuggestion: string | null
+  transactionDate: string | null
+  matchedLocale: string | null
+  matchedPatternKey: string | null
+}
+
 export interface ExpenseBuddySmsImportNativeModule extends NativeModule {
   getPermissionStatusAsync(): Promise<SmsImportPermissionResponse>
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options?: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
+  scanAndParseMessagesAsync(
+    options?: SmsImportScanOptions
+  ): Promise<NativeSmsScanParseResult[]>
   categorizeMessagesAsync?(
     requests: NativeSmsCategoryPredictionRequest[]
   ): Promise<NativeSmsCategoryPrediction[]>

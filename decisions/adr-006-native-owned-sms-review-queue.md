@@ -1,7 +1,7 @@
 # ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence
 
-**Date:** 2026-05-27
-**Status:** Accepted
+**Date:** 2026-05-27 (last updated 2026-05-28 for Phase 3)
+**Status:** Accepted — Phases 1–3 complete, Phase 4 (reliability logging) complete
 **Author:** Planning draft via Opencode Deepseek v4 flash
 
 ---
@@ -86,7 +86,7 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
    This means the user starts with a clean queue after the update, but the scan window is bounded by their last cursor — they do not re-process their entire inbox. If no cursor exists (first-ever scan), fall back to the default 7-day lookback.
 
-**Phase 3 — JS cleanup**
+**Phase 3 — Native parser extraction and JS cleanup**
 
 8. **Strip JS queue ownership** from `sms-import-review-store.ts`:
    - Remove `mergeReviewItems()`, `persistQueueState()`, and the complex `initializeSmsImportReviewStore()` merge
@@ -100,6 +100,15 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
    - `insertPendingItemsAsync(items: ReviewQueueItem[])`
 
 10. **Switch to event-driven sync**: Native emits `"onReviewQueueUpdated"` after any mutation. JS subscribes via `addListener`, refetches a fresh snapshot on each event. No incremental state mutation across the bridge.
+
+11. **Extract parser to shared native module**: Move core regex parsing and fingerprint logic from `BackgroundSmsParser` (in `expense-buddy-background-sms`) to a new `SmsMessageParser` class in `expense-buddy-sms-import`. This eliminates the duplicate JS-side `parser.ts` and `fingerprint.ts` by:
+    - Adding `scanAndParseMessagesAsync` to `ExpenseBuddySmsImportModule` — scans SMS and returns pre-parsed results with native fingerprints
+    - Updating `BackgroundSmsParser` to delegate to `SmsMessageParser` for all regex/fingerprint logic, keeping only the Android `SmsMessage[]` → `SmsRawMessage` conversion
+    - Adding `implementation project(":expense-buddy-sms-import")` to `expense-buddy-background-sms/build.gradle`
+    - Simplifying `services/sms-import/bootstrap.ts` to call `scanAndParseMessages` instead of JS parser + fingerprint
+    - Deleting `parser.ts`, `parser.test.ts`, `fingerprint.ts`, `fingerprint.test.ts` (JS regex/fingerprint code)
+    - `payment-method-hints.ts` is kept — still used by `suggestion-resolver.ts` for downstream payment instrument matching
+    - Module dependency: `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android framework dependencies). Both `ExpenseBuddySmsImportModule` and `BackgroundSmsParser` call into it. Tests: `SmsMessageParserTest` (30 tests) replaces JS parser + fingerprint tests.
 
 **Phase 4 — Reliability**
 
@@ -144,9 +153,10 @@ This ADR does not change the privacy boundary defined in ADR-003. Raw SMS conten
 
 ## Rollout and follow-up scope
 
-- Implement Phase 1 first (fingerprint unification, mutexes, map storage, write serialization). Each sub-step can be shipped independently.
-- Ship Phase 2 (Room, repository, migration) as a single coherent change. The migration reads `lastScanCursor`, clears both old stores, scans from the cursor, and writes to Room.
-- Remove old SharedPreferences-based code and AsyncStorage queue key after the migration has run successfully in production.
-- Phase 3 (JS cleanup) can partially overlap with Phase 2 since the JS changes are additive (new TurboModule API calls) rather than breaking.
+- Implement Phase 1 first (fingerprint unification, mutexes, map storage, write serialization). ✓ Complete.
+- Ship Phase 2 (Room, repository, migration) as a single coherent change. ✓ Complete.
+- Remove old SharedPreferences-based code and AsyncStorage queue key after the migration has run successfully in production. ✓ Complete.
+- Phase 3 (JS cleanup + native parser extraction) done. JS `parser.ts`, `fingerprint.ts`, and their tests deleted. All regex/fingerprint logic unified in `SmsMessageParser` in `expense-buddy-sms-import`. ✓ Complete.
+- Phase 4 (reliability logging + import source metadata) done. ✓ Complete.
 - Monitor `sms_import_journal` for unexpected dedupe patterns after rollout.
-- Monitor crash rate and ANR frequency after the Room migration (Room uses `supportSQLite`; should be transparent but worth confirming on low-end devices).
+- Monitor crash rate and ANR frequency after the Room migration.

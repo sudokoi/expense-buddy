@@ -4,6 +4,7 @@ import ExpenseBuddySmsImportModule, {
   NativeSmsCategoryPrediction,
   NativeSmsCategoryPredictionRequest,
   NativeSmsImportMessage,
+  NativeSmsScanParseResult,
   SmsImportPermissionResponse,
   SmsImportScanOptions,
 } from "../../modules/expense-buddy-sms-import"
@@ -18,6 +19,9 @@ export interface AndroidSmsModule {
   getPermissionStatusAsync(): Promise<SmsImportPermissionResponse>
   requestPermissionAsync(): Promise<SmsImportPermissionResponse>
   scanMessagesAsync(options: SmsImportScanOptions): Promise<NativeSmsImportMessage[]>
+  scanAndParseMessagesAsync(
+    options: SmsImportScanOptions
+  ): Promise<NativeSmsScanParseResult[]>
   categorizeMessagesAsync?(
     requests: NativeSmsCategoryPredictionRequest[]
   ): Promise<NativeSmsCategoryPrediction[]>
@@ -73,6 +77,20 @@ export async function scanRecentSmsMessages(
       (left, right) =>
         new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime()
     )
+}
+
+export async function scanAndParseMessages(
+  options: SmsImportScanOptions = {}
+): Promise<NativeSmsScanParseResult[]> {
+  const results = await getAndroidSmsModule().scanAndParseMessagesAsync({
+    lookbackDays: 7,
+    ...options,
+  })
+
+  return results.sort(
+    (left, right) =>
+      new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime()
+  )
 }
 
 export async function categorizeSmsImportMessages(

@@ -35,6 +35,7 @@ function createModuleOverride(
       expires: "never",
     }),
     scanMessagesAsync: async (_options: SmsImportScanOptions) => [],
+    scanAndParseMessagesAsync: async (_options: SmsImportScanOptions) => [],
     ...overrides,
   }
 }
