@@ -382,7 +382,8 @@ export default function SettingsScreen() {
               await Clipboard.setStringAsync(logs)
               addNotification(
                 t("settings.about.logsCopied", {
-                  defaultValue: "Logs copied to clipboard. Paste them in the GitHub issue.",
+                  defaultValue:
+                    "Logs copied to clipboard. Paste them in the GitHub issue.",
                 }),
                 "info"
               )
