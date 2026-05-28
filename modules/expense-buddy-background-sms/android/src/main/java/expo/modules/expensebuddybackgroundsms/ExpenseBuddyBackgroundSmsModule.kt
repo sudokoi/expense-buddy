@@ -104,6 +104,36 @@ class ExpenseBuddyBackgroundSmsModule : Module() {
                 LoggerApi.d("SMS_MODULE", "insertPendingItemsAsync: inserted=${items.size}")
             }
 
+            AsyncFunction("approveItemsAsync") { fingerprints: List<String> ->
+                startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "approveItemsAsync: count=${fingerprints.size}")
+                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                val repo = SmsReviewQueueRepository(reactContext)
+                for (fp in fingerprints) {
+                    repo.approveItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                }
+            }
+
+            AsyncFunction("rejectItemsAsync") { fingerprints: List<String> ->
+                startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "rejectItemsAsync: count=${fingerprints.size}")
+                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                val repo = SmsReviewQueueRepository(reactContext)
+                for (fp in fingerprints) {
+                    repo.rejectItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                }
+            }
+
+            AsyncFunction("dismissItemsAsync") { fingerprints: List<String> ->
+                startQueueObserver()
+                LoggerApi.d("SMS_MODULE", "dismissItemsAsync: count=${fingerprints.size}")
+                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                val repo = SmsReviewQueueRepository(reactContext)
+                for (fp in fingerprints) {
+                    repo.dismissItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                }
+            }
+
             OnDestroy {
                 moduleScope.cancel()
             }

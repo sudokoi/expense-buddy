@@ -2,9 +2,11 @@ import { createStore } from "@xstate/store"
 import { SmsImportReviewItem } from "../types/sms-import"
 import {
   approveReviewItemAsync,
+  approveReviewItemsAsync,
   dismissReviewItemAsync,
   insertPendingItemsAsync,
   rejectReviewItemAsync,
+  rejectReviewItemsAsync,
 } from "../services/background-sms/android-background-sms-module"
 
 function sortReviewItems(items: SmsImportReviewItem[]): SmsImportReviewItem[] {
@@ -132,10 +134,9 @@ export function createSmsImportReviewStore() {
           event.acceptedItems.map((item) => item.fingerprint)
         )
 
+        const fingerprints = event.acceptedItems.map((item) => item.fingerprint)
         enqueue.effect(async () => {
-          for (const item of event.acceptedItems) {
-            await approveReviewItemAsync(item.fingerprint)
-          }
+          await approveReviewItemsAsync(fingerprints)
         })
 
         return {
@@ -158,9 +159,7 @@ export function createSmsImportReviewStore() {
         const rejectedFingerprints = new Set(event.fingerprints)
 
         enqueue.effect(async () => {
-          for (const fingerprint of event.fingerprints) {
-            await rejectReviewItemAsync(fingerprint)
-          }
+          await rejectReviewItemsAsync(event.fingerprints)
         })
 
         return {

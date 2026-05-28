@@ -13,8 +13,11 @@ jest.mock("../../modules/expense-buddy-background-sms", () => ({
 
 import type { ExpenseBuddyBackgroundSmsNativeModule } from "../../modules/expense-buddy-background-sms"
 import {
+  approveReviewItemsAsync,
+  dismissReviewItemsAsync,
   getBackgroundSmsState,
   getPendingReviewQueueAsync,
+  rejectReviewItemsAsync,
   setBackgroundSmsEnabled,
   setBackgroundSmsModuleForTesting,
 } from "./android-background-sms-module"
@@ -30,6 +33,9 @@ function createModuleOverride(
     rejectReviewItemAsync: async () => undefined,
     dismissReviewItemAsync: async () => undefined,
     insertPendingItemsAsync: async () => undefined,
+    approveItemsAsync: async () => undefined,
+    rejectItemsAsync: async () => undefined,
+    dismissItemsAsync: async () => undefined,
     ...overrides,
   } as ExpenseBuddyBackgroundSmsNativeModule
 }
@@ -84,5 +90,32 @@ describe("android-background-sms-module", () => {
     )
 
     await expect(setBackgroundSmsEnabled(true)).rejects.toThrow("native unavailable")
+  })
+
+  it("approveReviewItemsAsync calls native batch API with fingerprints", async () => {
+    const approveItemsAsync = jest.fn().mockResolvedValue(undefined)
+    setBackgroundSmsModuleForTesting(createModuleOverride({ approveItemsAsync }))
+
+    await approveReviewItemsAsync(["fp1", "fp2"])
+
+    expect(approveItemsAsync).toHaveBeenCalledWith(["fp1", "fp2"])
+  })
+
+  it("rejectReviewItemsAsync calls native batch API with fingerprints", async () => {
+    const rejectItemsAsync = jest.fn().mockResolvedValue(undefined)
+    setBackgroundSmsModuleForTesting(createModuleOverride({ rejectItemsAsync }))
+
+    await rejectReviewItemsAsync(["fp3", "fp4"])
+
+    expect(rejectItemsAsync).toHaveBeenCalledWith(["fp3", "fp4"])
+  })
+
+  it("dismissReviewItemsAsync calls native batch API with fingerprints", async () => {
+    const dismissItemsAsync = jest.fn().mockResolvedValue(undefined)
+    setBackgroundSmsModuleForTesting(createModuleOverride({ dismissItemsAsync }))
+
+    await dismissReviewItemsAsync(["fp5", "fp6"])
+
+    expect(dismissItemsAsync).toHaveBeenCalledWith(["fp5", "fp6"])
   })
 })

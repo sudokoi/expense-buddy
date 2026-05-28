@@ -122,6 +122,45 @@ export async function insertPendingItemsAsync(
   }
 }
 
+export async function approveReviewItemsAsync(
+  fingerprints: string[]
+): Promise<void> {
+  const module = getBackgroundSmsModule()
+  if (!module) return
+
+  try {
+    await module.approveItemsAsync(fingerprints)
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `approveReviewItemsAsync failed: ${e}`)
+  }
+}
+
+export async function rejectReviewItemsAsync(
+  fingerprints: string[]
+): Promise<void> {
+  const module = getBackgroundSmsModule()
+  if (!module) return
+
+  try {
+    await module.rejectItemsAsync(fingerprints)
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `rejectReviewItemsAsync failed: ${e}`)
+  }
+}
+
+export async function dismissReviewItemsAsync(
+  fingerprints: string[]
+): Promise<void> {
+  const module = getBackgroundSmsModule()
+  if (!module) return
+
+  try {
+    await module.dismissItemsAsync(fingerprints)
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `dismissReviewItemsAsync failed: ${e}`)
+  }
+}
+
 function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
   return {
     id: dto.sourceMessageId,
