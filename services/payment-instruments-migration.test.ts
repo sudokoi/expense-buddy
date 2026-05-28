@@ -4,6 +4,9 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
+  multiGet: jest.fn(() => Promise.resolve([])),
+  multiSet: jest.fn(() => Promise.resolve()),
+  multiRemove: jest.fn(() => Promise.resolve()),
 }))
 
 jest.mock("./settings-manager", () => ({
@@ -98,8 +101,9 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     })
     expect(savedSettings.paymentInstrumentsMigrationVersion).toBe(1)
 
-    // Persisted as v1: index + per-item keys
+    // Persisted as v1: index via setItem, items via multiSet
     const setItemCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
+    const multiSetCalls = (AsyncStorage.multiSet as jest.Mock).mock.calls
 
     // index write
     const indexCall = setItemCalls.find((c) => c[0] === "expenses:index:v1")
@@ -107,13 +111,14 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     const updatedIds = JSON.parse(indexCall![1])
     expect(updatedIds).toEqual(["e1", "e2"])
 
-    const e1Call = setItemCalls.find((c) => c[0] === "expenses:item:v1:e1")
-    const e2Call = setItemCalls.find((c) => c[0] === "expenses:item:v1:e2")
-    expect(e1Call).toBeTruthy()
-    expect(e2Call).toBeTruthy()
+    const allMultiSetEntries = multiSetCalls.flatMap((c) => c[0] as Array<[string, string]>)
+    const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
+    const e2Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e2")
+    expect(e1Entry).toBeTruthy()
+    expect(e2Entry).toBeTruthy()
 
-    const updatedE1 = JSON.parse(e1Call![1])
-    const updatedE2 = JSON.parse(e2Call![1])
+    const updatedE1 = JSON.parse(e1Entry![1])
+    const updatedE2 = JSON.parse(e2Entry![1])
 
     for (const e of [updatedE1, updatedE2]) {
       expect(e.paymentMethod.instrumentId).toBe("inst_1")
@@ -202,10 +207,11 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     // In relink pass it should only write expenses and track bulk edit
     expect(saveSettings).not.toHaveBeenCalled()
 
-    const setItemCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
-    const updatedExpenseCall = setItemCalls.find((c) => c[0] === "expenses:item:v1:e1")
-    expect(updatedExpenseCall).toBeTruthy()
-    const updated = JSON.parse(updatedExpenseCall![1])
+    const multiSetCalls = (AsyncStorage.multiSet as jest.Mock).mock.calls
+    const allMultiSetEntries = multiSetCalls.flatMap((c) => c[0] as Array<[string, string]>)
+    const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
+    expect(e1Entry).toBeTruthy()
+    const updated = JSON.parse(e1Entry![1])
     expect(updated.paymentMethod.instrumentId).toBe("inst_1")
 
     expect(trackBulkEdit).toHaveBeenCalledTimes(1)

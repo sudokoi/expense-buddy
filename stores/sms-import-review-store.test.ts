@@ -5,21 +5,28 @@ import {
 } from "./sms-import-review-store"
 import {
   approveReviewItemAsync,
+  approveReviewItemsAsync,
   dismissReviewItemAsync,
   insertPendingItemsAsync,
   rejectReviewItemAsync,
+  rejectReviewItemsAsync,
 } from "../services/background-sms/android-background-sms-module"
 import type { SmsImportReviewItem } from "../types/sms-import"
 
 jest.mock("../services/background-sms/android-background-sms-module", () => ({
   approveReviewItemAsync: jest.fn(async () => undefined),
+  approveReviewItemsAsync: jest.fn(async () => undefined),
   dismissReviewItemAsync: jest.fn(async () => undefined),
   insertPendingItemsAsync: jest.fn(async () => undefined),
   rejectReviewItemAsync: jest.fn(async () => undefined),
+  rejectReviewItemsAsync: jest.fn(async () => undefined),
 }))
 
 const mockApproveReviewItemAsync = approveReviewItemAsync as jest.MockedFunction<
   typeof approveReviewItemAsync
+>
+const mockApproveReviewItemsAsync = approveReviewItemsAsync as jest.MockedFunction<
+  typeof approveReviewItemsAsync
 >
 const mockDismissReviewItemAsync = dismissReviewItemAsync as jest.MockedFunction<
   typeof dismissReviewItemAsync
@@ -29,6 +36,9 @@ const mockInsertPendingItemsAsync = insertPendingItemsAsync as jest.MockedFuncti
 >
 const mockRejectReviewItemAsync = rejectReviewItemAsync as jest.MockedFunction<
   typeof rejectReviewItemAsync
+>
+const mockRejectReviewItemsAsync = rejectReviewItemsAsync as jest.MockedFunction<
+  typeof rejectReviewItemsAsync
 >
 
 function createItem(
@@ -215,7 +225,7 @@ describe("smsImportReviewStore", () => {
   })
 
   describe("markItemsRejected", () => {
-    it("updates multiple items and calls reject for each", async () => {
+    it("updates multiple items and calls reject batch API", async () => {
       smsImportReviewStore.trigger.upsertReviewItems({
         items: [createItem("a"), createItem("b")],
       })
@@ -226,7 +236,7 @@ describe("smsImportReviewStore", () => {
 
       await new Promise(setImmediate)
 
-      expect(mockRejectReviewItemAsync).toHaveBeenCalledTimes(2)
+      expect(mockRejectReviewItemsAsync).toHaveBeenCalledWith(["fp-a", "fp-b"])
     })
   })
 
