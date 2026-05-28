@@ -61,7 +61,7 @@ function getNextCursor(
 
 function createReviewItem(
   parsed: NativeSmsScanParseResult,
-  existingFingerprints: Set<string>,
+  existingFingerprints: Set<string>
 ): SmsImportReviewItem | null {
   if (existingFingerprints.has(parsed.fingerprint)) {
     return null
@@ -96,7 +96,8 @@ function createReviewItem(
     categorySuggestion: parsed.categorySuggestion ?? undefined,
     categorySuggestionConfidence: parsed.categorySuggestionConfidence ?? undefined,
     categorySuggestionModelId: parsed.categorySuggestionModelId ?? undefined,
-    categorySuggestionSource: (parsed.categorySuggestionSource as "regex" | "ml" | undefined) ?? undefined,
+    categorySuggestionSource:
+      (parsed.categorySuggestionSource as "regex" | "ml" | undefined) ?? undefined,
     paymentMethodSuggestion,
     noteSuggestion: parsed.noteSuggestion ?? undefined,
     transactionDate: parsed.transactionDate ?? undefined,

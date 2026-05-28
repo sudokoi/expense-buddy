@@ -825,7 +825,10 @@ export function SmsImportReviewScreen({
                             <Button onPress={() => openEditor(item)}>
                               {t("common.edit")}
                             </Button>
-                            <Button theme="red" onPress={() => markItemRejected(item.fingerprint)}>
+                            <Button
+                              theme="red"
+                              onPress={() => markItemRejected(item.fingerprint)}
+                            >
                               {t("smsImport.sheet.actions.reject")}
                             </Button>
                             <Button onPress={() => dismissItem(item.fingerprint)}>

@@ -8,10 +8,7 @@ jest.mock("./android-sms-module", () => ({
 }))
 
 import { scanSmsImportReviewQueue } from "./bootstrap"
-import {
-  getSmsPermissionStatus,
-  scanAndParseMessages,
-} from "./android-sms-module"
+import { getSmsPermissionStatus, scanAndParseMessages } from "./android-sms-module"
 import type { NativeSmsScanParseResult } from "../../modules/expense-buddy-sms-import"
 import type { PaymentMethodType } from "../../types/expense"
 import type { SmsImportReviewItem } from "../../types/sms-import"
