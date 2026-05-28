@@ -1,9 +1,17 @@
 package expo.modules.expensebuddybackgroundsms.db
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "sms_review_queue")
+@Entity(
+    tableName = "sms_review_queue",
+    indices = [
+        Index(value = ["status"]),
+        Index(value = ["fingerprint"]),
+        Index(value = ["timestamp"]),
+    ],
+)
 data class ReviewQueueEntity(
     @PrimaryKey
     val fingerprint: String,

@@ -1,0 +1,262 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "56018eaa4d5eed796628146cb3cc4cf5",
+    "entities": [
+      {
+        "tableName": "sms_review_queue",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`fingerprint` TEXT NOT NULL, `sender` TEXT NOT NULL, `body` TEXT NOT NULL, `amount` REAL, `amountNormalized` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `sourceMessageId` TEXT NOT NULL, `sourceReceivedAt` TEXT NOT NULL, `status` TEXT NOT NULL, `currency` TEXT, `merchantName` TEXT, `categorySuggestion` TEXT, `categorySuggestionConfidence` REAL, `categorySuggestionModelId` TEXT, `categorySuggestionSource` TEXT, `paymentMethodType` TEXT, `paymentMethodIdentifier` TEXT, `paymentMethodInstrumentId` TEXT, `noteSuggestion` TEXT, `transactionDate` TEXT, `matchedLocale` TEXT, `matchedPatternKey` TEXT, `acceptedExpenseId` TEXT, `importSource` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`fingerprint`))",
+        "fields": [
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sender",
+            "columnName": "sender",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "body",
+            "columnName": "body",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "amountNormalized",
+            "columnName": "amountNormalized",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceMessageId",
+            "columnName": "sourceMessageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceReceivedAt",
+            "columnName": "sourceReceivedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "merchantName",
+            "columnName": "merchantName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categorySuggestion",
+            "columnName": "categorySuggestion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categorySuggestionConfidence",
+            "columnName": "categorySuggestionConfidence",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "categorySuggestionModelId",
+            "columnName": "categorySuggestionModelId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categorySuggestionSource",
+            "columnName": "categorySuggestionSource",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentMethodType",
+            "columnName": "paymentMethodType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentMethodIdentifier",
+            "columnName": "paymentMethodIdentifier",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentMethodInstrumentId",
+            "columnName": "paymentMethodInstrumentId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "noteSuggestion",
+            "columnName": "noteSuggestion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "transactionDate",
+            "columnName": "transactionDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "matchedLocale",
+            "columnName": "matchedLocale",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "matchedPatternKey",
+            "columnName": "matchedPatternKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "acceptedExpenseId",
+            "columnName": "acceptedExpenseId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "importSource",
+            "columnName": "importSource",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "fingerprint"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sms_review_queue_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_status` ON `${TABLE_NAME}` (`status`)"
+          },
+          {
+            "name": "index_sms_review_queue_fingerprint",
+            "unique": false,
+            "columnNames": [
+              "fingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_fingerprint` ON `${TABLE_NAME}` (`fingerprint`)"
+          },
+          {
+            "name": "index_sms_review_queue_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_review_queue_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sms_import_journal",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fingerprint` TEXT NOT NULL, `source` TEXT NOT NULL, `action` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `details` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "action",
+            "columnName": "action",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details",
+            "columnName": "details",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sms_import_journal_fingerprint",
+            "unique": false,
+            "columnNames": [
+              "fingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_import_journal_fingerprint` ON `${TABLE_NAME}` (`fingerprint`)"
+          },
+          {
+            "name": "index_sms_import_journal_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sms_import_journal_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '56018eaa4d5eed796628146cb3cc4cf5')"
+    ]
+  }
+}

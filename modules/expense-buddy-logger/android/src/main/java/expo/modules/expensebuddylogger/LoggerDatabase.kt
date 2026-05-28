@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [LogEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class LoggerDatabase : RoomDatabase() {
@@ -15,6 +17,13 @@ abstract class LoggerDatabase : RoomDatabase() {
 
     companion object {
         private const val DATABASE_NAME = "expense_buddy_logs.db"
+
+        val MIGRATION_1_2: Migration =
+            object : Migration(1, 2) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level)")
+                }
+            }
 
         @Volatile
         private var instance: LoggerDatabase? = null
@@ -26,7 +35,8 @@ abstract class LoggerDatabase : RoomDatabase() {
                         context.applicationContext,
                         LoggerDatabase::class.java,
                         DATABASE_NAME,
-                    ).fallbackToDestructiveMigration()
+                    ).addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }
             }

@@ -1,9 +1,16 @@
 package expo.modules.expensebuddybackgroundsms.db
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "sms_import_journal")
+@Entity(
+    tableName = "sms_import_journal",
+    indices = [
+        Index(value = ["fingerprint"]),
+        Index(value = ["timestamp"]),
+    ],
+)
 data class ImportJournalEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

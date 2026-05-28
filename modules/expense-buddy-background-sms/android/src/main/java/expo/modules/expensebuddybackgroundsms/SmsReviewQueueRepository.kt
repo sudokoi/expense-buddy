@@ -29,15 +29,20 @@ class SmsReviewQueueRepository(
         }
     }
 
-    private val mutex = Mutex()
     private val dbInstance by lazy { context?.let { SmsReviewQueueDatabase.getInstance(it) } }
     private val dao get() = injectedDao ?: dbInstance!!.reviewQueueDao()
     private val journalDao get() = injectedJournalDao ?: dbInstance!!.importJournalDao()
+
+    private val mutex = Mutex()
 
     suspend fun upsertItem(
         item: ReviewQueueEntity,
         source: String,
     ): Boolean {
+        val db = dbInstance
+        if (db != null) {
+            return db.upsertItem(item, source)
+        }
         return mutex.withLock {
             val existing = dao.getItemByFingerprint(item.fingerprint)
             if (existing != null) {
@@ -53,7 +58,6 @@ class SmsReviewQueueRepository(
                 )
                 return@withLock false
             }
-
             val inserted = dao.insertIfNotExists(item)
             if (inserted == -1L) {
                 LoggerApi.d("SMS_QUEUE", "DEDUPED fingerprint=${item.fingerprint} source=$source reason=race_condition_insert_failed")
@@ -68,7 +72,6 @@ class SmsReviewQueueRepository(
                 )
                 return@withLock false
             }
-
             LoggerApi.d("SMS_QUEUE", "INSERTED fingerprint=${item.fingerprint} source=$source")
             journalDao.insert(
                 ImportJournalEntity(
@@ -88,6 +91,10 @@ class SmsReviewQueueRepository(
         source: String,
         expenseId: String? = null,
     ) {
+        val db = dbInstance
+        if (db != null) {
+            return db.approveItem(fingerprint, source, expenseId)
+        }
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.approveItem(fingerprint, STATUS_APPROVED, expenseId, now)
@@ -108,6 +115,10 @@ class SmsReviewQueueRepository(
         fingerprint: String,
         source: String,
     ) {
+        val db = dbInstance
+        if (db != null) {
+            return db.rejectItem(fingerprint, source)
+        }
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_REJECTED, now)
@@ -128,6 +139,10 @@ class SmsReviewQueueRepository(
         fingerprint: String,
         source: String,
     ) {
+        val db = dbInstance
+        if (db != null) {
+            return db.dismissItem(fingerprint, source)
+        }
         mutex.withLock {
             val now = System.currentTimeMillis()
             dao.updateStatus(fingerprint, STATUS_DISMISSED, now)

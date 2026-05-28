@@ -13,6 +13,9 @@ object LoggerApi {
     private var dao: LogDao? = null
     private var scope: CoroutineScope? = null
     private var capacity: Int = 1000
+    private val approximateCount =
+        java.util.concurrent.atomic
+            .AtomicInteger(0)
 
     fun initialize(
         context: android.content.Context,
@@ -22,6 +25,9 @@ object LoggerApi {
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val db = LoggerDatabase.getInstance(context)
         dao = db.logDao()
+        scope?.launch {
+            approximateCount.set(dao?.count() ?: 0)
+        }
     }
 
     @SuppressLint("VisibleForTests")
@@ -32,12 +38,16 @@ object LoggerApi {
         this.capacity = capacity
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         this.dao = dao
+        scope?.launch {
+            approximateCount.set(dao.count())
+        }
     }
 
     internal fun resetForTesting() {
         dao = null
         scope = null
         capacity = 1000
+        approximateCount.set(0)
     }
 
     fun d(
@@ -77,9 +87,13 @@ object LoggerApi {
                     stacktrace = stacktrace,
                 ),
             )
-            val count = dao?.count() ?: 0
+            val count = approximateCount.incrementAndGet()
             if (count > capacity) {
-                dao?.prune(capacity)
+                val actualCount = dao?.count() ?: 0
+                if (actualCount > capacity) {
+                    dao?.prune(capacity)
+                }
+                approximateCount.set(actualCount.coerceAtMost(capacity))
             }
         }
     }
