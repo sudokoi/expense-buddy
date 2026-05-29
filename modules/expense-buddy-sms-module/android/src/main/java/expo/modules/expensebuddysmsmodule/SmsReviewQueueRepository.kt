@@ -35,6 +35,21 @@ class SmsReviewQueueRepository(
 
     private val mutex = Mutex()
 
+    suspend fun upsertItems(
+        items: List<ReviewQueueEntity>,
+        source: String,
+    ): Int {
+        val db = dbInstance
+        if (db != null) {
+            return db.upsertItems(items, source)
+        }
+        var count = 0
+        for (item in items) {
+            if (upsertItem(item, source)) count++
+        }
+        return count
+    }
+
     suspend fun upsertItem(
         item: ReviewQueueEntity,
         source: String,

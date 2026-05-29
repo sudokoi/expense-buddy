@@ -11,6 +11,7 @@ import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -143,13 +144,13 @@ class ExpenseBuddySmsModule : Module() {
 
                     LoggerApi.d("SMS_MODULE", "syncInboxAsync: scanned ${parsedResults.size} messages since $cursor")
 
-                    // 3. Insert parsed results into the queue database
+                    // 3. Insert parsed results into the queue database in a single transaction
                     val repo = SmsReviewQueueRepository(reactContext)
                     var latestReceivedAt: Long = -1
+                    val entities = mutableListOf<ReviewQueueEntity>()
 
                     runBlocking(Dispatchers.IO) {
                         for (parsed in parsedResults) {
-                            // Construct the queue item manually
                             val receivedAtStr = parsed["receivedAt"] as? String ?: continue
                             val receivedAtMillis =
                                 java.time.Instant
@@ -199,7 +200,12 @@ class ExpenseBuddySmsModule : Module() {
                                 )
 
                             val entity = repo.toReviewQueueEntity(item, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                            repo.upsertItem(entity, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                            entities.add(entity)
+                        }
+
+                        if (entities.isNotEmpty()) {
+                            val inserted = repo.upsertItems(entities, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                            LoggerApi.d("SMS_MODULE", "syncInboxAsync: inserted $inserted / ${entities.size} items")
                         }
                     }
 

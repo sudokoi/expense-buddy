@@ -21,7 +21,7 @@ export function useSmsImportActions() {
   const { t } = useTranslation()
   const { addNotification } = useNotifications()
   const { settings } = useSettings()
-  const { pendingItems } = useSmsImportReview()
+  const { pendingItems, refreshItems } = useSmsImportReview()
   const [isScanningSmsImports, setIsScanningSmsImports] = useState(false)
 
   const openSmsImportReview = useCallback(() => {
@@ -98,9 +98,10 @@ export function useSmsImportActions() {
 
     const result = await scanSmsImports()
     if (result.pendingCount > 0) {
+      await refreshItems()
       openSmsImportReview()
     }
-  }, [openSmsImportReview, pendingItems.length, scanSmsImports])
+  }, [openSmsImportReview, pendingItems.length, refreshItems, scanSmsImports])
 
   return {
     isScanningSmsImports,

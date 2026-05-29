@@ -20,6 +20,18 @@ abstract class SmsReviewQueueDatabase : RoomDatabase() {
     abstract fun importJournalDao(): ImportJournalDao
 
     @Transaction
+    open suspend fun upsertItems(
+        entities: List<ReviewQueueEntity>,
+        source: String,
+    ): Int {
+        var inserted = 0
+        for (entity in entities) {
+            if (upsertItem(entity, source)) inserted++
+        }
+        return inserted
+    }
+
+    @Transaction
     open suspend fun upsertItem(
         entity: ReviewQueueEntity,
         source: String,

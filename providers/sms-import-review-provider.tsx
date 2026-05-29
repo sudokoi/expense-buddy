@@ -5,6 +5,7 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  useRef,
 } from "react"
 import { SmsImportReviewItem } from "../types/sms-import"
 import {
@@ -23,6 +24,7 @@ interface SmsImportReviewContextValue {
   pendingItems: SmsImportReviewItem[]
   resolvedItems: SmsImportReviewItem[]
   isLoading: boolean
+  refreshItems: () => Promise<void>
   markItemAccepted: (fingerprint: string, acceptedExpenseId?: string) => Promise<void>
   markItemsAccepted: (
     acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>
@@ -41,8 +43,12 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
 }) => {
   const [items, setItems] = useState<SmsImportReviewItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const isFetchingRef = useRef(false)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchItems = useCallback(async () => {
+    if (isFetchingRef.current) return
+    isFetchingRef.current = true
     try {
       setIsLoading(true)
       const data = await getPendingReviewQueueAsync()
@@ -51,6 +57,7 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
       console.warn("Failed to fetch pending review queue", error)
     } finally {
       setIsLoading(false)
+      isFetchingRef.current = false
     }
   }, [])
 
@@ -62,10 +69,20 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
     if (!ExpenseBuddySmsModule) return
 
     const subscription = ExpenseBuddySmsModule.addListener("onReviewQueueUpdated", () => {
-      fetchItems()
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        void fetchItems()
+      }, 300)
     })
 
-    return () => subscription.remove()
+    return () => {
+      subscription.remove()
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
   }, [fetchItems])
 
   const pendingItems = useMemo(
@@ -78,12 +95,16 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
     [items]
   )
 
+  const refreshItems = useCallback(async () => {
+    await fetchItems()
+  }, [fetchItems])
+
   const markItemAccepted = useCallback(async (fingerprint: string) => {
     await approveReviewItemAsync(fingerprint)
   }, [])
 
   const markItemsAccepted = useCallback(
-    async (acceptedItems: Array<{ fingerprint: string }>) => {
+    async (acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>) => {
       await approveReviewItemsAsync(acceptedItems.map((i) => i.fingerprint))
     },
     []
@@ -122,6 +143,7 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
       markItemsDismissed,
       dismissItem,
       clearResolvedItems,
+      refreshItems,
     }),
     [
       items,
@@ -135,6 +157,7 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
       markItemsDismissed,
       dismissItem,
       clearResolvedItems,
+      refreshItems,
     ]
   )
 
