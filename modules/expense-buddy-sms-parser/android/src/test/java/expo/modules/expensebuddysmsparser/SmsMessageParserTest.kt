@@ -467,9 +467,9 @@ class SmsMessageParserTest {
 
     @Test
     fun `detects SBI Credit Card transaction with mathematical sans-serif unicode`() {
-        // Mathematical Sans-Serif Small letters for "spent"
         val body =
-            "Rs.4,354.00 \uD835\uDDCC\uD835\uDDC9\uD835\uDDBE\uD835\uDDC7\uD835\uDDCD \uD835\uDDC8\uD835\uDDC7 " +
+            "Rs.4,354.00 \uD835\uDDCC\uD835\uDDC9\uD835\uDDBE\uD835\uDDC7\uD835\uDDCD " +
+                "\uD835\uDDC8\uD835\uDDC7 " +
                 "\uD835\uDDCE\uD835\uDDC8\uD835\uDDCE\uD835\uDDCB \uD835\uDDB2\uD835\uDDA1\uD835\uDDA8 " +
                 "\uD835\uDDA2\uD835\uDDCB\uD835\uDDBE\uD835\uDDBD" +
                 "\uD835\uDDC2\uD835\uDDCD " +
@@ -491,6 +491,53 @@ class SmsMessageParserTest {
 
         assertThat(result).isNotNull()
         assertThat(result?.amount).isWithin(1e-9).of(4354.0)
+        assertThat(result?.merchantName).isEqualTo("PYUFLIPKARTINTERNET")
+        assertThat(result?.paymentMethodSuggestion?.type).isEqualTo("Credit Card")
+        assertThat(result?.fingerprint).isNotNull()
+    }
+
+    @Test
+    fun `detects SBI Card transaction with the exact user-reported message`() {
+        val body =
+            "Rs.4,354.00 \uD835\uDDCC\uD835\uDDC9\uD835\uDDBE\uD835\uDDC7\uD835\uDDCD " +
+                "\uD835\uDDC8\uD835\uDDC7 " +
+                "\uD835\uDDCE\uD835\uDDC8\uD835\uDDCE\uD835\uDDCB \uD835\uDDB2\uD835\uDDA1\uD835\uDDA8 " +
+                "\uD835\uDDA2\uD835\uDDCB\uD835\uDDBE\uD835\uDDBD\uD835\uDDC2\uD835\uDDCD " +
+                "\uD835\uDDA2\uD835\uDDBA\uD835\uDDCB\uD835\uDDBD " +
+                "\uD835\uDDBE\uD835\uDDC7\uD835\uDDBD\uD835\uDDC2\uD835\uDDC7\uD835\uDDC0 " +
+                "1126 at PYUFLIPKARTINTERNET on 28/05/26. " +
+                "\uD835\uDDB3\uD835\uDDCB\uD835\uDDC1\uD835\uDDC7. " +
+                "\uD835\uDDC7\uD835\uDDC8\uD835\uDDCD \uD835\uDDBD\uD835\uDDC8\uD835\uDDC7\uD835\uDDBE " +
+                "\uD835\uDDBB\uD835\uDDCE \uD835\uDDCE\uD835\uDDC8\uD835\uDDCE? " +
+                "\uD835\uDDB1\uD835\uDDBE\uD835\uDDC9\uD835\uDDC8\uD835\uDDCB\uD835\uDDCD " +
+                "\uD835\uDDBA\uD835\uDDCD " +
+                "https://sbicard.com/Dispute"
+        val result = SmsMessageParser.parseRawMessageWithReason("SBICARD", body, "2026-05-28T10:15:30.000Z")
+        assertNotNull(result.parsed)
+        assertNull(result.skipReason)
+        assertThat(result.parsed?.amount).isWithin(1e-9).of(4354.0)
+        assertThat(result.parsed?.merchantName).isEqualTo("PYUFLIPKARTINTERNET")
+    }
+
+    @Test
+    fun `fingerprint is stable for mathematical sans-serif message across scans`() {
+        val body =
+            "Rs.4,354.00 \uD835\uDDCC\uD835\uDDC9\uD835\uDDBE\uD835\uDDC7\uD835\uDDCD " +
+                "\uD835\uDDC8\uD835\uDDC7 " +
+                "\uD835\uDDCE\uD835\uDDC8\uD835\uDDCE\uD835\uDDCB \uD835\uDDB2\uD835\uDDA1\uD835\uDDA8 " +
+                "\uD835\uDDA2\uD835\uDDCB\uD835\uDDBE\uD835\uDDBD\uD835\uDDC2\uD835\uDDCD " +
+                "\uD835\uDDA2\uD835\uDDBA\uD835\uDDCB\uD835\uDDBD " +
+                "\uD835\uDDBE\uD835\uDDC7\uD835\uDDBD\uD835\uDDC2\uD835\uDDC7\uD835\uDDC0 " +
+                "1126 at PYUFLIPKARTINTERNET on 28/05/26. " +
+                "\uD835\uDDB3\uD835\uDDCB\uD835\uDDC1\uD835\uDDC7. " +
+                "\uD835\uDDC7\uD835\uDDC8\uD835\uDDCD \uD835\uDDBD\uD835\uDDC8\uD835\uDDC7\uD835\uDDBE " +
+                "\uD835\uDDBB\uD835\uDDCE \uD835\uDDCE\uD835\uDDC8\uD835\uDDCE? " +
+                "\uD835\uDDB1\uD835\uDDBE\uD835\uDDC9\uD835\uDDC8\uD835\uDDCB\uD835\uDDCD " +
+                "\uD835\uDDBA\uD835\uDDCD " +
+                "https://sbicard.com/Dispute"
+        val fp1 = SmsMessageParser.createFingerprint("SBICARD", body, "2026-05-28T10:15:30.000Z", 4354.0)
+        val fp2 = SmsMessageParser.createFingerprint("SBICARD", body, "2026-05-28T10:15:31.500Z", 4354.0)
+        assertThat(fp1).isEqualTo(fp2)
     }
 
     @Test

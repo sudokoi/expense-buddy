@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import expo.modules.expensebuddylogger.LoggerApi
+import expo.modules.expensebuddysmsparser.SmsCategoryLiteRtClassifier
 import expo.modules.expensebuddysmsparser.SmsPaymentMethod
 import expo.modules.expensebuddysmsparser.SmsRawMessage
 import expo.modules.interfaces.permissions.Permissions
@@ -125,8 +126,13 @@ class ExpenseBuddySmsModule : Module() {
                     val scanner = SmsInboxScanner(reactContext)
 
                     val classifier =
-                        expo.modules.expensebuddysmsparser.SmsCategoryLiteRtClassifier
-                            .getInstance(reactContext)
+                        try {
+                            SmsCategoryLiteRtClassifier
+                                .getInstance(reactContext)
+                        } catch (e: Exception) {
+                            LoggerApi.w("SMS_MODULE", "ML classifier unavailable, falling back to regex-only", e)
+                            null
+                        }
                     val parsedResults =
                         scanner.scanAndParseMessages(
                             sinceTimestampMillis = scanSinceMillis,
