@@ -22,6 +22,7 @@ import {
   useSettings,
   useCategories,
 } from "../../stores/hooks"
+import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -140,7 +141,10 @@ const FilterChip = React.memo(function FilterChip({
       px="$control"
       borderWidth={UI_BORDER_WIDTH.thin}
       borderColor="$borderColor"
-      onPress={onRemove}
+      onPress={() => {
+        logAsync("INFO", "UI_ACTION", "REMOVE_FILTER_CHIP")
+        onRemove()
+      }}
       style={{
         borderRadius: UI_RADIUS.round,
       }}
@@ -564,6 +568,7 @@ export default function HistoryScreen() {
     if (deletingExpenseId) {
       deleteExpense(deletingExpenseId)
       addNotification(t("history.deleted"), "success")
+      logAsync("INFO", "UI_ACTION", `DELETE_EXPENSE id=${deletingExpenseId}`)
       setDeletingExpenseId(null)
     }
   }, [deletingExpenseId, deleteExpense, addNotification, t])
@@ -708,6 +713,7 @@ export default function HistoryScreen() {
           paymentMethod,
         })
         addNotification(t("history.updated"), "success")
+        logAsync("INFO", "UI_ACTION", `EDIT_EXPENSE id=${editingExpense.id}`)
         setEditingExpense(null)
         setShowDatePicker(false)
       }
@@ -733,6 +739,7 @@ export default function HistoryScreen() {
 
   const handleResetFilters = useCallback(() => {
     reset()
+    logAsync("INFO", "UI_ACTION", "RESET_FILTERS")
   }, [reset])
 
   // Category selection handler for edit dialog

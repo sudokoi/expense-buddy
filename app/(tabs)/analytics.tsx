@@ -28,6 +28,7 @@ import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
+import { logAsync } from "../../services/logger"
 import { getCurrencySymbol } from "../../utils/currency"
 import {
   UI_RADIUS,
@@ -159,6 +160,7 @@ export default function AnalyticsScreen() {
   // Handle category selection from pie chart segment tap - memoized
   const handleCategorySelect = useCallback(
     (category: string | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_CATEGORY_SELECT")
       if (category) {
         const newCategories = selectedCategories.includes(category)
           ? selectedCategories.filter((c) => c !== category)
@@ -171,6 +173,7 @@ export default function AnalyticsScreen() {
 
   const handlePaymentInstrumentSelect = useCallback(
     (key: PaymentInstrumentSelectionKey | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_INSTRUMENT_SELECT")
       if (!key) {
         startTransition(() => setSelectedPaymentInstruments([]))
         return
@@ -189,7 +192,10 @@ export default function AnalyticsScreen() {
     return availableCurrencies.map((c) => ({
       code: c,
       isSelected: effectiveCurrency === c,
-      onPress: () => startTransition(() => setSelectedCurrency(c)),
+      onPress: () => {
+        logAsync("INFO", "UI_ACTION", "ANALYTICS_CURRENCY_FILTER")
+        startTransition(() => setSelectedCurrency(c))
+      },
     }))
   }, [availableCurrencies, effectiveCurrency, setSelectedCurrency])
 
@@ -256,6 +262,7 @@ export default function AnalyticsScreen() {
 
   const handlePaymentMethodSelect = useCallback(
     (paymentMethodType: PaymentMethodType | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_PAYMENT_METHOD_SELECT")
       handlePaymentMethodsChange(paymentMethodType ? [paymentMethodType] : [])
     },
     [handlePaymentMethodsChange]
@@ -517,6 +524,8 @@ export default function AnalyticsScreen() {
       void save().catch((error) =>
         console.warn("Failed to persist analytics filters:", error)
       )
+
+      logAsync("INFO", "UI_ACTION", "APPLY_ANALYTICS_FILTERS")
 
       setFiltersOpen(false)
     },

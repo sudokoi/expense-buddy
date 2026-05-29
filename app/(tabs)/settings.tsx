@@ -326,7 +326,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             const token = syncConfig?.token
             const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
-            const logs = await getLogsForBugReportAsync(token ? 200 : 50)
+            const logs = await getLogsForBugReportAsync(token ? 500 : 50)
 
             if (token && logs) {
               try {

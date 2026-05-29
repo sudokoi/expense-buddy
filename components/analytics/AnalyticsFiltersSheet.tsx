@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from "react"
 import { YStack, XStack, Button, Sheet, H4, ScrollView, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { X } from "@tamagui/lucide-icons-2"
+import { logAsync } from "../../services/logger"
 import type { TimeWindow } from "../../utils/analytics/time"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
@@ -200,6 +201,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
       selectedPaymentInstruments: draftPaymentInstruments,
       selectedCurrency: draftCurrency,
     })
+    logAsync("INFO", "UI_ACTION", "APPLY_ANALYTICS_FILTERS_SHEET")
   }, [
     onApply,
     draftTimeWindow,
@@ -217,6 +219,7 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
     setDraftPaymentMethods([])
     setDraftPaymentInstruments([])
     setDraftCurrency(null) // Reset to auto
+    logAsync("INFO", "UI_ACTION", "RESET_ANALYTICS_FILTER_DRAFT")
   }, [])
 
   if (!open) return null

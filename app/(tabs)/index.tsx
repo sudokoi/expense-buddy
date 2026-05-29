@@ -14,6 +14,7 @@ import { CATEGORY_COLORS } from "../../constants/category-colors"
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
+import { logAsync } from "../../services/logger"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -225,7 +226,10 @@ export default function DashboardScreen() {
               key={c}
               size="$chip"
               px="$control"
-              onPress={() => startTransition(() => setSelectedCurrency(c))}
+              onPress={() => {
+                logAsync("INFO", "UI_ACTION", "DASHBOARD_CURRENCY_FILTER")
+                startTransition(() => setSelectedCurrency(c))
+              }}
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}

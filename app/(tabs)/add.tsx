@@ -10,6 +10,7 @@ import {
   useSmsImportReview,
   useUIState,
 } from "../../stores/hooks"
+import { logAsync } from "../../services/logger"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
@@ -267,6 +268,7 @@ export default function AddExpenseScreen() {
     } else {
       addNotification(t("add.success"), "success")
     }
+    logAsync("INFO", "UI_ACTION", `ADD_EXPENSE stayOnAdd=${stayOnAdd}`)
 
     resetForm()
     if (!stayOnAdd) {

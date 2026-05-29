@@ -10,6 +10,7 @@ import { YStack, XStack, H4, Button, Text, Sheet, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { logAsync } from "../../services/logger"
 import type {
   TimeWindow,
   PaymentInstrumentSelectionKey,
@@ -202,6 +203,7 @@ export const FilterSheet = React.memo(function FilterSheet({
     onPaymentInstrumentsChange(draftPaymentInstruments)
     onSearchChange(draftSearchQuery)
     onAmountRangeChange(draftMinAmount, draftMaxAmount)
+    logAsync("INFO", "UI_ACTION", "APPLY_FILTERS")
     onClose()
   }, [
     draftTimeWindow,
@@ -231,6 +233,7 @@ export const FilterSheet = React.memo(function FilterSheet({
     setDraftSearchQuery("")
     setDraftMinAmount(null)
     setDraftMaxAmount(null)
+    logAsync("INFO", "UI_ACTION", "RESET_FILTER_DRAFT")
   }, [])
 
   if (!open) return null

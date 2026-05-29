@@ -13,7 +13,7 @@ export async function logAsync(
   await module.logAsync(level, tag, message, stacktrace ?? null).catch(() => {})
 }
 
-export async function getLogsForBugReportAsync(count: number = 200): Promise<string> {
+export async function getLogsForBugReportAsync(count: number = 500): Promise<string> {
   if (!module) return ""
   return module.getLogsAsStringAsync(count).catch(() => "")
 }

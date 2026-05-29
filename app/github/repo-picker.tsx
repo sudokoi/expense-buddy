@@ -224,76 +224,70 @@ export default function GitHubRepoPickerScreen() {
 
   return (
     <YStack flex={1} bg="$background">
+      <YStack px="$gutter" pt={insets.top} pb="$gutter" bg="$background" gap="$gutter">
+        <XStack justify="space-between" items="center">
+          <Text fontSize="$screenTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
+            {t("repoPicker.title")}
+          </Text>
+          <Button size="$chip" px="$control" chromeless onPress={() => router.back()}>
+            {t("common.cancel")}
+          </Button>
+        </XStack>
+
+        <Text color="$color" opacity={UI_OPACITY.medium}>
+          {t("repoPicker.subtitle")}
+        </Text>
+
+        {viewerLogin ? (
+          <Text color="$color" opacity={UI_OPACITY.medium}>
+            Signed in as {viewerLogin}
+          </Text>
+        ) : null}
+
+        {isLoading ? (
+          <XStack gap="$section" items="center">
+            <Spinner />
+            <Text color="$color">{t("repoPicker.loading")}</Text>
+          </XStack>
+        ) : null}
+
+        {error ? (
+          <YStack gap="$control">
+            <Text color="$red10">{error}</Text>
+            <Button size="$chip" px="$control" onPress={load}>
+              {t("common.save")}
+            </Button>
+          </YStack>
+        ) : null}
+
+        <Input
+          bg="$background"
+          size="$control"
+          borderWidth={UI_BORDER_WIDTH.normal}
+          borderColor="$borderColor"
+          focusStyle={{
+            borderColor: ACCENT_COLORS.primary,
+          }}
+          placeholder={t("repoPicker.searchPlaceholder")}
+          value={query}
+          onChangeText={setQuery}
+          disabled={isLoading || !!error}
+        />
+      </YStack>
+
       <FlashList
         data={!isLoading && !error ? filtered : []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          padding: UI_SPACE.gutter,
           paddingBottom: insets.bottom,
+          paddingHorizontal: UI_SPACE.gutter,
           maxWidth: 17.5 * UI_SPACE.empty,
           alignSelf: "center",
           width: "100%",
         }}
         ItemSeparatorComponent={() => <YStack style={{ height: UI_SPACE.control }} />}
-        ListHeaderComponent={
-          <YStack gap="$gutter">
-            <XStack justify="space-between" items="center">
-              <Text
-                fontSize="$screenTitle"
-                fontWeight={UI_FONT_WEIGHT.bold}
-                color="$color"
-              >
-                {t("repoPicker.title")}
-              </Text>
-              <Button size="$chip" px="$control" chromeless onPress={() => router.back()}>
-                {t("common.cancel")}
-              </Button>
-            </XStack>
-
-            <Text color="$color" opacity={UI_OPACITY.medium}>
-              {t("repoPicker.subtitle")}
-            </Text>
-
-            {viewerLogin ? (
-              <Text color="$color" opacity={UI_OPACITY.medium}>
-                Signed in as {viewerLogin}
-              </Text>
-            ) : null}
-
-            {isLoading ? (
-              <XStack gap="$section" items="center">
-                <Spinner />
-                <Text color="$color">{t("repoPicker.loading")}</Text>
-              </XStack>
-            ) : null}
-
-            {error ? (
-              <YStack gap="$control">
-                <Text color="$red10">{error}</Text>
-                <Button size="$chip" px="$control" onPress={load}>
-                  {t("common.save")}
-                </Button>
-              </YStack>
-            ) : null}
-
-            <Input
-              bg="$background"
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor="$borderColor"
-              focusStyle={{
-                borderColor: ACCENT_COLORS.primary,
-              }}
-              placeholder={t("repoPicker.searchPlaceholder")}
-              value={query}
-              onChangeText={setQuery}
-              disabled={isLoading || !!error}
-              mb={UI_SPACE.control}
-            />
-          </YStack>
-        }
         ListEmptyComponent={
           !isLoading && !error ? (
             <Text color="$color" opacity={UI_OPACITY.medium}>
