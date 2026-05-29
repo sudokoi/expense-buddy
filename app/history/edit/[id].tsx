@@ -335,6 +335,7 @@ export default function EditExpenseScreen() {
               value={note}
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
+              selectTextOnFocus
             />
           </YStack>
 

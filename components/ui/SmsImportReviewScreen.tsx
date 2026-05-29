@@ -736,6 +736,7 @@ export function SmsImportReviewScreen({
                         : current
                     )
                   }}
+                  selectTextOnFocus
                 />
               </YStack>
 

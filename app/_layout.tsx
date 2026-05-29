@@ -180,13 +180,12 @@ function RootLayoutNav() {
         />
 
         <Stack.Screen
-          name="modal"
+          name="history/edit/[id]"
           options={{
-            title: "Tamagui + Expo",
-            presentation: "modal",
-            animation: "slide_from_right",
-            gestureEnabled: true,
-            gestureDirection: "horizontal",
+            headerStyle: {
+              backgroundColor: theme.background.val,
+            },
+            headerTintColor: theme.color.val,
             contentStyle: {
               backgroundColor: theme.background.val,
             },

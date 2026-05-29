@@ -7,7 +7,7 @@ ANDROID_DIR="$PROJECT_DIR/android"
 if [ ! -d "$ANDROID_DIR" ]; then
   echo "==> android/ directory not found. Running expo prebuild..."
   cd "$PROJECT_DIR"
-  npx expo prebuild --platform android --no-install --no-clean
+  npx expo prebuild --platform android --no-install
 fi
 
 cd "$ANDROID_DIR"
