@@ -116,7 +116,7 @@ The "Report an Issue" button in Settings is modified to:
 
 1. **JS-only ring buffer** — Store logs in a JS array with AsyncStorage persistence. Rejected because logs are lost on JS thread crashes, and the background receiver cannot log without the bridge being up.
 
-2. **Single shared Room database** — Add a `logs` table to the existing Room database in `expense-buddy-background-sms`. Rejected because it couples logging to the SMS module and creates a cross-module dependency in the wrong direction (SMS module would be a logging dependency for other modules).
+2. **Single shared Room database** — Add a `logs` table to the existing Room database in `expense-buddy-sms-module`. Rejected because it couples logging to the SMS module and creates a cross-module dependency in the wrong direction (SMS module would be a logging dependency for other modules).
 
 3. **Android Logcat only** — Use `android.util.Log` for native logging and `console.log` for JS. Rejected because logcat is not accessible to end users, is lost on device reboot, and cannot be attached to bug reports without adb.
 

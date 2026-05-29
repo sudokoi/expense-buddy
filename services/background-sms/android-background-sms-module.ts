@@ -2,29 +2,29 @@ import { Platform } from "react-native"
 import {
   BackgroundSmsPermissionStatus,
   BackgroundSmsState,
-  ExpenseBuddyBackgroundSmsNativeModule,
+  ExpenseBuddySmsNativeModule,
   ReviewQueueItemDto,
-} from "../../modules/expense-buddy-background-sms"
-export type { BackgroundSmsPermissionStatus } from "../../modules/expense-buddy-background-sms"
-import ExpenseBuddyBackgroundSmsModule from "../../modules/expense-buddy-background-sms"
+} from "../../modules/expense-buddy-sms-module"
+export type { BackgroundSmsPermissionStatus } from "../../modules/expense-buddy-sms-module"
+import ExpenseBuddySmsModule from "../../modules/expense-buddy-sms-module"
 import { SmsImportReviewItem } from "../../types/sms-import"
 import { PaymentMethodType } from "../../types/expense"
 import { logAsync } from "../logger"
 
-let moduleOverride: ExpenseBuddyBackgroundSmsNativeModule | null = null
+let moduleOverride: ExpenseBuddySmsNativeModule | null = null
 
 export function setBackgroundSmsModuleForTesting(
-  nextModule: ExpenseBuddyBackgroundSmsNativeModule | null
+  nextModule: ExpenseBuddySmsNativeModule | null
 ): void {
   moduleOverride = nextModule
 }
 
-function getBackgroundSmsModule(): ExpenseBuddyBackgroundSmsNativeModule | null {
+function getBackgroundSmsModule(): ExpenseBuddySmsNativeModule | null {
   if (Platform.OS !== "android") {
     return null
   }
 
-  return moduleOverride ?? ExpenseBuddyBackgroundSmsModule
+  return moduleOverride ?? ExpenseBuddySmsModule
 }
 
 export async function getBackgroundSmsState(): Promise<BackgroundSmsState> {

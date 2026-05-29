@@ -14,15 +14,15 @@ This document focuses on the current architecture shape, the reasons behind the 
 
 ## Runtime Layers
 
-| Layer              | Responsibility                                                               | Main locations                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Routes             | Screen composition and navigation                                            | `app/`                                                                                                                                            |
-| Components         | Reusable presentational building blocks                                      | `components/`                                                                                                                                     |
-| Hooks              | Screen-facing composition, derived state, and view logic                     | `hooks/`                                                                                                                                          |
-| Stores             | Long-lived application state                                                 | `stores/`                                                                                                                                         |
-| Services           | Persistence, sync, parsing, import, and data transforms                      | `services/`                                                                                                                                       |
-| Native modules     | Android SMS access, background SMS alerts, Play Core, and structured logging | `modules/expense-buddy-sms-import/`, `modules/expense-buddy-background-sms/`, `modules/expense-buddy-play-core/`, `modules/expense-buddy-logger/` |
-| Shared definitions | constants, types, utilities, locale resources                                | `constants/`, `types/`, `utils/`, `locales/`                                                                                                      |
+| Layer              | Responsibility                                                               | Main locations                                                                                                                                |
+| ------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Routes             | Screen composition and navigation                                            | `app/`                                                                                                                                        |
+| Components         | Reusable presentational building blocks                                      | `components/`                                                                                                                                 |
+| Hooks              | Screen-facing composition, derived state, and view logic                     | `hooks/`                                                                                                                                      |
+| Stores             | Long-lived application state                                                 | `stores/`                                                                                                                                     |
+| Services           | Persistence, sync, parsing, import, and data transforms                      | `services/`                                                                                                                                   |
+| Native modules     | Android SMS access, background SMS alerts, Play Core, and structured logging | `modules/expense-buddy-sms-parser/`, `modules/expense-buddy-sms-module/`, `modules/expense-buddy-play-core/`, `modules/expense-buddy-logger/` |
+| Shared definitions | constants, types, utilities, locale resources                                | `constants/`, `types/`, `utils/`, `locales/`                                                                                                  |
 
 The main dependency direction is:
 
@@ -44,7 +44,7 @@ Expense Buddy uses XState lightweight stores for most long-lived state, plus a d
 | UI State Store     | Device-local expansion and layout preferences           | Yes              | No                        |
 | Notification Store | Toasts and transient feedback                           | No               | No                        |
 
-The SMS import review queue is not managed by an XState store. It is owned by a native Room database (in `expense-buddy-background-sms`) and surfaced to React through a React Context provider (`SmsImportReviewProvider` in `providers/sms-import-review-provider.tsx`). The provider subscribes to native `onReviewQueueUpdated` events and refetches snapshots — it does not own queue state.
+The SMS import review queue is not managed by an XState store. It is owned by a native Room database (in `expense-buddy-sms-module`) and surfaced to React through a React Context provider (`SmsImportReviewProvider` in `providers/sms-import-review-provider.tsx`). The provider subscribes to native `onReviewQueueUpdated` events and refetches snapshots — it does not own queue state.
 
 Selection rules:
 
@@ -56,15 +56,15 @@ The sync state machine coordinates fetch, merge, push, conflict, and error state
 
 ## Persistence Model
 
-| Data               | Local storage          | Remote storage                     | Notes                                                                                                    |
-| ------------------ | ---------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Expenses           | AsyncStorage snapshot  | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`                                                              |
-| Settings           | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                                 |
-| GitHub credentials | Secure storage         | No                                 | Token and repo configuration stay on-device                                                              |
-| Filters            | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                             |
-| SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-background-sms` |
-| Dirty-day metadata | AsyncStorage           | No                                 | Used to minimize sync work                                                                               |
-| Remote SHA cache   | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                         |
+| Data               | Local storage          | Remote storage                     | Notes                                                                                                |
+| ------------------ | ---------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Expenses           | AsyncStorage snapshot  | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`                                                          |
+| Settings           | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                             |
+| GitHub credentials | Secure storage         | No                                 | Token and repo configuration stay on-device                                                          |
+| Filters            | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                         |
+| SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-sms-module` |
+| Dirty-day metadata | AsyncStorage           | No                                 | Used to minimize sync work                                                                           |
+| Remote SHA cache   | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                     |
 
 This split supports offline-first behavior while keeping the sync format small and inspectable.
 
@@ -88,13 +88,13 @@ Runtime flow:
 2. If permission was already granted, the provider fetches the pending review queue from native Room.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
 4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
-5. `ExpenseBuddyBackgroundSmsModule` provides `syncInboxAsync` which queries recent SMS from the ContentProvider, and natively parses each message using `SmsMessageParser` (from `expense-buddy-sms-import`) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
+5. `ExpenseBuddySmsModule` provides `syncInboxAsync` which queries recent SMS from the ContentProvider, and natively parses each message using `SmsMessageParser` (from `expense-buddy-sms-parser`) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
 6. The native sync pipeline then directly runs LiteRT category inference on the parsed messages, replacing the regex category suggestion only when the model clears its confidence gate.
 7. `SmsMessageParser.createFingerprint` generates a deterministic SHA-256 fingerprint from sender, body, timestamp (quantized to 3-minute windows), and amount for dedup.
-8. Parsed candidates are deterministically inserted into a native Room database via `SmsReviewQueueRepository` in `expense-buddy-background-sms` natively, avoiding JS bridge overhead.
+8. Parsed candidates are deterministically inserted into a native Room database via `SmsReviewQueueRepository` in `expense-buddy-sms-module` natively, avoiding JS bridge overhead.
 9. JS simply calls `syncInboxAsync` and receives the number of items successfully scanned, fully bypassing any JS-based orchestration or XState store handling.
 10. The review provider subscribes to native `onReviewQueueUpdated` events via a React Context provider (`SmsImportReviewProvider`) and refetches a fresh snapshot on each change — it does not own queue state.
-11. When an `SMS_RECEIVED` broadcast arrives, the background receiver calls `BackgroundSmsParser.parseIncomingMessage` which delegates to `SmsMessageParser` (from `expense-buddy-sms-import`) for the core regex logic, then inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
+11. When an `SMS_RECEIVED` broadcast arrives, the background receiver calls `BackgroundSmsParser.parseIncomingMessage` which delegates to `SmsMessageParser` (from `expense-buddy-sms-parser`) for the core regex logic, then inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
 12. Notification taps route into `/sms/review`, targeting a single item directly when possible.
 13. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
 14. Only accepted items are converted into normal expense records and enter the regular sync flow.
@@ -118,8 +118,8 @@ There is no server-side parsing roadmap. Any future ML-based parser is expected 
 
 Module dependency structure:
 
-- `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android SDK, no Expo module) and LiteRT ML classification. It acts purely as a stateless text-parsing and ML utility library with no bridge to JS.
-- `expense-buddy-background-sms` is the single Expo bridge module for all SMS functionality — permissions (`READ_SMS`), inbox scanning (`SmsInboxScanner`), background alerts, and Room queue persistence. It depends on `expense-buddy-sms-import` to parse the messages it reads and on `expense-buddy-logger` for structured logging.
+- `expense-buddy-sms-parser` owns `SmsMessageParser` (pure Kotlin, no Android SDK, no Expo module) and LiteRT ML classification. It acts purely as a stateless text-parsing and ML utility library with no bridge to JS.
+- `expense-buddy-sms-module` is the single Expo bridge module for all SMS functionality — permissions (`READ_SMS`), inbox scanning (`SmsInboxScanner`), background alerts, and Room queue persistence. It depends on `expense-buddy-sms-parser` to parse the messages it reads and on `expense-buddy-logger` for structured logging.
 - `expense-buddy-logger` is a dependency of both for structured logging.
 
 Related decisions:

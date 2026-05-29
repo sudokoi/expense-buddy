@@ -70,7 +70,7 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
 **Phase 2 — Room migration**
 
-5. **Add Room database** to `expense-buddy-background-sms`. Create:
+5. **Add Room database** to `expense-buddy-sms-module`. Create:
    - `ReviewQueueEntity` (fingerprint PK, status: PENDING/APPROVED/REJECTED/DISMISSED/FAILED, importSource, timestamps, all parsed fields)
    - `SmsImportJournalEntity` (auto-id PK, fingerprint, source, action, timestamp, details)
    - `ReviewQueueDao` with insert-on-conflict-ignore, status update, pending-item query
@@ -92,7 +92,7 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
    - Remove `mergeReviewItems()`, `persistQueueState()`, and the complex `initializeSmsImportReviewStore()` merge
    - Replace all `enqueue.effect(async () => persistQueueState(...))` with calls to native TurboModule APIs
 
-9. **Expose new TurboModule APIs** on `ExpenseBuddyBackgroundSmsModule`:
+9. **Expose new TurboModule APIs** on `ExpenseBuddySmsModule`:
    - `getPendingReviewQueueAsync()` → returns `ReviewQueueItem[]`
    - `approveReviewItemAsync(fingerprint: string)`
    - `rejectReviewItemAsync(fingerprint: string)`
@@ -101,14 +101,14 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
 10. **Switch to event-driven sync**: Native emits `"onReviewQueueUpdated"` after any mutation. JS subscribes via `addListener`, refetches a fresh snapshot on each event. No incremental state mutation across the bridge.
 
-11. **Extract parser to shared native module**: Move core regex parsing and fingerprint logic from `BackgroundSmsParser` (in `expense-buddy-background-sms`) to a new `SmsMessageParser` class in `expense-buddy-sms-import`. This eliminates the duplicate JS-side `parser.ts` and `fingerprint.ts` by:
+11. **Extract parser to shared native module**: Move core regex parsing and fingerprint logic from `BackgroundSmsParser` (in `expense-buddy-sms-module`) to a new `SmsMessageParser` class in `expense-buddy-sms-parser`. This eliminates the duplicate JS-side `parser.ts` and `fingerprint.ts` by:
     - Adding `scanAndParseMessagesAsync` to `ExpenseBuddySmsImportModule` — scans SMS and returns pre-parsed results with native fingerprints
     - Updating `BackgroundSmsParser` to delegate to `SmsMessageParser` for all regex/fingerprint logic, keeping only the Android `SmsMessage[]` → `SmsRawMessage` conversion
-    - Adding `implementation project(":expense-buddy-sms-import")` to `expense-buddy-background-sms/build.gradle`
+    - Adding `implementation project(":expense-buddy-sms-parser")` to `expense-buddy-sms-module/build.gradle`
     - Simplifying `services/sms-import/bootstrap.ts` to call `scanAndParseMessages` instead of JS parser + fingerprint
     - Deleting `parser.ts`, `parser.test.ts`, `fingerprint.ts`, `fingerprint.test.ts` (JS regex/fingerprint code)
     - `payment-method-hints.ts` is kept — still used by `suggestion-resolver.ts` for downstream payment instrument matching
-    - Module dependency: `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android framework dependencies). Both `ExpenseBuddySmsImportModule` and `BackgroundSmsParser` call into it. Tests: `SmsMessageParserTest` (30 tests) replaces JS parser + fingerprint tests.
+    - Module dependency: `expense-buddy-sms-parser` owns `SmsMessageParser` (pure Kotlin, no Android framework dependencies). Both `ExpenseBuddySmsImportModule` and `BackgroundSmsParser` call into it. Tests: `SmsMessageParserTest` (30 tests) replaces JS parser + fingerprint tests.
 
 **Phase 4 — Reliability**
 
@@ -131,7 +131,7 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
 ### Negative
 
-- Adds Room as a dependency to `expense-buddy-background-sms` module (APK size increase ~100 KB)
+- Adds Room as a dependency to `expense-buddy-sms-module` module (APK size increase ~100 KB)
 - Existing queue data is discarded on migration (pending items that were not yet reviewed are lost; they will be re-created on rescan)
 - JS store initialization must wait for native snapshot fetch (minor latency at startup)
 - Testing needs changes: Room DAOs need in-memory test databases, TurboModule calls need mocking
@@ -156,17 +156,17 @@ This ADR does not change the privacy boundary defined in ADR-003. Raw SMS conten
 - Implement Phase 1 first (fingerprint unification, mutexes, map storage, write serialization). ✓ Complete.
 - Ship Phase 2 (Room, repository, migration) as a single coherent change. ✓ Complete.
 - Remove old SharedPreferences-based code and AsyncStorage queue key after the migration has run successfully in production. ✓ Complete.
-- Phase 3 (JS cleanup + native parser extraction) done. JS `parser.ts`, `fingerprint.ts`, and their tests deleted. All regex/fingerprint logic unified in `SmsMessageParser` in `expense-buddy-sms-import`. ✓ Complete.
+- Phase 3 (JS cleanup + native parser extraction) done. JS `parser.ts`, `fingerprint.ts`, and their tests deleted. All regex/fingerprint logic unified in `SmsMessageParser` in `expense-buddy-sms-parser`. ✓ Complete.
 - Phase 4 (reliability logging + import source metadata) done. ✓ Complete.
 - Monitor `sms_import_journal` for unexpected dedupe patterns after rollout.
 - Monitor crash rate and ANR frequency after the Room migration.
 
 **Phase 5 — Zero-Hop Architecture (Current State)**
 
-13. **Complete centralization of SMS reading**: Moved `SmsInboxScanner.kt` and all Telephony querying natively into `expense-buddy-background-sms`.
-14. **Direct native sync**: Implemented `syncInboxAsync` directly on `ExpenseBuddyBackgroundSmsModule` that completely bypasses JS orchestration, parsing, and deduplication for manual scans. JS just calls `syncInboxAsync` and native reads, parses, dedupes, and queues items in one hop.
+13. **Complete centralization of SMS reading**: Moved `SmsInboxScanner.kt` and all Telephony querying natively into `expense-buddy-sms-module`.
+14. **Direct native sync**: Implemented `syncInboxAsync` directly on `ExpenseBuddySmsModule` that completely bypasses JS orchestration, parsing, and deduplication for manual scans. JS just calls `syncInboxAsync` and native reads, parses, dedupes, and queues items in one hop.
 15. **Consolidate permissions**: Moved all Android `Manifest.permission.READ_SMS` permission checks and methods from `sms-import` to `background-sms`.
-16. **Pure utility module**: `expense-buddy-sms-import` is now entirely decoupled from Android Telephony. Its Expo module (`ExpenseBuddySmsImportModule.kt`, TypeScript bridge files, `expo-module.config.json`) has been deleted — it is now a pure Kotlin/ML library with no JS bridge. It contains only `SmsMessageParser` and `SmsCategoryLiteRtClassifier`.
+16. **Pure utility module**: `expense-buddy-sms-parser` is now entirely decoupled from Android Telephony. Its Expo module (`ExpenseBuddySmsImportModule.kt`, TypeScript bridge files, `expo-module.config.json`) has been deleted — it is now a pure Kotlin/ML library with no JS bridge. It contains only `SmsMessageParser` and `SmsCategoryLiteRtClassifier`.
 17. **Dead code removal**: Deleted the JS state machine orchestrator `bootstrap.ts` completely. Also removed `insertPendingItemsAsync` (types, service layer, test mock, and Kotlin implementation), `reviewItemToDto`, `getLastScanCursorAsync`/`setLastScanCursorAsync` (Kotlin-only, no JS callers), `patchConsole`, and `optNullableString`/`optNullableDouble` extension functions. Total: 382 lines removed.
 18. **React Context provider**: Replaced the XState `sms-import-review-store` with a React Context provider (`SmsImportReviewProvider` in `providers/sms-import-review-provider.tsx`) that subscribes to native `onReviewQueueUpdated` events and refetches snapshots. The `useSmsImportReview()` hook is re-exported through `stores/hooks.ts` for compatibility.
 19. **Parser diagnostics**: Added `SkipReason` enum and `parseRawMessageWithReason` to `SmsMessageParser.kt` for structured skip-reason logging. Added combining-marks stripping (NFKD + `\u0300-\u036f\ufe20-\ufe2f`) to handle Mathematical Sans-Serif and other decorated Unicode characters in SMS text.

@@ -55,8 +55,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### SMS Import and Review
 
-- Android-only SMS import using the native `expense-buddy-sms-import` parsing engine (pure Kotlin, no JS bridge)
-- Android-only background transaction alerts using the native `expense-buddy-background-sms` module
+- Android-only SMS import using the native `expense-buddy-sms-parser` parsing engine (pure Kotlin, no JS bridge)
+- Android-only background transaction alerts using the native `expense-buddy-sms-module` module
 - Zero-hop native sync: a single `syncInboxAsync` bridge call reads, parses, classifies, deduplicates, and queues items in native Room — JS only receives a count
 - Inline `READ_SMS` permission handling through the native module
 - Optional Settings toggle for background SMS alerts with `RECEIVE_SMS` and `POST_NOTIFICATIONS` gating
@@ -174,7 +174,7 @@ Key implementation details:
 - XState stores for expenses, settings, filters, notifications, and UI state
 - React Context provider for SMS review queue (native-owned Room persistence, not an XState store)
 - service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
-- single native Android SMS module (`expense-buddy-background-sms`) handling permissions, inbox scanning, ML classification, and queue persistence — `expense-buddy-sms-import` is a pure Kotlin library with no JS bridge
+- single native Android SMS module (`expense-buddy-sms-module`) handling permissions, inbox scanning, ML classification, and queue persistence — `expense-buddy-sms-parser` is a pure Kotlin library with no JS bridge
 - property-based and unit tests across storage, sync, parsing, and store behavior
 - tracked Expo native modules for background SMS alerts and Play Core integrations
 
@@ -230,8 +230,8 @@ expense-buddy/
 │   ├── ui-state-store.ts
 │   └── store-provider.tsx
 ├── modules/
-│   ├── expense-buddy-background-sms/ # Single SMS bridge module (permissions, scan, ML, queue)
-│   ├── expense-buddy-sms-import/     # Pure Kotlin parsing library (no JS bridge)
+│   ├── expense-buddy-sms-module/ # Single SMS bridge module (permissions, scan, ML, queue)
+│   ├── expense-buddy-sms-parser/     # Pure Kotlin parsing library (no JS bridge)
 │   ├── expense-buddy-play-core/      # Play Store update and review native module
 │   └── expense-buddy-logger/         # On-device structured logging
 ├── locales/                    # en-US, en-GB, en-IN, hi, ja

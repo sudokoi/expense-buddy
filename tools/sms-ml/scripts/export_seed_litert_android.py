@@ -10,7 +10,7 @@ ARTIFACT_ROOT = REPO_ROOT / "tools" / "sms-ml" / "artifacts" / "training" / MODE
 ANDROID_ASSET_ROOT = (
     REPO_ROOT
     / "modules"
-    / "expense-buddy-sms-import"
+    / "expense-buddy-sms-parser"
     / "android"
     / "src"
     / "main"

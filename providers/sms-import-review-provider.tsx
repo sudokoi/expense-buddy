@@ -16,7 +16,7 @@ import {
   dismissReviewItemAsync,
   dismissReviewItemsAsync,
 } from "../services/background-sms/android-background-sms-module"
-import ExpenseBuddyBackgroundSmsModule from "../modules/expense-buddy-background-sms"
+import ExpenseBuddySmsModule from "../modules/expense-buddy-sms-module"
 
 interface SmsImportReviewContextValue {
   items: SmsImportReviewItem[]
@@ -59,14 +59,11 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
   }, [fetchItems])
 
   useEffect(() => {
-    if (!ExpenseBuddyBackgroundSmsModule) return
+    if (!ExpenseBuddySmsModule) return
 
-    const subscription = ExpenseBuddyBackgroundSmsModule.addListener(
-      "onReviewQueueUpdated",
-      () => {
-        fetchItems()
-      }
-    )
+    const subscription = ExpenseBuddySmsModule.addListener("onReviewQueueUpdated", () => {
+      fetchItems()
+    })
 
     return () => subscription.remove()
   }, [fetchItems])

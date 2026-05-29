@@ -6,15 +6,15 @@ jest.mock("../../services/logger", () => ({
   logAsync: jest.fn(),
 }))
 
-jest.mock("../../modules/expense-buddy-background-sms", () => ({
+jest.mock("../../modules/expense-buddy-sms-module", () => ({
   __esModule: true,
   default: null,
 }))
 
 import type {
   BackgroundSmsPermissionResponse,
-  ExpenseBuddyBackgroundSmsNativeModule,
-} from "../../modules/expense-buddy-background-sms"
+  ExpenseBuddySmsNativeModule,
+} from "../../modules/expense-buddy-sms-module"
 import {
   approveReviewItemsAsync,
   dismissReviewItemsAsync,
@@ -29,8 +29,8 @@ import {
 } from "./android-background-sms-module"
 
 function createModuleOverride(
-  overrides: Partial<ExpenseBuddyBackgroundSmsNativeModule> = {}
-): ExpenseBuddyBackgroundSmsNativeModule {
+  overrides: Partial<ExpenseBuddySmsNativeModule> = {}
+): ExpenseBuddySmsNativeModule {
   const defaultPermissionResponse: BackgroundSmsPermissionResponse = {
     status: "granted",
     granted: true,
@@ -52,7 +52,7 @@ function createModuleOverride(
     rejectItemsAsync: async () => undefined,
     dismissItemsAsync: async () => undefined,
     ...overrides,
-  } as ExpenseBuddyBackgroundSmsNativeModule
+  } as ExpenseBuddySmsNativeModule
 }
 
 describe("android-background-sms-module", () => {

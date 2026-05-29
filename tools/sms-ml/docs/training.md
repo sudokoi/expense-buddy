@@ -83,7 +83,7 @@ This document tracks the first trainable model path in the SMS ML workspace.
 - model bundle: `artifacts/training/seed-litert-v1/model.tflite`
 - model metadata: `artifacts/training/seed-litert-v1/metadata.json`
 - hybrid benchmark: `artifacts/benchmarks/seed-v1-litert-hybrid.json`
-- Android asset bundle: `modules/expense-buddy-sms-import/android/src/main/assets/sms_ml/seed-litert-v1/`
+- Android asset bundle: `modules/expense-buddy-sms-parser/android/src/main/assets/sms_ml/seed-litert-v1/`
 
 ## Native-ready caveats
 
