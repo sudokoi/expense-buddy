@@ -1,21 +1,10 @@
 import React, { startTransition, useCallback, useMemo, useState } from "react"
-import {
-  YStack,
-  Text,
-  XStack,
-  Button,
-  H6,
-  Input,
-  Dialog,
-  Label,
-  ScrollView,
-} from "tamagui"
-import { Calendar, Filter, X } from "@tamagui/lucide-icons-2"
-import { Platform, BackHandler, View } from "react-native"
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { YStack, Text, XStack, Button, H6, Dialog, ScrollView } from "tamagui"
+import { Filter, X } from "@tamagui/lucide-icons-2"
+import { BackHandler, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import DateTimePicker from "@react-native-community/datetimepicker"
 import { FlashList } from "@shopify/flash-list"
+import { useRouter, Href } from "expo-router"
 import {
   useExpenses,
   useNotifications,
@@ -25,42 +14,19 @@ import {
 import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
-import { PAYMENT_METHODS } from "../../constants/payment-methods"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
-import { parseISO } from "date-fns"
+import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { getLocalDayKey, formatDate } from "../../utils/date"
-import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
-import type {
-  ExpenseCategory,
-  Expense,
-  PaymentMethodType,
-  PaymentMethod,
-} from "../../types/expense"
+import type { Expense, PaymentMethodType } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { syncDownMore } from "../../services/sync-manager"
 import {
-  getAmountInputProps,
-  getAmountPreview,
-  parseAmountInput,
-} from "../../utils/amount-input"
-import { validateIdentifier } from "../../utils/payment-method-validation"
-import { PaymentInstrumentMethod } from "../../types/payment-instrument"
-import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
-import type { PaymentInstrument } from "../../types/payment-instrument"
-import {
-  PAYMENT_INSTRUMENT_METHODS,
   findInstrumentById,
   formatPaymentInstrumentLabel,
   getActivePaymentInstruments,
+  PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
-import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
-import {
-  InstrumentEntryKind,
-  PaymentInstrumentInlineDropdown,
-} from "../../components/ui/PaymentInstrumentInlineDropdown"
+import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
-import { CategoryCard } from "../../components/ui/CategoryCard"
-import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
 import { useTranslation } from "react-i18next"
 import { FilterSheet } from "../../components/history/FilterSheet"
 import type {
@@ -172,9 +138,10 @@ function methodShortLabel(method: string): string {
 
 export default function HistoryScreen() {
   const { t } = useTranslation()
-  const { state, deleteExpense, editExpense, replaceAllExpenses } = useExpenses()
+  const router = useRouter()
+  const { state, deleteExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
-  const { syncConfig, settings, updateSettings } = useSettings()
+  const { syncConfig, settings } = useSettings()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
@@ -198,39 +165,16 @@ export default function HistoryScreen() {
   const { save: saveFilters } = useFilterPersistence()
 
   // Local UI state
-  const [editingExpense, setEditingExpense] = useState<{
-    id: string
-    amount: string
-    category: ExpenseCategory
-    note: string
-    date: string
-    currency?: string
-    paymentMethodType?: PaymentMethodType
-    paymentMethodId: string
-    paymentInstrumentId?: string
-  } | null>(null)
-  const [showDatePicker, setShowDatePicker] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
-  const [instrumentEntryKind, setInstrumentEntryKind] =
-    useState<InstrumentEntryKind>("none")
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
-  const amountInputProps = useMemo(
-    () => getAmountInputProps(settings.enableMathExpressions),
-    [settings.enableMathExpressions]
-  )
 
   // Handle back button to close dialogs instead of navigating
   React.useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (editingExpense) {
-        setEditingExpense(null)
-        setShowDatePicker(false)
-        return true
-      }
       if (deletingExpenseId) {
         setDeletingExpenseId(null)
         return true
@@ -243,22 +187,7 @@ export default function HistoryScreen() {
     })
 
     return () => backHandler.remove()
-  }, [editingExpense, deletingExpenseId, showFilterSheet])
-
-  // Compute preview when expression contains operators
-  const expressionPreview = useMemo(() => {
-    return getAmountPreview(editingExpense?.amount ?? "", {
-      allowMathExpressions: settings.enableMathExpressions,
-    })
-  }, [editingExpense?.amount, settings.enableMathExpressions])
-
-  // Get current payment method config for identifier input in edit dialog
-  const selectedPaymentConfig = useMemo(() => {
-    if (!editingExpense?.paymentMethodType) return null
-    return (
-      PAYMENT_METHODS.find((pm) => pm.value === editingExpense.paymentMethodType) || null
-    )
-  }, [editingExpense?.paymentMethodType])
+  }, [deletingExpenseId, showFilterSheet])
 
   // Apply all filters in single pass for optimal performance
   const filteredExpenses = useMemo(() => {
@@ -539,26 +468,12 @@ export default function HistoryScreen() {
   ])
 
   // Memoized handlers for list item actions
-  const handleEdit = useCallback((expense: Expense) => {
-    setInstrumentEntryKind(
-      expense.paymentMethod?.instrumentId
-        ? "saved"
-        : expense.paymentMethod?.identifier
-          ? "manual"
-          : "none"
-    )
-    setEditingExpense({
-      id: expense.id,
-      amount: expense.amount.toString(),
-      category: expense.category,
-      note: expense.note || "",
-      date: expense.date,
-      currency: expense.currency,
-      paymentMethodType: expense.paymentMethod?.type,
-      paymentMethodId: expense.paymentMethod?.identifier || "",
-      paymentInstrumentId: expense.paymentMethod?.instrumentId,
-    })
-  }, [])
+  const handleEdit = useCallback(
+    (expense: Expense) => {
+      router.push(`/history/edit/${expense.id}` as Href)
+    },
+    [router]
+  )
 
   const handleDelete = useCallback((id: string) => {
     setDeletingExpenseId(id)
@@ -675,58 +590,6 @@ export default function HistoryScreen() {
     [insets.bottom]
   )
 
-  // Save handler for edit dialog
-  const handleSaveEdit = useCallback(() => {
-    if (editingExpense) {
-      const expense = state.activeExpenses.find((e) => e.id === editingExpense.id)
-      if (expense) {
-        if (!editingExpense.amount.trim()) {
-          addNotification(t("history.editDialog.fields.amountError"), "error")
-          return
-        }
-
-        const result = parseAmountInput(editingExpense.amount, {
-          allowMathExpressions: settings.enableMathExpressions,
-        })
-
-        if (!result.success) {
-          addNotification(
-            result.error || t("history.editDialog.fields.expressionError"),
-            "error"
-          )
-          return
-        }
-
-        const paymentMethod: PaymentMethod | undefined = editingExpense.paymentMethodType
-          ? {
-              type: editingExpense.paymentMethodType,
-              identifier: editingExpense.paymentMethodId.trim() || undefined,
-              instrumentId: editingExpense.paymentInstrumentId,
-            }
-          : undefined
-
-        editExpense(editingExpense.id, {
-          amount: result.value!,
-          category: editingExpense.category,
-          date: editingExpense.date,
-          note: editingExpense.note,
-          paymentMethod,
-        })
-        addNotification(t("history.updated"), "success")
-        logAsync("INFO", "UI_ACTION", `EDIT_EXPENSE id=${editingExpense.id}`)
-        setEditingExpense(null)
-        setShowDatePicker(false)
-      }
-    }
-  }, [
-    editingExpense,
-    state.activeExpenses,
-    editExpense,
-    addNotification,
-    settings.enableMathExpressions,
-    t,
-  ])
-
   // Filter sheet handlers
   const handleOpenFilterSheet = useCallback(() => {
     setShowFilterSheet(true)
@@ -741,60 +604,6 @@ export default function HistoryScreen() {
     reset()
     logAsync("INFO", "UI_ACTION", "RESET_FILTERS")
   }, [reset])
-
-  // Category selection handler for edit dialog
-  const handleCategorySelect = useCallback((category: ExpenseCategory) => {
-    setEditingExpense((prev) => (prev ? { ...prev, category } : null))
-  }, [])
-
-  const handlePaymentMethodSelect = useCallback((type: PaymentMethodType) => {
-    setEditingExpense((prev) => {
-      if (!prev) return null
-      if (prev.paymentMethodType === type) {
-        setInstrumentEntryKind("none")
-        return {
-          ...prev,
-          paymentMethodType: undefined,
-          paymentMethodId: "",
-          paymentInstrumentId: undefined,
-        }
-      } else {
-        setInstrumentEntryKind("none")
-        return {
-          ...prev,
-          paymentMethodType: type,
-          paymentMethodId: "",
-          paymentInstrumentId: undefined,
-        }
-      }
-    })
-  }, [])
-
-  const handleIdentifierChange = useCallback(
-    (text: string) => {
-      setEditingExpense((prev) => {
-        if (!prev) return null
-        if (prev.paymentMethodType === "Other") {
-          const maxLen = selectedPaymentConfig?.maxLength || 50
-          return { ...prev, paymentMethodId: text.slice(0, maxLen) }
-        } else {
-          const maxLen = selectedPaymentConfig?.maxLength || 4
-          if (
-            prev.paymentMethodType &&
-            isPaymentInstrumentMethod(prev.paymentMethodType)
-          ) {
-            setInstrumentEntryKind("manual")
-          }
-          return {
-            ...prev,
-            paymentMethodId: validateIdentifier(text, maxLen),
-            paymentInstrumentId: undefined,
-          }
-        }
-      })
-    },
-    [selectedPaymentConfig?.maxLength]
-  )
 
   // Empty state
   if (state.activeExpenses.length === 0) {
@@ -987,288 +796,6 @@ export default function HistoryScreen() {
                 {t("common.delete")}
               </Button>
             </XStack>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
-
-      {/* Edit Expense Dialog */}
-      <Dialog
-        open={!!editingExpense}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingExpense(null)
-            setShowDatePicker(false)
-          }
-        }}
-      >
-        <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
-          <Dialog.Content
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor="$borderColor"
-            elevate
-            key="content"
-            style={{ maxHeight: "80%" }}
-            gap="$gutter"
-          >
-            <Dialog.Title size="$sectionTitle">
-              {t("history.editDialog.title")}
-            </Dialog.Title>
-            <Dialog.Description>{t("history.editDialog.description")}</Dialog.Description>
-
-            <KeyboardAwareScrollView
-              bottomOffset={20}
-              contentContainerStyle={{ paddingBottom: insets.bottom }}
-            >
-              <YStack gap="$section">
-                <YStack gap="$control">
-                  <XStack items="center" justify="space-between">
-                    <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="date">
-                      {t("history.editDialog.fields.date")}
-                    </Label>
-                    <Button
-                      size="$control"
-                      onPress={() => setShowDatePicker(true)}
-                      icon={Calendar}
-                    >
-                      {editingExpense?.date
-                        ? formatDate(editingExpense.date, "dd/MM/yyyy")
-                        : t("history.editDialog.fields.datePlaceholder")}
-                    </Button>
-                  </XStack>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={
-                        editingExpense?.date ? parseISO(editingExpense.date) : new Date()
-                      }
-                      mode="date"
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
-                      onChange={(event, selectedDate) => {
-                        setShowDatePicker(Platform.OS === "ios")
-                        if (selectedDate && event.type !== "dismissed") {
-                          const originalDate = editingExpense?.date
-                            ? parseISO(editingExpense.date)
-                            : new Date()
-                          selectedDate.setHours(
-                            originalDate.getHours(),
-                            originalDate.getMinutes(),
-                            originalDate.getSeconds(),
-                            originalDate.getMilliseconds()
-                          )
-                          setEditingExpense((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  date: selectedDate.toISOString(),
-                                }
-                              : null
-                          )
-                        }
-                      }}
-                    />
-                  )}
-                  {showDatePicker && Platform.OS === "ios" && (
-                    <Button size="$control" onPress={() => setShowDatePicker(false)}>
-                      {t("common.done")}
-                    </Button>
-                  )}
-                </YStack>
-
-                <YStack gap="$control">
-                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="amount">
-                    {t("history.editDialog.fields.amount")}
-                  </Label>
-                  <XStack style={{ alignItems: "center" }} gap="$control">
-                    <Text
-                      fontSize="$label"
-                      fontWeight={UI_FONT_WEIGHT.bold}
-                      color="$color"
-                      opacity={UI_OPACITY.strong}
-                    >
-                      {getCurrencySymbol(
-                        editingExpense?.currency || getFallbackCurrency()
-                      )}
-                    </Text>
-                    <Input
-                      flex={1}
-                      size="$control"
-                      bg="$background"
-                      borderWidth={UI_BORDER_WIDTH.normal}
-                      borderColor="$borderColor"
-                      focusStyle={{
-                        borderColor: ACCENT_COLORS.primary,
-                      }}
-                      id="amount"
-                      value={editingExpense?.amount || ""}
-                      onChangeText={(text) =>
-                        setEditingExpense((prev) =>
-                          prev ? { ...prev, amount: text } : null
-                        )
-                      }
-                      placeholder={
-                        settings.enableMathExpressions
-                          ? t("history.editDialog.fields.amountPlaceholder")
-                          : t("history.editDialog.fields.amountPlaceholderNumeric")
-                      }
-                      keyboardType={amountInputProps.keyboardType}
-                      inputMode={amountInputProps.inputMode}
-                    />
-                  </XStack>
-                  {expressionPreview && (
-                    <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
-                      {t("history.editDialog.fields.preview", {
-                        amount: expressionPreview,
-                      })}
-                    </Text>
-                  )}
-                </YStack>
-
-                <YStack gap="$control">
-                  <Label color="$color" opacity={UI_OPACITY.strong}>
-                    {t("history.editDialog.fields.category")}
-                  </Label>
-                  <XStack flexWrap="wrap" gap={UI_SPACE.control}>
-                    {categories.map((cat) => {
-                      const isSelected = editingExpense?.category === cat.label
-                      return (
-                        <CategoryCard
-                          key={cat.label}
-                          isSelected={isSelected}
-                          categoryColor={cat.color}
-                          label={cat.label}
-                          onPress={() => handleCategorySelect(cat.label)}
-                          compact
-                        />
-                      )
-                    })}
-                  </XStack>
-                </YStack>
-
-                <YStack gap="$control">
-                  <Label color="$color" opacity={UI_OPACITY.strong} htmlFor="note">
-                    {t("history.editDialog.fields.note")}
-                  </Label>
-                  <Input
-                    id="note"
-                    bg="$background"
-                    size="$control"
-                    borderWidth={UI_BORDER_WIDTH.normal}
-                    borderColor="$borderColor"
-                    focusStyle={{
-                      borderColor: ACCENT_COLORS.primary,
-                    }}
-                    value={editingExpense?.note || ""}
-                    onChangeText={(text) =>
-                      setEditingExpense((prev) => (prev ? { ...prev, note: text } : null))
-                    }
-                    placeholder={t("history.editDialog.fields.notePlaceholder")}
-                  />
-                </YStack>
-
-                {/* Payment Method Selection */}
-                <YStack gap="$control">
-                  <Label color="$color" opacity={UI_OPACITY.strong}>
-                    {t("history.editDialog.fields.paymentMethod")}
-                  </Label>
-                  <XStack flexWrap="wrap" gap={UI_SPACE.control}>
-                    {PAYMENT_METHODS.map((pm) => (
-                      <PaymentMethodCard
-                        key={pm.value}
-                        config={pm}
-                        isSelected={editingExpense?.paymentMethodType === pm.value}
-                        onPress={() => handlePaymentMethodSelect(pm.value)}
-                      />
-                    ))}
-                  </XStack>
-
-                  {/* Identifier input for cards/UPI/Other */}
-                  {selectedPaymentConfig?.hasIdentifier && (
-                    <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                      <Label
-                        color="$color"
-                        opacity={UI_OPACITY.subtle}
-                        fontSize="$caption"
-                      >
-                        {selectedPaymentConfig.identifierLabel ||
-                          t("history.editDialog.fields.identifier")}
-                      </Label>
-
-                      {editingExpense?.paymentMethodType &&
-                      isPaymentInstrumentMethod(editingExpense.paymentMethodType) ? (
-                        <PaymentInstrumentInlineDropdown
-                          method={
-                            editingExpense.paymentMethodType as PaymentInstrumentMethod
-                          }
-                          instruments={allInstruments}
-                          kind={
-                            editingExpense.paymentInstrumentId
-                              ? "saved"
-                              : instrumentEntryKind === "manual"
-                                ? "manual"
-                                : "none"
-                          }
-                          selectedInstrumentId={editingExpense.paymentInstrumentId}
-                          manualDigits={editingExpense.paymentMethodId}
-                          identifierLabel={selectedPaymentConfig.identifierLabel}
-                          maxLength={selectedPaymentConfig.maxLength}
-                          onChange={(next) => {
-                            setInstrumentEntryKind(next.kind)
-                            setEditingExpense((prev) =>
-                              prev
-                                ? {
-                                    ...prev,
-                                    paymentInstrumentId: next.selectedInstrumentId,
-                                    paymentMethodId: next.manualDigits,
-                                  }
-                                : null
-                            )
-                          }}
-                          onCreateInstrument={(inst) => {
-                            updateSettings({
-                              paymentInstruments: [inst, ...allInstruments],
-                            })
-                          }}
-                        />
-                      ) : (
-                        <Input
-                          size="$control"
-                          bg="$background"
-                          borderWidth={UI_BORDER_WIDTH.normal}
-                          borderColor="$borderColor"
-                          focusStyle={{
-                            borderColor: ACCENT_COLORS.primary,
-                          }}
-                          placeholder={
-                            editingExpense?.paymentMethodType === "Other"
-                              ? t("history.editDialog.fields.otherPlaceholder")
-                              : t("history.editDialog.fields.identifierPlaceholder", {
-                                  max: selectedPaymentConfig.maxLength,
-                                })
-                          }
-                          keyboardType={
-                            editingExpense?.paymentMethodType === "Other"
-                              ? "default"
-                              : "numeric"
-                          }
-                          value={editingExpense?.paymentMethodId || ""}
-                          onChangeText={handleIdentifierChange}
-                          maxLength={selectedPaymentConfig.maxLength}
-                        />
-                      )}
-                    </YStack>
-                  )}
-                </YStack>
-              </YStack>
-
-              <XStack gap="$section" justify="flex-end" mt={UI_SPACE.gutter}>
-                <Dialog.Close asChild>
-                  <Button size="$control">{t("common.cancel")}</Button>
-                </Dialog.Close>
-                <Button size="$control" theme="accent" onPress={handleSaveEdit}>
-                  {t("common.save")}
-                </Button>
-              </XStack>
-            </KeyboardAwareScrollView>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>

@@ -386,11 +386,9 @@ export default function AddExpenseScreen() {
                 {t("add.date")}
               </Label>
               <Button
-                icon={<Calendar size="$icon" />}
                 size="$control"
                 onPress={() => setShowDatePicker(true)}
-                chromeless
-                borderWidth={UI_BORDER_WIDTH.thin}
+                icon={Calendar}
               >
                 {date.toLocaleDateString()}
               </Button>
