@@ -130,7 +130,7 @@ class ExpenseBuddySmsModule : Module() {
                             SmsCategoryLiteRtClassifier
                                 .getInstance(reactContext)
                         } catch (e: Exception) {
-                            LoggerApi.w("SMS_MODULE", "ML classifier unavailable, falling back to regex-only", e)
+                            LoggerApi.w("SMS_MODULE", "ML classifier unavailable, falling back to regex-only: ${e.message}")
                             null
                         }
                     val parsedResults =

@@ -1,12 +1,16 @@
 plugins {
   id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
 }
 group = 'expo.modules.expensebuddysmsparser'
 version = '1.0.0'
 
 android {
   namespace "expo.modules.expensebuddysmsparser"
+  compileSdk 36
   defaultConfig {
+    minSdk 24
+    targetSdk 36
     versionCode 1
     versionName "1.0.0"
   }

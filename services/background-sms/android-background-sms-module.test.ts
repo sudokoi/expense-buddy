@@ -75,6 +75,114 @@ describe("android-background-sms-module", () => {
     await expect(getBackgroundSmsState()).resolves.toEqual({ enabled: true })
   })
 
+  it("maps native uppercase statuses to TS lowercase statuses", async () => {
+    setBackgroundSmsModuleForTesting(
+      createModuleOverride({
+        getPendingReviewQueueAsync: async () => [
+          {
+            fingerprint: "fp-pending",
+            sender: "SBI",
+            body: "test",
+            amount: null,
+            currency: null,
+            merchantName: null,
+            categorySuggestion: null,
+            paymentMethodType: null,
+            paymentMethodIdentifier: null,
+            paymentMethodInstrumentId: null,
+            noteSuggestion: null,
+            transactionDate: null,
+            matchedLocale: null,
+            matchedPatternKey: null,
+            status: "PENDING",
+            acceptedExpenseId: null,
+            sourceMessageId: "1",
+            sourceReceivedAt: "0",
+            createdAt: 0,
+            updatedAt: 0,
+          },
+          {
+            fingerprint: "fp-approved",
+            sender: "HDFC",
+            body: "test",
+            amount: null,
+            currency: null,
+            merchantName: null,
+            categorySuggestion: null,
+            paymentMethodType: null,
+            paymentMethodIdentifier: null,
+            paymentMethodInstrumentId: null,
+            noteSuggestion: null,
+            transactionDate: null,
+            matchedLocale: null,
+            matchedPatternKey: null,
+            status: "APPROVED",
+            acceptedExpenseId: null,
+            sourceMessageId: "2",
+            sourceReceivedAt: "0",
+            createdAt: 0,
+            updatedAt: 0,
+          },
+          {
+            fingerprint: "fp-rejected",
+            sender: "ICICI",
+            body: "test",
+            amount: null,
+            currency: null,
+            merchantName: null,
+            categorySuggestion: null,
+            paymentMethodType: null,
+            paymentMethodIdentifier: null,
+            paymentMethodInstrumentId: null,
+            noteSuggestion: null,
+            transactionDate: null,
+            matchedLocale: null,
+            matchedPatternKey: null,
+            status: "REJECTED",
+            acceptedExpenseId: null,
+            sourceMessageId: "3",
+            sourceReceivedAt: "0",
+            createdAt: 0,
+            updatedAt: 0,
+          },
+          {
+            fingerprint: "fp-dismissed",
+            sender: "AXIS",
+            body: "test",
+            amount: null,
+            currency: null,
+            merchantName: null,
+            categorySuggestion: null,
+            paymentMethodType: null,
+            paymentMethodIdentifier: null,
+            paymentMethodInstrumentId: null,
+            noteSuggestion: null,
+            transactionDate: null,
+            matchedLocale: null,
+            matchedPatternKey: null,
+            status: "DISMISSED",
+            acceptedExpenseId: null,
+            sourceMessageId: "4",
+            sourceReceivedAt: "0",
+            createdAt: 0,
+            updatedAt: 0,
+          },
+        ],
+      })
+    )
+
+    const items = await getPendingReviewQueueAsync()
+    expect(items).toHaveLength(4)
+    expect(items[0].status).toBe("pending")
+    expect(items[1].status).toBe("accepted")
+    expect(items[2].status).toBe("rejected")
+    expect(items[3].status).toBe("dismissed")
+    expect(items[0].fingerprint).toBe("fp-pending")
+    expect(items[1].fingerprint).toBe("fp-approved")
+    expect(items[2].fingerprint).toBe("fp-rejected")
+    expect(items[3].fingerprint).toBe("fp-dismissed")
+  })
+
   it("returns empty array when no pending items exist", async () => {
     setBackgroundSmsModuleForTesting(
       createModuleOverride({

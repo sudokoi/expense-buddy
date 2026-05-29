@@ -176,6 +176,12 @@ export async function dismissReviewItemsAsync(fingerprints: string[]): Promise<v
 }
 
 function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
+  const statusMap: Record<string, SmsImportReviewItem["status"]> = {
+    PENDING: "pending",
+    APPROVED: "accepted",
+    REJECTED: "rejected",
+    DISMISSED: "dismissed",
+  }
   return {
     id: dto.sourceMessageId,
     fingerprint: dto.fingerprint,
@@ -203,7 +209,7 @@ function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
     transactionDate: dto.transactionDate ?? undefined,
     matchedLocale: dto.matchedLocale ?? undefined,
     matchedPatternKey: dto.matchedPatternKey ?? undefined,
-    status: dto.status as SmsImportReviewItem["status"],
+    status: statusMap[dto.status] ?? "pending",
     acceptedExpenseId: dto.acceptedExpenseId ?? undefined,
     createdAt: new Date(dto.createdAt).toISOString(),
     updatedAt: new Date(dto.updatedAt).toISOString(),
