@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react"
-import { SmsImportReviewItem } from "../../types/sms-import"
+import { SmsImportReviewItem } from "../types/sms-import"
 import {
   getPendingReviewQueueAsync,
   approveReviewItemAsync,
@@ -15,8 +15,8 @@ import {
   rejectReviewItemsAsync,
   dismissReviewItemAsync,
   dismissReviewItemsAsync,
-} from "../../services/background-sms/android-background-sms-module"
-import ExpenseBuddyBackgroundSmsModule from "../../modules/expense-buddy-background-sms"
+} from "../services/background-sms/android-background-sms-module"
+import ExpenseBuddyBackgroundSmsModule from "../modules/expense-buddy-background-sms"
 
 interface SmsImportReviewContextValue {
   items: SmsImportReviewItem[]
@@ -109,9 +109,6 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
   }, [])
 
   const clearResolvedItems = useCallback(() => {
-    // Resolved items are cleared from the queue inherently because the native DB query
-    // `getPendingReviewQueueAsync` only fetches pending items anyway.
-    // If the UI wants to clear its local display of them, we just refetch to get the latest pending.
     fetchItems()
   }, [fetchItems])
 

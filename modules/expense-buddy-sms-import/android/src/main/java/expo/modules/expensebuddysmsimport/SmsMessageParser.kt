@@ -57,10 +57,26 @@ private val upiHintPattern = Regex("\\bupi\\b", RegexOption.IGNORE_CASE)
 private val creditCardHintPattern = Regex("credit card|credit a/c|credit acct|\\bamex\\b|american express", RegexOption.IGNORE_CASE)
 private val debitCardHintPattern = Regex("debit card|debit a/c|debited from a/c|debited from acct", RegexOption.IGNORE_CASE)
 
+enum class SkipReason {
+    EMPTY_BODY,
+    OTP_MATCH,
+    NEGATIVE_ALERT,
+    NOT_DEBIT,
+    AMOUNT_MISSING,
+}
+
+data class ParseResult(
+    val parsed: SmsParsedMessage?,
+    val skipReason: SkipReason?,
+)
+
 object SmsMessageParser {
+    private val combiningMarksPattern = Regex("[\\u0300-\\u036f\\ufe20-\\ufe2f]")
+
     private fun normalizeUnicode(text: String): String =
         try {
-            Normalizer.normalize(text, Normalizer.Form.NFKD)
+            val nfkd = Normalizer.normalize(text, Normalizer.Form.NFKD)
+            nfkd.replace(combiningMarksPattern, "")
         } catch (_: Exception) {
             text
         }
@@ -69,21 +85,34 @@ object SmsMessageParser {
         sender: String,
         body: String,
         receivedAt: String,
-    ): SmsParsedMessage? {
+    ): SmsParsedMessage? = parseRawMessageWithReason(sender, body, receivedAt).parsed
+
+    fun parseRawMessageWithReason(
+        sender: String,
+        body: String,
+        receivedAt: String,
+    ): ParseResult {
         val normalizedBody = normalizeUnicode(body).trim()
         if (normalizedBody.isEmpty()) {
-            return null
+            return ParseResult(null, SkipReason.EMPTY_BODY)
         }
 
-        if (otpKeywords.containsMatchIn(normalizedBody) || isNegativeBankAlert(normalizedBody)) {
-            return null
+        if (otpKeywords.containsMatchIn(normalizedBody)) {
+            return ParseResult(null, SkipReason.OTP_MATCH)
+        }
+
+        if (isNegativeBankAlert(normalizedBody)) {
+            return ParseResult(null, SkipReason.NEGATIVE_ALERT)
         }
 
         if (!debitKeywords.containsMatchIn(normalizedBody) || creditOnlyKeywords.containsMatchIn(normalizedBody)) {
-            return null
+            return ParseResult(null, SkipReason.NOT_DEBIT)
         }
 
-        val amount = parseAmount(normalizedBody) ?: return null
+        val amount = parseAmount(normalizedBody)
+        if (amount == null) {
+            return ParseResult(null, SkipReason.AMOUNT_MISSING)
+        }
         val merchantName = inferMerchant(normalizedBody)
 
         val messageId = "scan_${sha256("$sender|$body|$receivedAt")}"
@@ -96,18 +125,21 @@ object SmsMessageParser {
             )
         val fingerprint = createFingerprint(sender, body, receivedAt, amount)
 
-        return SmsParsedMessage(
-            fingerprint = fingerprint,
-            sourceMessage = rawMessage,
-            amount = amount,
-            currency = "INR",
-            merchantName = merchantName,
-            categorySuggestion = inferCategory(normalizedBody, merchantName),
-            paymentMethodSuggestion = inferPaymentMethod(normalizedBody),
-            noteSuggestion = merchantName?.let { "SMS import: $it" },
-            transactionDate = receivedAt,
-            matchedLocale = "en-IN",
-            matchedPatternKey = "india.generic.transaction",
+        return ParseResult(
+            SmsParsedMessage(
+                fingerprint = fingerprint,
+                sourceMessage = rawMessage,
+                amount = amount,
+                currency = "INR",
+                merchantName = merchantName,
+                categorySuggestion = inferCategory(normalizedBody, merchantName),
+                paymentMethodSuggestion = inferPaymentMethod(normalizedBody),
+                noteSuggestion = merchantName?.let { "SMS import: $it" },
+                transactionDate = receivedAt,
+                matchedLocale = "en-IN",
+                matchedPatternKey = "india.generic.transaction",
+            ),
+            null,
         )
     }
 

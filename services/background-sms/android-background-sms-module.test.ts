@@ -11,28 +11,43 @@ jest.mock("../../modules/expense-buddy-background-sms", () => ({
   default: null,
 }))
 
-import type { ExpenseBuddyBackgroundSmsNativeModule } from "../../modules/expense-buddy-background-sms"
+import type {
+  BackgroundSmsPermissionResponse,
+  ExpenseBuddyBackgroundSmsNativeModule,
+} from "../../modules/expense-buddy-background-sms"
 import {
   approveReviewItemsAsync,
   dismissReviewItemsAsync,
+  getBackgroundSmsPermissionStatus,
   getBackgroundSmsState,
   getPendingReviewQueueAsync,
   rejectReviewItemsAsync,
+  requestBackgroundSmsPermission,
   setBackgroundSmsEnabled,
   setBackgroundSmsModuleForTesting,
+  syncInboxAsync,
 } from "./android-background-sms-module"
 
 function createModuleOverride(
   overrides: Partial<ExpenseBuddyBackgroundSmsNativeModule> = {}
 ): ExpenseBuddyBackgroundSmsNativeModule {
+  const defaultPermissionResponse: BackgroundSmsPermissionResponse = {
+    status: "granted",
+    granted: true,
+    canAskAgain: true,
+    expires: "never",
+  }
   return {
+    addListener: jest.fn() as any,
     getBackgroundSmsStateAsync: async () => ({ enabled: false }),
     setBackgroundSmsEnabledAsync: async () => undefined,
+    syncInboxAsync: async () => 5,
+    getPermissionStatusAsync: async () => defaultPermissionResponse,
+    requestPermissionAsync: async () => defaultPermissionResponse,
     getPendingReviewQueueAsync: async () => [],
     approveReviewItemAsync: async () => undefined,
     rejectReviewItemAsync: async () => undefined,
     dismissReviewItemAsync: async () => undefined,
-    insertPendingItemsAsync: async () => undefined,
     approveItemsAsync: async () => undefined,
     rejectItemsAsync: async () => undefined,
     dismissItemsAsync: async () => undefined,
@@ -117,5 +132,91 @@ describe("android-background-sms-module", () => {
     await dismissReviewItemsAsync(["fp5", "fp6"])
 
     expect(dismissItemsAsync).toHaveBeenCalledWith(["fp5", "fp6"])
+  })
+
+  describe("getBackgroundSmsPermissionStatus", () => {
+    it("returns granted status from native module", async () => {
+      setBackgroundSmsModuleForTesting(
+        createModuleOverride({
+          getPermissionStatusAsync: async () => ({
+            status: "granted",
+            granted: true,
+            canAskAgain: true,
+            expires: "never",
+          }),
+        })
+      )
+
+      await expect(getBackgroundSmsPermissionStatus()).resolves.toBe("granted")
+    })
+
+    it("returns denied status from native module", async () => {
+      setBackgroundSmsModuleForTesting(
+        createModuleOverride({
+          getPermissionStatusAsync: async () => ({
+            status: "denied",
+            granted: false,
+            canAskAgain: true,
+            expires: "never",
+          }),
+        })
+      )
+
+      await expect(getBackgroundSmsPermissionStatus()).resolves.toBe("denied")
+    })
+
+    it("returns unavailable on non-Android platforms", async () => {
+      const { Platform } = require("react-native")
+      const originalOs = Platform.OS
+      Platform.OS = "ios"
+      setBackgroundSmsModuleForTesting(null)
+
+      await expect(getBackgroundSmsPermissionStatus()).resolves.toBe("unavailable")
+
+      Platform.OS = originalOs
+    })
+  })
+
+  describe("requestBackgroundSmsPermission", () => {
+    it("requests permission via native module", async () => {
+      const requestPermissionAsync = jest.fn().mockResolvedValue({
+        status: "granted",
+        granted: true,
+        canAskAgain: true,
+        expires: "never",
+      })
+      setBackgroundSmsModuleForTesting(createModuleOverride({ requestPermissionAsync }))
+
+      await expect(requestBackgroundSmsPermission()).resolves.toBe("granted")
+      expect(requestPermissionAsync).toHaveBeenCalled()
+    })
+  })
+
+  describe("syncInboxAsync", () => {
+    it("returns created count from native module", async () => {
+      const syncInboxAsync = jest.fn().mockResolvedValue(3)
+      setBackgroundSmsModuleForTesting(createModuleOverride({ syncInboxAsync }))
+
+      await expect(syncInboxAsync(true)).resolves.toBe(3)
+      expect(syncInboxAsync).toHaveBeenCalledWith(true)
+    })
+
+    it("returns 0 on non-Android platforms", async () => {
+      const { Platform } = require("react-native")
+      const originalOs = Platform.OS
+      Platform.OS = "ios"
+      setBackgroundSmsModuleForTesting(null)
+
+      await expect(syncInboxAsync(false)).resolves.toBe(0)
+
+      Platform.OS = originalOs
+    })
+
+    it("surfaces native errors", async () => {
+      const mockSync = jest.fn().mockRejectedValue(new Error("native sync failed"))
+      setBackgroundSmsModuleForTesting(createModuleOverride({ syncInboxAsync: mockSync }))
+
+      await expect(syncInboxAsync(false)).rejects.toThrow("native sync failed")
+    })
   })
 })

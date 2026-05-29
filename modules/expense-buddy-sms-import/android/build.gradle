@@ -1,6 +1,5 @@
 plugins {
   id 'com.android.library'
-  id 'expo-module-gradle-plugin'
 }
 group = 'expo.modules.expensebuddysmsimport'
 version = '1.0.0'

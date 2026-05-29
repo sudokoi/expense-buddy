@@ -52,8 +52,6 @@ export interface ExpenseBuddyBackgroundSmsNativeModule extends NativeModule {
   approveReviewItemAsync(fingerprint: string): Promise<void>
   rejectReviewItemAsync(fingerprint: string): Promise<void>
   dismissReviewItemAsync(fingerprint: string): Promise<void>
-  insertPendingItemsAsync(itemsJson: string): Promise<void>
-
   approveItemsAsync(fingerprints: string[]): Promise<void>
   rejectItemsAsync(fingerprints: string[]): Promise<void>
   dismissItemsAsync(fingerprints: string[]): Promise<void>

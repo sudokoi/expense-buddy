@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import expo.modules.expensebuddylogger.LoggerApi
-import org.json.JSONObject
 
 private const val PREFS_NAME = "expense_buddy_background_sms"
 private const val ENABLED_KEY = "enabled"
@@ -80,7 +79,3 @@ private object BackgroundSmsReceiverComponent {
 
     private fun componentName(context: Context): ComponentName = ComponentName(context, ExpenseBuddyBackgroundSmsReceiver::class.java)
 }
-
-internal fun JSONObject.optNullableString(key: String): String? = if (isNull(key)) null else optString(key, null)
-
-internal fun JSONObject.optNullableDouble(key: String): Double? = if (isNull(key) || !has(key)) null else optDouble(key)

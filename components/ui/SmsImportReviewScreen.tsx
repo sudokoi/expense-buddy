@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
 import { Button, Card, H4, Input, Label, Text, XStack, YStack } from "tamagui"
 import {
+  type PaymentMethod,
   PaymentMethodType,
   type Expense,
   type ExpenseCategory,
@@ -234,6 +235,19 @@ export function SmsImportReviewScreen({
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
   const scrollViewRef = useRef<any>(null)
+  const resolvedSuggestions = useMemo(() => {
+    const map = new Map<
+      string,
+      { category: ExpenseCategory; paymentMethod: PaymentMethod | undefined }
+    >()
+    for (const item of pendingItems) {
+      map.set(item.id, {
+        category: resolveCategoryLabel(item, categories),
+        paymentMethod: resolveSmsImportPaymentSuggestion(item, paymentInstruments),
+      })
+    }
+    return map
+  }, [pendingItems, categories, paymentInstruments])
   const handledInitialFocusIdRef = useRef<string | null>(null)
 
   const editingItem = useMemo(
@@ -795,17 +809,16 @@ export function SmsImportReviewScreen({
                             <Text>
                               {t("smsImport.sheet.labels.category")}:{" "}
                               {getLocalizedCategoryLabel(
-                                resolveCategoryLabel(item, categories),
+                                resolvedSuggestions.get(item.id)?.category ??
+                                  item.categorySuggestion ??
+                                  t("categories.other"),
                                 t
                               )}
                             </Text>
                             <Text>
                               {t("smsImport.sheet.labels.payment")}:{" "}
                               {getLocalizedPaymentMethodLabel(
-                                resolveSmsImportPaymentSuggestion(
-                                  item,
-                                  paymentInstruments
-                                ),
+                                resolvedSuggestions.get(item.id)?.paymentMethod,
                                 paymentInstruments,
                                 t
                               )}

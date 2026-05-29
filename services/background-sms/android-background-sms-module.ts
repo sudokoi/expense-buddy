@@ -139,21 +139,6 @@ export async function dismissReviewItemAsync(fingerprint: string): Promise<void>
   }
 }
 
-export async function insertPendingItemsAsync(
-  items: SmsImportReviewItem[]
-): Promise<void> {
-  const module = getBackgroundSmsModule()
-  if (!module) return
-
-  try {
-    const json = JSON.stringify(items.map(reviewItemToDto))
-    await module.insertPendingItemsAsync(json)
-  } catch (e) {
-    await logAsync("ERROR", "JS_MODULE", `insertPendingItemsAsync failed: ${e}`)
-    throw e
-  }
-}
-
 export async function approveReviewItemsAsync(fingerprints: string[]): Promise<void> {
   const module = getBackgroundSmsModule()
   if (!module) return
@@ -222,30 +207,5 @@ function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
     acceptedExpenseId: dto.acceptedExpenseId ?? undefined,
     createdAt: new Date(dto.createdAt).toISOString(),
     updatedAt: new Date(dto.updatedAt).toISOString(),
-  }
-}
-
-function reviewItemToDto(item: SmsImportReviewItem): ReviewQueueItemDto {
-  return {
-    fingerprint: item.fingerprint,
-    sender: item.sourceMessage.sender,
-    body: item.sourceMessage.body,
-    amount: item.amount ?? null,
-    currency: item.currency ?? null,
-    merchantName: item.merchantName ?? null,
-    categorySuggestion: item.categorySuggestion ?? null,
-    paymentMethodType: item.paymentMethodSuggestion?.type ?? null,
-    paymentMethodIdentifier: item.paymentMethodSuggestion?.identifier ?? null,
-    paymentMethodInstrumentId: item.paymentMethodSuggestion?.instrumentId ?? null,
-    noteSuggestion: item.noteSuggestion ?? null,
-    transactionDate: item.transactionDate ?? null,
-    matchedLocale: item.matchedLocale ?? null,
-    matchedPatternKey: item.matchedPatternKey ?? null,
-    status: item.status,
-    acceptedExpenseId: item.acceptedExpenseId ?? null,
-    sourceMessageId: item.sourceMessage.messageId,
-    sourceReceivedAt: item.sourceMessage.receivedAt,
-    createdAt: new Date(item.createdAt).getTime(),
-    updatedAt: new Date(item.updatedAt).getTime(),
   }
 }

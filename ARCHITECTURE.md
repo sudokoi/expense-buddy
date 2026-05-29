@@ -36,14 +36,15 @@ The main dependency direction is:
 
 Expense Buddy uses XState lightweight stores for most long-lived state, plus a dedicated XState machine for sync lifecycle control.
 
-| Store                   | Purpose                                                 | Persists locally | Syncs across devices      |
-| ----------------------- | ------------------------------------------------------- | ---------------- | ------------------------- |
-| Expense Store           | Expense records and expense mutations                   | Yes              | Yes                       |
-| Settings Store          | Categories, instruments, app preferences, sync settings | Yes              | Yes for syncable settings |
-| Filter Store            | Shared History and Analytics filter state               | Yes              | No                        |
-| SMS Import Review Store | Parsed SMS candidates and review actions                | Yes              | No                        |
-| UI State Store          | Device-local expansion and layout preferences           | Yes              | No                        |
-| Notification Store      | Toasts and transient feedback                           | No               | No                        |
+| Store              | Purpose                                                 | Persists locally | Syncs across devices      |
+| ------------------ | ------------------------------------------------------- | ---------------- | ------------------------- |
+| Expense Store      | Expense records and expense mutations                   | Yes              | Yes                       |
+| Settings Store     | Categories, instruments, app preferences, sync settings | Yes              | Yes for syncable settings |
+| Filter Store       | Shared History and Analytics filter state               | Yes              | No                        |
+| UI State Store     | Device-local expansion and layout preferences           | Yes              | No                        |
+| Notification Store | Toasts and transient feedback                           | No               | No                        |
+
+The SMS import review queue is not managed by an XState store. It is owned by a native Room database (in `expense-buddy-background-sms`) and surfaced to React through a React Context provider (`SmsImportReviewProvider` in `providers/sms-import-review-provider.tsx`). The provider subscribes to native `onReviewQueueUpdated` events and refetches snapshots — it does not own queue state.
 
 Selection rules:
 
@@ -84,7 +85,7 @@ Current constraints:
 Runtime flow:
 
 1. The app checks SMS permission status on startup without prompting.
-2. If permission was already granted, bootstrap logic can scan the bounded recent window.
+2. If permission was already granted, the provider fetches the pending review queue from native Room.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
 4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
 5. `ExpenseBuddyBackgroundSmsModule` provides `syncInboxAsync` which queries recent SMS from the ContentProvider, and natively parses each message using `SmsMessageParser` (from `expense-buddy-sms-import`) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
@@ -92,7 +93,7 @@ Runtime flow:
 7. `SmsMessageParser.createFingerprint` generates a deterministic SHA-256 fingerprint from sender, body, timestamp (quantized to 3-minute windows), and amount for dedup.
 8. Parsed candidates are deterministically inserted into a native Room database via `SmsReviewQueueRepository` in `expense-buddy-background-sms` natively, avoiding JS bridge overhead.
 9. JS simply calls `syncInboxAsync` and receives the number of items successfully scanned, fully bypassing any JS-based orchestration or XState store handling.
-10. The review store subscribes to native `onReviewQueueUpdated` events and refetches a fresh snapshot on each change — it does not own queue state.
+10. The review provider subscribes to native `onReviewQueueUpdated` events via a React Context provider (`SmsImportReviewProvider`) and refetches a fresh snapshot on each change — it does not own queue state.
 11. When an `SMS_RECEIVED` broadcast arrives, the background receiver calls `BackgroundSmsParser.parseIncomingMessage` which delegates to `SmsMessageParser` (from `expense-buddy-sms-import`) for the core regex logic, then inserts the result into Room via `SmsReviewQueueRepository`, and posts a local notification only if the app is not foregrounded.
 12. Notification taps route into `/sms/review`, targeting a single item directly when possible.
 13. The review UI lets the user accept, edit, reject, dismiss, or clear staged items.
@@ -117,9 +118,9 @@ There is no server-side parsing roadmap. Any future ML-based parser is expected 
 
 Module dependency structure:
 
-- `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android SDK) and LiteRT ML classification. It acts purely as a stateless text-parsing and ML utility module.
-- `expense-buddy-background-sms` orchestrates all SMS Telephony inbox querying (`SmsInboxScanner`), permissions, background alerts, and the Room queue persistence. It depends on `expense-buddy-sms-import` to parse the messages it reads.
-- `expense-buddy-logger` is a dependency of both for structured logging
+- `expense-buddy-sms-import` owns `SmsMessageParser` (pure Kotlin, no Android SDK, no Expo module) and LiteRT ML classification. It acts purely as a stateless text-parsing and ML utility library with no bridge to JS.
+- `expense-buddy-background-sms` is the single Expo bridge module for all SMS functionality — permissions (`READ_SMS`), inbox scanning (`SmsInboxScanner`), background alerts, and Room queue persistence. It depends on `expense-buddy-sms-import` to parse the messages it reads and on `expense-buddy-logger` for structured logging.
+- `expense-buddy-logger` is a dependency of both for structured logging.
 
 Related decisions:
 

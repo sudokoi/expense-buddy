@@ -55,12 +55,13 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### SMS Import and Review
 
-- Android-only SMS import using the native `expense-buddy-sms-import` module
+- Android-only SMS import using the native `expense-buddy-sms-import` parsing engine (pure Kotlin, no JS bridge)
 - Android-only background transaction alerts using the native `expense-buddy-background-sms` module
-- Inline `READ_SMS` permission handling from Settings
+- Zero-hop native sync: a single `syncInboxAsync` bridge call reads, parses, classifies, deduplicates, and queues items in native Room — JS only receives a count
+- Inline `READ_SMS` permission handling through the native module
 - Optional Settings toggle for background SMS alerts with `RECEIVE_SMS` and `POST_NOTIFICATIONS` gating
-- Review queue where each staged item can be accepted, edited, rejected, or dismissed
-- Local notifications route back into the existing review queue instead of silently creating expenses
+- Review queue where each staged item can be accepted, edited, rejected, or dismissed — surfaced through a React Context provider subscribed to native events
+- Local notifications route back into the review queue instead of silently creating expenses
 - Native LiteRT category suggestion with regex fallback for low-confidence predictions
 - Conservative category suggestion resolver built around shipped default categories
 - Local-only processing with no backend parsing
@@ -104,12 +105,13 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 1. Open Settings and scan recent messages, or enable background SMS alerts on Android.
 2. Expense Buddy reads recent Android transaction SMS messages on-device or parses newly received SMS messages locally in the background.
-3. The parser extracts likely transaction details and a regex fallback category locally.
-4. The native Android module can score the same messages with a bundled LiteRT category model.
-5. The app stages the candidate with the ML category only when the model is confident enough.
-6. If a new background match arrives while the app is not foregrounded, a local notification opens the existing review flow.
-7. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
-8. Only accepted items become normal expense records and participate in optional GitHub sync.
+3. A single `syncInboxAsync` native bridge call reads, parses, classifies, deduplicates, and inserts items into a native Room queue — no JS orchestration.
+4. The parser extracts likely transaction details, generates a deterministic SHA-256 fingerprint for dedup, and produces a regex fallback category suggestion.
+5. The native module scores the same messages with a bundled LiteRT category model, replacing the regex suggestion only when confidence is high enough.
+6. If a new background match arrives while the app is not foregrounded, a local notification opens the review flow.
+7. The review UI (backed by a React Context provider subscribing to native `onReviewQueueUpdated` events) shows pending candidates.
+8. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
+9. Only accepted items become normal expense records and participate in optional GitHub sync.
 
 This review-first model is deliberate. The app aims to reduce manual entry without hiding how an import decision was made.
 
@@ -169,11 +171,12 @@ Expense Buddy uses Expo Router for navigation, Tamagui for UI, XState stores for
 Key implementation details:
 
 - file-based routing under `app/`
-- XState stores for expenses, settings, filters, notifications, UI state, and SMS review state
+- XState stores for expenses, settings, filters, notifications, and UI state
+- React Context provider for SMS review queue (native-owned Room persistence, not an XState store)
 - service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
-- native Android SMS modules bridged through `services/sms-import/` and `services/background-sms/`
+- single native Android SMS module (`expense-buddy-background-sms`) handling permissions, inbox scanning, ML classification, and queue persistence — `expense-buddy-sms-import` is a pure Kotlin library with no JS bridge
 - property-based and unit tests across storage, sync, parsing, and store behavior
-- tracked Expo native modules for Android SMS import, Android background SMS alerts, and Play Core integrations
+- tracked Expo native modules for background SMS alerts and Play Core integrations
 
 For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -202,12 +205,9 @@ expense-buddy/
 │   ├── NotificationStack.tsx
 │   ├── Provider.tsx
 │   └── SyncIndicator.tsx
-├── hooks/                      # analytics, auth, sync, changelog, and update hooks
+├── hooks/                      # analytics, auth, sync, changelog, update, and SMS import action hooks
 ├── services/
 │   ├── sms-import/
-│   │   ├── android-sms-module.ts
-│   │   ├── bootstrap.ts
-│   │   ├── parser.ts
 │   │   └── suggestion-resolver.ts
 │   ├── background-sms/
 │   │   ├── android-background-sms-module.ts
@@ -220,18 +220,20 @@ expense-buddy/
 │   ├── settings-manager.ts     # settings persistence and sync support
 │   ├── update-checker.ts
 │   └── auto-sync-service.ts
+├── providers/                  # React Context providers
+│   └── sms-import-review-provider.tsx
 ├── stores/
 │   ├── expense-store.ts
 │   ├── settings-store.ts
 │   ├── filter-store.ts
-│   ├── sms-import-review-store.ts
 │   ├── notification-store.ts
 │   ├── ui-state-store.ts
 │   └── store-provider.tsx
 ├── modules/
-│   ├── expense-buddy-background-sms/ # Android background SMS alerts native module
+│   ├── expense-buddy-background-sms/ # Single SMS bridge module (permissions, scan, ML, queue)
+│   ├── expense-buddy-sms-import/     # Pure Kotlin parsing library (no JS bridge)
 │   ├── expense-buddy-play-core/      # Play Store update and review native module
-│   └── expense-buddy-sms-import/     # Android SMS import native module
+│   └── expense-buddy-logger/         # On-device structured logging
 ├── locales/                    # en-US, en-GB, en-IN, hi, ja
 ├── decisions/                  # ADRs and technical decisions
 ├── assets/

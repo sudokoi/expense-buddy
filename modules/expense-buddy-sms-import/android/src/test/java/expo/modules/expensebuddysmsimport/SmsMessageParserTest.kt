@@ -1,6 +1,9 @@
 package expo.modules.expensebuddysmsimport
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SmsMessageParserTest {
@@ -488,5 +491,72 @@ class SmsMessageParserTest {
 
         assertThat(result).isNotNull()
         assertThat(result?.amount).isWithin(1e-9).of(4354.0)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns EMPTY_BODY for empty message`() {
+        val result = SmsMessageParser.parseRawMessageWithReason("BANK", "", "2026-05-28T10:15:30.000Z")
+        assertNull(result.parsed)
+        assertEquals(SkipReason.EMPTY_BODY, result.skipReason)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns OTP_MATCH for OTP message`() {
+        val result =
+            SmsMessageParser.parseRawMessageWithReason(
+                "BANK",
+                "OTP 482911 for transaction at Amazon",
+                "2026-05-28T10:15:30.000Z",
+            )
+        assertNull(result.parsed)
+        assertEquals(SkipReason.OTP_MATCH, result.skipReason)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns NOT_DEBIT for credited message`() {
+        val result =
+            SmsMessageParser.parseRawMessageWithReason(
+                "BANK",
+                "INR 500 credited to your account",
+                "2026-05-28T10:15:30.000Z",
+            )
+        assertNull(result.parsed)
+        assertEquals(SkipReason.NOT_DEBIT, result.skipReason)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns AMOUNT_MISSING for message without amount`() {
+        val result =
+            SmsMessageParser.parseRawMessageWithReason(
+                "BANK",
+                "Your debit card transaction at Swiggy was successful",
+                "2026-05-28T10:15:30.000Z",
+            )
+        assertNull(result.parsed)
+        assertEquals(SkipReason.AMOUNT_MISSING, result.skipReason)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns NEGATIVE_ALERT for approval prompt message`() {
+        val result =
+            SmsMessageParser.parseRawMessageWithReason(
+                "BANK",
+                "INR 499 transaction at Amazon requires authentication. Approve in app to complete your transaction.",
+                "2026-05-28T10:15:30.000Z",
+            )
+        assertNull(result.parsed)
+        assertEquals(SkipReason.NEGATIVE_ALERT, result.skipReason)
+    }
+
+    @Test
+    fun `parseRawMessageWithReason returns null skip reason for valid transaction`() {
+        val result =
+            SmsMessageParser.parseRawMessageWithReason(
+                "VK-HDFCBK",
+                "INR 499 spent at Amazon Marketplace using debit card",
+                "2026-04-11T10:15:30.000Z",
+            )
+        assertNotNull(result.parsed)
+        assertNull(result.skipReason)
     }
 }

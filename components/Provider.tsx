@@ -3,7 +3,7 @@ import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { config } from "../tamagui.config"
 import { StoreProvider } from "../stores/store-provider"
 import { useThemeSettings } from "../stores/hooks"
-import { SmsImportReviewProvider } from "../stores/hooks/use-sms-import-review"
+import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 
 /**
  * Inner provider component that uses effectiveTheme from settings store
