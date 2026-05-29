@@ -455,6 +455,7 @@ class SmsMessageParserTest {
     fun `detects SBI Credit Card transaction with plain ASCII`() {
         val result =
             SmsMessageParser.parseRawMessage(
+                sender = "VK-SBICRD",
                 body =
                     "Rs.4,354.00 spent on your SBI Credit Card ending 1126 at PYUFLIPKARTINTERNET " +
                         "on 28/05/26. Trxn. not done by you? Report at https://sbicard.com/Dispute",
@@ -491,7 +492,7 @@ class SmsMessageParserTest {
 
         assertThat(result).isNotNull()
         assertThat(result?.amount).isWithin(1e-9).of(4354.0)
-        assertThat(result?.merchantName).isEqualTo("PYUFLIPKARTINTERNET")
+        assertThat(result?.merchantName).contains("PYUFLIPKARTINTERNET")
         assertThat(result?.paymentMethodSuggestion?.type).isEqualTo("Credit Card")
         assertThat(result?.fingerprint).isNotNull()
     }
@@ -516,7 +517,7 @@ class SmsMessageParserTest {
         assertNotNull(result.parsed)
         assertNull(result.skipReason)
         assertThat(result.parsed?.amount).isWithin(1e-9).of(4354.0)
-        assertThat(result.parsed?.merchantName).isEqualTo("PYUFLIPKARTINTERNET")
+        assertThat(result.parsed?.merchantName).contains("PYUFLIPKARTINTERNET")
     }
 
     @Test

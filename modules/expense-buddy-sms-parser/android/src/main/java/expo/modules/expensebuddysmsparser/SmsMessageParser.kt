@@ -29,7 +29,7 @@ private val approvalPromptKeywords =
         "if not you|if this wasn'?t you|approve|approval|authenticate|authorize|authorise|confirm this transaction|complete this transaction|to complete your transaction|to proceed",
         RegexOption.IGNORE_CASE,
     )
-private val merchantPattern = Regex("\\b(?:at|to|merchant)\\s+([A-Za-z0-9&._\\-/ ]{2,40})", RegexOption.IGNORE_CASE)
+private val merchantPattern = Regex("\\b(?:at|to|merchant)\\s+(\\w+(?:[&\\-]\\w+)?(?:\\s+\\w+(?:[&\\-]\\w+)?)?)", RegexOption.IGNORE_CASE)
 
 private val categoryInferenceRules =
     listOf(
