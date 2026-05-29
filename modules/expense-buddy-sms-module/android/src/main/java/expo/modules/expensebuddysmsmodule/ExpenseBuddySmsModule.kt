@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import expo.modules.expensebuddylogger.LoggerApi
+import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import expo.modules.expensebuddysmsparser.SmsCategoryLiteRtClassifier
 import expo.modules.expensebuddysmsparser.SmsPaymentMethod
 import expo.modules.expensebuddysmsparser.SmsRawMessage
@@ -11,7 +12,6 @@ import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -147,6 +147,7 @@ class ExpenseBuddySmsModule : Module() {
                     // 3. Insert parsed results into the queue database in a single transaction
                     val repo = SmsReviewQueueRepository(reactContext)
                     var latestReceivedAt: Long = -1
+                    var insertedCount = 0
                     val entities = mutableListOf<ReviewQueueEntity>()
 
                     runBlocking(Dispatchers.IO) {
@@ -204,25 +205,25 @@ class ExpenseBuddySmsModule : Module() {
                         }
 
                         if (entities.isNotEmpty()) {
-                            val inserted = repo.upsertItems(entities, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                            LoggerApi.d("SMS_MODULE", "syncInboxAsync: inserted $inserted / ${entities.size} items")
+                            insertedCount = repo.upsertItems(entities, SmsReviewQueueRepository.SOURCE_JS_ACTION)
+                            LoggerApi.d("SMS_MODULE", "syncInboxAsync: inserted $insertedCount / ${entities.size} items")
                         }
                     }
 
-                    // 4. Update the high-water mark cursor
-                    if (latestReceivedAt > 0) {
-                        // We use Math.max(0, latestReceivedAt - 1) to match the JS behavior
-                        val nextCursor =
-                            java.time.Instant
-                                .ofEpochMilli(kotlin.math.max(latestReceivedAt - 1, 0))
-                                .toString()
-                        BackgroundSmsPreferences.setLastScanCursor(reactContext, nextCursor)
-                    }
+                    // 4. Update the high-water mark cursor — advance past the latest
+                    //    scanned message so it is not re-read on the next scan.
+                    val nextCursor =
+                        java.time.Instant
+                            .ofEpochMilli(
+                                kotlin.math.max(latestReceivedAt, scanSinceMillis + 1),
+                            ).toString()
+                    BackgroundSmsPreferences.setLastScanCursor(reactContext, nextCursor)
+                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: next_cursor=$nextCursor")
 
                     val durationMs = System.currentTimeMillis() - startTimeMs
                     LoggerApi.d("SMS_MODULE", "syncInboxAsync: completed in ${durationMs}ms with ${parsedResults.size} parsed items")
 
-                    parsedResults.size
+                    insertedCount
                 } catch (e: Exception) {
                     LoggerApi.e("SMS_MODULE", "syncInboxAsync: failed", e)
                     throw e
