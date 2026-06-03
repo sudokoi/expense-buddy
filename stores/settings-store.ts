@@ -18,6 +18,7 @@ import {
   clearSyncConfig as clearSyncConfigFromStorage,
   loadSyncConfig as loadSyncConfigFromStorage,
 } from "../services/sync-manager"
+import { migrateSyncConfig } from "../services/sync-config"
 import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
 import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
@@ -653,6 +654,9 @@ export async function initializeSettingsStore(
   store: SettingsStore = settingsStore
 ): Promise<void> {
   try {
+    // Migrate old single-provider config to multi-provider format (idempotent)
+    await migrateSyncConfig()
+
     // Load all settings in parallel
     const [settings, syncedSettingsHash, syncConfig] = await Promise.all([
       loadSettings(),

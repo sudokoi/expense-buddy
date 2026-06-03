@@ -123,3 +123,50 @@ export async function testConnection(): Promise<SyncResult> {
 export async function getActiveProviderConfig(): Promise<ProviderConfig | null> {
   return providerSettingsStore.getActiveConfig()
 }
+
+const MIGRATION_KEY = "sync.migration.v1"
+
+/**
+ * Migrates old single-GitHub config to the multi-provider format.
+ *
+ * Checks if old SecureStorage keys exist but no provider store data,
+ * then creates a GitHub provider entry from the old config.
+ *
+ * Idempotent: writes a migration marker key on success.
+ * Safe to re-run: skips if migration marker exists or providers already exist.
+ */
+export async function migrateSyncConfig(): Promise<void> {
+  try {
+    const alreadyMigrated = await secureStorage.getItem(MIGRATION_KEY)
+    if (alreadyMigrated) return
+
+    const providerState = await providerSettingsStore.load()
+    if (providerState.providers.length > 0) return
+
+    const token = await secureStorage.getItem(GITHUB_TOKEN_KEY)
+    const repo = await secureStorage.getItem(GITHUB_REPO_KEY)
+    const branch = await secureStorage.getItem(GITHUB_BRANCH_KEY)
+
+    if (!token || !repo || !branch) return
+
+    await credentialStore.save("github_pat", {
+      credentialId: "github_pat",
+      kind: "github_pat",
+      data: { token: token.trim() },
+    })
+
+    const providerConfig: GitHubProviderConfig = {
+      kind: "github",
+      id: "default",
+      label: repo.trim(),
+      credentialId: "github_pat",
+      repo: repo.trim(),
+      branch: branch.trim(),
+    }
+    await providerSettingsStore.addProvider(providerConfig)
+    await providerSettingsStore.setActiveProvider("default")
+    await secureStorage.setItem(MIGRATION_KEY, "true")
+  } catch (error) {
+    console.warn("Sync config migration failed (will retry):", error)
+  }
+}
