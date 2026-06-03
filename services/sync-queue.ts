@@ -3,6 +3,8 @@ import { Expense } from "../types/expense"
 import { AppSettings } from "./settings-manager"
 import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
+import { providerStateStore } from "./sync/provider-state-store"
+import { providerSettingsStore } from "./sync/provider-settings-store"
 
 const SYNC_QUEUE_KEY = "sync_queue_v1"
 const SYNC_QUEUE_VERSION = 1
@@ -352,4 +354,61 @@ function applyCategoryReorder(settings: AppSettings, labels: string[]): AppSetti
     }))
 
   return { ...settings, categories: [...reordered, ...missingCategories] }
+}
+
+export async function getProviderWatermark(
+  providerId: string
+): Promise<number | null> {
+  return providerStateStore.get<number>(providerId, "watermark")
+}
+
+export async function setProviderWatermark(
+  providerId: string,
+  watermark: number
+): Promise<void> {
+  await providerStateStore.set(providerId, "watermark", watermark)
+}
+
+export async function markProviderReconciled(
+  providerId: string
+): Promise<void> {
+  await providerStateStore.set(providerId, "reconciled", true)
+}
+
+export async function isProviderReconciled(
+  providerId: string
+): Promise<boolean> {
+  const reconciled = await providerStateStore.get<boolean>(
+    providerId,
+    "reconciled"
+  )
+  return reconciled === true
+}
+
+/**
+ * Returns the minimum watermark across all providers that have completed
+ * initial reconciliation. Providers still in awaitingInitialReconciliation
+ * are excluded so they don't block compaction — they will reconcile against
+ * the full local dataset when activated.
+ *
+ * Returns 0 when no providers are reconciled (nothing to compact).
+ */
+export async function getMinSyncedWatermark(): Promise<number> {
+  const settings = await providerSettingsStore.load()
+
+  if (settings.providers.length === 0) return 0
+
+  const watermarks: number[] = []
+
+  for (const provider of settings.providers) {
+    const reconciled = await isProviderReconciled(provider.id)
+    if (!reconciled) continue
+
+    const watermark = await getProviderWatermark(provider.id)
+    if (watermark !== null) {
+      watermarks.push(watermark)
+    }
+  }
+
+  return watermarks.length > 0 ? Math.min(...watermarks) : 0
 }

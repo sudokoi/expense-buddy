@@ -1,12 +1,3 @@
-/**
- * React hook for the XState sync machine
- *
- * Provides a clean API for React components to interact with the sync state machine.
- * Uses callbacks passed to sync() instead of useEffect for side effects.
- * The sync actor is shared via StoreProvider context - all components see the same state.
- *
- * Updated for git-style sync with unified fetch-merge-push flow.
- */
 import { useSelector } from "@xstate/react"
 import { useCallback, useMemo } from "react"
 import { Expense } from "../types/expense"
@@ -17,19 +8,16 @@ import {
   ConflictResolver,
   TrueConflict,
   MergeResult,
-  ConflictResolution,
-  GitStyleSyncResult,
 } from "../services/sync-machine"
+import type { ConflictResolution } from "../services/git-style-sync"
 import { useStoreContext } from "../stores/store-provider"
 
-// Re-export types for convenience
 export type {
   SyncCallbacks,
   ConflictResolver,
   TrueConflict,
   MergeResult,
   ConflictResolution,
-  GitStyleSyncResult,
 }
 
 export interface SyncParams {
@@ -37,12 +25,10 @@ export interface SyncParams {
   settings?: AppSettings
   syncSettingsEnabled: boolean
   callbacks?: SyncCallbacks
-  /** Optional conflict resolver - if not provided, conflicts will pause sync */
   conflictResolver?: ConflictResolver
 }
 
 export interface UseSyncMachineReturn {
-  // Current state
   state: SyncMachineState
   isIdle: boolean
   isSyncing: boolean
@@ -51,35 +37,28 @@ export interface UseSyncMachineReturn {
   isSuccess: boolean
   isError: boolean
   isInSync: boolean
+  isAwaitingInitialReconciliation: boolean
+  isReconcilingFirstSync: boolean
 
-  // Context data
   error?: string
-  syncResult?: GitStyleSyncResult
   mergeResult?: MergeResult
-  /** Pending conflicts that need resolution */
   pendingConflicts?: TrueConflict[]
 
-  // Actions
-  /** Start a sync operation */
   sync: (params: SyncParams) => void
-  /** Resolve conflicts and continue sync */
-  resolveConflicts: (resolutions: ConflictResolution[]) => void
-  /** Cancel sync (from conflict state) */
+  resolveConflicts: (
+    resolutions: { expenseId: string; choice: "local" | "remote" }[]
+  ) => void
   cancel: () => void
-  /** Reset to idle state */
   reset: () => void
 }
 
 export function useSyncMachine(): UseSyncMachineReturn {
   const { syncActor } = useStoreContext()
 
-  // Use useSelector to subscribe to actor state reactively
   const snapshot = useSelector(syncActor, (state) => state)
 
-  // Extract current state string
   const state = snapshot.value as SyncMachineState
 
-  // Derived state flags
   const isIdle = state === "idle"
   const isSyncing = state === "syncing"
   const isConflict = state === "conflict"
@@ -87,8 +66,9 @@ export function useSyncMachine(): UseSyncMachineReturn {
   const isSuccess = state === "success"
   const isError = state === "error"
   const isInSync = state === "inSync"
+  const isAwaitingInitialReconciliation = state === "awaitingInitialReconciliation"
+  const isReconcilingFirstSync = state === "reconcilingFirstSync"
 
-  // Actions use the shared actor's send
   const sync = useCallback(
     (params: SyncParams) => {
       syncActor.send({
@@ -104,7 +84,7 @@ export function useSyncMachine(): UseSyncMachineReturn {
   )
 
   const resolveConflicts = useCallback(
-    (resolutions: ConflictResolution[]) => {
+    (resolutions: { expenseId: string; choice: "local" | "remote" }[]) => {
       syncActor.send({
         type: "RESOLVE_CONFLICTS",
         resolutions,
@@ -121,11 +101,9 @@ export function useSyncMachine(): UseSyncMachineReturn {
     syncActor.send({ type: "RESET" })
   }, [syncActor])
 
-  // Memoize context extraction to avoid unnecessary re-renders
   const contextData = useMemo(
     () => ({
       error: snapshot.context.error,
-      syncResult: snapshot.context.syncResult,
       mergeResult: snapshot.context.mergeResult,
       pendingConflicts: snapshot.context.pendingConflicts,
     }),
@@ -141,6 +119,8 @@ export function useSyncMachine(): UseSyncMachineReturn {
     isSuccess,
     isError,
     isInSync,
+    isAwaitingInitialReconciliation,
+    isReconcilingFirstSync,
     ...contextData,
     sync,
     resolveConflicts,

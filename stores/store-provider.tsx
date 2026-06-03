@@ -40,6 +40,12 @@ import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
+import { DeferredProvider } from "../services/sync/deferred-provider"
+import { createProvider } from "../services/sync/provider-registry"
+import { getActiveProviderConfig } from "../services/sync-config"
+
+// Register provider factories at import time
+import "../services/sync"
 
 interface StoreContextValue {
   expenseStore: ExpenseStore
@@ -79,11 +85,16 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   skipInitialization = false,
 }) => {
   const initializedRef = useRef(false)
+  const deferredProviderRef = useRef<DeferredProvider | null>(null)
 
   // Create sync actor once on mount (using ref to avoid recreating)
   const syncActorRef = useRef<ActorRefFrom<typeof syncMachine> | null>(null)
   if (!syncActorRef.current && !providedSyncActor) {
-    syncActorRef.current = createActor(syncMachine)
+    const deferredProvider = new DeferredProvider()
+    deferredProviderRef.current = deferredProvider
+    syncActorRef.current = createActor(syncMachine, {
+      input: { provider: deferredProvider },
+    })
     syncActorRef.current.start()
   }
   const syncActor = providedSyncActor ?? syncActorRef.current!
@@ -128,6 +139,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeUIStateStore(uiStateStore)
       initializeUpdateStore(updateStore)
       await runLaunchUpdateCheck(updateStore)
+
+      const activeConfig = await getActiveProviderConfig()
+      if (activeConfig && deferredProviderRef.current) {
+        const provider = createProvider(activeConfig)
+        deferredProviderRef.current.resolve(provider)
+      }
     })()
   }, [expenseStore, settingsStore, skipInitialization, uiStateStore, updateStore])
 

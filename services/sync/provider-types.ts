@@ -15,6 +15,7 @@ export interface GitHubProviderConfig extends BaseSyncProviderConfig {
 
 export interface GoogleDriveProviderConfig extends BaseSyncProviderConfig {
   kind: "google_drive"
+  clientId?: string
   accountEmail?: string
   archiveFileName: string
 }

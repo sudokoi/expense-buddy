@@ -1,22 +1,31 @@
 import { createActor, waitFor } from "xstate"
 import { Expense } from "../types/expense"
-import { loadSyncConfig, SyncNotification, type GitStyleSyncResult } from "./sync-manager"
+import { loadSyncConfig } from "./sync-config"
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
+import { createProvider } from "./sync/provider-registry"
+import { getActiveProviderConfig } from "./sync-config"
+import type { SyncNotification } from "../types/sync"
 import i18next from "i18next"
 import {
   applyQueuedOpsToExpenses,
   applyQueuedOpsToSettings,
   clearSyncOpsUpTo,
+  getMinSyncedWatermark,
+  getProviderWatermark,
   getSyncOpsSince,
   getSyncQueueWatermark,
+  isProviderReconciled,
+  markProviderReconciled,
+  setProviderWatermark,
 } from "./sync-queue"
+
+// Register provider factories at import time
+import "./sync"
 
 /**
  * Main auto-sync orchestration function
- * Uses the XState sync machine for background sync operations
- *
- * Updated for git-style sync: uses unified fetch-merge-push flow
+ * Uses the XState sync machine for background sync operations with provider-based flow
  */
 export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promise<{
   synced: boolean
@@ -27,19 +36,24 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   pendingExpenseOps?: boolean
 }> {
   try {
-    // Load current app settings to check if auto-sync and settings sync are enabled
     let appSettings = await loadSettings()
 
-    // Check if auto-sync is enabled
     if (!appSettings.autoSyncEnabled) {
       return { synced: false }
     }
 
-    // Check if GitHub sync is configured
     const config = await loadSyncConfig()
     if (!config) {
       return { synced: false }
     }
+
+    const activeProviderConfig = await getActiveProviderConfig()
+    if (!activeProviderConfig) {
+      return { synced: false }
+    }
+
+    const provider = createProvider(activeProviderConfig)
+    const providerId = activeProviderConfig.id
 
     let currentExpenses = localExpenses
     let followUpRemaining = appSettings.autoSyncTiming === "on_change" ? 3 : 0
@@ -48,14 +62,17 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
     let lastDownloadedSettings: AppSettings | undefined
 
     while (true) {
-      const watermark = await getSyncQueueWatermark()
+      let watermark = await getProviderWatermark(providerId)
+      if (watermark === null) {
+        watermark = await getSyncQueueWatermark()
+        await setProviderWatermark(providerId, watermark)
+      }
 
-      // Create and start the sync machine actor for background operation
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider },
+      })
       actor.start()
 
-      // Send the SYNC event with the current state
-      // Note: git-style sync doesn't need hasLocalChanges - it always does fetch-merge-push
       actor.send({
         type: "SYNC",
         localExpenses: currentExpenses,
@@ -63,7 +80,6 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         syncSettingsEnabled: appSettings.syncSettings,
       })
 
-      // Wait for the machine to reach a final state
       const finalSnapshot = await waitFor(
         actor,
         (snapshot) =>
@@ -71,13 +87,12 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           snapshot.matches("inSync") ||
           snapshot.matches("error") ||
           snapshot.matches("conflict"),
-        { timeout: 60000 } // 60 second timeout
+        { timeout: 60000 }
       )
 
       actor.stop()
 
       const context = finalSnapshot.context
-      const syncResult = context.syncResult as GitStyleSyncResult | undefined
 
       if (finalSnapshot.matches("conflict")) {
         return {
@@ -110,23 +125,31 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
 
       let reconciledSettings: AppSettings | undefined
-      if (syncResult?.mergedSettings || syncResult?.mergedCategories || hasSettingsOps) {
-        let settingsBase = appSettings
-        if (syncResult?.mergedSettings) {
-          settingsBase = syncResult.mergedSettings
-        } else if (syncResult?.mergedCategories) {
-          settingsBase = { ...settingsBase, categories: syncResult.mergedCategories }
-        }
+      if (hasSettingsOps) {
+        const settingsBase = appSettings
         reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
       }
 
       const lastAppliedId =
         opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
-      await clearSyncOpsUpTo(lastAppliedId)
+      await setProviderWatermark(providerId, lastAppliedId)
 
-      if (syncResult) {
-        const localFilesUpdated = syncResult.localFilesUpdated ?? 0
-        const remoteFilesUpdated = syncResult.remoteFilesUpdated ?? 0
+      if (!(await isProviderReconciled(providerId))) {
+        await markProviderReconciled(providerId)
+      }
+
+      const minWatermark = await getMinSyncedWatermark()
+      if (minWatermark > 0) {
+        await clearSyncOpsUpTo(minWatermark)
+      }
+
+      if (mergeResult) {
+        const localFilesUpdated =
+          (mergeResult.addedFromLocal.length ?? 0) +
+          (mergeResult.updatedFromLocal.length ?? 0)
+        const remoteFilesUpdated =
+          (mergeResult.addedFromRemote.length ?? 0) +
+          (mergeResult.updatedFromRemote.length ?? 0)
         lastNotification = {
           localFilesUpdated,
           remoteFilesUpdated,
@@ -171,9 +194,6 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   }
 }
 
-/**
- * Check if auto-sync should run for the given timing
- */
 export async function shouldAutoSyncForTiming(
   timing: "on_launch" | "on_change"
 ): Promise<boolean> {

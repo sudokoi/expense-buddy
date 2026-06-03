@@ -43,10 +43,43 @@ describe("provider-registry", () => {
     expect(provider.providerId).toBe("test-github")
   })
 
-  it("throws when no factory is registered for a kind", () => {
-    expect(() => createProvider(mockDriveConfig)).toThrow(
-      "No sync provider factory registered for kind: google_drive"
-    )
+  it("creates a google_drive provider when factory is registered", () => {
+    registerFactory({
+      kind: "google_drive",
+      create: () => ({
+        kind: "google_drive" as const,
+        providerId: "test-drive",
+        testConnection: jest.fn(),
+        readSnapshot: jest.fn(),
+        writeSnapshot: jest.fn(),
+        getStatus: jest.fn(),
+      }),
+    })
+
+    const provider = createProvider(mockDriveConfig)
+    expect(provider.kind).toBe("google_drive")
+    expect(provider.providerId).toBe("test-drive")
+  })
+
+  it("reports registered kinds including google_drive", () => {
+    registerFactory({
+      kind: "github",
+      create: () => mockGitHubProvider,
+    })
+    registerFactory({
+      kind: "google_drive",
+      create: () => ({
+        kind: "google_drive" as const,
+        providerId: "test-drive",
+        testConnection: jest.fn(),
+        readSnapshot: jest.fn(),
+        writeSnapshot: jest.fn(),
+        getStatus: jest.fn(),
+      }),
+    })
+    const kinds = getRegisteredKinds()
+    expect(kinds).toContain("github")
+    expect(kinds).toContain("google_drive")
   })
 
   it("reports registered kinds", () => {

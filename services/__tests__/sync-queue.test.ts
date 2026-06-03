@@ -5,6 +5,11 @@ import {
   getSyncOpsSince,
   getSyncQueueWatermark,
   clearSyncOpsUpTo,
+  getProviderWatermark,
+  setProviderWatermark,
+  getMinSyncedWatermark,
+  markProviderReconciled,
+  isProviderReconciled,
   SyncQueueOpInput,
 } from "../sync-queue"
 import { Expense } from "../../types/expense"
@@ -148,5 +153,90 @@ describe("sync-queue", () => {
     expect(reconciled.theme).toBe("dark")
     const travel = reconciled.categories.find((cat) => cat.label === "Travel")
     expect(travel?.color).toBe("#456")
+  })
+
+  describe("per-provider watermarks", () => {
+    it("getProviderWatermark returns null for unknown provider", async () => {
+      const wm = await getProviderWatermark("nonexistent")
+      expect(wm).toBeNull()
+    })
+
+    it("setProviderWatermark and getProviderWatermark round-trip", async () => {
+      await setProviderWatermark("test-provider", 42)
+      const wm = await getProviderWatermark("test-provider")
+      expect(wm).toBe(42)
+    })
+
+    it("setProviderWatermark overwrites previous value", async () => {
+      await setProviderWatermark("test-provider", 10)
+      await setProviderWatermark("test-provider", 99)
+      const wm = await getProviderWatermark("test-provider")
+      expect(wm).toBe(99)
+    })
+
+    it("getMinSyncedWatermark returns 0 when no providers exist", async () => {
+      const min = await getMinSyncedWatermark()
+      expect(min).toBe(0)
+    })
+
+    it("getMinSyncedWatermark returns min across reconciled providers", async () => {
+      mockStorage.set(
+        "sync.provider.state",
+        JSON.stringify({
+          activeProviderId: "github",
+          providers: [{ id: "github" }, { id: "drive" }],
+        })
+      )
+      await setProviderWatermark("github", 50)
+      await setProviderWatermark("drive", 100)
+      await markProviderReconciled("github")
+      await markProviderReconciled("drive")
+
+      const min = await getMinSyncedWatermark()
+      expect(min).toBe(50)
+    })
+
+    it("getMinSyncedWatermark excludes non-reconciled providers", async () => {
+      mockStorage.set(
+        "sync.provider.state",
+        JSON.stringify({
+          activeProviderId: "github",
+          providers: [{ id: "github" }, { id: "drive" }],
+        })
+      )
+      await setProviderWatermark("github", 50)
+      await setProviderWatermark("drive", 100)
+      await markProviderReconciled("github")
+      // drive is NOT reconciled
+
+      const min = await getMinSyncedWatermark()
+      expect(min).toBe(50)
+    })
+
+    it("getMinSyncedWatermark returns 0 when no providers are reconciled", async () => {
+      mockStorage.set(
+        "sync.provider.state",
+        JSON.stringify({
+          activeProviderId: "github",
+          providers: [{ id: "github" }],
+        })
+      )
+      await setProviderWatermark("github", 50)
+      // Not reconciled
+
+      const min = await getMinSyncedWatermark()
+      expect(min).toBe(0)
+    })
+
+    it("isProviderReconciled returns false before mark", async () => {
+      const r1 = await isProviderReconciled("test-provider")
+      expect(r1).toBe(false)
+    })
+
+    it("markProviderReconciled and isProviderReconciled round-trip", async () => {
+      await markProviderReconciled("test-provider")
+      const r = await isProviderReconciled("test-provider")
+      expect(r).toBe(true)
+    })
   })
 })

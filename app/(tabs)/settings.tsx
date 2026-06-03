@@ -21,7 +21,6 @@ import { useUpdateCheck } from "../../hooks/use-update-check"
 import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
 import {
   applyQueuedOpsToExpenses,
-  applyQueuedOpsToSettings,
   clearSyncOpsUpTo,
   getSyncOpsSince,
   getSyncQueueWatermark,
@@ -539,8 +538,12 @@ export default function SettingsScreen() {
           }
         },
         onSuccess: async (result) => {
-          const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
-          const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
+          const localFilesUpdated =
+            (result.mergeResult?.addedFromLocal.length ?? 0) +
+            (result.mergeResult?.updatedFromLocal.length ?? 0)
+          const remoteFilesUpdated =
+            (result.mergeResult?.addedFromRemote.length ?? 0) +
+            (result.mergeResult?.updatedFromRemote.length ?? 0)
           addNotification(
             t("settings.notifications.syncComplete", {
               localCount: localFilesUpdated,
@@ -565,18 +568,6 @@ export default function SettingsScreen() {
             (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
           )
 
-          let settingsBase = settings
-          if (result.syncResult?.mergedSettings) {
-            settingsBase = result.syncResult.mergedSettings
-          } else if (result.syncResult?.mergedCategories) {
-            settingsBase = {
-              ...settingsBase,
-              categories: result.syncResult.mergedCategories,
-            }
-          }
-
-          const reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
-
           if (watermark !== null) {
             const lastAppliedId =
               opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
@@ -592,10 +583,6 @@ export default function SettingsScreen() {
 
           if (reconciledExpenses.length > 0) {
             replaceAllExpenses(reconciledExpenses)
-          }
-
-          if (settings.syncSettings && result.syncResult?.mergedSettings) {
-            replaceSettings(reconciledSettings)
           }
         },
         onInSync: () => {
@@ -619,7 +606,6 @@ export default function SettingsScreen() {
     clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
-    replaceSettings,
   ])
 
   return (
