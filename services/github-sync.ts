@@ -4,6 +4,7 @@
 
 import i18next from "../i18n"
 import { withRetry } from "./retry"
+import { SETTINGS_FILENAME } from "./sync/provider-types"
 
 interface GitHubFileResponse {
   content: string
@@ -1386,7 +1387,7 @@ export async function deleteFile(
 // Settings Sync Functions
 // ============================================================================
 
-const SETTINGS_FILE_PATH = "settings.json"
+const SETTINGS_FILE_PATH = SETTINGS_FILENAME
 
 /**
  * Upload settings.json to GitHub repository

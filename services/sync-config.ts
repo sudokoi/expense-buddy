@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { secureStorage } from "./secure-storage"
 import { validatePAT, GitHubApiError } from "./github-sync"
 import { getUserFriendlyMessage } from "./error-utils"
@@ -59,7 +60,12 @@ export async function clearSyncConfig(): Promise<void> {
   await secureStorage.deleteItem(GITHUB_REPO_KEY)
   await secureStorage.deleteItem(GITHUB_BRANCH_KEY)
   await credentialStore.delete("github_pat")
-  await providerSettingsStore.removeProvider("default")
+
+  const state = await providerSettingsStore.load()
+  const githubProviders = state.providers.filter((p) => p.kind === "github")
+  for (const provider of githubProviders) {
+    await providerSettingsStore.removeProvider(provider.id)
+  }
 }
 
 export async function testConnection(): Promise<SyncResult> {
@@ -137,7 +143,7 @@ const MIGRATION_KEY = "sync.migration.v1"
  */
 export async function migrateSyncConfig(): Promise<void> {
   try {
-    const alreadyMigrated = await secureStorage.getItem(MIGRATION_KEY)
+    const alreadyMigrated = await AsyncStorage.getItem(MIGRATION_KEY)
     if (alreadyMigrated) return
 
     const providerState = await providerSettingsStore.load()
@@ -165,7 +171,7 @@ export async function migrateSyncConfig(): Promise<void> {
     }
     await providerSettingsStore.addProvider(providerConfig)
     await providerSettingsStore.setActiveProvider("default")
-    await secureStorage.setItem(MIGRATION_KEY, "true")
+    await AsyncStorage.setItem(MIGRATION_KEY, "true")
   } catch (error) {
     console.warn("Sync config migration failed (will retry):", error)
   }

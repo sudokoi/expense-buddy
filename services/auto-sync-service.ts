@@ -1,6 +1,5 @@
 import { createActor, waitFor } from "xstate"
 import { Expense } from "../types/expense"
-import { loadSyncConfig } from "./sync-config"
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
 import { createProvider } from "./sync/provider-registry"
@@ -43,11 +42,6 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       return { synced: false }
     }
 
-    const config = await loadSyncConfig()
-    if (!config) {
-      return { synced: false }
-    }
-
     const activeProviderConfig = await getActiveProviderConfig()
     if (!activeProviderConfig) {
       return { synced: false }
@@ -82,7 +76,10 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         callbacks: {
           onAuthError: (info) => {
             console.warn(
-              `Auto-sync auth error: ${info.errorCode}, shouldSignOut=${info.shouldSignOut}`
+              "[AutoSync] Auth error:",
+              info.errorCode,
+              "shouldSignOut:",
+              info.shouldSignOut
             )
           },
         },
@@ -195,7 +192,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       followUpRemaining -= 1
     }
   } catch (error) {
-    console.error("Auto-sync failed:", error)
+    console.error("[AutoSync] Failed:", error)
     return {
       synced: false,
       error: String(error),

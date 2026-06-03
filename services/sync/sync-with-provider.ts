@@ -1,5 +1,5 @@
 import type { SyncProvider, SyncSnapshot } from "./provider-types"
-import { SyncProviderError } from "./provider-types"
+import { SyncProviderError, SETTINGS_FILENAME } from "./provider-types"
 import { importFromCSV, exportToCSV } from "../csv-handler"
 import { groupExpensesByDay, getFilenameForDay } from "../daily-file-manager"
 import { computeContentHash } from "../hash-storage"
@@ -29,8 +29,6 @@ export interface SyncWithProviderOptions {
     conflicts: TrueConflict[]
   ) => Promise<{ expenseId: string; choice: "local" | "remote" }[] | undefined>
 }
-
-const SETTINGS_FILENAME = "settings.json"
 
 export async function syncWithProvider(
   options: SyncWithProviderOptions

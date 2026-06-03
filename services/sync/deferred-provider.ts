@@ -44,7 +44,7 @@ export class DeferredProvider implements SyncProvider {
   private ensure(): SyncProvider {
     if (!this.inner) {
       throw new SyncProviderError(
-        "AUTH_MISSING",
+        "NOT_CONFIGURED",
         "github",
         "Sync not configured yet",
         false

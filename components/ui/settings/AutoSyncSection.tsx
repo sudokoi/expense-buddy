@@ -109,7 +109,7 @@ export function AutoSyncSection({
         </YStack>
         <Switch
           size="$control"
-          checked={autoSyncEnabled && !reconciliationRequired}
+          checked={autoSyncEnabled}
           onCheckedChange={onAutoSyncEnabledChange}
           disabled={reconciliationRequired}
           bg="$gray8"

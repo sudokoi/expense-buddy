@@ -1,3 +1,5 @@
+export const SETTINGS_FILENAME = "settings.json"
+
 export type SyncProviderKind = "github" | "google_drive"
 
 export interface BaseSyncProviderConfig {
@@ -49,6 +51,7 @@ export type SyncProviderErrorCode =
   | "AUTH_EXPIRED"
   | "AUTH_INVALID"
   | "PERMISSION_DENIED"
+  | "NOT_CONFIGURED"
   | "NOT_FOUND"
   | "CONFLICT"
   | "RATE_LIMITED"

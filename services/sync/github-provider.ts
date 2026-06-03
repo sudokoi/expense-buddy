@@ -16,13 +16,13 @@ import {
   batchCommit,
   validatePAT,
   GitHubApiError,
+  generateCommitMessage,
   type BatchCommitRequest,
 } from "../github-sync"
 import { getDayKeyFromFilename } from "../daily-file-manager"
 import { simpleHash } from "./sync-utils"
+import { SETTINGS_FILENAME } from "./provider-types"
 import { APP_CONFIG } from "../../constants/app-config"
-
-const SETTINGS_FILENAME = "settings.json"
 
 export class GitHubProvider implements SyncProvider {
   readonly kind = "github" as const
@@ -266,14 +266,6 @@ export class GitHubProvider implements SyncProvider {
     }
     return new SyncProviderErrorClass("REMOTE_ERROR", "github", msg, true)
   }
-}
-
-function generateCommitMessage(uploads: number, deletions: number): string {
-  const parts: string[] = []
-  if (uploads > 0) parts.push(`${uploads} file${uploads > 1 ? "s" : ""} updated`)
-  if (deletions > 0) parts.push(`${deletions} file${deletions > 1 ? "s" : ""} deleted`)
-  if (parts.length === 0) return `Sync expenses - ${new Date().toISOString()}`
-  return `Sync expenses: ${parts.join(", ")} - ${new Date().toISOString()}`
 }
 
 function mapBatchErrorCode(code: string | undefined): SyncProviderError["code"] {

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { ProviderConfig, SyncProvidersState } from "./provider-types"
 import { providerStateStore } from "./provider-state-store"
+import { credentialStore } from "./credential-store"
 
 const STORAGE_KEY = "sync.provider.state"
 
@@ -19,7 +20,8 @@ export const providerSettingsStore = {
         activeProviderId: parsed.activeProviderId ?? null,
         providers: Array.isArray(parsed.providers) ? parsed.providers : [],
       }
-    } catch {
+    } catch (error) {
+      console.warn("Failed to load provider settings store, using defaults:", error)
       return { ...DEFAULT_STATE }
     }
   },
@@ -41,12 +43,16 @@ export const providerSettingsStore = {
 
   async removeProvider(id: string): Promise<void> {
     const state = await this.load()
+    const removed = state.providers.find((p) => p.id === id)
     state.providers = state.providers.filter((p) => p.id !== id)
     if (state.activeProviderId === id) {
       state.activeProviderId = state.providers[0]?.id ?? null
     }
     await this.save(state)
     await providerStateStore.clearProvider(id)
+    if (removed?.credentialId) {
+      await credentialStore.delete(removed.credentialId)
+    }
   },
 
   async setActiveProvider(id: string | null): Promise<void> {

@@ -129,14 +129,12 @@ export interface ProviderManagementSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
   onAddProvider: (kind: "github" | "google_drive") => void
   onProviderMutated?: () => void
-  isTesting: boolean
 }
 
 export function ProviderManagementSection({
   onNotification,
   onAddProvider,
   onProviderMutated,
-  isTesting: _isTesting,
 }: ProviderManagementSectionProps) {
   const { t } = useTranslation()
 
@@ -162,7 +160,13 @@ export function ProviderManagementSection({
   }, [])
 
   useEffect(() => {
-    loadState().catch(() => {})
+    let cancelled = false
+    loadState().then(() => {
+      if (cancelled) return
+    })
+    return () => {
+      cancelled = true
+    }
   }, [loadState])
 
   const handleActivate = useCallback(

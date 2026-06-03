@@ -101,8 +101,8 @@ export default function SettingsScreen() {
   const [providerMutationVersion, setProviderMutationVersion] = useState(0)
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
-  // Derive isConfigured from syncConfig !== null
-  const isConfigured = syncConfig !== null
+  // Derive isConfigured from both legacy syncConfig and new provider framework
+  const isConfigured = syncConfig !== null || activeProviderReconciled !== null
 
   // Bump when provider mutations happen so reconciliation re-checks
   const handleProviderMutated = useCallback(() => {
@@ -205,7 +205,7 @@ export default function SettingsScreen() {
       // Check if this is first-time configuration (no previous config existed)
       const isFirstTimeSetup = syncConfig === null
 
-      saveSyncConfig(config)
+      await saveSyncConfig(config)
       addNotification(t("settings.github.successConfig"), "success")
 
       // Only prompt to download if this is first-time setup AND no local expenses
@@ -659,7 +659,6 @@ export default function SettingsScreen() {
           <ProviderManagementSection
             onNotification={handleNotification}
             onAddProvider={handleAddProvider}
-            isTesting={isTesting}
             onProviderMutated={handleProviderMutated}
           />
 
