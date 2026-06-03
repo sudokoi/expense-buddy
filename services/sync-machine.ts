@@ -320,9 +320,13 @@ export const syncMachine = setup({
     inSync: {
       entry: ({ context }) => {
         context.callbacks.onInSync?.()
+        context.callbacks.onSuccess?.({})
       },
       after: {
         IN_SYNC_DISPLAY_TIME: "idle",
+      },
+      on: {
+        RESET: "idle",
       },
     },
 

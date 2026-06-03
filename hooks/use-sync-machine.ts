@@ -41,6 +41,7 @@ export interface UseSyncMachineReturn {
   isReconcilingFirstSync: boolean
 
   error?: string
+  errorCode?: string
   mergeResult?: MergeResult
   pendingConflicts?: TrueConflict[]
 
@@ -104,6 +105,7 @@ export function useSyncMachine(): UseSyncMachineReturn {
   const contextData = useMemo(
     () => ({
       error: snapshot.context.error,
+      errorCode: snapshot.context.errorCode,
       mergeResult: snapshot.context.mergeResult,
       pendingConflicts: snapshot.context.pendingConflicts,
     }),

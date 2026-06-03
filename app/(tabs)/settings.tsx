@@ -98,10 +98,16 @@ export default function SettingsScreen() {
   const [activeProviderReconciled, setActiveProviderReconciled] = useState<
     boolean | null
   >(null)
+  const [providerMutationVersion, setProviderMutationVersion] = useState(0)
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
   // Derive isConfigured from syncConfig !== null
   const isConfigured = syncConfig !== null
+
+  // Bump when provider mutations happen so reconciliation re-checks
+  const handleProviderMutated = useCallback(() => {
+    setProviderMutationVersion((v) => v + 1)
+  }, [])
 
   // Check if active provider needs first sync
   useEffect(() => {
@@ -123,7 +129,7 @@ export default function SettingsScreen() {
     return () => {
       cancelled = true
     }
-  }, [syncConfig])
+  }, [syncConfig, providerMutationVersion])
 
   // Update check state - use hook's state for updateInfo
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
@@ -362,7 +368,7 @@ export default function SettingsScreen() {
               if (githubProvider) {
                 const entry = await credentialStore.get(githubProvider.credentialId)
                 if (entry) {
-                  githubToken = entry.data["token"]
+                  githubToken = entry.data["token"] ?? entry.data["access_token"]
                 }
               }
             } catch {
@@ -654,6 +660,7 @@ export default function SettingsScreen() {
             onNotification={handleNotification}
             onAddProvider={handleAddProvider}
             isTesting={isTesting}
+            onProviderMutated={handleProviderMutated}
           />
 
           {addingProviderKind === "github" && (
@@ -683,6 +690,53 @@ export default function SettingsScreen() {
               <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                 {t("settings.googleDrive.help")}
               </Text>
+              <Button
+                size="$control"
+                theme="accent"
+                onPress={async () => {
+                  const { credentialStore } =
+                    await import("../../services/sync/credential-store")
+                  const { getGoogleDriveOAuthClientId } =
+                    await import("../../constants/runtime-config")
+                  const clientId = getGoogleDriveOAuthClientId()
+                  if (!clientId) {
+                    handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
+                    return
+                  }
+                  const providerId = `google_drive_${Date.now()}`
+                  try {
+                    await credentialStore.save(providerId, {
+                      credentialId: providerId,
+                      kind: "google_oauth",
+                      data: {
+                        access_token: "",
+                        refresh_token: "",
+                        expires_at: "",
+                        client_id: clientId,
+                      },
+                    })
+                    await providerSettingsStore.addProvider({
+                      id: providerId,
+                      kind: "google_drive",
+                      label: "Google Drive",
+                      credentialId: providerId,
+                      clientId,
+                      archiveFileName: "expenses-archive.zip",
+                      accountEmail: "",
+                    })
+                    setAddingProviderKind(null)
+                    handleProviderMutated()
+                    handleNotification(t("settings.googleDrive.configured"), "success")
+                  } catch {
+                    handleNotification(t("common.error"), "error")
+                  }
+                }}
+              >
+                {t("settings.providers.addGoogleDrive")}
+              </Button>
+              <Button size="$control" onPress={() => setAddingProviderKind(null)}>
+                {t("common.cancel")}
+              </Button>
             </YStack>
           )}
 

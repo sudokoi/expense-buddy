@@ -1,4 +1,5 @@
 import type { SyncProvider, SyncProviderFactory, ProviderConfig } from "./provider-types"
+import { SyncProviderError } from "./provider-types"
 
 const factories = new Map<string, SyncProviderFactory>()
 
@@ -9,7 +10,12 @@ export function registerFactory(factory: SyncProviderFactory): void {
 export function createProvider(config: ProviderConfig): SyncProvider {
   const factory = factories.get(config.kind)
   if (!factory) {
-    throw new Error(`No sync provider factory registered for kind: ${config.kind}`)
+    throw new SyncProviderError(
+      "NOT_FOUND",
+      config.kind,
+      `No sync provider factory registered for kind: ${config.kind}`,
+      false
+    )
   }
   return factory.create(config)
 }

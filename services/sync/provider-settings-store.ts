@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { ProviderConfig, SyncProvidersState } from "./provider-types"
+import { providerStateStore } from "./provider-state-store"
 
 const STORAGE_KEY = "sync.provider.state"
 
@@ -24,11 +25,7 @@ export const providerSettingsStore = {
   },
 
   async save(state: SyncProvidersState): Promise<void> {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch (error) {
-      console.warn("Failed to save provider settings:", error)
-    }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   },
 
   async addProvider(config: ProviderConfig): Promise<void> {
@@ -49,6 +46,7 @@ export const providerSettingsStore = {
       state.activeProviderId = state.providers[0]?.id ?? null
     }
     await this.save(state)
+    await providerStateStore.clearProvider(id)
   },
 
   async setActiveProvider(id: string | null): Promise<void> {

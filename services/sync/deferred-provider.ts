@@ -17,12 +17,28 @@ import { SyncProviderError } from "./provider-types"
  */
 export class DeferredProvider implements SyncProvider {
   private inner: SyncProvider | null = null
+  private resolvedKind: SyncProviderKind = "github"
+  private resolvedId: string = "pending"
+  private _resolved = false
 
-  readonly kind: SyncProviderKind = "github"
-  readonly providerId: string = "pending"
+  get kind(): SyncProviderKind {
+    return this._resolved ? this.resolvedKind : "github"
+  }
+
+  get providerId(): string {
+    return this._resolved ? this.resolvedId : "pending"
+  }
+
+  get isResolved(): boolean {
+    return this._resolved
+  }
 
   resolve(provider: SyncProvider): void {
+    if (this._resolved) return
     this.inner = provider
+    this.resolvedKind = provider.kind
+    this.resolvedId = provider.providerId
+    this._resolved = true
   }
 
   private ensure(): SyncProvider {

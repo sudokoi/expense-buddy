@@ -33,6 +33,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
   notification?: SyncNotification
   downloadedSettings?: AppSettings
   error?: string
+  errorCode?: string
   pendingExpenseOps?: boolean
 }> {
   try {
@@ -78,6 +79,13 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         localExpenses: currentExpenses,
         settings: appSettings.syncSettings ? appSettings : undefined,
         syncSettingsEnabled: appSettings.syncSettings,
+        callbacks: {
+          onAuthError: (info) => {
+            console.warn(
+              `Auto-sync auth error: ${info.errorCode}, shouldSignOut=${info.shouldSignOut}`
+            )
+          },
+        },
       })
 
       const finalSnapshot = await waitFor(
@@ -105,6 +113,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         return {
           synced: false,
           error: context.error || i18next.t("githubSync.manager.syncFailed"),
+          errorCode: context.errorCode,
         }
       }
 

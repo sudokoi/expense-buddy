@@ -10,9 +10,8 @@ import type {
 } from "./provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
 import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../archive-utils"
+import { simpleHash } from "./sync-utils"
 import { Platform } from "react-native"
-
-const ARCHIVE_FILENAME = "expenses-archive.zip"
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
 const UPLOAD_API_BASE = "https://www.googleapis.com/upload/drive/v3"
 
@@ -123,7 +122,7 @@ export class GoogleDriveProvider implements SyncProvider {
       manifest: {
         version: 1,
         generatedAt: new Date().toISOString(),
-        appVersion: "1.0.0",
+        appVersion: "1.0.0", // TODO: read from app.json at build time
         files: fileList,
       },
       files,
@@ -263,7 +262,7 @@ export class GoogleDriveProvider implements SyncProvider {
   private async findArchiveFile(token: string): Promise<DriveFileMetadata | null> {
     try {
       const response = await fetch(
-        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name='${ARCHIVE_FILENAME}'&fields=files(id,name,version,modifiedTime)`,
+        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name='${this.config.archiveFileName}'&fields=files(id,name,version,modifiedTime)`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -325,7 +324,7 @@ export class GoogleDriveProvider implements SyncProvider {
   private async createFile(token: string, archiveBase64: string): Promise<void> {
     const boundary = `boundary_${Date.now()}`
     const metadata = JSON.stringify({
-      name: ARCHIVE_FILENAME,
+      name: this.config.archiveFileName,
       parents: ["appDataFolder"],
       mimeType: "application/zip",
     })
@@ -432,13 +431,4 @@ export class GoogleDriveProvider implements SyncProvider {
     }
     return new SyncProviderErrorClass("REMOTE_ERROR", "google_drive", msg, true)
   }
-}
-
-function simpleHash(content: string): string {
-  let hash = 5381
-  for (let i = 0; i < content.length; i++) {
-    hash = ((hash << 5) + hash) ^ content.charCodeAt(i)
-    hash = hash >>> 0
-  }
-  return hash.toString(16)
 }

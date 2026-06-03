@@ -166,13 +166,17 @@ export async function enqueueSyncOp(op: SyncQueueOpInput): Promise<SyncQueueOp> 
 }
 
 export async function getSyncQueueWatermark(): Promise<number> {
-  const state = await loadState()
-  return Math.max(0, state.nextId - 1)
+  return enqueueWrite(async () => {
+    const state = await loadState()
+    return Math.max(0, state.nextId - 1)
+  })
 }
 
 export async function getSyncOpsSince(watermark: number): Promise<SyncQueueOp[]> {
-  const state = await loadState()
-  return state.ops.filter((op) => op.id > watermark).sort((a, b) => a.id - b.id)
+  return enqueueWrite(async () => {
+    const state = await loadState()
+    return state.ops.filter((op) => op.id > watermark).sort((a, b) => a.id - b.id)
+  })
 }
 
 export async function clearSyncOpsUpTo(watermark: number): Promise<void> {

@@ -336,7 +336,9 @@
     },
     "googleDrive": {
       "configTitle": "Google Drive",
-      "help": "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only."
+      "help": "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only.",
+      "clientIdMissing": "Google Drive is not configured. Set EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID in your environment.",
+      "configured": "Google Drive configured"
     },
     "autoSync": {
       "title": "Auto-Sync & Options",

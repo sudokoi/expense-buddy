@@ -107,7 +107,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   }
   const githubAuthActor = providedGitHubAuthActor ?? githubAuthActorRef.current!
 
-  // Cleanup sync actor on unmount
+  // Cleanup sync actors on unmount
   useEffect(() => {
     return () => {
       if (syncActorRef.current) {
@@ -118,7 +118,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       }
       cleanupUpdateStore()
     }
-  }, [])
+  }, [providedSyncActor, providedGitHubAuthActor])
 
   // Initialize stores when component mounts (inside React tree where RN is ready)
   useEffect(() => {

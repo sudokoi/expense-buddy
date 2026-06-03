@@ -31,6 +31,7 @@ function createConfig(
     id: "test-drive",
     label: "Test Drive",
     credentialId: "google-creds",
+    clientId: "test-client-id.apps.googleusercontent.com",
     archiveFileName: "expenses-archive.zip",
     ...overrides,
   }
@@ -163,8 +164,10 @@ describe("GoogleDriveProvider", () => {
     })
 
     it("returns null when unzip returns empty", async () => {
-      global.fetch = mockFetch({
-        json: {
+      const listResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({
           files: [
             {
               id: "file-123",
@@ -173,11 +176,19 @@ describe("GoogleDriveProvider", () => {
               modifiedTime: "2024-06-01T00:00:00Z",
             },
           ],
-        },
-      })
-      global.fetch = mockFetch({
-        text: "base64-archive",
-      })
+        }),
+        text: async () => "",
+      }
+      const downloadResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () => "base64-archive",
+      }
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(listResponse)
+        .mockResolvedValueOnce(downloadResponse)
 
       mockUnzip.mockResolvedValue([])
 

@@ -19,6 +19,7 @@ import {
   type BatchCommitRequest,
 } from "../github-sync"
 import { getDayKeyFromFilename } from "../daily-file-manager"
+import { simpleHash } from "./sync-utils"
 
 const SETTINGS_FILENAME = "settings.json"
 
@@ -99,6 +100,8 @@ export class GitHubProvider implements SyncProvider {
 
     const files: Record<string, string> = {}
 
+    let failedDownloads = 0
+
     for (const entry of expenseEntries) {
       try {
         const fileData = await downloadCSV(
@@ -111,8 +114,14 @@ export class GitHubProvider implements SyncProvider {
           files[entry.path] = fileData.content
         }
       } catch {
-        continue
+        failedDownloads++
       }
+    }
+
+    if (failedDownloads > 0) {
+      console.warn(
+        `GitHubProvider: ${failedDownloads} file(s) failed to download during readSnapshot`
+      )
     }
 
     if (settingsEntry) {
@@ -126,6 +135,7 @@ export class GitHubProvider implements SyncProvider {
           files[SETTINGS_FILENAME] = settingsData.content
         }
       } catch {
+        console.warn("GitHubProvider: failed to download settings file")
         // settings file is optional
       }
     }
@@ -255,15 +265,6 @@ export class GitHubProvider implements SyncProvider {
     }
     return new SyncProviderErrorClass("REMOTE_ERROR", "github", msg, true)
   }
-}
-
-function simpleHash(content: string): string {
-  let hash = 5381
-  for (let i = 0; i < content.length; i++) {
-    hash = ((hash << 5) + hash) ^ content.charCodeAt(i)
-    hash = hash >>> 0
-  }
-  return hash.toString(16)
 }
 
 function generateCommitMessage(uploads: number, deletions: number): string {

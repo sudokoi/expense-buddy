@@ -6,6 +6,7 @@ import type {
   ProviderConfig,
   SyncProvidersState,
 } from "../../../services/sync/provider-types"
+import { SyncProviderError as SyncProviderErrorClass } from "../../../services/sync/provider-types"
 import { providerSettingsStore } from "../../../services/sync/provider-settings-store"
 import { createProvider } from "../../../services/sync/provider-registry"
 import { isProviderReconciled } from "../../../services/sync-queue"
@@ -127,12 +128,14 @@ function ProviderCard({
 export interface ProviderManagementSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
   onAddProvider: (kind: "github" | "google_drive") => void
+  onProviderMutated?: () => void
   isTesting: boolean
 }
 
 export function ProviderManagementSection({
   onNotification,
   onAddProvider,
+  onProviderMutated,
   isTesting: _isTesting,
 }: ProviderManagementSectionProps) {
   const { t } = useTranslation()
@@ -159,7 +162,7 @@ export function ProviderManagementSection({
   }, [])
 
   useEffect(() => {
-    void loadState()
+    loadState().catch(() => {})
   }, [loadState])
 
   const handleActivate = useCallback(
@@ -167,8 +170,9 @@ export function ProviderManagementSection({
       await providerSettingsStore.setActiveProvider(id)
       await loadState()
       onNotification(t("settings.providers.activated"), "success")
+      onProviderMutated?.()
     },
-    [loadState, onNotification, t]
+    [loadState, onNotification, onProviderMutated, t]
   )
 
   const handleRemove = useCallback(
@@ -188,12 +192,13 @@ export function ProviderManagementSection({
               await providerSettingsStore.removeProvider(id)
               await loadState()
               onNotification(t("settings.providers.removed"), "info")
+              onProviderMutated?.()
             },
           },
         ]
       )
     },
-    [providerState.providers, loadState, onNotification, t]
+    [providerState.providers, loadState, onNotification, onProviderMutated, t]
   )
 
   const handleTestConnection = useCallback(
@@ -221,11 +226,13 @@ export function ProviderManagementSection({
           onNotification(result.error.message, "error")
         }
       } catch (error) {
+        const msg =
+          error instanceof SyncProviderErrorClass ? error.message : String(error)
         setConnectionResults((prev) => ({
           ...prev,
-          [config.id]: { ok: false, error: String(error) },
+          [config.id]: { ok: false, error: msg },
         }))
-        onNotification(String(error), "error")
+        onNotification(msg, "error")
       } finally {
         setTestingId(null)
       }
