@@ -31,6 +31,7 @@ import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
+import { ProviderManagementSection } from "../../components/ui/settings/ProviderManagementSection"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
@@ -83,11 +84,14 @@ export default function SettingsScreen() {
   const { isScanningSmsImports, openSmsImportReview, scanSmsImports } =
     useSmsImportActions()
 
-  // GitHub config state
+  // Provider management state
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
+  const [addingProviderKind, setAddingProviderKind] = useState<
+    "github" | "google_drive" | null
+  >(null)
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
   // Derive isConfigured from syncConfig !== null
@@ -279,6 +283,13 @@ export default function SettingsScreen() {
       addNotification(message, type)
     },
     [addNotification]
+  )
+
+  const handleAddProvider = useCallback(
+    (kind: "github" | "google_drive") => {
+      setAddingProviderKind(kind)
+    },
+    []
   )
 
   // App info handlers - use hook's checkForUpdates for manual checks
@@ -615,16 +626,48 @@ export default function SettingsScreen() {
           title={t("settings.sections.sync")}
           description={t("settings.sync.description")}
         >
-          <GitHubConfigSection
-            syncConfig={syncConfig}
-            onSaveConfig={handleSaveConfig}
-            onTestConnection={handleTestConnection}
-            onClearConfig={handleClearConfig}
-            isTesting={isTesting}
-            connectionStatus={connectionStatus}
-            onConnectionStatusChange={handleConnectionStatusChange}
+          <ProviderManagementSection
             onNotification={handleNotification}
+            onAddProvider={handleAddProvider}
+            isTesting={isTesting}
           />
+
+          {addingProviderKind === "github" && (
+            <YStack mt={UI_SPACE.gutter}>
+              <GitHubConfigSection
+                syncConfig={syncConfig}
+                onSaveConfig={handleSaveConfig}
+                onTestConnection={handleTestConnection}
+                onClearConfig={handleClearConfig}
+                isTesting={isTesting}
+                connectionStatus={connectionStatus}
+                onConnectionStatusChange={handleConnectionStatusChange}
+                onNotification={handleNotification}
+              />
+            </YStack>
+          )}
+
+          {addingProviderKind === "google_drive" && (
+            <YStack
+              bg="$backgroundHover"
+              p={UI_SPACE.section}
+              rounded={UI_RADIUS.surface}
+              gap="$control"
+              mt={UI_SPACE.gutter}
+            >
+              <Label>
+                {t("settings.googleDrive.configTitle", {
+                  defaultValue: "Google Drive",
+                })}
+              </Label>
+              <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+                {t("settings.googleDrive.help", {
+                  defaultValue:
+                    "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only.",
+                })}
+              </Text>
+            </YStack>
+          )}
 
           {isConfigured && (
             <YStack gap="$gutter" mt={UI_SPACE.control}>

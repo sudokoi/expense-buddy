@@ -315,6 +315,27 @@
       "successSignIn": "गिटहब साइन-इन सफल",
       "validationError": "कृपया सत्यापन त्रुटियों को ठीक करें"
     },
+    "providers": {
+      "title": "Providers",
+      "active": "ACTIVE",
+      "needsSetup": "NEEDS SETUP",
+      "noProviders": "No sync providers configured yet",
+      "addGithub": "Add GitHub",
+      "addGoogleDrive": "Add Google Drive",
+      "removeTitle": "Remove Provider",
+      "removeMessage": "Remove \"{{label}}\"? This will not delete remote data.",
+      "remove": "Remove",
+      "removed": "Provider removed",
+      "activated": "Provider activated",
+      "test": "Test",
+      "testing": "Testing...",
+      "connectionOk": "Connection successful",
+      "googleDriveDesc": "Google Drive (appDataFolder)"
+    },
+    "googleDrive": {
+      "configTitle": "Google Drive",
+      "help": "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only."
+    },
     "autoSync": {
       "title": "ऑटो-सिंक और विकल्प",
       "enable": "ऑटो-सिंक सक्षम करें",

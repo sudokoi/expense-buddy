@@ -3,9 +3,13 @@ import Constants from "expo-constants"
 export const GITHUB_LOGIN_NOT_CONFIGURED_MESSAGE =
   "GitHub login isn’t configured for this build"
 
+export const GOOGLE_DRIVE_LOGIN_NOT_CONFIGURED_MESSAGE =
+  "Google Drive login isn’t configured for this build"
+
 type ExpoExtra = {
   auth?: {
     githubOAuthClientId?: string | null
+    googleDriveOAuthClientId?: string | null
   }
 }
 
@@ -69,6 +73,47 @@ export function getGitHubOAuthClientIdStatus():
     }
 
     return { ok: false, error: GITHUB_LOGIN_NOT_CONFIGURED_MESSAGE }
+  }
+  return { ok: true, clientId }
+}
+
+function isProbablyGoogleOAuthClientId(value: string): boolean {
+  // Google OAuth client IDs end with .apps.googleusercontent.com
+  if (value.length < 20 || value.length > 256) return false
+  if (value.toLowerCase().includes("object")) return false
+  if (!/\.apps\.googleusercontent\.com$/.test(value)) return false
+  return true
+}
+
+function getGoogleDriveOAuthClientIdFromProcessEnv(): string | null {
+  return normalizeEnvValue(
+    (process.env as Record<string, unknown> | undefined)
+      ?.EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID
+  )
+}
+
+export function getGoogleDriveOAuthClientId(): string | null {
+  const extra = getExpoExtra()
+  const fromExtra = normalizeEnvValue(extra.auth?.googleDriveOAuthClientId)
+  const candidate = fromExtra ?? getGoogleDriveOAuthClientIdFromProcessEnv()
+  if (!candidate) return null
+  return isProbablyGoogleOAuthClientId(candidate) ? candidate : null
+}
+
+export function getGoogleDriveOAuthClientIdStatus():
+  | { ok: true; clientId: string }
+  | { ok: false; error: string } {
+  const clientId = getGoogleDriveOAuthClientId()
+  if (!clientId) {
+    const isExpoGo = (Constants as any)?.appOwnership === "expo"
+    if (isExpoGo) {
+      return {
+        ok: false,
+        error:
+          "Google Drive login isn’t configured for Expo Go. Set EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID and restart Expo.",
+      }
+    }
+    return { ok: false, error: GOOGLE_DRIVE_LOGIN_NOT_CONFIGURED_MESSAGE }
   }
   return { ok: true, clientId }
 }

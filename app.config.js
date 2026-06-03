@@ -4,6 +4,12 @@ const { version } = require("./package.json")
 // Used for Android device-flow login. Expo Go can override via EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID.
 const GITHUB_OAUTH_CLIENT_ID = "Ov23lihYBxLtgot0H8Nq"
 
+// Google OAuth Web Client ID (not a secret).
+// Used for Android Google Drive sync. Expo Go can override via EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID.
+// Create one at https://console.cloud.google.com/apis/credentials
+const GOOGLE_DRIVE_OAUTH_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID || ""
+
 /**
  * Converts a semantic version string to a numeric version code for app stores.
  *
@@ -170,6 +176,7 @@ export default {
       auth: {
         githubOAuthClientId:
           process.env.EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID || GITHUB_OAUTH_CLIENT_ID,
+        googleDriveOAuthClientId: GOOGLE_DRIVE_OAUTH_CLIENT_ID,
       },
       eas: {
         projectId: "facbe508-0deb-4c1d-9625-b49b672a98f1",
