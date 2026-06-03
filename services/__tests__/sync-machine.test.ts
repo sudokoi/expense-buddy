@@ -655,6 +655,70 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
     })
   })
 
+  describe("Auth Error Handling", () => {
+    it("should invoke onAuthError callback when errorCode is AUTH_MISSING", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: false,
+        error: "Missing authentication",
+        errorCode: "AUTH_MISSING",
+      })
+
+      const onAuthError = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [],
+        syncSettingsEnabled: false,
+        callbacks: { onAuthError },
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("error")
+      expect(onAuthError).toHaveBeenCalledWith({
+        errorCode: "AUTH_MISSING",
+        shouldSignOut: false,
+      })
+
+      actor.stop()
+    })
+
+    it("should invoke onAuthError with shouldSignOut=true for AUTH_INVALID", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: false,
+        error: "Invalid token",
+        errorCode: "AUTH_INVALID",
+      })
+
+      const onAuthError = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [],
+        syncSettingsEnabled: false,
+        callbacks: { onAuthError },
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("error")
+      expect(onAuthError).toHaveBeenCalledWith({
+        errorCode: "AUTH_INVALID",
+        shouldSignOut: true,
+      })
+
+      actor.stop()
+    })
+  })
+
   describe("RESET Event", () => {
     it("should reset from success state to idle", async () => {
       const mergeResult = createMergeResult({
