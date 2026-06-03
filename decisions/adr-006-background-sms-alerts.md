@@ -1,4 +1,4 @@
-# ADR-005: Android Background SMS Alerts Stay Local and Review-First
+# ADR-006: Android Background SMS Alerts Stay Local and Review-First
 
 **Date:** 2026-05-22  
 **Status:** Accepted  

@@ -1,4 +1,4 @@
-# Proposal: On-Device ML SMS Categorization
+# ADR-003: On-Device ML SMS Categorization
 
 **Date:** 2026-04-17  
 **Status:** Research and planning draft  

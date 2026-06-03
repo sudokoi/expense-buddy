@@ -1,4 +1,4 @@
-# ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence
+# ADR-007: Native-Owned SMS Review Queue with Room-Based Persistence
 
 **Date:** 2026-05-27 (last updated 2026-05-28 for Phase 3)
 **Status:** Accepted — Phases 1–3 complete, Phase 4 (reliability logging) complete
@@ -28,7 +28,7 @@ This split-brain architecture causes several production bugs:
 
 - **Array-based storage is not idempotent**: Both JS and native store the queue as `List<T>`. Insert is `[...list, item]` — not idempotent. The same item inserted twice creates two entries. Fingerprint dedupe happens at read time as a post-processing step rather than at write time, so concurrent inserts that race past the dedupe check both succeed.
 
-ADR-003 established the review-first staging boundary. ADR-005 added background SMS alerts with a native snapshot mirror. This ADR addresses the architectural gaps that emerged when those two systems interacted without a unified ownership model.
+ADR-004 established the review-first staging boundary. ADR-006 added background SMS alerts with a native snapshot mirror. This ADR addresses the architectural gaps that emerged when those two systems interacted without a unified ownership model.
 
 ## Decision
 
@@ -149,7 +149,7 @@ Migrate the SMS review queue to a native-owned, Room-backed persistence model. J
 
 ## Privacy and policy notes
 
-This ADR does not change the privacy boundary defined in ADR-003. Raw SMS content remains on-device. Queue data moves from AsyncStorage + SharedPreferences to Room, both of which are local-only Android storage. No new data leaves the device.
+This ADR does not change the privacy boundary defined in ADR-004. Raw SMS content remains on-device. Queue data moves from AsyncStorage + SharedPreferences to Room, both of which are local-only Android storage. No new data leaves the device.
 
 ## Rollout and follow-up scope
 

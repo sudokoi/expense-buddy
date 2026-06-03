@@ -1,4 +1,4 @@
-# ADR-007: On-Device Structured Logging with Room-Backed Ring Buffer
+# ADR-008: On-Device Structured Logging with Room-Backed Ring Buffer
 
 **Date:** 2026-05-27
 **Status:** Accepted
@@ -124,5 +124,5 @@ The "Report an Issue" button in Settings is modified to:
 
 ## Related
 
-- ADR-006: Native-owned SMS review queue (primary consumer of logging)
+- ADR-007: Native-owned SMS review queue (primary consumer of logging)
 - PRIVACY.md: Updated to describe device logging

@@ -1,4 +1,4 @@
-# Proposal: Multi-Provider Sync with Google Drive Backups
+# ADR-009: Multi-Provider Sync with Google Drive Backups
 
 **Date:** 2026-06-03  
 **Status:** Research and planning draft  
@@ -481,4 +481,4 @@ Rejected because the orchestration and merge logic are already well established 
 ## Related
 
 - ADR-001: XState Sync State Machine
-- ADR-007: On-device structured logging with bug-report integration
+- ADR-008: On-device structured logging with bug-report integration

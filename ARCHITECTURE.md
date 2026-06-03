@@ -125,11 +125,12 @@ Module dependency structure:
 Related decisions:
 
 - [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
-- [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
-- [ADR-005: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-005-background-sms-alerts.md)
-- [ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence](./decisions/adr-006-native-owned-sms-review-queue.md)
-- [ADR-007: On-Device Structured Logging](./decisions/adr-007-device-logging.md)
-- [On-Device ML SMS Categorization Proposal](./decisions/proposal-on-device-ml-sms-categorization.md)
+- [ADR-003: On-Device ML SMS Categorization](./decisions/adr-003-on-device-ml-sms-categorization.md)
+- [ADR-004: Review-First Local-Only SMS Staging](./decisions/adr-004-review-first-local-only-sms-staging.md)
+- [ADR-005: Android-Only Scope and Play Permission Gate](./decisions/adr-005-android-only-scope-and-play-permission-gate.md)
+- [ADR-006: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-006-background-sms-alerts.md)
+- [ADR-007: Native-Owned SMS Review Queue with Room-Based Persistence](./decisions/adr-007-native-owned-sms-review-queue.md)
+- [ADR-008: On-Device Structured Logging](./decisions/adr-008-device-logging.md)
 
 ## GitHub Sync Architecture
 
@@ -224,7 +225,7 @@ Bug report flow (Settings > About > Report an Issue):
 2. On user consent, `getLogsAsStringAsync(200)` retrieves formatted entries via the TurboModule
 3. The GitHub new-issue URL opens with logs pre-filled in the body parameter
 
-Related decision: [ADR-007](./decisions/adr-007-device-logging.md)
+Related decision: [ADR-008](./decisions/adr-008-device-logging.md)
 
 ## Internationalization and App Shell
 

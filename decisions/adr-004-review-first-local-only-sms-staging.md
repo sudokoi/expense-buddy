@@ -1,4 +1,4 @@
-# ADR-003: Review-First Local-Only SMS Staging
+# ADR-004: Review-First Local-Only SMS Staging
 
 **Date:** 2026-04-11  
 **Status:** Accepted  
