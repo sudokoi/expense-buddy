@@ -38,6 +38,8 @@ import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
+import { providerSettingsStore } from "../../services/sync/provider-settings-store"
+import { credentialStore } from "../../services/sync/credential-store"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -321,31 +323,39 @@ export default function SettingsScreen() {
     }
 
     Alert.alert(
-      t("settings.about.includeLogsTitle", {
-        defaultValue: "Include Device Logs?",
-      }),
-      t("settings.about.includeLogsMessage", {
-        defaultValue:
-          "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
-      }),
+      t("settings.about.includeLogsTitle"),
+      t("settings.about.includeLogsMessage"),
       [
         {
-          text: t("settings.about.attachLogs", {
-            defaultValue: "Attach Logs",
-          }),
+           text: t("settings.about.attachLogs"),
           onPress: async () => {
-            const token = syncConfig?.token
             const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
-            const logs = await getLogsForBugReportAsync(token ? 500 : 50)
 
-            if (token && logs) {
+            // Look up GitHub provider credentials regardless of active sync provider
+            let githubToken: string | undefined
+            try {
+              const state = await providerSettingsStore.load()
+              const githubProvider = state.providers.find((p) => p.kind === "github")
+              if (githubProvider) {
+                const entry = await credentialStore.get(githubProvider.credentialId)
+                if (entry) {
+                  githubToken = entry.data["token"]
+                }
+              }
+            } catch {
+              // Fall through to clipboard fallback
+            }
+
+            const logs = await getLogsForBugReportAsync(githubToken ? 500 : 50)
+
+            if (githubToken && logs) {
               try {
                 const response = await fetch(
                   `https://api.github.com/repos/${appRepo}/issues`,
                   {
                     method: "POST",
                     headers: {
-                      Authorization: `Bearer ${token}`,
+                      Authorization: `Bearer ${githubToken}`,
                       Accept: "application/vnd.github+json",
                       "Content-Type": "application/json",
                     },
@@ -370,9 +380,7 @@ export default function SettingsScreen() {
                     html_url: string
                   }
                   addNotification(
-                    t("settings.about.issueCreated", {
-                      defaultValue: "Issue created. Add details in the browser.",
-                    }),
+                    t("settings.about.issueCreated"),
                     "success"
                   )
                   openIssue(issue.number)
@@ -386,10 +394,7 @@ export default function SettingsScreen() {
             if (logs) {
               await Clipboard.setStringAsync(logs)
               addNotification(
-                t("settings.about.logsCopied", {
-                  defaultValue:
-                    "Logs copied to clipboard. Paste them in the GitHub issue.",
-                }),
+                t("settings.about.logsCopied"),
                 "info"
               )
             }
@@ -397,16 +402,16 @@ export default function SettingsScreen() {
           },
         },
         {
-          text: t("settings.about.dontAttach", { defaultValue: "Don't Attach" }),
+          text: t("settings.about.dontAttach"),
           onPress: openNewIssue,
         },
         {
-          text: t("common.cancel", { defaultValue: "Cancel" }),
+          text: t("common.cancel"),
           style: "cancel",
         },
       ]
     )
-  }, [t, addNotification, syncConfig])
+  }, [t, addNotification])
 
   // Theme and settings handlers
   const handleThemeChange = useCallback(
