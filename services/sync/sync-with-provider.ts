@@ -10,6 +10,7 @@ import {
   type TrueConflict,
 } from "../merge-engine"
 import type { Expense } from "../../types/expense"
+import { APP_CONFIG } from "../../constants/app-config"
 
 export interface SyncWithProviderResult {
   success: boolean
@@ -237,7 +238,7 @@ function buildSnapshot(
     manifest: {
       version: 1,
       generatedAt: new Date().toISOString(),
-      appVersion: "1.0.0",
+      appVersion: APP_CONFIG.version,
       files: Object.entries(files).map(([path, content]) => ({
         path,
         hash: computeContentHash(content),

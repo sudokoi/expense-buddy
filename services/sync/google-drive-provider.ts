@@ -11,6 +11,7 @@ import type {
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
 import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../archive-utils"
 import { simpleHash } from "./sync-utils"
+import { APP_CONFIG } from "../../constants/app-config"
 import { Platform } from "react-native"
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
 const UPLOAD_API_BASE = "https://www.googleapis.com/upload/drive/v3"
@@ -122,7 +123,7 @@ export class GoogleDriveProvider implements SyncProvider {
       manifest: {
         version: 1,
         generatedAt: new Date().toISOString(),
-        appVersion: "1.0.0", // TODO: read from app.json at build time
+        appVersion: APP_CONFIG.version,
         files: fileList,
       },
       files,

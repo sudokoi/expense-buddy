@@ -20,6 +20,7 @@ import {
 } from "../github-sync"
 import { getDayKeyFromFilename } from "../daily-file-manager"
 import { simpleHash } from "./sync-utils"
+import { APP_CONFIG } from "../../constants/app-config"
 
 const SETTINGS_FILENAME = "settings.json"
 
@@ -154,7 +155,7 @@ export class GitHubProvider implements SyncProvider {
       manifest: {
         version: 1,
         generatedAt: new Date().toISOString(),
-        appVersion: "1.0.0",
+        appVersion: APP_CONFIG.version,
         files: fileList,
       },
       files,

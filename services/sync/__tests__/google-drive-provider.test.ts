@@ -1,6 +1,7 @@
 import type { SyncSnapshot, RemoteRevision } from "../provider-types"
 import type { CredentialStore } from "../provider-types"
 import type { GoogleDriveProviderConfig } from "../provider-types"
+import { APP_CONFIG } from "../../../constants/app-config"
 
 jest.mock("react-native", () => ({
   Platform: { OS: "android" },
@@ -208,7 +209,7 @@ describe("GoogleDriveProvider", () => {
       manifest: {
         version: 1,
         generatedAt: "2024-06-01T00:00:00Z",
-        appVersion: "1.0.0",
+        appVersion: APP_CONFIG.version,
         files: [
           { path: "2024-06-01.csv", hash: "abc123" },
           { path: "2024-06-02.csv", hash: "def456" },
