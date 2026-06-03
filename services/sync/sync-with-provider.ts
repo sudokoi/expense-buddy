@@ -95,6 +95,42 @@ export async function firstTimeSync(
   provider: SyncProvider,
   localExpenses: Expense[]
 ): Promise<SyncWithProviderResult> {
+  const existingSnapshot = await provider.readSnapshot()
+  if (existingSnapshot) {
+    const remoteExpenses = parseExpensesFromSnapshot(existingSnapshot)
+    const allExpenses = [...remoteExpenses]
+    const localMap = new Map(localExpenses.map((e) => [e.id, e]))
+    const seenIds = new Set<string>()
+    for (const expense of allExpenses) {
+      seenIds.add(expense.id)
+      const local = localMap.get(expense.id)
+      if (local && local.updatedAt > expense.updatedAt) {
+        Object.assign(expense, local)
+      }
+    }
+    for (const expense of localExpenses) {
+      if (!seenIds.has(expense.id)) {
+        allExpenses.push(expense)
+      }
+    }
+    const mergedSnapshot = buildSnapshot(allExpenses, existingSnapshot)
+    try {
+      await provider.writeSnapshot(mergedSnapshot, existingSnapshot.remoteRevision)
+    } catch (error) {
+      const formatted = formatError(error)
+      return {
+        success: false,
+        error: formatted.message,
+        errorCode: formatted.code,
+        isFirstSync: true,
+      }
+    }
+    return {
+      success: true,
+      isFirstSync: true,
+    }
+  }
+
   const snapshot = buildSnapshot(localExpenses, null)
   try {
     await provider.writeSnapshot(snapshot, null)

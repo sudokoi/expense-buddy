@@ -85,10 +85,14 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        conflictResolver?: ConflictResolver
         resolutions: { expenseId: string; choice: "local" | "remote" }[]
       }
     >(async ({ input }) => {
-      const resolver = async () => input.resolutions
+      const resolver =
+        input.resolutions.length > 0
+          ? async () => input.resolutions
+          : input.conflictResolver
       const result = await syncWithProvider({
         provider: input.provider,
         localExpenses: input.localExpenses,
@@ -277,6 +281,7 @@ export const syncMachine = setup({
         input: ({ context, event }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          conflictResolver: context.conflictResolver,
           resolutions:
             event.type === "RESOLVE_CONFLICTS"
               ? event.resolutions

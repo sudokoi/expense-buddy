@@ -140,10 +140,24 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       initializeUpdateStore(updateStore)
       await runLaunchUpdateCheck(updateStore)
 
-      const activeConfig = await getActiveProviderConfig()
-      if (activeConfig && deferredProviderRef.current) {
-        const provider = createProvider(activeConfig)
-        deferredProviderRef.current.resolve(provider)
+      try {
+        const activeConfig = await getActiveProviderConfig()
+        if (activeConfig && deferredProviderRef.current) {
+          const provider = createProvider(activeConfig)
+          deferredProviderRef.current.resolve(provider)
+        }
+      } catch (error) {
+        console.warn("Failed to resolve sync provider:", error)
+      }
+
+      if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
+        setTimeout(() => {
+          if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
+            console.warn(
+              "Sync provider not resolved within timeout; sync will retry on next attempt"
+            )
+          }
+        }, 30000)
       }
     })()
   }, [expenseStore, settingsStore, skipInitialization, uiStateStore, updateStore])
