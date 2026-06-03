@@ -349,7 +349,9 @@
       "onLaunchHelp": "アプリ開始時に同期",
       "onChange": "変更ごと",
       "onChangeHelp": "変更を加えた直後に同期",
+      "reconciliationRequired": "初回同期が必要です。先に「初回同期」を実行してください。",
       "syncNow": "今すぐ同期",
+      "firstSync": "初回同期",
       "syncing": "同期中..."
     },
     "categories": {

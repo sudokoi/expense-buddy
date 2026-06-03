@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react"
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, Platform, Pressable } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
@@ -40,6 +40,7 @@ import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import { credentialStore } from "../../services/sync/credential-store"
+import { isProviderReconciled } from "../../services/sync-queue"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -94,10 +95,33 @@ export default function SettingsScreen() {
   const [addingProviderKind, setAddingProviderKind] = useState<
     "github" | "google_drive" | null
   >(null)
+  const [activeProviderReconciled, setActiveProviderReconciled] = useState<boolean | null>(
+    null
+  )
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
   // Derive isConfigured from syncConfig !== null
   const isConfigured = syncConfig !== null
+
+  // Check if active provider needs first sync
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        const config = await providerSettingsStore.getActiveConfig()
+        if (config && !cancelled) {
+          const reconciled = await isProviderReconciled(config.id)
+          if (!cancelled) setActiveProviderReconciled(reconciled)
+        } else if (!cancelled) {
+          setActiveProviderReconciled(null)
+        }
+      } catch {
+        if (!cancelled) setActiveProviderReconciled(null)
+      }
+    }
+    void check()
+    return () => { cancelled = true }
+  }, [syncConfig])
 
   // Update check state - use hook's state for updateInfo
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
@@ -456,11 +480,13 @@ export default function SettingsScreen() {
   ])
 
   // Sync button text with pending count
+  const needsFirstSync = activeProviderReconciled === false
   const syncButtonText = useMemo(() => {
     if (isSyncing) return t("settings.autoSync.syncing")
+    if (needsFirstSync) return t("settings.autoSync.firstSync")
     if (pendingCount > 0) return `${t("settings.autoSync.syncNow")} (${pendingCount})`
     return t("settings.autoSync.syncNow")
-  }, [isSyncing, pendingCount, t])
+  }, [isSyncing, needsFirstSync, pendingCount, t])
 
   /**
    * Show conflict resolution dialog for true conflicts
@@ -684,6 +710,7 @@ export default function SettingsScreen() {
                 autoSyncEnabled={settings.autoSyncEnabled}
                 autoSyncTiming={settings.autoSyncTiming}
                 syncSettings={settings.syncSettings}
+                reconciliationRequired={needsFirstSync}
                 onAutoSyncEnabledChange={setAutoSyncEnabled}
                 onAutoSyncTimingChange={setAutoSyncTiming}
                 onSyncSettingsChange={handleSyncSettingsToggle}

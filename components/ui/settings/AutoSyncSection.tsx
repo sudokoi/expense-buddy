@@ -25,6 +25,8 @@ export interface AutoSyncSectionProps {
   autoSyncTiming: AutoSyncTiming
   /** Whether to sync settings to GitHub */
   syncSettings: boolean
+  /** Whether the active provider needs an initial manual sync first */
+  reconciliationRequired?: boolean
   /** Callback when auto-sync enabled changes */
   onAutoSyncEnabledChange: (enabled: boolean) => void
   /** Callback when auto-sync timing changes */
@@ -45,6 +47,7 @@ export function AutoSyncSection({
   autoSyncEnabled,
   autoSyncTiming,
   syncSettings,
+  reconciliationRequired,
   onAutoSyncEnabledChange,
   onAutoSyncTimingChange,
   onSyncSettingsChange,
@@ -62,6 +65,19 @@ export function AutoSyncSection({
       borderTopColor="$borderColor"
       style={{ paddingTop: UI_SPACE.gutter }}
     >
+      {reconciliationRequired && (
+        <YStack
+          bg="$yellow2"
+          px={UI_SPACE.section}
+          py={UI_SPACE.section}
+          rounded={UI_RADIUS.surface}
+        >
+          <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.strong}>
+            {t("settings.autoSync.reconciliationRequired")}
+          </Text>
+        </YStack>
+      )}
+
       <Text
         fontSize="$body"
         fontWeight={UI_FONT_WEIGHT.bold}
@@ -93,10 +109,12 @@ export function AutoSyncSection({
         </YStack>
         <Switch
           size="$control"
-          checked={autoSyncEnabled}
+          checked={autoSyncEnabled && !reconciliationRequired}
           onCheckedChange={onAutoSyncEnabledChange}
+          disabled={reconciliationRequired}
           bg="$gray8"
           activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
+          opacity={reconciliationRequired ? UI_OPACITY.subtle : 1}
         >
           <Switch.Thumb />
         </Switch>

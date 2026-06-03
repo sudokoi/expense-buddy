@@ -349,7 +349,9 @@
       "onLaunchHelp": "ऐप शुरू होने पर सिंक करें",
       "onChange": "हर बदलाव पर",
       "onChangeHelp": "बदलाव करने के तुरंत बाद सिंक करें",
+      "reconciliationRequired": "पहला सिंक आवश्यक है। कृपया पहले \"पहला सिंक\" करें।",
       "syncNow": "अभी सिंक करें",
+      "firstSync": "पहला सिंक",
       "syncing": "सिंक हो रहा है..."
     },
     "categories": {

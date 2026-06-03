@@ -349,7 +349,9 @@
       "onLaunchHelp": "Sync when the app starts",
       "onChange": "On Every Change",
       "onChangeHelp": "Sync immediately after making changes",
+      "reconciliationRequired": "First sync required before auto-sync can be enabled. Tap \"First Sync\" above to start.",
       "syncNow": "Sync Now",
+      "firstSync": "First Sync",
       "syncing": "Syncing..."
     },
     "categories": {
