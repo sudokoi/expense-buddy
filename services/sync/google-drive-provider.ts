@@ -9,10 +9,7 @@ import type {
   SyncProviderError,
 } from "./provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
-import {
-  zipTextEntriesAsync,
-  unzipTextEntriesAsync,
-} from "../archive-utils"
+import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../archive-utils"
 import { Platform } from "react-native"
 
 const ARCHIVE_FILENAME = "expenses-archive.zip"
@@ -33,10 +30,7 @@ export class GoogleDriveProvider implements SyncProvider {
   private config: GoogleDriveProviderConfig
   private credentialStore: CredentialStore
 
-  constructor(
-    config: GoogleDriveProviderConfig,
-    credentialStore: CredentialStore
-  ) {
+  constructor(config: GoogleDriveProviderConfig, credentialStore: CredentialStore) {
     this.providerId = config.id
     this.config = config
     this.credentialStore = credentialStore
@@ -266,9 +260,7 @@ export class GoogleDriveProvider implements SyncProvider {
     })
   }
 
-  private async findArchiveFile(
-    token: string
-  ): Promise<DriveFileMetadata | null> {
+  private async findArchiveFile(token: string): Promise<DriveFileMetadata | null> {
     try {
       const response = await fetch(
         `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name='${ARCHIVE_FILENAME}'&fields=files(id,name,version,modifiedTime)`,
@@ -293,19 +285,13 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
-  private async downloadFile(
-    token: string,
-    fileId: string
-  ): Promise<string | null> {
+  private async downloadFile(token: string, fileId: string): Promise<string | null> {
     try {
-      const response = await fetch(
-        `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?alt=media`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
       if (!response.ok) {
         throw this.mapHttpError(response.status, "Failed to download file")
@@ -336,10 +322,7 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
-  private async createFile(
-    token: string,
-    archiveBase64: string
-  ): Promise<void> {
+  private async createFile(token: string, archiveBase64: string): Promise<void> {
     const boundary = `boundary_${Date.now()}`
     const metadata = JSON.stringify({
       name: ARCHIVE_FILENAME,
@@ -359,17 +342,14 @@ export class GoogleDriveProvider implements SyncProvider {
       `--${boundary}--`,
     ].join("\r\n")
 
-    const response = await fetch(
-      `${UPLOAD_API_BASE}/files?uploadType=multipart`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": `multipart/related; boundary=${boundary}`,
-        },
-        body,
-      }
-    )
+    const response = await fetch(`${UPLOAD_API_BASE}/files?uploadType=multipart`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body,
+    })
 
     if (!response.ok) {
       throw this.mapHttpError(response.status, "Failed to create archive")
@@ -381,27 +361,21 @@ export class GoogleDriveProvider implements SyncProvider {
     fileId: string,
     archiveBase64: string
   ): Promise<void> {
-    const response = await fetch(
-      `${UPLOAD_API_BASE}/files/${fileId}?uploadType=media`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/zip",
-        },
-        body: archiveBase64,
-      }
-    )
+    const response = await fetch(`${UPLOAD_API_BASE}/files/${fileId}?uploadType=media`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/zip",
+      },
+      body: archiveBase64,
+    })
 
     if (!response.ok) {
       throw this.mapHttpError(response.status, "Failed to update archive")
     }
   }
 
-  private mapHttpError(
-    status: number,
-    fallbackMessage: string
-  ): SyncProviderError {
+  private mapHttpError(status: number, fallbackMessage: string): SyncProviderError {
     if (status === 401 || status === 403) {
       return new SyncProviderErrorClass(
         status === 401 ? "AUTH_INVALID" : "PERMISSION_DENIED",
@@ -443,12 +417,7 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   private authError(code: SyncProviderError["code"]): SyncProviderError {
-    return new SyncProviderErrorClass(
-      code,
-      "google_drive",
-      `${code}`,
-      false
-    )
+    return new SyncProviderErrorClass(code, "google_drive", `${code}`, false)
   }
 
   private toProviderError(error: unknown): SyncProviderError {
@@ -459,12 +428,7 @@ export class GoogleDriveProvider implements SyncProvider {
       msg.includes("Network request failed") ||
       msg.includes("TypeError")
     ) {
-      return new SyncProviderErrorClass(
-        "NETWORK",
-        "google_drive",
-        msg,
-        true
-      )
+      return new SyncProviderErrorClass("NETWORK", "google_drive", msg, true)
     }
     return new SyncProviderErrorClass("REMOTE_ERROR", "google_drive", msg, true)
   }

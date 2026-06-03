@@ -356,9 +356,7 @@ function applyCategoryReorder(settings: AppSettings, labels: string[]): AppSetti
   return { ...settings, categories: [...reordered, ...missingCategories] }
 }
 
-export async function getProviderWatermark(
-  providerId: string
-): Promise<number | null> {
+export async function getProviderWatermark(providerId: string): Promise<number | null> {
   return providerStateStore.get<number>(providerId, "watermark")
 }
 
@@ -369,19 +367,12 @@ export async function setProviderWatermark(
   await providerStateStore.set(providerId, "watermark", watermark)
 }
 
-export async function markProviderReconciled(
-  providerId: string
-): Promise<void> {
+export async function markProviderReconciled(providerId: string): Promise<void> {
   await providerStateStore.set(providerId, "reconciled", true)
 }
 
-export async function isProviderReconciled(
-  providerId: string
-): Promise<boolean> {
-  const reconciled = await providerStateStore.get<boolean>(
-    providerId,
-    "reconciled"
-  )
+export async function isProviderReconciled(providerId: string): Promise<boolean> {
+  const reconciled = await providerStateStore.get<boolean>(providerId, "reconciled")
   return reconciled === true
 }
 

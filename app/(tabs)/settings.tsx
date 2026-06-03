@@ -95,9 +95,9 @@ export default function SettingsScreen() {
   const [addingProviderKind, setAddingProviderKind] = useState<
     "github" | "google_drive" | null
   >(null)
-  const [activeProviderReconciled, setActiveProviderReconciled] = useState<boolean | null>(
-    null
-  )
+  const [activeProviderReconciled, setActiveProviderReconciled] = useState<
+    boolean | null
+  >(null)
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
   // Derive isConfigured from syncConfig !== null
@@ -120,7 +120,9 @@ export default function SettingsScreen() {
       }
     }
     void check()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [syncConfig])
 
   // Update check state - use hook's state for updateInfo
@@ -311,12 +313,9 @@ export default function SettingsScreen() {
     [addNotification]
   )
 
-  const handleAddProvider = useCallback(
-    (kind: "github" | "google_drive") => {
-      setAddingProviderKind(kind)
-    },
-    []
-  )
+  const handleAddProvider = useCallback((kind: "github" | "google_drive") => {
+    setAddingProviderKind(kind)
+  }, [])
 
   // App info handlers - use hook's checkForUpdates for manual checks
   // This bypasses dismissal so users can always check for updates from settings
@@ -351,7 +350,7 @@ export default function SettingsScreen() {
       t("settings.about.includeLogsMessage"),
       [
         {
-           text: t("settings.about.attachLogs"),
+          text: t("settings.about.attachLogs"),
           onPress: async () => {
             const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
 
@@ -403,10 +402,7 @@ export default function SettingsScreen() {
                     number: number
                     html_url: string
                   }
-                  addNotification(
-                    t("settings.about.issueCreated"),
-                    "success"
-                  )
+                  addNotification(t("settings.about.issueCreated"), "success")
                   openIssue(issue.number)
                   return
                 }
@@ -417,10 +413,7 @@ export default function SettingsScreen() {
 
             if (logs) {
               await Clipboard.setStringAsync(logs)
-              addNotification(
-                t("settings.about.logsCopied"),
-                "info"
-              )
+              addNotification(t("settings.about.logsCopied"), "info")
             }
             openNewIssue()
           },
@@ -686,9 +679,7 @@ export default function SettingsScreen() {
               gap="$control"
               mt={UI_SPACE.gutter}
             >
-              <Label>
-                {t("settings.googleDrive.configTitle")}
-              </Label>
+              <Label>{t("settings.googleDrive.configTitle")}</Label>
               <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
                 {t("settings.googleDrive.help")}
               </Text>

@@ -17,10 +17,10 @@ Expense Buddy does not collect, store, transmit, or share any personal informati
 
 All expense data you enter is stored locally on your device using:
 
-- **AsyncStorage** for expense records
-- **Expo SecureStore** for sensitive configuration (like GitHub tokens)
+- **AsyncStorage** for expense records, settings, filters, provider state, and queue metadata
+- **Expo SecureStore** for sensitive configuration (provider tokens, OAuth credentials)
 
-Your data never leaves your device unless you explicitly choose to sync it to GitHub (see below).
+Your data never leaves your device unless you explicitly choose to sync it (see below).
 
 ## SMS Import (Android Only)
 
@@ -58,7 +58,9 @@ Expense Buddy includes an on-device logging system to help debug issues:
 - **Logs never leave your device** unless you voluntarily choose to share them when reporting a bug
 - **If you report a bug from Settings**, the app asks for your explicit permission before attaching log entries to the GitHub issue
 
-## GitHub Sync (Optional)
+## Sync (Optional)
+
+### GitHub
 
 If you choose to use the optional GitHub sync feature:
 
@@ -70,18 +72,32 @@ If you choose to use the optional GitHub sync feature:
 - **Your expense data is uploaded directly to your own GitHub repository**
 - **We have no access to your GitHub credentials or synced data**
 
-The sync happens directly between your device and GitHub's servers. We do not operate any intermediary servers and have no visibility into your synced data.
+### Google Drive (Android Only)
+
+If you choose to use the optional Google Drive sync feature:
+
+- **On Android, you sign in with your Google account** (OAuth 2.0 device authorization flow)
+- **The app stores expenses in its private `appDataFolder`** — a Drive location visible only to the app, not to your normal Drive file listing
+- **Expenses are bundled as a compressed archive** (`expenses-archive.zip`) in the `appDataFolder`
+- **Read and write access to this folder is required** — the app does not access any other Drive content
+- **Your expense data is uploaded directly from your device to Google Drive**
+- **We have no access to your Google credentials or synced data**
+- **Google Drive sync is Android-only** — the Google Drive REST API requires a native OAuth flow
+
+### Common
+
+The sync happens directly between your device and the provider's servers. We do not operate any intermediary servers and have no visibility into your synced data.
 
 ## Third-Party Services
 
-The app does not integrate with any analytics, advertising, or tracking services. The only external service the app can connect to is GitHub, and only if you explicitly configure it.
+The app does not integrate with any analytics, advertising, or tracking services. The only external services the app can connect to are GitHub and Google Drive, and only if you explicitly configure them.
 
 ## Permissions
 
 The app may request the following permissions:
 
-- **Internet Access**: Required only for the optional GitHub sync feature
-- **Secure Storage**: To safely store your GitHub token on your device
+- **Internet Access**: Required for optional sync features (GitHub, Google Drive)
+- **Secure Storage**: To safely store provider credentials on your device
 - **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import; the app requests it when you manually start a scan from Settings
 - **Background SMS Access (`RECEIVE_SMS`)**: Required only if you explicitly enable Android background SMS alerts from Settings
 - **Notifications (`POST_NOTIFICATIONS`)**: Required only if you explicitly enable Android background SMS alerts and allow local notifications
@@ -106,4 +122,4 @@ https://github.com/sudokoi/expense-buddy/issues
 
 ---
 
-**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync confirmed expense records to your own GitHub repository.
+**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync confirmed expense records to your own GitHub repository or Google Drive `appDataFolder`.

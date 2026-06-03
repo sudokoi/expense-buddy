@@ -12,10 +12,7 @@ jest.mock("../../archive-utils", () => ({
 }))
 
 import { GoogleDriveProvider } from "../google-drive-provider"
-import {
-  zipTextEntriesAsync,
-  unzipTextEntriesAsync,
-} from "../../archive-utils"
+import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../../archive-utils"
 
 const mockZip = zipTextEntriesAsync as jest.Mock
 const mockUnzip = unzipTextEntriesAsync as jest.Mock
@@ -39,12 +36,7 @@ function createConfig(
   }
 }
 
-function mockFetch(response: {
-  ok?: boolean
-  status?: number
-  json?: any
-  text?: any
-}) {
+function mockFetch(response: { ok?: boolean; status?: number; json?: any; text?: any }) {
   return jest.fn().mockResolvedValue({
     ok: response.ok ?? true,
     status: response.status ?? 200,
@@ -69,10 +61,7 @@ describe("GoogleDriveProvider", () => {
       createdAt: "2024-01-01",
       updatedAt: "2024-01-01",
     })
-    provider = new GoogleDriveProvider(
-      createConfig(),
-      mockCredentialStore
-    )
+    provider = new GoogleDriveProvider(createConfig(), mockCredentialStore)
   })
 
   describe("testConnection", () => {
@@ -318,17 +307,15 @@ describe("GoogleDriveProvider", () => {
         version: 5,
       }
 
-      await expect(
-        provider.writeSnapshot(snapshot, revision)
-      ).rejects.toThrow("Remote archive has been modified since last sync")
+      await expect(provider.writeSnapshot(snapshot, revision)).rejects.toThrow(
+        "Remote archive has been modified since last sync"
+      )
     })
 
     it("throws AUTH_MISSING when no token", async () => {
       ;(mockCredentialStore.get as jest.Mock).mockResolvedValue(null)
 
-      await expect(
-        provider.writeSnapshot(snapshot, null)
-      ).rejects.toThrow(/AUTH_MISSING/)
+      await expect(provider.writeSnapshot(snapshot, null)).rejects.toThrow(/AUTH_MISSING/)
     })
   })
 
@@ -343,9 +330,7 @@ describe("GoogleDriveProvider", () => {
     })
 
     it("returns not connected on error", async () => {
-      global.fetch = jest
-        .fn()
-        .mockRejectedValue(new Error("Network error"))
+      global.fetch = jest.fn().mockRejectedValue(new Error("Network error"))
 
       const status = await provider.getStatus()
       expect(status.connected).toBe(false)

@@ -2,7 +2,10 @@ import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Button } from "tamagui"
 import { Alert, Platform } from "react-native"
 import { X, Plus } from "@tamagui/lucide-icons-2"
-import type { ProviderConfig, SyncProvidersState } from "../../../services/sync/provider-types"
+import type {
+  ProviderConfig,
+  SyncProvidersState,
+} from "../../../services/sync/provider-types"
 import { providerSettingsStore } from "../../../services/sync/provider-settings-store"
 import { createProvider } from "../../../services/sync/provider-registry"
 import { isProviderReconciled } from "../../../services/sync-queue"
@@ -63,24 +66,14 @@ function ProviderCard({
         <XStack gap={UI_SPACE.control} items="center">
           <Text fontWeight={UI_FONT_WEIGHT.medium}>{config.label || kindLabel}</Text>
           {isActive && (
-            <YStack
-              bg={successColor}
-              px={UI_SPACE.micro}
-              py={1}
-              rounded={UI_RADIUS.chip}
-            >
+            <YStack bg={successColor} px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
               <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
                 {t("settings.providers.active")}
               </Text>
             </YStack>
           )}
           {!isReconciled && (
-            <YStack
-              bg="$yellow9"
-              px={UI_SPACE.micro}
-              py={1}
-              rounded={UI_RADIUS.chip}
-            >
+            <YStack bg="$yellow9" px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
               <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
                 {t("settings.providers.needsSetup")}
               </Text>
@@ -112,16 +105,10 @@ function ProviderCard({
           onPress={() => onTestConnection(config)}
           disabled={isTesting}
         >
-          {isTesting
-            ? t("settings.providers.testing")
-            : t("settings.providers.test")}
+          {isTesting ? t("settings.providers.testing") : t("settings.providers.test")}
         </Button>
         {!isActive && (
-          <Button
-            size="$compact"
-            theme="accent"
-            onPress={() => onActivate(config.id)}
-          >
+          <Button size="$compact" theme="accent" onPress={() => onActivate(config.id)}>
             {t("settings.providers.activate")}
           </Button>
         )}
@@ -179,10 +166,7 @@ export function ProviderManagementSection({
     async (id: string) => {
       await providerSettingsStore.setActiveProvider(id)
       await loadState()
-      onNotification(
-        t("settings.providers.activated"),
-        "success"
-      )
+      onNotification(t("settings.providers.activated"), "success")
     },
     [loadState, onNotification, t]
   )
@@ -203,10 +187,7 @@ export function ProviderManagementSection({
             onPress: async () => {
               await providerSettingsStore.removeProvider(id)
               await loadState()
-              onNotification(
-                t("settings.providers.removed"),
-                "info"
-              )
+              onNotification(t("settings.providers.removed"), "info")
             },
           },
         ]
@@ -235,10 +216,7 @@ export function ProviderManagementSection({
         }))
 
         if (result.ok) {
-          onNotification(
-            t("settings.providers.connectionOk"),
-            "success"
-          )
+          onNotification(t("settings.providers.connectionOk"), "success")
         } else {
           onNotification(result.error.message, "error")
         }
@@ -283,12 +261,12 @@ export function ProviderManagementSection({
               isTesting={testingId === config.id}
               connectionLabel={
                 connectionResults[config.id]?.ok
-                  ? connectionResults[config.id].label ?? null
+                  ? (connectionResults[config.id].label ?? null)
                   : null
               }
               connectionError={
                 connectionResults[config.id] && !connectionResults[config.id].ok
-                  ? connectionResults[config.id].error ?? null
+                  ? (connectionResults[config.id].error ?? null)
                   : null
               }
             />

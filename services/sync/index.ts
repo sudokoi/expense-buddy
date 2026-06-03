@@ -17,8 +17,5 @@ registerFactory({
 registerFactory({
   kind: "google_drive",
   create: (config: ProviderConfig) =>
-    new GoogleDriveProvider(
-      config as GoogleDriveProviderConfig,
-      credentialStore
-    ),
+    new GoogleDriveProvider(config as GoogleDriveProviderConfig, credentialStore),
 })
