@@ -330,6 +330,8 @@
       "test": "Test",
       "testing": "Testing...",
       "connectionOk": "Connection successful",
+      "github": "GitHub",
+      "googleDrive": "Google Drive",
       "googleDriveDesc": "Google Drive (appDataFolder)"
     },
     "googleDrive": {

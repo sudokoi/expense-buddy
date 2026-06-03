@@ -45,8 +45,8 @@ function ProviderCard({
 
   const kindLabel =
     config.kind === "github"
-      ? "GitHub"
-      : "Google Drive"
+      ? t("settings.providers.github")
+      : t("settings.providers.googleDrive")
 
   return (
     <XStack
@@ -70,7 +70,7 @@ function ProviderCard({
               rounded={UI_RADIUS.chip}
             >
               <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
-                {t("settings.providers.active", { defaultValue: "ACTIVE" })}
+                {t("settings.providers.active")}
               </Text>
             </YStack>
           )}
@@ -82,7 +82,7 @@ function ProviderCard({
               rounded={UI_RADIUS.chip}
             >
               <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
-                {t("settings.providers.needsSetup", { defaultValue: "NEEDS SETUP" })}
+                {t("settings.providers.needsSetup")}
               </Text>
             </YStack>
           )}
@@ -91,9 +91,7 @@ function ProviderCard({
           {config.kind === "github"
             ? `${(config as any).repo || ""}`
             : config.kind === "google_drive"
-              ? t("settings.providers.googleDriveDesc", {
-                  defaultValue: "Google Drive (appDataFolder)",
-                })
+              ? t("settings.providers.googleDriveDesc")
               : ""}
         </Text>
         {connectionLabel && (
@@ -115,8 +113,8 @@ function ProviderCard({
           disabled={isTesting}
         >
           {isTesting
-            ? t("settings.providers.testing", { defaultValue: "Testing..." })
-            : t("settings.providers.test", { defaultValue: "Test" })}
+            ? t("settings.providers.testing")
+            : t("settings.providers.test")}
         </Button>
         {!isActive && (
           <Button
@@ -124,7 +122,7 @@ function ProviderCard({
             theme="accent"
             onPress={() => onActivate(config.id)}
           >
-            {t("settings.providers.activate", { defaultValue: "Activate" })}
+            {t("settings.providers.activate")}
           </Button>
         )}
         <Button
@@ -182,7 +180,7 @@ export function ProviderManagementSection({
       await providerSettingsStore.setActiveProvider(id)
       await loadState()
       onNotification(
-        t("settings.providers.activated", { defaultValue: "Provider activated" }),
+        t("settings.providers.activated"),
         "success"
       )
     },
@@ -195,25 +193,18 @@ export function ProviderManagementSection({
       const label = config?.label || id
 
       Alert.alert(
-        t("settings.providers.removeTitle", {
-          defaultValue: "Remove Provider",
-        }),
-        t("settings.providers.removeMessage", {
-          defaultValue: `Remove "${label}"? This will not delete remote data.`,
-          label,
-        }),
+        t("settings.providers.removeTitle"),
+        t("settings.providers.removeMessage", { label }),
         [
-          { text: t("common.cancel", { defaultValue: "Cancel" }), style: "cancel" },
+          { text: t("common.cancel"), style: "cancel" },
           {
-            text: t("settings.providers.remove", { defaultValue: "Remove" }),
+            text: t("settings.providers.remove"),
             style: "destructive",
             onPress: async () => {
               await providerSettingsStore.removeProvider(id)
               await loadState()
               onNotification(
-                t("settings.providers.removed", {
-                  defaultValue: "Provider removed",
-                }),
+                t("settings.providers.removed"),
                 "info"
               )
             },
@@ -245,9 +236,7 @@ export function ProviderManagementSection({
 
         if (result.ok) {
           onNotification(
-            t("settings.providers.connectionOk", {
-              defaultValue: "Connection successful",
-            }),
+            t("settings.providers.connectionOk"),
             "success"
           )
         } else {
@@ -279,7 +268,7 @@ export function ProviderManagementSection({
             color="$color"
             opacity={UI_OPACITY.strong}
           >
-            {t("settings.providers.title", { defaultValue: "Providers" })}
+            {t("settings.providers.title")}
           </Text>
 
           {providerState.providers.map((config) => (
@@ -319,9 +308,7 @@ export function ProviderManagementSection({
             opacity={UI_OPACITY.medium}
             style={{ textAlign: "center" }}
           >
-            {t("settings.providers.noProviders", {
-              defaultValue: "No sync providers configured yet",
-            })}
+            {t("settings.providers.noProviders")}
           </Text>
         </YStack>
       )}
@@ -334,7 +321,7 @@ export function ProviderManagementSection({
           onPress={() => onAddProvider("github")}
           theme="accent"
         >
-          {t("settings.providers.addGithub", { defaultValue: "Add GitHub" })}
+          {t("settings.providers.addGithub")}
         </Button>
         {Platform.OS === "android" && (
           <Button
@@ -342,9 +329,7 @@ export function ProviderManagementSection({
             icon={Plus}
             onPress={() => onAddProvider("google_drive")}
           >
-            {t("settings.providers.addGoogleDrive", {
-              defaultValue: "Add Google Drive",
-            })}
+            {t("settings.providers.addGoogleDrive")}
           </Button>
         )}
       </XStack>

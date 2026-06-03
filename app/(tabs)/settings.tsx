@@ -656,15 +656,10 @@ export default function SettingsScreen() {
               mt={UI_SPACE.gutter}
             >
               <Label>
-                {t("settings.googleDrive.configTitle", {
-                  defaultValue: "Google Drive",
-                })}
+                {t("settings.googleDrive.configTitle")}
               </Label>
               <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
-                {t("settings.googleDrive.help", {
-                  defaultValue:
-                    "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only.",
-                })}
+                {t("settings.googleDrive.help")}
               </Text>
             </YStack>
           )}
