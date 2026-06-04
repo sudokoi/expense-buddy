@@ -4,7 +4,7 @@ import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "ta
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
-import { Dimensions } from "react-native"
+import { Dimensions, Platform } from "react-native"
 import React, { startTransition } from "react"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
@@ -23,12 +23,16 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
+import { useSyncMachine } from "../../hooks/use-sync-machine"
+import { RefreshCw, MessageSquare } from "@tamagui/lucide-icons-2"
 import {
   UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
@@ -71,6 +75,8 @@ export default function DashboardScreen() {
   const { state } = useExpenses()
   const { categories, getCategoryByLabel } = useCategories()
   const { settings } = useSettings()
+  const { startSmsImportFromAdd } = useSmsImportActions()
+  const syncMachine = useSyncMachine()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -188,10 +194,6 @@ export default function DashboardScreen() {
   }, [])
 
   // Memoized navigation handlers
-  const handleAddPress = React.useCallback(() => {
-    router.push("/(tabs)/add")
-  }, [router])
-
   const handleAnalyticsPress = React.useCallback(() => {
     router.push("/(tabs)/analytics")
   }, [router])
@@ -199,6 +201,19 @@ export default function DashboardScreen() {
   const handleHistoryPress = React.useCallback(() => {
     router.push("/(tabs)/history")
   }, [router])
+
+  const handleSmsImport = React.useCallback(async () => {
+    await startSmsImportFromAdd()
+  }, [startSmsImportFromAdd])
+
+  const handleSync = React.useCallback(() => {
+    if (syncMachine.isSyncing) return
+    syncMachine.sync({
+      localExpenses: state.expenses,
+      settings: settings.syncSettings ? settings : undefined,
+      syncSettingsEnabled: settings.syncSettings,
+    })
+  }, [syncMachine, state.expenses, settings])
 
   return (
     <ScreenContainer>
@@ -209,9 +224,21 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" theme="accent" onPress={handleAddPress}>
-          {t("common.add")}
-        </Button>
+        <XStack gap={UI_SPACE.control}>
+          <Button
+            size="$control"
+            onPress={handleSync}
+            icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
+          />
+          {Platform.OS === "android" ? (
+            <Button
+              size="$control"
+              theme="accent"
+              onPress={handleSmsImport}
+              icon={<MessageSquare size={UI_ICON_SIZE.medium} />}
+            />
+          ) : null}
+        </XStack>
       </XStack>
 
       {/* Currency Filter - Show only if multiple currencies exist */}
