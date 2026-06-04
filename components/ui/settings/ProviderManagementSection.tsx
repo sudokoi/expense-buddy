@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react"
-import { YStack, XStack, Text, Button } from "tamagui"
-import { Alert, Platform } from "react-native"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
+import { YStack, XStack, Text, Button, View } from "tamagui"
+import { Alert, Platform, Animated, PanResponder } from "react-native"
 import { X, Plus, Pencil } from "@tamagui/lucide-icons-2"
 import type {
   ProviderConfig,
@@ -21,6 +21,8 @@ import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
+const SWIPE_THRESHOLD = 60
+const ACTION_WIDTH = 260
 
 interface ProviderItemProps {
   config: ProviderConfig
@@ -35,7 +37,7 @@ interface ProviderItemProps {
   connectionError: string | null
 }
 
-function ProviderCard({
+function SwipeableProviderCard({
   config,
   isActive,
   isReconciled,
@@ -49,74 +51,107 @@ function ProviderCard({
 }: ProviderItemProps) {
   const { t } = useTranslation()
 
+  const translateX = useRef(new Animated.Value(0)).current
+  const isOpenRef = useRef(false)
+
   const kindLabel =
     config.kind === "github"
       ? t("settings.providers.github")
       : t("settings.providers.googleDrive")
 
+  const open = useCallback(() => {
+    Animated.spring(translateX, {
+      toValue: ACTION_WIDTH,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 12,
+    }).start()
+    isOpenRef.current = true
+  }, [translateX])
+
+  const close = useCallback(() => {
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 12,
+    }).start()
+    isOpenRef.current = false
+  }, [translateX])
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gs) =>
+          Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 2,
+        onPanResponderMove: (_, gs) => {
+          const base = isOpenRef.current ? ACTION_WIDTH : 0
+          const next = Math.max(0, Math.min(ACTION_WIDTH, base + gs.dx))
+          translateX.setValue(next)
+        },
+        onPanResponderRelease: (_, gs) => {
+          if (gs.dx > SWIPE_THRESHOLD) {
+            open()
+          } else if (gs.dx < -SWIPE_THRESHOLD) {
+            close()
+          } else {
+            if (isOpenRef.current) { open() } else { close() }
+          }
+        },
+      }),
+    [translateX, open, close]
+  )
+
+  const handleAction = useCallback(
+    (fn: () => void) => () => {
+      close()
+      fn()
+    },
+    [close]
+  )
+
   return (
-    <XStack
+    <View
       bg={isActive ? "$backgroundHover" : "$background"}
-      px={UI_SPACE.section}
-      py={UI_SPACE.section}
       rounded={UI_RADIUS.surface}
       borderWidth={isActive ? 2 : 1}
       borderColor={isActive ? successColor : "$borderColor"}
-      items="center"
-      justify="space-between"
+      overflow="hidden"
+      position="relative"
     >
-      <YStack flex={1} gap={UI_SPACE.micro}>
-        <XStack gap={UI_SPACE.control} items="center">
-          <Text fontWeight={UI_FONT_WEIGHT.medium}>{config.label || kindLabel}</Text>
-          {isActive && (
-            <YStack bg={successColor} px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
-              <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
-                {t("settings.providers.active")}
-              </Text>
-            </YStack>
-          )}
-          {!isReconciled && (
-            <YStack bg="$yellow9" px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
-              <Text fontSize="$caption" color="white" fontWeight={UI_FONT_WEIGHT.bold}>
-                {t("settings.providers.needsSetup")}
-              </Text>
-            </YStack>
-          )}
-        </XStack>
-        <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.medium}>
-          {config.kind === "github"
-            ? `${(config as any).repo || ""}`
-            : config.kind === "google_drive"
-              ? t("settings.providers.googleDriveDesc")
-              : ""}
-        </Text>
-        {connectionLabel && (
-          <Text fontSize="$caption" color={successColor}>
-            {connectionLabel}
-          </Text>
-        )}
-        {connectionError && (
-          <Text fontSize="$caption" color={errorColor}>
-            {connectionError}
-          </Text>
-        )}
-      </YStack>
-
-      <XStack gap={UI_SPACE.micro} flexWrap="wrap" items="center">
+      <XStack
+        position="absolute"
+        l={0}
+        t={0}
+        b={0}
+        items="center"
+        gap={UI_SPACE.micro}
+        pl={UI_SPACE.control}
+        pr={UI_SPACE.control}
+        style={{ width: ACTION_WIDTH }}
+      >
         {config.kind === "github" && (
-          <Button size="$compact" icon={Pencil} onPress={() => onEdit(config)}>
+          <Button
+            size="$compact"
+            icon={Pencil}
+            onPress={handleAction(() => onEdit(config))}
+          >
             {t("settings.providers.edit")}
           </Button>
         )}
         <Button
           size="$compact"
-          onPress={() => onTestConnection(config)}
+          onPress={handleAction(() => onTestConnection(config))}
           disabled={isTesting}
         >
           {isTesting ? t("settings.providers.testing") : t("settings.providers.test")}
         </Button>
         {!isActive && (
-          <Button size="$compact" theme="accent" onPress={() => onActivate(config.id)}>
+          <Button
+            size="$compact"
+            theme="accent"
+            onPress={handleAction(() => onActivate(config.id))}
+          >
             {t("settings.providers.activate")}
           </Button>
         )}
@@ -124,11 +159,80 @@ function ProviderCard({
           size="$compact"
           color="white"
           bg={errorColor}
-          onPress={() => onRemove(config.id)}
+          onPress={handleAction(() => onRemove(config.id))}
           icon={X}
         />
       </XStack>
-    </XStack>
+
+      <Animated.View
+        style={{ transform: [{ translateX }] }}
+        {...panResponder.panHandlers}
+      >
+        <XStack
+          bg={isActive ? "$backgroundHover" : "$background"}
+          px={UI_SPACE.section}
+          py={UI_SPACE.section}
+          items="center"
+        >
+          <YStack flex={1} gap={UI_SPACE.micro}>
+            <XStack gap={UI_SPACE.control} items="center">
+              <Text fontWeight={UI_FONT_WEIGHT.medium}>
+                {config.label || kindLabel}
+              </Text>
+              {isActive && (
+                <YStack
+                  bg={successColor}
+                  px={UI_SPACE.micro}
+                  py={1}
+                  rounded={UI_RADIUS.chip}
+                >
+                  <Text
+                    fontSize="$caption"
+                    color="white"
+                    fontWeight={UI_FONT_WEIGHT.bold}
+                  >
+                    {t("settings.providers.active")}
+                  </Text>
+                </YStack>
+              )}
+              {!isReconciled && (
+                <YStack
+                  bg="$yellow9"
+                  px={UI_SPACE.micro}
+                  py={1}
+                  rounded={UI_RADIUS.chip}
+                >
+                  <Text
+                    fontSize="$caption"
+                    color="white"
+                    fontWeight={UI_FONT_WEIGHT.bold}
+                  >
+                    {t("settings.providers.needsSetup")}
+                  </Text>
+                </YStack>
+              )}
+            </XStack>
+            <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.medium}>
+              {config.kind === "github"
+                ? `${(config as any).repo || ""}`
+                : config.kind === "google_drive"
+                  ? t("settings.providers.googleDriveDesc")
+                  : ""}
+            </Text>
+            {connectionLabel && (
+              <Text fontSize="$caption" color={successColor}>
+                {connectionLabel}
+              </Text>
+            )}
+            {connectionError && (
+              <Text fontSize="$caption" color={errorColor}>
+                {connectionError}
+              </Text>
+            )}
+          </YStack>
+        </XStack>
+      </Animated.View>
+    </View>
   )
 }
 
@@ -272,7 +376,7 @@ export function ProviderManagementSection({
           </Text>
 
           {providerState.providers.map((config) => (
-            <ProviderCard
+            <SwipeableProviderCard
               key={config.id}
               config={config}
               isActive={config.id === providerState.activeProviderId}
