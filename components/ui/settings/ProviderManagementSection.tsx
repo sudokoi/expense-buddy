@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { YStack, XStack, Text, Button, View } from "tamagui"
 import { Alert, Platform, Animated, PanResponder } from "react-native"
-import { X, Plus, Pencil } from "@tamagui/lucide-icons-2"
+import { Plus, Pencil, Play, Trash2, Check } from "@tamagui/lucide-icons-2"
 import type {
   ProviderConfig,
   SyncProvidersState,
@@ -110,6 +110,15 @@ function SwipeableProviderCard({
     [close]
   )
 
+  const [tooltipLabel, setTooltipLabel] = useState<string | null>(null)
+  const tooltipTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const showTooltip = useCallback((label: string) => {
+    setTooltipLabel(label)
+    clearTimeout(tooltipTimer.current)
+    tooltipTimer.current = setTimeout(() => setTooltipLabel(null), 2000)
+  }, [])
+
   return (
     <View
       bg={isActive ? "$backgroundHover" : "$background"}
@@ -130,38 +139,119 @@ function SwipeableProviderCard({
         pr={UI_SPACE.control}
         style={{ width: ACTION_WIDTH }}
       >
-        {config.kind === "github" && (
-          <Button
-            size="$compact"
-            icon={Pencil}
-            onPress={handleAction(() => onEdit(config))}
-          >
-            {t("settings.providers.edit")}
-          </Button>
-        )}
-        <Button
-          size="$compact"
-          onPress={handleAction(() => onTestConnection(config))}
-          disabled={isTesting}
-        >
-          {isTesting ? t("settings.providers.testing") : t("settings.providers.test")}
-        </Button>
-        {!isActive && (
-          <Button
-            size="$compact"
-            theme="accent"
-            onPress={handleAction(() => onActivate(config.id))}
-          >
-            {t("settings.providers.activate")}
-          </Button>
-        )}
-        <Button
-          size="$compact"
-          color="white"
-          bg={errorColor}
-          onPress={handleAction(() => onRemove(config.id))}
-          icon={X}
-        />
+        <XStack position="relative" items="center" gap={UI_SPACE.micro}>
+          {config.kind === "github" && (
+            <YStack position="relative">
+              <Button
+                size="$compact"
+                icon={Pencil}
+                chromeless
+                circular
+                onPress={handleAction(() => onEdit(config))}
+                onLongPress={() => showTooltip(t("settings.providers.edit"))}
+              />
+              {tooltipLabel === t("settings.providers.edit") && (
+                <YStack
+                  position="absolute"
+                  b="100%"
+                  mb={4}
+                  bg="$color"
+                  px={6}
+                  py={2}
+                  rounded={4}
+                  style={{ zIndex: 100 }}
+                >
+                  <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
+                    {tooltipLabel}
+                  </Text>
+                </YStack>
+              )}
+            </YStack>
+          )}
+          <YStack position="relative">
+            <Button
+              size="$compact"
+              icon={Play}
+              chromeless
+              circular
+              onPress={handleAction(() => onTestConnection(config))}
+              disabled={isTesting}
+              onLongPress={() => showTooltip(t("settings.providers.test"))}
+            />
+            {tooltipLabel === t("settings.providers.test") && (
+              <YStack
+                position="absolute"
+                b="100%"
+                mb={4}
+                bg="$color"
+                px={6}
+                py={2}
+                rounded={4}
+                style={{ zIndex: 100 }}
+              >
+                <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
+                  {tooltipLabel}
+                </Text>
+              </YStack>
+            )}
+          </YStack>
+          {!isActive && (
+            <YStack position="relative">
+              <Button
+                size="$compact"
+                icon={Check}
+                chromeless
+                circular
+                onPress={handleAction(() => onActivate(config.id))}
+                onLongPress={() => showTooltip(t("settings.providers.activate"))}
+              />
+              {tooltipLabel === t("settings.providers.activate") && (
+                <YStack
+                  position="absolute"
+                  b="100%"
+                  mb={4}
+                  bg="$color"
+                  px={6}
+                  py={2}
+                  rounded={4}
+                  style={{ zIndex: 100 }}
+                >
+                  <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
+                    {tooltipLabel}
+                  </Text>
+                </YStack>
+              )}
+            </YStack>
+          )}
+          <YStack position="relative">
+            <Button
+              size="$compact"
+              icon={Trash2}
+              chromeless
+              circular
+              color="white"
+              bg={errorColor}
+              onPress={handleAction(() => onRemove(config.id))}
+              onLongPress={() => showTooltip(t("settings.providers.remove"))}
+            />
+            {tooltipLabel === t("settings.providers.remove") && (
+              <YStack
+                position="absolute"
+                b="100%"
+                mb={4}
+                bg="$color"
+                px={6}
+                py={2}
+                rounded={4}
+                style={{ zIndex: 100 }}
+              >
+                <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
+                  {tooltipLabel}
+                </Text>
+              </YStack>
+            )}
+          </YStack>
+        </XStack>
       </XStack>
 
       <Animated.View
