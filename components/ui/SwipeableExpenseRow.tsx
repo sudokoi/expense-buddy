@@ -19,6 +19,7 @@ interface SwipeableExpenseRowProps {
   instruments: PaymentInstrument[]
   subtitleMode: ExpenseRowSubtitleMode
   showPaymentMethod?: boolean
+  isReadOnly?: boolean
   onEdit?: (expense: Expense) => void
   onDelete?: (id: string) => void
 }
@@ -29,6 +30,7 @@ export const SwipeableExpenseRow = memo(function SwipeableExpenseRow({
   instruments,
   subtitleMode,
   showPaymentMethod = true,
+  isReadOnly = false,
   onEdit,
   onDelete,
 }: SwipeableExpenseRowProps) {
@@ -83,6 +85,19 @@ export const SwipeableExpenseRow = memo(function SwipeableExpenseRow({
     snapTo(0)
     onDelete?.(expense.id)
   }, [onDelete, expense.id, snapTo])
+
+  if (isReadOnly) {
+    return (
+      <ExpenseRow
+        expense={expense}
+        categoryInfo={categoryInfo}
+        instruments={instruments}
+        subtitleMode={subtitleMode}
+        showPaymentMethod={showPaymentMethod}
+        showActions={false}
+      />
+    )
+  }
 
   return (
     <XStack overflow="hidden">

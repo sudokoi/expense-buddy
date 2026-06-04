@@ -328,13 +328,10 @@ export default function SettingsScreen() {
     setShowGitHubEditor(false)
   }, [])
 
-  const handleEditProvider = useCallback(
-    (_config: ProviderConfig) => {
-      setShowGitHubEditor(true)
-      setAddingProviderKind(null)
-    },
-    []
-  )
+  const handleEditProvider = useCallback((_config: ProviderConfig) => {
+    setShowGitHubEditor(true)
+    setAddingProviderKind(null)
+  }, [])
 
   // App info handlers - use hook's checkForUpdates for manual checks
   // This bypasses dismissal so users can always check for updates from settings
@@ -744,7 +741,6 @@ export default function SettingsScreen() {
                       label: "Google Drive",
                       credentialId: result.providerId,
                       clientId,
-                      archiveFileName: "expenses-archive.zip",
                       accountEmail: result.accountEmail,
                     })
                     setAddingProviderKind(null)

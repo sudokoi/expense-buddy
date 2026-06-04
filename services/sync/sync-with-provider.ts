@@ -284,10 +284,7 @@ function formatError(error: unknown): { message: string; code?: string } {
  * removed files, and skips untouched files entirely, reducing API calls on
  * successive syncs.
  */
-function filterChangedFiles(
-  before: SyncSnapshot,
-  after: SyncSnapshot
-): SyncSnapshot {
+function filterChangedFiles(before: SyncSnapshot, after: SyncSnapshot): SyncSnapshot {
   const files: Record<string, string> = {}
 
   for (const [path, content] of Object.entries(after.files)) {

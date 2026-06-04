@@ -9,18 +9,25 @@ import type {
   SyncProviderError,
 } from "./provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
-import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../archive-utils"
 import { simpleHash } from "./sync-utils"
 import { APP_CONFIG } from "../../constants/app-config"
 import { Platform } from "react-native"
+
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
 const UPLOAD_API_BASE = "https://www.googleapis.com/upload/drive/v3"
+const YEAR_FILE_PREFIX = "expense-buddy-"
+const YEAR_FILE_SUFFIX = ".json"
 
 interface DriveFileMetadata {
   id: string
   name: string
   version: number
   modifiedTime: string
+}
+
+interface YearFileData {
+  v: number
+  f: Record<string, string>
 }
 
 export class GoogleDriveProvider implements SyncProvider {
@@ -51,10 +58,7 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const token = await this.getAccessToken()
     if (!token) {
-      return {
-        ok: false,
-        error: this.authError("AUTH_MISSING"),
-      }
+      return { ok: false, error: this.authError("AUTH_MISSING") }
     }
 
     try {
@@ -75,15 +79,9 @@ export class GoogleDriveProvider implements SyncProvider {
         }
       }
 
-      return {
-        ok: true,
-        label: "Google Drive (appDataFolder)",
-      }
+      return { ok: true, label: "Google Drive (appDataFolder)" }
     } catch (error) {
-      return {
-        ok: false,
-        error: this.toProviderError(error),
-      }
+      return { ok: false, error: this.toProviderError(error) }
     }
   }
 
@@ -100,19 +98,22 @@ export class GoogleDriveProvider implements SyncProvider {
     const token = await this.getAccessToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const archiveFile = await this.findArchiveFile(token)
-    if (!archiveFile) return null
-
-    const archiveContent = await this.downloadFile(token, archiveFile.id)
-    if (!archiveContent) return null
-
-    const entries = await unzipTextEntriesAsync(archiveContent)
-    if (!entries || entries.length === 0) return null
+    const yearFiles = await this.listYearFiles(token)
+    if (yearFiles.length === 0) return null
 
     const files: Record<string, string> = {}
-    for (const entry of entries) {
-      files[entry.path] = entry.content
+
+    for (const file of yearFiles) {
+      const content = await this.downloadFile(token, file.id)
+      if (!content) continue
+
+      const parsed = this.parseYearFile(content)
+      for (const [path, fileContent] of Object.entries(parsed.f)) {
+        files[path] = fileContent
+      }
     }
+
+    if (Object.keys(files).length === 0) return null
 
     const fileList = Object.entries(files).map(([path, content]) => ({
       path,
@@ -127,11 +128,7 @@ export class GoogleDriveProvider implements SyncProvider {
         files: fileList,
       },
       files,
-      remoteRevision: {
-        kind: "drive_version",
-        fileId: archiveFile.id,
-        version: archiveFile.version,
-      },
+      remoteRevision: { kind: "drive" },
     }
   }
 
@@ -148,32 +145,19 @@ export class GoogleDriveProvider implements SyncProvider {
     const token = await this.getAccessToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const archiveFile = await this.findArchiveFile(token)
-    if (!archiveFile) return false
+    const yearFiles = await this.listYearFiles(token)
+    if (yearFiles.length === 0) return false
 
-    try {
-      const response = await fetch(`${DRIVE_API_BASE}/files/${archiveFile.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        throw this.mapHttpError(response.status, "Failed to delete archive")
-      }
-
-      return true
-    } catch (error) {
-      if (error instanceof SyncProviderErrorClass) throw error
-      throw this.toProviderError(error)
+    for (const file of yearFiles) {
+      await this.deleteFile(token, file.id)
     }
+
+    return true
   }
 
   async writeSnapshot(
     snapshot: SyncSnapshot,
-    lastKnownRevision: RemoteRevision | null
+    _lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
@@ -187,19 +171,40 @@ export class GoogleDriveProvider implements SyncProvider {
     const token = await this.getAccessToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const entries = Object.entries(snapshot.files).map(([path, content]) => ({
-      path,
-      content,
-    }))
-    const archiveBase64 = await zipTextEntriesAsync(entries)
+    const currentYear = new Date().getFullYear()
+    const filesByYear = this.groupFilesByYear(snapshot.files, currentYear)
 
-    const archiveFile = await this.findArchiveFile(token)
+    for (const [yearStr, changedFiles] of Object.entries(filesByYear)) {
+      const fileName = this.yearFileName(parseInt(yearStr, 10))
+      const existingFile = await this.findFileByName(token, fileName)
 
-    if (archiveFile) {
-      await this.checkStaleWrite(archiveFile, lastKnownRevision)
-      await this.updateFile(token, archiveFile.id, archiveBase64)
-    } else {
-      await this.createFile(token, archiveBase64)
+      const existingContent = existingFile
+        ? await this.downloadFile(token, existingFile.id)
+        : null
+
+      const yearData: YearFileData = existingContent
+        ? this.parseYearFile(existingContent)
+        : { v: 1, f: {} }
+
+      for (const [path, content] of Object.entries(changedFiles)) {
+        if (content.length === 0) {
+          delete yearData.f[path]
+        } else {
+          yearData.f[path] = content
+        }
+      }
+
+      const hasEntries = Object.keys(yearData.f).length > 0
+
+      if (existingFile) {
+        if (hasEntries) {
+          await this.updateFile(token, existingFile.id, JSON.stringify(yearData))
+        } else {
+          await this.deleteFile(token, existingFile.id)
+        }
+      } else if (hasEntries) {
+        await this.createFile(token, fileName, JSON.stringify(yearData))
+      }
     }
   }
 
@@ -226,6 +231,185 @@ export class GoogleDriveProvider implements SyncProvider {
       return { connected: response.ok, lastSyncTime: null }
     } catch {
       return { connected: false, lastSyncTime: null }
+    }
+  }
+
+  private yearFileName(year: number): string {
+    return `${YEAR_FILE_PREFIX}${year}${YEAR_FILE_SUFFIX}`
+  }
+
+  private getYearForPath(path: string, currentYear: number): number {
+    const match = path.match(/(\d{4})-\d{2}-\d{2}\.csv$/)
+    return match ? parseInt(match[1], 10) : currentYear
+  }
+
+  private groupFilesByYear(
+    files: Record<string, string>,
+    currentYear: number
+  ): Record<string, Record<string, string>> {
+    const grouped: Record<string, Record<string, string>> = {}
+    for (const [path, content] of Object.entries(files)) {
+      const year = String(this.getYearForPath(path, currentYear))
+      if (!grouped[year]) grouped[year] = {}
+      grouped[year][path] = content
+    }
+    return grouped
+  }
+
+  private async listYearFiles(token: string): Promise<DriveFileMetadata[]> {
+    try {
+      const encodedPrefix = encodeURIComponent(YEAR_FILE_PREFIX)
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name contains '${encodedPrefix}'&fields=files(id,name,version,modifiedTime)`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw this.mapHttpError(response.status, "Failed to list files")
+      }
+
+      const data = await response.json()
+      const files: DriveFileMetadata[] = data.files ?? []
+      return files.filter(
+        (f) => f.name.startsWith(YEAR_FILE_PREFIX) && f.name.endsWith(YEAR_FILE_SUFFIX)
+      )
+    } catch (error) {
+      if (error instanceof SyncProviderErrorClass) throw error
+      throw this.toProviderError(error)
+    }
+  }
+
+  private async findFileByName(
+    token: string,
+    name: string
+  ): Promise<DriveFileMetadata | null> {
+    try {
+      const encodedName = encodeURIComponent(name)
+      const response = await fetch(
+        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name='${encodedName}'&fields=files(id,name,version,modifiedTime)`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw this.mapHttpError(response.status, "Failed to list files")
+      }
+
+      const data = await response.json()
+      const files: DriveFileMetadata[] = data.files ?? []
+      return files.length > 0 ? files[0] : null
+    } catch (error) {
+      if (error instanceof SyncProviderErrorClass) throw error
+      throw this.toProviderError(error)
+    }
+  }
+
+  private async downloadFile(token: string, fileId: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!response.ok) {
+        throw this.mapHttpError(response.status, "Failed to download file")
+      }
+
+      return await response.text()
+    } catch (error) {
+      if (error instanceof SyncProviderErrorClass) throw error
+      throw this.toProviderError(error)
+    }
+  }
+
+  private parseYearFile(content: string): YearFileData {
+    if (!content || content.trim().length === 0) {
+      return { v: 1, f: {} }
+    }
+    try {
+      const parsed = JSON.parse(content)
+      if (parsed && typeof parsed === "object" && parsed.v === 1 && parsed.f) {
+        return parsed as YearFileData
+      }
+      return { v: 1, f: {} }
+    } catch {
+      throw new SyncProviderErrorClass(
+        "ARCHIVE_CORRUPT",
+        "google_drive",
+        "Year file is corrupted",
+        false
+      )
+    }
+  }
+
+  private async createFile(token: string, fileName: string, body: string): Promise<void> {
+    const boundary = `boundary_${Date.now()}`
+    const metadata = JSON.stringify({
+      name: fileName,
+      parents: ["appDataFolder"],
+      mimeType: "application/json",
+    })
+
+    const multipartBody = [
+      `--${boundary}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      metadata,
+      `--${boundary}`,
+      "Content-Type: application/json",
+      "",
+      body,
+      `--${boundary}--`,
+    ].join("\r\n")
+
+    const response = await fetch(`${UPLOAD_API_BASE}/files?uploadType=multipart`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body: multipartBody,
+    })
+
+    if (!response.ok) {
+      throw this.mapHttpError(response.status, "Failed to create file")
+    }
+  }
+
+  private async updateFile(token: string, fileId: string, body: string): Promise<void> {
+    const response = await fetch(`${UPLOAD_API_BASE}/files/${fileId}?uploadType=media`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body,
+    })
+
+    if (!response.ok) {
+      throw this.mapHttpError(response.status, "Failed to update file")
+    }
+  }
+
+  private async deleteFile(token: string, fileId: string): Promise<void> {
+    const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      throw this.mapHttpError(response.status, "Failed to delete file")
     }
   }
 
@@ -294,121 +478,6 @@ export class GoogleDriveProvider implements SyncProvider {
         client_id: this.config.clientId ?? "",
       },
     })
-  }
-
-  private async findArchiveFile(token: string): Promise<DriveFileMetadata | null> {
-    try {
-      const response = await fetch(
-        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name='${this.config.archiveFileName}'&fields=files(id,name,version,modifiedTime)`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw this.mapHttpError(response.status, "Failed to list files")
-      }
-
-      const data = await response.json()
-      const files: DriveFileMetadata[] = data.files ?? []
-      return files.length > 0 ? files[0] : null
-    } catch (error) {
-      if (error instanceof SyncProviderErrorClass) throw error
-      throw this.toProviderError(error)
-    }
-  }
-
-  private async downloadFile(token: string, fileId: string): Promise<string | null> {
-    try {
-      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?alt=media`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw this.mapHttpError(response.status, "Failed to download file")
-      }
-
-      return await response.text()
-    } catch (error) {
-      if (error instanceof SyncProviderErrorClass) throw error
-      throw this.toProviderError(error)
-    }
-  }
-
-  private async checkStaleWrite(
-    remoteFile: DriveFileMetadata,
-    lastKnownRevision: RemoteRevision | null
-  ): Promise<void> {
-    if (!lastKnownRevision || lastKnownRevision.kind !== "drive_version") {
-      return
-    }
-
-    if (remoteFile.version > lastKnownRevision.version) {
-      throw new SyncProviderErrorClass(
-        "CONFLICT",
-        "google_drive",
-        "Remote archive has been modified since last sync",
-        false
-      )
-    }
-  }
-
-  private async createFile(token: string, archiveBase64: string): Promise<void> {
-    const boundary = `boundary_${Date.now()}`
-    const metadata = JSON.stringify({
-      name: this.config.archiveFileName,
-      parents: ["appDataFolder"],
-      mimeType: "application/zip",
-    })
-
-    const body = [
-      `--${boundary}`,
-      "Content-Type: application/json; charset=UTF-8",
-      "",
-      metadata,
-      `--${boundary}`,
-      "Content-Type: application/zip",
-      "",
-      archiveBase64,
-      `--${boundary}--`,
-    ].join("\r\n")
-
-    const response = await fetch(`${UPLOAD_API_BASE}/files?uploadType=multipart`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-      },
-      body,
-    })
-
-    if (!response.ok) {
-      throw this.mapHttpError(response.status, "Failed to create archive")
-    }
-  }
-
-  private async updateFile(
-    token: string,
-    fileId: string,
-    archiveBase64: string
-  ): Promise<void> {
-    const response = await fetch(`${UPLOAD_API_BASE}/files/${fileId}?uploadType=media`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/zip",
-      },
-      body: archiveBase64,
-    })
-
-    if (!response.ok) {
-      throw this.mapHttpError(response.status, "Failed to update archive")
-    }
   }
 
   private mapHttpError(status: number, fallbackMessage: string): SyncProviderError {

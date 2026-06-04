@@ -19,7 +19,6 @@ export interface GoogleDriveProviderConfig extends BaseSyncProviderConfig {
   kind: "google_drive"
   clientId: string
   accountEmail?: string
-  archiveFileName: string
 }
 
 export type ProviderConfig = GitHubProviderConfig | GoogleDriveProviderConfig
@@ -72,9 +71,7 @@ export class SyncProviderError extends Error {
   }
 }
 
-export type RemoteRevision =
-  | { kind: "git_sha"; sha: string }
-  | { kind: "drive_version"; fileId: string; version: number }
+export type RemoteRevision = { kind: "git_sha"; sha: string } | { kind: "drive" }
 
 export interface SyncSnapshot {
   manifest: {

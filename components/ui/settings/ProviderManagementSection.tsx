@@ -201,9 +201,7 @@ function SwipeableProviderCard({
         >
           <YStack flex={1} gap={UI_SPACE.micro}>
             <XStack gap={UI_SPACE.control} items="center">
-              <Text fontWeight={UI_FONT_WEIGHT.medium}>
-                {config.label || kindLabel}
-              </Text>
+              <Text fontWeight={UI_FONT_WEIGHT.medium}>{config.label || kindLabel}</Text>
               {isActive && (
                 <YStack
                   bg={successColor}
@@ -221,12 +219,7 @@ function SwipeableProviderCard({
                 </YStack>
               )}
               {!isReconciled && (
-                <YStack
-                  bg="$yellow9"
-                  px={UI_SPACE.micro}
-                  py={1}
-                  rounded={UI_RADIUS.chip}
-                >
+                <YStack bg="$yellow9" px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
                   <Text
                     fontSize="$caption"
                     color="white"

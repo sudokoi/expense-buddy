@@ -7,16 +7,7 @@ jest.mock("react-native", () => ({
   Platform: { OS: "android" },
 }))
 
-jest.mock("../../archive-utils", () => ({
-  zipTextEntriesAsync: jest.fn(),
-  unzipTextEntriesAsync: jest.fn(),
-}))
-
 import { GoogleDriveProvider } from "../google-drive-provider"
-import { zipTextEntriesAsync, unzipTextEntriesAsync } from "../../archive-utils"
-
-const mockZip = zipTextEntriesAsync as jest.Mock
-const mockUnzip = unzipTextEntriesAsync as jest.Mock
 
 const mockCredentialStore: CredentialStore = {
   get: jest.fn(),
@@ -33,7 +24,6 @@ function createConfig(
     label: "Test Drive",
     credentialId: "google-creds",
     clientId: "test-client-id.apps.googleusercontent.com",
-    archiveFileName: "expenses-archive.zip",
     ...overrides,
   }
 }
@@ -68,9 +58,7 @@ describe("GoogleDriveProvider", () => {
 
   describe("testConnection", () => {
     it("returns ok when Drive API responds", async () => {
-      global.fetch = mockFetch({
-        json: { files: [] },
-      })
+      global.fetch = mockFetch({ json: { files: [] } })
 
       const result = await provider.testConnection()
       expect(result.ok).toBe(true)
@@ -111,25 +99,75 @@ describe("GoogleDriveProvider", () => {
   })
 
   describe("readSnapshot", () => {
-    it("returns null when no archive file exists", async () => {
-      global.fetch = mockFetch({
-        json: { files: [] },
-      })
+    it("returns null when no year files exist", async () => {
+      global.fetch = mockFetch({ json: { files: [] } })
 
       const result = await provider.readSnapshot()
       expect(result).toBeNull()
     })
 
-    it("returns SyncSnapshot when archive exists", async () => {
-      const findResponse = Promise.resolve({
+    it("returns SyncSnapshot from year files", async () => {
+      const listResponse = Promise.resolve({
         ok: true,
         status: 200,
         json: async () => ({
           files: [
             {
-              id: "file-123",
-              name: "expenses-archive.zip",
-              version: 5,
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
+              modifiedTime: "2024-06-01T00:00:00Z",
+            },
+            {
+              id: "file-2025",
+              name: "expense-buddy-2025.json",
+              version: 2,
+              modifiedTime: "2025-01-01T00:00:00Z",
+            },
+          ],
+        }),
+        text: async () => "",
+      })
+
+      const download2024 = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2024-06-01.csv": "id,amount\n1,100" } }),
+      })
+
+      const download2025 = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2025-01-15.csv": "id,amount\n2,200" } }),
+      })
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(listResponse)
+        .mockResolvedValueOnce(download2024)
+        .mockResolvedValueOnce(download2025)
+
+      const result = await provider.readSnapshot()
+      expect(result).not.toBeNull()
+      expect(result!.files["expenses/2024-06-01.csv"]).toBe("id,amount\n1,100")
+      expect(result!.files["expenses/2025-01-15.csv"]).toBe("id,amount\n2,200")
+      expect(result!.remoteRevision).toEqual({ kind: "drive" })
+    })
+
+    it("returns null when all year files are empty", async () => {
+      const listResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: [
+            {
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
               modifiedTime: "2024-06-01T00:00:00Z",
             },
           ],
@@ -141,57 +179,13 @@ describe("GoogleDriveProvider", () => {
         ok: true,
         status: 200,
         json: async () => ({}),
-        text: async () => "base64-encoded-archive-content",
+        text: async () => JSON.stringify({ v: 1, f: {} }),
       })
 
-      global.fetch = jest
-        .fn()
-        .mockResolvedValueOnce(findResponse)
-        .mockResolvedValueOnce(downloadResponse)
-
-      mockUnzip.mockResolvedValue([
-        { path: "2024-06-01.csv", content: "id,amount\n1,100" },
-        { path: "settings.json", content: '{"theme":"dark"}' },
-      ])
-
-      const result = await provider.readSnapshot()
-      expect(result).not.toBeNull()
-      expect(result!.files["2024-06-01.csv"]).toBe("id,amount\n1,100")
-      expect(result!.remoteRevision).toEqual({
-        kind: "drive_version",
-        fileId: "file-123",
-        version: 5,
-      })
-    })
-
-    it("returns null when unzip returns empty", async () => {
-      const listResponse = {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          files: [
-            {
-              id: "file-123",
-              name: "expenses-archive.zip",
-              version: 3,
-              modifiedTime: "2024-06-01T00:00:00Z",
-            },
-          ],
-        }),
-        text: async () => "",
-      }
-      const downloadResponse = {
-        ok: true,
-        status: 200,
-        json: async () => ({}),
-        text: async () => "base64-archive",
-      }
       global.fetch = jest
         .fn()
         .mockResolvedValueOnce(listResponse)
         .mockResolvedValueOnce(downloadResponse)
-
-      mockUnzip.mockResolvedValue([])
 
       const result = await provider.readSnapshot()
       expect(result).toBeNull()
@@ -211,59 +205,78 @@ describe("GoogleDriveProvider", () => {
         generatedAt: "2024-06-01T00:00:00Z",
         appVersion: APP_CONFIG.version,
         files: [
-          { path: "2024-06-01.csv", hash: "abc123" },
-          { path: "2024-06-02.csv", hash: "def456" },
+          { path: "expenses/2024-06-01.csv", hash: "abc123" },
+          { path: "expenses/2024-06-02.csv", hash: "def456" },
+          { path: "settings.json", hash: "xyz789" },
         ],
       },
       files: {
-        "2024-06-01.csv": "id,amount\n1,100",
-        "2024-06-02.csv": "id,amount\n2,200",
+        "expenses/2024-06-01.csv": "id,amount\n1,100",
+        "expenses/2024-06-02.csv": "id,amount\n2,200",
+        "settings.json": '{"theme":"dark"}',
       },
       remoteRevision: null,
     }
 
-    it("creates a new archive when none exists", async () => {
-      mockZip.mockResolvedValue("new-base64-archive")
-
-      const findResponse = Promise.resolve({
+    it("creates new year files when none exist", async () => {
+      const list2024Response = Promise.resolve({
         ok: true,
         status: 200,
         json: async () => ({ files: [] }),
         text: async () => "",
       })
 
-      const createResponse = Promise.resolve({
+      const listSettingsResponse = Promise.resolve({
         ok: true,
         status: 200,
-        json: async () => ({ id: "new-file" }),
+        json: async () => ({ files: [] }),
+        text: async () => "",
+      })
+
+      const create2024Response = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ id: "new-2024" }),
+        text: async () => "",
+      })
+
+      const createSettingsResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ id: "new-settings" }),
         text: async () => "",
       })
 
       global.fetch = jest
         .fn()
-        .mockResolvedValueOnce(findResponse)
-        .mockResolvedValueOnce(createResponse)
+        .mockResolvedValueOnce(list2024Response)
+        .mockResolvedValueOnce(create2024Response)
+        .mockResolvedValueOnce(listSettingsResponse)
+        .mockResolvedValueOnce(createSettingsResponse)
 
       await provider.writeSnapshot(snapshot, null)
 
-      expect(mockZip).toHaveBeenCalledWith([
-        { path: "2024-06-01.csv", content: "id,amount\n1,100" },
-        { path: "2024-06-02.csv", content: "id,amount\n2,200" },
-      ])
+      const calls = (global.fetch as jest.Mock).mock.calls
+      const createCalls = calls.filter((c: any[]) =>
+        String(c[0]).includes("upload/drive")
+      )
+      expect(createCalls.length).toBe(2)
+
+      const year2024Body = createCalls[0][1]?.body ?? ""
+      expect(year2024Body).toContain("expenses/2024-06-01.csv")
+      expect(year2024Body).toContain("id,amount\\n1,100")
     })
 
-    it("updates existing archive", async () => {
-      mockZip.mockResolvedValue("updated-base64-archive")
-
-      const findResponse = Promise.resolve({
+    it("updates existing year file", async () => {
+      const find2024Response = Promise.resolve({
         ok: true,
         status: 200,
         json: async () => ({
           files: [
             {
-              id: "file-123",
-              name: "expenses-archive.zip",
-              version: 5,
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
               modifiedTime: "2024-06-01T00:00:00Z",
             },
           ],
@@ -271,57 +284,101 @@ describe("GoogleDriveProvider", () => {
         text: async () => "",
       })
 
+      const downloadResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2024-05-01.csv": "id,amount\n3,300" } }),
+      })
+
       const updateResponse = Promise.resolve({
         ok: true,
         status: 200,
-        json: async () => ({ id: "file-123" }),
+        json: async () => ({}),
         text: async () => "",
       })
 
       global.fetch = jest
         .fn()
-        .mockResolvedValueOnce(findResponse)
+        .mockResolvedValueOnce(find2024Response)
+        .mockResolvedValueOnce(downloadResponse)
         .mockResolvedValueOnce(updateResponse)
 
-      const revision: RemoteRevision = {
-        kind: "drive_version",
-        fileId: "file-123",
-        version: 5,
+      const revision: RemoteRevision = { kind: "drive" }
+
+      const smallSnapshot: SyncSnapshot = {
+        manifest: {
+          version: 1,
+          generatedAt: "2024-06-01T00:00:00Z",
+          appVersion: APP_CONFIG.version,
+          files: [],
+        },
+        files: { "expenses/2024-06-01.csv": "id,amount\n1,100" },
+        remoteRevision: revision,
       }
 
-      await provider.writeSnapshot(snapshot, revision)
+      await provider.writeSnapshot(smallSnapshot, revision)
+
+      const updateCall = (global.fetch as jest.Mock).mock.calls[2]
+      expect(updateCall[0]).toContain("upload/drive/v3/files/file-2024")
+      expect(updateCall[1]?.method ?? "PATCH").toContain("PATCH")
     })
 
-    it("throws CONFLICT on stale write detection", async () => {
-      mockZip.mockResolvedValue("archive-data")
-
-      const findResponse = Promise.resolve({
+    it("removes entries with empty content and deletes file when empty", async () => {
+      const find2024Response = Promise.resolve({
         ok: true,
         status: 200,
         json: async () => ({
           files: [
             {
-              id: "file-123",
-              name: "expenses-archive.zip",
-              version: 6,
-              modifiedTime: "2024-06-02T00:00:00Z",
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
+              modifiedTime: "2024-06-01T00:00:00Z",
             },
           ],
         }),
         text: async () => "",
       })
 
-      global.fetch = jest.fn().mockResolvedValueOnce(findResponse)
+      const downloadResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2024-06-01.csv": "id,amount\n1,100" } }),
+      })
 
-      const revision: RemoteRevision = {
-        kind: "drive_version",
-        fileId: "file-123",
-        version: 5,
+      const deleteResponse = Promise.resolve({
+        ok: true,
+        status: 204,
+        json: async () => ({}),
+        text: async () => "",
+      })
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(find2024Response)
+        .mockResolvedValueOnce(downloadResponse)
+        .mockResolvedValueOnce(deleteResponse)
+
+      const deleteSnapshot: SyncSnapshot = {
+        manifest: {
+          version: 1,
+          generatedAt: "2024-06-01T00:00:00Z",
+          appVersion: APP_CONFIG.version,
+          files: [],
+        },
+        files: { "expenses/2024-06-01.csv": "" },
+        remoteRevision: null,
       }
 
-      await expect(provider.writeSnapshot(snapshot, revision)).rejects.toThrow(
-        "Remote archive has been modified since last sync"
-      )
+      await provider.writeSnapshot(deleteSnapshot, null)
+
+      const deleteCall = (global.fetch as jest.Mock).mock.calls[2]
+      expect(deleteCall[0]).toContain("drive/v3/files/file-2024")
+      expect(deleteCall[1]?.method ?? "DELETE").toContain("DELETE")
     })
 
     it("throws AUTH_MISSING when no token", async () => {
@@ -357,43 +414,65 @@ describe("GoogleDriveProvider", () => {
   })
 
   describe("deleteRemoteData", () => {
-    it("returns false when no archive file exists", async () => {
+    it("returns false when no year files exist", async () => {
       global.fetch = mockFetch({ json: { files: [] } })
 
       await expect(provider.deleteRemoteData()).resolves.toBe(false)
     })
 
-    it("deletes the archive when it exists", async () => {
-      const listResponse = {
+    it("deletes all year files", async () => {
+      const listResponse = Promise.resolve({
         ok: true,
         status: 200,
         json: async () => ({
           files: [
             {
-              id: "file-123",
-              name: "expenses-archive.zip",
-              version: 3,
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
               modifiedTime: "2024-06-01T00:00:00Z",
+            },
+            {
+              id: "file-2025",
+              name: "expense-buddy-2025.json",
+              version: 2,
+              modifiedTime: "2025-01-01T00:00:00Z",
             },
           ],
         }),
         text: async () => "",
-      }
-      const deleteResponse = {
+      })
+
+      const delete2024Response = Promise.resolve({
         ok: true,
         status: 204,
         json: async () => ({}),
         text: async () => "",
-      }
+      })
+
+      const delete2025Response = Promise.resolve({
+        ok: true,
+        status: 204,
+        json: async () => ({}),
+        text: async () => "",
+      })
 
       global.fetch = jest
         .fn()
         .mockResolvedValueOnce(listResponse)
-        .mockResolvedValueOnce(deleteResponse)
+        .mockResolvedValueOnce(delete2024Response)
+        .mockResolvedValueOnce(delete2025Response)
 
       await expect(provider.deleteRemoteData()).resolves.toBe(true)
-      expect(global.fetch).toHaveBeenLastCalledWith(
-        "https://www.googleapis.com/drive/v3/files/file-123",
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        "https://www.googleapis.com/drive/v3/files/file-2024",
+        expect.objectContaining({ method: "DELETE" })
+      )
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        3,
+        "https://www.googleapis.com/drive/v3/files/file-2025",
         expect.objectContaining({ method: "DELETE" })
       )
     })

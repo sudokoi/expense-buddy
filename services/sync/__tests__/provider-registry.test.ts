@@ -29,7 +29,6 @@ const mockDriveConfig: ProviderConfig = {
   label: "Test Drive",
   credentialId: "cred-2",
   clientId: "test-client-id.apps.googleusercontent.com",
-  archiveFileName: "backup.zip",
 }
 
 describe("provider-registry", () => {

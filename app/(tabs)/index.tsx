@@ -28,10 +28,7 @@ import { useSettings } from "../../stores/hooks"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { useSyncMachine } from "../../hooks/use-sync-machine"
 import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
-import {
-  isProviderReconciled,
-  markProviderReconciled,
-} from "../../services/sync-queue"
+import { isProviderReconciled, markProviderReconciled } from "../../services/sync-queue"
 import {
   UI_RADIUS,
   UI_SPACE,

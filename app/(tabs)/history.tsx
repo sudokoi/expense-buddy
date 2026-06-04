@@ -15,6 +15,7 @@ import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
+import { parseISO, subYears } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import type { Expense, PaymentMethodType } from "../../types/expense"
 import type { Category } from "../../types/category"
@@ -171,6 +172,7 @@ export default function HistoryScreen() {
   const [showFilterSheet, setShowFilterSheet] = useState(false)
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
+  const readOnlyCutoff = useMemo(() => subYears(new Date(), 1), [])
 
   // Handle back button to close dialogs instead of navigating
   React.useEffect(() => {
@@ -532,6 +534,8 @@ export default function HistoryScreen() {
         categoryByLabel.get(item.expense.category) ??
         getFallbackCategory(item.expense.category)
 
+      const isReadOnly = parseISO(item.expense.date) < readOnlyCutoff
+
       return (
         <SwipeableExpenseRow
           expense={item.expense}
@@ -540,10 +544,11 @@ export default function HistoryScreen() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           instruments={allInstruments}
+          isReadOnly={isReadOnly}
         />
       )
     },
-    [handleEdit, handleDelete, allInstruments, categoryByLabel]
+    [handleEdit, handleDelete, allInstruments, categoryByLabel, readOnlyCutoff]
   )
 
   // Key extractor for FlashList

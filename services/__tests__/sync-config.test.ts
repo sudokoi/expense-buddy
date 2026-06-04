@@ -163,7 +163,6 @@ describe("loadSyncConfig", () => {
       label: "Google Drive",
       credentialId: "drive-creds",
       clientId: "test.apps.googleusercontent.com",
-      archiveFileName: "backup.zip",
     })
 
     const result = await loadSyncConfig()

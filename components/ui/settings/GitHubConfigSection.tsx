@@ -268,7 +268,11 @@ export function GitHubConfigSection({
   }, [])
 
   return (
-    <Accordion type="single" collapsible defaultValue={defaultExpanded ? "github-config" : undefined}>
+    <Accordion
+      type="single"
+      collapsible
+      defaultValue={defaultExpanded ? "github-config" : undefined}
+    >
       <Accordion.Item value="github-config">
         <Accordion.Trigger
           bg="$backgroundHover"

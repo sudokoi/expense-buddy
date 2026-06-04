@@ -13,7 +13,14 @@ import {
 import { logAsync } from "../../services/logger"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import { Calendar, Check, ChevronDown, ChevronUp, Download, Plus } from "@tamagui/lucide-icons-2"
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Plus,
+} from "@tamagui/lucide-icons-2"
 import { Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
