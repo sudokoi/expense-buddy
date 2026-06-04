@@ -39,6 +39,7 @@ import { LocalizationSection } from "../../components/ui/settings/LocalizationSe
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
+import type { ProviderConfig } from "../../services/sync/provider-types"
 import { credentialStore } from "../../services/sync/credential-store"
 import { isProviderReconciled, markProviderReconciled } from "../../services/sync-queue"
 import { GoogleOAuthError } from "../../services/sync/google-oauth-service"
@@ -323,6 +324,13 @@ export default function SettingsScreen() {
   const handleAddProvider = useCallback((kind: "github" | "google_drive") => {
     setAddingProviderKind(kind)
   }, [])
+
+  const handleEditProvider = useCallback(
+    async (config: ProviderConfig) => {
+      setAddingProviderKind(config.kind)
+    },
+    []
+  )
 
   // App info handlers - use hook's checkForUpdates for manual checks
   // This bypasses dismissal so users can always check for updates from settings
@@ -667,6 +675,7 @@ export default function SettingsScreen() {
           <ProviderManagementSection
             onNotification={handleNotification}
             onAddProvider={handleAddProvider}
+            onEditProvider={handleEditProvider}
             onProviderMutated={handleProviderMutated}
           />
 

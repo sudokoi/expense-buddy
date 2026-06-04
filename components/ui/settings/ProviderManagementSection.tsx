@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Button } from "tamagui"
 import { Alert, Platform } from "react-native"
-import { X, Plus } from "@tamagui/lucide-icons-2"
+import { X, Plus, Pencil } from "@tamagui/lucide-icons-2"
 import type {
   ProviderConfig,
   SyncProvidersState,
@@ -27,6 +27,7 @@ interface ProviderItemProps {
   isActive: boolean
   isReconciled: boolean
   onActivate: (id: string) => void
+  onEdit: (config: ProviderConfig) => void
   onRemove: (id: string) => void
   onTestConnection: (config: ProviderConfig) => void
   isTesting: boolean
@@ -39,6 +40,7 @@ function ProviderCard({
   isActive,
   isReconciled,
   onActivate,
+  onEdit,
   onRemove,
   onTestConnection,
   isTesting,
@@ -101,6 +103,11 @@ function ProviderCard({
       </YStack>
 
       <XStack gap={UI_SPACE.micro} flexWrap="wrap" items="center">
+        {config.kind === "github" && (
+          <Button size="$compact" icon={Pencil} onPress={() => onEdit(config)}>
+            {t("settings.providers.edit")}
+          </Button>
+        )}
         <Button
           size="$compact"
           onPress={() => onTestConnection(config)}
@@ -128,12 +135,14 @@ function ProviderCard({
 export interface ProviderManagementSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
   onAddProvider: (kind: "github" | "google_drive") => void
+  onEditProvider?: (config: ProviderConfig) => void
   onProviderMutated?: () => void
 }
 
 export function ProviderManagementSection({
   onNotification,
   onAddProvider,
+  onEditProvider,
   onProviderMutated,
 }: ProviderManagementSectionProps) {
   const { t } = useTranslation()
@@ -269,6 +278,7 @@ export function ProviderManagementSection({
               isActive={config.id === providerState.activeProviderId}
               isReconciled={reconciledMap[config.id] ?? false}
               onActivate={handleActivate}
+              onEdit={onEditProvider ?? (() => {})}
               onRemove={handleRemove}
               onTestConnection={handleTestConnection}
               isTesting={testingId === config.id}
