@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
-import { XStack, Input, Button } from "tamagui"
+import { XStack, Input } from "tamagui"
+import { useTranslation } from "react-i18next"
 import { X } from "@tamagui/lucide-icons-2"
+import { IconActionButton } from "../ui/IconActionButton"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
@@ -12,6 +14,7 @@ interface SearchFilterProps {
 
 export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilterProps) {
   const [inputValue, setInputValue] = useState(value)
+  const { t } = useTranslation()
 
   // Debounce the actual filter update
   useEffect(() => {
@@ -46,7 +49,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
         placeholderTextColor="$color"
       />
       {inputValue.length > 0 && (
-        <Button
+        <IconActionButton
           size="$chip"
           circular
           icon={X}
@@ -54,6 +57,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
             setInputValue("")
             onChange("")
           }}
+          tooltip={t("common.clear")}
         />
       )}
     </XStack>

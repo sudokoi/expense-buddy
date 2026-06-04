@@ -4,8 +4,9 @@ import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "ta
 import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories, useNotifications } from "../../stores/hooks"
 import { useRouter } from "expo-router"
-import { Dimensions, Platform } from "react-native"
+import { Animated, Dimensions, Easing, Platform } from "react-native"
 import React, { startTransition } from "react"
+import { IconActionButton } from "../../components/ui/IconActionButton"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
@@ -26,7 +27,7 @@ import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { useSyncMachine } from "../../hooks/use-sync-machine"
-import { RefreshCw, MessageSquare } from "@tamagui/lucide-icons-2"
+import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
 import {
   isProviderReconciled,
   markProviderReconciled,
@@ -91,6 +92,7 @@ export default function DashboardScreen() {
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
   const [hasNonGitHubProvider, setHasNonGitHubProvider] = React.useState(false)
+  const syncSpin = React.useRef(new Animated.Value(0)).current
 
   React.useEffect(() => {
     let cancelled = false
@@ -243,6 +245,31 @@ export default function DashboardScreen() {
     })
   }, [syncMachine, state.expenses, settings, addNotification])
 
+  React.useEffect(() => {
+    if (!syncMachine.isSyncing) {
+      syncSpin.stopAnimation()
+      syncSpin.setValue(0)
+      return
+    }
+
+    const loop = Animated.loop(
+      Animated.timing(syncSpin, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    )
+
+    loop.start()
+    return () => loop.stop()
+  }, [syncMachine.isSyncing, syncSpin])
+
+  const syncRotate = syncSpin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  })
+
   return (
     <ScreenContainer>
       {/* Header */}
@@ -254,18 +281,28 @@ export default function DashboardScreen() {
         </YStack>
         <XStack gap={UI_SPACE.control}>
           {hasSyncProvider && (
-            <Button
+            <IconActionButton
               size="$control"
               onPress={handleSync}
-              icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
+              icon={
+                <Animated.View style={{ transform: [{ rotate: syncRotate }] }}>
+                  <RefreshCw size={UI_ICON_SIZE.medium} />
+                </Animated.View>
+              }
+              tooltip={
+                syncMachine.isSyncing
+                  ? t("settings.autoSync.syncing")
+                  : t("settings.autoSync.syncNow")
+              }
             />
           )}
           {Platform.OS === "android" ? (
-            <Button
+            <IconActionButton
               size="$control"
               theme="accent"
               onPress={handleSmsImport}
-              icon={<MessageSquare size={UI_ICON_SIZE.medium} />}
+              icon={<Download size={UI_ICON_SIZE.medium} />}
+              tooltip={t("add.importSms")}
             />
           ) : null}
         </XStack>

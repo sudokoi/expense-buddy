@@ -355,4 +355,53 @@ describe("GoogleDriveProvider", () => {
       expect(status.connected).toBe(false)
     })
   })
+
+  describe("deleteRemoteData", () => {
+    it("returns false when no archive file exists", async () => {
+      global.fetch = mockFetch({ json: { files: [] } })
+
+      await expect(provider.deleteRemoteData()).resolves.toBe(false)
+    })
+
+    it("deletes the archive when it exists", async () => {
+      const listResponse = {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: [
+            {
+              id: "file-123",
+              name: "expenses-archive.zip",
+              version: 3,
+              modifiedTime: "2024-06-01T00:00:00Z",
+            },
+          ],
+        }),
+        text: async () => "",
+      }
+      const deleteResponse = {
+        ok: true,
+        status: 204,
+        json: async () => ({}),
+        text: async () => "",
+      }
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(listResponse)
+        .mockResolvedValueOnce(deleteResponse)
+
+      await expect(provider.deleteRemoteData()).resolves.toBe(true)
+      expect(global.fetch).toHaveBeenLastCalledWith(
+        "https://www.googleapis.com/drive/v3/files/file-123",
+        expect.objectContaining({ method: "DELETE" })
+      )
+    })
+
+    it("throws AUTH_MISSING when no token", async () => {
+      ;(mockCredentialStore.get as jest.Mock).mockResolvedValue(null)
+
+      await expect(provider.deleteRemoteData()).rejects.toThrow(/AUTH_MISSING/)
+    })
+  })
 })

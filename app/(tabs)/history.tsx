@@ -26,7 +26,7 @@ import {
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
-import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import { SwipeableExpenseRow } from "../../components/ui/SwipeableExpenseRow"
 import { useTranslation } from "react-i18next"
 import { FilterSheet } from "../../components/history/FilterSheet"
 import type {
@@ -533,14 +533,13 @@ export default function HistoryScreen() {
         getFallbackCategory(item.expense.category)
 
       return (
-        <ExpenseRow
+        <SwipeableExpenseRow
           expense={item.expense}
           categoryInfo={categoryInfo}
           subtitleMode="time"
           onEdit={handleEdit}
           onDelete={handleDelete}
           instruments={allInstruments}
-          showActions
         />
       )
     },

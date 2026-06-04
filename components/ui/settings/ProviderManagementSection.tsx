@@ -1,15 +1,17 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { YStack, XStack, Text, Button, View } from "tamagui"
 import { Alert, Platform, Animated, PanResponder } from "react-native"
-import { Plus, Pencil, Play, Trash2, Check } from "@tamagui/lucide-icons-2"
+import { Plus, Pencil, Play, Trash2, Check, X } from "@tamagui/lucide-icons-2"
 import type {
   ProviderConfig,
   SyncProvidersState,
 } from "../../../services/sync/provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "../../../services/sync/provider-types"
 import { providerSettingsStore } from "../../../services/sync/provider-settings-store"
+import { providerStateStore } from "../../../services/sync/provider-state-store"
 import { createProvider } from "../../../services/sync/provider-registry"
 import { isProviderReconciled } from "../../../services/sync-queue"
+import { IconActionButton } from "../IconActionButton"
 import { useTranslation } from "react-i18next"
 import {
   UI_RADIUS,
@@ -21,8 +23,9 @@ import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
-const SWIPE_THRESHOLD = 60
 const ACTION_WIDTH = 260
+const SWIPE_THRESHOLD = 60
+const OPEN_RATIO = 0.85
 
 interface ProviderItemProps {
   config: ProviderConfig
@@ -30,6 +33,7 @@ interface ProviderItemProps {
   isReconciled: boolean
   onActivate: (id: string) => void
   onEdit: (config: ProviderConfig) => void
+  onDeleteRemote: (config: ProviderConfig) => void
   onRemove: (id: string) => void
   onTestConnection: (config: ProviderConfig) => void
   isTesting: boolean
@@ -43,6 +47,7 @@ function SwipeableProviderCard({
   isReconciled,
   onActivate,
   onEdit,
+  onDeleteRemote,
   onRemove,
   onTestConnection,
   isTesting,
@@ -53,6 +58,7 @@ function SwipeableProviderCard({
 
   const translateX = useRef(new Animated.Value(0)).current
   const isOpenRef = useRef(false)
+  const actionWidthRef = useRef(ACTION_WIDTH)
 
   const kindLabel =
     config.kind === "github"
@@ -60,8 +66,9 @@ function SwipeableProviderCard({
       : t("settings.providers.googleDrive")
 
   const open = useCallback(() => {
+    const w = actionWidthRef.current
     Animated.spring(translateX, {
-      toValue: ACTION_WIDTH,
+      toValue: -(w * OPEN_RATIO),
       useNativeDriver: true,
       tension: 80,
       friction: 12,
@@ -85,17 +92,16 @@ function SwipeableProviderCard({
         onMoveShouldSetPanResponder: (_, gs) =>
           Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 2,
         onPanResponderMove: (_, gs) => {
-          const base = isOpenRef.current ? ACTION_WIDTH : 0
-          const next = Math.max(0, Math.min(ACTION_WIDTH, base + gs.dx))
+          const w = actionWidthRef.current * OPEN_RATIO
+          const base = isOpenRef.current ? -w : 0
+          const next = Math.max(-w, Math.min(0, base + gs.dx))
           translateX.setValue(next)
         },
         onPanResponderRelease: (_, gs) => {
-          if (gs.dx > SWIPE_THRESHOLD) {
+          if (gs.dx < -SWIPE_THRESHOLD && !isOpenRef.current) {
             open()
-          } else if (gs.dx < -SWIPE_THRESHOLD) {
-            close()
           } else {
-            if (isOpenRef.current) { open() } else { close() }
+            close()
           }
         },
       }),
@@ -110,15 +116,6 @@ function SwipeableProviderCard({
     [close]
   )
 
-  const [tooltipLabel, setTooltipLabel] = useState<string | null>(null)
-  const tooltipTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  const showTooltip = useCallback((label: string) => {
-    setTooltipLabel(label)
-    clearTimeout(tooltipTimer.current)
-    tooltipTimer.current = setTimeout(() => setTooltipLabel(null), 2000)
-  }, [])
-
   return (
     <View
       bg={isActive ? "$backgroundHover" : "$background"}
@@ -130,128 +127,66 @@ function SwipeableProviderCard({
     >
       <XStack
         position="absolute"
-        l={0}
+        r={0}
         t={0}
         b={0}
-        items="center"
+        style={{ alignItems: "center", justifyContent: "flex-end" }}
         gap={UI_SPACE.micro}
         pl={UI_SPACE.control}
         pr={UI_SPACE.control}
-        style={{ width: ACTION_WIDTH }}
+        onLayout={(e) => {
+          actionWidthRef.current = e.nativeEvent.layout.width
+        }}
       >
-        <XStack position="relative" items="center" gap={UI_SPACE.micro}>
-          {config.kind === "github" && (
-            <YStack position="relative">
-              <Button
-                size="$compact"
-                icon={Pencil}
-                chromeless
-                circular
-                onPress={handleAction(() => onEdit(config))}
-                onLongPress={() => showTooltip(t("settings.providers.edit"))}
-              />
-              {tooltipLabel === t("settings.providers.edit") && (
-                <YStack
-                  position="absolute"
-                  b="100%"
-                  mb={4}
-                  bg="$color"
-                  px={6}
-                  py={2}
-                  rounded={4}
-                  style={{ zIndex: 100 }}
-                >
-                  <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
-                    {tooltipLabel}
-                  </Text>
-                </YStack>
-              )}
-            </YStack>
-          )}
-          <YStack position="relative">
-            <Button
-              size="$compact"
-              icon={Play}
-              chromeless
-              circular
-              onPress={handleAction(() => onTestConnection(config))}
-              disabled={isTesting}
-              onLongPress={() => showTooltip(t("settings.providers.test"))}
-            />
-            {tooltipLabel === t("settings.providers.test") && (
-              <YStack
-                position="absolute"
-                b="100%"
-                mb={4}
-                bg="$color"
-                px={6}
-                py={2}
-                rounded={4}
-                style={{ zIndex: 100 }}
-              >
-                <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
-                  {tooltipLabel}
-                </Text>
-              </YStack>
-            )}
-          </YStack>
-          {!isActive && (
-            <YStack position="relative">
-              <Button
-                size="$compact"
-                icon={Check}
-                chromeless
-                circular
-                onPress={handleAction(() => onActivate(config.id))}
-                onLongPress={() => showTooltip(t("settings.providers.activate"))}
-              />
-              {tooltipLabel === t("settings.providers.activate") && (
-                <YStack
-                  position="absolute"
-                  b="100%"
-                  mb={4}
-                  bg="$color"
-                  px={6}
-                  py={2}
-                  rounded={4}
-                  style={{ zIndex: 100 }}
-                >
-                  <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
-                    {tooltipLabel}
-                  </Text>
-                </YStack>
-              )}
-            </YStack>
-          )}
-          <YStack position="relative">
-            <Button
-              size="$compact"
-              icon={Trash2}
-              chromeless
-              circular
-              color="white"
-              bg={errorColor}
-              onPress={handleAction(() => onRemove(config.id))}
-              onLongPress={() => showTooltip(t("settings.providers.remove"))}
-            />
-            {tooltipLabel === t("settings.providers.remove") && (
-              <YStack
-                position="absolute"
-                b="100%"
-                mb={4}
-                bg="$color"
-                px={6}
-                py={2}
-                rounded={4}
-                style={{ zIndex: 100 }}
-              >
-                <Text fontSize="$caption" color="$background" whiteSpace="nowrap">
-                  {tooltipLabel}
-                </Text>
-              </YStack>
-            )}
-          </YStack>
-        </XStack>
+        {config.kind === "github" && (
+          <IconActionButton
+            size="$compact"
+            icon={Pencil}
+            chromeless
+            circular
+            onPress={handleAction(() => onEdit(config))}
+            tooltip={t("settings.providers.edit")}
+          />
+        )}
+        <IconActionButton
+          size="$compact"
+          icon={Play}
+          chromeless
+          circular
+          onPress={handleAction(() => onTestConnection(config))}
+          disabled={isTesting}
+          tooltip={t("settings.providers.test")}
+        />
+        {!isActive && (
+          <IconActionButton
+            size="$compact"
+            icon={Check}
+            chromeless
+            circular
+            onPress={handleAction(() => onActivate(config.id))}
+            tooltip={t("settings.providers.activate")}
+          />
+        )}
+        {config.kind === "google_drive" && (
+          <IconActionButton
+            size="$compact"
+            icon={Trash2}
+            chromeless
+            circular
+            color="white"
+            bg={errorColor}
+            onPress={handleAction(() => onDeleteRemote(config))}
+            tooltip={t("settings.providers.deleteBackup")}
+          />
+        )}
+        <IconActionButton
+          size="$compact"
+          icon={X}
+          chromeless
+          circular
+          onPress={handleAction(() => onRemove(config.id))}
+          tooltip={t("settings.providers.remove")}
+        />
       </XStack>
 
       <Animated.View
@@ -408,6 +343,63 @@ export function ProviderManagementSection({
     [providerState.providers, loadState, onNotification, onProviderMutated, t]
   )
 
+  const handleDeleteRemote = useCallback(
+    async (config: ProviderConfig) => {
+      if (config.kind !== "google_drive") {
+        return
+      }
+
+      const label = config.label || config.id
+
+      Alert.alert(
+        t("settings.providers.deleteBackupTitle"),
+        t("settings.providers.deleteBackupMessage", { label }),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("settings.providers.deleteBackup"),
+            style: "destructive",
+            onPress: async () => {
+              try {
+                const provider = createProvider(config)
+                if (!provider.deleteRemoteData) {
+                  throw new SyncProviderErrorClass(
+                    "NOT_FOUND",
+                    config.kind,
+                    "Remote backup deletion is not supported for this provider",
+                    false
+                  )
+                }
+                const deleted = await provider.deleteRemoteData()
+
+                await providerStateStore.clearProvider(config.id)
+                setConnectionResults((prev) => {
+                  const next = { ...prev }
+                  delete next[config.id]
+                  return next
+                })
+                await loadState()
+
+                onNotification(
+                  deleted
+                    ? t("settings.providers.deleteBackupSuccess")
+                    : t("settings.providers.deleteBackupMissing"),
+                  deleted ? "success" : "info"
+                )
+                onProviderMutated?.()
+              } catch (error) {
+                const msg =
+                  error instanceof SyncProviderErrorClass ? error.message : String(error)
+                onNotification(msg, "error")
+              }
+            },
+          },
+        ]
+      )
+    },
+    [loadState, onNotification, onProviderMutated, t]
+  )
+
   const handleTestConnection = useCallback(
     async (config: ProviderConfig) => {
       setTestingId(config.id)
@@ -473,6 +465,7 @@ export function ProviderManagementSection({
               isReconciled={reconciledMap[config.id] ?? false}
               onActivate={handleActivate}
               onEdit={onEditProvider ?? (() => {})}
+              onDeleteRemote={handleDeleteRemote}
               onRemove={handleRemove}
               onTestConnection={handleTestConnection}
               isTesting={testingId === config.id}

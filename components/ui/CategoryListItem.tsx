@@ -1,11 +1,12 @@
 import { memo, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { YStack, XStack, Text, Button } from "tamagui"
+import { YStack, XStack, Text } from "tamagui"
 import { Pressable, Alert } from "react-native"
 import { Pencil, Trash2 } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { IconActionButton } from "./IconActionButton"
 import { getReadableTextColor } from "../../constants/theme-colors"
 import {
   UI_RADIUS,
@@ -153,20 +154,22 @@ export const CategoryListItem = memo(function CategoryListItem({
 
         {/* Action buttons */}
         <XStack flexDirection="row" items="center" gap={UI_SPACE.micro / 2} shrink={0}>
-          <Button
+          <IconActionButton
             size="$chip"
             chromeless
             icon={<Pencil size={UI_ICON_SIZE.small} />}
             onPress={handleEdit}
             aria-label={t("common.editLabel", { label: category.label })}
+            tooltip={t("common.editLabel", { label: category.label })}
           />
           {canDelete && (
-            <Button
+            <IconActionButton
               size="$chip"
               chromeless
               icon={<Trash2 size={UI_ICON_SIZE.small} />}
               onPress={handleDelete}
               aria-label={t("common.deleteLabel", { label: category.label })}
+              tooltip={t("common.deleteLabel", { label: category.label })}
             />
           )}
         </XStack>

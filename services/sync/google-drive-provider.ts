@@ -135,6 +135,42 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
+  async deleteRemoteData(): Promise<boolean> {
+    if (Platform.OS !== "android") {
+      throw new SyncProviderErrorClass(
+        "REMOTE_ERROR",
+        "google_drive",
+        "Google Drive sync is only available on Android",
+        false
+      )
+    }
+
+    const token = await this.getAccessToken()
+    if (!token) throw this.authError("AUTH_MISSING")
+
+    const archiveFile = await this.findArchiveFile(token)
+    if (!archiveFile) return false
+
+    try {
+      const response = await fetch(`${DRIVE_API_BASE}/files/${archiveFile.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw this.mapHttpError(response.status, "Failed to delete archive")
+      }
+
+      return true
+    } catch (error) {
+      if (error instanceof SyncProviderErrorClass) throw error
+      throw this.toProviderError(error)
+    }
+  }
+
   async writeSnapshot(
     snapshot: SyncSnapshot,
     lastKnownRevision: RemoteRevision | null

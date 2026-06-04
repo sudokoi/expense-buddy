@@ -102,6 +102,7 @@ export interface SyncProvider {
 
   testConnection(): Promise<ConnectionTestResult>
   readSnapshot(): Promise<SyncSnapshot | null>
+  deleteRemoteData?(): Promise<boolean>
   writeSnapshot(
     snapshot: SyncSnapshot,
     lastKnownRevision: RemoteRevision | null

@@ -3,7 +3,7 @@ import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, Platform, Pressable } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
 import * as Clipboard from "expo-clipboard"
-import { ChevronRight } from "@tamagui/lucide-icons-2"
+import { ChevronRight, RefreshCw } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
@@ -773,6 +773,7 @@ export default function SettingsScreen() {
                 onPress={handleSync}
                 disabled={isSyncing}
                 theme="accent"
+                icon={isSyncing ? undefined : RefreshCw}
               >
                 {syncButtonText}
               </Button>

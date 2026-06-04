@@ -6,6 +6,7 @@ import { parseISO, isSameDay, addDays, subDays } from "date-fns"
 import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons-2"
 import { SectionList } from "react-native"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import { IconActionButton } from "../../components/ui/IconActionButton"
 import type { Expense } from "../../types/expense"
 import { Category } from "../../types/category"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
@@ -132,12 +133,14 @@ export default function DayViewScreen() {
         items="center"
         justify="center"
       >
-        <Button
+        <IconActionButton
           size="$compact"
           chromeless
           icon={ChevronLeft}
           onPress={() => router.back()}
           color="$color"
+          aria-label={t("common.back")}
+          tooltip={t("common.back")}
         />
         <YStack style={{ alignItems: "center" }}>
           <Text fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
@@ -157,11 +160,25 @@ export default function DayViewScreen() {
         px={UI_SPACE.gutter}
         pb={UI_SPACE.control}
       >
-        <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
+        <IconActionButton
+          size="$compact"
+          chromeless
+          icon={ArrowLeft}
+          onPress={handlePrevDay}
+          aria-label={t("dayView.previousDay")}
+          tooltip={t("dayView.previousDay")}
+        />
         <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}
         </Text>
-        <Button size="$compact" chromeless icon={ArrowRight} onPress={handleNextDay} />
+        <IconActionButton
+          size="$compact"
+          chromeless
+          icon={ArrowRight}
+          onPress={handleNextDay}
+          aria-label={t("dayView.nextDay")}
+          tooltip={t("dayView.nextDay")}
+        />
       </XStack>
 
       <Text
