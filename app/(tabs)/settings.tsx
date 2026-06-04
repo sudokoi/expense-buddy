@@ -40,7 +40,7 @@ import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import { credentialStore } from "../../services/sync/credential-store"
-import { isProviderReconciled } from "../../services/sync-queue"
+import { isProviderReconciled, markProviderReconciled } from "../../services/sync-queue"
 import { GoogleOAuthError } from "../../services/sync/google-oauth-service"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
@@ -626,6 +626,12 @@ export default function SettingsScreen() {
           if (reconciledExpenses.length > 0) {
             replaceAllExpenses(reconciledExpenses)
           }
+
+          const activeConfig = await providerSettingsStore.getActiveConfig()
+          if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
+            await markProviderReconciled(activeConfig.id)
+            handleProviderMutated()
+          }
         },
         onInSync: () => {
           addNotification(t("settings.notifications.alreadyInSync"), "success")
@@ -648,6 +654,7 @@ export default function SettingsScreen() {
     clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
+    handleProviderMutated,
   ])
 
   return (

@@ -356,6 +356,7 @@ export function GitHubConfigSection({
                   focusStyle={{
                     borderColor: configErrors.token ? "$red10" : ACCENT_COLORS.primary,
                   }}
+                  placeholderTextColor="$color"
                 />
                 {configErrors.token ? (
                   <Text fontSize="$caption" color="$red10">
@@ -445,6 +446,7 @@ export function GitHubConfigSection({
                   focusStyle={{
                     borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
                   }}
+                  placeholderTextColor="$color"
                 />
               ) : (
                 <YStack gap="$control">
@@ -459,6 +461,7 @@ export function GitHubConfigSection({
                     focusStyle={{
                       borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
                     }}
+                    placeholderTextColor="$color"
                   />
                   <Button size="$compact" onPress={handleChooseRepo} disabled={!token}>
                     {repo
@@ -488,6 +491,7 @@ export function GitHubConfigSection({
                 focusStyle={{
                   borderColor: configErrors.branch ? "$red10" : ACCENT_COLORS.primary,
                 }}
+                placeholderTextColor="$color"
               />
               {configErrors.branch && (
                 <Text fontSize="$caption" color="$red10">

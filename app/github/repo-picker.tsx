@@ -268,6 +268,7 @@ export default function GitHubRepoPickerScreen() {
           focusStyle={{
             borderColor: ACCENT_COLORS.primary,
           }}
+          placeholderTextColor="$color"
           placeholder={t("repoPicker.searchPlaceholder")}
           value={query}
           onChangeText={setQuery}

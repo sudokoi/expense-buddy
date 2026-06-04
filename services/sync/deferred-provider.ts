@@ -12,14 +12,22 @@ import { SyncProviderError } from "./provider-types"
  * A SyncProvider wrapper that starts unconfigured and can be resolved
  * to a real provider after async initialization completes.
  *
- * This bridges the gap between synchronous React render-time
- * provider creation and asynchronous config loading.
+ * Resolution happens lazily on first method call:
+ * - The `resolveFromConfig` callback is invoked to fetch the active config
+ *   and create a provider.
+ * - Or can be resolved eagerly via `resolve(provider)`.
  */
 export class DeferredProvider implements SyncProvider {
   private inner: SyncProvider | null = null
   private resolvedKind: SyncProviderKind = "github"
   private resolvedId: string = "pending"
   private _resolved = false
+  private resolving: Promise<SyncProvider> | null = null
+  private readonly resolveFromConfig: () => Promise<SyncProvider>
+
+  constructor(resolveFromConfig: () => Promise<SyncProvider>) {
+    this.resolveFromConfig = resolveFromConfig
+  }
 
   get kind(): SyncProviderKind {
     return this._resolved ? this.resolvedKind : "github"
@@ -41,8 +49,28 @@ export class DeferredProvider implements SyncProvider {
     this._resolved = true
   }
 
-  private ensure(): SyncProvider {
-    if (!this.inner) {
+  private async ensure(): Promise<SyncProvider> {
+    if (this.inner) return this.inner
+    if (this.resolving) return this.resolving
+
+    this.resolving = this.tryResolve()
+    try {
+      return await this.resolving
+    } finally {
+      this.resolving = null
+    }
+  }
+
+  private async tryResolve(): Promise<SyncProvider> {
+    try {
+      const provider = await this.resolveFromConfig()
+      this.inner = provider
+      this.resolvedKind = provider.kind
+      this.resolvedId = provider.providerId
+      this._resolved = true
+      return this.inner
+    } catch (error) {
+      if (error instanceof SyncProviderError) throw error
       throw new SyncProviderError(
         "NOT_CONFIGURED",
         "github",
@@ -50,25 +78,24 @@ export class DeferredProvider implements SyncProvider {
         false
       )
     }
-    return this.inner
   }
 
   async testConnection(): Promise<ConnectionTestResult> {
-    return this.ensure().testConnection()
+    return (await this.ensure()).testConnection()
   }
 
   async readSnapshot(): Promise<SyncSnapshot | null> {
-    return this.ensure().readSnapshot()
+    return (await this.ensure()).readSnapshot()
   }
 
   async writeSnapshot(
     snapshot: SyncSnapshot,
     lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
-    return this.ensure().writeSnapshot(snapshot, lastKnownRevision)
+    return (await this.ensure()).writeSnapshot(snapshot, lastKnownRevision)
   }
 
   async getStatus(): Promise<ProviderStatus> {
-    return this.ensure().getStatus()
+    return (await this.ensure()).getStatus()
   }
 }

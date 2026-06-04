@@ -91,7 +91,13 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   // Create sync actor once on mount (using ref to avoid recreating)
   const syncActorRef = useRef<ActorRefFrom<typeof syncMachine> | null>(null)
   if (!syncActorRef.current && !providedSyncActor) {
-    const deferredProvider = new DeferredProvider()
+    const deferredProvider = new DeferredProvider(async () => {
+      const activeConfig = await getActiveProviderConfig()
+      if (!activeConfig) {
+        throw new Error("No active provider config found")
+      }
+      return createProvider(activeConfig)
+    })
     deferredProviderRef.current = deferredProvider
     syncActorRef.current = createActor(syncMachine, {
       input: { provider: deferredProvider },

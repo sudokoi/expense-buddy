@@ -114,6 +114,7 @@ export const syncMachine = setup({
   },
   delays: {
     SUCCESS_DISPLAY_TIME: 2000,
+    ERROR_DISPLAY_TIME: 5000,
     IN_SYNC_DISPLAY_TIME: 100,
   },
 }).createMachine({
@@ -345,6 +346,15 @@ export const syncMachine = setup({
     },
 
     error: {
+      after: {
+        ERROR_DISPLAY_TIME: {
+          target: "idle",
+          actions: assign({
+            error: undefined,
+            errorCode: undefined,
+          }),
+        },
+      },
       entry: ({ context }) => {
         const errorCode = context.errorCode
         const isAuthError =

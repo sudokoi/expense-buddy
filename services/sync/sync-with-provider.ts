@@ -72,8 +72,10 @@ export async function syncWithProvider(
     }
   }
 
+  const writeSnapshot = filterChangedFiles(snapshot, mergedSnapshot)
+
   try {
-    await provider.writeSnapshot(mergedSnapshot, snapshot.remoteRevision)
+    await provider.writeSnapshot(writeSnapshot, snapshot.remoteRevision)
   } catch (error) {
     const formatted = formatError(error)
     return {
@@ -113,8 +115,9 @@ export async function firstTimeSync(
       }
     }
     const mergedSnapshot = buildSnapshot(allExpenses, existingSnapshot)
+    const writeSnapshot = filterChangedFiles(existingSnapshot, mergedSnapshot)
     try {
-      await provider.writeSnapshot(mergedSnapshot, existingSnapshot.remoteRevision)
+      await provider.writeSnapshot(writeSnapshot, existingSnapshot.remoteRevision)
     } catch (error) {
       const formatted = formatError(error)
       return {
@@ -271,4 +274,46 @@ function formatError(error: unknown): { message: string; code?: string } {
     return { message: error.message }
   }
   return { message: String(error) }
+}
+
+/**
+ * Given the before and after snapshots, produce a minimal snapshot containing
+ * only the files that actually differ — plus the settings file.
+ *
+ * This ensures that `writeSnapshot()` only uploads changed/new files, deletes
+ * removed files, and skips untouched files entirely, reducing API calls on
+ * successive syncs.
+ */
+function filterChangedFiles(
+  before: SyncSnapshot,
+  after: SyncSnapshot
+): SyncSnapshot {
+  const files: Record<string, string> = {}
+
+  for (const [path, content] of Object.entries(after.files)) {
+    const oldContent = before.files[path]
+    if (path === SETTINGS_FILENAME || oldContent !== content) {
+      files[path] = content
+    }
+  }
+
+  for (const path of Object.keys(before.files)) {
+    if (!(path in after.files)) {
+      files[path] = ""
+    }
+  }
+
+  return {
+    manifest: {
+      version: after.manifest.version,
+      generatedAt: after.manifest.generatedAt,
+      appVersion: after.manifest.appVersion,
+      files: Object.entries(files).map(([path, content]) => ({
+        path,
+        hash: computeContentHash(content),
+      })),
+    },
+    files,
+    remoteRevision: after.remoteRevision,
+  }
 }

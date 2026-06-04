@@ -286,6 +286,7 @@ export default function EditExpenseScreen() {
                     ? t("history.editDialog.fields.amountPlaceholder")
                     : t("history.editDialog.fields.amountPlaceholderNumeric")
                 }
+                placeholderTextColor="$color"
                 keyboardType={amountInputProps.keyboardType}
                 inputMode={amountInputProps.inputMode}
               />
@@ -336,6 +337,7 @@ export default function EditExpenseScreen() {
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               selectTextOnFocus
+              placeholderTextColor="$color"
             />
           </YStack>
 
@@ -407,6 +409,7 @@ export default function EditExpenseScreen() {
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
+                    placeholderTextColor="$color"
                   />
                 )}
               </YStack>

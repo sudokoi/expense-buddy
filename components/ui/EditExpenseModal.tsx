@@ -255,6 +255,7 @@ export function EditExpenseModal({
                 focusStyle={{
                   borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
                 }}
+                placeholderTextColor="$color"
               />
             </XStack>
             {errors.amount && (
@@ -302,6 +303,7 @@ export function EditExpenseModal({
               focusStyle={{
                 borderColor: ACCENT_COLORS.primary,
               }}
+              placeholderTextColor="$color"
             />
           </YStack>
 
@@ -374,6 +376,7 @@ export function EditExpenseModal({
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
+                    placeholderTextColor="$color"
                   />
                 )}
               </YStack>

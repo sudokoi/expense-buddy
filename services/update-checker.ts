@@ -53,13 +53,15 @@ export async function isPlayStoreInstall(): Promise<boolean> {
     return false
   }
 
+  if (isExpoGo()) {
+    return false
+  }
+
   try {
-    // Dynamic import to avoid crash in Expo Go where native modules aren't available
     const DeviceInfo = await import("react-native-device-info")
     const installerPackage = await DeviceInfo.default.getInstallerPackageName()
     return installerPackage === "com.android.vending"
   } catch {
-    // In Expo Go or if module fails, assume not from Play Store
     return false
   }
 }
@@ -250,6 +252,10 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
 
 async function getInstallerPackageName(): Promise<string | null> {
   if (Platform.OS !== "android") {
+    return null
+  }
+
+  if (isExpoGo()) {
     return null
   }
 

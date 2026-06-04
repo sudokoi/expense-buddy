@@ -332,6 +332,7 @@ export default function AddExpenseScreen() {
                 size="$prominent"
                 px="$section"
                 bg="$background"
+                placeholderTextColor="$color"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -410,6 +411,7 @@ export default function AddExpenseScreen() {
               {t("add.note")}
             </Label>
             <Input
+              placeholderTextColor="$color"
               placeholder={t("add.notePlaceholder")}
               value={note}
               onChangeText={setNote}
@@ -508,6 +510,7 @@ export default function AddExpenseScreen() {
                         focusStyle={{
                           borderColor: ACCENT_COLORS.primary,
                         }}
+                        placeholderTextColor="$color"
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")

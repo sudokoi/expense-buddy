@@ -2,7 +2,7 @@ import { format, subDays } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses, useCategories } from "../../stores/hooks"
+import { useExpenses, useCategories, useNotifications } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions, Platform } from "react-native"
 import React, { startTransition } from "react"
@@ -15,6 +15,7 @@ import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
+import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -26,6 +27,10 @@ import { useSettings } from "../../stores/hooks"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { useSyncMachine } from "../../hooks/use-sync-machine"
 import { RefreshCw, MessageSquare } from "@tamagui/lucide-icons-2"
+import {
+  isProviderReconciled,
+  markProviderReconciled,
+} from "../../services/sync-queue"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -74,8 +79,9 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 export default function DashboardScreen() {
   const { state } = useExpenses()
   const { categories, getCategoryByLabel } = useCategories()
-  const { settings } = useSettings()
+  const { settings, syncConfig } = useSettings()
   const { startSmsImportFromAdd } = useSmsImportActions()
+  const { addNotification } = useNotifications()
   const syncMachine = useSyncMachine()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
@@ -84,6 +90,19 @@ export default function DashboardScreen() {
   const { t } = useTranslation()
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
+  const [hasNonGitHubProvider, setHasNonGitHubProvider] = React.useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    providerSettingsStore.getActiveConfig().then((config) => {
+      if (!cancelled) setHasNonGitHubProvider(config !== null && config.kind !== "github")
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const hasSyncProvider = syncConfig !== null || hasNonGitHubProvider
 
   // Singleton pass to group expenses by currency
   const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
@@ -212,8 +231,17 @@ export default function DashboardScreen() {
       localExpenses: state.expenses,
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
+      callbacks: {
+        onError: (error) => addNotification(error, "error"),
+        onSuccess: async () => {
+          const activeConfig = await providerSettingsStore.getActiveConfig()
+          if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
+            await markProviderReconciled(activeConfig.id)
+          }
+        },
+      },
     })
-  }, [syncMachine, state.expenses, settings])
+  }, [syncMachine, state.expenses, settings, addNotification])
 
   return (
     <ScreenContainer>
@@ -225,11 +253,13 @@ export default function DashboardScreen() {
           </Text>
         </YStack>
         <XStack gap={UI_SPACE.control}>
-          <Button
-            size="$control"
-            onPress={handleSync}
-            icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
-          />
+          {hasSyncProvider && (
+            <Button
+              size="$control"
+              onPress={handleSync}
+              icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
+            />
+          )}
           {Platform.OS === "android" ? (
             <Button
               size="$control"

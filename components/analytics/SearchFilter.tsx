@@ -43,6 +43,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
         value={inputValue}
         onChangeText={setInputValue}
         placeholder="Search notes, categories, payment methods..."
+        placeholderTextColor="$color"
       />
       {inputValue.length > 0 && (
         <Button
