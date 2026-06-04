@@ -8,7 +8,7 @@ const GITHUB_OAUTH_CLIENT_ID = "Ov23lihYBxLtgot0H8Nq"
 // Used for Android Google Drive sync. Expo Go can override via EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID.
 // Create one at https://console.cloud.google.com/apis/credentials
 const GOOGLE_DRIVE_OAUTH_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID || ""
+  "124317329894-0fm8q66la9ih1u9t7if3jnoae5qalec7.apps.googleusercontent.com124317329894-0fm8q66la9ih1u9t7if3jnoae5qalec7.apps.googleusercontent.com124317329894-0fm8q66la9ih1u9t7if3jnoae5qalec7.apps.googleusercontent.com"
 
 /**
  * Converts a semantic version string to a numeric version code for app stores.

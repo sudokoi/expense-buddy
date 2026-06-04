@@ -41,6 +41,7 @@ import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import { credentialStore } from "../../services/sync/credential-store"
 import { isProviderReconciled } from "../../services/sync-queue"
+import { GoogleOAuthError } from "../../services/sync/google-oauth-service"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -693,8 +694,6 @@ export default function SettingsScreen() {
                 size="$control"
                 theme="accent"
                 onPress={async () => {
-                  const { credentialStore } =
-                    await import("../../services/sync/credential-store")
                   const { getGoogleDriveOAuthClientId } =
                     await import("../../constants/runtime-config")
                   const clientId = getGoogleDriveOAuthClientId()
@@ -702,31 +701,26 @@ export default function SettingsScreen() {
                     handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
                     return
                   }
-                  const providerId = `google_drive_${Date.now()}`
                   try {
-                    await credentialStore.save(providerId, {
-                      credentialId: providerId,
-                      kind: "google_oauth",
-                      data: {
-                        access_token: "",
-                        refresh_token: "",
-                        expires_at: "",
-                        client_id: clientId,
-                      },
-                    })
+                    const { initiateGoogleDriveOAuth } =
+                      await import("../../services/sync/google-oauth-service")
+                    const result = await initiateGoogleDriveOAuth(clientId)
                     await providerSettingsStore.addProvider({
-                      id: providerId,
+                      id: result.providerId,
                       kind: "google_drive",
                       label: "Google Drive",
-                      credentialId: providerId,
+                      credentialId: result.providerId,
                       clientId,
                       archiveFileName: "expenses-archive.zip",
-                      accountEmail: "",
+                      accountEmail: result.accountEmail,
                     })
                     setAddingProviderKind(null)
                     handleProviderMutated()
                     handleNotification(t("settings.googleDrive.configured"), "success")
-                  } catch {
+                  } catch (error) {
+                    if (error instanceof GoogleOAuthError && error.code === "CANCELLED") {
+                      return
+                    }
                     handleNotification(t("common.error"), "error")
                   }
                 }}
