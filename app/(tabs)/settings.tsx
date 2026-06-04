@@ -33,6 +33,7 @@ import { ThemeSelector } from "../../components/ui/ThemeSelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
 import { ProviderManagementSection } from "../../components/ui/settings/ProviderManagementSection"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
+import { GitHubConfigModal } from "../../components/ui/settings/GitHubConfigModal"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
@@ -97,6 +98,7 @@ export default function SettingsScreen() {
   const [addingProviderKind, setAddingProviderKind] = useState<
     "github" | "google_drive" | null
   >(null)
+  const [showGitHubEditor, setShowGitHubEditor] = useState(false)
   const [activeProviderReconciled, setActiveProviderReconciled] = useState<
     boolean | null
   >(null)
@@ -323,11 +325,13 @@ export default function SettingsScreen() {
 
   const handleAddProvider = useCallback((kind: "github" | "google_drive") => {
     setAddingProviderKind(kind)
+    setShowGitHubEditor(false)
   }, [])
 
   const handleEditProvider = useCallback(
-    async (config: ProviderConfig) => {
-      setAddingProviderKind(config.kind)
+    (_config: ProviderConfig) => {
+      setShowGitHubEditor(true)
+      setAddingProviderKind(null)
     },
     []
   )
@@ -693,6 +697,19 @@ export default function SettingsScreen() {
               />
             </YStack>
           )}
+
+          <GitHubConfigModal
+            open={showGitHubEditor}
+            onClose={() => setShowGitHubEditor(false)}
+            syncConfig={syncConfig}
+            onSaveConfig={handleSaveConfig}
+            onTestConnection={handleTestConnection}
+            onClearConfig={handleClearConfig}
+            isTesting={isTesting}
+            connectionStatus={connectionStatus}
+            onConnectionStatusChange={handleConnectionStatusChange}
+            onNotification={handleNotification}
+          />
 
           {addingProviderKind === "google_drive" && (
             <YStack
