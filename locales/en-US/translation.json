@@ -233,7 +233,7 @@
       "about": "APP INFORMATION"
     },
     "sync": {
-      "description": "Connect GitHub, run manual syncs, and control automatic syncing."
+      "description": "Configure sync providers, run manual syncs, and control automatic syncing."
     },
     "payment": {
       "description": "Keep payment defaults, saved instruments, and categories together in one place.",

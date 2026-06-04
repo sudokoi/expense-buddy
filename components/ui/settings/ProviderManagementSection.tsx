@@ -246,6 +246,8 @@ export function ProviderManagementSection({
 
   const hasProviders = providerState.providers.length > 0
 
+  const existingKinds = new Set(providerState.providers.map((p) => p.kind))
+
   return (
     <YStack gap="$gutter">
       {/* Provider cards */}
@@ -302,17 +304,19 @@ export function ProviderManagementSection({
         </YStack>
       )}
 
-      {/* Add provider buttons */}
+      {/* Add provider buttons — only show for kinds not yet configured */}
       <XStack gap="$control" flexWrap="wrap">
-        <Button
-          size="$control"
-          icon={Plus}
-          onPress={() => onAddProvider("github")}
-          theme="accent"
-        >
-          {t("settings.providers.addGithub")}
-        </Button>
-        {Platform.OS === "android" && (
+        {!existingKinds.has("github") && (
+          <Button
+            size="$control"
+            icon={Plus}
+            onPress={() => onAddProvider("github")}
+            theme="accent"
+          >
+            {t("settings.providers.addGithub")}
+          </Button>
+        )}
+        {!existingKinds.has("google_drive") && Platform.OS === "android" && (
           <Button
             size="$control"
             icon={Plus}
