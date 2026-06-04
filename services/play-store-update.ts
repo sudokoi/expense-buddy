@@ -99,8 +99,17 @@ function normalizeUpdateInfo(rawInfo: NativePlayStoreUpdateInfo): PlayStoreUpdat
 }
 
 export async function getPlayStoreUpdateInfo(): Promise<PlayStoreUpdateInfo> {
-  const nativeInfo = await getModule().getUpdateInfoAsync()
-  return normalizeUpdateInfo(nativeInfo)
+  try {
+    const nativeInfo = await getModule().getUpdateInfoAsync()
+    return normalizeUpdateInfo(nativeInfo)
+  } catch {
+    return {
+      installStatus: "unknown",
+      isFlexibleUpdateAllowed: false,
+      isImmediateUpdateAllowed: false,
+      updateAvailability: "unknown",
+    }
+  }
 }
 
 export async function startPlayStoreFlexibleUpdate(): Promise<void> {
@@ -122,7 +131,14 @@ export function subscribeToPlayStoreUpdateStatus(
     return () => {}
   }
 
-  const subscription = getModule().addListener("onUpdateStatus", (event) => {
+  let module: ExpenseBuddyPlayCoreNativeModule
+  try {
+    module = getModule()
+  } catch {
+    return () => {}
+  }
+
+  const subscription = module.addListener("onUpdateStatus", (event) => {
     listener({
       bytesDownloaded:
         typeof event.bytesDownloaded === "number" ? event.bytesDownloaded : undefined,

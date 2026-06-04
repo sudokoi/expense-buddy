@@ -1,9 +1,6 @@
 import * as WebBrowser from "expo-web-browser"
-import { makeRedirectUri, loadAsync } from "expo-auth-session"
 import { credentialStore } from "./credential-store"
 import type { CredentialEntry } from "./provider-types"
-
-WebBrowser.maybeCompleteAuthSession()
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
@@ -29,7 +26,8 @@ export class GoogleOAuthError extends Error {
   }
 }
 
-function getRedirectUri(): string {
+async function getRedirectUri(): Promise<string> {
+  const { makeRedirectUri } = await import("expo-auth-session")
   return makeRedirectUri()
 }
 
@@ -107,7 +105,11 @@ export interface GoogleDriveOAuthResult {
 export async function initiateGoogleDriveOAuth(
   clientId: string
 ): Promise<GoogleDriveOAuthResult> {
-  const redirectUri = getRedirectUri()
+  WebBrowser.maybeCompleteAuthSession()
+
+  const { loadAsync } = await import("expo-auth-session")
+
+  const redirectUri = await getRedirectUri()
 
   const request = await loadAsync(
     {

@@ -6,6 +6,7 @@ import React, {
   useRef,
   useCallback,
 } from "react"
+import { Platform } from "react-native"
 import { createActor, ActorRefFrom } from "xstate"
 import {
   expenseStore as defaultExpenseStore,
@@ -137,8 +138,11 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeSettingsStore(settingsStore)
       await initializeExpenseStore(expenseStore)
       await initializeUIStateStore(uiStateStore)
-      initializeUpdateStore(updateStore)
-      await runLaunchUpdateCheck(updateStore)
+
+      if (Platform.OS === "android") {
+        initializeUpdateStore(updateStore)
+        await runLaunchUpdateCheck(updateStore)
+      }
 
       try {
         const activeConfig = await getActiveProviderConfig()
