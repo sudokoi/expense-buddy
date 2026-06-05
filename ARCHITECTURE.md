@@ -75,7 +75,6 @@ SMS import is intentionally narrow in the current product scope.
 
 Current constraints:
 
-- Android only
 - Recent-window scanning rather than full historical inbox import
 - Receiver-driven new-message detection rather than polling or scheduled background work
 - Deterministic extraction for explainable matches
@@ -171,7 +170,7 @@ GitHub sync follows a fetch-merge-push model:
 
 Daily CSV files (`expenses-YYYY-MM-DD.csv`), soft deletes via `deletedAt`, optional settings sync, dirty-day tracking, and SHA caching all carry over from the legacy design.
 
-### Google Drive Sync (Android only)
+### Google Drive Sync
 
 `GoogleDriveProvider` (`services/sync/google-drive-provider.ts`) uses the REST Drive API v3 directly (no Google SDK). Expenses are bundled as a compressed archive (`expenses-archive.zip`) stored in the app's `appDataFolder` — a special Drive location invisible to other Drive apps.
 

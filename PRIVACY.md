@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** May 22, 2026
+**Last Updated:** June 5, 2026
 
 ## Overview
 
@@ -13,6 +13,8 @@ Expense Buddy is a free, open-source expense tracking application licensed under
 
 Expense Buddy does not collect, store, transmit, or share any personal information or usage data with us or any third parties. The app operates entirely on your device.
 
+**OAuth token exchange note:** When you sign in with Google Drive, the app sends the OAuth authorization code to a Cloudflare Worker (`token-exchange.sudokoi.workers.dev`) that we operate. The Worker exchanges it for access/refresh tokens using the app's client secret (which cannot be stored in the APK). The Worker does **not** log, persist, or transmit the tokens anywhere — they are returned directly to your device and stored locally in Expo SecureStore. Your actual expense data never passes through this Worker.
+
 ## Data Storage
 
 All expense data you enter is stored locally on your device using:
@@ -22,7 +24,7 @@ All expense data you enter is stored locally on your device using:
 
 Your data never leaves your device unless you explicitly choose to sync it (see below).
 
-## SMS Import (Android Only)
+## SMS Import
 
 If you enable SMS import on Android:
 
@@ -47,7 +49,7 @@ If you enable background SMS alerts on Android:
 - **No notification is shown while the app is already in the foreground**
 - **A local pending-review snapshot is kept on-device so notification taps can reopen the right review state offline**
 
-## Device Logging (Android Only)
+## Device Logging
 
 Expense Buddy includes an on-device logging system to help debug issues:
 
@@ -72,25 +74,31 @@ If you choose to use the optional GitHub sync feature:
 - **Your expense data is uploaded directly to your own GitHub repository**
 - **We have no access to your GitHub credentials or synced data**
 
-### Google Drive (Android Only)
+### Google Drive
 
 If you choose to use the optional Google Drive sync feature:
 
-- **On Android, you sign in with your Google account** (OAuth 2.0 device authorization flow)
+- **On Android, you sign in with your Google account** (native GoogleSignInClient)
 - **The app stores expenses in its private `appDataFolder`** — a Drive location visible only to the app, not to your normal Drive file listing
-- **Expenses are bundled as a compressed archive** (`expenses-archive.zip`) in the `appDataFolder`
+- **Expenses are stored as per-year JSON files** in the `appDataFolder`
 - **Read and write access to this folder is required** — the app does not access any other Drive content
-- **Your expense data is uploaded directly from your device to Google Drive**
+- **OAuth token exchange runs through a Cloudflare Worker** to keep the client secret out of the APK — the Worker only sees the authorization code, never your expense data
+- **Your expense data is uploaded directly from your device to Google Drive** — the Worker is not involved in data sync
 - **We have no access to your Google credentials or synced data**
-- **Google Drive sync is Android-only** — the Google Drive REST API requires a native OAuth flow
 
 ### Common
 
-The sync happens directly between your device and the provider's servers. We do not operate any intermediary servers and have no visibility into your synced data.
+The sync happens directly between your device and the provider's servers. We have no visibility into your synced data.
+
+**Intermediary servers:** The only server we operate is a Cloudflare Worker used exclusively for Google OAuth token exchange. It processes authorization codes, returns tokens to your device, and does not persist or log any data. Your expense data never passes through this Worker.
 
 ## Third-Party Services
 
-The app does not integrate with any analytics, advertising, or tracking services. The only external services the app can connect to are GitHub and Google Drive, and only if you explicitly configure them.
+The app does not integrate with any analytics, advertising, or tracking services. The only external services the app can connect to are:
+
+- **GitHub** — for optional sync (your repository, your data)
+- **Google Drive** — for optional sync (your appDataFolder, your data)
+- **Cloudflare Workers** — for Google OAuth token exchange only; no expense data is sent here
 
 ## Permissions
 

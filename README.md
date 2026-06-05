@@ -13,7 +13,7 @@
   <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml/badge.svg" alt="Build Status" /></a>
 </p>
 
-Expense Buddy is a privacy-first expense tracker built with React Native and Expo, designed around one core idea: turn transaction SMS messages into draft expenses automatically, let you review them on-device, and keep the confirmed data synced to a sync provider you control.
+Expense Buddy is a **privacy-first expense tracker for Android**, built with React Native and Expo and distributed through Google Play. The core idea: turn transaction SMS messages into draft expenses automatically, let you review them on-device, and keep the confirmed data synced to a sync provider you control.
 
 Manual entry, analytics, multi-currency support, and sync are all there, but the product's differentiator is the import pipeline: scan recent Android SMS messages, extract likely expenses, stage them locally, and import only what you approve.
 
@@ -150,7 +150,7 @@ yarn start
 
 _On Android, you can also sign in with GitHub using the device authorization flow and pick a repository directly._
 
-### Google Drive (Android only)
+### Google Drive
 
 1. Go to Settings > Google Drive Config.
 2. Tap Add Google Drive and sign in with your Google account.
