@@ -156,7 +156,7 @@ Key design rules:
 
 ### GitHub Sync
 
-The legacy GitHub sync path (used before the provider framework) still exists in `github-sync.ts` for backward compatibility. The new `GitHubProvider` in `services/sync/github-provider.ts` wraps the same `getRepositoryTree`, `downloadCSV`, `batchCommit`, and `validatePAT` functions under the `SyncProvider` interface.
+The `GitHubProvider` in `services/sync/github-provider.ts` uses the Git Trees API to list remote files, downloads only changed daily files, merges, and pushes through Git Blobs/Trees/Commits APIs. The old `github-sync.ts` functions were removed after the provider framework stabilized.
 
 GitHub sync follows a fetch-merge-push model:
 
@@ -172,15 +172,15 @@ Daily CSV files (`expenses-YYYY-MM-DD.csv`), soft deletes via `deletedAt`, optio
 
 ### Google Drive Sync
 
-`GoogleDriveProvider` (`services/sync/google-drive-provider.ts`) uses the REST Drive API v3 directly (no Google SDK). Expenses are bundled as a compressed archive (`expenses-archive.zip`) stored in the app's `appDataFolder` — a special Drive location invisible to other Drive apps.
+`GoogleDriveProvider` (`services/sync/google-drive-provider.ts`) uses the REST Drive API v3 directly (no Google SDK). Expenses are stored as per-year JSON files (`expense-buddy-<year>.json`) in the app's `appDataFolder` — a special Drive location invisible to other Drive apps.
 
 Key design decisions:
 
-- **Stale-write detection**: Each archive has a version number. Before writing, the provider compares `remoteFile.version > lastKnownRevision.version` — a version bump on remote means a concurrent write, which surfaces a `CONFLICT` error rather than silently overwriting.
+- **Stale-write detection**: Each year file's content hash is captured during `readSnapshot` and stored in the `remoteRevision`. Before writing, the provider re-reads the file and compares its hash against the stored version. A mismatch means a concurrent write, which surfaces a `CONFLICT` error rather than silently overwriting.
 - **OAuth token refresh**: Tokens are stored in `CredentialStore` with `access_token`, `refresh_token`, and `expires_at`. The provider refreshes automatically when the token is expired.
 - **Android-native OAuth**: Google Drive auth uses the native `play-services-auth` GoogleSignInClient via the `expense-buddy-google-auth` Expo module, not a browser-based OAuth redirect. This complies with Google's current policy which rejects custom-scheme redirect URIs for Android apps.
 - **Android-only**: Drive sync requires the native Google identity flow; the web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
-- **Archive format**: A single zip contains all expense CSVs and settings; this is simpler than per-file syncing because Drive has no equivalent of GitHub's tree API.
+- **Per-year JSON format**: Each year file bundles all day-level CSV content for that year into a JSON map (`{ v: 1, f: { "expenses-2026-01-01.csv": "id,amount\n...", ... } }`). This avoids creating hundreds of individual Drive files while keeping reads incremental — only the year files containing dirty days are downloaded.
 
 ### Queue Compaction
 

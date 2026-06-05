@@ -28,3 +28,11 @@ feat: multi-provider sync architecture (ADR-009)
 - Add Cloudflare Worker for server-side Google OAuth token exchange + refresh (client secret never in APK)
 - Add CI workflow to deploy token exchange Worker on merge to main
 - Update all documentation (README, ARCHITECTURE, PRIVACY) for multi-provider sync and native OAuth
+- Remove legacy git-style sync engine (sync-upload, sync-download, sync-migration, git-style-sync, remote-fetch) and SHA-cache-based file classification
+- Add dirty-day tracking: filterPaths in readSnapshot(), dirtyDays/deletedDays threaded through sync machine, auto-sync reads from AsyncStorage
+- Restore settings sync in the new pipeline: parse SETTINGS_FILENAME from remote, merge with local settings, write back
+- Add RESET handler and auto-timeout to conflict state to prevent stuck actors
+- Add stale-write detection for Google Drive via content-hash version tracking in RemoteRevision
+- Fix DeferredProvider: proxy deleteRemoteData, use resolvedKind in error handler
+- Fix PKCE codeVerifier non-empty assertion, preserve new refresh_token in saveNewToken, strip raw HTTP body from token exchange logs
+- Add per-year JSON files for Google Drive (replacing zip archive) — year files are downloaded incrementally based on dirty days
