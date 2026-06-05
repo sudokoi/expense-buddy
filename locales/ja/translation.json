@@ -120,6 +120,7 @@
     "updated": "支出を更新しました",
     "deleted": "支出を削除しました",
     "loadError": "支出の読み込みに失敗しました",
+    "loadMoreNotAvailable": "現在の同期プロバイダーでは利用できません",
     "noResultsTitle": "一致する支出がありません",
     "noResultsSubtitle": "フィルターを調整してみてください",
     "filterSheet": {

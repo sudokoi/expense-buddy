@@ -12,8 +12,12 @@ import { useSyncMachine, TrueConflict, ConflictResolution } from "./use-sync-mac
 import {
   applyQueuedOpsToExpenses,
   clearSyncOpsUpTo,
+  getMinSyncedWatermark,
   getSyncOpsSince,
   getSyncQueueWatermark,
+  isProviderReconciled,
+  markProviderReconciled,
+  setProviderWatermark,
 } from "../services/sync-queue"
 import { loadDirtyDays, saveDirtyDays } from "../services/expense-dirty-days"
 import { providerSettingsStore } from "../services/sync/provider-settings-store"
@@ -175,7 +179,19 @@ export function useSyncHandler() {
           if (watermark !== null) {
             const lastAppliedId =
               opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
-            await clearSyncOpsUpTo(lastAppliedId)
+
+            const activeConfig = await providerSettingsStore.getActiveConfig()
+            if (activeConfig) {
+              await setProviderWatermark(activeConfig.id, lastAppliedId)
+              if (!(await isProviderReconciled(activeConfig.id))) {
+                await markProviderReconciled(activeConfig.id)
+              }
+            }
+
+            const minWatermark = await getMinSyncedWatermark()
+            if (minWatermark > 0) {
+              await clearSyncOpsUpTo(minWatermark)
+            }
           }
 
           if (!pendingExpenseOps) {
@@ -187,11 +203,6 @@ export function useSyncHandler() {
 
           if (reconciledExpenses.length > 0) {
             replaceAllExpenses(reconciledExpenses)
-          }
-
-          const activeConfig = await providerSettingsStore.getActiveConfig()
-          if (activeConfig) {
-            markReconciled(activeConfig.id)
           }
         },
         onInSync: () => {

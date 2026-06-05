@@ -10,6 +10,7 @@ import {
   useNotifications,
   useSettings,
   useCategories,
+  useProviderManagement,
 } from "../../stores/hooks"
 import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/hooks"
@@ -143,6 +144,7 @@ export default function HistoryScreen() {
   const { state, deleteExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const { syncConfig, settings } = useSettings()
+  const { providers, activeProviderId } = useProviderManagement()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
@@ -225,10 +227,27 @@ export default function HistoryScreen() {
   }, [filteredExpenses])
 
   const shouldShowLoadMore = useMemo(() => {
-    if (!hasMore || !syncConfig || filters.selectedMonth) return false
+    if (!hasMore || filters.selectedMonth) return false
 
-    return !isTimeWindowCovered(state.expenses, filters.timeWindow)
-  }, [filters.selectedMonth, filters.timeWindow, hasMore, syncConfig, state.expenses])
+    if (syncConfig) {
+      return !isTimeWindowCovered(state.expenses, filters.timeWindow)
+    }
+
+    const activeProvider = providers.find((p) => p.id === activeProviderId)
+    if (activeProvider?.kind === "github") {
+      return !isTimeWindowCovered(state.expenses, filters.timeWindow)
+    }
+
+    return false
+  }, [
+    filters.selectedMonth,
+    filters.timeWindow,
+    hasMore,
+    syncConfig,
+    state.expenses,
+    providers,
+    activeProviderId,
+  ])
 
   React.useEffect(() => {
     if (!filters.selectedMonth) return
@@ -495,6 +514,13 @@ export default function HistoryScreen() {
 
     setIsLoadingMore(true)
     try {
+      const activeProvider = providers.find((p) => p.id === activeProviderId)
+      if (activeProvider && activeProvider.kind !== "github") {
+        addNotification(t("history.loadMoreNotAvailable"), "info")
+        setIsLoadingMore(false)
+        return
+      }
+
       const result = await syncDownMore(state.expenses, 7)
 
       if (result.success && result.expenses) {
@@ -509,7 +535,16 @@ export default function HistoryScreen() {
     } finally {
       setIsLoadingMore(false)
     }
-  }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification, t])
+  }, [
+    isLoadingMore,
+    hasMore,
+    state.expenses,
+    replaceAllExpenses,
+    addNotification,
+    t,
+    providers,
+    activeProviderId,
+  ])
 
   // Render item for FlashList
   const renderFlashListItem = useCallback(

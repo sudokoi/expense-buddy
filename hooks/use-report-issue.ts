@@ -39,7 +39,9 @@ export function useReportIssue() {
                   githubToken = entry.data["token"] ?? entry.data["access_token"]
                 }
               }
-            } catch { /* ignore - token not available */ }
+            } catch {
+              /* ignore - token not available */
+            }
 
             const logs = await getLogsForBugReportAsync(githubToken ? 500 : 50)
 
@@ -78,7 +80,9 @@ export function useReportIssue() {
                   openIssue(issue.number)
                   return
                 }
-            } catch { /* ignore - issue creation failed */ }
+              } catch {
+                /* ignore - issue creation failed */
+              }
             }
 
             if (logs) {

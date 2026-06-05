@@ -120,6 +120,7 @@
     "updated": "Expense updated",
     "deleted": "Expense deleted",
     "loadError": "Failed to load more expenses",
+    "loadMoreNotAvailable": "Not available with current sync provider",
     "noResultsTitle": "No matching expenses",
     "noResultsSubtitle": "Try adjusting your filters",
     "filterSheet": {

@@ -120,6 +120,7 @@
     "updated": "व्यय अपडेट किया गया",
     "deleted": "व्यय हटाया गया",
     "loadError": "अधिक खर्च लोड करने में विफल",
+    "loadMoreNotAvailable": "वर्तमान सिंक प्रदाता के साथ उपलब्ध नहीं है",
     "noResultsTitle": "कोई मिलान खर्च नहीं",
     "noResultsSubtitle": "अपने फिल्टर समायोजित करने का प्रयास करें",
     "filterSheet": {
