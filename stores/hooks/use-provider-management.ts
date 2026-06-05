@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "../store-provider"
-import { providerStore, ProviderConnectionStatus } from "../provider-store"
+import { ProviderConnectionStatus } from "../provider-store"
 import type {
   ProviderConfig,
   SyncProvidersState,

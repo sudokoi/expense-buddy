@@ -23,7 +23,6 @@ import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
-const ACTION_WIDTH = 260
 const SWIPE_THRESHOLD = 60
 const OPEN_RATIO = 0.85
 
@@ -225,13 +224,8 @@ export function ProviderManagementSection({
 }: ProviderManagementSectionProps) {
   const { t } = useTranslation()
 
-  const {
-    providerCards,
-    hasActiveProvider,
-    removeProvider,
-    setActiveProvider,
-    testConnection,
-  } = useProviderManagement()
+  const { providerCards, removeProvider, setActiveProvider, testConnection } =
+    useProviderManagement()
 
   const handleActivate = useCallback(
     async (id: string) => {

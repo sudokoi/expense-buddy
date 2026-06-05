@@ -8,7 +8,8 @@ import {
   useProviderManagement,
   ProviderCardStatus,
 } from "../stores/hooks"
-import { useSyncMachine, TrueConflict, ConflictResolution } from "./use-sync-machine"
+import { useSyncMachine, TrueConflict } from "./use-sync-machine"
+import type { ConflictResolution } from "../services/sync-machine"
 import {
   applyQueuedOpsToExpenses,
   clearSyncOpsUpTo,
@@ -92,7 +93,7 @@ export function useSyncHandler() {
   const { settings, hasUnsyncedChanges, clearSyncConfig, clearSettingsChangeFlag } =
     useSettings()
   const { addNotification } = useNotifications()
-  const { hasActiveProvider, providerCards, markReconciled } = useProviderManagement()
+  const { hasActiveProvider, providerCards } = useProviderManagement()
   const syncMachine = useSyncMachine()
   const { showConflictDialog } = useConflictDialog()
 
@@ -129,6 +130,8 @@ export function useSyncHandler() {
     syncQueueWatermarkRef.current = await getSyncQueueWatermark()
     syncMachine.sync({
       localExpenses: state.expenses,
+      dirtyDays: state.dirtyDays,
+      deletedDays: state.deletedDays,
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
       callbacks: {
@@ -217,7 +220,6 @@ export function useSyncHandler() {
     state.dirtyDays,
     state.deletedDays,
     state.expenses,
-    hasUnsyncedChanges,
     syncMachine,
     settings,
     clearSyncConfig,
@@ -227,7 +229,6 @@ export function useSyncHandler() {
     clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
-    markReconciled,
   ])
 
   return {

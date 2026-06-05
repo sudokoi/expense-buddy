@@ -1,8 +1,7 @@
 import { createStore } from "@xstate/store"
-import type { ProviderConfig, SyncProvidersState } from "../services/sync/provider-types"
+import type { ProviderConfig } from "../services/sync/provider-types"
 import { providerSettingsStore } from "../services/sync/provider-settings-store"
 import { isProviderReconciled, markProviderReconciled } from "../services/sync-queue"
-import { createProvider } from "../services/sync/provider-registry"
 
 export enum ProviderConnectionStatus {
   Idle = "idle",

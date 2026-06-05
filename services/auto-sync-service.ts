@@ -6,6 +6,7 @@ import { createProvider } from "./sync/provider-registry"
 import { getActiveProviderConfig } from "./sync-config"
 import type { SyncNotification } from "../types/sync"
 import i18next from "i18next"
+import { loadDirtyDays } from "./expense-dirty-days"
 import {
   applyQueuedOpsToExpenses,
   applyQueuedOpsToSettings,
@@ -63,6 +64,10 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
         await setProviderWatermark(providerId, watermark)
       }
 
+      const dirtyDaysState = await loadDirtyDays()
+      const dirtyDays = dirtyDaysState.state.dirtyDays ?? []
+      const deletedDays = dirtyDaysState.state.deletedDays ?? []
+
       const actor = createActor(syncMachine, {
         input: { provider },
       })
@@ -71,6 +76,8 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
       actor.send({
         type: "SYNC",
         localExpenses: currentExpenses,
+        dirtyDays,
+        deletedDays,
         settings: appSettings.syncSettings ? appSettings : undefined,
         syncSettingsEnabled: appSettings.syncSettings,
         callbacks: {

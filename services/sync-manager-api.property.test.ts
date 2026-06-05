@@ -45,14 +45,7 @@ describe("Sync Manager API Backward Compatibility", () => {
     "clearSyncConfig",
     "testConnection",
     "determineSyncDirection",
-    "syncUp",
-    "syncDown",
-    "syncDownMore",
-    "fetchAllRemoteExpenses",
-    "classifyTreeEntries",
     "getPendingSyncCount",
-    "migrateToDailyFiles",
-    "gitStyleSync",
     "saveLastSyncTime",
   ] as const
 
@@ -150,34 +143,6 @@ describe("Sync Manager API Backward Compatibility", () => {
         remoteTime: "2024-01-01T00:00:00Z",
       }
       expect(result.direction).toBe("push")
-    })
-
-    it("FetchAllRemoteResult type SHALL be exported and usable", () => {
-      const result: SyncManager.FetchAllRemoteResult = {
-        success: true,
-        expenses: [],
-        filesDownloaded: 0,
-      }
-      expect(result.success).toBe(true)
-    })
-
-    it("GitStyleSyncResult type SHALL be exported and usable", () => {
-      const result: SyncManager.GitStyleSyncResult = {
-        success: true,
-        message: "Sync complete",
-        filesUploaded: 1,
-        filesSkipped: 0,
-      }
-      expect(result.success).toBe(true)
-    })
-
-    it("ConflictResolution type SHALL be exported and usable", () => {
-      const resolution: SyncManager.ConflictResolution = {
-        expenseId: "test-id",
-        choice: "local",
-      }
-      expect(resolution.expenseId).toBe("test-id")
-      expect(resolution.choice).toBe("local")
     })
   })
 })

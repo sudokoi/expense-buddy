@@ -69,7 +69,7 @@ export class GitHubProvider implements SyncProvider {
     }
   }
 
-  async readSnapshot(): Promise<SyncSnapshot | null> {
+  async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
     const token = await this.getToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
@@ -90,8 +90,12 @@ export class GitHubProvider implements SyncProvider {
       return null
     }
 
+    const filterSet = filterPaths ? new Set(filterPaths) : null
     const expenseEntries = treeResult.entries.filter(
-      (e) => e.type === "blob" && getDayKeyFromFilename(e.path) !== null
+      (e) =>
+        e.type === "blob" &&
+        getDayKeyFromFilename(e.path) !== null &&
+        (!filterSet || filterSet.has(e.path))
     )
     const settingsEntry = treeResult.entries.find((e) => e.path === SETTINGS_FILENAME)
 

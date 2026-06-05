@@ -21,6 +21,8 @@ export type ConflictResolver = (
 export interface SyncMachineContext {
   provider: SyncProvider
   localExpenses: Expense[]
+  dirtyDays?: string[]
+  deletedDays?: string[]
   settings?: AppSettings
   syncSettingsEnabled: boolean
   callbacks: SyncCallbacks
@@ -35,6 +37,8 @@ export type SyncMachineEvent =
   | {
       type: "SYNC"
       localExpenses: Expense[]
+      dirtyDays?: string[]
+      deletedDays?: string[]
       settings?: AppSettings
       syncSettingsEnabled: boolean
       callbacks?: SyncCallbacks
@@ -69,12 +73,16 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        dirtyDays?: string[]
+        deletedDays?: string[]
         conflictResolver?: ConflictResolver
       }
     >(async ({ input }) => {
       const result = await syncWithProvider({
         provider: input.provider,
         localExpenses: input.localExpenses,
+        dirtyDays: input.dirtyDays,
+        deletedDays: input.deletedDays,
         conflictResolver: input.conflictResolver,
       })
       return result
@@ -85,6 +93,8 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        dirtyDays?: string[]
+        deletedDays?: string[]
         conflictResolver?: ConflictResolver
         resolutions: { expenseId: string; choice: "local" | "remote" }[]
       }
@@ -96,6 +106,8 @@ export const syncMachine = setup({
       const result = await syncWithProvider({
         provider: input.provider,
         localExpenses: input.localExpenses,
+        dirtyDays: input.dirtyDays,
+        deletedDays: input.deletedDays,
         conflictResolver: resolver,
       })
       return result
@@ -133,6 +145,8 @@ export const syncMachine = setup({
           target: "syncing",
           actions: assign({
             localExpenses: ({ event }) => event.localExpenses,
+            dirtyDays: ({ event }) => event.dirtyDays,
+            deletedDays: ({ event }) => event.deletedDays,
             settings: ({ event }) => event.settings,
             syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
             callbacks: ({ event }) => event.callbacks || {},
@@ -152,6 +166,8 @@ export const syncMachine = setup({
         input: ({ context }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          dirtyDays: context.dirtyDays,
+          deletedDays: context.deletedDays,
           conflictResolver: context.conflictResolver,
         }),
         onDone: [
@@ -282,6 +298,8 @@ export const syncMachine = setup({
         input: ({ context, event }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          dirtyDays: context.dirtyDays,
+          deletedDays: context.deletedDays,
           conflictResolver: context.conflictResolver,
           resolutions:
             event.type === "RESOLVE_CONFLICTS"
@@ -381,6 +399,8 @@ export const syncMachine = setup({
           target: "syncing",
           actions: assign({
             localExpenses: ({ event }) => event.localExpenses,
+            dirtyDays: ({ event }) => event.dirtyDays,
+            deletedDays: ({ event }) => event.deletedDays,
             settings: ({ event }) => event.settings,
             syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
             callbacks: ({ event }) => event.callbacks || {},
@@ -405,6 +425,8 @@ export type SyncMachineState =
   | "inSync"
   | "success"
   | "error"
+
+export type ConflictResolution = { expenseId: string; choice: "local" | "remote" }
 
 export type { TrueConflict, MergeResult }
 

@@ -9,19 +9,14 @@ import {
   TrueConflict,
   MergeResult,
 } from "../services/sync-machine"
-import type { ConflictResolution } from "../services/git-style-sync"
 import { useStoreContext } from "../stores/store-provider"
 
-export type {
-  SyncCallbacks,
-  ConflictResolver,
-  TrueConflict,
-  MergeResult,
-  ConflictResolution,
-}
+export type { SyncCallbacks, ConflictResolver, TrueConflict, MergeResult }
 
 export interface SyncParams {
   localExpenses: Expense[]
+  dirtyDays?: string[]
+  deletedDays?: string[]
   settings?: AppSettings
   syncSettingsEnabled: boolean
   callbacks?: SyncCallbacks
@@ -75,6 +70,8 @@ export function useSyncMachine(): UseSyncMachineReturn {
       syncActor.send({
         type: "SYNC",
         localExpenses: params.localExpenses,
+        dirtyDays: params.dirtyDays,
+        deletedDays: params.deletedDays,
         settings: params.settings,
         syncSettingsEnabled: params.syncSettingsEnabled,
         callbacks: params.callbacks,

@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from "react"
+import { memo } from "react"
 import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"

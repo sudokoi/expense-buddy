@@ -183,7 +183,14 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         }, 30000)
       }
     })()
-  }, [expenseStore, settingsStore, skipInitialization, uiStateStore, updateStore])
+  }, [
+    expenseStore,
+    settingsStore,
+    skipInitialization,
+    uiStateStore,
+    updateStore,
+    providerStore,
+  ])
 
   // Memoize the notification handler to avoid recreating on every render
   const handleSyncNotification = useCallback(

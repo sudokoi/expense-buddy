@@ -85,7 +85,7 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
-  async readSnapshot(): Promise<SyncSnapshot | null> {
+  async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
         "REMOTE_ERROR",
@@ -102,13 +102,25 @@ export class GoogleDriveProvider implements SyncProvider {
     if (yearFiles.length === 0) return null
 
     const files: Record<string, string> = {}
+    const filterSet = filterPaths ? new Set(filterPaths) : null
+    const neededYears: Set<string> | null = filterSet
+      ? new Set(
+          Array.from(filterSet).map((p) =>
+            String(this.getYearForPath(p, new Date().getFullYear()))
+          )
+        )
+      : null
 
     for (const file of yearFiles) {
+      const fileYear = file.name.slice(YEAR_FILE_PREFIX.length, -YEAR_FILE_SUFFIX.length)
+      if (neededYears && !neededYears.has(fileYear)) continue
+
       const content = await this.downloadFile(token, file.id)
       if (!content) continue
 
       const parsed = this.parseYearFile(content)
       for (const [path, fileContent] of Object.entries(parsed.f)) {
+        if (filterSet && !filterSet.has(path)) continue
         files[path] = fileContent
       }
     }

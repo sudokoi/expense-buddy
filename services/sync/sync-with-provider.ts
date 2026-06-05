@@ -25,6 +25,8 @@ export interface SyncWithProviderResult {
 export interface SyncWithProviderOptions {
   provider: SyncProvider
   localExpenses: Expense[]
+  dirtyDays?: string[]
+  deletedDays?: string[]
   conflictResolver?: (
     conflicts: TrueConflict[]
   ) => Promise<{ expenseId: string; choice: "local" | "remote" }[] | undefined>
@@ -33,11 +35,13 @@ export interface SyncWithProviderOptions {
 export async function syncWithProvider(
   options: SyncWithProviderOptions
 ): Promise<SyncWithProviderResult> {
-  const { provider, localExpenses, conflictResolver } = options
+  const { provider, localExpenses, conflictResolver, dirtyDays, deletedDays } = options
+
+  const filterPaths = buildFilterPaths(dirtyDays, deletedDays)
 
   let snapshot: SyncSnapshot | null
   try {
-    snapshot = await provider.readSnapshot()
+    snapshot = await provider.readSnapshot(filterPaths)
   } catch (error) {
     const formatted = formatError(error)
     return {
@@ -284,6 +288,15 @@ function formatError(error: unknown): { message: string; code?: string } {
  * removed files, and skips untouched files entirely, reducing API calls on
  * successive syncs.
  */
+function buildFilterPaths(
+  dirtyDays?: string[],
+  deletedDays?: string[]
+): string[] | undefined {
+  const allDays = new Set([...(dirtyDays ?? []), ...(deletedDays ?? [])])
+  if (allDays.size === 0) return undefined
+  return Array.from(allDays).map(getFilenameForDay)
+}
+
 function filterChangedFiles(before: SyncSnapshot, after: SyncSnapshot): SyncSnapshot {
   const files: Record<string, string> = {}
 

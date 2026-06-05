@@ -99,7 +99,7 @@ export interface SyncProvider {
   readonly providerId: string
 
   testConnection(): Promise<ConnectionTestResult>
-  readSnapshot(): Promise<SyncSnapshot | null>
+  readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null>
   deleteRemoteData?(): Promise<boolean>
   writeSnapshot(
     snapshot: SyncSnapshot,

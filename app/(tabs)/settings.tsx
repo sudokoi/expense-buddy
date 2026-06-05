@@ -13,7 +13,7 @@ import {
 import { useSyncHandler } from "../../hooks/use-sync-handler"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useReportIssue } from "../../hooks/use-report-issue"
-import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
+import { testConnection, SyncConfig } from "../../services/sync-manager"
 import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
@@ -37,7 +37,7 @@ export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
 
-  const { state, replaceAllExpenses } = useExpenses()
+  const { state } = useExpenses()
   const { addNotification } = useNotifications()
   const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
 
@@ -66,7 +66,6 @@ export default function SettingsScreen() {
     updateSettings,
     setAutoSyncEnabled,
     setAutoSyncTiming,
-    replaceSettings,
     saveSyncConfig,
     clearSyncConfig,
   } = useSettings()
@@ -157,60 +156,10 @@ export default function SettingsScreen() {
       addNotification(t("settings.github.successConfig"), "success")
 
       if (isFirstTimeSetup && state.expenses.length === 0) {
-        Alert.alert(
-          t("settings.downloadPrompt.title"),
-          t("settings.downloadPrompt.message"),
-          [
-            { text: t("settings.downloadPrompt.notNow"), style: "cancel" },
-            {
-              text: t("settings.downloadPrompt.download"),
-              onPress: async () => {
-                try {
-                  const result = await syncDown(7, true)
-                  if (result.success && result.expenses) {
-                    replaceAllExpenses(result.expenses)
-                    addNotification(
-                      t("settings.notifications.downloaded", {
-                        count: result.expenses.length,
-                      }),
-                      "success"
-                    )
-
-                    if (result.settings) {
-                      replaceSettings(result.settings)
-                      addNotification(
-                        t("settings.notifications.settingsApplied"),
-                        "success"
-                      )
-                    }
-
-                    if (!settings.autoSyncEnabled) {
-                      setAutoSyncEnabled(true)
-                      addNotification(t("settings.notifications.autoSyncEnabled"), "info")
-                    }
-                  } else {
-                    addNotification(result.error || result.message, "error")
-                  }
-                } catch (error) {
-                  addNotification(String(error), "error")
-                }
-              },
-            },
-          ]
-        )
+        handleSync()
       }
     },
-    [
-      syncConfig,
-      state.expenses.length,
-      settings.autoSyncEnabled,
-      saveSyncConfig,
-      setAutoSyncEnabled,
-      replaceSettings,
-      replaceAllExpenses,
-      addNotification,
-      t,
-    ]
+    [syncConfig, state.expenses.length, saveSyncConfig, handleSync, addNotification, t]
   )
 
   const handleTestConnection = useCallback(async () => {
