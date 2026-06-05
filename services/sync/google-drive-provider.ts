@@ -459,7 +459,9 @@ export class GoogleDriveProvider implements SyncProvider {
         return data.access_token
       }
 
-      console.warn("[google-drive] token refresh succeeded but no access_token in response")
+      console.warn(
+        "[google-drive] token refresh succeeded but no access_token in response"
+      )
       return null
     } catch (error) {
       console.warn("[google-drive] token refresh network error:", error)

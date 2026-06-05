@@ -1,6 +1,5 @@
 import { createStore } from "@xstate/store"
-import { useSelector } from "@xstate/store-react"
-import { useEffect, useCallback, useMemo, useRef } from "react"
+import { useCallback } from "react"
 import {
   AnalyticsFiltersState,
   DEFAULT_ANALYTICS_FILTERS,
@@ -12,9 +11,6 @@ import type {
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
 } from "../types/analytics"
-
-// Debounce delay for search queries (ms)
-const SEARCH_DEBOUNCE_MS = 300
 
 interface FilterContext extends AnalyticsFiltersState {
   isHydrated: boolean
@@ -108,184 +104,15 @@ export const filterStore = createStore({
 })
 
 // ============================================================================
-// Hook for components
-// ============================================================================
-
-export function useFilters() {
-  // Use individual selectors for each filter property to avoid object creation
-  const timeWindow = useSelector(filterStore, (s) => s.context.timeWindow)
-  const selectedCategories = useSelector(filterStore, (s) => s.context.selectedCategories)
-  const selectedPaymentMethods = useSelector(
-    filterStore,
-    (s) => s.context.selectedPaymentMethods
-  )
-  const selectedPaymentInstruments = useSelector(
-    filterStore,
-    (s) => s.context.selectedPaymentInstruments
-  )
-  const selectedMonth = useSelector(filterStore, (s) => s.context.selectedMonth)
-  const selectedCurrency = useSelector(filterStore, (s) => s.context.selectedCurrency)
-  const searchQuery = useSelector(filterStore, (s) => s.context.searchQuery)
-  const minAmount = useSelector(filterStore, (s) => s.context.minAmount)
-  const maxAmount = useSelector(filterStore, (s) => s.context.maxAmount)
-  const isHydrated = useSelector(filterStore, (s) => s.context.isHydrated)
-
-  // Memoize the filters object to maintain stable reference
-  const filters = useMemo(
-    () => ({
-      timeWindow,
-      selectedMonth,
-      selectedCategories,
-      selectedPaymentMethods,
-      selectedPaymentInstruments,
-      selectedCurrency,
-      searchQuery,
-      minAmount,
-      maxAmount,
-    }),
-    [
-      timeWindow,
-      selectedMonth,
-      selectedCategories,
-      selectedPaymentMethods,
-      selectedPaymentInstruments,
-      selectedCurrency,
-      searchQuery,
-      minAmount,
-      maxAmount,
-    ]
-  )
-
-  // Calculate active count (primitive value, safe to calculate inline)
-  const activeCount = useMemo(() => {
-    let count = 0
-    if (selectedMonth) {
-      count++
-    } else if (timeWindow !== "all") {
-      count++
-    }
-    if (selectedCategories.length > 0) count++
-    if (selectedPaymentMethods.length > 0) count++
-    if (selectedPaymentInstruments.length > 0) count++
-    if (searchQuery.trim()) count++
-    if (minAmount !== null || maxAmount !== null) count++
-    return count
-  }, [
-    timeWindow,
-    selectedMonth,
-    selectedCategories,
-    selectedPaymentMethods,
-    selectedPaymentInstruments,
-    searchQuery,
-    minAmount,
-    maxAmount,
-  ])
-
-  const hasActive = activeCount > 0
-
-  // Actions
-  const applyFilters = useCallback((newFilters: AnalyticsFiltersState) => {
-    filterStore.trigger.applyFilters({ filters: newFilters })
-  }, [])
-
-  const setTimeWindow = useCallback((timeWindow: TimeWindow) => {
-    filterStore.trigger.setTimeWindow({ timeWindow })
-  }, [])
-
-  const setSelectedMonth = useCallback((month: string | null) => {
-    filterStore.trigger.setSelectedMonth({ month })
-  }, [])
-
-  const setSelectedCategories = useCallback((categories: string[]) => {
-    filterStore.trigger.setSelectedCategories({ categories })
-  }, [])
-
-  const setSelectedPaymentMethods = useCallback(
-    (methods: PaymentMethodSelectionKey[]) => {
-      filterStore.trigger.setSelectedPaymentMethods({ methods })
-    },
-    []
-  )
-
-  const setSelectedPaymentInstruments = useCallback(
-    (instruments: PaymentInstrumentSelectionKey[]) => {
-      filterStore.trigger.setSelectedPaymentInstruments({ instruments })
-    },
-    []
-  )
-
-  const setSelectedCurrency = useCallback((currency: string | null) => {
-    filterStore.trigger.setSelectedCurrency({ currency })
-  }, [])
-
-  // Debounced search query to reduce re-renders while typing
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const setSearchQuery = useCallback((query: string) => {
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    // Set new timeout
-    searchTimeoutRef.current = setTimeout(() => {
-      filterStore.trigger.setSearchQuery({ query })
-    }, SEARCH_DEBOUNCE_MS)
-  }, [])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const setAmountRange = useCallback((min: number | null, max: number | null) => {
-    filterStore.trigger.setAmountRange({ min, max })
-  }, [])
-
-  const reset = useCallback(() => {
-    filterStore.trigger.reset()
-  }, [])
-
-  const markSaved = useCallback(() => {
-    filterStore.trigger.markSaved()
-  }, [])
-
-  return {
-    // State
-    filters,
-    activeCount,
-    hasActive,
-    isHydrated,
-    // Actions
-    applyFilters,
-    setTimeWindow,
-    setSelectedMonth,
-    setSelectedCategories,
-    setSelectedPaymentMethods,
-    setSelectedPaymentInstruments,
-    setSelectedCurrency,
-    setSearchQuery,
-    setAmountRange,
-    reset,
-    markSaved,
-  }
-}
-
-// ============================================================================
 // Persistence Hook
 // ============================================================================
 
-export function useFilterPersistence() {
-  // Load on mount
-  useEffect(() => {
-    loadAnalyticsFilters().then((stored) => {
-      filterStore.trigger.hydrate({ filters: stored })
-    })
-  }, [])
+export async function initializeFilterStore() {
+  const stored = await loadAnalyticsFilters()
+  filterStore.trigger.hydrate({ filters: stored })
+}
 
-  // Save function (call only when filter sheet closes)
+export function useFilterPersistence() {
   const save = useCallback(async () => {
     const current = filterStore.getSnapshot().context
     await saveAnalyticsFilters({

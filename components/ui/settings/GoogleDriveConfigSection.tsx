@@ -47,9 +47,8 @@ export function GoogleDriveConfigSection({
             return
           }
           try {
-            const { initiateGoogleDriveOAuth } = await import(
-              "../../../services/sync/google-oauth-service"
-            )
+            const { initiateGoogleDriveOAuth } =
+              await import("../../../services/sync/google-oauth-service")
             const result = await initiateGoogleDriveOAuth(clientId, tokenExchangeUrl)
             addProvider({
               id: result.providerId,

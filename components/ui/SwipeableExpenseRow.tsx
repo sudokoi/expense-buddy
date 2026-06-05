@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useRef } from "react"
-import { Animated, PanResponder } from "react-native"
+import React, { memo, useCallback } from "react"
+import { Animated } from "react-native"
 import { XStack } from "tamagui"
 import { Edit3, Trash } from "@tamagui/lucide-icons-2"
 import { useTranslation } from "react-i18next"
@@ -8,6 +8,7 @@ import type { Category } from "../../types/category"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow, type ExpenseRowSubtitleMode } from "./ExpenseRow"
 import { IconActionButton } from "./IconActionButton"
+import { useSwipeReveal } from "../../hooks/use-swipe-reveal"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 const SWIPE_THRESHOLD = 80
@@ -36,45 +37,11 @@ export const SwipeableExpenseRow = memo(function SwipeableExpenseRow({
 }: SwipeableExpenseRowProps) {
   const { t } = useTranslation()
 
-  const translateX = useRef(new Animated.Value(0)).current
-  const isOpenRef = useRef(false)
-  const actionsWidthRef = useRef(0)
-
-  const snapTo = useCallback(
-    (toValue: number) => {
-      Animated.spring(translateX, {
-        toValue,
-        useNativeDriver: true,
-        tension: 80,
-        friction: 12,
-      }).start()
-      isOpenRef.current = toValue !== 0
-    },
-    [translateX]
-  )
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gs) =>
-        Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy),
-      onPanResponderMove: (_, gs) => {
-        const maxOpen = actionsWidthRef.current
-        const clamped = Math.min(0, Math.max(-maxOpen, gs.dx))
-        translateX.setValue(clamped)
-      },
-      onPanResponderRelease: (_, gs) => {
-        const maxOpen = actionsWidthRef.current
-        if (gs.dx < -SWIPE_THRESHOLD && !isOpenRef.current) {
-          snapTo(-maxOpen)
-        } else {
-          snapTo(0)
-        }
-      },
-      onPanResponderTerminate: () => {
-        snapTo(0)
-      },
-    })
-  ).current
+  const { translateX, panResponder, snapTo, actionsWidthRef } = useSwipeReveal({
+    swipeThreshold: SWIPE_THRESHOLD,
+    openRatio: OPEN_RATIO,
+    direction: "left",
+  })
 
   const handleEdit = useCallback(() => {
     snapTo(0)
@@ -113,7 +80,7 @@ export const SwipeableExpenseRow = memo(function SwipeableExpenseRow({
         pl={UI_SPACE.control}
         pr={UI_SPACE.control}
         onLayout={(e) => {
-          actionsWidthRef.current = e.nativeEvent.layout.width * OPEN_RATIO
+          actionsWidthRef.current = e.nativeEvent.layout.width
         }}
       >
         <IconActionButton

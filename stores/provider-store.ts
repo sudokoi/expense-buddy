@@ -112,10 +112,7 @@ export const providerStore = createStore({
       },
     }),
 
-    setConnectionSuccess: (
-      context,
-      event: { providerId: string; label: string }
-    ) => ({
+    setConnectionSuccess: (context, event: { providerId: string; label: string }) => ({
       ...context,
       connectionResults: {
         ...context.connectionResults,
@@ -126,10 +123,7 @@ export const providerStore = createStore({
       },
     }),
 
-    setConnectionFailed: (
-      context,
-      event: { providerId: string; error: string }
-    ) => ({
+    setConnectionFailed: (context, event: { providerId: string; error: string }) => ({
       ...context,
       connectionResults: {
         ...context.connectionResults,

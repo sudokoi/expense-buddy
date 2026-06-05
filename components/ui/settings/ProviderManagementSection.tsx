@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react"
+import { useCallback } from "react"
 import { YStack, XStack, Text, Button, View } from "tamagui"
-import { Alert, Animated, PanResponder } from "react-native"
+import { Alert, Animated } from "react-native"
 import { Plus, Pencil, Play, Check, Trash2, X } from "@tamagui/lucide-icons-2"
 import type { ProviderConfig } from "../../../services/sync/provider-types"
 import { SyncProviderError } from "../../../services/sync/provider-types"
 import { providerStateStore } from "../../../services/sync/provider-state-store"
+import { useSwipeReveal } from "../../../hooks/use-swipe-reveal"
 import { IconActionButton } from "../IconActionButton"
 import { useTranslation } from "react-i18next"
 import {
@@ -44,58 +45,19 @@ function SwipeableProviderCard({
   actions: ProviderCardActions
 }) {
   const { t } = useTranslation()
-  const translateX = useRef(new Animated.Value(0)).current
-  const isOpenRef = useRef(false)
-  const actionWidthRef = useRef(ACTION_WIDTH)
   const { config, connectionStatus, connectionLabel, connectionError } = providerCard
+
+  const { translateX, panResponder, close, actionsWidthRef } = useSwipeReveal({
+    swipeThreshold: SWIPE_THRESHOLD,
+    openRatio: OPEN_RATIO,
+    direction: "left",
+    verticalThresholdMultiplier: 2,
+  })
 
   const kindLabel =
     config.kind === "github"
       ? t("settings.providers.github")
       : t("settings.providers.googleDrive")
-
-  const open = useCallback(() => {
-    const w = actionWidthRef.current
-    Animated.spring(translateX, {
-      toValue: -(w * OPEN_RATIO),
-      useNativeDriver: true,
-      tension: 80,
-      friction: 12,
-    }).start()
-    isOpenRef.current = true
-  }, [translateX])
-
-  const close = useCallback(() => {
-    Animated.spring(translateX, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 80,
-      friction: 12,
-    }).start()
-    isOpenRef.current = false
-  }, [translateX])
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gs) =>
-          Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 2,
-        onPanResponderMove: (_, gs) => {
-          const w = actionWidthRef.current * OPEN_RATIO
-          const base = isOpenRef.current ? -w : 0
-          const next = Math.max(-w, Math.min(0, base + gs.dx))
-          translateX.setValue(next)
-        },
-        onPanResponderRelease: (_, gs) => {
-          if (gs.dx < -SWIPE_THRESHOLD && !isOpenRef.current) {
-            open()
-          } else {
-            close()
-          }
-        },
-      }),
-    [translateX, open, close]
-  )
 
   const handleAction = useCallback(
     (fn: () => void) => () => {
@@ -129,7 +91,7 @@ function SwipeableProviderCard({
         pl={UI_SPACE.control}
         pr={UI_SPACE.control}
         onLayout={(e) => {
-          actionWidthRef.current = e.nativeEvent.layout.width
+          actionsWidthRef.current = e.nativeEvent.layout.width
         }}
       >
         {config.kind === "github" && actions.onEdit && (
@@ -213,12 +175,7 @@ function SwipeableProviderCard({
                 </YStack>
               )}
               {status === ProviderCardStatus.ActiveUnreconciled && (
-                <YStack
-                  bg="$yellow9"
-                  px={UI_SPACE.micro}
-                  py={1}
-                  rounded={UI_RADIUS.chip}
-                >
+                <YStack bg="$yellow9" px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
                   <Text
                     fontSize="$caption"
                     color="white"
@@ -324,35 +281,33 @@ export function ProviderManagementSection({
           {
             text: t("settings.providers.deleteBackup"),
             style: "destructive",
-              onPress: async () => {
-                try {
-                  const { createProvider } = await import(
-                    "../../../services/sync/provider-registry"
+            onPress: async () => {
+              try {
+                const { createProvider } =
+                  await import("../../../services/sync/provider-registry")
+                const provider = createProvider(config)
+                if (!provider.deleteRemoteData) {
+                  throw new SyncProviderError(
+                    "NOT_FOUND",
+                    config.kind,
+                    "Remote backup deletion is not supported for this provider",
+                    false
                   )
-                  const provider = createProvider(config)
-                  if (!provider.deleteRemoteData) {
-                    throw new SyncProviderError(
-                      "NOT_FOUND",
-                      config.kind,
-                      "Remote backup deletion is not supported for this provider",
-                      false
-                    )
-                  }
-                  const deleted = await provider.deleteRemoteData()
-                  await providerStateStore.clearProvider(config.id)
-                  onNotification(
-                    deleted
-                      ? t("settings.providers.deleteBackupSuccess")
-                      : t("settings.providers.deleteBackupMissing"),
-                    deleted ? "success" : "info"
-                  )
-                  onProviderMutated?.()
-                } catch (err) {
-                  const msg =
-                    err instanceof SyncProviderError ? err.message : String(err)
-                  onNotification(msg, "error")
                 }
-              },
+                const deleted = await provider.deleteRemoteData()
+                await providerStateStore.clearProvider(config.id)
+                onNotification(
+                  deleted
+                    ? t("settings.providers.deleteBackupSuccess")
+                    : t("settings.providers.deleteBackupMissing"),
+                  deleted ? "success" : "info"
+                )
+                onProviderMutated?.()
+              } catch (err) {
+                const msg = err instanceof SyncProviderError ? err.message : String(err)
+                onNotification(msg, "error")
+              }
+            },
           },
         ]
       )
@@ -366,8 +321,7 @@ export function ProviderManagementSection({
       if (result.ok) {
         onNotification(t("settings.providers.connectionOk"), "success")
       } else {
-        const msg =
-          typeof result.error === "string" ? result.error : result.error.message
+        const msg = typeof result.error === "string" ? result.error : result.error.message
         onNotification(msg, "error")
       }
     },
@@ -436,7 +390,11 @@ export function ProviderManagementSection({
           </Button>
         )}
         {!existingKinds.has("google_drive") && (
-          <Button size="$control" icon={Plus} onPress={() => onAddProvider("google_drive")}>
+          <Button
+            size="$control"
+            icon={Plus}
+            onPress={() => onAddProvider("google_drive")}
+          >
             {t("settings.providers.addGoogleDrive")}
           </Button>
         )}

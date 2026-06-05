@@ -1,3 +1,4 @@
+import { memo, type ReactNode } from "react"
 import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
 import { AutoSyncTiming } from "../../../services/settings-manager"
 import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
@@ -10,39 +11,66 @@ import {
   UI_BORDER_WIDTH,
 } from "../../../constants/ui-tokens"
 
-/**
- * Props for the AutoSyncSection component
- *
- * This component handles the auto-sync options UI including:
- * - Enable/disable auto-sync toggle
- * - Sync settings toggle (include theme and preferences)
- * - Auto-sync timing selection (on launch vs on change)
- */
+interface ToggleRowProps {
+  label: string
+  help: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  disabled?: boolean
+}
+
+const ToggleRow = memo(function ToggleRow({
+  label,
+  help,
+  checked,
+  onCheckedChange,
+  disabled,
+}: ToggleRowProps) {
+  return (
+    <XStack
+      bg="$backgroundHover"
+      items="center"
+      justify="space-between"
+      px={UI_SPACE.section}
+      py={UI_SPACE.section}
+      rounded={UI_RADIUS.chip}
+    >
+      <YStack flex={1}>
+        <Label>{label}</Label>
+        <Text
+          fontSize="$caption"
+          color="$color"
+          opacity={UI_OPACITY.subtle}
+          mt={UI_SPACE.micro}
+        >
+          {help}
+        </Text>
+      </YStack>
+      <Switch
+        size="$control"
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        bg="$gray8"
+        activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
+        opacity={disabled ? UI_OPACITY.subtle : 1}
+      >
+        <Switch.Thumb />
+      </Switch>
+    </XStack>
+  )
+})
+
 export interface AutoSyncSectionProps {
-  /** Whether auto-sync is enabled */
   autoSyncEnabled: boolean
-  /** When to trigger auto-sync */
   autoSyncTiming: AutoSyncTiming
-  /** Whether to sync settings to GitHub */
   syncSettings: boolean
-  /** Whether the active provider needs an initial manual sync first */
   reconciliationRequired?: boolean
-  /** Callback when auto-sync enabled changes */
   onAutoSyncEnabledChange: (enabled: boolean) => void
-  /** Callback when auto-sync timing changes */
   onAutoSyncTimingChange: (timing: AutoSyncTiming) => void
-  /** Callback when sync settings changes */
   onSyncSettingsChange: (enabled: boolean) => void
 }
 
-/**
- * AutoSyncSection - Auto-sync options UI
- *
- * Provides controls for:
- * - Enabling/disabling auto-sync
- * - Choosing whether to sync settings
- * - Selecting when to sync (on launch or on change)
- */
 export function AutoSyncSection({
   autoSyncEnabled,
   autoSyncTiming,
@@ -53,10 +81,6 @@ export function AutoSyncSection({
   onSyncSettingsChange,
 }: AutoSyncSectionProps) {
   const { t } = useTranslation()
-
-  const handleAutoSyncTimingChange = (value: string) => {
-    onAutoSyncTimingChange(value as AutoSyncTiming)
-  }
 
   return (
     <YStack
@@ -87,71 +111,21 @@ export function AutoSyncSection({
         {t("settings.autoSync.title")}
       </Text>
 
-      {/* Enable Auto-Sync Toggle */}
-      <XStack
-        bg="$backgroundHover"
-        items="center"
-        justify="space-between"
-        px={UI_SPACE.section}
-        py={UI_SPACE.section}
-        rounded={UI_RADIUS.chip}
-      >
-        <YStack flex={1}>
-          <Label>{t("settings.autoSync.enable")}</Label>
-          <Text
-            fontSize="$caption"
-            color="$color"
-            opacity={UI_OPACITY.subtle}
-            mt={UI_SPACE.micro}
-          >
-            {t("settings.autoSync.enableHelp")}
-          </Text>
-        </YStack>
-        <Switch
-          size="$control"
-          checked={autoSyncEnabled}
-          onCheckedChange={onAutoSyncEnabledChange}
-          disabled={reconciliationRequired}
-          bg="$gray8"
-          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-          opacity={reconciliationRequired ? UI_OPACITY.subtle : 1}
-        >
-          <Switch.Thumb />
-        </Switch>
-      </XStack>
+      <ToggleRow
+        label={t("settings.autoSync.enable")}
+        help={t("settings.autoSync.enableHelp")}
+        checked={autoSyncEnabled}
+        onCheckedChange={onAutoSyncEnabledChange}
+        disabled={reconciliationRequired}
+      />
 
-      {/* Also sync settings toggle */}
-      <XStack
-        bg="$backgroundHover"
-        items="center"
-        justify="space-between"
-        px={UI_SPACE.section}
-        py={UI_SPACE.section}
-        rounded={UI_RADIUS.chip}
-      >
-        <YStack flex={1}>
-          <Label>{t("settings.autoSync.syncSettings")}</Label>
-          <Text
-            fontSize="$caption"
-            color="$color"
-            opacity={UI_OPACITY.subtle}
-            mt={UI_SPACE.micro}
-          >
-            {t("settings.autoSync.syncSettingsHelp")}
-          </Text>
-        </YStack>
-        <Switch
-          size="$control"
-          checked={syncSettings}
-          onCheckedChange={onSyncSettingsChange}
-          bg="$gray8"
-          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-        >
-          <Switch.Thumb />
-        </Switch>
-      </XStack>
+      <ToggleRow
+        label={t("settings.autoSync.syncSettings")}
+        help={t("settings.autoSync.syncSettingsHelp")}
+        checked={syncSettings}
+        onCheckedChange={onSyncSettingsChange}
+      />
 
-      {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
         <YStack
           gap="$control"
@@ -160,7 +134,10 @@ export function AutoSyncSection({
           p="$section"
         >
           <Label>{t("settings.autoSync.whenToSync")}</Label>
-          <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
+          <RadioGroup
+            value={autoSyncTiming}
+            onValueChange={(value) => onAutoSyncTimingChange(value as AutoSyncTiming)}
+          >
             <XStack gap="$control" items="center" my={UI_SPACE.control}>
               <RadioGroup.Item value="on_launch" id="on_launch" size="$control">
                 <RadioGroup.Indicator />

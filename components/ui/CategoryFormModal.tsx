@@ -8,8 +8,8 @@ import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
 import { ColorPickerSheet } from "./ColorPickerSheet"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
-import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
-import { getColorValue } from "../../tamagui.config"
+import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
@@ -165,9 +165,7 @@ export function CategoryFormModal({
     onClose()
   }, [onClose])
 
-  // Resolved color for display
-  const resolvedColor = useMemo(() => getColorValue(color), [color])
-  const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
+  const { resolvedColor, iconColor } = useResolvedCategoryColor(color)
 
   // Handle opening icon picker
   const handleOpenIconPicker = useCallback(() => {

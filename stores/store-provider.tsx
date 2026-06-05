@@ -42,6 +42,7 @@ import {
   initializeProviderStore,
   ProviderStore,
 } from "./provider-store"
+import { filterStore as defaultFilterStore, initializeFilterStore } from "./filter-store"
 import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
@@ -60,6 +61,7 @@ interface StoreContextValue {
   uiStateStore: UIStateStore
   updateStore: UpdateStore
   providerStore: ProviderStore
+  filterStore: typeof defaultFilterStore
   syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
@@ -68,16 +70,15 @@ const StoreContext = createContext<StoreContextValue | null>(null)
 
 interface StoreProviderProps {
   children: React.ReactNode
-  // Optional overrides for testing
   expenseStore?: ExpenseStore
   settingsStore?: SettingsStore
   notificationStore?: NotificationStore
   uiStateStore?: UIStateStore
   updateStore?: UpdateStore
   providerStore?: ProviderStore
+  filterStore?: typeof defaultFilterStore
   syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
-  // Skip initialization (for testing)
   skipInitialization?: boolean
 }
 
@@ -89,6 +90,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   uiStateStore = defaultUIStateStore,
   updateStore = defaultUpdateStore,
   providerStore: providedProviderStore,
+  filterStore = defaultFilterStore,
   syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
@@ -154,6 +156,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeExpenseStore(expenseStore)
       await initializeUIStateStore(uiStateStore)
       await initializeProviderStore(providerStore)
+      await initializeFilterStore()
 
       if (Platform.OS === "android") {
         initializeUpdateStore(updateStore)
@@ -224,6 +227,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       uiStateStore,
       updateStore,
       providerStore,
+      filterStore,
       syncActor,
       githubAuthActor,
     }),
@@ -234,6 +238,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       uiStateStore,
       updateStore,
       providerStore,
+      filterStore,
       syncActor,
       githubAuthActor,
     ]

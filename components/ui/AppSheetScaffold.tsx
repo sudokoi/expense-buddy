@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { memo, useCallback, type ReactNode } from "react"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
 import { H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
@@ -31,7 +31,7 @@ type AppSheetScaffoldProps = {
   children: ReactNode
 }
 
-export function AppSheetScaffold({
+const AppSheetScaffoldInternal = memo(function AppSheetScaffold({
   open,
   onClose,
   title,
@@ -46,6 +46,13 @@ export function AppSheetScaffold({
 }: AppSheetScaffoldProps) {
   const { t } = useTranslation()
 
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) onClose()
+    },
+    [onClose]
+  )
+
   if (!open && unmountWhenClosed) {
     return null
   }
@@ -54,9 +61,7 @@ export function AppSheetScaffold({
     <Sheet
       modal
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) onClose()
-      }}
+      onOpenChange={handleOpenChange}
       snapPoints={snapPoints}
       dismissOnSnapToBottom={dismissOnSnapToBottom}
     >
@@ -98,6 +103,7 @@ export function AppSheetScaffold({
       </Sheet.Frame>
     </Sheet>
   )
-}
+})
 
+export const AppSheetScaffold = AppSheetScaffoldInternal
 export type { AppSheetScaffoldProps }

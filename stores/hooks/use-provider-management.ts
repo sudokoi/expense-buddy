@@ -2,7 +2,10 @@ import { useCallback } from "react"
 import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "../store-provider"
 import { providerStore, ProviderConnectionStatus } from "../provider-store"
-import type { ProviderConfig, SyncProvidersState } from "../../services/sync/provider-types"
+import type {
+  ProviderConfig,
+  SyncProvidersState,
+} from "../../services/sync/provider-types"
 import { createProvider } from "../../services/sync/provider-registry"
 import { SyncProviderError } from "../../services/sync/provider-types"
 
@@ -100,8 +103,7 @@ export function useProviderManagement() {
         }
         return result
       } catch (error) {
-        const msg =
-          error instanceof SyncProviderError ? error.message : String(error)
+        const msg = error instanceof SyncProviderError ? error.message : String(error)
         providerStore.trigger.setConnectionFailed({
           providerId: config.id,
           error: msg,

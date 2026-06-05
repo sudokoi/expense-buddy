@@ -12,7 +12,7 @@ import {
   useCategories,
 } from "../../stores/hooks"
 import { logAsync } from "../../services/logger"
-import { useFilters, useFilterPersistence } from "../../stores/filter-store"
+import { useFilters, useFilterPersistence } from "../../stores/hooks"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { parseISO, subYears } from "date-fns"
