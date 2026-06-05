@@ -37,6 +37,11 @@ import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
 } from "./notification-store"
+import {
+  providerStore as defaultProviderStore,
+  initializeProviderStore,
+  ProviderStore,
+} from "./provider-store"
 import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
@@ -54,6 +59,7 @@ interface StoreContextValue {
   notificationStore: NotificationStore
   uiStateStore: UIStateStore
   updateStore: UpdateStore
+  providerStore: ProviderStore
   syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
@@ -68,6 +74,7 @@ interface StoreProviderProps {
   notificationStore?: NotificationStore
   uiStateStore?: UIStateStore
   updateStore?: UpdateStore
+  providerStore?: ProviderStore
   syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
   // Skip initialization (for testing)
@@ -81,6 +88,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   notificationStore = defaultNotificationStore,
   uiStateStore = defaultUIStateStore,
   updateStore = defaultUpdateStore,
+  providerStore: providedProviderStore,
   syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
@@ -113,6 +121,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     githubAuthActorRef.current.start()
   }
   const githubAuthActor = providedGitHubAuthActor ?? githubAuthActorRef.current!
+  const providerStore = providedProviderStore ?? defaultProviderStore
 
   // Cleanup sync actors on unmount
   useEffect(() => {
@@ -144,6 +153,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       await initializeSettingsStore(settingsStore)
       await initializeExpenseStore(expenseStore)
       await initializeUIStateStore(uiStateStore)
+      await initializeProviderStore(providerStore)
 
       if (Platform.OS === "android") {
         initializeUpdateStore(updateStore)
@@ -213,6 +223,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       notificationStore,
       uiStateStore,
       updateStore,
+      providerStore,
       syncActor,
       githubAuthActor,
     }),
@@ -222,6 +233,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       notificationStore,
       uiStateStore,
       updateStore,
+      providerStore,
       syncActor,
       githubAuthActor,
     ]

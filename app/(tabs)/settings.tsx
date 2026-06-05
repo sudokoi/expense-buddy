@@ -11,6 +11,8 @@ import {
   useNotifications,
   useSettings,
   useSmsImportReview,
+  useProviderManagement,
+  ProviderCardStatus,
 } from "../../stores/hooks"
 import {
   useSyncMachine,
@@ -32,6 +34,7 @@ import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
 import { ProviderManagementSection } from "../../components/ui/settings/ProviderManagementSection"
+import { GoogleDriveConfigSection } from "../../components/ui/settings/GoogleDriveConfigSection"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
 import { GitHubConfigModal } from "../../components/ui/settings/GitHubConfigModal"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
@@ -39,11 +42,10 @@ import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
-import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import type { ProviderConfig } from "../../services/sync/provider-types"
+import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import { credentialStore } from "../../services/sync/credential-store"
-import { isProviderReconciled, markProviderReconciled } from "../../services/sync-queue"
-import { GoogleOAuthError } from "../../services/sync/google-oauth-service"
+import { markProviderReconciled as persistProviderReconciled } from "../../services/sync-queue"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -99,41 +101,12 @@ export default function SettingsScreen() {
     "github" | "google_drive" | null
   >(null)
   const [showGitHubEditor, setShowGitHubEditor] = useState(false)
-  const [activeProviderReconciled, setActiveProviderReconciled] = useState<
-    boolean | null
-  >(null)
-  const [providerMutationVersion, setProviderMutationVersion] = useState(0)
   const syncQueueWatermarkRef = useRef<number | null>(null)
 
+  const { hasActiveProvider, providerCards, markReconciled } = useProviderManagement()
+
   // Derive isConfigured from both legacy syncConfig and new provider framework
-  const isConfigured = syncConfig !== null || activeProviderReconciled !== null
-
-  // Bump when provider mutations happen so reconciliation re-checks
-  const handleProviderMutated = useCallback(() => {
-    setProviderMutationVersion((v) => v + 1)
-  }, [])
-
-  // Check if active provider needs first sync
-  useEffect(() => {
-    let cancelled = false
-    const check = async () => {
-      try {
-        const config = await providerSettingsStore.getActiveConfig()
-        if (config && !cancelled) {
-          const reconciled = await isProviderReconciled(config.id)
-          if (!cancelled) setActiveProviderReconciled(reconciled)
-        } else if (!cancelled) {
-          setActiveProviderReconciled(null)
-        }
-      } catch {
-        if (!cancelled) setActiveProviderReconciled(null)
-      }
-    }
-    void check()
-    return () => {
-      cancelled = true
-    }
-  }, [syncConfig, providerMutationVersion])
+  const isConfigured = syncConfig !== null || hasActiveProvider
 
   // Update check state - use hook's state for updateInfo
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
@@ -489,7 +462,8 @@ export default function SettingsScreen() {
   ])
 
   // Sync button text with pending count
-  const needsFirstSync = activeProviderReconciled === false
+  const needsFirstSync = hasActiveProvider &&
+    providerCards.some((c) => c.status === ProviderCardStatus.ActiveUnreconciled)
   const syncButtonText = useMemo(() => {
     if (isSyncing) return t("settings.autoSync.syncing")
     if (needsFirstSync) return t("settings.autoSync.firstSync")
@@ -637,9 +611,8 @@ export default function SettingsScreen() {
           }
 
           const activeConfig = await providerSettingsStore.getActiveConfig()
-          if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
-            await markProviderReconciled(activeConfig.id)
-            handleProviderMutated()
+          if (activeConfig) {
+            markReconciled(activeConfig.id)
           }
         },
         onInSync: () => {
@@ -663,7 +636,6 @@ export default function SettingsScreen() {
     clearDirtyDaysAfterSync,
     clearSettingsChangeFlag,
     replaceAllExpenses,
-    handleProviderMutated,
   ])
 
   return (
@@ -677,7 +649,6 @@ export default function SettingsScreen() {
             onNotification={handleNotification}
             onAddProvider={handleAddProvider}
             onEditProvider={handleEditProvider}
-            onProviderMutated={handleProviderMutated}
           />
 
           {addingProviderKind === "github" && (
@@ -709,82 +680,11 @@ export default function SettingsScreen() {
           />
 
           {addingProviderKind === "google_drive" && (
-            <YStack
-              bg="$backgroundHover"
-              p={UI_SPACE.section}
-              rounded={UI_RADIUS.surface}
-              gap="$control"
-              mt={UI_SPACE.gutter}
-            >
-              <Label>{t("settings.googleDrive.configTitle")}</Label>
-              <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
-                {t("settings.googleDrive.help")}
-              </Text>
-              <Button
-                size="$control"
-                theme="accent"
-                onPress={async () => {
-                  const { getGoogleDriveOAuthClientId, getGoogleTokenExchangeUrl } =
-                    await import("../../constants/runtime-config")
-                  const clientId = getGoogleDriveOAuthClientId()
-                  const tokenExchangeUrl = getGoogleTokenExchangeUrl() ?? ""
-                  if (!clientId) {
-                    handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
-                    return
-                  }
-                  if (!tokenExchangeUrl) {
-                    handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
-                    return
-                  }
-                  try {
-                    const { initiateGoogleDriveOAuth } =
-                      await import("../../services/sync/google-oauth-service")
-                    const result = await initiateGoogleDriveOAuth(
-                      clientId,
-                      tokenExchangeUrl
-                    )
-                    await providerSettingsStore.addProvider({
-                      id: result.providerId,
-                      kind: "google_drive",
-                      label: "Google Drive",
-                      credentialId: result.providerId,
-                      clientId,
-                      tokenExchangeUrl,
-                      accountEmail: result.accountEmail,
-                    })
-                    await providerSettingsStore.setActiveProvider(result.providerId)
-                    setAddingProviderKind(null)
-                    handleProviderMutated()
-                    handleNotification(t("settings.googleDrive.configured"), "success")
-                  } catch (error) {
-                    if (error instanceof GoogleOAuthError) {
-                      if (error.code === "CANCELLED") return
-                      if (error.code === "CONFIG_ERROR") {
-                        handleNotification(t("settings.googleDrive.authFailed"), "error")
-                        return
-                      }
-                      if (error.code === "NATIVE_MODULE_UNAVAILABLE") {
-                        handleNotification(
-                          t("settings.googleDrive.nativeModuleError"),
-                          "error"
-                        )
-                        return
-                      }
-                      if (error.stage === "exchange") {
-                        handleNotification(t("settings.googleDrive.authFailed"), "error")
-                        return
-                      }
-                    }
-                    handleNotification(t("common.error"), "error")
-                  }
-                }}
-              >
-                {t("settings.providers.addGoogleDrive")}
-              </Button>
-              <Button size="$control" onPress={() => setAddingProviderKind(null)}>
-                {t("common.cancel")}
-              </Button>
-            </YStack>
+            <GoogleDriveConfigSection
+              onNotification={handleNotification}
+              onCancel={() => setAddingProviderKind(null)}
+              onDone={() => setAddingProviderKind(null)}
+            />
           )}
 
           {isConfigured && (

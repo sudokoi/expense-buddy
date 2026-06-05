@@ -350,7 +350,8 @@
       "clientIdMissing": "Google Driveが設定されていません。環境変数EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_IDを設定してください。",
       "nativeModuleError": "Google Authネイティブモジュールが見つかりません。`npx expo prebuild --clean && npx expo run:android`で再ビルドしてください。",
       "authFailed": "Google Driveの認証に失敗しました。Googleアカウントを確認して、もう一度お試しください。",
-      "configured": "Google Driveを設定しました"
+      "configured": "Google Driveを設定しました",
+      "tokenExchangeUrlMissing": "Google Driveが設定されていません。環境変数EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URLを設定してください。"
     },
     "autoSync": {
       "title": "自動同期とオプション",

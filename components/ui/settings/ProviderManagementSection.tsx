@@ -1,18 +1,17 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { YStack, XStack, Text, Button, View } from "tamagui"
-import { Alert, Platform, Animated, PanResponder } from "react-native"
-import { Plus, Pencil, Play, Trash2, Check, X } from "@tamagui/lucide-icons-2"
-import type {
-  ProviderConfig,
-  SyncProvidersState,
-} from "../../../services/sync/provider-types"
-import { SyncProviderError as SyncProviderErrorClass } from "../../../services/sync/provider-types"
-import { providerSettingsStore } from "../../../services/sync/provider-settings-store"
+import { Alert, Animated, PanResponder } from "react-native"
+import { Plus, Pencil, Play, Check, Trash2, X } from "@tamagui/lucide-icons-2"
+import type { ProviderConfig } from "../../../services/sync/provider-types"
+import { SyncProviderError } from "../../../services/sync/provider-types"
 import { providerStateStore } from "../../../services/sync/provider-state-store"
-import { createProvider } from "../../../services/sync/provider-registry"
-import { isProviderReconciled } from "../../../services/sync-queue"
 import { IconActionButton } from "../IconActionButton"
 import { useTranslation } from "react-i18next"
+import {
+  useProviderManagement,
+  ProviderCardStatus,
+  ProviderConnectionStatus,
+} from "../../../stores/hooks"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -27,38 +26,28 @@ const ACTION_WIDTH = 260
 const SWIPE_THRESHOLD = 60
 const OPEN_RATIO = 0.85
 
-interface ProviderItemProps {
-  config: ProviderConfig
-  isActive: boolean
-  isReconciled: boolean
-  onActivate: (id: string) => void
-  onEdit: (config: ProviderConfig) => void
-  onDeleteRemote: (config: ProviderConfig) => void
+interface ProviderCardActions {
+  onEdit?: (config: ProviderConfig) => void
   onRemove: (id: string) => void
+  onDeleteRemote: (config: ProviderConfig) => void
+  onActivate: (id: string) => void
   onTestConnection: (config: ProviderConfig) => void
-  isTesting: boolean
-  connectionLabel: string | null
-  connectionError: string | null
 }
 
 function SwipeableProviderCard({
-  config,
-  isActive,
-  isReconciled,
-  onActivate,
-  onEdit,
-  onDeleteRemote,
-  onRemove,
-  onTestConnection,
-  isTesting,
-  connectionLabel,
-  connectionError,
-}: ProviderItemProps) {
+  status,
+  providerCard,
+  actions,
+}: {
+  status: ProviderCardStatus
+  providerCard: ReturnType<typeof useProviderManagement>["providerCards"][number]
+  actions: ProviderCardActions
+}) {
   const { t } = useTranslation()
-
   const translateX = useRef(new Animated.Value(0)).current
   const isOpenRef = useRef(false)
   const actionWidthRef = useRef(ACTION_WIDTH)
+  const { config, connectionStatus, connectionLabel, connectionError } = providerCard
 
   const kindLabel =
     config.kind === "github"
@@ -116,6 +105,11 @@ function SwipeableProviderCard({
     [close]
   )
 
+  const isActive =
+    status === ProviderCardStatus.ActiveReconciled ||
+    status === ProviderCardStatus.ActiveUnreconciled
+  const isTesting = connectionStatus === ProviderConnectionStatus.Testing
+
   return (
     <View
       bg={isActive ? "$backgroundHover" : "$background"}
@@ -138,13 +132,13 @@ function SwipeableProviderCard({
           actionWidthRef.current = e.nativeEvent.layout.width
         }}
       >
-        {config.kind === "github" && (
+        {config.kind === "github" && actions.onEdit && (
           <IconActionButton
             size="$compact"
             icon={Pencil}
             chromeless
             circular
-            onPress={handleAction(() => onEdit(config))}
+            onPress={handleAction(() => actions.onEdit!(config))}
             tooltip={t("settings.providers.edit")}
           />
         )}
@@ -153,7 +147,7 @@ function SwipeableProviderCard({
           icon={Play}
           chromeless
           circular
-          onPress={handleAction(() => onTestConnection(config))}
+          onPress={handleAction(() => actions.onTestConnection(config))}
           disabled={isTesting}
           tooltip={t("settings.providers.test")}
         />
@@ -163,7 +157,7 @@ function SwipeableProviderCard({
             icon={Check}
             chromeless
             circular
-            onPress={handleAction(() => onActivate(config.id))}
+            onPress={handleAction(() => actions.onActivate(config.id))}
             tooltip={t("settings.providers.activate")}
           />
         )}
@@ -175,7 +169,7 @@ function SwipeableProviderCard({
             circular
             color="white"
             bg={errorColor}
-            onPress={handleAction(() => onDeleteRemote(config))}
+            onPress={handleAction(() => actions.onDeleteRemote(config))}
             tooltip={t("settings.providers.deleteBackup")}
           />
         )}
@@ -184,7 +178,7 @@ function SwipeableProviderCard({
           icon={X}
           chromeless
           circular
-          onPress={handleAction(() => onRemove(config.id))}
+          onPress={handleAction(() => actions.onRemove(config.id))}
           tooltip={t("settings.providers.remove")}
         />
       </XStack>
@@ -202,7 +196,7 @@ function SwipeableProviderCard({
           <YStack flex={1} gap={UI_SPACE.micro}>
             <XStack gap={UI_SPACE.control} items="center">
               <Text fontWeight={UI_FONT_WEIGHT.medium}>{config.label || kindLabel}</Text>
-              {isActive && (
+              {status === ProviderCardStatus.ActiveReconciled && (
                 <YStack
                   bg={successColor}
                   px={UI_SPACE.micro}
@@ -218,8 +212,13 @@ function SwipeableProviderCard({
                   </Text>
                 </YStack>
               )}
-              {!isReconciled && (
-                <YStack bg="$yellow9" px={UI_SPACE.micro} py={1} rounded={UI_RADIUS.chip}>
+              {status === ProviderCardStatus.ActiveUnreconciled && (
+                <YStack
+                  bg="$yellow9"
+                  px={UI_SPACE.micro}
+                  py={1}
+                  rounded={UI_RADIUS.chip}
+                >
                   <Text
                     fontSize="$caption"
                     color="white"
@@ -237,12 +236,12 @@ function SwipeableProviderCard({
                   ? t("settings.providers.googleDriveDesc")
                   : ""}
             </Text>
-            {connectionLabel && (
+            {connectionStatus === ProviderConnectionStatus.Success && connectionLabel && (
               <Text fontSize="$caption" color={successColor}>
                 {connectionLabel}
               </Text>
             )}
-            {connectionError && (
+            {connectionStatus === ProviderConnectionStatus.Failed && connectionError && (
               <Text fontSize="$caption" color={errorColor}>
                 {connectionError}
               </Text>
@@ -269,57 +268,27 @@ export function ProviderManagementSection({
 }: ProviderManagementSectionProps) {
   const { t } = useTranslation()
 
-  const [providerState, setProviderState] = useState<SyncProvidersState>({
-    activeProviderId: null,
-    providers: [],
-  })
-  const [reconciledMap, setReconciledMap] = useState<Record<string, boolean>>({})
-  const [connectionResults, setConnectionResults] = useState<
-    Record<string, { ok: boolean; label?: string; error?: string }>
-  >({})
-  const [testingId, setTestingId] = useState<string | null>(null)
-  const [providerMutationVersion, setProviderMutationVersion] = useState(0)
-
-  const handleMutation = useCallback(() => {
-    setProviderMutationVersion((v) => v + 1)
-    onProviderMutated?.()
-  }, [onProviderMutated])
-
-  const loadState = useCallback(async () => {
-    const state = await providerSettingsStore.load()
-    setProviderState(state)
-
-    const reconciled: Record<string, boolean> = {}
-    for (const p of state.providers) {
-      reconciled[p.id] = await isProviderReconciled(p.id)
-    }
-    setReconciledMap(reconciled)
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    loadState().then(() => {
-      if (cancelled) return
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [loadState, providerMutationVersion])
+  const {
+    providerCards,
+    hasActiveProvider,
+    removeProvider,
+    setActiveProvider,
+    testConnection,
+  } = useProviderManagement()
 
   const handleActivate = useCallback(
     async (id: string) => {
-      await providerSettingsStore.setActiveProvider(id)
-      await loadState()
+      setActiveProvider(id)
       onNotification(t("settings.providers.activated"), "success")
-      handleMutation()
+      onProviderMutated?.()
     },
-    [loadState, onNotification, handleMutation, t]
+    [setActiveProvider, onNotification, onProviderMutated, t]
   )
 
   const handleRemove = useCallback(
     async (id: string) => {
-      const config = providerState.providers.find((p) => p.id === id)
-      const label = config?.label || id
+      const config = providerCards.find((p) => p.config.id === id)
+      const label = config?.config.label || id
 
       Alert.alert(
         t("settings.providers.removeTitle"),
@@ -329,24 +298,21 @@ export function ProviderManagementSection({
           {
             text: t("settings.providers.remove"),
             style: "destructive",
-            onPress: async () => {
-              await providerSettingsStore.removeProvider(id)
-              await loadState()
+            onPress: () => {
+              removeProvider(id)
               onNotification(t("settings.providers.removed"), "info")
-              handleMutation()
+              onProviderMutated?.()
             },
           },
         ]
       )
     },
-    [providerState.providers, loadState, onNotification, handleMutation, t]
+    [providerCards, removeProvider, onNotification, onProviderMutated, t]
   )
 
   const handleDeleteRemote = useCallback(
     async (config: ProviderConfig) => {
-      if (config.kind !== "google_drive") {
-        return
-      }
+      if (config.kind !== "google_drive") return
 
       const label = config.label || config.id
 
@@ -358,93 +324,61 @@ export function ProviderManagementSection({
           {
             text: t("settings.providers.deleteBackup"),
             style: "destructive",
-            onPress: async () => {
-              try {
-                const provider = createProvider(config)
-                if (!provider.deleteRemoteData) {
-                  throw new SyncProviderErrorClass(
-                    "NOT_FOUND",
-                    config.kind,
-                    "Remote backup deletion is not supported for this provider",
-                    false
+              onPress: async () => {
+                try {
+                  const { createProvider } = await import(
+                    "../../../services/sync/provider-registry"
                   )
+                  const provider = createProvider(config)
+                  if (!provider.deleteRemoteData) {
+                    throw new SyncProviderError(
+                      "NOT_FOUND",
+                      config.kind,
+                      "Remote backup deletion is not supported for this provider",
+                      false
+                    )
+                  }
+                  const deleted = await provider.deleteRemoteData()
+                  await providerStateStore.clearProvider(config.id)
+                  onNotification(
+                    deleted
+                      ? t("settings.providers.deleteBackupSuccess")
+                      : t("settings.providers.deleteBackupMissing"),
+                    deleted ? "success" : "info"
+                  )
+                  onProviderMutated?.()
+                } catch (err) {
+                  const msg =
+                    err instanceof SyncProviderError ? err.message : String(err)
+                  onNotification(msg, "error")
                 }
-                const deleted = await provider.deleteRemoteData()
-
-                await providerStateStore.clearProvider(config.id)
-                setConnectionResults((prev) => {
-                  const next = { ...prev }
-                  delete next[config.id]
-                  return next
-                })
-                await loadState()
-
-                onNotification(
-                  deleted
-                    ? t("settings.providers.deleteBackupSuccess")
-                    : t("settings.providers.deleteBackupMissing"),
-                  deleted ? "success" : "info"
-                )
-                handleMutation()
-              } catch (error) {
-                const msg =
-                  error instanceof SyncProviderErrorClass ? error.message : String(error)
-                onNotification(msg, "error")
-              }
-            },
+              },
           },
         ]
       )
     },
-    [loadState, onNotification, handleMutation, t]
+    [onNotification, onProviderMutated, t]
   )
 
   const handleTestConnection = useCallback(
     async (config: ProviderConfig) => {
-      setTestingId(config.id)
-      setConnectionResults((prev) => ({
-        ...prev,
-        [config.id]: { ok: false },
-      }))
-
-      try {
-        const provider = createProvider(config)
-        const result = await provider.testConnection()
-
-        setConnectionResults((prev) => ({
-          ...prev,
-          [config.id]: result.ok
-            ? { ok: true, label: result.label }
-            : { ok: false, error: result.error.message },
-        }))
-
-        if (result.ok) {
-          onNotification(t("settings.providers.connectionOk"), "success")
-        } else {
-          onNotification(result.error.message, "error")
-        }
-      } catch (error) {
+      const result = await testConnection(config)
+      if (result.ok) {
+        onNotification(t("settings.providers.connectionOk"), "success")
+      } else {
         const msg =
-          error instanceof SyncProviderErrorClass ? error.message : String(error)
-        setConnectionResults((prev) => ({
-          ...prev,
-          [config.id]: { ok: false, error: msg },
-        }))
+          typeof result.error === "string" ? result.error : result.error.message
         onNotification(msg, "error")
-      } finally {
-        setTestingId(null)
       }
     },
-    [onNotification, t]
+    [testConnection, onNotification, t]
   )
 
-  const hasProviders = providerState.providers.length > 0
-
-  const existingKinds = new Set(providerState.providers.map((p) => p.kind))
+  const hasProviders = providerCards.length > 0
+  const existingKinds = new Set(providerCards.map((p) => p.config.kind))
 
   return (
     <YStack gap="$gutter">
-      {/* Provider cards */}
       {hasProviders ? (
         <YStack gap="$control">
           <Text
@@ -456,28 +390,18 @@ export function ProviderManagementSection({
             {t("settings.providers.title")}
           </Text>
 
-          {providerState.providers.map((config) => (
+          {providerCards.map((card) => (
             <SwipeableProviderCard
-              key={config.id}
-              config={config}
-              isActive={config.id === providerState.activeProviderId}
-              isReconciled={reconciledMap[config.id] ?? false}
-              onActivate={handleActivate}
-              onEdit={onEditProvider ?? (() => {})}
-              onDeleteRemote={handleDeleteRemote}
-              onRemove={handleRemove}
-              onTestConnection={handleTestConnection}
-              isTesting={testingId === config.id}
-              connectionLabel={
-                connectionResults[config.id]?.ok
-                  ? (connectionResults[config.id].label ?? null)
-                  : null
-              }
-              connectionError={
-                connectionResults[config.id] && !connectionResults[config.id].ok
-                  ? (connectionResults[config.id].error ?? null)
-                  : null
-              }
+              key={card.config.id}
+              status={card.status}
+              providerCard={card}
+              actions={{
+                onEdit: onEditProvider,
+                onRemove: handleRemove,
+                onDeleteRemote: handleDeleteRemote,
+                onActivate: handleActivate,
+                onTestConnection: handleTestConnection,
+              }}
             />
           ))}
         </YStack>
@@ -500,7 +424,6 @@ export function ProviderManagementSection({
         </YStack>
       )}
 
-      {/* Add provider buttons — only show for kinds not yet configured */}
       <XStack gap="$control" flexWrap="wrap">
         {!existingKinds.has("github") && (
           <Button
@@ -512,12 +435,8 @@ export function ProviderManagementSection({
             {t("settings.providers.addGithub")}
           </Button>
         )}
-        {!existingKinds.has("google_drive") && Platform.OS === "android" && (
-          <Button
-            size="$control"
-            icon={Plus}
-            onPress={() => onAddProvider("google_drive")}
-          >
+        {!existingKinds.has("google_drive") && (
+          <Button size="$control" icon={Plus} onPress={() => onAddProvider("google_drive")}>
             {t("settings.providers.addGoogleDrive")}
           </Button>
         )}

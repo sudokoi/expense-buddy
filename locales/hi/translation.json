@@ -350,7 +350,8 @@
       "clientIdMissing": "Google Drive configured nhi hai. EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID set karein.",
       "nativeModuleError": "Google Auth native module nahi mila. `npx expo prebuild --clean && npx expo run:android` se rebuild karein.",
       "authFailed": "Google Drive authorization failed. Google account check karein aur phir se try karein.",
-      "configured": "Google Drive configure ho gaya"
+      "configured": "Google Drive configure ho gaya",
+      "tokenExchangeUrlMissing": "Google Drive configured nhi hai. EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URL set karein."
     },
     "autoSync": {
       "title": "ऑटो-सिंक और विकल्प",

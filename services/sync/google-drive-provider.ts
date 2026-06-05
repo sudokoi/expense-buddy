@@ -445,15 +445,24 @@ export class GoogleDriveProvider implements SyncProvider {
         }),
       })
 
-      if (!response.ok) return null
+      if (!response.ok) {
+        const text = await response.text().catch(() => "unknown")
+        console.warn(
+          `[google-drive] token refresh failed: HTTP ${response.status} body=${text}`
+        )
+        return null
+      }
 
       const data = await response.json()
       if (data.access_token) {
         await this.saveNewToken(data)
         return data.access_token
       }
+
+      console.warn("[google-drive] token refresh succeeded but no access_token in response")
       return null
-    } catch {
+    } catch (error) {
+      console.warn("[google-drive] token refresh network error:", error)
       return null
     }
   }
