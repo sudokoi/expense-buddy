@@ -126,9 +126,16 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
       }
     >(async ({ input }) => {
-      const result = await firstTimeSync(input.provider, input.localExpenses)
+      const result = await firstTimeSync(
+        input.provider,
+        input.localExpenses,
+        input.settings,
+        input.syncSettingsEnabled
+      )
       return result
     }),
   },
@@ -258,6 +265,8 @@ export const syncMachine = setup({
         input: ({ context }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
         }),
         onDone: [
           {
