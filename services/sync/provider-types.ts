@@ -72,7 +72,9 @@ export class SyncProviderError extends Error {
   }
 }
 
-export type RemoteRevision = { kind: "git_sha"; sha: string } | { kind: "drive" }
+export type RemoteRevision =
+  | { kind: "git_sha"; sha: string }
+  | { kind: "drive"; fileVersions?: Record<string, string> }
 
 export interface SyncSnapshot {
   manifest: {

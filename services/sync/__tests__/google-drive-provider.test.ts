@@ -156,7 +156,10 @@ describe("GoogleDriveProvider", () => {
       expect(result).not.toBeNull()
       expect(result!.files["expenses/2024-06-01.csv"]).toBe("id,amount\n1,100")
       expect(result!.files["expenses/2025-01-15.csv"]).toBe("id,amount\n2,200")
-      expect(result!.remoteRevision).toEqual({ kind: "drive" })
+      expect(result!.remoteRevision).toMatchObject({
+        kind: "drive",
+        fileVersions: expect.any(Object),
+      })
     })
 
     it("returns null when all year files are empty", async () => {

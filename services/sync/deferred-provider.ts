@@ -73,7 +73,7 @@ export class DeferredProvider implements SyncProvider {
       if (error instanceof SyncProviderError) throw error
       throw new SyncProviderError(
         "NOT_CONFIGURED",
-        "github",
+        this.resolvedKind,
         "Sync not configured yet",
         false
       )
@@ -97,5 +97,13 @@ export class DeferredProvider implements SyncProvider {
 
   async getStatus(): Promise<ProviderStatus> {
     return (await this.ensure()).getStatus()
+  }
+
+  async deleteRemoteData(): Promise<boolean> {
+    const provider = await this.ensure()
+    if (provider.deleteRemoteData) {
+      return provider.deleteRemoteData()
+    }
+    return false
   }
 }

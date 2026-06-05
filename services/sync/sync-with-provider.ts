@@ -10,11 +10,14 @@ import {
   type TrueConflict,
 } from "../merge-engine"
 import type { Expense } from "../../types/expense"
+import type { AppSettings } from "../settings-manager"
+import { hydrateSettingsFromJson } from "../settings-manager"
 import { APP_CONFIG } from "../../constants/app-config"
 
 export interface SyncWithProviderResult {
   success: boolean
   mergeResult?: MergeResult
+  mergedSettings?: AppSettings
   pendingConflicts?: TrueConflict[]
   error?: string
   errorCode?: string
@@ -25,6 +28,8 @@ export interface SyncWithProviderResult {
 export interface SyncWithProviderOptions {
   provider: SyncProvider
   localExpenses: Expense[]
+  localSettings?: AppSettings
+  syncSettingsEnabled?: boolean
   dirtyDays?: string[]
   deletedDays?: string[]
   conflictResolver?: (
@@ -35,7 +40,15 @@ export interface SyncWithProviderOptions {
 export async function syncWithProvider(
   options: SyncWithProviderOptions
 ): Promise<SyncWithProviderResult> {
-  const { provider, localExpenses, conflictResolver, dirtyDays, deletedDays } = options
+  const {
+    provider,
+    localExpenses,
+    localSettings,
+    syncSettingsEnabled,
+    conflictResolver,
+    dirtyDays,
+    deletedDays,
+  } = options
 
   const filterPaths = buildFilterPaths(dirtyDays, deletedDays)
 
@@ -57,8 +70,10 @@ export async function syncWithProvider(
   }
 
   const remoteExpenses = parseExpensesFromSnapshot(snapshot)
+  const remoteSettings = parseSettingsFromSnapshot(snapshot)
 
   let mergeResult = mergeExpenses(localExpenses, remoteExpenses)
+  let mergedSettings: AppSettings | undefined
 
   const conflictOutcome = await resolveConflictsIfNeeded(mergeResult, conflictResolver)
   if (conflictOutcome.earlyReturn) return conflictOutcome.earlyReturn
@@ -66,12 +81,24 @@ export async function syncWithProvider(
     mergeResult = conflictOutcome.updatedResult
   }
 
-  const mergedSnapshot = buildSnapshot(mergeResult.merged, snapshot)
+  if (syncSettingsEnabled && localSettings) {
+    mergedSettings = remoteSettings
+      ? { ...remoteSettings, ...localSettings }
+      : localSettings
+  }
 
-  if (!snapshotHasChanges(snapshot, mergedSnapshot)) {
+  const mergedSnapshot = buildSnapshot(
+    mergeResult.merged,
+    snapshot,
+    mergedSettings,
+    syncSettingsEnabled
+  )
+
+  if (!snapshotHasChanges(snapshot, mergedSnapshot, syncSettingsEnabled)) {
     return {
       success: true,
       mergeResult,
+      mergedSettings,
       isInSync: true,
     }
   }
@@ -85,6 +112,7 @@ export async function syncWithProvider(
     return {
       success: false,
       mergeResult,
+      mergedSettings,
       error: formatted.message,
       errorCode: formatted.code,
     }
@@ -93,17 +121,28 @@ export async function syncWithProvider(
   return {
     success: true,
     mergeResult,
+    mergedSettings,
   }
 }
 
 export async function firstTimeSync(
   provider: SyncProvider,
-  localExpenses: Expense[]
+  localExpenses: Expense[],
+  localSettings?: AppSettings,
+  syncSettingsEnabled?: boolean
 ): Promise<SyncWithProviderResult> {
   const existingSnapshot = await provider.readSnapshot()
   if (existingSnapshot) {
     const remoteExpenses = parseExpensesFromSnapshot(existingSnapshot)
+    const remoteSettings = parseSettingsFromSnapshot(existingSnapshot)
     const allExpenses = [...remoteExpenses]
+
+    let mergedSettings: AppSettings | undefined
+    if (syncSettingsEnabled && localSettings) {
+      mergedSettings = remoteSettings
+        ? { ...remoteSettings, ...localSettings }
+        : localSettings
+    }
     const localMap = new Map(localExpenses.map((e) => [e.id, e]))
     const seenIds = new Set<string>()
     for (const expense of allExpenses) {
@@ -118,7 +157,12 @@ export async function firstTimeSync(
         allExpenses.push(expense)
       }
     }
-    const mergedSnapshot = buildSnapshot(allExpenses, existingSnapshot)
+    const mergedSnapshot = buildSnapshot(
+      allExpenses,
+      existingSnapshot,
+      mergedSettings,
+      syncSettingsEnabled
+    )
     const writeSnapshot = filterChangedFiles(existingSnapshot, mergedSnapshot)
     try {
       await provider.writeSnapshot(writeSnapshot, existingSnapshot.remoteRevision)
@@ -134,10 +178,12 @@ export async function firstTimeSync(
     return {
       success: true,
       isFirstSync: true,
+      mergedSettings,
     }
   }
 
-  const snapshot = buildSnapshot(localExpenses, null)
+  const mergedSettings = syncSettingsEnabled && localSettings ? localSettings : undefined
+  const snapshot = buildSnapshot(localExpenses, null, mergedSettings, syncSettingsEnabled)
   try {
     await provider.writeSnapshot(snapshot, null)
   } catch (error) {
@@ -220,9 +266,21 @@ function parseExpensesFromSnapshot(snapshot: SyncSnapshot): Expense[] {
   return all
 }
 
+function parseSettingsFromSnapshot(snapshot: SyncSnapshot): AppSettings | null {
+  const content = snapshot.files[SETTINGS_FILENAME]
+  if (!content) return null
+  try {
+    return hydrateSettingsFromJson(JSON.parse(content))
+  } catch {
+    return null
+  }
+}
+
 function buildSnapshot(
   expenses: Expense[],
-  existingSnapshot: SyncSnapshot | null
+  existingSnapshot: SyncSnapshot | null,
+  mergedSettings?: AppSettings,
+  syncSettingsEnabled?: boolean
 ): SyncSnapshot {
   const grouped = groupExpensesByDay(expenses)
   const files: Record<string, string> = {}
@@ -231,7 +289,9 @@ function buildSnapshot(
     files[getFilenameForDay(dayKey)] = exportToCSV(dayExpenses)
   }
 
-  if (existingSnapshot) {
+  if (syncSettingsEnabled && mergedSettings) {
+    files[SETTINGS_FILENAME] = JSON.stringify(mergedSettings)
+  } else if (existingSnapshot) {
     for (const [path, content] of Object.entries(existingSnapshot.files)) {
       if (path === SETTINGS_FILENAME && !files[path]) {
         files[path] = content
@@ -254,8 +314,15 @@ function buildSnapshot(
   }
 }
 
-function snapshotHasChanges(before: SyncSnapshot, after: SyncSnapshot): boolean {
-  const skipPaths = new Set<string>([SETTINGS_FILENAME])
+function snapshotHasChanges(
+  before: SyncSnapshot,
+  after: SyncSnapshot,
+  syncSettingsEnabled?: boolean
+): boolean {
+  const skipPaths = new Set<string>()
+  if (!syncSettingsEnabled) {
+    skipPaths.add(SETTINGS_FILENAME)
+  }
   const bKeys = Object.keys(before.files)
     .filter((k) => !skipPaths.has(k))
     .sort()

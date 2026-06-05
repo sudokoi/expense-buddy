@@ -2,7 +2,7 @@ import { setup, assign, fromPromise } from "xstate"
 import type { SyncProvider } from "./sync/provider-types"
 import { syncWithProvider, firstTimeSync } from "./sync/sync-with-provider"
 import { Expense } from "../types/expense"
-import { AppSettings } from "./settings-manager"
+import type { AppSettings } from "./settings-manager"
 import { TrueConflict, MergeResult } from "./merge-engine"
 import i18next from "i18next"
 
@@ -73,6 +73,8 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
         dirtyDays?: string[]
         deletedDays?: string[]
         conflictResolver?: ConflictResolver
@@ -81,6 +83,8 @@ export const syncMachine = setup({
       const result = await syncWithProvider({
         provider: input.provider,
         localExpenses: input.localExpenses,
+        localSettings: input.settings,
+        syncSettingsEnabled: input.syncSettingsEnabled,
         dirtyDays: input.dirtyDays,
         deletedDays: input.deletedDays,
         conflictResolver: input.conflictResolver,
@@ -93,6 +97,8 @@ export const syncMachine = setup({
       {
         provider: SyncProvider
         localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
         dirtyDays?: string[]
         deletedDays?: string[]
         conflictResolver?: ConflictResolver
@@ -106,6 +112,8 @@ export const syncMachine = setup({
       const result = await syncWithProvider({
         provider: input.provider,
         localExpenses: input.localExpenses,
+        localSettings: input.settings,
+        syncSettingsEnabled: input.syncSettingsEnabled,
         dirtyDays: input.dirtyDays,
         deletedDays: input.deletedDays,
         conflictResolver: resolver,
@@ -128,6 +136,7 @@ export const syncMachine = setup({
     SUCCESS_DISPLAY_TIME: 2000,
     ERROR_DISPLAY_TIME: 5000,
     IN_SYNC_DISPLAY_TIME: 100,
+    CONFLICT_DISPLAY_TIME: 30000,
   },
 }).createMachine({
   id: "sync",
@@ -166,6 +175,8 @@ export const syncMachine = setup({
         input: ({ context }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
           dirtyDays: context.dirtyDays,
           deletedDays: context.deletedDays,
           conflictResolver: context.conflictResolver,
@@ -277,6 +288,16 @@ export const syncMachine = setup({
     },
 
     conflict: {
+      after: {
+        CONFLICT_DISPLAY_TIME: {
+          target: "idle",
+          actions: assign({
+            pendingConflicts: undefined,
+            error: undefined,
+            errorCode: undefined,
+          }),
+        },
+      },
       on: {
         RESOLVE_CONFLICTS: {
           target: "pushing",
@@ -289,6 +310,7 @@ export const syncMachine = setup({
             errorCode: undefined,
           }),
         },
+        RESET: "idle",
       },
     },
 
@@ -298,6 +320,8 @@ export const syncMachine = setup({
         input: ({ context, event }) => ({
           provider: context.provider,
           localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
           dirtyDays: context.dirtyDays,
           deletedDays: context.deletedDays,
           conflictResolver: context.conflictResolver,

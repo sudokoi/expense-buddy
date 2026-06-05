@@ -154,9 +154,17 @@ export async function initiateGoogleDriveOAuth(
     throw new GoogleOAuthError("auth", "NO_CODE", "No authorization code received")
   }
 
+  if (!request.codeVerifier) {
+    throw new GoogleOAuthError(
+      "auth",
+      "NO_CODE_VERIFIER",
+      "PKCE code verifier is missing"
+    )
+  }
+
   const tokens = await exchangeCodeForTokens(
     result.params.code,
-    request.codeVerifier ?? "",
+    request.codeVerifier,
     clientId,
     redirectUri
   )
@@ -235,14 +243,12 @@ async function exchangeServerAuthCodeForTokens(
   })
 
   if (!response.ok) {
-    const text = await response.text().catch(() => "unknown")
-    console.warn(
-      `[google-oauth] token exchange failed: HTTP ${response.status} body=${text}`
-    )
+    const statusText = await response.text().catch(() => "unknown")
+    console.warn(`[google-oauth] token exchange failed: HTTP ${response.status}`)
     throw new GoogleOAuthError(
       "exchange",
       `HTTP_${response.status}`,
-      `Token exchange failed: ${text}`
+      `Token exchange failed: ${statusText}`
     )
   }
 

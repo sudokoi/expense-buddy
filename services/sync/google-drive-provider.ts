@@ -111,12 +111,16 @@ export class GoogleDriveProvider implements SyncProvider {
         )
       : null
 
+    const fileVersions: Record<string, string> = {}
+
     for (const file of yearFiles) {
       const fileYear = file.name.slice(YEAR_FILE_PREFIX.length, -YEAR_FILE_SUFFIX.length)
       if (neededYears && !neededYears.has(fileYear)) continue
 
       const content = await this.downloadFile(token, file.id)
       if (!content) continue
+
+      fileVersions[fileYear] = simpleHash(content)
 
       const parsed = this.parseYearFile(content)
       for (const [path, fileContent] of Object.entries(parsed.f)) {
@@ -140,7 +144,7 @@ export class GoogleDriveProvider implements SyncProvider {
         files: fileList,
       },
       files,
-      remoteRevision: { kind: "drive" },
+      remoteRevision: { kind: "drive", fileVersions },
     }
   }
 
@@ -169,7 +173,7 @@ export class GoogleDriveProvider implements SyncProvider {
 
   async writeSnapshot(
     snapshot: SyncSnapshot,
-    _lastKnownRevision: RemoteRevision | null
+    lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
@@ -193,6 +197,22 @@ export class GoogleDriveProvider implements SyncProvider {
       const existingContent = existingFile
         ? await this.downloadFile(token, existingFile.id)
         : null
+
+      if (
+        existingContent &&
+        lastKnownRevision?.kind === "drive" &&
+        lastKnownRevision.fileVersions
+      ) {
+        const knownVersion = lastKnownRevision.fileVersions[yearStr]
+        if (knownVersion && simpleHash(existingContent) !== knownVersion) {
+          throw new SyncProviderErrorClass(
+            "CONFLICT",
+            "google_drive",
+            `Year file ${yearStr} was modified by another device since last read`,
+            false
+          )
+        }
+      }
 
       const yearData: YearFileData = existingContent
         ? this.parseYearFile(existingContent)
@@ -458,10 +478,8 @@ export class GoogleDriveProvider implements SyncProvider {
       })
 
       if (!response.ok) {
-        const text = await response.text().catch(() => "unknown")
-        console.warn(
-          `[google-drive] token refresh failed: HTTP ${response.status} body=${text}`
-        )
+        await response.text().catch(() => "unknown")
+        console.warn(`[google-drive] token refresh failed: HTTP ${response.status}`)
         return null
       }
 
@@ -484,6 +502,7 @@ export class GoogleDriveProvider implements SyncProvider {
   private async saveNewToken(tokenData: {
     access_token: string
     expires_in?: number
+    refresh_token?: string
   }): Promise<void> {
     const expiresAt = tokenData.expires_in
       ? String(Date.now() + tokenData.expires_in * 1000)
@@ -495,7 +514,7 @@ export class GoogleDriveProvider implements SyncProvider {
       kind: "google_oauth",
       data: {
         access_token: tokenData.access_token,
-        refresh_token: existing?.data["refresh_token"] ?? "",
+        refresh_token: tokenData.refresh_token ?? existing?.data["refresh_token"] ?? "",
         expires_at: expiresAt ?? "",
         client_id: this.config.clientId ?? "",
       },
