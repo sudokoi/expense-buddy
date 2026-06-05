@@ -29,6 +29,7 @@ const mockDriveConfig: ProviderConfig = {
   label: "Test Drive",
   credentialId: "cred-2",
   clientId: "test-client-id.apps.googleusercontent.com",
+  tokenExchangeUrl: "https://token-exchange.test/",
 }
 
 describe("provider-registry", () => {

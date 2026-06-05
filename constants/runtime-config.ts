@@ -10,6 +10,7 @@ type ExpoExtra = {
   auth?: {
     githubOAuthClientId?: string | null
     googleDriveOAuthClientId?: string | null
+    googleTokenExchangeUrl?: string | null
   }
 }
 
@@ -98,6 +99,16 @@ export function getGoogleDriveOAuthClientId(): string | null {
   const candidate = fromExtra ?? getGoogleDriveOAuthClientIdFromProcessEnv()
   if (!candidate) return null
   return isProbablyGoogleOAuthClientId(candidate) ? candidate : null
+}
+
+export function getGoogleTokenExchangeUrl(): string | null {
+  const extra = getExpoExtra()
+  const fromExtra = normalizeEnvValue(extra.auth?.googleTokenExchangeUrl)
+  const fromEnv = normalizeEnvValue(
+    (process.env as Record<string, unknown> | undefined)
+      ?.EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URL
+  )
+  return fromExtra ?? fromEnv
 }
 
 export function getGoogleDriveOAuthClientIdStatus():

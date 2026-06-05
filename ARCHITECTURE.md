@@ -179,7 +179,8 @@ Key design decisions:
 
 - **Stale-write detection**: Each archive has a version number. Before writing, the provider compares `remoteFile.version > lastKnownRevision.version` — a version bump on remote means a concurrent write, which surfaces a `CONFLICT` error rather than silently overwriting.
 - **OAuth token refresh**: Tokens are stored in `CredentialStore` with `access_token`, `refresh_token`, and `expires_at`. The provider refreshes automatically when the token is expired.
-- **Android-only**: Drive sync requires a native OAuth flow; the web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
+- **Android-native OAuth**: Google Drive auth uses the native `play-services-auth` GoogleSignInClient via the `expense-buddy-google-auth` Expo module, not a browser-based OAuth redirect. This complies with Google's current policy which rejects custom-scheme redirect URIs for Android apps.
+- **Android-only**: Drive sync requires the native Google identity flow; the web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
 - **Archive format**: A single zip contains all expense CSVs and settings; this is simpler than per-file syncing because Drive has no equivalent of GitHub's tree API.
 
 ### Queue Compaction

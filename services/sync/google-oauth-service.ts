@@ -1,6 +1,9 @@
 import * as WebBrowser from "expo-web-browser"
+import { Platform } from "react-native"
 import { credentialStore } from "./credential-store"
 import type { CredentialEntry } from "./provider-types"
+import ExpenseBuddyGoogleAuthModule from "../../modules/expense-buddy-google-auth"
+import type { ExpenseBuddyGoogleAuthNativeModule } from "../../modules/expense-buddy-google-auth"
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
@@ -103,8 +106,17 @@ export interface GoogleDriveOAuthResult {
 }
 
 export async function initiateGoogleDriveOAuth(
-  clientId: string
+  clientId: string,
+  tokenExchangeUrl?: string
 ): Promise<GoogleDriveOAuthResult> {
+  if (Platform.OS === "android" && ExpenseBuddyGoogleAuthModule) {
+    return initiateAndroidGoogleDriveOAuth(
+      clientId,
+      tokenExchangeUrl ?? "",
+      ExpenseBuddyGoogleAuthModule
+    )
+  }
+
   WebBrowser.maybeCompleteAuthSession()
 
   const { loadAsync } = await import("expo-auth-session")
@@ -169,6 +181,93 @@ export async function initiateGoogleDriveOAuth(
   }
 
   return { providerId, accountEmail }
+}
+
+async function initiateAndroidGoogleDriveOAuth(
+  webClientId: string,
+  tokenExchangeUrl: string,
+  module: ExpenseBuddyGoogleAuthNativeModule
+): Promise<GoogleDriveOAuthResult> {
+  let result: { serverAuthCode: string; email: string } | null
+  try {
+    result = await module.startGoogleDriveOAuthAsync(webClientId)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    const code = (error as { code?: string })?.code
+    if (code?.startsWith("ERR_GOOGLE_AUTH_CONFIG")) {
+      throw new GoogleOAuthError("auth", "CONFIG_ERROR", message)
+    }
+    throw new GoogleOAuthError("auth", "NATIVE_ERROR", message)
+  }
+
+  if (!result) {
+    throw new GoogleOAuthError("auth", "CANCELLED", "User cancelled the OAuth flow")
+  }
+
+  const { serverAuthCode, email } = result
+  if (!serverAuthCode) {
+    throw new GoogleOAuthError("auth", "NO_CODE", "No authorization code received")
+  }
+
+  const tokens = await exchangeServerAuthCodeForTokens(
+    serverAuthCode,
+    webClientId,
+    tokenExchangeUrl
+  )
+  const providerId = `google_drive_${Date.now()}`
+  await storeTokens(providerId, tokens, webClientId)
+
+  return { providerId, accountEmail: email }
+}
+
+async function exchangeServerAuthCodeForTokens(
+  serverAuthCode: string,
+  clientId: string,
+  tokenExchangeUrl: string
+): Promise<GoogleDriveTokenResult> {
+  const response = await fetch(tokenExchangeUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      code: serverAuthCode,
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "unknown")
+    console.warn(
+      `[google-oauth] token exchange failed: HTTP ${response.status} body=${text}`
+    )
+    throw new GoogleOAuthError(
+      "exchange",
+      `HTTP_${response.status}`,
+      `Token exchange failed: ${text}`
+    )
+  }
+
+  const data = (await response.json()) as {
+    access_token?: string
+    refresh_token?: string
+    expires_in?: number
+  }
+
+  if (!data.access_token) {
+    console.warn(
+      `[google-oauth] token exchange succeeded but no access_token in response`
+    )
+    throw new GoogleOAuthError(
+      "exchange",
+      "NO_ACCESS_TOKEN",
+      "No access token in response"
+    )
+  }
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token ?? "",
+    expiresIn: data.expires_in ?? 3600,
+  }
 }
 
 export async function getGoogleDriveTokenInfo(

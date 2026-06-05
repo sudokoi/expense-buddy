@@ -1,8 +1,10 @@
 # ADR-009: Multi-Provider Sync with Google Drive Backups
 
 **Date:** 2026-06-03  
-**Status:** Accepted — design in refinement  
+**Status:** Amended — Native Android OAuth replaces browser flow (2026-06-05)  
 **Author:** Planning draft via GitHub Copilot
+
+> **Amendment (2026-06-05):** The initial design used `expo-auth-session` with a custom `myapp://` redirect URI. Google's OAuth 2.0 policy now rejects custom-scheme redirect URIs for Android apps. The auth layer was replaced with a native Android `GoogleSignInClient` flow via the `expense-buddy-google-auth` Expo module. The browser fallback (`expo-auth-session`) is retained for non-Android platforms but is not used in production (Drive sync is Android-only).
 
 ---
 

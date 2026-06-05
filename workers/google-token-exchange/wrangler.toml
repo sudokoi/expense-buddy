@@ -1,0 +1,6 @@
+name = "expense-buddy-token-exchange"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+
+[vars]
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"

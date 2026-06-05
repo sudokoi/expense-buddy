@@ -724,31 +724,56 @@ export default function SettingsScreen() {
                 size="$control"
                 theme="accent"
                 onPress={async () => {
-                  const { getGoogleDriveOAuthClientId } =
+                  const { getGoogleDriveOAuthClientId, getGoogleTokenExchangeUrl } =
                     await import("../../constants/runtime-config")
                   const clientId = getGoogleDriveOAuthClientId()
+                  const tokenExchangeUrl = getGoogleTokenExchangeUrl() ?? ""
                   if (!clientId) {
+                    handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
+                    return
+                  }
+                  if (!tokenExchangeUrl) {
                     handleNotification(t("settings.googleDrive.clientIdMissing"), "error")
                     return
                   }
                   try {
                     const { initiateGoogleDriveOAuth } =
                       await import("../../services/sync/google-oauth-service")
-                    const result = await initiateGoogleDriveOAuth(clientId)
+                    const result = await initiateGoogleDriveOAuth(
+                      clientId,
+                      tokenExchangeUrl
+                    )
                     await providerSettingsStore.addProvider({
                       id: result.providerId,
                       kind: "google_drive",
                       label: "Google Drive",
                       credentialId: result.providerId,
                       clientId,
+                      tokenExchangeUrl,
                       accountEmail: result.accountEmail,
                     })
+                    await providerSettingsStore.setActiveProvider(result.providerId)
                     setAddingProviderKind(null)
                     handleProviderMutated()
                     handleNotification(t("settings.googleDrive.configured"), "success")
                   } catch (error) {
-                    if (error instanceof GoogleOAuthError && error.code === "CANCELLED") {
-                      return
+                    if (error instanceof GoogleOAuthError) {
+                      if (error.code === "CANCELLED") return
+                      if (error.code === "CONFIG_ERROR") {
+                        handleNotification(t("settings.googleDrive.authFailed"), "error")
+                        return
+                      }
+                      if (error.code === "NATIVE_MODULE_UNAVAILABLE") {
+                        handleNotification(
+                          t("settings.googleDrive.nativeModuleError"),
+                          "error"
+                        )
+                        return
+                      }
+                      if (error.stage === "exchange") {
+                        handleNotification(t("settings.googleDrive.authFailed"), "error")
+                        return
+                      }
                     }
                     handleNotification(t("common.error"), "error")
                   }

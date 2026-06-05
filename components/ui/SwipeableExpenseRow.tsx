@@ -102,7 +102,13 @@ export const SwipeableExpenseRow = memo(function SwipeableExpenseRow({
   return (
     <XStack overflow="hidden">
       <XStack
-        style={{ position: "absolute", right: 0, top: 0, bottom: 0, alignItems: "center" }}
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          alignItems: "center",
+        }}
         gap="$control"
         pl={UI_SPACE.control}
         pr={UI_SPACE.control}

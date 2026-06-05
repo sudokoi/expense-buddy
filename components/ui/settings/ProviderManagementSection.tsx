@@ -278,6 +278,12 @@ export function ProviderManagementSection({
     Record<string, { ok: boolean; label?: string; error?: string }>
   >({})
   const [testingId, setTestingId] = useState<string | null>(null)
+  const [providerMutationVersion, setProviderMutationVersion] = useState(0)
+
+  const handleMutation = useCallback(() => {
+    setProviderMutationVersion((v) => v + 1)
+    onProviderMutated?.()
+  }, [onProviderMutated])
 
   const loadState = useCallback(async () => {
     const state = await providerSettingsStore.load()
@@ -298,16 +304,16 @@ export function ProviderManagementSection({
     return () => {
       cancelled = true
     }
-  }, [loadState])
+  }, [loadState, providerMutationVersion])
 
   const handleActivate = useCallback(
     async (id: string) => {
       await providerSettingsStore.setActiveProvider(id)
       await loadState()
       onNotification(t("settings.providers.activated"), "success")
-      onProviderMutated?.()
+      handleMutation()
     },
-    [loadState, onNotification, onProviderMutated, t]
+    [loadState, onNotification, handleMutation, t]
   )
 
   const handleRemove = useCallback(
@@ -327,13 +333,13 @@ export function ProviderManagementSection({
               await providerSettingsStore.removeProvider(id)
               await loadState()
               onNotification(t("settings.providers.removed"), "info")
-              onProviderMutated?.()
+              handleMutation()
             },
           },
         ]
       )
     },
-    [providerState.providers, loadState, onNotification, onProviderMutated, t]
+    [providerState.providers, loadState, onNotification, handleMutation, t]
   )
 
   const handleDeleteRemote = useCallback(
@@ -379,7 +385,7 @@ export function ProviderManagementSection({
                     : t("settings.providers.deleteBackupMissing"),
                   deleted ? "success" : "info"
                 )
-                onProviderMutated?.()
+                handleMutation()
               } catch (error) {
                 const msg =
                   error instanceof SyncProviderErrorClass ? error.message : String(error)
@@ -390,7 +396,7 @@ export function ProviderManagementSection({
         ]
       )
     },
-    [loadState, onNotification, onProviderMutated, t]
+    [loadState, onNotification, handleMutation, t]
   )
 
   const handleTestConnection = useCallback(

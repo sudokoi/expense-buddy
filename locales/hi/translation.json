@@ -346,8 +346,10 @@
     },
     "googleDrive": {
       "configTitle": "Google Drive",
-      "help": "Google Drive sync uses OAuth 2.0. Sign in with your Google account to enable Drive backup. Available on Android only.",
+      "help": "Sign in with your Google account to enable Drive backup. Available on Android only.",
       "clientIdMissing": "Google Drive configured nhi hai. EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID set karein.",
+      "nativeModuleError": "Google Auth native module nahi mila. `npx expo prebuild --clean && npx expo run:android` se rebuild karein.",
+      "authFailed": "Google Drive authorization failed. Google account check karein aur phir se try karein.",
       "configured": "Google Drive configure ho gaya"
     },
     "autoSync": {

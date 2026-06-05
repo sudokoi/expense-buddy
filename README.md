@@ -157,7 +157,30 @@ _On Android, you can also sign in with GitHub using the device authorization flo
 3. The app stores a compressed expense archive in your app-specific `appDataFolder` — invisible to other Drive apps.
 4. Test the connection and save.
 
-_Google Drive sync requires an Android device and a Google account with the app authorized to use Drive API._
+_Google Drive sync requires an Android device and a Google account with the app authorized to use Drive API. An **Android OAuth client** must be configured in Google Cloud Console (see setup steps below)._
+
+#### Google Cloud Console — Android OAuth Client Setup
+
+The app uses `play-services-auth` (GoogleSignInClient) for native Android sign-in, not a browser redirect. You must create an Android OAuth client in the same GCP project as the existing web client.
+
+1. Go to [Google Cloud Console > APIs & Services > Credentials](https://console.developers.google.com/apis/credentials).
+2. Select the same project that contains the web client ID (`124317329894-...`).
+3. Click **Create Credentials** → **OAuth client ID**.
+4. For **Application type**, select **Android**.
+5. Provide a name (e.g. "Expense Buddy Android").
+6. For **Package name**, enter: `com.sudokoi.expensebuddy`
+7. For **SHA-1 certificate fingerprint**, add the debug and release fingerprints:
+   - **Debug** (local development):
+     ```
+     keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android -keypass android
+     ```
+   - **Release** (production signing):
+     Obtain from your app signing key (Play Console or your keystore).
+8. Click **Create**. Copy the client ID (it ends with `.apps.googleusercontent.com`).
+9. Still in the same project, verify that the **Drive API** is enabled: go to [Enabled APIs & Services](https://console.developers.google.com/apis/enabled) and ensure `Google Drive API` is listed. Enable it if not.
+10. Review the **OAuth consent screen**: ensure the required fields (app name, support email) are filled and the `../auth/drive.file` scope is listed if you publish the app.
+
+> **The Android OAuth client ID is NOT stored in the code.** Google Play Services identifies the app by package name + signing certificate, so no code change is needed after creating the client. The existing web client ID (`GOOGLE_DRIVE_OAUTH_CLIENT_ID`) is still required for the server-side token exchange.
 
 ### Auto-sync options
 

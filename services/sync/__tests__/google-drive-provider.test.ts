@@ -24,6 +24,7 @@ function createConfig(
     label: "Test Drive",
     credentialId: "google-creds",
     clientId: "test-client-id.apps.googleusercontent.com",
+    tokenExchangeUrl: "https://token-exchange.test/",
     ...overrides,
   }
 }
