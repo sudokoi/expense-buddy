@@ -6,7 +6,7 @@ import ExpenseBuddyGoogleAuthModule from "../../modules/expense-buddy-google-aut
 import type { ExpenseBuddyGoogleAuthNativeModule } from "../../modules/expense-buddy-google-auth"
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
+const DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
 
 const googleDiscovery = {
   authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -129,7 +129,7 @@ export async function initiateGoogleDriveOAuth(
   const request = await loadAsync(
     {
       clientId,
-      scopes: [DRIVE_FILE_SCOPE],
+      scopes: [DRIVE_APPDATA_SCOPE],
       redirectUri,
       extraParams: {
         access_type: "offline",

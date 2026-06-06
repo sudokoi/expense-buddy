@@ -15,7 +15,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
 
 private const val TAG = "ExpenseBuddyGoogleAuth"
 private const val GOOGLE_SIGN_IN_REQUEST_CODE = 31030
-private const val DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
+private const val DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
 
 private class GoogleAuthNoActivityException :
     CodedException(
@@ -54,7 +54,7 @@ class ExpenseBuddyGoogleAuthModule : Module() {
                 val options =
                     GoogleSignInOptions
                         .Builder()
-                        .requestScopes(Scope(DRIVE_FILE_SCOPE))
+                        .requestScopes(Scope(DRIVE_APPDATA_SCOPE))
                         .requestServerAuthCode(webClientId)
                         .requestEmail()
                         .build()
