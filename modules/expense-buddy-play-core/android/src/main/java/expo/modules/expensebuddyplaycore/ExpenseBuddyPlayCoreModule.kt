@@ -2,6 +2,7 @@ package expo.modules.expensebuddyplaycore
 
 import android.app.Activity
 import android.content.IntentSender.SendIntentException
+import android.util.Log
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -47,12 +48,16 @@ class ExpenseBuddyPlayCoreModule : Module() {
 
     private val installStateListener =
         InstallStateUpdatedListener { state ->
+            val status = mapInstallStatus(state.installStatus())
+            val bytes = state.bytesDownloaded()
+            val total = state.totalBytesToDownload()
+            Log.d("PLAY_CORE", "installStateUpdate status=$status bytesDownloaded=$bytes/$total")
             sendEvent(
                 UPDATE_STATUS_EVENT_NAME,
                 mapOf(
-                    "bytesDownloaded" to state.bytesDownloaded().toDouble(),
-                    "status" to mapInstallStatus(state.installStatus()),
-                    "totalBytesToDownload" to state.totalBytesToDownload().toDouble(),
+                    "bytesDownloaded" to bytes.toDouble(),
+                    "status" to status,
+                    "totalBytesToDownload" to total.toDouble(),
                 ),
             )
 
@@ -75,17 +80,22 @@ class ExpenseBuddyPlayCoreModule : Module() {
             AsyncFunction("getUpdateInfoAsync") { promise: Promise ->
                 appUpdateManager.appUpdateInfo
                     .addOnSuccessListener { appUpdateInfo ->
+                        val availability = appUpdateInfo.updateAvailability()
+                        Log.d("PLAY_CORE", "getUpdateInfoAsync success availability=$availability")
                         promise.resolve(appUpdateInfoToMap(appUpdateInfo))
                     }.addOnFailureListener { error ->
+                        Log.e("PLAY_CORE", "getUpdateInfoAsync failed: ${error.message}")
                         promise.reject("ERR_PLAY_STORE_UPDATE_INFO_FAILED", error.message, error)
                     }
             }
 
             AsyncFunction("startFlexibleUpdateAsync") { promise: Promise ->
+                Log.d("PLAY_CORE", "startFlexibleUpdateAsync")
                 startUpdate(promise, AppUpdateType.FLEXIBLE)
             }
 
             AsyncFunction("startImmediateUpdateAsync") { promise: Promise ->
+                Log.d("PLAY_CORE", "startImmediateUpdateAsync")
                 startUpdate(promise, AppUpdateType.IMMEDIATE)
             }
 
@@ -93,13 +103,16 @@ class ExpenseBuddyPlayCoreModule : Module() {
                 appUpdateManager
                     .completeUpdate()
                     .addOnSuccessListener {
+                        Log.d("PLAY_CORE", "completeUpdateAsync success")
                         promise.resolve(null)
                     }.addOnFailureListener { error ->
+                        Log.e("PLAY_CORE", "completeUpdateAsync failed: ${error.message}")
                         promise.reject("ERR_PLAY_STORE_UPDATE_COMPLETE_FAILED", error.message, error)
                     }
             }
 
             AsyncFunction("requestReviewAsync") { promise: Promise ->
+                Log.d("PLAY_CORE", "requestReviewAsync")
                 requestReview(promise)
             }
 
@@ -118,6 +131,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
     ) {
         val activity =
             appContext.currentActivity ?: run {
+                Log.w("PLAY_CORE", "startUpdate failed: no foreground activity")
                 promise.reject(PlayCoreCurrentActivityUnavailableException())
                 return
             }
@@ -132,7 +146,15 @@ class ExpenseBuddyPlayCoreModule : Module() {
                 val updateTypeLabel =
                     if (updateType == AppUpdateType.IMMEDIATE) "immediate" else "flexible"
 
+                val allowedFlexible = appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                val allowedImmediate = appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                Log.d(
+                    "PLAY_CORE",
+                    "startUpdate type=$updateTypeLabel availability=$availability isAvailable=$isAvailable allowedFlexible=$allowedFlexible allowedImmediate=$allowedImmediate",
+                )
+
                 if (!isAvailable || !appUpdateInfo.isUpdateTypeAllowed(updateType)) {
+                    Log.w("PLAY_CORE", "startUpdate: update not available for type=$updateTypeLabel")
                     promise.reject(
                         CodedException(
                             code = "ERR_PLAY_STORE_UPDATE_NOT_AVAILABLE",
@@ -154,10 +176,12 @@ class ExpenseBuddyPlayCoreModule : Module() {
                             UPDATE_REQUEST_CODE,
                         )
 
+                    Log.d("PLAY_CORE", "startUpdateFlowForResult started=$started")
                     if (started) {
                         promise.resolve(null)
                     } else {
                         unregisterInstallStateListener()
+                        Log.w("PLAY_CORE", "startUpdateFlowForResult returned false")
                         promise.reject(
                             CodedException(
                                 code = "ERR_PLAY_STORE_UPDATE_NOT_STARTED",
@@ -168,13 +192,16 @@ class ExpenseBuddyPlayCoreModule : Module() {
                     }
                 } catch (error: SendIntentException) {
                     unregisterInstallStateListener()
+                    Log.e("PLAY_CORE", "startUpdateFlowForResult SendIntentException: ${error.message}")
                     promise.reject("ERR_PLAY_STORE_UPDATE_INTENT_FAILED", error.message, error)
                 } catch (error: Exception) {
                     unregisterInstallStateListener()
+                    Log.e("PLAY_CORE", "startUpdateFlowForResult failed: ${error.message}")
                     promise.reject("ERR_PLAY_STORE_UPDATE_START_FAILED", error.message, error)
                 }
             }.addOnFailureListener { error ->
                 unregisterInstallStateListener()
+                Log.e("PLAY_CORE", "startUpdate appUpdateInfo failed: ${error.message}")
                 promise.reject("ERR_PLAY_STORE_UPDATE_START_FAILED", error.message, error)
             }
     }
@@ -182,6 +209,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
     private fun requestReview(promise: Promise) {
         val activity =
             appContext.currentActivity ?: run {
+                Log.w("PLAY_CORE", "requestReview failed: no foreground activity")
                 promise.reject(PlayCoreCurrentActivityUnavailableException())
                 return
             }
@@ -190,14 +218,18 @@ class ExpenseBuddyPlayCoreModule : Module() {
         reviewManager
             .requestReviewFlow()
             .addOnSuccessListener { reviewInfo ->
+                Log.d("PLAY_CORE", "requestReviewFlow success, launching review flow")
                 reviewManager
                     .launchReviewFlow(activity, reviewInfo)
                     .addOnCompleteListener {
+                        Log.d("PLAY_CORE", "launchReviewFlow completed")
                         promise.resolve(null)
                     }.addOnFailureListener { error ->
+                        Log.e("PLAY_CORE", "launchReviewFlow failed: ${error.message}")
                         promise.reject("ERR_PLAY_STORE_REVIEW_FLOW_FAILED", error.message, error)
                     }
             }.addOnFailureListener { error ->
+                Log.e("PLAY_CORE", "requestReviewFlow failed: ${error.message}")
                 promise.reject("ERR_PLAY_STORE_REVIEW_REQUEST_FAILED", error.message, error)
             }
     }
@@ -207,6 +239,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
             return
         }
 
+        Log.d("PLAY_CORE", "handleActivityResult resultCode=${payload.resultCode}")
         when (payload.resultCode) {
             Activity.RESULT_OK -> sendEvent(UPDATE_STATUS_EVENT_NAME, mapOf("status" to "accepted"))
             Activity.RESULT_CANCELED -> {
@@ -226,6 +259,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
             return
         }
 
+        Log.d("PLAY_CORE", "registerInstallStateListener")
         appUpdateManager.registerListener(installStateListener)
         isInstallStateListenerRegistered = true
     }
@@ -235,6 +269,7 @@ class ExpenseBuddyPlayCoreModule : Module() {
             return
         }
 
+        Log.d("PLAY_CORE", "unregisterInstallStateListener")
         appUpdateManager.unregisterListener(installStateListener)
         isInstallStateListenerRegistered = false
     }
