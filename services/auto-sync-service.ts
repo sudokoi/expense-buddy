@@ -4,6 +4,7 @@ import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
 import { createProvider } from "./sync/provider-registry"
 import { getActiveProviderConfig } from "./sync-config"
+import { providerStore } from "../stores/provider-store"
 import type { SyncNotification } from "../types/sync"
 import i18next from "i18next"
 import { loadDirtyDays } from "./expense-dirty-days"
@@ -149,6 +150,7 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
 
       if (!(await isProviderReconciled(providerId))) {
         await markProviderReconciled(providerId)
+        providerStore.trigger.markReconciled({ id: providerId })
       }
 
       const minWatermark = await getMinSyncedWatermark()

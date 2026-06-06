@@ -103,7 +103,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   const syncActorRef = useRef<ActorRefFrom<typeof syncMachine> | null>(null)
   if (!syncActorRef.current && !providedSyncActor) {
     const deferredProvider = new DeferredProvider(async () => {
-      const activeConfig = await getActiveProviderConfig()
+      const snapshot = providerStore.getSnapshot()
+      const activeConfig = snapshot.context.activeProviderId
+        ? snapshot.context.providers.find(
+            (p) => p.id === snapshot.context.activeProviderId
+          )
+        : null
       if (!activeConfig) {
         throw new Error("No active provider config found")
       }

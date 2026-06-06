@@ -24,7 +24,7 @@ import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
 const SWIPE_THRESHOLD = 60
-const OPEN_RATIO = 0.85
+const OPEN_RATIO = 1
 
 interface ProviderCardActions {
   onEdit?: (config: ProviderConfig) => void
@@ -228,7 +228,7 @@ export function ProviderManagementSection({
     useProviderManagement()
 
   const handleActivate = useCallback(
-    async (id: string) => {
+    (id: string) => {
       setActiveProvider(id)
       onNotification(t("settings.providers.activated"), "success")
       onProviderMutated?.()

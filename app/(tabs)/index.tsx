@@ -17,6 +17,7 @@ import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
+import { providerStore } from "../../stores/provider-store"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -240,6 +241,7 @@ export default function DashboardScreen() {
           const activeConfig = await providerSettingsStore.getActiveConfig()
           if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
             await markProviderReconciled(activeConfig.id)
+            providerStore.trigger.markReconciled({ id: activeConfig.id })
           }
           logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
         },

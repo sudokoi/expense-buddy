@@ -50,11 +50,6 @@ export const providerStore = createStore({
     addProvider: (context, event: { config: ProviderConfig }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.addProvider(event.config)
-        logAsync(
-          "INFO",
-          "PROVIDER_STORE",
-          `ADD_PROVIDER id=${event.config.id} kind=${event.config.kind}`
-        )
       })
 
       const exists = context.providers.some((p) => p.id === event.config.id)
@@ -67,11 +62,6 @@ export const providerStore = createStore({
     removeProvider: (context, event: { id: string }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.removeProvider(event.id)
-        logAsync(
-          "INFO",
-          "PROVIDER_STORE",
-          `REMOVE_PROVIDER id=${event.id} wasActive=${context.activeProviderId === event.id}`
-        )
       })
 
       const providers = context.providers.filter((p) => p.id !== event.id)
@@ -98,7 +88,6 @@ export const providerStore = createStore({
     setActiveProvider: (context, event: { id: string | null }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.setActiveProvider(event.id)
-        logAsync("INFO", "PROVIDER_STORE", `SET_ACTIVE_PROVIDER id=${event.id ?? "null"}`)
       })
 
       return { ...context, activeProviderId: event.id }
@@ -107,7 +96,6 @@ export const providerStore = createStore({
     markReconciled: (context, event: { id: string }, enqueue) => {
       enqueue.effect(async () => {
         await markProviderReconciled(event.id)
-        logAsync("INFO", "PROVIDER_STORE", `MARK_PROVIDER_RECONCILED id=${event.id}`)
       })
 
       return {
