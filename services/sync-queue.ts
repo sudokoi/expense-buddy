@@ -5,6 +5,7 @@ import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
 import { providerStateStore } from "./sync/provider-state-store"
 import { providerSettingsStore } from "./sync/provider-settings-store"
+import { logAsync } from "./logger"
 
 const SYNC_QUEUE_KEY = "sync_queue_v1"
 const SYNC_QUEUE_VERSION = 1
@@ -161,6 +162,11 @@ export async function enqueueSyncOp(op: SyncQueueOpInput): Promise<SyncQueueOp> 
       ops: [...state.ops, nextOp],
     }
     await saveState(nextState)
+    logAsync(
+      "INFO",
+      "SYNC_QUEUE",
+      `ENQUEUE_OP id=${nextOp.id} type=${nextOp.type} queueSize=${nextState.ops.length}`
+    )
     return nextOp
   })
 }
@@ -188,6 +194,11 @@ export async function clearSyncOpsUpTo(watermark: number): Promise<void> {
       ops: remaining,
     }
     await saveState(nextState)
+    logAsync(
+      "INFO",
+      "SYNC_QUEUE",
+      `CLEAR_OPS_UP_TO watermark=${watermark} removed=${state.ops.length - remaining.length} remaining=${remaining.length}`
+    )
   })
 }
 
@@ -369,14 +380,25 @@ export async function setProviderWatermark(
   watermark: number
 ): Promise<void> {
   await providerStateStore.set(providerId, "watermark", watermark)
+  logAsync(
+    "INFO",
+    "SYNC_QUEUE",
+    `SET_PROVIDER_WATERMARK providerId=${providerId} watermark=${watermark}`
+  )
 }
 
 export async function markProviderReconciled(providerId: string): Promise<void> {
   await providerStateStore.set(providerId, "reconciled", true)
+  logAsync("INFO", "SYNC_QUEUE", `MARK_PROVIDER_RECONCILED providerId=${providerId}`)
 }
 
 export async function isProviderReconciled(providerId: string): Promise<boolean> {
   const reconciled = await providerStateStore.get<boolean>(providerId, "reconciled")
+  logAsync(
+    "INFO",
+    "SYNC_QUEUE",
+    `IS_PROVIDER_RECONCILED providerId=${providerId} result=${reconciled === true}`
+  )
   return reconciled === true
 }
 

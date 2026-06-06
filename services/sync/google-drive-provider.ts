@@ -12,6 +12,7 @@ import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
 import { simpleHash } from "./sync-utils"
 import { APP_CONFIG } from "../../constants/app-config"
 import { Platform } from "react-native"
+import { logAsync } from "../logger"
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
 const UPLOAD_API_BASE = "https://www.googleapis.com/upload/drive/v3"
@@ -86,6 +87,7 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
+    const startTime = Date.now()
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
         "REMOTE_ERROR",
@@ -99,6 +101,11 @@ export class GoogleDriveProvider implements SyncProvider {
     if (!token) throw this.authError("AUTH_MISSING")
 
     const yearFiles = await this.listYearFiles(token)
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `readSnapshot yearFiles=${yearFiles.length} hasFilterPaths=${filterPaths !== undefined}`
+    )
     if (yearFiles.length === 0) return null
 
     const files: Record<string, string> = {}
@@ -136,7 +143,7 @@ export class GoogleDriveProvider implements SyncProvider {
       hash: simpleHash(content),
     }))
 
-    return {
+    const snapshot: SyncSnapshot = {
       manifest: {
         version: 1,
         generatedAt: new Date().toISOString(),
@@ -146,6 +153,14 @@ export class GoogleDriveProvider implements SyncProvider {
       files,
       remoteRevision: { kind: "drive", fileVersions },
     }
+
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `readSnapshot completed took=${Date.now() - startTime}ms`
+    )
+
+    return snapshot
   }
 
   async deleteRemoteData(): Promise<boolean> {
@@ -175,6 +190,7 @@ export class GoogleDriveProvider implements SyncProvider {
     snapshot: SyncSnapshot,
     lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
+    const startTime = Date.now()
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
         "REMOTE_ERROR",
@@ -189,6 +205,12 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const currentYear = new Date().getFullYear()
     const filesByYear = this.groupFilesByYear(snapshot.files, currentYear)
+
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `writeSnapshot years=${Object.keys(filesByYear).length} totalFiles=${Object.keys(snapshot.files).length}`
+    )
 
     for (const [yearStr, changedFiles] of Object.entries(filesByYear)) {
       const fileName = this.yearFileName(parseInt(yearStr, 10))
@@ -238,6 +260,12 @@ export class GoogleDriveProvider implements SyncProvider {
         await this.createFile(token, fileName, JSON.stringify(yearData))
       }
     }
+
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `writeSnapshot completed took=${Date.now() - startTime}ms`
+    )
   }
 
   async getStatus(): Promise<ProviderStatus> {

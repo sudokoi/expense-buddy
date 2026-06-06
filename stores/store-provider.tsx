@@ -48,6 +48,7 @@ import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
 import { DeferredProvider } from "../services/sync/deferred-provider"
+import { logAsync } from "../services/logger"
 import { createProvider } from "../services/sync/provider-registry"
 import { getActiveProviderConfig } from "../services/sync-config"
 
@@ -113,6 +114,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       input: { provider: deferredProvider },
     })
     syncActorRef.current.start()
+    logAsync("INFO", "INIT", "SYNC_ACTOR_CREATED")
   }
   const syncActor = providedSyncActor ?? syncActorRef.current!
 
@@ -121,6 +123,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   if (!githubAuthActorRef.current && !providedGitHubAuthActor) {
     githubAuthActorRef.current = createActor(githubAuthMachine)
     githubAuthActorRef.current.start()
+    logAsync("INFO", "INIT", "GITHUB_AUTH_ACTOR_CREATED")
   }
   const githubAuthActor = providedGitHubAuthActor ?? githubAuthActorRef.current!
   const providerStore = providedProviderStore ?? defaultProviderStore
@@ -146,21 +149,41 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     // Initialize stores - AsyncStorage is safe to use here
     // Run startup migrations before stores load so auto-sync/export uses migrated data.
     ;(async () => {
+      logAsync("INFO", "INIT", "INITIALIZATION_STARTED")
+
       try {
         await migratePaymentInstrumentsOnStartup()
+        logAsync("INFO", "INIT", "PAYMENT_INSTRUMENT_MIGRATION_SUCCESS")
       } catch (error) {
         console.warn("Payment instrument migration failed:", error)
+        logAsync("WARN", "INIT", `PAYMENT_INSTRUMENT_MIGRATION_FAILED error=${error}`)
       }
 
+      logAsync("INFO", "INIT", "SETTINGS_STORE_INIT_START")
       await initializeSettingsStore(settingsStore)
+      logAsync("INFO", "INIT", "SETTINGS_STORE_INIT_DONE")
+
+      logAsync("INFO", "INIT", "EXPENSE_STORE_INIT_START")
       await initializeExpenseStore(expenseStore)
+      logAsync("INFO", "INIT", "EXPENSE_STORE_INIT_DONE")
+
+      logAsync("INFO", "INIT", "UI_STATE_STORE_INIT_START")
       await initializeUIStateStore(uiStateStore)
+      logAsync("INFO", "INIT", "UI_STATE_STORE_INIT_DONE")
+
+      logAsync("INFO", "INIT", "PROVIDER_STORE_INIT_START")
       await initializeProviderStore(providerStore)
+      logAsync("INFO", "INIT", "PROVIDER_STORE_INIT_DONE")
+
+      logAsync("INFO", "INIT", "FILTER_STORE_INIT_START")
       await initializeFilterStore()
+      logAsync("INFO", "INIT", "FILTER_STORE_INIT_DONE")
 
       if (Platform.OS === "android") {
+        logAsync("INFO", "INIT", "UPDATE_STORE_INIT_START")
         initializeUpdateStore(updateStore)
         await runLaunchUpdateCheck(updateStore)
+        logAsync("INFO", "INIT", "UPDATE_STORE_INIT_DONE")
       }
 
       try {
@@ -168,20 +191,31 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         if (activeConfig && deferredProviderRef.current) {
           const provider = createProvider(activeConfig)
           deferredProviderRef.current.resolve(provider)
+          logAsync(
+            "INFO",
+            "INIT",
+            `PROVIDER_RESOLVED kind=${activeConfig.kind} id=${activeConfig.id}`
+          )
+        } else {
+          logAsync("INFO", "INIT", "PROVIDER_RESOLUTION_SKIPPED noActiveConfig")
         }
       } catch (error) {
+        logAsync("WARN", "INIT", `PROVIDER_RESOLUTION_FAILED error=${error}`)
         console.warn("Failed to resolve sync provider:", error)
       }
 
       if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
         setTimeout(() => {
           if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
+            logAsync("WARN", "INIT", "PROVIDER_TIMEOUT_UNRESOLVED")
             console.warn(
               "Sync provider not resolved within timeout; sync will retry on next attempt"
             )
           }
         }, 30000)
       }
+
+      logAsync("INFO", "INIT", "INITIALIZATION_COMPLETE")
     })()
   }, [
     expenseStore,

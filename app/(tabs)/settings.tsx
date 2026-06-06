@@ -14,6 +14,7 @@ import { useSyncHandler } from "../../hooks/use-sync-handler"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useReportIssue } from "../../hooks/use-report-issue"
 import { testConnection, SyncConfig } from "../../services/sync-manager"
+import { logAsync } from "../../services/logger"
 import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
@@ -214,6 +215,7 @@ export default function SettingsScreen() {
   )
 
   const handleAddProvider = useCallback((kind: "github" | "google_drive") => {
+    logAsync("INFO", "UI_ACTION", `SETTINGS_ADD_PROVIDER kind=${kind}`)
     setAddingProviderKind(kind)
     setShowGitHubEditor(false)
   }, [])

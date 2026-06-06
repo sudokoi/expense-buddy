@@ -70,100 +70,126 @@ export class GitHubProvider implements SyncProvider {
   }
 
   async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
+    const startTime = Date.now()
     const token = await this.getToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const treeResult = await getRepositoryTree(
-      token,
-      this.config.repo,
-      this.config.branch
-    )
-    if (!treeResult.success) {
-      if (treeResult.authStatus) {
-        throw new SyncProviderErrorClass(
-          "AUTH_INVALID",
-          "github",
-          treeResult.error ?? "Auth failed",
-          false
-        )
-      }
-      return null
-    }
+    const controller = new AbortController()
+    const abortTimeout = setTimeout(() => controller.abort(), 25000)
+    const signal = controller.signal
 
-    const filterSet = filterPaths ? new Set(filterPaths) : null
-    const expenseEntries = treeResult.entries.filter(
-      (e) =>
-        e.type === "blob" &&
-        getDayKeyFromFilename(e.path) !== null &&
-        (!filterSet || filterSet.has(e.path))
-    )
-    const settingsEntry = treeResult.entries.find((e) => e.path === SETTINGS_FILENAME)
-
-    if (expenseEntries.length === 0 && !settingsEntry) {
-      return null
-    }
-
-    const files: Record<string, string> = {}
-
-    let failedDownloads = 0
-
-    for (const entry of expenseEntries) {
-      try {
-        const fileData = await downloadCSV(
-          token,
-          this.config.repo,
-          this.config.branch,
-          entry.path
-        )
-        if (fileData) {
-          files[entry.path] = fileData.content
-        }
-      } catch {
-        failedDownloads++
-      }
-    }
-
-    if (failedDownloads > 0) {
+    try {
       console.warn(
-        `GitHubProvider: ${failedDownloads} file(s) failed to download during readSnapshot`
+        `GitHubProvider: readSnapshot - fetching tree for ${this.config.repo}/${this.config.branch}`
       )
-    }
 
-    if (settingsEntry) {
-      try {
-        const settingsData = await downloadSettingsFile(
-          token,
-          this.config.repo,
-          this.config.branch
-        )
-        if (settingsData) {
-          files[SETTINGS_FILENAME] = settingsData.content
+      const treeResult = await getRepositoryTree(
+        token,
+        this.config.repo,
+        this.config.branch,
+        signal
+      )
+      if (!treeResult.success) {
+        if (treeResult.authStatus) {
+          throw new SyncProviderErrorClass(
+            "AUTH_INVALID",
+            "github",
+            treeResult.error ?? "Auth failed",
+            false
+          )
         }
-      } catch {
-        console.warn("GitHubProvider: failed to download settings file")
-        // settings file is optional
+        return null
       }
-    }
 
-    const fileList = Object.entries(files).map(([path, content]) => ({
-      path,
-      hash: simpleHash(content),
-    }))
+      const filterSet = filterPaths ? new Set(filterPaths) : null
+      const expenseEntries = treeResult.entries.filter(
+        (e) =>
+          e.type === "blob" &&
+          getDayKeyFromFilename(e.path) !== null &&
+          (!filterSet || filterSet.has(e.path))
+      )
+      const settingsEntry = treeResult.entries.find((e) => e.path === SETTINGS_FILENAME)
 
-    const remoteRevision: RemoteRevision = {
-      kind: "git_sha",
-      sha: treeResult.treeSha,
-    }
+      if (expenseEntries.length === 0 && !settingsEntry) {
+        console.warn(
+          `GitHubProvider: readSnapshot - no matching files found in repo (took ${Date.now() - startTime}ms)`
+        )
+        return null
+      }
 
-    return {
-      manifest: {
-        version: 1,
-        generatedAt: new Date().toISOString(),
-        appVersion: APP_CONFIG.version,
-        files: fileList,
-      },
-      files,
-      remoteRevision,
+      const files: Record<string, string> = {}
+
+      let failedDownloads = 0
+
+      console.warn(
+        `GitHubProvider: readSnapshot - downloading ${expenseEntries.length} expense file(s)`
+      )
+
+      for (const entry of expenseEntries) {
+        try {
+          const fileData = await downloadCSV(
+            token,
+            this.config.repo,
+            this.config.branch,
+            entry.path,
+            signal
+          )
+          if (fileData) {
+            files[entry.path] = fileData.content
+          }
+        } catch {
+          failedDownloads++
+        }
+      }
+
+      if (failedDownloads > 0) {
+        console.warn(
+          `GitHubProvider: ${failedDownloads} file(s) failed to download during readSnapshot`
+        )
+      }
+
+      if (settingsEntry) {
+        try {
+          const settingsData = await downloadSettingsFile(
+            token,
+            this.config.repo,
+            this.config.branch,
+            signal
+          )
+          if (settingsData) {
+            files[SETTINGS_FILENAME] = settingsData.content
+          }
+        } catch {
+          console.warn("GitHubProvider: failed to download settings file")
+        }
+      }
+
+      const fileList = Object.entries(files).map(([path, content]) => ({
+        path,
+        hash: simpleHash(content),
+      }))
+
+      const remoteRevision: RemoteRevision = {
+        kind: "git_sha",
+        sha: treeResult.treeSha,
+      }
+
+      console.warn(
+        `GitHubProvider: readSnapshot - completed (${Object.keys(files).length} files, took ${Date.now() - startTime}ms)`
+      )
+
+      return {
+        manifest: {
+          version: 1,
+          generatedAt: new Date().toISOString(),
+          appVersion: APP_CONFIG.version,
+          files: fileList,
+        },
+        files,
+        remoteRevision,
+      }
+    } finally {
+      clearTimeout(abortTimeout)
     }
   }
 
@@ -171,43 +197,61 @@ export class GitHubProvider implements SyncProvider {
     snapshot: SyncSnapshot,
     _lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
+    const startTime = Date.now()
     const token = await this.getToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const uploads: { path: string; content: string }[] = []
-    const deletions: { path: string }[] = []
+    const controller = new AbortController()
+    const abortTimeout = setTimeout(() => controller.abort(), 25000)
+    const signal = controller.signal
 
-    for (const [path, content] of Object.entries(snapshot.files)) {
-      if (content.length === 0) {
-        deletions.push({ path })
-      } else {
-        uploads.push({ path, content })
+    try {
+      const uploads: { path: string; content: string }[] = []
+      const deletions: { path: string }[] = []
+
+      for (const [path, content] of Object.entries(snapshot.files)) {
+        if (content.length === 0) {
+          deletions.push({ path })
+        } else {
+          uploads.push({ path, content })
+        }
       }
-    }
 
-    const commitRequest: BatchCommitRequest = {
-      uploads,
-      deletions,
-      message: generateCommitMessage(uploads.length, deletions.length),
-    }
-
-    const result = await batchCommit(
-      token,
-      this.config.repo,
-      this.config.branch,
-      commitRequest
-    )
-
-    if (!result.success) {
-      const code = mapBatchErrorCode(result.errorCode)
-      const retryable =
-        code === "CONFLICT" || code === "RATE_LIMITED" || code === "NETWORK"
-      throw new SyncProviderErrorClass(
-        code,
-        "github",
-        result.error ?? "Write failed",
-        retryable
+      console.warn(
+        `GitHubProvider: writeSnapshot - uploading ${uploads.length} file(s), deleting ${deletions.length} file(s)`
       )
+
+      const commitRequest: BatchCommitRequest = {
+        uploads,
+        deletions,
+        message: generateCommitMessage(uploads.length, deletions.length),
+      }
+
+      const result = await batchCommit(
+        token,
+        this.config.repo,
+        this.config.branch,
+        commitRequest,
+        signal
+      )
+
+      if (!result.success) {
+        const code = mapBatchErrorCode(result.errorCode)
+        const retryable =
+          code === "CONFLICT" || code === "RATE_LIMITED" || code === "NETWORK"
+        throw new SyncProviderErrorClass(
+          code,
+          "github",
+          result.error ?? "Write failed",
+          retryable
+        )
+      }
+
+      console.warn(
+        `GitHubProvider: writeSnapshot - completed (took ${Date.now() - startTime}ms)`
+      )
+    } finally {
+      clearTimeout(abortTimeout)
     }
   }
 
@@ -259,6 +303,14 @@ export class GitHubProvider implements SyncProvider {
         )
       }
       return new SyncProviderErrorClass("REMOTE_ERROR", "github", error.message, true)
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      return new SyncProviderErrorClass(
+        "NETWORK",
+        "github",
+        "Request timed out after 25 seconds",
+        true
+      )
     }
     const msg = String(error)
     if (

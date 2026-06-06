@@ -7,6 +7,7 @@ import {
   GitHubDeviceCode,
 } from "./github-device-flow"
 import i18next from "i18next"
+import { logAsync } from "./logger"
 
 const TOKEN_KEY = "github_pat"
 
@@ -154,22 +155,37 @@ export const githubAuthMachine = setup({
           {
             guard: ({ event }) => Boolean(event.output),
             target: "authenticated",
-            actions: assign({
-              token: ({ event }) => String(event.output || ""),
-              error: () => null,
-            }),
+            actions: [
+              assign({
+                token: ({ event }) => String(event.output || ""),
+                error: () => null,
+              }),
+              () => {
+                logAsync("INFO", "GITHUB_AUTH", "INITIALIZING tokenFound=true")
+              },
+            ],
           },
           {
             target: "signedOut",
-            actions: assign({
-              token: () => "",
-              error: () => null,
-            }),
+            actions: [
+              assign({
+                token: () => "",
+                error: () => null,
+              }),
+              () => {
+                logAsync("INFO", "GITHUB_AUTH", "INITIALIZING tokenFound=false")
+              },
+            ],
           },
         ],
         onError: {
           target: "signedOut",
-          actions: assign({ token: () => "" }),
+          actions: [
+            assign({ token: () => "" }),
+            () => {
+              logAsync("WARN", "GITHUB_AUTH", "INITIALIZING_FAILED")
+            },
+          ],
         },
       },
     },
@@ -190,6 +206,9 @@ export const githubAuthMachine = setup({
     },
 
     requestingDeviceCode: {
+      entry: () => {
+        logAsync("INFO", "GITHUB_AUTH", "REQUESTING_DEVICE_CODE")
+      },
       invoke: {
         src: "requestDeviceCode",
         onDone: {
@@ -203,9 +222,14 @@ export const githubAuthMachine = setup({
         },
         onError: {
           target: "error",
-          actions: assign({
-            error: ({ event }) => safeMessage(event.error),
-          }),
+          actions: [
+            assign({
+              error: ({ event }) => safeMessage(event.error),
+            }),
+            () => {
+              logAsync("ERROR", "GITHUB_AUTH", "DEVICE_CODE_FAILED")
+            },
+          ],
         },
       },
       on: {
@@ -215,6 +239,9 @@ export const githubAuthMachine = setup({
     },
 
     polling: {
+      entry: () => {
+        logAsync("INFO", "GITHUB_AUTH", "POLLING_STARTED")
+      },
       always: [
         {
           guard: ({ context }) =>
@@ -310,6 +337,9 @@ export const githubAuthMachine = setup({
     },
 
     persistingToken: {
+      entry: () => {
+        logAsync("INFO", "GITHUB_AUTH", "PERSISTING_TOKEN")
+      },
       invoke: {
         src: "persistToken",
         input: ({ context }) => ({ token: context.token }),
@@ -324,13 +354,21 @@ export const githubAuthMachine = setup({
               context.callbacks.onSignedIn?.()
             },
             assign({ callbacks: () => ({}) }),
+            () => {
+              logAsync("INFO", "GITHUB_AUTH", "PERSIST_TOKEN_SUCCESS")
+            },
           ],
         },
         onError: {
           target: "error",
-          actions: assign({
-            error: ({ event }) => safeMessage(event.error),
-          }),
+          actions: [
+            assign({
+              error: ({ event }) => safeMessage(event.error),
+            }),
+            () => {
+              logAsync("ERROR", "GITHUB_AUTH", "PERSIST_TOKEN_FAILED")
+            },
+          ],
         },
       },
       on: {
@@ -339,6 +377,9 @@ export const githubAuthMachine = setup({
     },
 
     authenticated: {
+      entry: () => {
+        logAsync("INFO", "GITHUB_AUTH", "AUTHENTICATED")
+      },
       on: {
         SIGN_OUT: { target: "signingOut" },
       },

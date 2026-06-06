@@ -2,6 +2,7 @@ import { createStore } from "@xstate/store"
 import type { ProviderConfig } from "../services/sync/provider-types"
 import { providerSettingsStore } from "../services/sync/provider-settings-store"
 import { isProviderReconciled, markProviderReconciled } from "../services/sync-queue"
+import { logAsync } from "../services/logger"
 
 export enum ProviderConnectionStatus {
   Idle = "idle",
@@ -49,6 +50,11 @@ export const providerStore = createStore({
     addProvider: (context, event: { config: ProviderConfig }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.addProvider(event.config)
+        logAsync(
+          "INFO",
+          "PROVIDER_STORE",
+          `ADD_PROVIDER id=${event.config.id} kind=${event.config.kind}`
+        )
       })
 
       const exists = context.providers.some((p) => p.id === event.config.id)
@@ -61,6 +67,11 @@ export const providerStore = createStore({
     removeProvider: (context, event: { id: string }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.removeProvider(event.id)
+        logAsync(
+          "INFO",
+          "PROVIDER_STORE",
+          `REMOVE_PROVIDER id=${event.id} wasActive=${context.activeProviderId === event.id}`
+        )
       })
 
       const providers = context.providers.filter((p) => p.id !== event.id)
@@ -87,6 +98,7 @@ export const providerStore = createStore({
     setActiveProvider: (context, event: { id: string | null }, enqueue) => {
       enqueue.effect(async () => {
         await providerSettingsStore.setActiveProvider(event.id)
+        logAsync("INFO", "PROVIDER_STORE", `SET_ACTIVE_PROVIDER id=${event.id ?? "null"}`)
       })
 
       return { ...context, activeProviderId: event.id }
@@ -95,6 +107,7 @@ export const providerStore = createStore({
     markReconciled: (context, event: { id: string }, enqueue) => {
       enqueue.effect(async () => {
         await markProviderReconciled(event.id)
+        logAsync("INFO", "PROVIDER_STORE", `MARK_PROVIDER_RECONCILED id=${event.id}`)
       })
 
       return {
@@ -103,35 +116,52 @@ export const providerStore = createStore({
       }
     },
 
-    setConnectionTesting: (context, event: { providerId: string }) => ({
-      ...context,
-      connectionResults: {
-        ...context.connectionResults,
-        [event.providerId]: { status: ProviderConnectionStatus.Testing },
-      },
-    }),
-
-    setConnectionSuccess: (context, event: { providerId: string; label: string }) => ({
-      ...context,
-      connectionResults: {
-        ...context.connectionResults,
-        [event.providerId]: {
-          status: ProviderConnectionStatus.Success,
-          label: event.label,
+    setConnectionTesting: (context, event: { providerId: string }) => {
+      logAsync("INFO", "PROVIDER_STORE", `CONNECTION_TESTING id=${event.providerId}`)
+      return {
+        ...context,
+        connectionResults: {
+          ...context.connectionResults,
+          [event.providerId]: { status: ProviderConnectionStatus.Testing },
         },
-      },
-    }),
+      }
+    },
 
-    setConnectionFailed: (context, event: { providerId: string; error: string }) => ({
-      ...context,
-      connectionResults: {
-        ...context.connectionResults,
-        [event.providerId]: {
-          status: ProviderConnectionStatus.Failed,
-          error: event.error,
+    setConnectionSuccess: (context, event: { providerId: string; label: string }) => {
+      logAsync(
+        "INFO",
+        "PROVIDER_STORE",
+        `CONNECTION_SUCCESS id=${event.providerId} label=${event.label}`
+      )
+      return {
+        ...context,
+        connectionResults: {
+          ...context.connectionResults,
+          [event.providerId]: {
+            status: ProviderConnectionStatus.Success,
+            label: event.label,
+          },
         },
-      },
-    }),
+      }
+    },
+
+    setConnectionFailed: (context, event: { providerId: string; error: string }) => {
+      logAsync(
+        "ERROR",
+        "PROVIDER_STORE",
+        `CONNECTION_FAILED id=${event.providerId} error=${event.error}`
+      )
+      return {
+        ...context,
+        connectionResults: {
+          ...context.connectionResults,
+          [event.providerId]: {
+            status: ProviderConnectionStatus.Failed,
+            error: event.error,
+          },
+        },
+      }
+    },
 
     clearConnectionResult: (context, event: { providerId: string }) => {
       const next = { ...context.connectionResults }
@@ -157,7 +187,13 @@ export async function initializeProviderStore(
       activeProviderId: state.activeProviderId,
       reconciledMap,
     })
+    logAsync(
+      "INFO",
+      "PROVIDER_STORE",
+      `INITIALIZE providers=${state.providers.length} activeId=${state.activeProviderId ?? "null"} reconciled=${Object.values(reconciledMap).filter(Boolean).length}`
+    )
   } catch (error) {
+    logAsync("ERROR", "PROVIDER_STORE", `INITIALIZE_FAILED error=${error}`)
     console.warn("Failed to initialize provider store:", error)
     store.trigger.loadProviders({
       providers: [],

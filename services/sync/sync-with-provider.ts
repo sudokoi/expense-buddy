@@ -13,6 +13,7 @@ import type { Expense } from "../../types/expense"
 import type { AppSettings } from "../settings-manager"
 import { hydrateSettingsFromJson } from "../settings-manager"
 import { APP_CONFIG } from "../../constants/app-config"
+import { logAsync } from "../logger"
 
 export interface SyncWithProviderResult {
   success: boolean
@@ -52,11 +53,22 @@ export async function syncWithProvider(
 
   const filterPaths = buildFilterPaths(dirtyDays, deletedDays)
 
+  logAsync(
+    "INFO",
+    "SYNC_CORE",
+    `SYNC_WITH_PROVIDER localCount=${localExpenses.length} hasFilterPaths=${filterPaths !== undefined} syncSettings=${syncSettingsEnabled}`
+  )
+
   let snapshot: SyncSnapshot | null
   try {
     snapshot = await provider.readSnapshot(filterPaths)
   } catch (error) {
     const formatted = formatError(error)
+    logAsync(
+      "ERROR",
+      "SYNC_CORE",
+      `READ_SNAPSHOT_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+    )
     return {
       success: false,
       error: formatted.message,
@@ -66,14 +78,27 @@ export async function syncWithProvider(
   }
 
   if (!snapshot) {
+    logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC noRemoteData")
     return { success: true, isFirstSync: true }
   }
 
   const remoteExpenses = parseExpensesFromSnapshot(snapshot)
   const remoteSettings = parseSettingsFromSnapshot(snapshot)
 
+  logAsync(
+    "INFO",
+    "SYNC_CORE",
+    `PARSED_REMOTE expenses=${remoteExpenses.length} hasSettings=${remoteSettings !== null}`
+  )
+
   let mergeResult = mergeExpenses(localExpenses, remoteExpenses)
   let mergedSettings: AppSettings | undefined
+
+  logAsync(
+    "INFO",
+    "SYNC_CORE",
+    `MERGE_RESULT addedLocal=${mergeResult.addedFromLocal.length} updatedLocal=${mergeResult.updatedFromLocal.length} addedRemote=${mergeResult.addedFromRemote.length} updatedRemote=${mergeResult.updatedFromRemote.length} conflicts=${mergeResult.trueConflicts.length}`
+  )
 
   const conflictOutcome = await resolveConflictsIfNeeded(mergeResult, conflictResolver)
   if (conflictOutcome.earlyReturn) return conflictOutcome.earlyReturn
@@ -95,6 +120,7 @@ export async function syncWithProvider(
   )
 
   if (!snapshotHasChanges(snapshot, mergedSnapshot, syncSettingsEnabled)) {
+    logAsync("INFO", "SYNC_CORE", "IN_SYNC noChangesDetected")
     return {
       success: true,
       mergeResult,
@@ -104,11 +130,20 @@ export async function syncWithProvider(
   }
 
   const writeSnapshot = filterChangedFiles(snapshot, mergedSnapshot)
+  const writeFileCount = Object.keys(writeSnapshot.files).length
+
+  logAsync("INFO", "SYNC_CORE", `WRITE_SNAPSHOT files=${writeFileCount}`)
 
   try {
     await provider.writeSnapshot(writeSnapshot, snapshot.remoteRevision)
+    logAsync("INFO", "SYNC_CORE", "WRITE_SNAPSHOT_SUCCESS")
   } catch (error) {
     const formatted = formatError(error)
+    logAsync(
+      "ERROR",
+      "SYNC_CORE",
+      `WRITE_SNAPSHOT_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+    )
     return {
       success: false,
       mergeResult,
@@ -131,8 +166,15 @@ export async function firstTimeSync(
   localSettings?: AppSettings,
   syncSettingsEnabled?: boolean
 ): Promise<SyncWithProviderResult> {
+  logAsync(
+    "INFO",
+    "SYNC_CORE",
+    `FIRST_TIME_SYNC_START localCount=${localExpenses.length} syncSettings=${syncSettingsEnabled}`
+  )
+
   const existingSnapshot = await provider.readSnapshot()
   if (existingSnapshot) {
+    logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC hasRemoteSnapshot merging")
     const remoteExpenses = parseExpensesFromSnapshot(existingSnapshot)
     const remoteSettings = parseSettingsFromSnapshot(existingSnapshot)
     const allExpenses = [...remoteExpenses]
@@ -164,10 +206,21 @@ export async function firstTimeSync(
       syncSettingsEnabled
     )
     const writeSnapshot = filterChangedFiles(existingSnapshot, mergedSnapshot)
+    logAsync(
+      "INFO",
+      "SYNC_CORE",
+      `FIRST_TIME_SYNC writing merged files=${Object.keys(writeSnapshot.files).length}`
+    )
     try {
       await provider.writeSnapshot(writeSnapshot, existingSnapshot.remoteRevision)
+      logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_MERGE_WRITE_SUCCESS")
     } catch (error) {
       const formatted = formatError(error)
+      logAsync(
+        "ERROR",
+        "SYNC_CORE",
+        `FIRST_TIME_SYNC_MERGE_WRITE_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+      )
       return {
         success: false,
         error: formatted.message,
@@ -184,10 +237,21 @@ export async function firstTimeSync(
 
   const mergedSettings = syncSettingsEnabled && localSettings ? localSettings : undefined
   const snapshot = buildSnapshot(localExpenses, null, mergedSettings, syncSettingsEnabled)
+  logAsync(
+    "INFO",
+    "SYNC_CORE",
+    `FIRST_TIME_SYNC writing initial snapshot files=${Object.keys(snapshot.files).length}`
+  )
   try {
     await provider.writeSnapshot(snapshot, null)
+    logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_INITIAL_WRITE_SUCCESS")
   } catch (error) {
     const formatted = formatError(error)
+    logAsync(
+      "ERROR",
+      "SYNC_CORE",
+      `FIRST_TIME_SYNC_INITIAL_WRITE_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+    )
     return {
       success: false,
       error: formatted.message,

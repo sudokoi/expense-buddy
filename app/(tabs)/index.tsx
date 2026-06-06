@@ -226,17 +226,22 @@ export default function DashboardScreen() {
 
   const handleSync = React.useCallback(() => {
     if (syncMachine.isSyncing) return
+    logAsync("INFO", "UI_ACTION", "MANUAL_SYNC dashboard")
     syncMachine.sync({
       localExpenses: state.expenses,
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
       callbacks: {
-        onError: (error) => addNotification(error, "error"),
+        onError: (error) => {
+          addNotification(error, "error")
+          logAsync("ERROR", "UI_ACTION", `MANUAL_SYNC_FAILED error=${error}`)
+        },
         onSuccess: async () => {
           const activeConfig = await providerSettingsStore.getActiveConfig()
           if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
             await markProviderReconciled(activeConfig.id)
           }
+          logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
         },
       },
     })

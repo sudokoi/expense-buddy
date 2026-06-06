@@ -5,6 +5,7 @@ import { Expense } from "../types/expense"
 import type { AppSettings } from "./settings-manager"
 import { TrueConflict, MergeResult } from "./merge-engine"
 import i18next from "i18next"
+import { logAsync } from "./logger"
 
 export interface SyncCallbacks {
   onConflict?: (conflicts: TrueConflict[]) => void
@@ -144,6 +145,7 @@ export const syncMachine = setup({
     ERROR_DISPLAY_TIME: 5000,
     IN_SYNC_DISPLAY_TIME: 100,
     CONFLICT_DISPLAY_TIME: 30000,
+    SYNC_TIMEOUT: 60000,
   },
 }).createMachine({
   id: "sync",
@@ -159,24 +161,50 @@ export const syncMachine = setup({
       on: {
         SYNC: {
           target: "syncing",
-          actions: assign({
-            localExpenses: ({ event }) => event.localExpenses,
-            dirtyDays: ({ event }) => event.dirtyDays,
-            deletedDays: ({ event }) => event.deletedDays,
-            settings: ({ event }) => event.settings,
-            syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            callbacks: ({ event }) => event.callbacks || {},
-            conflictResolver: ({ event }) => event.conflictResolver,
-            mergeResult: undefined,
-            pendingConflicts: undefined,
-            error: undefined,
-            errorCode: undefined,
-          }),
+          actions: [
+            assign({
+              localExpenses: ({ event }) => event.localExpenses,
+              dirtyDays: ({ event }) => event.dirtyDays,
+              deletedDays: ({ event }) => event.deletedDays,
+              settings: ({ event }) => event.settings,
+              syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
+              callbacks: ({ event }) => event.callbacks || {},
+              conflictResolver: ({ event }) => event.conflictResolver,
+              mergeResult: undefined,
+              pendingConflicts: undefined,
+              error: undefined,
+              errorCode: undefined,
+            }),
+            ({ context }) => {
+              logAsync(
+                "INFO",
+                "SYNC_MACHINE",
+                `SYNC_STARTED expenseCount=${context.localExpenses.length} settingsSync=${context.syncSettingsEnabled}`
+              )
+            },
+          ],
         },
       },
     },
 
     syncing: {
+      entry: () => {
+        logAsync("INFO", "SYNC_MACHINE", "SYNC_IN_PROGRESS")
+      },
+      after: {
+        SYNC_TIMEOUT: {
+          target: "error",
+          actions: [
+            assign({
+              error: "Sync timed out after 60 seconds",
+              errorCode: "TIMEOUT",
+            }),
+            () => {
+              logAsync("ERROR", "SYNC_MACHINE", "SYNC_TIMEOUT")
+            },
+          ],
+        },
+      },
       invoke: {
         src: "unifiedSync",
         input: ({ context }) => ({
@@ -203,22 +231,37 @@ export const syncMachine = setup({
                 if (event.output.pendingConflicts) {
                   context.callbacks.onConflict?.(event.output.pendingConflicts)
                 }
+                logAsync(
+                  "WARN",
+                  "SYNC_MACHINE",
+                  `SYNC_CONFLICTS count=${event.output.pendingConflicts?.length ?? 0}`
+                )
               },
             ],
           },
           {
             guard: ({ event }) => event.output.isInSync === true,
             target: "inSync",
-            actions: assign({
-              mergeResult: ({ event }) => event.output.mergeResult,
-            }),
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_IN_SYNC")
+              },
+            ],
           },
           {
             guard: ({ event }) => event.output.isFirstSync === true,
             target: "awaitingInitialReconciliation",
-            actions: assign({
-              mergeResult: ({ event }) => event.output.mergeResult,
-            }),
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "FIRST_TIME_SYNC")
+              },
+            ],
           },
           {
             guard: ({ event }) => event.output.success === true,
@@ -232,23 +275,44 @@ export const syncMachine = setup({
                   mergeResult: event.output.mergeResult,
                 })
               },
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_SUCCESS")
+              },
             ],
           },
           {
             target: "error",
-            actions: assign({
-              mergeResult: ({ event }) => event.output.mergeResult,
-              error: ({ event }) =>
-                event.output.error || i18next.t("githubSync.manager.syncFailed"),
-              errorCode: ({ event }) => event.output.errorCode,
-            }),
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+                error: ({ event }) =>
+                  event.output.error || i18next.t("githubSync.manager.syncFailed"),
+                errorCode: ({ event }) => event.output.errorCode,
+              }),
+              ({ event }) => {
+                logAsync(
+                  "ERROR",
+                  "SYNC_MACHINE",
+                  `SYNC_FAILED error=${event.output.error ?? "unknown"} code=${event.output.errorCode ?? "none"}`
+                )
+              },
+            ],
           },
         ],
         onError: {
           target: "error",
-          actions: assign({
-            error: ({ event }) => formatMachineError(event.error),
-          }),
+          actions: [
+            assign({
+              error: ({ event }) => formatMachineError(event.error),
+            }),
+            ({ event }) => {
+              logAsync(
+                "ERROR",
+                "SYNC_MACHINE",
+                `SYNC_INVOKE_ERROR error=${formatMachineError(event.error)}`
+              )
+            },
+          ],
         },
       },
     },
@@ -276,22 +340,43 @@ export const syncMachine = setup({
               ({ context }) => {
                 context.callbacks.onSuccess?.({ isFirstSync: true })
               },
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "FIRST_TIME_SYNC_SUCCESS")
+              },
             ],
           },
           {
             target: "error",
-            actions: assign({
-              error: ({ event }) =>
-                event.output.error || i18next.t("githubSync.manager.syncFailed"),
-              errorCode: ({ event }) => event.output.errorCode,
-            }),
+            actions: [
+              assign({
+                error: ({ event }) =>
+                  event.output.error || i18next.t("githubSync.manager.syncFailed"),
+                errorCode: ({ event }) => event.output.errorCode,
+              }),
+              ({ event }) => {
+                logAsync(
+                  "ERROR",
+                  "SYNC_MACHINE",
+                  `FIRST_TIME_SYNC_FAILED error=${event.output.error ?? "unknown"} code=${event.output.errorCode ?? "none"}`
+                )
+              },
+            ],
           },
         ],
         onError: {
           target: "error",
-          actions: assign({
-            error: ({ event }) => formatMachineError(event.error),
-          }),
+          actions: [
+            assign({
+              error: ({ event }) => formatMachineError(event.error),
+            }),
+            ({ event }) => {
+              logAsync(
+                "ERROR",
+                "SYNC_MACHINE",
+                `FIRST_TIME_SYNC_INVOKE_ERROR error=${formatMachineError(event.error)}`
+              )
+            },
+          ],
         },
       },
     },
@@ -424,6 +509,12 @@ export const syncMachine = setup({
 
         context.callbacks.onError?.(
           context.error || i18next.t("githubSync.errors.unknown", { status: "unknown" })
+        )
+
+        logAsync(
+          isAuthError ? "WARN" : "ERROR",
+          "SYNC_MACHINE",
+          `SYNC_ERROR_STATE error=${context.error ?? "unknown"} code=${errorCode ?? "none"} isAuthError=${isAuthError}`
         )
       },
       on: {

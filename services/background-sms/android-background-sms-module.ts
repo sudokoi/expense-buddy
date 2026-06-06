@@ -57,6 +57,7 @@ export async function setBackgroundSmsEnabled(enabled: boolean): Promise<void> {
   }
 
   await module.setBackgroundSmsEnabledAsync(enabled)
+  logAsync("INFO", "SMS_MODULE", `setBackgroundSmsEnabled enabled=${enabled}`)
 }
 
 export async function syncInboxAsync(useMlOnly: boolean): Promise<number> {
@@ -64,9 +65,15 @@ export async function syncInboxAsync(useMlOnly: boolean): Promise<number> {
   if (!module) return 0
 
   try {
-    return await module.syncInboxAsync(useMlOnly)
+    const count = await module.syncInboxAsync(useMlOnly)
+    await logAsync(
+      "INFO",
+      "SMS_MODULE",
+      `syncInboxAsync count=${count} useMlOnly=${useMlOnly}`
+    )
+    return count
   } catch (e) {
-    await logAsync("ERROR", "JS_MODULE", `syncInboxAsync failed: ${e}`)
+    await logAsync("ERROR", "SMS_MODULE", `syncInboxAsync failed: ${e}`)
     throw e
   }
 }
@@ -97,10 +104,11 @@ export async function approveReviewItemAsync(fingerprint: string): Promise<void>
 
   try {
     await module.approveReviewItemAsync(fingerprint)
+    await logAsync("INFO", "SMS_MODULE", `approveReviewItem fingerprint=${fingerprint}`)
   } catch (e) {
     await logAsync(
       "ERROR",
-      "JS_MODULE",
+      "SMS_MODULE",
       `approveReviewItemAsync(${fingerprint}) failed: ${e}`
     )
     throw e
@@ -113,10 +121,11 @@ export async function rejectReviewItemAsync(fingerprint: string): Promise<void> 
 
   try {
     await module.rejectReviewItemAsync(fingerprint)
+    await logAsync("INFO", "SMS_MODULE", `rejectReviewItem fingerprint=${fingerprint}`)
   } catch (e) {
     await logAsync(
       "ERROR",
-      "JS_MODULE",
+      "SMS_MODULE",
       `rejectReviewItemAsync(${fingerprint}) failed: ${e}`
     )
     throw e
@@ -129,10 +138,11 @@ export async function dismissReviewItemAsync(fingerprint: string): Promise<void>
 
   try {
     await module.dismissReviewItemAsync(fingerprint)
+    await logAsync("INFO", "SMS_MODULE", `dismissReviewItem fingerprint=${fingerprint}`)
   } catch (e) {
     await logAsync(
       "ERROR",
-      "JS_MODULE",
+      "SMS_MODULE",
       `dismissReviewItemAsync(${fingerprint}) failed: ${e}`
     )
     throw e
@@ -145,8 +155,13 @@ export async function approveReviewItemsAsync(fingerprints: string[]): Promise<v
 
   try {
     await module.approveItemsAsync(fingerprints)
+    await logAsync(
+      "INFO",
+      "SMS_MODULE",
+      `approveReviewItems count=${fingerprints.length}`
+    )
   } catch (e) {
-    await logAsync("ERROR", "JS_MODULE", `approveReviewItemsAsync failed: ${e}`)
+    await logAsync("ERROR", "SMS_MODULE", `approveReviewItemsAsync failed: ${e}`)
     throw e
   }
 }
@@ -157,8 +172,9 @@ export async function rejectReviewItemsAsync(fingerprints: string[]): Promise<vo
 
   try {
     await module.rejectItemsAsync(fingerprints)
+    await logAsync("INFO", "SMS_MODULE", `rejectReviewItems count=${fingerprints.length}`)
   } catch (e) {
-    await logAsync("ERROR", "JS_MODULE", `rejectReviewItemsAsync failed: ${e}`)
+    await logAsync("ERROR", "SMS_MODULE", `rejectReviewItemsAsync failed: ${e}`)
     throw e
   }
 }
@@ -169,8 +185,13 @@ export async function dismissReviewItemsAsync(fingerprints: string[]): Promise<v
 
   try {
     await module.dismissItemsAsync(fingerprints)
+    await logAsync(
+      "INFO",
+      "SMS_MODULE",
+      `dismissReviewItems count=${fingerprints.length}`
+    )
   } catch (e) {
-    await logAsync("ERROR", "JS_MODULE", `dismissReviewItemsAsync failed: ${e}`)
+    await logAsync("ERROR", "SMS_MODULE", `dismissReviewItemsAsync failed: ${e}`)
     throw e
   }
 }

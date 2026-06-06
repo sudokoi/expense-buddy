@@ -11,6 +11,7 @@ import {
   persistExpensesUpdated,
   removeLegacyExpensesKey,
 } from "../services/expense-storage"
+import { logAsync } from "../services/logger"
 import {
   loadDirtyDays,
   markDirtyDay,
@@ -148,11 +149,22 @@ export const expenseStore = createStore({
       const dayKey = getLocalDayKey(normalizedExpense.date)
       const dirtyDays = addUniqueDay(context.dirtyDays, dayKey)
 
+      logAsync(
+        "INFO",
+        "EXPENSE_STORE",
+        `ADD_EXPENSE id=${normalizedExpense.id} amount=${normalizedExpense.amount} currency=${normalizedExpense.currency} category=${normalizedExpense.category}`
+      )
+
       enqueue.effect(async () => {
         await persistExpenseAdded(normalizedExpense)
         await markDirtyDay(dayKey)
         await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        logAsync(
+          "INFO",
+          "EXPENSE_STORE",
+          `ADD_EXPENSE_PERSISTED id=${normalizedExpense.id}`
+        )
       })
 
       return { ...context, expenses: newExpenses, dirtyDays }
@@ -170,6 +182,12 @@ export const expenseStore = createStore({
       )
       const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
+      logAsync(
+        "INFO",
+        "EXPENSE_STORE",
+        `BATCH_ADD_EXPENSES count=${normalizedExpenses.length} days=${affectedDays.length}`
+      )
+
       enqueue.effect(async () => {
         await persistExpensesAdded(normalizedExpenses)
 
@@ -183,6 +201,11 @@ export const expenseStore = createStore({
         })
 
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        logAsync(
+          "INFO",
+          "EXPENSE_STORE",
+          `BATCH_ADD_PERSISTED count=${normalizedExpenses.length}`
+        )
       })
 
       return { ...context, expenses: newExpenses, dirtyDays }
@@ -218,6 +241,13 @@ export const expenseStore = createStore({
         deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
+      const dayChanged = previousDayKey !== nextDayKey
+      logAsync(
+        "INFO",
+        "EXPENSE_STORE",
+        `EDIT_EXPENSE id=${normalizedExpense.id} dayChanged=${dayChanged} deletedDayKey=${deletedDayKey ?? "null"}`
+      )
+
       enqueue.effect(async () => {
         await persistExpenseUpdated(normalizedExpense)
         await markDirtyDay(nextDayKey)
@@ -229,6 +259,11 @@ export const expenseStore = createStore({
         }
         await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        logAsync(
+          "INFO",
+          "EXPENSE_STORE",
+          `EDIT_EXPENSE_PERSISTED id=${normalizedExpense.id}`
+        )
       })
 
       return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
@@ -252,6 +287,12 @@ export const expenseStore = createStore({
         deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
+      logAsync(
+        "INFO",
+        "EXPENSE_STORE",
+        `DELETE_EXPENSE id=${event.id} deletedDayKey=${deletedDayKey ?? "null"}`
+      )
+
       enqueue.effect(async () => {
         if (updatedExpense) {
           await persistExpenseUpdated(updatedExpense)
@@ -263,6 +304,7 @@ export const expenseStore = createStore({
           await enqueueSyncOp({ type: "expense.upsert", expense: updatedExpense })
         }
         await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+        logAsync("INFO", "EXPENSE_STORE", `DELETE_EXPENSE_PERSISTED id=${event.id}`)
       })
 
       return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
@@ -446,10 +488,17 @@ export async function initializeExpenseStore(
     const loaded = await loadAllExpensesFromStorage()
     const expenses = loaded.expenses
 
+    logAsync(
+      "INFO",
+      "EXPENSE_STORE",
+      `INITIALIZE source=${loaded.source} expenseCount=${expenses.length}`
+    )
+
     // One-time migration: if we loaded from legacy storage, migrate to v1 and remove legacy key.
     if (loaded.source === "legacy") {
       await migrateLegacyExpensesToV1(expenses)
       await removeLegacyExpensesKey()
+      logAsync("INFO", "EXPENSE_STORE", "LEGACY_MIGRATION_DONE")
     }
 
     const dirtyDaysResult = await loadDirtyDays()
@@ -460,9 +509,16 @@ export async function initializeExpenseStore(
       deletedDays: dirtyDaysResult.state.deletedDays,
     })
 
+    logAsync(
+      "INFO",
+      "EXPENSE_STORE",
+      `LOADED dirtyDays=${dirtyDaysResult.state.dirtyDays?.length ?? 0} deletedDays=${dirtyDaysResult.state.deletedDays?.length ?? 0}`
+    )
+
     // Perform auto-sync on launch using the helper
     await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
   } catch (error) {
+    logAsync("ERROR", "EXPENSE_STORE", `INITIALIZE_FAILED error=${error}`)
     console.warn("Failed to initialize expense store:", error)
     store.trigger.loadExpenses({ expenses: [] })
   }

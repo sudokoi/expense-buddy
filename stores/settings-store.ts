@@ -26,6 +26,7 @@ import { changeLanguage } from "../i18n"
 import { getDefaultCurrencyForLanguage } from "../utils/currency"
 import { enqueueSyncOp } from "../services/sync-queue"
 import { setBackgroundSmsEnabled } from "../services/background-sms/android-background-sms-module"
+import { logAsync } from "../services/logger"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -49,6 +50,13 @@ function createSettingUpdater<K extends keyof AppSettings>(key: K) {
   ) => {
     const newSettings = { ...context.settings, [key]: event[key] }
     const newSyncState = computeSettingsSyncState(newSettings, context.syncedSettingsHash)
+
+    const value = String(event[key]).substring(0, 100)
+    logAsync(
+      "INFO",
+      "SETTINGS_STORE",
+      `UPDATE_SETTING key=${String(key)} value=${value} newSyncState=${newSyncState}`
+    )
 
     enqueue.effect(async () => {
       await saveSettings(newSettings)
@@ -674,7 +682,14 @@ export async function initializeSettingsStore(
       syncedSettingsHash,
       syncConfig,
     })
+
+    logAsync(
+      "INFO",
+      "SETTINGS_STORE",
+      `INITIALIZE hasSettings=true syncState=${settingsSyncState} hasSyncConfig=${syncConfig !== null}`
+    )
   } catch (error) {
+    logAsync("ERROR", "SETTINGS_STORE", `INITIALIZE_FAILED error=${error}`)
     console.warn("Failed to initialize settings store:", error)
     store.trigger.loadSettings({
       settings: DEFAULT_SETTINGS,

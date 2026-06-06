@@ -105,10 +105,13 @@ export interface GoogleDriveOAuthResult {
   accountEmail: string
 }
 
+import { logAsync } from "../logger"
+
 export async function initiateGoogleDriveOAuth(
   clientId: string,
   tokenExchangeUrl?: string
 ): Promise<GoogleDriveOAuthResult> {
+  logAsync("INFO", "GOOGLE_OAUTH", "OAUTH_INITIATED")
   if (Platform.OS === "android" && ExpenseBuddyGoogleAuthModule) {
     return initiateAndroidGoogleDriveOAuth(
       clientId,
@@ -187,6 +190,12 @@ export async function initiateGoogleDriveOAuth(
       // Non-critical
     }
   }
+
+  logAsync(
+    "INFO",
+    "GOOGLE_OAUTH",
+    `OAUTH_SUCCESS providerId=${providerId} hasEmail=${accountEmail !== ""}`
+  )
 
   return { providerId, accountEmail }
 }

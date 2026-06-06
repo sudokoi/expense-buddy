@@ -283,7 +283,8 @@ function mapHttpError(
 export async function getBranchRef(
   token: string,
   repo: string,
-  branch: string
+  branch: string,
+  signal?: AbortSignal
 ): Promise<
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -299,6 +300,7 @@ export async function getBranchRef(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/ref/heads/${branch}`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
@@ -334,7 +336,8 @@ export async function getBranchRef(
 export async function getCommitTree(
   token: string,
   repo: string,
-  commitSha: string
+  commitSha: string,
+  signal?: AbortSignal
 ): Promise<
   { treeSha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -350,6 +353,7 @@ export async function getCommitTree(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/commits/${commitSha}`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
@@ -383,10 +387,11 @@ export async function getCommitTree(
 export async function getRepositoryTree(
   token: string,
   repo: string,
-  branch: string
+  branch: string,
+  signal?: AbortSignal
 ): Promise<RepositoryTreeResult> {
   // Step 1: Get branch ref
-  const refResult = await getBranchRef(token, repo, branch)
+  const refResult = await getBranchRef(token, repo, branch, signal)
   if ("error" in refResult) {
     const code = refResult.errorCode
     if (code === "AUTH") {
@@ -417,7 +422,7 @@ export async function getRepositoryTree(
   }
 
   // Step 2: Get commit tree SHA
-  const commitResult = await getCommitTree(token, repo, refResult.sha)
+  const commitResult = await getCommitTree(token, repo, refResult.sha, signal)
   if ("error" in commitResult) {
     const code = commitResult.errorCode
     if (code === "AUTH") {
@@ -457,6 +462,7 @@ export async function getRepositoryTree(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/trees/${commitResult.treeSha}?recursive=1`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
@@ -532,7 +538,8 @@ export async function getRepositoryTree(
 export async function createBlob(
   token: string,
   repo: string,
-  content: string
+  content: string,
+  signal?: AbortSignal
 ): Promise<
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -551,6 +558,7 @@ export async function createBlob(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/blobs`,
       {
+        signal,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -594,7 +602,8 @@ export async function createTree(
   token: string,
   repo: string,
   baseTreeSha: string,
-  entries: { path: string; sha: string | null }[]
+  entries: { path: string; sha: string | null }[],
+  signal?: AbortSignal
 ): Promise<
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -618,6 +627,7 @@ export async function createTree(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/trees`,
       {
+        signal,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -663,7 +673,8 @@ export async function createCommit(
   repo: string,
   message: string,
   treeSha: string,
-  parentSha: string
+  parentSha: string,
+  signal?: AbortSignal
 ): Promise<
   { sha: string } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -679,6 +690,7 @@ export async function createCommit(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/commits`,
       {
+        signal,
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -723,7 +735,8 @@ export async function updateRef(
   token: string,
   repo: string,
   branch: string,
-  commitSha: string
+  commitSha: string,
+  signal?: AbortSignal
 ): Promise<
   { success: true } | { error: string; errorCode: BatchCommitResult["errorCode"] }
 > {
@@ -739,6 +752,7 @@ export async function updateRef(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/git/refs/heads/${branch}`,
       {
+        signal,
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -784,7 +798,8 @@ export async function batchCommit(
   token: string,
   repo: string,
   branch: string,
-  request: BatchCommitRequest
+  request: BatchCommitRequest,
+  signal?: AbortSignal
 ): Promise<BatchCommitResult> {
   const { uploads, deletions, message } = request
 
@@ -813,7 +828,7 @@ export async function batchCommit(
 
   const executeBatch = async (): Promise<BatchCommitResult> => {
     // Step 1: Get current branch ref (HEAD SHA)
-    const refResult = await getBranchRef(token, repo, branch)
+    const refResult = await getBranchRef(token, repo, branch, signal)
     if ("error" in refResult) {
       throwIfRetryable(refResult)
       return {
@@ -825,7 +840,7 @@ export async function batchCommit(
     const headSha = refResult.sha
 
     // Step 2: Get base tree SHA from commit
-    const treeResult = await getCommitTree(token, repo, headSha)
+    const treeResult = await getCommitTree(token, repo, headSha, signal)
     if ("error" in treeResult) {
       throwIfRetryable(treeResult)
       return {
@@ -845,7 +860,7 @@ export async function batchCommit(
     const blobShas: { [path: string]: string } = {}
 
     for (const upload of uploads) {
-      const blobResult = await createBlob(token, repo, upload.content)
+      const blobResult = await createBlob(token, repo, upload.content, signal)
       if ("error" in blobResult) {
         throwIfRetryable(blobResult)
         return {
@@ -868,7 +883,7 @@ export async function batchCommit(
     }
 
     // Step 5: Create new tree with all changes
-    const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries)
+    const newTreeResult = await createTree(token, repo, baseTreeSha, treeEntries, signal)
     if ("error" in newTreeResult) {
       throwIfRetryable(newTreeResult)
       return {
@@ -880,7 +895,14 @@ export async function batchCommit(
     const newTreeSha = newTreeResult.sha
 
     // Step 6: Create commit pointing to new tree
-    const commitResult = await createCommit(token, repo, message, newTreeSha, headSha)
+    const commitResult = await createCommit(
+      token,
+      repo,
+      message,
+      newTreeSha,
+      headSha,
+      signal
+    )
     if ("error" in commitResult) {
       throwIfRetryable(commitResult)
       return {
@@ -892,7 +914,7 @@ export async function batchCommit(
     const newCommitSha = commitResult.sha
 
     // Step 7: Update branch ref to new commit
-    const updateResult = await updateRef(token, repo, branch, newCommitSha)
+    const updateResult = await updateRef(token, repo, branch, newCommitSha, signal)
     if ("error" in updateResult) {
       throwIfRetryable(updateResult)
       return {
@@ -1241,7 +1263,8 @@ export async function downloadCSV(
   token: string,
   repo: string,
   branch: string,
-  filePath: string = "expenses.csv"
+  filePath: string = "expenses.csv",
+  signal?: AbortSignal
 ): Promise<{ content: string; sha: string } | null> {
   const execute = async (): Promise<{ content: string; sha: string } | null> => {
     const [owner, repoName] = repo.split("/")
@@ -1249,6 +1272,7 @@ export async function downloadCSV(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}?ref=${branch}`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
@@ -1478,7 +1502,8 @@ export async function uploadSettingsFile(
 export async function downloadSettingsFile(
   token: string,
   repo: string,
-  branch: string
+  branch: string,
+  signal?: AbortSignal
 ): Promise<{ content: string; sha: string } | null> {
   const execute = async (): Promise<{ content: string; sha: string } | null> => {
     const [owner, repoName] = repo.split("/")
@@ -1489,6 +1514,7 @@ export async function downloadSettingsFile(
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/contents/${SETTINGS_FILE_PATH}?ref=${branch}`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
