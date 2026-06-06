@@ -161,6 +161,42 @@ export const providerStore = createStore({
 
 export type ProviderStore = typeof providerStore
 
+/** Persist a provider config then update the in-memory store (write-through). */
+export async function addProviderToStore(
+  config: ProviderConfig,
+  store: ProviderStore = providerStore
+): Promise<void> {
+  await providerSettingsStore.addProvider(config)
+  store.trigger.addProvider({ config })
+}
+
+/** Persist the active provider id then update the in-memory store (write-through). */
+export async function setActiveProviderInStore(
+  id: string | null,
+  store: ProviderStore = providerStore
+): Promise<void> {
+  await providerSettingsStore.setActiveProvider(id)
+  store.trigger.setActiveProvider({ id })
+}
+
+/** Persist provider removal then update the in-memory store (write-through). */
+export async function removeProviderFromStore(
+  id: string,
+  store: ProviderStore = providerStore
+): Promise<void> {
+  await providerSettingsStore.removeProvider(id)
+  store.trigger.removeProvider({ id })
+}
+
+/** Persist reconciled state then update the in-memory store (write-through). */
+export async function markReconciledInStore(
+  id: string,
+  store: ProviderStore = providerStore
+): Promise<void> {
+  await markProviderReconciled(id)
+  store.trigger.markReconciled({ id })
+}
+
 export async function initializeProviderStore(
   store: ProviderStore = providerStore
 ): Promise<void> {

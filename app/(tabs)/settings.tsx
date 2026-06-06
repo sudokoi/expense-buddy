@@ -9,6 +9,7 @@ import {
   useNotifications,
   useSettings,
   useSmsImportReview,
+  useProviderManagement,
 } from "../../stores/hooks"
 import { useSyncHandler } from "../../hooks/use-sync-handler"
 import { useUpdateCheck } from "../../hooks/use-update-check"
@@ -72,6 +73,13 @@ export default function SettingsScreen() {
   } = useSettings()
   const { isScanningSmsImports, openSmsImportReview, scanSmsImports } =
     useSmsImportActions()
+
+  const {
+    addProvider: addProviderManagement,
+    setActiveProvider: setActiveProviderManagement,
+    removeProvider: removeProviderManagement,
+    providers,
+  } = useProviderManagement()
 
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
@@ -154,13 +162,31 @@ export default function SettingsScreen() {
       const isFirstTimeSetup = syncConfig === null
 
       await saveSyncConfig(config)
+      await addProviderManagement({
+        kind: "github",
+        id: "default",
+        label: config.repo.trim(),
+        credentialId: "github_pat",
+        repo: config.repo.trim(),
+        branch: config.branch.trim(),
+      })
+      await setActiveProviderManagement("default")
       addNotification(t("settings.github.successConfig"), "success")
 
       if (isFirstTimeSetup && state.expenses.length === 0) {
         handleSync()
       }
     },
-    [syncConfig, state.expenses.length, saveSyncConfig, handleSync, addNotification, t]
+    [
+      syncConfig,
+      state.expenses.length,
+      saveSyncConfig,
+      addProviderManagement,
+      setActiveProviderManagement,
+      handleSync,
+      addNotification,
+      t,
+    ]
   )
 
   const handleTestConnection = useCallback(async () => {
@@ -191,14 +217,18 @@ export default function SettingsScreen() {
       {
         text: t("settings.clearDialog.clear"),
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
           clearSyncConfig()
+          const githubProviders = providers.filter((p) => p.kind === "github")
+          for (const p of githubProviders) {
+            await removeProviderManagement(p.id)
+          }
           setConnectionStatus("idle")
           addNotification(t("settings.notifications.configCleared"), "success")
         },
       },
     ])
-  }, [clearSyncConfig, addNotification, t])
+  }, [clearSyncConfig, removeProviderManagement, providers, addNotification, t])
 
   const handleConnectionStatusChange = useCallback(
     (status: "idle" | "success" | "error") => {

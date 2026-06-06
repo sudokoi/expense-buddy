@@ -50,7 +50,7 @@ export function GoogleDriveConfigSection({
             const { initiateGoogleDriveOAuth } =
               await import("../../../services/sync/google-oauth-service")
             const result = await initiateGoogleDriveOAuth(clientId, tokenExchangeUrl)
-            addProvider({
+            await addProvider({
               id: result.providerId,
               kind: "google_drive",
               label: "Google Drive",
@@ -59,7 +59,7 @@ export function GoogleDriveConfigSection({
               tokenExchangeUrl,
               accountEmail: result.accountEmail,
             })
-            setActiveProvider(result.providerId)
+            await setActiveProvider(result.providerId)
             onDone()
             onNotification(t("settings.googleDrive.configured"), "success")
           } catch (error) {

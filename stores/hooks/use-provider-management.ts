@@ -1,7 +1,13 @@
 import { useCallback } from "react"
 import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "../store-provider"
-import { ProviderConnectionStatus } from "../provider-store"
+import {
+  ProviderConnectionStatus,
+  addProviderToStore,
+  setActiveProviderInStore,
+  removeProviderFromStore,
+  markReconciledInStore,
+} from "../provider-store"
 import type {
   ProviderConfig,
   SyncProvidersState,
@@ -53,16 +59,16 @@ export function useProviderManagement() {
   })
 
   const addProvider = useCallback(
-    (config: ProviderConfig) => {
-      providerStore.trigger.addProvider({ config })
+    async (config: ProviderConfig) => {
+      await addProviderToStore(config, providerStore)
     },
     [providerStore]
   )
 
   const removeProvider = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const removed = providers.find((p) => p.id === id)
-      providerStore.trigger.removeProvider({ id })
+      await removeProviderFromStore(id, providerStore)
       if (removed?.kind === "github") {
         settingsStore.trigger.clearSyncConfig()
       }
@@ -71,15 +77,15 @@ export function useProviderManagement() {
   )
 
   const setActiveProvider = useCallback(
-    (id: string | null) => {
-      providerStore.trigger.setActiveProvider({ id })
+    async (id: string | null) => {
+      await setActiveProviderInStore(id, providerStore)
     },
     [providerStore]
   )
 
   const markReconciled = useCallback(
-    (id: string) => {
-      providerStore.trigger.markReconciled({ id })
+    async (id: string) => {
+      await markReconciledInStore(id, providerStore)
     },
     [providerStore]
   )

@@ -228,8 +228,8 @@ export function ProviderManagementSection({
     useProviderManagement()
 
   const handleActivate = useCallback(
-    (id: string) => {
-      setActiveProvider(id)
+    async (id: string) => {
+      await setActiveProvider(id)
       onNotification(t("settings.providers.activated"), "success")
       onProviderMutated?.()
     },
@@ -249,8 +249,8 @@ export function ProviderManagementSection({
           {
             text: t("settings.providers.remove"),
             style: "destructive",
-            onPress: () => {
-              removeProvider(id)
+            onPress: async () => {
+              await removeProvider(id)
               onNotification(t("settings.providers.removed"), "info")
               onProviderMutated?.()
             },

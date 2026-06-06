@@ -17,7 +17,7 @@ import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
-import { providerStore } from "../../stores/provider-store"
+import { markReconciledInStore } from "../../stores/provider-store"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -29,7 +29,7 @@ import { useSettings } from "../../stores/hooks"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { useSyncMachine } from "../../hooks/use-sync-machine"
 import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
-import { isProviderReconciled, markProviderReconciled } from "../../services/sync-queue"
+import { isProviderReconciled } from "../../services/sync-queue"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -240,8 +240,7 @@ export default function DashboardScreen() {
         onSuccess: async () => {
           const activeConfig = await providerSettingsStore.getActiveConfig()
           if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
-            await markProviderReconciled(activeConfig.id)
-            providerStore.trigger.markReconciled({ id: activeConfig.id })
+            await markReconciledInStore(activeConfig.id)
           }
           logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
         },

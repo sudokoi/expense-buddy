@@ -17,12 +17,11 @@ import {
   getSyncOpsSince,
   getSyncQueueWatermark,
   isProviderReconciled,
-  markProviderReconciled,
   setProviderWatermark,
 } from "../services/sync-queue"
 import { loadDirtyDays, saveDirtyDays } from "../services/expense-dirty-days"
 import { providerSettingsStore } from "../services/sync/provider-settings-store"
-import { providerStore } from "../stores/provider-store"
+import { markReconciledInStore } from "../stores/provider-store"
 
 function useConflictDialog() {
   const { t } = useTranslation()
@@ -188,8 +187,7 @@ export function useSyncHandler() {
             if (activeConfig) {
               await setProviderWatermark(activeConfig.id, lastAppliedId)
               if (!(await isProviderReconciled(activeConfig.id))) {
-                await markProviderReconciled(activeConfig.id)
-                providerStore.trigger.markReconciled({ id: activeConfig.id })
+                await markReconciledInStore(activeConfig.id)
               }
             }
 
