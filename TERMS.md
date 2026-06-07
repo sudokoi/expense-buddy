@@ -1,7 +1,7 @@
 # Terms and Conditions
 
 **Expense Buddy**  
-**Last Updated:** June 7, 2026
+**Last Updated:** June 8, 2026
 
 ## 1. Acceptance of Terms
 
@@ -13,7 +13,7 @@ Expense Buddy is a free, open-source expense tracking application that runs prim
 
 - Manual expense entry with categories, payment methods, and notes
 - Optional Android SMS import for auto-detecting expenses from transaction messages
-- Optional GitHub sync for backing up confirmed expenses to a repository you control
+- Optional cloud sync (GitHub or Google Drive) for backing up confirmed expenses
 - Spending analytics, charts, and multi-currency support
 
 The App is provided "as is" and licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
@@ -24,15 +24,18 @@ Your privacy is fundamental to Expense Buddy. The App does not collect, store, t
 
 ### 3.1 Local Storage
 
-All expense data is stored locally on your device using AsyncStorage and Expo SecureStore. Your data never leaves your device unless you explicitly enable GitHub sync.
+All expense data is stored locally on your device using AsyncStorage and Expo SecureStore. Your data never leaves your device unless you explicitly enable cloud sync.
 
 ### 3.2 SMS Import (Android)
 
 The SMS import feature processes transaction SMS messages entirely on-device. Raw SMS content is stored locally for review only and is never uploaded to GitHub. The feature requires your explicit action to grant `READ_SMS` and `RECEIVE_SMS` permissions.
 
-### 3.3 GitHub Sync (Optional)
+### 3.3 Cloud Sync (Optional)
 
-GitHub sync is entirely optional and opt-in. When enabled, your confirmed expense data is uploaded directly to a GitHub repository you choose and control. We do not operate any intermediary servers and have no access to your GitHub credentials or synced data. Only personal repositories you own are supported.
+Cloud sync is entirely optional and opt-in. You can choose between GitHub or Google Drive:
+
+- **GitHub:** Your confirmed expense data is uploaded directly to a GitHub repository you choose and control. We do not operate any intermediary servers and have no access to your GitHub credentials or synced data. Only personal repositories you own are supported.
+- **Google Drive:** Your confirmed expense data is stored in Google Drive's private app data folder (`appDataFolder`), which is accessible only by this app. A Cloudflare Worker handles OAuth token exchange and refresh so your client secret is never stored in the app. We do not log, store, or access your tokens or synced data. Google's infrastructure stores your data in accordance with the [Google Privacy Policy](https://policies.google.com/privacy).
 
 ### 3.4 Device Logging (Android)
 
@@ -44,7 +47,10 @@ See [PRIVACY.md](PRIVACY.md) for the complete privacy policy.
 
 ### 4.1 Account and Credentials
 
-If you choose to use GitHub sync, you are responsible for maintaining the security of your GitHub credentials and access tokens. The App stores your token locally using Expo SecureStore.
+If you choose to use cloud sync, you are responsible for maintaining the security of your credentials and access tokens:
+
+- **GitHub:** Your personal access token is stored locally using Expo SecureStore.
+- **Google Drive:** OAuth tokens are obtained via native Google Sign-In and stored locally using Expo SecureStore. Token refresh is handled through a Cloudflare Worker; no token data is persisted by the Worker.
 
 ### 4.2 Permissions
 
@@ -61,14 +67,16 @@ The SMS import feature is Android-only and operates on a review-first model:
 - The App scans recent SMS messages on-device to detect likely transaction messages
 - Detected transactions are staged locally for your review
 - You must explicitly accept, edit, reject, or dismiss each staged item before it becomes an expense record
-- Only accepted items are added to your expense history and participate in optional GitHub sync
-- Raw SMS content is never synced to GitHub
+- Only accepted items are added to your expense history and participate in optional cloud sync
+- Raw SMS content is never synced to GitHub or Google Drive
 
 The current SMS parsing uses deterministic rules and an on-device LiteRT model for category suggestions. Category suggestions are generated locally and may be inaccurate. You are responsible for reviewing and correcting all imported data.
 
-## 6. GitHub Sync
+## 6. Cloud Sync
 
-GitHub sync is an optional feature that allows you to back up confirmed expense records to a GitHub repository you control:
+Cloud sync is an optional feature that allows you to back up confirmed expense records. You can choose between the following providers:
+
+### 6.1 GitHub Sync
 
 - Sync uses a fetch-merge-push workflow against your chosen repository
 - Expenses are stored as daily CSV files in `expenses-YYYY-MM-DD.csv` format
@@ -77,6 +85,16 @@ GitHub sync is an optional feature that allows you to back up confirmed expense 
 - Organization repositories are not supported
 
 You are solely responsible for the security and access control of the GitHub repository you use for sync.
+
+### 6.2 Google Drive Sync
+
+- Sync uses Google Drive's private app data folder (`appDataFolder`), which is not visible to users or other apps
+- Expenses are stored as per-year JSON files
+- Authentication uses native Android Google Sign-In with OAuth 2.0
+- Token refresh is handled server-side by a Cloudflare Worker so your client secret is never stored in the app
+- You must have a Google account signed in on your device
+
+You are responsible for the security of your Google account and the OAuth permissions you grant to the App.
 
 ## 7. Open Source License
 
