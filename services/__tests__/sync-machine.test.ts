@@ -134,7 +134,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         isInSync: true,
       })
 
-      const onInSync = jest.fn()
+      const onSuccess = jest.fn()
       const actor = createActor(syncMachine, {
         input: { provider: mockProvider },
       })
@@ -144,12 +144,12 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
-        callbacks: { onInSync },
+        callbacks: { onSuccess },
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      expect(onInSync).toHaveBeenCalled()
+      expect(onSuccess).toHaveBeenCalledWith({ mergeResult })
 
       actor.stop()
     })

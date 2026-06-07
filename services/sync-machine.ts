@@ -461,8 +461,7 @@ export const syncMachine = setup({
 
     inSync: {
       entry: ({ context }) => {
-        context.callbacks.onInSync?.()
-        context.callbacks.onSuccess?.({})
+        context.callbacks.onSuccess?.({ mergeResult: context.mergeResult })
       },
       after: {
         IN_SYNC_DISPLAY_TIME: "idle",
