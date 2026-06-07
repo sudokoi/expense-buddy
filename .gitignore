@@ -67,6 +67,7 @@ tools/sms-ml/models/generated
 
 # credentials (keystores, signing keys)
 credentials
+credentials.json
 
 # vscode settings
 .vscode
