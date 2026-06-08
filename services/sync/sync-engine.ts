@@ -526,12 +526,10 @@ export class SyncOrchestrator implements SyncEngine {
       })
     } catch (error) {
       // waitFor timed out (or the actor threw): keep the provider gated and
-      // surface the error; the reconciliation retries on next activation/launch.
-      this.lastRunAt = new Date().toISOString()
-      this.lastError = String(error)
-      this.lastOutcome = "error"
-      this.runVersion += 1
-      this.emitChange()
+      // retry on next activation/launch. Do NOT update the UI-facing
+      // lastOutcome/runVersion — transient first-reconciliation errors (e.g.
+      // network not ready on launch) aren't meaningful to the user and would
+      // briefly flash a spurious error icon in the SyncIndicator.
       logAsync(
         "ERROR",
         "SYNC_ENGINE",
@@ -584,10 +582,9 @@ export class SyncOrchestrator implements SyncEngine {
     // activation/launch. Conflicts require explicit user resolution. A failed
     // first reconciliation parks back in `awaitingInitialReconciliation`, so the
     // terminal error lives in machine context rather than the `error` state.
-    this.lastError = final.context.error ?? this.lastError
-    this.lastOutcome = final.matches("conflict") ? "conflict" : "error"
-    this.runVersion += 1
-    this.emitChange()
+    // Do NOT update lastOutcome/runVersion — transient first-reconciliation
+    // errors aren't meaningful to the user and would briefly flash a spurious
+    // error icon in the SyncIndicator.
     logAsync(
       "WARN",
       "SYNC_ENGINE",
