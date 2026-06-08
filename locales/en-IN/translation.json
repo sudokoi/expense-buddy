@@ -93,6 +93,7 @@
     "readOnly": {
       "blocked": "Entries older than 6 months are locked and can't be changed."
     },
+    "saveFailed": "Couldn't save your changes. Please try again.",
     "deleteDialog": {
       "title": "Delete Expense",
       "description": "Are you sure you want to delete this expense? This action cannot be undone."

@@ -23,11 +23,7 @@ import { isDateEditable, isExpenseEditable } from "../services/read-only-window"
 import { getLocalDayKey } from "../utils/date"
 import i18next from "i18next"
 import { AppSettings } from "../services/settings-manager"
-import {
-  performAutoSyncOnChange,
-  performAutoSyncOnLaunch,
-  AutoSyncCallbacks,
-} from "./helpers"
+import { performAutoSyncOnLaunch, AutoSyncCallbacks } from "./helpers"
 
 function normalizeExpenseForSave(expense: Expense): Expense {
   const normalizedNote = expense.note.trim()
@@ -114,6 +110,37 @@ function emitReadOnlyBlockNotification(): void {
 }
 
 /**
+ * Emit an error notification when an authoring mutation could not be durably
+ * persisted. Paired with a rollback event so the in-memory state never stands
+ * after its persistence threw. Routed through setSyncNotification so it
+ * surfaces (and auto-clears) like other sync toasts.
+ */
+function emitPersistErrorNotification(): void {
+  expenseStore.trigger.setSyncNotification({
+    notification: {
+      localFilesUpdated: 0,
+      remoteFilesUpdated: 0,
+      message: i18next.t("history.saveFailed"),
+    },
+  })
+}
+
+/**
+ * Seam for post-persistence sync signaling.
+ *
+ * Authoring effects must signal sync only AFTER durable persistence succeeds,
+ * and they must never drive sync as a fire-and-forget chain from inside the
+ * mutation effect. The standalone SyncOrchestrator does not exist yet (task 7)
+ * and the wiring lands in task 11/12; until then this is intentionally a no-op
+ * placeholder that marks where `syncOrchestrator.requestSync("on_change")` will
+ * be called once durable persistence has completed.
+ */
+function signalSyncAfterPersistence(): void {
+  // Intentionally empty until SyncOrchestrator.requestSync("on_change") is
+  // wired in (tasks 7 and 11/12). Do not introduce the orchestrator here.
+}
+
+/**
  * Create auto-sync callbacks for expense store actions
  * These callbacks update store state based on sync results
  */
@@ -160,6 +187,22 @@ export const expenseStore = createStore({
       isLoading: event.isLoading,
     }),
 
+    /**
+     * Revert an authoring mutation whose persistence failed. The effect that
+     * performed the mutation captures the pre-mutation snapshot and dispatches
+     * this event on a persistence throw so an in-memory change never stands
+     * without durable backing.
+     */
+    rollbackMutation: (
+      context,
+      event: { expenses: Expense[]; dirtyDays: string[]; deletedDays: string[] }
+    ) => ({
+      ...context,
+      expenses: event.expenses,
+      dirtyDays: event.dirtyDays,
+      deletedDays: event.deletedDays,
+    }),
+
     addExpense: (context, event: { expense: Expense }, enqueue) => {
       const normalizedExpense = normalizeExpenseForSave(event.expense)
       if (!isDateEditable(normalizedExpense.date)) {
@@ -170,6 +213,11 @@ export const expenseStore = createStore({
       const dayKey = getLocalDayKey(normalizedExpense.date)
       const dirtyDays = addUniqueDay(context.dirtyDays, dayKey)
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       logAsync(
         "INFO",
         "EXPENSE_STORE",
@@ -177,15 +225,30 @@ export const expenseStore = createStore({
       )
 
       enqueue.effect(async () => {
-        await persistExpenseAdded(normalizedExpense)
-        await markDirtyDay(dayKey)
-        await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
-        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
-        logAsync(
-          "INFO",
-          "EXPENSE_STORE",
-          `ADD_EXPENSE_PERSISTED id=${normalizedExpense.id}`
-        )
+        try {
+          await persistExpenseAdded(normalizedExpense)
+          await markDirtyDay(dayKey)
+          await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
+          logAsync(
+            "INFO",
+            "EXPENSE_STORE",
+            `ADD_EXPENSE_PERSISTED id=${normalizedExpense.id}`
+          )
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          signalSyncAfterPersistence()
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `ADD_EXPENSE_PERSIST_FAILED id=${normalizedExpense.id} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
+          })
+          emitPersistErrorNotification()
+        }
       })
 
       return { ...context, expenses: newExpenses, dirtyDays }
@@ -210,6 +273,11 @@ export const expenseStore = createStore({
       )
       const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       logAsync(
         "INFO",
         "EXPENSE_STORE",
@@ -217,23 +285,38 @@ export const expenseStore = createStore({
       )
 
       enqueue.effect(async () => {
-        await persistExpensesAdded(normalizedExpenses)
+        try {
+          await persistExpensesAdded(normalizedExpenses)
 
-        for (const dayKey of new Set(affectedDays)) {
-          await markDirtyDay(dayKey)
+          for (const dayKey of new Set(affectedDays)) {
+            await markDirtyDay(dayKey)
+          }
+
+          await enqueueSyncOp({
+            type: "expense.batchUpsert",
+            expenses: normalizedExpenses,
+          })
+
+          logAsync(
+            "INFO",
+            "EXPENSE_STORE",
+            `BATCH_ADD_PERSISTED count=${normalizedExpenses.length}`
+          )
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          signalSyncAfterPersistence()
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `BATCH_ADD_PERSIST_FAILED count=${normalizedExpenses.length} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
+          })
+          emitPersistErrorNotification()
         }
-
-        await enqueueSyncOp({
-          type: "expense.batchUpsert",
-          expenses: normalizedExpenses,
-        })
-
-        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
-        logAsync(
-          "INFO",
-          "EXPENSE_STORE",
-          `BATCH_ADD_PERSISTED count=${normalizedExpenses.length}`
-        )
       })
 
       return { ...context, expenses: newExpenses, dirtyDays }
@@ -278,6 +361,11 @@ export const expenseStore = createStore({
         deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       const dayChanged = previousDayKey !== nextDayKey
       logAsync(
         "INFO",
@@ -286,21 +374,36 @@ export const expenseStore = createStore({
       )
 
       enqueue.effect(async () => {
-        await persistExpenseUpdated(normalizedExpense)
-        await markDirtyDay(nextDayKey)
-        if (previousDayKey && previousDayKey !== nextDayKey) {
-          await markDirtyDay(previousDayKey)
+        try {
+          await persistExpenseUpdated(normalizedExpense)
+          await markDirtyDay(nextDayKey)
+          if (previousDayKey && previousDayKey !== nextDayKey) {
+            await markDirtyDay(previousDayKey)
+          }
+          if (deletedDayKey) {
+            await markDeletedDay(deletedDayKey)
+          }
+          await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
+          logAsync(
+            "INFO",
+            "EXPENSE_STORE",
+            `EDIT_EXPENSE_PERSISTED id=${normalizedExpense.id}`
+          )
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          signalSyncAfterPersistence()
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `EDIT_EXPENSE_PERSIST_FAILED id=${normalizedExpense.id} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
+          })
+          emitPersistErrorNotification()
         }
-        if (deletedDayKey) {
-          await markDeletedDay(deletedDayKey)
-        }
-        await enqueueSyncOp({ type: "expense.upsert", expense: normalizedExpense })
-        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
-        logAsync(
-          "INFO",
-          "EXPENSE_STORE",
-          `EDIT_EXPENSE_PERSISTED id=${normalizedExpense.id}`
-        )
       })
 
       return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
@@ -329,6 +432,11 @@ export const expenseStore = createStore({
         deletedDays = addUniqueDay(deletedDays, deletedDayKey)
       }
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       logAsync(
         "INFO",
         "EXPENSE_STORE",
@@ -336,17 +444,32 @@ export const expenseStore = createStore({
       )
 
       enqueue.effect(async () => {
-        if (updatedExpense) {
-          await persistExpenseUpdated(updatedExpense)
+        try {
+          if (updatedExpense) {
+            await persistExpenseUpdated(updatedExpense)
+          }
+          if (deletedDayKey) {
+            await markDeletedDay(deletedDayKey)
+          }
+          if (updatedExpense) {
+            await enqueueSyncOp({ type: "expense.upsert", expense: updatedExpense })
+          }
+          logAsync("INFO", "EXPENSE_STORE", `DELETE_EXPENSE_PERSISTED id=${event.id}`)
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          signalSyncAfterPersistence()
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `DELETE_EXPENSE_PERSIST_FAILED id=${event.id} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
+          })
+          emitPersistErrorNotification()
         }
-        if (deletedDayKey) {
-          await markDeletedDay(deletedDayKey)
-        }
-        if (updatedExpense) {
-          await enqueueSyncOp({ type: "expense.upsert", expense: updatedExpense })
-        }
-        await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
-        logAsync("INFO", "EXPENSE_STORE", `DELETE_EXPENSE_PERSISTED id=${event.id}`)
       })
 
       return { ...context, expenses: newExpenses, dirtyDays, deletedDays }
@@ -433,26 +556,45 @@ export const expenseStore = createStore({
 
       const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       enqueue.effect(async () => {
-        // Persist only affected expenses (avoid full-array rewrite)
-        if (affectedExpenses.length > 0) {
-          await persistExpensesUpdated(affectedExpenses)
-        }
+        try {
+          // Persist only affected expenses (avoid full-array rewrite)
+          if (affectedExpenses.length > 0) {
+            await persistExpensesUpdated(affectedExpenses)
+          }
 
-        for (const dayKey of new Set(affectedDays)) {
-          await markDirtyDay(dayKey)
-        }
+          for (const dayKey of new Set(affectedDays)) {
+            await markDirtyDay(dayKey)
+          }
 
-        if (affectedExpenses.length > 0) {
-          await enqueueSyncOp({
-            type: "expense.batchUpsert",
-            expenses: affectedExpenses,
+          if (affectedExpenses.length > 0) {
+            await enqueueSyncOp({
+              type: "expense.batchUpsert",
+              expenses: affectedExpenses,
+            })
+          }
+
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          if (affectedExpenseIds.length > 0) {
+            signalSyncAfterPersistence()
+          }
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `REASSIGN_TO_OTHER_PERSIST_FAILED count=${affectedExpenses.length} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
           })
-        }
-
-        // Trigger auto-sync if enabled for on_change timing
-        if (affectedExpenseIds.length > 0) {
-          await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+          emitPersistErrorNotification()
         }
       })
 
@@ -494,26 +636,45 @@ export const expenseStore = createStore({
 
       const dirtyDays = addUniqueDays(context.dirtyDays, affectedDays)
 
+      // Snapshot for rollback if persistence throws.
+      const previousExpenses = context.expenses
+      const previousDirtyDays = context.dirtyDays
+      const previousDeletedDays = context.deletedDays
+
       enqueue.effect(async () => {
-        // Persist only affected expenses (avoid full-array rewrite)
-        if (affectedExpenses.length > 0) {
-          await persistExpensesUpdated(affectedExpenses)
-        }
+        try {
+          // Persist only affected expenses (avoid full-array rewrite)
+          if (affectedExpenses.length > 0) {
+            await persistExpensesUpdated(affectedExpenses)
+          }
 
-        for (const dayKey of new Set(affectedDays)) {
-          await markDirtyDay(dayKey)
-        }
+          for (const dayKey of new Set(affectedDays)) {
+            await markDirtyDay(dayKey)
+          }
 
-        if (affectedExpenses.length > 0) {
-          await enqueueSyncOp({
-            type: "expense.batchUpsert",
-            expenses: affectedExpenses,
+          if (affectedExpenses.length > 0) {
+            await enqueueSyncOp({
+              type: "expense.batchUpsert",
+              expenses: affectedExpenses,
+            })
+          }
+
+          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          if (affectedExpenseIds.length > 0) {
+            signalSyncAfterPersistence()
+          }
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `UPDATE_CATEGORIES_PERSIST_FAILED count=${affectedExpenses.length} error=${error}`
+          )
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: previousDirtyDays,
+            deletedDays: previousDeletedDays,
           })
-        }
-
-        // Trigger auto-sync if enabled for on_change timing
-        if (affectedExpenseIds.length > 0) {
-          await performAutoSyncOnChange(newExpenses, createAutoSyncCallbacks())
+          emitPersistErrorNotification()
         }
       })
 

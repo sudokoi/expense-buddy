@@ -30,16 +30,12 @@ import type { Expense } from "../../types/expense"
 import { persistExpensesAdded } from "../../services/expense-storage"
 import { markDirtyDay } from "../../services/expense-dirty-days"
 import { enqueueSyncOp } from "../../services/sync-queue"
-import { performAutoSyncOnChange } from "../helpers"
 
 const mockPersistExpensesAdded = persistExpensesAdded as jest.MockedFunction<
   typeof persistExpensesAdded
 >
 const mockMarkDirtyDay = markDirtyDay as jest.MockedFunction<typeof markDirtyDay>
 const mockEnqueueSyncOp = enqueueSyncOp as jest.MockedFunction<typeof enqueueSyncOp>
-const mockPerformAutoSyncOnChange = performAutoSyncOnChange as jest.MockedFunction<
-  typeof performAutoSyncOnChange
->
 
 function createExpense(id: string, date: string, note: string): Expense {
   return {
@@ -108,11 +104,6 @@ describe("expenseStore addExpenses", () => {
         expect.objectContaining({ id: "2", note: "second", category: "Food" }),
       ],
     })
-    expect(mockPerformAutoSyncOnChange).toHaveBeenCalledTimes(1)
-    expect(mockPerformAutoSyncOnChange).toHaveBeenCalledWith(
-      [expect.objectContaining({ id: "1" }), expect.objectContaining({ id: "2" })],
-      expect.any(Object)
-    )
   })
 
   it("deduplicates dirty day writes for multiple expenses on the same day", async () => {

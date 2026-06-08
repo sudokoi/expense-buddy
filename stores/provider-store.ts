@@ -47,11 +47,7 @@ export const providerStore = createStore({
       reconciledMap: event.reconciledMap,
     }),
 
-    addProvider: (context, event: { config: ProviderConfig }, enqueue) => {
-      enqueue.effect(async () => {
-        await providerSettingsStore.addProvider(event.config)
-      })
-
+    addProvider: (context, event: { config: ProviderConfig }) => {
       const exists = context.providers.some((p) => p.id === event.config.id)
       const providers = exists
         ? context.providers.map((p) => (p.id === event.config.id ? event.config : p))
@@ -59,11 +55,7 @@ export const providerStore = createStore({
       return { ...context, providers }
     },
 
-    removeProvider: (context, event: { id: string }, enqueue) => {
-      enqueue.effect(async () => {
-        await providerSettingsStore.removeProvider(event.id)
-      })
-
+    removeProvider: (context, event: { id: string }) => {
       const providers = context.providers.filter((p) => p.id !== event.id)
       const activeProviderId =
         context.activeProviderId === event.id
@@ -85,19 +77,11 @@ export const providerStore = createStore({
       }
     },
 
-    setActiveProvider: (context, event: { id: string | null }, enqueue) => {
-      enqueue.effect(async () => {
-        await providerSettingsStore.setActiveProvider(event.id)
-      })
-
+    setActiveProvider: (context, event: { id: string | null }) => {
       return { ...context, activeProviderId: event.id }
     },
 
-    markReconciled: (context, event: { id: string }, enqueue) => {
-      enqueue.effect(async () => {
-        await markProviderReconciled(event.id)
-      })
-
+    markReconciled: (context, event: { id: string }) => {
       return {
         ...context,
         reconciledMap: { ...context.reconciledMap, [event.id]: true },
