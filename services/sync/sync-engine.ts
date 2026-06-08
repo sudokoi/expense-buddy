@@ -373,7 +373,7 @@ export class SyncOrchestrator implements SyncEngine {
       dirtyDays,
       deletedDays,
       settings,
-      awaitFirstReconciliation: true,
+      initialReconciliationComplete: false,
     })
 
     this.lastRunAt = new Date().toISOString()
@@ -391,10 +391,10 @@ export class SyncOrchestrator implements SyncEngine {
     }
 
     // Not reconciled: keep background auto-sync gated and retry on next
-    // activation/launch. Conflicts require explicit user resolution.
-    if (final.matches("error")) {
-      this.lastError = final.context.error
-    }
+    // activation/launch. Conflicts require explicit user resolution. A failed
+    // first reconciliation parks back in `awaitingInitialReconciliation`, so the
+    // terminal error lives in machine context rather than the `error` state.
+    this.lastError = final.context.error ?? this.lastError
     logAsync(
       "WARN",
       "SYNC_ENGINE",
@@ -455,10 +455,16 @@ export class SyncOrchestrator implements SyncEngine {
     const { dirtyDays, deletedDays } = await this.deps.dirtyDays.load()
     const localExpenses = this.deps.getLocalExpenses()
 
+    // Route the machine correctly: a reconciled provider runs the normal sync
+    // flow, while an unreconciled one (only reachable here via manual/retry,
+    // since background runs are gated above) drives the activation first
+    // reconciliation.
+    const reconciled = await this.deps.queue.isProviderReconciled(config.id)
+
     logAsync(
       "INFO",
       "SYNC_ENGINE",
-      `RUN_ONCE reason=${reason} providerId=${config.id} localCount=${localExpenses.length} dirty=${dirtyDays.length} deleted=${deletedDays.length}`
+      `RUN_ONCE reason=${reason} providerId=${config.id} localCount=${localExpenses.length} dirty=${dirtyDays.length} deleted=${deletedDays.length} reconciled=${reconciled}`
     )
 
     const final = await this.driveMachine({
@@ -467,9 +473,16 @@ export class SyncOrchestrator implements SyncEngine {
       dirtyDays,
       deletedDays,
       settings,
+      initialReconciliationComplete: reconciled,
     })
 
     this.lastRunAt = new Date().toISOString()
+
+    // A manual/retry run that completed the first reconciliation must record the
+    // reconciled flag so background auto-sync becomes eligible afterwards.
+    if (!reconciled && (final.matches("success") || final.matches("inSync"))) {
+      await this.deps.queue.markProviderReconciled(config.id)
+    }
 
     return this.reconcileWatermarkAndApply(config.id, final, localExpenses)
   }
@@ -485,13 +498,23 @@ export class SyncOrchestrator implements SyncEngine {
     deletedDays: string[]
     settings: AppSettings
     /**
-     * When true, wait past the transient `awaitingInitialReconciliation` gate
-     * for the deeper first-sync terminal (`reconcilingFirstSync` → success /
-     * error / conflict). Used by the activation-triggered first reconciliation.
+     * Whether the active provider has already completed its first
+     * reconciliation on this device. Drives the machine's `idle` SYNC guard:
+     * - `true`  → the machine routes straight into the normal `syncing` flow.
+     * - `false` → the machine parks in the `awaitingInitialReconciliation` gate,
+     *   so the orchestrator must emit an explicit `START_FIRST_SYNC` to drive
+     *   the activation-triggered first reconciliation (see below).
      */
-    awaitFirstReconciliation?: boolean
+    initialReconciliationComplete: boolean
   }): Promise<ReturnType<RunActor["getSnapshot"]>> {
-    const { provider, localExpenses, dirtyDays, deletedDays, settings } = args
+    const {
+      provider,
+      localExpenses,
+      dirtyDays,
+      deletedDays,
+      settings,
+      initialReconciliationComplete,
+    } = args
 
     const actor = createActor(syncMachine, { input: { provider } })
     this.currentActor = actor
@@ -507,6 +530,7 @@ export class SyncOrchestrator implements SyncEngine {
       deletedDays,
       settings: settings.syncSettings ? settings : undefined,
       syncSettingsEnabled: settings.syncSettings,
+      initialReconciliationComplete,
       callbacks: {
         onAuthError: (info) => {
           logAsync(
@@ -519,6 +543,16 @@ export class SyncOrchestrator implements SyncEngine {
       conflictResolver: this.deps.conflictResolver,
     })
 
+    // When the provider has not yet reconciled, the SYNC above only parks the
+    // machine in the `awaitingInitialReconciliation` gate (it ignores further
+    // background SYNC events). Activation is the explicit first-sync trigger, so
+    // we synchronously drive the gate into `reconcilingFirstSync` here. Both
+    // sends are processed synchronously, so by the time we `waitFor` below the
+    // machine has already left the transient gate state.
+    if (!initialReconciliationComplete) {
+      actor.send({ type: "START_FIRST_SYNC" })
+    }
+
     const final = await waitFor(
       actor,
       (snapshot) =>
@@ -526,8 +560,11 @@ export class SyncOrchestrator implements SyncEngine {
         snapshot.matches("inSync") ||
         snapshot.matches("error") ||
         snapshot.matches("conflict") ||
-        (!args.awaitFirstReconciliation &&
-          snapshot.matches("awaitingInitialReconciliation")),
+        // Reaching the gate here is terminal for a run: for a reconciled
+        // provider the machine never enters it; for a first reconciliation we
+        // have already passed the transient entry, so landing back here means
+        // `reconcilingFirstSync` failed and parked the gate again.
+        snapshot.matches("awaitingInitialReconciliation"),
       { timeout: 60000 }
     )
 
