@@ -87,7 +87,7 @@ Runtime flow:
 1. The app checks SMS permission status on startup without prompting.
 2. If permission was already granted, the provider fetches the pending review queue from native Room.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
-4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
+4. A Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
 5. `ExpenseBuddySmsModule` provides `syncInboxAsync` which queries recent SMS from the ContentProvider, and natively parses each message using `SmsMessageParser` (from `expense-buddy-sms-parser`) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
 6. The native sync pipeline then directly runs LiteRT category inference on the parsed messages, replacing the regex category suggestion only when the model clears its confidence gate.
 7. `SmsMessageParser.createFingerprint` generates a deterministic SHA-256 fingerprint from sender, body, timestamp (quantized to 3-minute windows), and amount for dedup.
@@ -179,7 +179,7 @@ Key design decisions:
 - **Stale-write detection**: Each year file's content hash is captured during `readSnapshot` and stored in the `remoteRevision`. Before writing, the provider re-reads the file and compares its hash against the stored version. A mismatch means a concurrent write, which surfaces a `CONFLICT` error rather than silently overwriting.
 - **OAuth token refresh**: Tokens are stored in `CredentialStore` with `access_token`, `refresh_token`, and `expires_at`. The provider refreshes automatically when the token is expired.
 - **Android-native OAuth**: Google Drive auth uses the native `play-services-auth` GoogleSignInClient via the `expense-buddy-google-auth` Expo module, not a browser-based OAuth redirect. This complies with Google's current policy which rejects custom-scheme redirect URIs for Android apps.
-- **Android-only**: Drive sync requires the native Google identity flow; the web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
+- **Native auth required**: Drive sync requires the native Google identity flow; a web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
 - **Per-year JSON format**: Each year file bundles all day-level CSV content for that year into a JSON map (`{ v: 1, f: { "expenses-2026-01-01.csv": "id,amount\n...", ... } }`). This avoids creating hundreds of individual Drive files while keeping reads incremental — only the year files containing dirty days are downloaded.
 
 ### Queue Compaction
@@ -189,6 +189,12 @@ The sync queue tracks all local edits with a global sequence number. When a prov
 ### Sync Machine
 
 The XState v5 sync machine (`services/sync-machine.ts`) receives the provider via `input` and manages the full lifecycle: `idle → syncing → (success | inSync | awaitingInitialReconciliation → reconcilingFirstSync | conflict | error)`. The machine detects auth errors by checking an `errorCode` field on the result — when the error is `AUTH_MISSING`, `AUTH_EXPIRED`, `AUTH_INVALID`, or `PERMISSION_DENIED`, the machine enters an auth-required state that the UI can respond to.
+
+### Read-Only Window
+
+A 180-day read-only window (`services/read-only-window.ts`) prevents edits to expenses older than 180 days. The window is computed from the earliest of the local expense date or the `firstAppLaunch` timestamp stored in settings. It is checked at write time inside the `expenseStore`. Expenses whose date falls inside the window allow full CRUD; expenses outside it are read-only. The window can only be widened (shortened) through a store update — it cannot be narrowed once set.
+
+Hooks and UI check `readOnlyUntil` to disable editing controls. The window also avoids stale corrections of synced records that all devices have already agreed on.
 
 ### Sync Config Migration
 

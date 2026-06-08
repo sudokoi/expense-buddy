@@ -55,8 +55,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### SMS Import and Review
 
-- Android-only SMS import using the native `expense-buddy-sms-parser` parsing engine (pure Kotlin, no JS bridge)
-- Android-only background transaction alerts using the native `expense-buddy-sms-module` module
+- SMS import using the native `expense-buddy-sms-parser` parsing engine (pure Kotlin, no JS bridge)
+- Background transaction alerts using the native `expense-buddy-sms-module` module
 - Zero-hop native sync: a single `syncInboxAsync` bridge call reads, parses, classifies, deduplicates, and queues items in native Room — JS only receives a count
 - Inline `READ_SMS` permission handling through the native module
 - Optional Settings toggle for background SMS alerts with `RECEIVE_SMS` and `POST_NOTIFICATIONS` gating
@@ -77,10 +77,10 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### Sync
 
-- **GitHub** — private repository sync using a fetch-merge-push workflow; daily CSV files, optional settings sync, dirty-day tracking, SHA caching, timestamp-based auto-resolution with true conflict detection
-- **Google Drive** — Android-only sync via REST Drive API v3; expenses bundled as a compressed archive in the app's `appDataFolder`; automatic OAuth token refresh; stale-write detection via file version numbers
-- At most one active sync provider at a time; inactive providers remain configured
-- Queue compaction with per-provider watermarks ensures only un-synced local edits are replayed after a provider switch
+- **GitHub** — private repository sync using a fetch-merge-push workflow; daily CSV files, optional settings sync
+- **Google Drive** — sync via REST Drive API v3; per-year JSON files in Drive's private `appDataFolder`; native Google Sign-In; automatic OAuth token refresh
+- Multi-provider framework with credential store, per-provider watermarks, and queue compaction
+- Activation-triggered first reconciliation on provider add/switch
 - Manual sync controls plus optional auto-sync on launch or on change
 
 ### Analytics
@@ -93,7 +93,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 ### User Experience
 
 - Works on Android, iOS, and Web for core expense tracking
-- SMS import is Android-only and requires a native build
+- SMS import requires a native build
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
 - Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese

@@ -1,10 +1,11 @@
 ---
-"expense-buddy": minor
+"expense-buddy": major
 ---
 
-feat: Google Drive sync, redesigned settings, and swipeable expenses
+feat: Google Drive sync, redesigned settings, swipeable expenses, and read-only window
 
-- Add Google Drive as a new sync provider — back up expenses to your Google Drive app folder using native Google Sign-In
-- Redesign Settings sync section with multi-provider management: add/remove/activate providers, connection testing, and status badges
+- Add Google Drive as a new sync provider with native Google Sign-In and per-year JSON storage
+- Redesign Settings with a multi-provider management section and swipeable provider cards
 - Add swipeable expense rows with icon-only swipe actions
-- Add swipeable provider cards with right-swipe for edit/delete/test actions
+- Add 6-month read-only window for editing past expenses
+- Rewrite sync engine with provider framework, per-provider watermarks, queue compaction, and first reconciliation

@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** June 5, 2026
+**Last Updated:** June 8, 2026
 
 ## Overview
 
