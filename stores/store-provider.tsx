@@ -229,6 +229,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       onNotify: (notification) =>
         expenseStore.trigger.setSyncNotification({ notification }),
       onDirtyDaysCleared: () => expenseStore.trigger.clearDirtyDaysState(),
+      onReconciled: (providerId) =>
+        providerStore.trigger.markReconciled({ id: providerId }),
       conflictResolver: promptConflictResolution,
       onAuthError: ({ shouldSignOut }) => {
         if (shouldSignOut) {

@@ -121,6 +121,12 @@ export interface SyncEngineDeps {
    * clear its in-memory copy and stay consistent with durable storage.
    */
   onDirtyDaysCleared?: () => void
+  /**
+   * Notify that the provider was durably marked as reconciled, so the store can
+   * update its in-memory `reconciledMap` and the UI can drop the "first sync"
+   * / "needs setup" indicators.
+   */
+  onReconciled?: (providerId: string) => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
   /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
@@ -154,6 +160,12 @@ export interface SyncEngineStoreBindings {
    * clear its in-memory copy and stay consistent with durable storage.
    */
   onDirtyDaysCleared?: () => void
+  /**
+   * Notify that the provider was durably marked as reconciled, so the store can
+   * update its in-memory `reconciledMap` and the UI can drop the "first sync"
+   * / "needs setup" indicators.
+   */
+  onReconciled?: (providerId: string) => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
   /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
@@ -376,6 +388,9 @@ export class SyncOrchestrator implements SyncEngine {
     if (bindings.onAuthError) {
       this.deps.onAuthError = bindings.onAuthError
     }
+    if (bindings.onReconciled) {
+      this.deps.onReconciled = bindings.onReconciled
+    }
     logAsync("INFO", "SYNC_ENGINE", "STORE_BINDINGS_SET")
   }
 
@@ -530,6 +545,7 @@ export class SyncOrchestrator implements SyncEngine {
     if (final.matches("success") || final.matches("inSync")) {
       this.lastError = undefined
       await this.deps.queue.markProviderReconciled(config.id)
+      this.deps.onReconciled?.(config.id)
       // The first reconciliation wrote the full local+merged data, so every op
       // in the queue up to now is durably represented in the remote. Anchor the
       // provider's watermark at the current queue head so subsequent runs have a
@@ -687,6 +703,7 @@ export class SyncOrchestrator implements SyncEngine {
     // reconciled flag so background auto-sync becomes eligible afterwards.
     if (!reconciled && (final.matches("success") || final.matches("inSync"))) {
       await this.deps.queue.markProviderReconciled(config.id)
+      this.deps.onReconciled?.(config.id)
     }
 
     const result = await this.reconcileWatermarkAndApply(config.id, final, localExpenses)
