@@ -129,4 +129,21 @@ describe("GitHubProvider deletion range guard", () => {
 
     expect(batchCommit).not.toHaveBeenCalled()
   })
+
+  it("fails with NETWORK (no commit) when the OCC re-read fails", async () => {
+    // We held a known revision but couldn't re-read the remote to verify it:
+    // the write must not proceed blind.
+    ;(getRepositoryTree as jest.Mock).mockResolvedValue({
+      success: false,
+      error: "transient",
+    })
+
+    const snapshot = makeSnapshot({ "expenses-2024-06-01.csv": "id,amount\n1,100" })
+
+    await expect(
+      provider.writeSnapshot(snapshot, { kind: "git_sha", sha: "original-sha" })
+    ).rejects.toMatchObject({ code: "NETWORK", retryable: true })
+
+    expect(batchCommit).not.toHaveBeenCalled()
+  })
 })

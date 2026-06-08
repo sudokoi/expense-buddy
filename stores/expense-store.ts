@@ -462,8 +462,6 @@ export const expenseStore = createStore({
       enqueue.effect(async () => {
         try {
           await persistExpensesSnapshot(event.expenses)
-          // Clean up legacy key after a successful full snapshot write.
-          await removeLegacyExpensesKey()
         } catch (error) {
           logAsync(
             "ERROR",
@@ -478,6 +476,19 @@ export const expenseStore = createStore({
             deletedDays: context.deletedDays,
           })
           emitPersistErrorNotification()
+          return
+        }
+
+        // Legacy-key cleanup is best-effort: the snapshot write already
+        // succeeded, so a cleanup failure must NOT roll back the saved data.
+        try {
+          await removeLegacyExpensesKey()
+        } catch (error) {
+          logAsync(
+            "WARN",
+            "EXPENSE_STORE",
+            `REPLACE_EXPENSES_LEGACY_KEY_CLEANUP_FAILED error=${error}`
+          )
         }
       })
 

@@ -215,6 +215,25 @@ describe("SyncOrchestrator first reconciliation", () => {
     )
   }, 10000)
 
+  it("recovers cleanly when a run times out (no leak, returns a failure)", async () => {
+    // readSnapshot never resolves -> the machine never reaches a terminal state
+    // -> waitFor times out. The orchestrator must tear the actor down, return a
+    // handled failure (not reject), and leave its state consistent for the UI.
+    const provider = makeProvider(() => new Promise(() => {}))
+    const state = { reconciled: true }
+    const deps = makeDeps(provider, state, [])
+    deps.runTimeoutMs = 50
+    const orchestrator = new SyncOrchestrator(deps)
+
+    const result = await orchestrator.manualSync()
+
+    expect(result.success).toBe(false)
+    expect(result.errorCode).toBe("TIMEOUT")
+    const after = orchestrator.getState()
+    expect(after.running).toBe(false)
+    expect(after.machineState).toBe("idle")
+  }, 10000)
+
   it("notifies subscribers and exposes a stable, updated snapshot for the UI", async () => {
     const provider = makeProvider(async () => emptyRemoteSnapshot())
     const state = { reconciled: true }

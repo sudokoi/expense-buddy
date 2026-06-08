@@ -214,12 +214,25 @@ export class GitHubProvider implements SyncProvider {
           this.config.branch,
           signal
         )
-        if (head.success && head.treeSha !== lastKnownRevision.sha) {
+        if (head.success) {
+          if (head.treeSha !== lastKnownRevision.sha) {
+            throw new SyncProviderErrorClass(
+              "CONFLICT",
+              "github",
+              "Remote advanced since last read",
+              false
+            )
+          }
+        } else {
+          // We held a known revision but could not re-read the remote to verify
+          // it is unchanged. Rather than write blind (and risk clobbering a
+          // concurrent change), fail the write as a retryable NETWORK error so
+          // the orchestrator re-reads/re-merges and retries.
           throw new SyncProviderErrorClass(
-            "CONFLICT",
+            "NETWORK",
             "github",
-            "Remote advanced since last read",
-            false
+            "Could not verify remote state before write",
+            true
           )
         }
       }

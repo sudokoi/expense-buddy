@@ -114,6 +114,8 @@ export interface SyncEngineDeps {
   onAuthError?: (info: { errorCode: string; shouldSignOut: boolean }) => void
   /** Debounce window (ms) for coalescing background `requestSync` bursts. */
   debounceMs?: number
+  /** Max time (ms) to wait for a single machine run to reach a terminal state. */
+  runTimeoutMs?: number
 }
 
 /**
@@ -219,6 +221,7 @@ export interface SyncEngine {
 }
 
 const DEFAULT_DEBOUNCE_MS = 400
+const DEFAULT_RUN_TIMEOUT_MS = 60000
 
 /**
  * Bounded auto-retry policy for the write. Only `NETWORK`/`RATE_LIMITED`
@@ -247,6 +250,7 @@ type RunActor = Actor<typeof syncMachine>
 export class SyncOrchestrator implements SyncEngine {
   private readonly deps: SyncEngineDeps
   private readonly debounceMs: number
+  private readonly runTimeoutMs: number
 
   // --- Serialization state: a single in-flight run + a re-run-pending flag. ---
   private inFlight: Promise<SyncRunResult> | null = null
@@ -285,6 +289,7 @@ export class SyncOrchestrator implements SyncEngine {
   constructor(deps: SyncEngineDeps) {
     this.deps = deps
     this.debounceMs = deps.debounceMs ?? DEFAULT_DEBOUNCE_MS
+    this.runTimeoutMs = deps.runTimeoutMs ?? DEFAULT_RUN_TIMEOUT_MS
     this.stateSnapshot = this.buildSnapshot()
   }
 
@@ -430,14 +435,31 @@ export class SyncOrchestrator implements SyncEngine {
       `FIRST_RECONCILIATION_START providerId=${config.id} localCount=${localExpenses.length} dirty=${dirtyDays.length} deleted=${deletedDays.length}`
     )
 
-    const final = await this.driveMachine({
-      provider,
-      localExpenses,
-      dirtyDays,
-      deletedDays,
-      settings,
-      initialReconciliationComplete: false,
-    })
+    let final
+    try {
+      final = await this.driveMachine({
+        provider,
+        localExpenses,
+        dirtyDays,
+        deletedDays,
+        settings,
+        initialReconciliationComplete: false,
+      })
+    } catch (error) {
+      // waitFor timed out (or the actor threw): keep the provider gated and
+      // surface the error; the reconciliation retries on next activation/launch.
+      this.lastRunAt = new Date().toISOString()
+      this.lastError = String(error)
+      this.lastOutcome = "error"
+      this.runVersion += 1
+      this.emitChange()
+      logAsync(
+        "ERROR",
+        "SYNC_ENGINE",
+        `FIRST_RECONCILIATION_THREW providerId=${config.id} error=${String(error)}`
+      )
+      return
+    }
 
     this.lastRunAt = new Date().toISOString()
 
@@ -571,14 +593,29 @@ export class SyncOrchestrator implements SyncEngine {
       `RUN_ONCE reason=${reason} providerId=${config.id} localCount=${localExpenses.length} dirty=${dirtyDays.length} deleted=${deletedDays.length} reconciled=${reconciled}`
     )
 
-    const final = await this.driveMachine({
-      provider,
-      localExpenses,
-      dirtyDays,
-      deletedDays,
-      settings,
-      initialReconciliationComplete: reconciled,
-    })
+    let final
+    try {
+      final = await this.driveMachine({
+        provider,
+        localExpenses,
+        dirtyDays,
+        deletedDays,
+        settings,
+        initialReconciliationComplete: reconciled,
+      })
+    } catch (error) {
+      // waitFor timed out (or the actor threw): surface a handled failure
+      // instead of rejecting up to the caller / leaving the UI spinner stuck.
+      this.lastRunAt = new Date().toISOString()
+      this.lastError = String(error)
+      const result: SyncRunResult = {
+        success: false,
+        error: String(error),
+        errorCode: "TIMEOUT",
+      }
+      this.recordOutcome(result)
+      return result
+    }
 
     this.lastRunAt = new Date().toISOString()
 
@@ -681,28 +718,43 @@ export class SyncOrchestrator implements SyncEngine {
       actor.send({ type: "START_FIRST_SYNC" })
     }
 
-    const final = await waitFor(
-      actor,
-      (snapshot) =>
-        snapshot.matches("success") ||
-        snapshot.matches("inSync") ||
-        snapshot.matches("error") ||
-        snapshot.matches("conflict") ||
-        // Reaching the gate here is terminal for a run: for a reconciled
-        // provider the machine never enters it; for a first reconciliation we
-        // have already passed the transient entry, so landing back here means
-        // `reconcilingFirstSync` failed and parked the gate again.
-        snapshot.matches("awaitingInitialReconciliation"),
-      { timeout: 60000 }
-    )
-
-    subscription.unsubscribe()
-    actor.stop()
-    if (this.currentActor === actor) {
-      this.currentActor = null
+    let final
+    try {
+      final = await waitFor(
+        actor,
+        (snapshot) =>
+          snapshot.matches("success") ||
+          snapshot.matches("inSync") ||
+          snapshot.matches("error") ||
+          snapshot.matches("conflict") ||
+          // Reaching the gate here is terminal for a run: for a reconciled
+          // provider the machine never enters it; for a first reconciliation we
+          // have already passed the transient entry, so landing back here means
+          // `reconcilingFirstSync` failed and parked the gate again.
+          snapshot.matches("awaitingInitialReconciliation"),
+        { timeout: this.runTimeoutMs }
+      )
+    } finally {
+      // Always tear down the actor/subscription, even when waitFor rejects on
+      // timeout — otherwise the actor and its subscription leak and the engine
+      // is left pointing at a dead/stuck actor. Each step is guarded so one
+      // failure cannot skip the rest.
+      try {
+        subscription.unsubscribe()
+      } catch (error) {
+        logAsync("WARN", "SYNC_ENGINE", `ACTOR_UNSUBSCRIBE_FAILED error=${String(error)}`)
+      }
+      try {
+        actor.stop()
+      } catch (error) {
+        logAsync("WARN", "SYNC_ENGINE", `ACTOR_STOP_FAILED error=${String(error)}`)
+      }
+      if (this.currentActor === actor) {
+        this.currentActor = null
+      }
+      this.machineState = "idle"
+      this.emitChange()
     }
-    this.machineState = "idle"
-    this.emitChange()
 
     return final
   }
