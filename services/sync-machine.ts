@@ -32,7 +32,6 @@ export interface SyncMachineContext {
   mergeResult?: MergeResult
   error?: string
   errorCode?: string
-  initialReconciliationComplete?: boolean
 }
 
 export type SyncMachineEvent =
@@ -45,8 +44,9 @@ export type SyncMachineEvent =
       syncSettingsEnabled: boolean
       callbacks?: SyncCallbacks
       conflictResolver?: ConflictResolver
-      // Set by the orchestrator so the idle guard can decide whether the active
-      // provider has completed its activation-triggered first reconciliation.
+      // The orchestrator's persisted per-provider reconciliation flag, supplied
+      // on every SYNC. This is the single source of truth for the gate decision;
+      // the machine does not keep its own copy in context.
       initialReconciliationComplete?: boolean
     }
   | {
@@ -378,9 +378,6 @@ export const syncMachine = setup({
             guard: ({ event }) => event.output.success === true,
             target: "success",
             actions: [
-              assign({
-                initialReconciliationComplete: true,
-              }),
               ({ context }) => {
                 context.callbacks.onSuccess?.({ isFirstSync: true })
               },
@@ -424,6 +421,12 @@ export const syncMachine = setup({
             },
           ],
         },
+      },
+      // Defensive: a CANCEL during first reconciliation abandons the attempt and
+      // returns to the gate (stays unreconciled). No current caller sends this,
+      // but without a handler the event would be silently dropped.
+      on: {
+        CANCEL: "awaitingInitialReconciliation",
       },
     },
 

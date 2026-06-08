@@ -289,7 +289,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
       actor.stop()
     })
 
-    it("should set initialReconciliationComplete and reach success after first reconciliation", async () => {
+    it("reaches success after first reconciliation", async () => {
       mockFirstTimeSync.mockResolvedValue({
         success: true,
         isFirstSync: true,
@@ -312,7 +312,6 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       expect(actor.getSnapshot().value).toBe("success")
-      expect(actor.getSnapshot().context.initialReconciliationComplete).toBe(true)
 
       actor.stop()
     })
@@ -349,7 +348,6 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
       expect(states).toContain("reconcilingFirstSync")
       expect(states).not.toContain("error")
       expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
-      expect(actor.getSnapshot().context.initialReconciliationComplete).not.toBe(true)
 
       actor.stop()
     })

@@ -252,6 +252,13 @@ export class SyncOrchestrator implements SyncEngine {
   private inFlight: Promise<SyncRunResult> | null = null
   private rerunPending = false
   private pendingReason: SyncReason = "on_change"
+  // Callers that arrive while a run is in flight wait here for the coalesced
+  // re-run's result (so e.g. manualSync resolves with its own run, not a stale
+  // background run's promise).
+  private pendingWaiters: Array<{
+    resolve: (result: SyncRunResult) => void
+    reject: (error: unknown) => void
+  }> = []
 
   // --- Debounce/coalesce state for background requests. ---
   private debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -481,7 +488,12 @@ export class SyncOrchestrator implements SyncEngine {
     if (this.inFlight) {
       this.rerunPending = true
       this.pendingReason = reason
-      return this.inFlight
+      // Return a promise bound to the NEXT (coalesced) run rather than the
+      // in-flight one, so this caller receives the result of a run that actually
+      // reflects its request instead of a stale, already-running background run.
+      return new Promise<SyncRunResult>((resolve, reject) => {
+        this.pendingWaiters.push({ resolve, reject })
+      })
     }
 
     const run = this.runOnce(reason).finally(() => {
@@ -490,7 +502,13 @@ export class SyncOrchestrator implements SyncEngine {
       if (this.rerunPending) {
         this.rerunPending = false
         const nextReason = this.pendingReason
-        void this.trigger(nextReason)
+        const waiters = this.pendingWaiters
+        this.pendingWaiters = []
+        // Forward the re-run's outcome to everyone who queued behind this run.
+        this.trigger(nextReason).then(
+          (result) => waiters.forEach((w) => w.resolve(result)),
+          (error) => waiters.forEach((w) => w.reject(error))
+        )
       }
     })
 

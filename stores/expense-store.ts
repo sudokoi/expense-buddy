@@ -457,10 +457,28 @@ export const expenseStore = createStore({
     },
 
     replaceExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
+      const previousExpenses = context.expenses
+
       enqueue.effect(async () => {
-        await persistExpensesSnapshot(event.expenses)
-        // Clean up legacy key after a successful full snapshot write.
-        await removeLegacyExpensesKey()
+        try {
+          await persistExpensesSnapshot(event.expenses)
+          // Clean up legacy key after a successful full snapshot write.
+          await removeLegacyExpensesKey()
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "EXPENSE_STORE",
+            `REPLACE_EXPENSES_PERSIST_FAILED count=${event.expenses.length} error=${error}`
+          )
+          // Keep in-memory state consistent with durable storage: roll back to
+          // the pre-replace set and surface the failure.
+          expenseStore.trigger.rollbackMutation({
+            expenses: previousExpenses,
+            dirtyDays: context.dirtyDays,
+            deletedDays: context.deletedDays,
+          })
+          emitPersistErrorNotification()
+        }
       })
 
       return {

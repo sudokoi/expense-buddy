@@ -30,8 +30,9 @@ export const SyncIndicator: React.FC = () => {
   const [recentOutcome, setRecentOutcome] = useState<"success" | "error" | null>(null)
   const lastVersionRef = useRef(runVersion)
 
-  useEffect(() => {
-    if (runVersion === lastVersionRef.current) return
+  // Derive outcome from runVersion/lastOutcome during render (avoids
+  // synchronous setState inside an effect, satisfying the lint rule).
+  if (runVersion !== lastVersionRef.current) {
     lastVersionRef.current = runVersion
     if (lastOutcome === "success" || lastOutcome === "in_sync") {
       setRecentOutcome("success")
@@ -39,11 +40,14 @@ export const SyncIndicator: React.FC = () => {
       setRecentOutcome("error")
     } else {
       setRecentOutcome(null)
-      return
     }
+  }
+
+  useEffect(() => {
+    if (!recentOutcome) return
     const timer = setTimeout(() => setRecentOutcome(null), 2000)
     return () => clearTimeout(timer)
-  }, [runVersion, lastOutcome])
+  }, [recentOutcome])
 
   const isSuccess = !isSyncing && recentOutcome === "success"
   const isError = !isSyncing && recentOutcome === "error"

@@ -11,6 +11,19 @@
 import { SyncOrchestrator, type SyncEngineDeps } from "../sync-engine"
 import type { ProviderConfig, SyncProvider, SyncSnapshot } from "../provider-types"
 import type { AppSettings } from "../../settings-manager"
+import type { Expense } from "../../../types/expense"
+
+function makeExpense(date = "2025-06-01T00:00:00.000Z"): Expense {
+  return {
+    id: `exp-${date}`,
+    amount: 100,
+    category: "Food",
+    note: "test",
+    date,
+    createdAt: date,
+    updatedAt: date,
+  } as Expense
+}
 
 const CONFIG: ProviderConfig = {
   id: "p1",
@@ -48,14 +61,15 @@ function makeProvider(
 
 function makeDeps(
   provider: SyncProvider,
-  state: { reconciled: boolean }
+  state: { reconciled: boolean },
+  localExpenses: Expense[] = []
 ): SyncEngineDeps {
   return {
     getActiveProviderConfig: async () => CONFIG,
     createProvider: () => provider,
     loadSettings: async () =>
       ({ autoSyncEnabled: true, syncSettings: false }) as unknown as AppSettings,
-    getLocalExpenses: () => [],
+    getLocalExpenses: () => localExpenses,
     queue: {
       getSyncQueueWatermark: async () => 0,
       getProviderWatermark: async () => null,
@@ -80,7 +94,7 @@ describe("SyncOrchestrator first reconciliation", () => {
     // No remote yet -> firstTimeSync initializes the remote and succeeds.
     const provider = makeProvider(async () => null)
     const state = { reconciled: false }
-    const orchestrator = new SyncOrchestrator(makeDeps(provider, state))
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state, [makeExpense()]))
 
     await orchestrator.rebindProvider()
 
@@ -91,6 +105,19 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(state.reconciled).toBe(true)
     expect(orchestrator.getState().lastError).toBeUndefined()
     expect(orchestrator.getState().machineState).toBe("idle")
+  }, 10000)
+
+  it("completes first reconciliation without writing when there is nothing to initialize", async () => {
+    // No remote and no local data -> firstTimeSync must NOT write an empty
+    // snapshot, but reconciliation still completes so background sync unblocks.
+    const provider = makeProvider(async () => null)
+    const state = { reconciled: false }
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state, []))
+
+    await orchestrator.rebindProvider()
+
+    expect(provider.writeSnapshot).not.toHaveBeenCalled()
+    expect(state.reconciled).toBe(true)
   }, 10000)
 
   it("keeps the provider gated when first reconciliation fails", async () => {
@@ -122,6 +149,30 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(result.skipped).not.toBe(true)
     expect(result.awaitingInitialReconciliation).not.toBe(true)
     expect(state.reconciled).toBe(true)
+  }, 10000)
+
+  it("returns a distinct promise for a run requested while another is in flight", async () => {
+    // A manual run requested while a run is already in flight must NOT receive
+    // the stale in-flight promise; it gets a promise bound to the coalesced
+    // re-run instead (and that re-run actually completes).
+    const provider = makeProvider(async () => emptyRemoteSnapshot())
+    const state = { reconciled: true }
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state))
+
+    const p1 = orchestrator.manualSync()
+    // inFlight is set synchronously by the first call, so this second call
+    // queues behind it.
+    const p2 = orchestrator.manualSync()
+
+    expect(p1).not.toBe(p2)
+
+    const [r1, r2] = await Promise.all([p1, p2])
+    expect(r1.skipped).not.toBe(true)
+    expect(r2.skipped).not.toBe(true)
+    // Two runs actually executed (the in-flight one + the coalesced re-run).
+    expect((provider.readSnapshot as jest.Mock).mock.calls.length).toBeGreaterThanOrEqual(
+      2
+    )
   }, 10000)
 
   it("notifies subscribers and exposes a stable, updated snapshot for the UI", async () => {

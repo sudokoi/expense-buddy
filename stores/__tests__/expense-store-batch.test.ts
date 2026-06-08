@@ -20,11 +20,6 @@ jest.mock("../../services/sync-queue", () => ({
   enqueueSyncOp: jest.fn(() => Promise.resolve()),
 }))
 
-jest.mock("../helpers", () => ({
-  performAutoSyncOnChange: jest.fn(() => Promise.resolve()),
-  performAutoSyncOnLaunch: jest.fn(() => Promise.resolve()),
-}))
-
 import { expenseStore } from "../expense-store"
 import type { Expense } from "../../types/expense"
 import { persistExpensesAdded } from "../../services/expense-storage"

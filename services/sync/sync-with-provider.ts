@@ -212,13 +212,10 @@ export async function firstTimeSync(
 
     // Both sides have data: merge through the shared tombstone- and
     // conflict-aware engine. There is NO last-writer-wins fallback: if the
-    // shared merge engine is unavailable or fails to initialize, the sync
-    // fails entirely rather than degrading to a lossy updatedAt string compare.
+    // merge engine throws, the sync fails entirely rather than degrading to a
+    // lossy updatedAt string compare (Requirement 5.6).
     let mergeResult: MergeResult
     try {
-      if (typeof mergeExpenses !== "function") {
-        throw new Error("shared merge engine is unavailable")
-      }
       mergeResult = mergeExpenses(localExpenses, remoteExpenses)
     } catch (error) {
       const formatted = formatError(error)
@@ -296,6 +293,14 @@ export async function firstTimeSync(
 
   const mergedSettings = syncSettingsEnabled && localSettings ? localSettings : undefined
   const snapshot = buildSnapshot(localExpenses, null, mergedSettings, syncSettingsEnabled)
+
+  // Nothing to initialize (no local expenses and no settings to sync): skip the
+  // remote write entirely rather than creating an empty snapshot on the remote.
+  if (Object.keys(snapshot.files).length === 0) {
+    logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_NO_INITIAL_DATA skippingWrite")
+    return { success: true, isFirstSync: true }
+  }
+
   logAsync(
     "INFO",
     "SYNC_CORE",
