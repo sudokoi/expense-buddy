@@ -23,7 +23,7 @@ import { isDateEditable, isExpenseEditable } from "../services/read-only-window"
 import { getLocalDayKey } from "../utils/date"
 import i18next from "i18next"
 import { AppSettings } from "../services/settings-manager"
-import { performAutoSyncOnLaunch, AutoSyncCallbacks } from "./helpers"
+import { syncOrchestrator } from "../services/sync/sync-engine"
 
 function normalizeExpenseForSave(expense: Expense): Expense {
   const normalizedNote = expense.note.trim()
@@ -108,7 +108,6 @@ function emitReadOnlyBlockNotification(): void {
     },
   })
 }
-
 /**
  * Emit an error notification when an authoring mutation could not be durably
  * persisted. Paired with a rollback event so the in-memory state never stands
@@ -128,39 +127,21 @@ function emitPersistErrorNotification(): void {
 /**
  * Seam for post-persistence sync signaling.
  *
- * Authoring effects must signal sync only AFTER durable persistence succeeds,
- * and they must never drive sync as a fire-and-forget chain from inside the
- * mutation effect. The standalone SyncOrchestrator does not exist yet (task 7)
- * and the wiring lands in task 11/12; until then this is intentionally a no-op
- * placeholder that marks where `syncOrchestrator.requestSync("on_change")` will
- * be called once durable persistence has completed.
+ * Authoring effects signal sync only AFTER durable persistence succeeds, and
+ * never drive sync as a fire-and-forget chain from inside the mutation effect.
+ * This is a thin, idempotent signal: the SyncOrchestrator owns the machine,
+ * debounces/coalesces bursts, gates background runs until the active provider is
+ * reconciled, and handles every async outcome (Requirements 2.2, 3.5).
  */
 function signalSyncAfterPersistence(): void {
-  // Intentionally empty until SyncOrchestrator.requestSync("on_change") is
-  // wired in (tasks 7 and 11/12). Do not introduce the orchestrator here.
+  syncOrchestrator.requestSync("on_change")
 }
 
 /**
- * Create auto-sync callbacks for expense store actions
- * These callbacks update store state based on sync results
+ * In-memory expense store. Authoring mutations enforce the read-only window,
+ * await durable persistence (with rollback on failure), and signal the
+ * SyncOrchestrator only after persistence succeeds.
  */
-function createAutoSyncCallbacks(): AutoSyncCallbacks {
-  return {
-    onExpensesReplaced: (expenses: Expense[]) => {
-      expenseStore.trigger.replaceExpenses({ expenses })
-    },
-    onDirtyDaysCleared: () => {
-      expenseStore.trigger.clearDirtyDaysState()
-    },
-    onSyncNotification: (notification: SyncNotification) => {
-      expenseStore.trigger.setSyncNotification({ notification })
-    },
-    onSettingsDownloaded: (settings: AppSettings) => {
-      emitSettingsDownloaded(settings)
-    },
-  }
-}
-
 export const expenseStore = createStore({
   context: {
     expenses: [] as Expense[],
@@ -234,7 +215,7 @@ export const expenseStore = createStore({
             "EXPENSE_STORE",
             `ADD_EXPENSE_PERSISTED id=${normalizedExpense.id}`
           )
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           signalSyncAfterPersistence()
         } catch (error) {
           logAsync(
@@ -302,7 +283,7 @@ export const expenseStore = createStore({
             "EXPENSE_STORE",
             `BATCH_ADD_PERSISTED count=${normalizedExpenses.length}`
           )
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           signalSyncAfterPersistence()
         } catch (error) {
           logAsync(
@@ -389,7 +370,7 @@ export const expenseStore = createStore({
             "EXPENSE_STORE",
             `EDIT_EXPENSE_PERSISTED id=${normalizedExpense.id}`
           )
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           signalSyncAfterPersistence()
         } catch (error) {
           logAsync(
@@ -455,7 +436,7 @@ export const expenseStore = createStore({
             await enqueueSyncOp({ type: "expense.upsert", expense: updatedExpense })
           }
           logAsync("INFO", "EXPENSE_STORE", `DELETE_EXPENSE_PERSISTED id=${event.id}`)
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           signalSyncAfterPersistence()
         } catch (error) {
           logAsync(
@@ -579,7 +560,7 @@ export const expenseStore = createStore({
             })
           }
 
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           if (affectedExpenseIds.length > 0) {
             signalSyncAfterPersistence()
           }
@@ -659,7 +640,7 @@ export const expenseStore = createStore({
             })
           }
 
-          // Durable persistence succeeded: signal sync (no-op seam until task 11/12).
+          // Durable persistence succeeded: signal the orchestrator (after persist).
           if (affectedExpenseIds.length > 0) {
             signalSyncAfterPersistence()
           }
@@ -718,8 +699,11 @@ export async function initializeExpenseStore(
       `LOADED dirtyDays=${dirtyDaysResult.state.dirtyDays?.length ?? 0} deletedDays=${dirtyDaysResult.state.deletedDays?.length ?? 0}`
     )
 
-    // Perform auto-sync on launch using the helper
-    await performAutoSyncOnLaunch(expenses, createAutoSyncCallbacks())
+    // Signal the orchestrator for an app-launch sync. This is a thin background
+    // signal: it is a no-op until the active provider has completed its
+    // activation-triggered first reconciliation (driven by the StoreProvider via
+    // syncOrchestrator.rebindProvider on provider activation).
+    syncOrchestrator.requestSync("on_launch")
   } catch (error) {
     logAsync("ERROR", "EXPENSE_STORE", `INITIALIZE_FAILED error=${error}`)
     console.warn("Failed to initialize expense store:", error)

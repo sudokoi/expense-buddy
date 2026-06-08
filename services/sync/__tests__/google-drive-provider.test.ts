@@ -8,6 +8,7 @@ jest.mock("react-native", () => ({
 }))
 
 import { GoogleDriveProvider } from "../google-drive-provider"
+import type { DriveYearCache } from "../google-drive-provider"
 
 const mockCredentialStore: CredentialStore = {
   get: jest.fn(),
@@ -202,6 +203,163 @@ describe("GoogleDriveProvider", () => {
     })
   })
 
+  describe("readSnapshot version preflight", () => {
+    function makeListResponse(
+      files: Array<{ id: string; name: string; version: number }>
+    ) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: files.map((f) => ({
+            ...f,
+            modifiedTime: "2025-01-01T00:00:00Z",
+          })),
+        }),
+        text: async () => "",
+      })
+    }
+
+    function makeCache(
+      overrides: Partial<DriveYearCache> = {}
+    ): jest.Mocked<DriveYearCache> {
+      return {
+        loadIndex: jest.fn().mockResolvedValue({}),
+        readYear: jest.fn().mockResolvedValue(null),
+        saveYear: jest.fn().mockResolvedValue(undefined),
+        ...overrides,
+      } as jest.Mocked<DriveYearCache>
+    }
+
+    it("skips download when version matches and usable cached content exists", async () => {
+      const cache = makeCache({
+        loadIndex: jest.fn().mockResolvedValue({
+          "2024": { fileId: "file-2024", version: 7, contentHash: "h2024" },
+        }),
+        readYear: jest
+          .fn()
+          .mockResolvedValue({ "expenses/2024-06-01.csv": "id,amount\n1,100" }),
+      })
+      const cachedProvider = new GoogleDriveProvider(
+        createConfig(),
+        mockCredentialStore,
+        cache
+      )
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          makeListResponse([
+            { id: "file-2024", name: "expense-buddy-2024.json", version: 7 },
+          ])
+        )
+
+      const result = await cachedProvider.readSnapshot()
+
+      expect(result).not.toBeNull()
+      expect(result!.files["expenses/2024-06-01.csv"]).toBe("id,amount\n1,100")
+      // Only the list call happened — no download.
+      expect((global.fetch as jest.Mock).mock.calls.length).toBe(1)
+      expect(cache.readYear).toHaveBeenCalledWith("2024")
+      expect(result!.remoteRevision).toMatchObject({
+        kind: "drive",
+        fileVersions: { "2024": { fileId: "file-2024", version: 7 } },
+      })
+    })
+
+    it("downloads when cache is missing even if version matches", async () => {
+      const cache = makeCache({
+        loadIndex: jest.fn().mockResolvedValue({
+          "2024": { fileId: "file-2024", version: 7, contentHash: "h2024" },
+        }),
+        readYear: jest.fn().mockResolvedValue(null),
+      })
+      const cachedProvider = new GoogleDriveProvider(
+        createConfig(),
+        mockCredentialStore,
+        cache
+      )
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          makeListResponse([
+            { id: "file-2024", name: "expense-buddy-2024.json", version: 7 },
+          ])
+        )
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({}),
+            text: async () =>
+              JSON.stringify({
+                v: 1,
+                f: { "expenses/2024-06-01.csv": "id,amount\n9,900" },
+              }),
+          })
+        )
+
+      const result = await cachedProvider.readSnapshot()
+
+      expect(result).not.toBeNull()
+      expect(result!.files["expenses/2024-06-01.csv"]).toBe("id,amount\n9,900")
+      // List + download both happened.
+      expect((global.fetch as jest.Mock).mock.calls.length).toBe(2)
+      expect(cache.saveYear).toHaveBeenCalledWith(
+        "2024",
+        { "expenses/2024-06-01.csv": "id,amount\n9,900" },
+        expect.objectContaining({ fileId: "file-2024", version: 7 })
+      )
+    })
+
+    it("downloads when the Drive version advanced past the cached revision", async () => {
+      const cache = makeCache({
+        loadIndex: jest.fn().mockResolvedValue({
+          "2024": { fileId: "file-2024", version: 7, contentHash: "h2024" },
+        }),
+        readYear: jest.fn().mockResolvedValue({ "expenses/2024-06-01.csv": "stale" }),
+      })
+      const cachedProvider = new GoogleDriveProvider(
+        createConfig(),
+        mockCredentialStore,
+        cache
+      )
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          makeListResponse([
+            { id: "file-2024", name: "expense-buddy-2024.json", version: 8 },
+          ])
+        )
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({}),
+            text: async () =>
+              JSON.stringify({
+                v: 1,
+                f: { "expenses/2024-06-01.csv": "fresh" },
+              }),
+          })
+        )
+
+      const result = await cachedProvider.readSnapshot()
+
+      expect(result).not.toBeNull()
+      expect(result!.files["expenses/2024-06-01.csv"]).toBe("fresh")
+      // Version mismatch => download despite a cached body being present.
+      expect(cache.readYear).not.toHaveBeenCalled()
+      expect((global.fetch as jest.Mock).mock.calls.length).toBe(2)
+      expect(result!.remoteRevision).toMatchObject({
+        kind: "drive",
+        fileVersions: { "2024": { version: 8 } },
+      })
+    })
+  })
+
   describe("writeSnapshot", () => {
     const snapshot: SyncSnapshot = {
       manifest: {
@@ -389,6 +547,173 @@ describe("GoogleDriveProvider", () => {
       ;(mockCredentialStore.get as jest.Mock).mockResolvedValue(null)
 
       await expect(provider.writeSnapshot(snapshot, null)).rejects.toThrow(/AUTH_MISSING/)
+    })
+  })
+
+  describe("writeSnapshot version preflight", () => {
+    const conflictSnapshot: SyncSnapshot = {
+      manifest: {
+        version: 1,
+        generatedAt: "2024-06-01T00:00:00Z",
+        appVersion: APP_CONFIG.version,
+        files: [],
+      },
+      files: { "expenses/2024-06-01.csv": "id,amount\n1,100" },
+      remoteRevision: null,
+    }
+
+    function find2024(version: number) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: [
+            {
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version,
+              modifiedTime: "2024-06-01T00:00:00Z",
+            },
+          ],
+        }),
+        text: async () => "",
+      })
+    }
+
+    it("throws CONFLICT and leaves the year file unchanged when the Drive version advanced", async () => {
+      const lastKnown: RemoteRevision = {
+        kind: "drive",
+        fileVersions: {
+          "2024": { fileId: "file-2024", version: 1, contentHash: "h2024" },
+        },
+      }
+
+      // call 0: findFileByName -> file exists at version 1 (stale list value)
+      // call 1: getFileVersion -> current Drive version is 2 (drift)
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(find2024(1))
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({ version: 2 }),
+            text: async () => "",
+          })
+        )
+
+      await expect(
+        provider.writeSnapshot(conflictSnapshot, lastKnown)
+      ).rejects.toMatchObject({ code: "CONFLICT" })
+
+      const calls = (global.fetch as jest.Mock).mock.calls
+      // Only the find + version preflight happened; no download/update/delete.
+      expect(calls.length).toBe(2)
+      expect(calls.some((c: any[]) => String(c[0]).includes("upload/drive"))).toBe(false)
+      expect(calls.some((c: any[]) => String(c[1]?.method) === "DELETE")).toBe(false)
+    })
+
+    it("writes the year file when the Drive version matches lastKnownRevision", async () => {
+      const lastKnown: RemoteRevision = {
+        kind: "drive",
+        fileVersions: {
+          "2024": { fileId: "file-2024", version: 5, contentHash: "h2024" },
+        },
+      }
+
+      // call 0: find -> file exists
+      // call 1: getFileVersion -> current version 5 (matches => no conflict)
+      // call 2: download existing body
+      // call 3: update
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(find2024(5))
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({ version: 5 }),
+            text: async () => "",
+          })
+        )
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({}),
+            text: async () =>
+              JSON.stringify({
+                v: 1,
+                f: { "expenses/2024-05-01.csv": "id,amount\n3,300" },
+              }),
+          })
+        )
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({ version: 6 }),
+            text: async () => "",
+          })
+        )
+
+      await expect(
+        provider.writeSnapshot(conflictSnapshot, lastKnown)
+      ).resolves.toBeUndefined()
+
+      const calls = (global.fetch as jest.Mock).mock.calls
+      const updateCall = calls.find((c: any[]) =>
+        String(c[0]).includes("upload/drive/v3/files/file-2024")
+      )
+      expect(updateCall).toBeDefined()
+      expect(updateCall![1]?.method).toBe("PATCH")
+    })
+
+    it("does not fail the sync when deleting an empty year file fails", async () => {
+      const deleteSnapshot: SyncSnapshot = {
+        manifest: {
+          version: 1,
+          generatedAt: "2024-06-01T00:00:00Z",
+          appVersion: APP_CONFIG.version,
+          files: [],
+        },
+        // Deleting the only day empties the year body.
+        files: { "expenses/2024-06-01.csv": "" },
+        remoteRevision: null,
+      }
+
+      // call 0: find -> file exists
+      // call 1: download -> body with a single day
+      // call 2: delete -> fails (500); must be swallowed, sync still succeeds
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(find2024(1))
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({}),
+            text: async () =>
+              JSON.stringify({
+                v: 1,
+                f: { "expenses/2024-06-01.csv": "id,amount\n1,100" },
+              }),
+          })
+        )
+        .mockResolvedValueOnce(
+          Promise.resolve({
+            ok: false,
+            status: 500,
+            json: async () => ({}),
+            text: async () => "server error",
+          })
+        )
+
+      await expect(provider.writeSnapshot(deleteSnapshot, null)).resolves.toBeUndefined()
+
+      const deleteCall = (global.fetch as jest.Mock).mock.calls[2]
+      expect(deleteCall[0]).toContain("drive/v3/files/file-2024")
+      expect(deleteCall[1]?.method).toBe("DELETE")
     })
   })
 

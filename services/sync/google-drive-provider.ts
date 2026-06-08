@@ -32,17 +32,52 @@ interface YearFileData {
   f: Record<string, string>
 }
 
+/**
+ * Provider-scoped cache port for the per-year revision index and parsed year
+ * bodies. It backs the `readSnapshot` version preflight: when a year file's
+ * Drive `version` is unchanged AND usable cached content exists, the download
+ * is skipped (Requirement 7.3). When the cache is missing or unavailable the
+ * provider downloads the year file even if the version matches (Requirement
+ * 7.6).
+ *
+ * The implementation is wired to provider-scoped metadata
+ * (`sync.providers.<providerId>.remoteIndex`) in a later task; until then the
+ * provider operates without a cache and always downloads (always-correct, just
+ * not bandwidth-optimal).
+ */
+export interface DriveYearCache {
+  /** Per-year revision index keyed by year string (e.g. "2025"). */
+  loadIndex(): Promise<Record<string, DriveYearRevision>>
+  /**
+   * Parsed `path -> content` map cached for a year, or null when no usable
+   * cached content exists for that year.
+   */
+  readYear(year: string): Promise<Record<string, string> | null>
+  /** Persist parsed content + revision for a year after a download. */
+  saveYear(
+    year: string,
+    files: Record<string, string>,
+    revision: DriveYearRevision
+  ): Promise<void>
+}
+
 export class GoogleDriveProvider implements SyncProvider {
   readonly kind = "google_drive" as const
   readonly providerId: string
 
   private config: GoogleDriveProviderConfig
   private credentialStore: CredentialStore
+  private yearCache: DriveYearCache | null
 
-  constructor(config: GoogleDriveProviderConfig, credentialStore: CredentialStore) {
+  constructor(
+    config: GoogleDriveProviderConfig,
+    credentialStore: CredentialStore,
+    yearCache?: DriveYearCache
+  ) {
     this.providerId = config.id
     this.config = config
     this.credentialStore = credentialStore
+    this.yearCache = yearCache ?? null
   }
 
   async testConnection(): Promise<ConnectionTestResult> {
@@ -87,7 +122,18 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
-  async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
+  /**
+   * Fetch the FULL remote snapshot for merging (no filterPaths). Lists the
+   * per-year JSON files in `appDataFolder` and, for each year, runs a version
+   * preflight: a download is skipped only when the Drive `version` matches the
+   * cached per-year revision AND usable cached content exists for that year
+   * (Requirement 7.3). Otherwise the year file is downloaded — including when
+   * the cache is missing even though the version matches (Requirement 7.6).
+   * The returned snapshot covers every year present remotely so the merge sees
+   * the complete remote set (Requirement 7.2), and carries a per-year
+   * `RemoteRevision` index.
+   */
+  async readSnapshot(): Promise<SyncSnapshot | null> {
     const startTime = Date.now()
     if (Platform.OS !== "android") {
       throw new SyncProviderErrorClass(
@@ -102,44 +148,56 @@ export class GoogleDriveProvider implements SyncProvider {
     if (!token) throw this.authError("AUTH_MISSING")
 
     const yearFiles = await this.listYearFiles(token)
-    logAsync(
-      "INFO",
-      "DRIVE_PROVIDER",
-      `readSnapshot yearFiles=${yearFiles.length} hasFilterPaths=${filterPaths !== undefined}`
-    )
+    logAsync("INFO", "DRIVE_PROVIDER", `readSnapshot yearFiles=${yearFiles.length}`)
     if (yearFiles.length === 0) return null
 
+    const cachedIndex = await this.loadRemoteIndex()
     const files: Record<string, string> = {}
-    const filterSet = filterPaths ? new Set(filterPaths) : null
-    const neededYears: Set<string> | null = filterSet
-      ? new Set(
-          Array.from(filterSet).map((p) =>
-            String(this.getYearForPath(p, new Date().getFullYear()))
-          )
-        )
-      : null
-
     const fileVersions: Record<string, DriveYearRevision> = {}
+    let skippedYears = 0
 
     for (const file of yearFiles) {
-      const fileYear = file.name.slice(YEAR_FILE_PREFIX.length, -YEAR_FILE_SUFFIX.length)
-      if (neededYears && !neededYears.has(fileYear)) continue
+      const year = this.parseYearFromName(file.name)
+      if (year === null) continue
+
+      const cached = cachedIndex[year]
+
+      // PREFLIGHT: skip the download only when the Drive version is unchanged
+      // AND usable cached content for that year is present. A missing/unusable
+      // cache falls through to a download even when the version matches.
+      if (cached && cached.version === file.version) {
+        const cachedFiles = await this.readCachedYear(year)
+        if (cachedFiles) {
+          Object.assign(files, cachedFiles)
+          fileVersions[year] = {
+            fileId: file.id,
+            version: file.version,
+            contentHash: cached.contentHash,
+          }
+          skippedYears++
+          continue
+        }
+      }
 
       const content = await this.downloadFile(token, file.id)
       if (!content) continue
 
-      fileVersions[fileYear] = {
+      const parsed = this.parseYearFile(content)
+      const revision: DriveYearRevision = {
         fileId: file.id,
         version: file.version,
         contentHash: simpleHash(content),
       }
-
-      const parsed = this.parseYearFile(content)
-      for (const [path, fileContent] of Object.entries(parsed.f)) {
-        if (filterSet && !filterSet.has(path)) continue
-        files[path] = fileContent
-      }
+      fileVersions[year] = revision
+      Object.assign(files, parsed.f)
+      await this.saveCachedYear(year, parsed.f, revision)
     }
+
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `readSnapshot years=${yearFiles.length} skipped=${skippedYears}`
+    )
 
     if (Object.keys(files).length === 0) return null
 
@@ -221,33 +279,40 @@ export class GoogleDriveProvider implements SyncProvider {
       const fileName = this.yearFileName(parseInt(yearStr, 10))
       const existingFile = await this.findFileByName(token, fileName)
 
-      const existingContent = existingFile
-        ? await this.downloadFile(token, existingFile.id)
-        : null
-
+      // PREFLIGHT optimistic concurrency (Req 6.4, 6.5): for an existing year
+      // file, re-read the current Drive `version` and compare it against the
+      // version captured at cycle start. If it advanced (another device wrote
+      // the year file since our read), throw CONFLICT and leave the year file
+      // unchanged. The numeric `version` is the preferred drift signal.
       if (
-        existingContent &&
+        existingFile &&
         lastKnownRevision?.kind === "drive" &&
         lastKnownRevision.fileVersions
       ) {
-        const knownVersion = lastKnownRevision.fileVersions[yearStr]
-        if (
-          knownVersion?.contentHash !== undefined &&
-          simpleHash(existingContent) !== knownVersion.contentHash
-        ) {
-          throw new SyncProviderErrorClass(
-            "CONFLICT",
-            "google_drive",
-            `Year file ${yearStr} was modified by another device since last read`,
-            false
-          )
+        const known = lastKnownRevision.fileVersions[yearStr]
+        if (known) {
+          const currentVersion = await this.getFileVersion(token, existingFile.id)
+          if (currentVersion !== null && currentVersion !== known.version) {
+            throw new SyncProviderErrorClass(
+              "CONFLICT",
+              "google_drive",
+              `Year file ${yearStr} was modified by another device since last read`,
+              false
+            )
+          }
         }
       }
+
+      const existingContent = existingFile
+        ? await this.downloadFile(token, existingFile.id)
+        : null
 
       const yearData: YearFileData = existingContent
         ? this.parseYearFile(existingContent)
         : { v: 1, f: {} }
 
+      // Merge changed day files into the year body. An empty-string content is
+      // a deletion: the day is removed from the year body (Req 7.5).
       for (const [path, content] of Object.entries(changedFiles)) {
         if (content.length === 0) {
           delete yearData.f[path]
@@ -257,15 +322,39 @@ export class GoogleDriveProvider implements SyncProvider {
       }
 
       const hasEntries = Object.keys(yearData.f).length > 0
+      const body = JSON.stringify(yearData)
 
       if (existingFile) {
         if (hasEntries) {
-          await this.updateFile(token, existingFile.id, JSON.stringify(yearData))
+          const newVersion = await this.updateFile(token, existingFile.id, body)
+          await this.saveCachedYear(yearStr, yearData.f, {
+            fileId: existingFile.id,
+            version: newVersion ?? existingFile.version,
+            contentHash: simpleHash(body),
+          })
         } else {
-          await this.deleteFile(token, existingFile.id)
+          // The year body became empty: delete the Drive file (Req 7.5). The
+          // delete is BEST-EFFORT (Req 7.7) — if it fails, log it, leave the
+          // empty file in place, and do NOT fail the sync.
+          try {
+            await this.deleteFile(token, existingFile.id)
+          } catch (error) {
+            logAsync(
+              "WARN",
+              "DRIVE_PROVIDER",
+              `writeSnapshot failed to delete empty year file ${fileName}; leaving it in place: ${String(error)}`
+            )
+          }
         }
       } else if (hasEntries) {
-        await this.createFile(token, fileName, JSON.stringify(yearData))
+        const created = await this.createFile(token, fileName, body)
+        if (created) {
+          await this.saveCachedYear(yearStr, yearData.f, {
+            fileId: created.id,
+            version: created.version ?? 1,
+            contentHash: simpleHash(body),
+          })
+        }
       }
     }
 
@@ -304,6 +393,70 @@ export class GoogleDriveProvider implements SyncProvider {
 
   private yearFileName(year: number): string {
     return `${YEAR_FILE_PREFIX}${year}${YEAR_FILE_SUFFIX}`
+  }
+
+  /**
+   * Extract the 4-digit year from a year file name (e.g.
+   * `expense-buddy-2025.json` -> "2025"). Returns null for names that don't
+   * match the expected pattern.
+   */
+  private parseYearFromName(name: string): string | null {
+    if (!name.startsWith(YEAR_FILE_PREFIX) || !name.endsWith(YEAR_FILE_SUFFIX)) {
+      return null
+    }
+    const year = name.slice(YEAR_FILE_PREFIX.length, -YEAR_FILE_SUFFIX.length)
+    return /^\d{4}$/.test(year) ? year : null
+  }
+
+  /**
+   * Load the cached per-year revision index. Cache failures are swallowed and
+   * treated as an empty index, forcing downloads (always-correct fallback).
+   */
+  private async loadRemoteIndex(): Promise<Record<string, DriveYearRevision>> {
+    if (!this.yearCache) return {}
+    try {
+      return await this.yearCache.loadIndex()
+    } catch (error) {
+      logAsync("WARN", "DRIVE_PROVIDER", `loadRemoteIndex failed: ${String(error)}`)
+      return {}
+    }
+  }
+
+  /**
+   * Read usable cached content for a year, or null when the cache is missing or
+   * unavailable (Requirement 7.6 — caller then downloads even on a version
+   * match).
+   */
+  private async readCachedYear(year: string): Promise<Record<string, string> | null> {
+    if (!this.yearCache) return null
+    try {
+      return await this.yearCache.readYear(year)
+    } catch (error) {
+      logAsync(
+        "WARN",
+        "DRIVE_PROVIDER",
+        `readCachedYear ${year} failed: ${String(error)}`
+      )
+      return null
+    }
+  }
+
+  /** Persist parsed content + revision for a year after a download (best-effort). */
+  private async saveCachedYear(
+    year: string,
+    files: Record<string, string>,
+    revision: DriveYearRevision
+  ): Promise<void> {
+    if (!this.yearCache) return
+    try {
+      await this.yearCache.saveYear(year, files, revision)
+    } catch (error) {
+      logAsync(
+        "WARN",
+        "DRIVE_PROVIDER",
+        `saveCachedYear ${year} failed: ${String(error)}`
+      )
+    }
   }
 
   private getYearForPath(path: string, currentYear: number): number {
@@ -418,7 +571,11 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
-  private async createFile(token: string, fileName: string, body: string): Promise<void> {
+  private async createFile(
+    token: string,
+    fileName: string,
+    body: string
+  ): Promise<{ id: string; version: number | null } | null> {
     const boundary = `boundary_${Date.now()}`
     const metadata = JSON.stringify({
       name: fileName,
@@ -438,33 +595,93 @@ export class GoogleDriveProvider implements SyncProvider {
       `--${boundary}--`,
     ].join("\r\n")
 
-    const response = await fetch(`${UPLOAD_API_BASE}/files?uploadType=multipart`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-      },
-      body: multipartBody,
-    })
+    const response = await fetch(
+      `${UPLOAD_API_BASE}/files?uploadType=multipart&fields=id,version`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": `multipart/related; boundary=${boundary}`,
+        },
+        body: multipartBody,
+      }
+    )
 
     if (!response.ok) {
       throw this.mapHttpError(response.status, "Failed to create file")
     }
+
+    try {
+      const data = await response.json()
+      return { id: data?.id ?? "", version: this.parseVersion(data?.version) }
+    } catch {
+      return null
+    }
   }
 
-  private async updateFile(token: string, fileId: string, body: string): Promise<void> {
-    const response = await fetch(`${UPLOAD_API_BASE}/files/${fileId}?uploadType=media`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body,
-    })
+  private async updateFile(
+    token: string,
+    fileId: string,
+    body: string
+  ): Promise<number | null> {
+    const response = await fetch(
+      `${UPLOAD_API_BASE}/files/${fileId}?uploadType=media&fields=version`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body,
+      }
+    )
 
     if (!response.ok) {
       throw this.mapHttpError(response.status, "Failed to update file")
     }
+
+    try {
+      const data = await response.json()
+      return this.parseVersion(data?.version)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Read the current Drive `version` for a file via `files.get?fields=version`.
+   * Used for the write-time optimistic-concurrency preflight (Req 6.4, 6.5).
+   * Drive may serialize the int64 `version` as a string, so both shapes are
+   * accepted. Returns null when the version cannot be determined.
+   */
+  private async getFileVersion(token: string, fileId: string): Promise<number | null> {
+    try {
+      const response = await fetch(`${DRIVE_API_BASE}/files/${fileId}?fields=version`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw this.mapHttpError(response.status, "Failed to read file version")
+      }
+
+      const data = await response.json()
+      return this.parseVersion(data?.version)
+    } catch (error) {
+      if (error instanceof SyncProviderErrorClass) throw error
+      throw this.toProviderError(error)
+    }
+  }
+
+  private parseVersion(value: unknown): number | null {
+    if (typeof value === "number") return value
+    if (typeof value === "string") {
+      const parsed = parseInt(value, 10)
+      return Number.isNaN(parsed) ? null : parsed
+    }
+    return null
   }
 
   private async deleteFile(token: string, fileId: string): Promise<void> {

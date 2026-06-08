@@ -1,10 +1,12 @@
 # ADR-009: Multi-Provider Sync with Google Drive Backups
 
 **Date:** 2026-06-03  
-**Status:** Amended — Native Android OAuth replaces browser flow (2026-06-05)  
+**Status:** Amended — Sync Engine Redesign: per-year Drive JSON, per-year revision, read-only authoring window, activation-triggered first reconciliation (2026-06-10)  
 **Author:** Planning draft via GitHub Copilot
 
 > **Amendment (2026-06-05):** The initial design used `expo-auth-session` with a custom `myapp://` redirect URI. Google's OAuth 2.0 policy now rejects custom-scheme redirect URIs for Android apps. The auth layer was replaced with a native Android `GoogleSignInClient` flow via the `expense-buddy-google-auth` Expo module. The browser fallback (`expo-auth-session`) is retained for non-Android platforms but is not used in production (Drive sync is Android-only).
+
+> **Amendment (2026-06-10) — Sync Engine Redesign:** The Sync Engine Redesign (`.kiro/specs/sync-engine-redesign/`) supersedes four parts of this ADR: (1) the Google Drive storage model moves from a single zip archive to **one JSON file per year**; (2) the Drive `RemoteRevision` becomes a **per-year version map** keyed by year instead of a single `{ fileId, version }`; (3) a **global read-only authoring window** (`READ_ONLY_WINDOW_MONTHS`, default 6) replaces the per-screen one-year history cutoff; and (4) `awaitingInitialReconciliation` is confirmed as a **real waiting state** that gates background auto-sync, with the first reconciliation now **triggered by provider activation** and the sync core fetching the full remote while uploading only dirty/deleted days. Full detail is in [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign) below. Affected original sections (§2 storage model, "Remote revision model", §5 switching semantics) are annotated inline and remain for historical context.
 
 ---
 
@@ -67,6 +69,8 @@ The app does not attempt active-active sync, mirroring, or remote-to-remote repl
 
 ### 2. Google Drive storage model
 
+> **⚠ Superseded by the Sync Engine Redesign (2026-06-10).** The single-zip-archive model described in this section is replaced by **one JSON file per year** (`expense-buddy-<year>.json`) in `appDataFolder`. The native in-memory zip module is no longer on the data path, so **the MVP-blocking temp-file/streaming concern raised in this section and in "Open questions" is now obsolete** — per-year JSON files are inherently memory-bounded and steady-state sync only touches the current year. See [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign). The text below is retained for historical context.
+
 Google Drive sync will store a single archive in the user's hidden Drive `appDataFolder`.
 
 Archive shape:
@@ -91,6 +95,8 @@ Recommended archive file name:
 `manifest.json` is the authoritative remote metadata root. A light preflight (`files.get` with `fields=version,modifiedTime`) tells the provider whether to re-download the whole archive or skip. No per-file SHA checks are done at the Drive API level.
 
 Archive size must be bounded. The native zip module currently reads and writes the entire archive in memory as base64. For large histories (years of daily CSVs), a temp-file or streaming boundary must be added to the native module so archive I/O does not OOM on mid-tier Android devices. The temp-file path is an **MVP-blocking requirement** — the current all-in-memory approach is acceptable for development and testing but must be replaced before the Google Drive provider ships to production. The `archive-codec.ts` TypeScript boundary is designed so this change is invisible to callers.
+
+> **⚠ Obsolete (2026-06-10):** This MVP-blocking concern no longer applies. The per-year JSON storage model removes the zip/native-archive data path entirely, so there is no all-in-memory archive to bound. See [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign).
 
 `appDataFolder` is the correct storage target because it is hidden, app-specific, and aligned with the intended backup/sync UX.
 
@@ -127,6 +133,8 @@ The merge engine remains shared. Credentials are stored in a separate `Credentia
 GitHub and Google Drive differ in remote transport, but both map to the same logical snapshot shape.
 
 ### 5. Active provider switching semantics
+
+> **⚠ Amended by the Sync Engine Redesign (2026-06-10).** The "require explicit manual sync completion before auto-sync" rule still holds, but the first reconciliation is now **triggered automatically by provider activation** (adding a provider, or switching the active provider), not by waiting for a separate manual Sync Now tap. `awaitingInitialReconciliation` is a **real** waiting state that gates _background_ auto-sync (`on_change`/`on_launch` become no-ops that issue zero `writeSnapshot` calls) until the activation-triggered reconciliation succeeds. See [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign).
 
 Switching the active provider does not migrate or overwrite data automatically.
 
@@ -296,6 +304,8 @@ Each provider maps its own transport errors into these codes. The mapping matche
 The `retryable` flag drives auto-sync retry behavior. `NETWORK`, `RATE_LIMITED`, and `CONFLICT` are retryable. `AUTH_*`, `PERMISSION_DENIED`, and `ARCHIVE_CORRUPT` are not.
 
 ### Remote revision model
+
+> **⚠ Superseded by the Sync Engine Redesign (2026-06-10).** The Drive variant `{ kind: "drive_version"; fileId; version }` (one archive) is replaced by a **per-year version map** `{ kind: "drive"; fileVersions: Record<string, DriveYearRevision> }`, where each year file carries its own `fileId`, `version`, and optional `contentHash`. The `git_sha` variant is unchanged. See [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign). The text below is retained for historical context.
 
 The logical snapshot uses a discriminated revision type — not a plain string — because GitHub and Drive have fundamentally different revision semantics.
 
@@ -899,9 +909,84 @@ Rejected because the codebase uses module-level singletons with `jest.mock` for 
   **Resolved:** Queued ops are retained and applied during the first merge. The per-provider queue watermark prevents replay after success. See "Initial reconciliation state machine" section.
 - ~what is the maximum reasonable archive size, and at what threshold does the native module need a temp-file path instead of all-in-memory base64~
   **Decision:** This is an MVP-blocking item, not a post-launch optimization. The current native module (`ArchiveUtils.kt`) reads and writes the entire archive in memory as base64, which means the same data exists simultaneously in native heap and the JS runtime heap (~2x memory). For a user with 3+ years of daily expense CSV files (~1100 files at ~200 bytes each = ~220 KB of content), the base64 zip overhead pushes this toward several MB in memory — safe on modern devices but risky on mid-tier Android with limited heap. The temp-file or streaming path must be added to the native module before the Google Drive provider ships to production. The `archive-codec.ts` TypeScript boundary is designed so this change is invisible to callers. The module interface (`zipTextEntriesAsync` / `unzipTextEntriesAsync`) can switch to temp-file internally without changing its TypeScript signature.
+  **Obsolete (2026-06-10):** Resolved by removing the zip data path. The Sync Engine Redesign stores Drive data as one JSON file per year, so there is no in-memory archive to bound. See [Amendment: Sync Engine Redesign](#amendment-sync-engine-redesign).
 
 ## Related
 
 - ADR-001: XState Sync State Machine (machine refactored to consume `SyncProvider` interface through actor input)
 - ADR-008: On-device structured logging with bug-report integration (bug report flow updated to find GitHub credential by kind)
 - Native archive utility module at `modules/expense-buddy-utils/` (committed in `6774a58`)
+
+---
+
+## Amendment: Sync Engine Redesign
+
+**Date:** 2026-06-10
+**Source:** `.kiro/specs/sync-engine-redesign/` (design.md is the source of truth)
+**Scope:** Supersedes four parts of the original ADR-009. All other decisions (provider model, one-provider-per-kind, credential store, error model, registry, provider-scoped metadata, bug reporting, GitHub provider behavior) remain unchanged.
+
+The Sync Engine Redesign rebuilds the multi-provider sync stack to fix a cross-device data-loss defect, extract a standalone testable orchestrator, and add a global read-only authoring window. In doing so it amends ADR-009 as follows.
+
+### 1. Google Drive storage model: per-year JSON files (supersedes §2)
+
+The single zip archive (`expense-buddy-backup.zip`) is replaced by **one JSON file per year** in the hidden `appDataFolder`:
+
+- File name: `expense-buddy-<year>.json` (e.g. `expense-buddy-2026.json`)
+- Content shape: `{ v: 1, f: { "expenses-YYYY-MM-DD.csv": "<csv>", ... } }` — a version tag plus a map of that year's daily CSV files
+- No zip container and **no native archive module on the data path**
+
+Consequences:
+
+- **The in-memory zip MVP-blocking concern is obsolete.** Because data is split per year and only the current-year file changes in steady state, there is no large all-in-memory archive to bound. The temp-file/streaming requirement called out in §2 and "Open questions" no longer applies.
+- `readSnapshot` returns a snapshot whose expense set is complete enough to merge against all local data: every year file whose revision changed, plus all years present locally.
+- `writeSnapshot` uploads only the changed year bodies. When a year body becomes empty, that year's Drive file is deleted; if the delete fails, the provider logs it, leaves the empty file in place, and does not fail the sync.
+- This pairs with the read-only window (below): entries older than the window cannot be authored, so prior-year files are effectively immutable and the common no-change sync reads one `files.list` + one `files.get` for the current year.
+
+### 2. Drive RemoteRevision: per-year version map (supersedes "Remote revision model")
+
+The Drive revision variant changes from a single archive revision to a per-year map:
+
+```ts
+type RemoteRevision =
+  | { kind: "git_sha"; sha: string }
+  | { kind: "drive"; fileVersions: Record<string, DriveYearRevision> }
+
+interface DriveYearRevision {
+  fileId: string // Drive file id for expense-buddy-<year>.json
+  version: number // Drive monotonic file version (preferred signal)
+  contentHash?: string // fallback signal if version is unavailable
+}
+```
+
+- The old `{ kind: "drive_version"; fileId; version }` (one archive) is removed.
+- The map is keyed by year string; each year file has its own `fileId` and `version`.
+- Optimistic concurrency is per year: before writing a year file that already exists, the provider preflights that year's Drive `version` via `files.get` and compares it against the `lastKnownRevision` entry for that year. If a year's `version` advanced since the read, it throws `CONFLICT` and leaves that year file unchanged.
+- A prior-year download is skipped only when the cached per-year revision matches **and** usable cached content for that year exists; if the local cache is missing, the year file is downloaded even when the version matches.
+- The `git_sha` variant is unchanged.
+
+### 3. Global read-only authoring window (new; supersedes the per-screen one-year cutoff)
+
+A global read-only authoring window is added as the single source of truth for editability, implemented in `services/read-only-window.ts`:
+
+- Controlled by the `READ_ONLY_WINDOW_MONTHS` code constant, **default 6 months**. It is a code constant, not user-configurable.
+- Exposes `isDayEditable`, `isExpenseEditable`, and `isDateEditable`.
+- Editability is evaluated against the **expense's own filed date**, not its `createdAt` timestamp.
+- Entries dated older than the window cannot be created, edited, deleted, or back-dated. The `expense-store.ts` mutation chokepoint rejects such mutations as a no-op and surfaces a block notification.
+- **This supersedes the prior ad-hoc one-year history cutoff** (`readOnlyCutoff = subYears(new Date(), 1)`) in the history screen. The history and add/edit screens now enforce the same window via the shared guard.
+- **The sync merge path is exempt.** `replaceExpenses` (applying merged results) and `firstTimeSync` (restore) never consult the guard, so remote history older than the window still restores on a fresh install.
+
+### 4. First reconciliation and the fetch-full-remote / upload-dirty-only contract (amends §5)
+
+- `awaitingInitialReconciliation` is a **real waiting state** (no blind auto-advance). While the active provider is not reconciled (`initialReconciliationComplete` is false), background auto-sync (`on_change`/`on_launch`) is a no-op that issues **zero `writeSnapshot` calls**.
+- The first reconciliation is **activation-triggered**: adding a provider or switching the active provider causes the orchestrator to fire `START_FIRST_SYNC`, moving the machine to `reconcilingFirstSync`. It is no longer gated on a separate manual Sync Now action. This amends §5's "require explicit manual sync completion before auto-sync" to "require the activation-triggered reconciliation to succeed."
+- On success, the machine sets `initialReconciliationComplete = true` for the active provider and the orchestrator unblocks background auto-sync; on failure it returns to `awaitingInitialReconciliation` and retries on the next activation or app launch.
+- **Sync core contract (fetch-full-remote / upload-dirty-only):** every sync cycle fetches the **full** remote snapshot via `readSnapshot` (no dirty/deleted-day filtering on the fetch/merge side), merges the complete local set against the complete remote set with the shared merge engine, and then uploads **only** the day files in the union of dirty and deleted days whose content differs from the remote. When the merge only pulled remote changes, the merged result is applied to local state and the remote is left unchanged. This fixes the cross-device data-loss defect where dirty-day filtering was incorrectly applied to the fetch side.
+
+### Traceability
+
+This amendment satisfies Requirement 10 of the Sync Engine Redesign spec:
+
+- **10.1** — per-year JSON storage replaces the zip archive; in-memory zip MVP-blocking concern marked obsolete (Amendment §1)
+- **10.2** — Drive `RemoteRevision` becomes a per-year `{ kind: "drive"; fileVersions }` map (Amendment §2)
+- **10.3** — global read-only authoring window added; supersedes the per-screen one-year cutoff (Amendment §3)
+- **10.4** — `awaitingInitialReconciliation` recorded as a real auto-sync gate; activation-triggered first reconciliation; fetch-full-remote / upload-dirty-only contract (Amendment §4)

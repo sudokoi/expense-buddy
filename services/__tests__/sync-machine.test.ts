@@ -113,6 +113,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -144,6 +145,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onSuccess },
       })
 
@@ -170,6 +172,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -203,6 +206,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         states.push(snapshot.value as string)
       })
 
+      // Background SYNC for an unreconciled provider enters the real gate.
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
@@ -210,9 +214,13 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         callbacks: { onSuccess },
       })
 
+      expect(states).toContain("awaitingInitialReconciliation")
+
+      // Activation-driven trigger advances the gate into reconciliation.
+      actor.send({ type: "START_FIRST_SYNC" })
+
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      expect(states).toContain("awaitingInitialReconciliation")
       expect(states).toContain("reconcilingFirstSync")
       expect(states).toContain("success")
       expect(onSuccess).toHaveBeenCalledWith({ isFirstSync: true })
@@ -220,12 +228,96 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
       actor.stop()
     })
 
-    it("should transition to error when firstTimeSync fails", async () => {
+    it("should ignore background SYNC events while awaiting initial reconciliation", async () => {
+      const onSuccess = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: { onSuccess },
+      })
+
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
+
+      // A second background SYNC must not pass the gate.
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: { onSuccess },
+      })
+
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
+      expect(mockFirstTimeSync).not.toHaveBeenCalled()
+
+      actor.stop()
+    })
+
+    it("should run a normal sync when the provider is already reconciled", async () => {
       mockSyncWithProvider.mockResolvedValue({
+        success: true,
+      })
+
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      const states: string[] = []
+      actor.subscribe((snapshot) => {
+        states.push(snapshot.value as string)
+      })
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
+        callbacks: {},
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(states).toContain("syncing")
+      expect(states).not.toContain("awaitingInitialReconciliation")
+
+      actor.stop()
+    })
+
+    it("should set initialReconciliationComplete and reach success after first reconciliation", async () => {
+      mockFirstTimeSync.mockResolvedValue({
         success: true,
         isFirstSync: true,
       })
 
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: {},
+      })
+
+      actor.send({ type: "START_FIRST_SYNC" })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("success")
+      expect(actor.getSnapshot().context.initialReconciliationComplete).toBe(true)
+
+      actor.stop()
+    })
+
+    it("should return to the gate when firstTimeSync fails", async () => {
       mockFirstTimeSync.mockResolvedValue({
         success: false,
         error: "Failed to create initial snapshot",
@@ -249,9 +341,15 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         callbacks: { onError },
       })
 
+      actor.send({ type: "START_FIRST_SYNC" })
+
       await new Promise((resolve) => setTimeout(resolve, 150))
 
-      expect(states).toContain("error")
+      // On failure the machine stays gated rather than entering the error state.
+      expect(states).toContain("reconcilingFirstSync")
+      expect(states).not.toContain("error")
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
+      expect(actor.getSnapshot().context.initialReconciliationComplete).not.toBe(true)
 
       actor.stop()
     })
@@ -293,6 +391,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [localExpense],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onConflict },
       })
 
@@ -351,6 +450,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [localExpense],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -394,6 +494,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -440,6 +541,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onSuccess },
       })
 
@@ -489,6 +591,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onConflict },
       })
 
@@ -525,6 +628,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -550,6 +654,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -574,6 +679,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -593,6 +699,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 150))
@@ -632,6 +739,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -673,6 +781,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onAuthError },
       })
 
@@ -704,6 +813,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onAuthError },
       })
 
@@ -739,6 +849,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -762,6 +873,7 @@ describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))

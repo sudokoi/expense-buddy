@@ -69,7 +69,7 @@ export class GitHubProvider implements SyncProvider {
     }
   }
 
-  async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
+  async readSnapshot(): Promise<SyncSnapshot | null> {
     const startTime = Date.now()
     const token = await this.getToken()
     if (!token) throw this.authError("AUTH_MISSING")
@@ -101,12 +101,8 @@ export class GitHubProvider implements SyncProvider {
         return null
       }
 
-      const filterSet = filterPaths ? new Set(filterPaths) : null
       const expenseEntries = treeResult.entries.filter(
-        (e) =>
-          e.type === "blob" &&
-          getDayKeyFromFilename(e.path) !== null &&
-          (!filterSet || filterSet.has(e.path))
+        (e) => e.type === "blob" && getDayKeyFromFilename(e.path) !== null
       )
       const settingsEntry = treeResult.entries.find((e) => e.path === SETTINGS_FILENAME)
 
@@ -195,7 +191,7 @@ export class GitHubProvider implements SyncProvider {
 
   async writeSnapshot(
     snapshot: SyncSnapshot,
-    _lastKnownRevision: RemoteRevision | null
+    lastKnownRevision: RemoteRevision | null
   ): Promise<void> {
     const startTime = Date.now()
     const token = await this.getToken()
@@ -206,10 +202,38 @@ export class GitHubProvider implements SyncProvider {
     const signal = controller.signal
 
     try {
+      // Optimistic concurrency (Requirements 6.1, 6.2): re-read the current
+      // branch/tree SHA and compare it against the git_sha captured when this
+      // cycle's snapshot was read. If the remote tree advanced, abort with
+      // CONFLICT and leave the remote untouched so the orchestrator re-reads
+      // and re-merges instead of clobbering the newer remote state.
+      if (lastKnownRevision?.kind === "git_sha") {
+        const head = await getRepositoryTree(
+          token,
+          this.config.repo,
+          this.config.branch,
+          signal
+        )
+        if (head.success && head.treeSha !== lastKnownRevision.sha) {
+          throw new SyncProviderErrorClass(
+            "CONFLICT",
+            "github",
+            "Remote advanced since last read",
+            true
+          )
+        }
+      }
+
+      // Out-of-range deletion guard (Requirement 6.3, restored from main): never
+      // delete a remote day file that falls outside the covered date range of
+      // the local data in this snapshot. This protects remote history from being
+      // nuked by a truncated local view.
+      const safeFiles = applyDeletionRangeGuard(snapshot.files)
+
       const uploads: { path: string; content: string }[] = []
       const deletions: { path: string }[] = []
 
-      for (const [path, content] of Object.entries(snapshot.files)) {
+      for (const [path, content] of Object.entries(safeFiles)) {
         if (content.length === 0) {
           deletions.push({ path })
         } else {
@@ -339,4 +363,54 @@ function mapBatchErrorCode(code: string | undefined): SyncProviderError["code"] 
     default:
       return "REMOTE_ERROR"
   }
+}
+
+/**
+ * Out-of-range deletion guard (restored from main).
+ *
+ * The covered date range of the local data is the span of day files that still
+ * carry content in this upload snapshot. A day-file deletion (empty content) is
+ * only honored when its day key falls inside that range; deletions for day files
+ * outside the range are dropped so a truncated local view can never delete remote
+ * history it never knew about. Non-day files (e.g. settings.json) and content
+ * uploads always pass through unchanged.
+ */
+function applyDeletionRangeGuard(files: Record<string, string>): Record<string, string> {
+  let oldest: string | null = null
+  let newest: string | null = null
+
+  for (const [path, content] of Object.entries(files)) {
+    if (content.length === 0) continue
+    const dayKey = getDayKeyFromFilename(path)
+    if (dayKey === null) continue
+    if (oldest === null || dayKey < oldest) oldest = dayKey
+    if (newest === null || dayKey > newest) newest = dayKey
+  }
+
+  const guarded: Record<string, string> = {}
+
+  for (const [path, content] of Object.entries(files)) {
+    // Content uploads always pass through.
+    if (content.length > 0) {
+      guarded[path] = content
+      continue
+    }
+
+    const dayKey = getDayKeyFromFilename(path)
+    // Non-day-file deletions (e.g. settings.json) are not range-guarded.
+    if (dayKey === null) {
+      guarded[path] = content
+      continue
+    }
+
+    // Day-file deletion: keep only when inside the covered date range.
+    const withinRange =
+      oldest !== null && newest !== null && dayKey >= oldest && dayKey <= newest
+    if (withinRange) {
+      guarded[path] = content
+    }
+    // Otherwise: drop the deletion, leaving the remote day file untouched.
+  }
+
+  return guarded
 }

@@ -5,11 +5,8 @@ import {
   computeSettingsHash,
   DEFAULT_SETTINGS,
 } from "../services/settings-manager"
-import {
-  performAutoSyncIfEnabled,
-  shouldAutoSyncForTiming,
-} from "../services/auto-sync-service"
-import { clearDirtyDays } from "../services/expense-dirty-days"
+import { shouldAutoSyncForTiming } from "../services/auto-sync-service"
+import { syncOrchestrator } from "../services/sync/sync-engine"
 
 /**
  * Result of an auto-sync operation
@@ -45,85 +42,33 @@ export interface AutoSyncCallbacks {
 }
 
 /**
- * Perform auto-sync if enabled and timing matches "on_change"
+ * Signal an auto-sync for the "on_change" timing.
  *
- * This helper encapsulates the common auto-sync pattern used across expense store actions.
- * It checks if auto-sync should run, performs the sync, and invokes callbacks to update state.
- *
- * @param expenses - Current expenses to sync
- * @param callbacks - Callbacks for handling sync results
- * @returns AutoSyncResult with sync status and any updated data
+ * This now sits entirely behind the SyncOrchestrator: it gates on the
+ * configured timing and then fires the orchestrator's idempotent, debounced
+ * signal. The orchestrator owns the machine, coalesces bursts, gates background
+ * runs until the active provider is reconciled, and routes merged
+ * results/notifications/settings back into the stores via its bindings — so the
+ * caller no longer threads expenses or callbacks through here.
  */
-export async function performAutoSyncOnChange(
-  expenses: Expense[],
-  callbacks: AutoSyncCallbacks
-): Promise<AutoSyncResult> {
-  const shouldSync = await shouldAutoSyncForTiming("on_change")
-  if (!shouldSync) {
-    return { synced: false }
+export async function performAutoSyncOnChange(): Promise<void> {
+  if (await shouldAutoSyncForTiming("on_change")) {
+    syncOrchestrator.requestSync("on_change")
   }
-
-  const result = await performAutoSyncIfEnabled(expenses)
-
-  if (result.synced && result.expenses) {
-    callbacks.onExpensesReplaced(result.expenses)
-    if (!result.pendingExpenseOps) {
-      await clearDirtyDays()
-      callbacks.onDirtyDaysCleared()
-    }
-
-    if (result.notification) {
-      callbacks.onSyncNotification(result.notification)
-    }
-
-    if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
-      callbacks.onSettingsDownloaded(result.downloadedSettings)
-    }
-  }
-
-  return result
 }
 
 /**
- * Perform auto-sync if enabled and timing matches "on_launch"
+ * Signal an auto-sync for the "on_launch" timing.
  *
- * Similar to performAutoSyncOnChange but for app launch timing.
- *
- * @param expenses - Current expenses to sync
- * @param callbacks - Callbacks for handling sync results
- * @returns AutoSyncResult with sync status and any updated data
+ * Like {@link performAutoSyncOnChange}, this delegates to the orchestrator. The
+ * activation-triggered first reconciliation (which unblocks background runs) is
+ * driven separately by `syncOrchestrator.rebindProvider()` on provider
+ * activation; this is purely the background launch signal.
  */
-export async function performAutoSyncOnLaunch(
-  expenses: Expense[],
-  callbacks: AutoSyncCallbacks
-): Promise<AutoSyncResult> {
-  const shouldSync = await shouldAutoSyncForTiming("on_launch")
-  if (!shouldSync) {
-    return { synced: false }
+export async function performAutoSyncOnLaunch(): Promise<void> {
+  if (await shouldAutoSyncForTiming("on_launch")) {
+    syncOrchestrator.requestSync("on_launch")
   }
-
-  const result = await performAutoSyncIfEnabled(expenses)
-
-  if (result.synced && result.expenses) {
-    callbacks.onExpensesReplaced(result.expenses)
-    if (!result.pendingExpenseOps) {
-      await clearDirtyDays()
-      callbacks.onDirtyDaysCleared()
-    }
-
-    if (result.notification) {
-      callbacks.onSyncNotification(result.notification)
-    }
-
-    if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
-      callbacks.onSettingsDownloaded(result.downloadedSettings)
-    }
-  } else if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
-    // Settings can be downloaded even if expenses weren't synced
-    callbacks.onSettingsDownloaded(result.downloadedSettings)
-  }
-
-  return result
 }
 
 /**

@@ -32,6 +32,7 @@ export interface SyncMachineContext {
   mergeResult?: MergeResult
   error?: string
   errorCode?: string
+  initialReconciliationComplete?: boolean
 }
 
 export type SyncMachineEvent =
@@ -44,11 +45,18 @@ export type SyncMachineEvent =
       syncSettingsEnabled: boolean
       callbacks?: SyncCallbacks
       conflictResolver?: ConflictResolver
+      // Set by the orchestrator so the idle guard can decide whether the active
+      // provider has completed its activation-triggered first reconciliation.
+      initialReconciliationComplete?: boolean
     }
   | {
       type: "RESOLVE_CONFLICTS"
       resolutions: { expenseId: string; choice: "local" | "remote" }[]
     }
+  // Activation-driven trigger emitted by the orchestrator on provider
+  // activation/rebind (and on manual retry / next launch) to advance the
+  // awaitingInitialReconciliation gate into reconcilingFirstSync.
+  | { type: "START_FIRST_SYNC" }
   | { type: "CANCEL" }
   | { type: "RESET" }
 
@@ -140,6 +148,24 @@ export const syncMachine = setup({
       return result
     }),
   },
+  actions: {
+    assignSyncContext: assign(({ event }) => {
+      if (event.type !== "SYNC") return {}
+      return {
+        localExpenses: event.localExpenses,
+        dirtyDays: event.dirtyDays,
+        deletedDays: event.deletedDays,
+        settings: event.settings,
+        syncSettingsEnabled: event.syncSettingsEnabled,
+        callbacks: event.callbacks || {},
+        conflictResolver: event.conflictResolver,
+        mergeResult: undefined,
+        pendingConflicts: undefined,
+        error: undefined,
+        errorCode: undefined,
+      }
+    }),
+  },
   delays: {
     SUCCESS_DISPLAY_TIME: 2000,
     ERROR_DISPLAY_TIME: 5000,
@@ -159,31 +185,34 @@ export const syncMachine = setup({
   states: {
     idle: {
       on: {
-        SYNC: {
-          target: "syncing",
-          actions: [
-            assign({
-              localExpenses: ({ event }) => event.localExpenses,
-              dirtyDays: ({ event }) => event.dirtyDays,
-              deletedDays: ({ event }) => event.deletedDays,
-              settings: ({ event }) => event.settings,
-              syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-              callbacks: ({ event }) => event.callbacks || {},
-              conflictResolver: ({ event }) => event.conflictResolver,
-              mergeResult: undefined,
-              pendingConflicts: undefined,
-              error: undefined,
-              errorCode: undefined,
-            }),
-            ({ context }) => {
-              logAsync(
-                "INFO",
-                "SYNC_MACHINE",
-                `SYNC_STARTED expenseCount=${context.localExpenses.length} settingsSync=${context.syncSettingsEnabled}`
-              )
-            },
-          ],
-        },
+        SYNC: [
+          {
+            // Provider already reconciled on this device -> run a normal sync.
+            guard: ({ event }) => event.initialReconciliationComplete === true,
+            target: "syncing",
+            actions: [
+              "assignSyncContext",
+              ({ context }) => {
+                logAsync(
+                  "INFO",
+                  "SYNC_MACHINE",
+                  `SYNC_STARTED expenseCount=${context.localExpenses.length} settingsSync=${context.syncSettingsEnabled}`
+                )
+              },
+            ],
+          },
+          {
+            // Not reconciled -> enter the REAL gate. Background auto-sync waits
+            // here until the orchestrator emits START_FIRST_SYNC on activation.
+            target: "awaitingInitialReconciliation",
+            actions: [
+              "assignSyncContext",
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_AWAITING_INITIAL_RECONCILIATION")
+              },
+            ],
+          },
+        ],
       },
     },
 
@@ -318,8 +347,20 @@ export const syncMachine = setup({
     },
 
     awaitingInitialReconciliation: {
-      after: {
-        0: "reconcilingFirstSync",
+      entry: () => {
+        logAsync("INFO", "SYNC_MACHINE", "AWAITING_INITIAL_RECONCILIATION")
+      },
+      // No `after: { 0: ... }` auto-advance. This is the real gate: it advances
+      // only on an explicit, activation-driven START_FIRST_SYNC emitted by the
+      // orchestrator. Background SYNC events are ignored so auto-sync cannot
+      // pass the gate before the first reconciliation succeeds.
+      on: {
+        START_FIRST_SYNC: "reconcilingFirstSync",
+        SYNC: {
+          // Ignored: background auto-sync stays gated (self-transition, no action).
+          target: "awaitingInitialReconciliation",
+        },
+        RESET: "idle",
       },
     },
 
@@ -337,6 +378,9 @@ export const syncMachine = setup({
             guard: ({ event }) => event.output.success === true,
             target: "success",
             actions: [
+              assign({
+                initialReconciliationComplete: true,
+              }),
               ({ context }) => {
                 context.callbacks.onSuccess?.({ isFirstSync: true })
               },
@@ -346,7 +390,9 @@ export const syncMachine = setup({
             ],
           },
           {
-            target: "error",
+            // Reconciliation failed -> stay gated. The orchestrator retries on
+            // the next provider activation / app launch / manual retry.
+            target: "awaitingInitialReconciliation",
             actions: [
               assign({
                 error: ({ event }) =>
@@ -364,7 +410,7 @@ export const syncMachine = setup({
           },
         ],
         onError: {
-          target: "error",
+          target: "awaitingInitialReconciliation",
           actions: [
             assign({
               error: ({ event }) => formatMachineError(event.error),

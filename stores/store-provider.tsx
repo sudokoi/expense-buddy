@@ -12,6 +12,7 @@ import {
   expenseStore as defaultExpenseStore,
   ExpenseStore,
   initializeExpenseStore,
+  emitSettingsDownloaded,
   onSettingsDownloaded,
   onSyncNotification,
 } from "./expense-store"
@@ -51,6 +52,7 @@ import { DeferredProvider } from "../services/sync/deferred-provider"
 import { logAsync } from "../services/logger"
 import { createProvider } from "../services/sync/provider-registry"
 import { getActiveProviderConfig } from "../services/sync-config"
+import { syncOrchestrator } from "../services/sync/sync-engine"
 
 // Register provider factories at import time
 import "../services/sync"
@@ -264,6 +266,45 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     })
     return unsubscribe
   }, [settingsStore])
+
+  // Wire the SyncOrchestrator to the stores and route provider activation through
+  // it. The orchestrator is a module-level singleton constructed with default
+  // service deps; here we inject the store-facing callbacks (so merged
+  // results/settings/notifications route back into the stores) and rebind it
+  // whenever the active provider changes (add/switch, and the initial load),
+  // which fires the activation-triggered first reconciliation.
+  useEffect(() => {
+    if (skipInitialization) return
+
+    syncOrchestrator.setStoreBindings({
+      getLocalExpenses: () => expenseStore.getSnapshot().context.expenses,
+      onMerged: (expenses) => expenseStore.trigger.replaceExpenses({ expenses }),
+      onSettingsDownloaded: (settings) => emitSettingsDownloaded(settings),
+      onNotify: (notification) =>
+        expenseStore.trigger.setSyncNotification({ notification }),
+    })
+
+    let lastActiveProviderId = providerStore.getSnapshot().context.activeProviderId
+    if (lastActiveProviderId) {
+      // A provider is already active on mount (e.g. fast store init): rebind so
+      // the activation-triggered first reconciliation runs on launch.
+      void syncOrchestrator.rebindProvider()
+    }
+
+    const subscription = providerStore.subscribe((snapshot) => {
+      const nextActiveProviderId = snapshot.context.activeProviderId
+      if (nextActiveProviderId === lastActiveProviderId) return
+      lastActiveProviderId = nextActiveProviderId
+      logAsync(
+        "INFO",
+        "INIT",
+        `PROVIDER_ACTIVATION_CHANGED activeProviderId=${nextActiveProviderId ?? "null"}`
+      )
+      void syncOrchestrator.rebindProvider()
+    })
+
+    return () => subscription.unsubscribe()
+  }, [expenseStore, providerStore, skipInitialization])
 
   const value = useMemo(
     () => ({
