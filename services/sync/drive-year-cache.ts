@@ -69,5 +69,26 @@ export function createDriveYearCache(providerId: string): DriveYearCache {
         `CACHE_SAVE_YEAR providerId=${providerId} year=${year} version=${revision.version}`
       )
     },
+
+    async removeYear(year: string): Promise<void> {
+      // Drop the cached body for the year and prune its entry from the index so
+      // a deleted year can never be served from a stale version match.
+      await providerStateStore.remove(providerId, yearContentField(year))
+
+      const index = await providerStateStore.get<Record<string, DriveYearRevision>>(
+        providerId,
+        REMOTE_INDEX_FIELD
+      )
+      if (index && year in index) {
+        delete index[year]
+        await providerStateStore.set(providerId, REMOTE_INDEX_FIELD, index)
+      }
+
+      logAsync(
+        "INFO",
+        "DRIVE_PROVIDER",
+        `CACHE_REMOVE_YEAR providerId=${providerId} year=${year}`
+      )
+    },
   }
 }

@@ -9,11 +9,7 @@
  * out after 60s and never completed.
  */
 import { SyncOrchestrator, type SyncEngineDeps } from "../sync-engine"
-import type {
-  ProviderConfig,
-  SyncProvider,
-  SyncSnapshot,
-} from "../provider-types"
+import type { ProviderConfig, SyncProvider, SyncSnapshot } from "../provider-types"
 import type { AppSettings } from "../../settings-manager"
 
 const CONFIG: ProviderConfig = {
@@ -58,7 +54,7 @@ function makeDeps(
     getActiveProviderConfig: async () => CONFIG,
     createProvider: () => provider,
     loadSettings: async () =>
-      ({ autoSyncEnabled: true, syncSettings: false } as unknown as AppSettings),
+      ({ autoSyncEnabled: true, syncSettings: false }) as unknown as AppSettings,
     getLocalExpenses: () => [],
     queue: {
       getSyncQueueWatermark: async () => 0,

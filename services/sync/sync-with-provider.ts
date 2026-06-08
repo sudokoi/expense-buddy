@@ -1,7 +1,11 @@
 import type { SyncProvider, SyncSnapshot, RemoteRevision } from "./provider-types"
 import { SyncProviderError, SETTINGS_FILENAME } from "./provider-types"
 import { importFromCSV, exportToCSV } from "../csv-handler"
-import { groupExpensesByDay, getFilenameForDay } from "../daily-file-manager"
+import {
+  groupExpensesByDay,
+  getFilenameForDay,
+  getDayKeyFromFilename,
+} from "../daily-file-manager"
 import { computeContentHash } from "../hash-storage"
 import {
   mergeExpenses,
@@ -522,7 +526,33 @@ function buildUploadSnapshot(args: {
     }
   }
 
-  return withManifest(files, mergedFull.remoteRevision)
+  // The covered day range is derived from the FULL merged data (every day file
+  // in mergedFull), NOT the changed-file subset, so a provider's deletion guard
+  // can correctly tell an in-range explicit deletion from an out-of-range one.
+  return withManifest(
+    files,
+    mergedFull.remoteRevision,
+    computeCoveredDayRange(mergedFull)
+  )
+}
+
+/**
+ * Compute the `yyyy-MM-dd` day-key span covered by all day files in a snapshot.
+ * Returns null when the snapshot carries no day files (settings-only).
+ */
+function computeCoveredDayRange(
+  snapshot: SyncSnapshot
+): { oldest: string; newest: string } | null {
+  let oldest: string | null = null
+  let newest: string | null = null
+  for (const path of Object.keys(snapshot.files)) {
+    if (path === SETTINGS_FILENAME) continue
+    const dayKey = getDayKeyFromFilename(path)
+    if (dayKey === null) continue
+    if (oldest === null || dayKey < oldest) oldest = dayKey
+    if (newest === null || dayKey > newest) newest = dayKey
+  }
+  return oldest !== null && newest !== null ? { oldest, newest } : null
 }
 
 /**
@@ -531,7 +561,8 @@ function buildUploadSnapshot(args: {
  */
 function withManifest(
   files: Record<string, string>,
-  remoteRevision: RemoteRevision | null
+  remoteRevision: RemoteRevision | null,
+  coveredDayRange?: { oldest: string; newest: string } | null
 ): SyncSnapshot {
   return {
     manifest: {
@@ -545,6 +576,7 @@ function withManifest(
     },
     files,
     remoteRevision,
+    coveredDayRange: coveredDayRange ?? null,
   }
 }
 

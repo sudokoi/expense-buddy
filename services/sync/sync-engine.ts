@@ -381,11 +381,18 @@ export class SyncOrchestrator implements SyncEngine {
     if (final.matches("success") || final.matches("inSync")) {
       this.lastError = undefined
       await this.deps.queue.markProviderReconciled(config.id)
+      // The first reconciliation wrote the full local+merged data, so every op
+      // in the queue up to now is durably represented in the remote. Anchor the
+      // provider's watermark at the current queue head so subsequent runs have a
+      // well-defined boundary and don't lazily initialize it at an arbitrary
+      // later point (which could swallow ops enqueued in between).
+      const head = await this.deps.queue.getSyncQueueWatermark()
+      await this.deps.queue.setProviderWatermark(config.id, head)
       await this.persistLastSyncTime(config.id)
       logAsync(
         "INFO",
         "SYNC_ENGINE",
-        `FIRST_RECONCILIATION_SUCCESS providerId=${config.id}`
+        `FIRST_RECONCILIATION_SUCCESS providerId=${config.id} watermark=${head}`
       )
       return
     }

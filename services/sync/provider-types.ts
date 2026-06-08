@@ -95,6 +95,15 @@ export interface SyncSnapshot {
   }
   files: Record<string, string>
   remoteRevision: RemoteRevision | null
+  /**
+   * The day-key span (`yyyy-MM-dd`) covered by the FULL local/merged data this
+   * snapshot was derived from — not just the changed files in `files`. Set by
+   * the upload-snapshot builder so a provider's out-of-range deletion guard can
+   * decide whether a deletion is inside the local data's covered range without
+   * having to (incorrectly) infer the range from the upload subset alone. When
+   * omitted, providers fall back to inferring the range from `files`.
+   */
+  coveredDayRange?: { oldest: string; newest: string } | null
 }
 
 export type ConnectionTestResult =

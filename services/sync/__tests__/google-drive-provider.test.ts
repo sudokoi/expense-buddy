@@ -201,6 +201,62 @@ describe("GoogleDriveProvider", () => {
 
       await expect(provider.readSnapshot()).rejects.toThrow(/AUTH_MISSING/)
     })
+
+    it("reads settings from the dedicated settings.json file, not a year body", async () => {
+      const listResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: [
+            {
+              id: "file-2025",
+              name: "expense-buddy-2025.json",
+              version: 1,
+              modifiedTime: "2025-01-01T00:00:00Z",
+            },
+            {
+              id: "file-settings",
+              name: "settings.json",
+              version: 3,
+              modifiedTime: "2025-01-02T00:00:00Z",
+            },
+          ],
+        }),
+        text: async () => "",
+      })
+
+      const downloadYear = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2025-01-15.csv": "id,amount\n2,200" } }),
+      })
+
+      const downloadSettings = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () => '{"theme":"dark"}',
+      })
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(listResponse)
+        .mockResolvedValueOnce(downloadYear)
+        .mockResolvedValueOnce(downloadSettings)
+
+      const result = await provider.readSnapshot()
+
+      expect(result).not.toBeNull()
+      expect(result!.files["settings.json"]).toBe('{"theme":"dark"}')
+      expect(result!.files["expenses/2025-01-15.csv"]).toBe("id,amount\n2,200")
+      // settings.json is not a year file, so it carries no per-year revision.
+      expect(result!.remoteRevision).toMatchObject({
+        kind: "drive",
+        fileVersions: { "2025": expect.any(Object) },
+      })
+    })
   })
 
   describe("readSnapshot version preflight", () => {
@@ -547,6 +603,72 @@ describe("GoogleDriveProvider", () => {
       ;(mockCredentialStore.get as jest.Mock).mockResolvedValue(null)
 
       await expect(provider.writeSnapshot(snapshot, null)).rejects.toThrow(/AUTH_MISSING/)
+    })
+
+    it("evicts the per-year cache when a year file is deleted", async () => {
+      const cache = {
+        loadIndex: jest.fn().mockResolvedValue({}),
+        readYear: jest.fn().mockResolvedValue(null),
+        saveYear: jest.fn().mockResolvedValue(undefined),
+        removeYear: jest.fn().mockResolvedValue(undefined),
+      }
+      const cachedProvider = new GoogleDriveProvider(
+        createConfig(),
+        mockCredentialStore,
+        cache
+      )
+
+      const find2024Response = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          files: [
+            {
+              id: "file-2024",
+              name: "expense-buddy-2024.json",
+              version: 1,
+              modifiedTime: "2024-06-01T00:00:00Z",
+            },
+          ],
+        }),
+        text: async () => "",
+      })
+
+      const downloadResponse = Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () =>
+          JSON.stringify({ v: 1, f: { "expenses/2024-06-01.csv": "id,amount\n1,100" } }),
+      })
+
+      const deleteResponse = Promise.resolve({
+        ok: true,
+        status: 204,
+        json: async () => ({}),
+        text: async () => "",
+      })
+
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce(find2024Response)
+        .mockResolvedValueOnce(downloadResponse)
+        .mockResolvedValueOnce(deleteResponse)
+
+      const deleteSnapshot: SyncSnapshot = {
+        manifest: {
+          version: 1,
+          generatedAt: "2024-06-01T00:00:00Z",
+          appVersion: APP_CONFIG.version,
+          files: [],
+        },
+        files: { "expenses/2024-06-01.csv": "" },
+        remoteRevision: null,
+      }
+
+      await cachedProvider.writeSnapshot(deleteSnapshot, null)
+
+      expect(cache.removeYear).toHaveBeenCalledWith("2024")
     })
   })
 

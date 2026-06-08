@@ -10,6 +10,7 @@ import type {
   SyncProviderError,
 } from "./provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
+import { SETTINGS_FILENAME } from "./provider-types"
 import { simpleHash } from "./sync-utils"
 import { APP_CONFIG } from "../../constants/app-config"
 import { Platform } from "react-native"
@@ -59,6 +60,12 @@ export interface DriveYearCache {
     files: Record<string, string>,
     revision: DriveYearRevision
   ): Promise<void>
+  /**
+   * Evict the cached content and revision for a year. Called when a year file
+   * is deleted (its body became empty) so a later version match can never serve
+   * stale content for a year that no longer exists remotely.
+   */
+  removeYear(year: string): Promise<void>
 }
 
 export class GoogleDriveProvider implements SyncProvider {
@@ -147,9 +154,15 @@ export class GoogleDriveProvider implements SyncProvider {
     const token = await this.getAccessToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const yearFiles = await this.listYearFiles(token)
-    logAsync("INFO", "DRIVE_PROVIDER", `readSnapshot yearFiles=${yearFiles.length}`)
-    if (yearFiles.length === 0) return null
+    const allFiles = await this.listAppDataFiles(token)
+    const yearFiles = allFiles.filter((f) => this.parseYearFromName(f.name) !== null)
+    const settingsFile = allFiles.find((f) => f.name === SETTINGS_FILENAME) ?? null
+    logAsync(
+      "INFO",
+      "DRIVE_PROVIDER",
+      `readSnapshot yearFiles=${yearFiles.length} hasSettings=${settingsFile !== null}`
+    )
+    if (yearFiles.length === 0 && !settingsFile) return null
 
     const cachedIndex = await this.loadRemoteIndex()
     const files: Record<string, string> = {}
@@ -168,7 +181,7 @@ export class GoogleDriveProvider implements SyncProvider {
       if (cached && cached.version === file.version) {
         const cachedFiles = await this.readCachedYear(year)
         if (cachedFiles) {
-          Object.assign(files, cachedFiles)
+          this.assignYearFiles(files, cachedFiles)
           fileVersions[year] = {
             fileId: file.id,
             version: file.version,
@@ -189,8 +202,18 @@ export class GoogleDriveProvider implements SyncProvider {
         contentHash: simpleHash(content),
       }
       fileVersions[year] = revision
-      Object.assign(files, parsed.f)
+      this.assignYearFiles(files, parsed.f)
       await this.saveCachedYear(year, parsed.f, revision)
+    }
+
+    // Settings live in a dedicated `settings.json` file (NOT folded into a year
+    // body, which would duplicate/misfile them across year boundaries). Read it
+    // separately so it round-trips deterministically.
+    if (settingsFile) {
+      const settingsContent = await this.downloadFile(token, settingsFile.id)
+      if (settingsContent) {
+        files[SETTINGS_FILENAME] = settingsContent
+      }
     }
 
     logAsync(
@@ -239,10 +262,11 @@ export class GoogleDriveProvider implements SyncProvider {
     const token = await this.getAccessToken()
     if (!token) throw this.authError("AUTH_MISSING")
 
-    const yearFiles = await this.listYearFiles(token)
-    if (yearFiles.length === 0) return false
+    // Delete every file in appDataFolder (year files + the settings file).
+    const allFiles = await this.listAppDataFiles(token)
+    if (allFiles.length === 0) return false
 
-    for (const file of yearFiles) {
+    for (const file of allFiles) {
       await this.deleteFile(token, file.id)
     }
 
@@ -267,12 +291,15 @@ export class GoogleDriveProvider implements SyncProvider {
     if (!token) throw this.authError("AUTH_MISSING")
 
     const currentYear = new Date().getFullYear()
-    const filesByYear = this.groupFilesByYear(snapshot.files, currentYear)
+    // Settings are written to their own dedicated file, never folded into a
+    // year body. Exclude it from the per-year grouping.
+    const { [SETTINGS_FILENAME]: settingsContent, ...dayFiles } = snapshot.files
+    const filesByYear = this.groupFilesByYear(dayFiles, currentYear)
 
     logAsync(
       "INFO",
       "DRIVE_PROVIDER",
-      `writeSnapshot years=${Object.keys(filesByYear).length} totalFiles=${Object.keys(snapshot.files).length}`
+      `writeSnapshot years=${Object.keys(filesByYear).length} totalFiles=${Object.keys(snapshot.files).length} hasSettings=${settingsContent !== undefined}`
     )
 
     for (const [yearStr, changedFiles] of Object.entries(filesByYear)) {
@@ -338,6 +365,9 @@ export class GoogleDriveProvider implements SyncProvider {
           // empty file in place, and do NOT fail the sync.
           try {
             await this.deleteFile(token, existingFile.id)
+            // Evict the cached body/revision so a later version match can never
+            // serve stale content for a year that no longer exists remotely.
+            await this.removeCachedYear(yearStr)
           } catch (error) {
             logAsync(
               "WARN",
@@ -358,11 +388,46 @@ export class GoogleDriveProvider implements SyncProvider {
       }
     }
 
+    // Write settings to their own dedicated file (create/update/delete),
+    // independent of the per-year day files.
+    if (settingsContent !== undefined) {
+      await this.writeSettingsFile(token, settingsContent)
+    }
+
     logAsync(
       "INFO",
       "DRIVE_PROVIDER",
       `writeSnapshot completed took=${Date.now() - startTime}ms`
     )
+  }
+
+  /**
+   * Create, update, or delete the dedicated `settings.json` file in
+   * appDataFolder. An empty-string content is a deletion (best-effort, mirroring
+   * the year-file delete semantics).
+   */
+  private async writeSettingsFile(token: string, content: string): Promise<void> {
+    const existing = await this.findFileByName(token, SETTINGS_FILENAME)
+    if (content.length > 0) {
+      if (existing) {
+        await this.updateFile(token, existing.id, content)
+      } else {
+        await this.createFile(token, SETTINGS_FILENAME, content)
+      }
+      return
+    }
+    // Deletion marker: remove the settings file if present (best-effort).
+    if (existing) {
+      try {
+        await this.deleteFile(token, existing.id)
+      } catch (error) {
+        logAsync(
+          "WARN",
+          "DRIVE_PROVIDER",
+          `writeSnapshot failed to delete settings file; leaving it in place: ${String(error)}`
+        )
+      }
+    }
   }
 
   async getStatus(): Promise<ProviderStatus> {
@@ -459,6 +524,20 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
+  /** Evict cached content + revision for a deleted year file (best-effort). */
+  private async removeCachedYear(year: string): Promise<void> {
+    if (!this.yearCache) return
+    try {
+      await this.yearCache.removeYear(year)
+    } catch (error) {
+      logAsync(
+        "WARN",
+        "DRIVE_PROVIDER",
+        `removeCachedYear ${year} failed: ${String(error)}`
+      )
+    }
+  }
+
   private getYearForPath(path: string, currentYear: number): number {
     const match = path.match(/(\d{4})-\d{2}-\d{2}\.csv$/)
     return match ? parseInt(match[1], 10) : currentYear
@@ -477,11 +556,31 @@ export class GoogleDriveProvider implements SyncProvider {
     return grouped
   }
 
-  private async listYearFiles(token: string): Promise<DriveFileMetadata[]> {
+  /**
+   * Merge a year body's parsed `path -> content` map into the accumulator,
+   * excluding any stray `settings.json` entry. Legacy data may have folded
+   * settings into a year body; settings are now sourced only from the dedicated
+   * settings file, so we never let a year body contribute them.
+   */
+  private assignYearFiles(
+    target: Record<string, string>,
+    yearFiles: Record<string, string>
+  ): void {
+    for (const [path, content] of Object.entries(yearFiles)) {
+      if (path === SETTINGS_FILENAME) continue
+      target[path] = content
+    }
+  }
+
+  /**
+   * List every file in the hidden appDataFolder (year files + the dedicated
+   * settings file). Used by readSnapshot so settings can be read without an
+   * extra round trip and without being misfiled into a year body.
+   */
+  private async listAppDataFiles(token: string): Promise<DriveFileMetadata[]> {
     try {
-      const encodedPrefix = encodeURIComponent(YEAR_FILE_PREFIX)
       const response = await fetch(
-        `${DRIVE_API_BASE}/files?spaces=appDataFolder&q=name contains '${encodedPrefix}'&fields=files(id,name,version,modifiedTime)`,
+        `${DRIVE_API_BASE}/files?spaces=appDataFolder&fields=files(id,name,version,modifiedTime)`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -496,9 +595,7 @@ export class GoogleDriveProvider implements SyncProvider {
 
       const data = await response.json()
       const files: DriveFileMetadata[] = data.files ?? []
-      return files.filter(
-        (f) => f.name.startsWith(YEAR_FILE_PREFIX) && f.name.endsWith(YEAR_FILE_SUFFIX)
-      )
+      return files
     } catch (error) {
       if (error instanceof SyncProviderErrorClass) throw error
       throw this.toProviderError(error)

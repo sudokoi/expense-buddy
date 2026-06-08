@@ -219,16 +219,17 @@ export class GitHubProvider implements SyncProvider {
             "CONFLICT",
             "github",
             "Remote advanced since last read",
-            true
+            false
           )
         }
       }
 
       // Out-of-range deletion guard (Requirement 6.3, restored from main): never
       // delete a remote day file that falls outside the covered date range of
-      // the local data in this snapshot. This protects remote history from being
-      // nuked by a truncated local view.
-      const safeFiles = applyDeletionRangeGuard(snapshot.files)
+      // the local data. The range is taken from the snapshot's coveredDayRange
+      // (the FULL local/merged data span) when present; otherwise it is inferred
+      // from the snapshot's own content files as a fallback.
+      const safeFiles = applyDeletionRangeGuard(snapshot.files, snapshot.coveredDayRange)
 
       const uploads: { path: string; content: string }[] = []
       const deletions: { path: string }[] = []
@@ -261,8 +262,10 @@ export class GitHubProvider implements SyncProvider {
 
       if (!result.success) {
         const code = mapBatchErrorCode(result.errorCode)
-        const retryable =
-          code === "CONFLICT" || code === "RATE_LIMITED" || code === "NETWORK"
+        // CONFLICT is never auto-retried on write: it is resolved by a full
+        // re-read + re-merge and an explicit user-initiated push (Req 6.6, 6.7).
+        // Only transient transport failures are retryable.
+        const retryable = code === "RATE_LIMITED" || code === "NETWORK"
         throw new SyncProviderErrorClass(
           code,
           "github",
@@ -366,25 +369,38 @@ function mapBatchErrorCode(code: string | undefined): SyncProviderError["code"] 
 }
 
 /**
- * Out-of-range deletion guard (restored from main).
+ * Out-of-range deletion guard (restored from main, Requirement 6.3).
  *
- * The covered date range of the local data is the span of day files that still
- * carry content in this upload snapshot. A day-file deletion (empty content) is
- * only honored when its day key falls inside that range; deletions for day files
- * outside the range are dropped so a truncated local view can never delete remote
- * history it never knew about. Non-day files (e.g. settings.json) and content
- * uploads always pass through unchanged.
+ * A day-file deletion (empty content) is only honored when its day key falls
+ * inside the local data's covered date range. The range is supplied explicitly
+ * via `coveredDayRange` (the FULL local/merged data span computed by the
+ * upload-snapshot builder); this is the correct basis because the upload
+ * snapshot only carries the changed/deleted subset, so inferring the range from
+ * its own content files would wrongly drop legitimate deletions (e.g. a
+ * delete-only batch, which has no content files at all).
+ *
+ * When no explicit range is supplied (e.g. the first-time-sync path that writes
+ * a full merged snapshot via filterChangedFiles), the range is inferred from the
+ * snapshot's own content files as a fallback. Non-day files (e.g. settings.json)
+ * and content uploads always pass through unchanged.
  */
-function applyDeletionRangeGuard(files: Record<string, string>): Record<string, string> {
-  let oldest: string | null = null
-  let newest: string | null = null
+function applyDeletionRangeGuard(
+  files: Record<string, string>,
+  coveredDayRange?: { oldest: string; newest: string } | null
+): Record<string, string> {
+  let oldest: string | null = coveredDayRange?.oldest ?? null
+  let newest: string | null = coveredDayRange?.newest ?? null
 
-  for (const [path, content] of Object.entries(files)) {
-    if (content.length === 0) continue
-    const dayKey = getDayKeyFromFilename(path)
-    if (dayKey === null) continue
-    if (oldest === null || dayKey < oldest) oldest = dayKey
-    if (newest === null || dayKey > newest) newest = dayKey
+  // Fallback: infer the covered range from this snapshot's content files only
+  // when an explicit range was not provided.
+  if (oldest === null || newest === null) {
+    for (const [path, content] of Object.entries(files)) {
+      if (content.length === 0) continue
+      const dayKey = getDayKeyFromFilename(path)
+      if (dayKey === null) continue
+      if (oldest === null || dayKey < oldest) oldest = dayKey
+      if (newest === null || dayKey > newest) newest = dayKey
+    }
   }
 
   const guarded: Record<string, string> = {}
