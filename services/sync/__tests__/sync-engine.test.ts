@@ -215,6 +215,46 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(onClearedCount).toBe(1)
   }, 10000)
 
+  it("defers first reconciliation until local data is ready, then runs it", async () => {
+    // Simulates the fast/injected-store path: rebindProvider fires before the
+    // expense store finishes loading. The first reconciliation must NOT run
+    // against an empty local set (which could drop local-only expenses); it is
+    // deferred until notifyLocalDataReady() signals the store loaded.
+    const restored = makeExpense("2025-06-01T00:00:00.000Z")
+    const provider = makeProvider(async () => remoteSnapshotWith([restored]))
+    const state = { reconciled: false }
+
+    // Local data starts "not ready" and flips to ready only after load.
+    let ready = false
+    const local: Expense[] = []
+    const deps = makeDeps(provider, state, local)
+    deps.isLocalDataReady = () => ready
+    deps.getLocalExpenses = () => local
+    const orchestrator = new SyncOrchestrator(deps)
+
+    await orchestrator.rebindProvider()
+
+    // Deferred: nothing written, provider still gated.
+    expect(provider.readSnapshot).not.toHaveBeenCalled()
+    expect(state.reconciled).toBe(false)
+
+    // Store finishes loading and contributes a local-only expense.
+    const localOnly = makeExpense("2025-06-02T00:00:00.000Z")
+    local.push(localOnly)
+    ready = true
+
+    orchestrator.notifyLocalDataReady()
+    // Let the deferred reconciliation settle.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await orchestrator.manualSync()
+
+    // Reconciliation ran with local data present; the local-only expense was
+    // pushed to the remote (not dropped).
+    expect(state.reconciled).toBe(true)
+    const written = (provider.writeSnapshot as jest.Mock).mock.calls
+    expect(written.length).toBeGreaterThan(0)
+  }, 10000)
+
   it("returns a distinct promise for a run requested while another is in flight", async () => {
     // A manual run requested while a run is already in flight must NOT receive
     // the stale in-flight promise; it gets a promise bound to the coalesced

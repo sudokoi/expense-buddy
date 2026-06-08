@@ -138,6 +138,9 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
 
       logAsync("INFO", "INIT", "EXPENSE_STORE_INIT_START")
       await initializeExpenseStore(expenseStore)
+      // Local expenses are now loaded: release any first reconciliation that was
+      // deferred because it would otherwise have merged against an empty set.
+      syncOrchestrator.notifyLocalDataReady()
       logAsync("INFO", "INIT", "EXPENSE_STORE_INIT_DONE")
 
       logAsync("INFO", "INIT", "UI_STATE_STORE_INIT_START")
@@ -220,6 +223,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
 
     syncOrchestrator.setStoreBindings({
       getLocalExpenses: () => expenseStore.getSnapshot().context.expenses,
+      isLocalDataReady: () => !expenseStore.getSnapshot().context.isLoading,
       onMerged: (expenses) => expenseStore.trigger.replaceExpenses({ expenses }),
       onSettingsDownloaded: (settings) => emitSettingsDownloaded(settings),
       onNotify: (notification) =>

@@ -96,6 +96,14 @@ export interface SyncEngineDeps {
   loadSettings: () => Promise<AppSettings>
   /** Snapshot the current in-memory expense set to feed the merge. */
   getLocalExpenses: () => Expense[]
+  /**
+   * Whether the local expense store has finished loading. The
+   * activation-triggered first reconciliation is deferred until this returns
+   * true, so a merge never runs against an empty, not-yet-loaded local set
+   * (which could drop local-only expenses on a fresh app update). Optional; when
+   * unset, readiness is assumed and no gating occurs.
+   */
+  isLocalDataReady?: () => boolean
   /** Queue / watermark accessors. */
   queue: SyncQueuePort
   /** Dirty/deleted day accessors. */
@@ -133,6 +141,8 @@ export interface SyncEngineDeps {
 export interface SyncEngineStoreBindings {
   /** Snapshot the current in-memory expense set to feed the merge. */
   getLocalExpenses?: () => Expense[]
+  /** Whether the local expense store has finished loading (see SyncEngineDeps). */
+  isLocalDataReady?: () => boolean
   /** Push merged results back into the expense store. */
   onMerged?: (expenses: Expense[]) => void
   /** Surface settings downloaded from the remote. */
@@ -228,6 +238,12 @@ export interface SyncEngine {
    * Teardown failure never blocks the rebind.
    */
   rebindProvider(): Promise<void>
+  /**
+   * Signal that the local expense store has finished loading. If an
+   * activation-triggered first reconciliation was deferred because local data
+   * was not yet ready, it runs now. No-op otherwise.
+   */
+  notifyLocalDataReady(): void
 }
 
 const DEFAULT_DEBOUNCE_MS = 400
@@ -287,6 +303,10 @@ export class SyncOrchestrator implements SyncEngine {
 
   // --- Provider binding + last-run bookkeeping. ---
   private activeProviderId: string | null = null
+  // Holds the active provider config when an activation-triggered first
+  // reconciliation was deferred because local data wasn't loaded yet. Run via
+  // `notifyLocalDataReady()` once the store signals readiness.
+  private deferredFirstReconciliation: ProviderConfig | null = null
   private lastError: string | undefined
   private lastRunAt: string | undefined
   private lastOutcome: SyncOutcome = "idle"
@@ -334,6 +354,9 @@ export class SyncOrchestrator implements SyncEngine {
   setStoreBindings(bindings: SyncEngineStoreBindings): void {
     if (bindings.getLocalExpenses) {
       this.deps.getLocalExpenses = bindings.getLocalExpenses
+    }
+    if (bindings.isLocalDataReady) {
+      this.deps.isLocalDataReady = bindings.isLocalDataReady
     }
     if (bindings.onMerged) {
       this.deps.onMerged = bindings.onMerged
@@ -420,6 +443,18 @@ export class SyncOrchestrator implements SyncEngine {
     await this.runFirstReconciliation(config)
   }
 
+  notifyLocalDataReady(): void {
+    const config = this.deferredFirstReconciliation
+    if (!config) return
+    this.deferredFirstReconciliation = null
+    logAsync(
+      "INFO",
+      "SYNC_ENGINE",
+      `FIRST_RECONCILIATION_RESUMED providerId=${config.id}`
+    )
+    void this.runFirstReconciliation(config)
+  }
+
   /**
    * Activation-triggered first reconciliation for a newly-bound provider.
    *
@@ -437,6 +472,22 @@ export class SyncOrchestrator implements SyncEngine {
    * orchestrator owns the persisted reconciliation flag here.
    */
   private async runFirstReconciliation(config: ProviderConfig): Promise<void> {
+    // Never reconcile against a not-yet-loaded local set: merging with empty
+    // local data could drop local-only expenses that haven't synced yet (e.g.
+    // immediately after an app update, before the expense store finishes
+    // loading). Defer until the store signals readiness via
+    // `notifyLocalDataReady()`. When `isLocalDataReady` is unbound, readiness is
+    // assumed and reconciliation proceeds (preserves prior behavior/tests).
+    if (this.deps.isLocalDataReady && !this.deps.isLocalDataReady()) {
+      this.deferredFirstReconciliation = config
+      logAsync(
+        "INFO",
+        "SYNC_ENGINE",
+        `FIRST_RECONCILIATION_DEFERRED providerId=${config.id} awaitingLocalData`
+      )
+      return
+    }
+
     const provider = this.deps.createProvider(config)
     const { dirtyDays, deletedDays } = await this.deps.dirtyDays.load()
     const localExpenses = this.deps.getLocalExpenses()
