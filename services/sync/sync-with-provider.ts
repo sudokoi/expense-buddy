@@ -198,7 +198,6 @@ export async function firstTimeSync(
     logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC hasRemoteSnapshot merging")
     const remoteExpenses = parseExpensesFromSnapshot(existingSnapshot)
     const remoteSettings = parseSettingsFromSnapshot(existingSnapshot)
-    const allExpenses = [...remoteExpenses]
 
     let mergedSettings: AppSettings | undefined
     if (syncSettingsEnabled && localSettings) {
@@ -206,41 +205,23 @@ export async function firstTimeSync(
         ? { ...remoteSettings, ...localSettings }
         : localSettings
     }
-    const localMap = new Map(localExpenses.map((e) => [e.id, e]))
-    const seenIds = new Set<string>()
-    for (const expense of allExpenses) {
-      seenIds.add(expense.id)
-      const local = localMap.get(expense.id)
-      if (local && local.updatedAt > expense.updatedAt) {
-        Object.assign(expense, local)
-      }
-    }
-    for (const expense of localExpenses) {
-      if (!seenIds.has(expense.id)) {
-        allExpenses.push(expense)
-      }
-    }
-    const mergedSnapshot = buildSnapshot(
-      allExpenses,
-      existingSnapshot,
-      mergedSettings,
-      syncSettingsEnabled
-    )
-    const writeSnapshot = filterChangedFiles(existingSnapshot, mergedSnapshot)
-    logAsync(
-      "INFO",
-      "SYNC_CORE",
-      `FIRST_TIME_SYNC writing merged files=${Object.keys(writeSnapshot.files).length}`
-    )
+
+    // Both sides have data: merge through the shared tombstone- and
+    // conflict-aware engine. There is NO last-writer-wins fallback: if the
+    // shared merge engine is unavailable or fails to initialize, the sync
+    // fails entirely rather than degrading to a lossy updatedAt string compare.
+    let mergeResult: MergeResult
     try {
-      await provider.writeSnapshot(writeSnapshot, existingSnapshot.remoteRevision)
-      logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_MERGE_WRITE_SUCCESS")
+      if (typeof mergeExpenses !== "function") {
+        throw new Error("shared merge engine is unavailable")
+      }
+      mergeResult = mergeExpenses(localExpenses, remoteExpenses)
     } catch (error) {
       const formatted = formatError(error)
       logAsync(
         "ERROR",
         "SYNC_CORE",
-        `FIRST_TIME_SYNC_MERGE_WRITE_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+        `FIRST_TIME_SYNC_MERGE_ENGINE_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
       )
       return {
         success: false,
@@ -249,10 +230,63 @@ export async function firstTimeSync(
         isFirstSync: true,
       }
     }
+
+    logAsync(
+      "INFO",
+      "SYNC_CORE",
+      `FIRST_TIME_SYNC_MERGE addedLocal=${mergeResult.addedFromLocal.length} updatedLocal=${mergeResult.updatedFromLocal.length} addedRemote=${mergeResult.addedFromRemote.length} updatedRemote=${mergeResult.updatedFromRemote.length} conflicts=${mergeResult.trueConflicts.length}`
+    )
+
+    // On a fresh install, remote-only history (all older than the read-only
+    // window) is restored here. This is MERGE, not authoring — the read-only
+    // guard is intentionally NOT consulted.
+    const mergedSnapshot = buildSnapshot(
+      mergeResult.merged,
+      existingSnapshot,
+      mergedSettings,
+      syncSettingsEnabled
+    )
+    const writeSnapshot = filterChangedFiles(existingSnapshot, mergedSnapshot)
+
+    if (Object.keys(writeSnapshot.files).length > 0) {
+      logAsync(
+        "INFO",
+        "SYNC_CORE",
+        `FIRST_TIME_SYNC writing merged files=${Object.keys(writeSnapshot.files).length}`
+      )
+      try {
+        await provider.writeSnapshot(writeSnapshot, existingSnapshot.remoteRevision)
+        logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_MERGE_WRITE_SUCCESS")
+      } catch (error) {
+        const formatted = formatError(error)
+        logAsync(
+          "ERROR",
+          "SYNC_CORE",
+          `FIRST_TIME_SYNC_MERGE_WRITE_FAILED error=${formatted.message} code=${formatted.code ?? "none"}`
+        )
+        return {
+          success: false,
+          mergeResult,
+          mergedSettings,
+          error: formatted.message,
+          errorCode: formatted.code,
+          isFirstSync: true,
+        }
+      }
+    } else {
+      logAsync("INFO", "SYNC_CORE", "FIRST_TIME_SYNC_NO_UPLOAD mergedEqualsRemote")
+    }
+
+    // Return mergeResult (including trueConflicts) so the orchestrator can
+    // replace local state with the merged set and surface any true conflicts
+    // through the same conflict-resolution path as a normal sync.
     return {
       success: true,
       isFirstSync: true,
+      mergeResult,
       mergedSettings,
+      pendingConflicts:
+        mergeResult.trueConflicts.length > 0 ? mergeResult.trueConflicts : undefined,
     }
   }
 

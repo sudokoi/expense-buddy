@@ -90,6 +90,9 @@
     "title": "Expense History",
     "emptyTitle": "No expenses yet.",
     "emptySubtitle": "Add one from the Add Expense tab.",
+    "readOnly": {
+      "blocked": "Entries older than 6 months are locked and can't be changed."
+    },
     "deleteDialog": {
       "title": "Delete Expense",
       "description": "Are you sure you want to delete this expense? This action cannot be undone."

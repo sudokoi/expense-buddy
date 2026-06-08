@@ -19,7 +19,9 @@ import {
   clearDirtyDays,
 } from "../services/expense-dirty-days"
 import { enqueueSyncOp } from "../services/sync-queue"
+import { isDateEditable, isExpenseEditable } from "../services/read-only-window"
 import { getLocalDayKey } from "../utils/date"
+import i18next from "i18next"
 import { AppSettings } from "../services/settings-manager"
 import {
   performAutoSyncOnChange,
@@ -97,6 +99,21 @@ function emitSyncNotification(notification: SyncNotification): void {
 }
 
 /**
+ * Emit a read-only block notification when a mutation is rejected because the
+ * affected day falls outside the read-only authoring window. Routed through
+ * setSyncNotification so it surfaces (and auto-clears) like other sync toasts.
+ */
+function emitReadOnlyBlockNotification(): void {
+  expenseStore.trigger.setSyncNotification({
+    notification: {
+      localFilesUpdated: 0,
+      remoteFilesUpdated: 0,
+      message: i18next.t("history.readOnly.blocked"),
+    },
+  })
+}
+
+/**
  * Create auto-sync callbacks for expense store actions
  * These callbacks update store state based on sync results
  */
@@ -145,6 +162,10 @@ export const expenseStore = createStore({
 
     addExpense: (context, event: { expense: Expense }, enqueue) => {
       const normalizedExpense = normalizeExpenseForSave(event.expense)
+      if (!isDateEditable(normalizedExpense.date)) {
+        enqueue.effect(() => emitReadOnlyBlockNotification())
+        return context // read-only: no mutation, no persist, no enqueue
+      }
       const newExpenses = [normalizedExpense, ...context.expenses]
       const dayKey = getLocalDayKey(normalizedExpense.date)
       const dirtyDays = addUniqueDay(context.dirtyDays, dayKey)
@@ -173,6 +194,13 @@ export const expenseStore = createStore({
     addExpenses: (context, event: { expenses: Expense[] }, enqueue) => {
       const normalizedExpenses = event.expenses.map(normalizeExpenseForSave)
       if (normalizedExpenses.length === 0) {
+        return context
+      }
+
+      // Reject the whole batch if any entry falls outside the read-only window,
+      // consistent with the single-add guard (no mutation, no persist, no enqueue).
+      if (normalizedExpenses.some((expense) => !isDateEditable(expense.date))) {
+        enqueue.effect(() => emitReadOnlyBlockNotification())
         return context
       }
 
@@ -216,6 +244,15 @@ export const expenseStore = createStore({
       const existingExpense = context.expenses.find(
         (expense) => expense.id === normalizedExpense.id
       )
+      // Block editing an entry already in the read-only zone, and block
+      // moving/back-dating an entry to a target date outside the window.
+      if (
+        (existingExpense && !isExpenseEditable(existingExpense)) ||
+        !isDateEditable(normalizedExpense.date)
+      ) {
+        enqueue.effect(() => emitReadOnlyBlockNotification())
+        return context // read-only: no mutation, no persist, no enqueue
+      }
       const previousDayKey = existingExpense ? getLocalDayKey(existingExpense.date) : null
       const nextDayKey = getLocalDayKey(normalizedExpense.date)
       const hasOtherOldDayExpenses = previousDayKey
@@ -270,6 +307,11 @@ export const expenseStore = createStore({
     },
 
     deleteExpense: (context, event: { id: string }, enqueue) => {
+      const existingExpense = context.expenses.find((e) => e.id === event.id)
+      if (existingExpense && !isExpenseEditable(existingExpense)) {
+        enqueue.effect(() => emitReadOnlyBlockNotification())
+        return context // read-only: no mutation, no persist, no enqueue
+      }
       const now = new Date().toISOString()
       // Soft delete: mark with deletedAt timestamp instead of removing
       let updatedExpense: Expense | null = null
