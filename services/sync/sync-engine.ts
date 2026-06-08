@@ -108,6 +108,11 @@ export interface SyncEngineDeps {
   onSettingsDownloaded?: (settings: AppSettings) => void
   /** Surface a user-facing sync notification. */
   onNotify?: (notification: SyncNotification) => void
+  /**
+   * Notify that the persisted dirty/deleted days were cleared, so the store can
+   * clear its in-memory copy and stay consistent with durable storage.
+   */
+  onDirtyDaysCleared?: () => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
   /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
@@ -134,6 +139,11 @@ export interface SyncEngineStoreBindings {
   onSettingsDownloaded?: (settings: AppSettings) => void
   /** Surface a user-facing sync notification. */
   onNotify?: (notification: SyncNotification) => void
+  /**
+   * Notify that the persisted dirty/deleted days were cleared, so the store can
+   * clear its in-memory copy and stay consistent with durable storage.
+   */
+  onDirtyDaysCleared?: () => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
   /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
@@ -333,6 +343,9 @@ export class SyncOrchestrator implements SyncEngine {
     }
     if (bindings.onNotify) {
       this.deps.onNotify = bindings.onNotify
+    }
+    if (bindings.onDirtyDaysCleared) {
+      this.deps.onDirtyDaysCleared = bindings.onDirtyDaysCleared
     }
     if (bindings.conflictResolver) {
       this.deps.conflictResolver = bindings.conflictResolver
@@ -681,45 +694,49 @@ export class SyncOrchestrator implements SyncEngine {
 
     const actor = createActor(syncMachine, { input: { provider } })
     this.currentActor = actor
-    const subscription = actor.subscribe((snapshot) => {
-      this.machineState = snapshot.value as SyncMachineState
-      this.emitChange()
-    })
-    actor.start()
-
-    actor.send({
-      type: "SYNC",
-      localExpenses,
-      dirtyDays,
-      deletedDays,
-      settings: settings.syncSettings ? settings : undefined,
-      syncSettingsEnabled: settings.syncSettings,
-      initialReconciliationComplete,
-      callbacks: {
-        onAuthError: (info) => {
-          logAsync(
-            "WARN",
-            "SYNC_ENGINE",
-            `AUTH_ERROR code=${info.errorCode} shouldSignOut=${info.shouldSignOut}`
-          )
-          this.deps.onAuthError?.(info)
-        },
-      },
-      conflictResolver: this.deps.conflictResolver,
-    })
-
-    // When the provider has not yet reconciled, the SYNC above only parks the
-    // machine in the `awaitingInitialReconciliation` gate (it ignores further
-    // background SYNC events). Activation is the explicit first-sync trigger, so
-    // we synchronously drive the gate into `reconcilingFirstSync` here. Both
-    // sends are processed synchronously, so by the time we `waitFor` below the
-    // machine has already left the transient gate state.
-    if (!initialReconciliationComplete) {
-      actor.send({ type: "START_FIRST_SYNC" })
-    }
+    // Declared up front so the `finally` below can always unsubscribe, even if
+    // `actor.start()`/`actor.send()` throws synchronously before `waitFor`.
+    let subscription: { unsubscribe: () => void } | null = null
 
     let final
     try {
+      subscription = actor.subscribe((snapshot) => {
+        this.machineState = snapshot.value as SyncMachineState
+        this.emitChange()
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses,
+        dirtyDays,
+        deletedDays,
+        settings: settings.syncSettings ? settings : undefined,
+        syncSettingsEnabled: settings.syncSettings,
+        initialReconciliationComplete,
+        callbacks: {
+          onAuthError: (info) => {
+            logAsync(
+              "WARN",
+              "SYNC_ENGINE",
+              `AUTH_ERROR code=${info.errorCode} shouldSignOut=${info.shouldSignOut}`
+            )
+            this.deps.onAuthError?.(info)
+          },
+        },
+        conflictResolver: this.deps.conflictResolver,
+      })
+
+      // When the provider has not yet reconciled, the SYNC above only parks the
+      // machine in the `awaitingInitialReconciliation` gate (it ignores further
+      // background SYNC events). Activation is the explicit first-sync trigger,
+      // so we synchronously drive the gate into `reconcilingFirstSync` here.
+      // Both sends are processed synchronously, so by the time we `waitFor`
+      // below the machine has already left the transient gate state.
+      if (!initialReconciliationComplete) {
+        actor.send({ type: "START_FIRST_SYNC" })
+      }
+
       final = await waitFor(
         actor,
         (snapshot) =>
@@ -740,7 +757,7 @@ export class SyncOrchestrator implements SyncEngine {
       // is left pointing at a dead/stuck actor. Each step is guarded so one
       // failure cannot skip the rest.
       try {
-        subscription.unsubscribe()
+        subscription?.unsubscribe()
       } catch (error) {
         logAsync("WARN", "SYNC_ENGINE", `ACTOR_UNSUBSCRIBE_FAILED error=${String(error)}`)
       }
@@ -913,6 +930,9 @@ export class SyncOrchestrator implements SyncEngine {
     // Dirty/deleted days have now been durably pushed: clear them. (Only ever
     // reached on success — a failed write returns above without clearing.)
     await this.deps.dirtyDays.clear()
+    // Keep the store's in-memory dirty/deleted days consistent with durable
+    // storage, otherwise the UI shows phantom pending changes after a sync.
+    this.deps.onDirtyDaysCleared?.()
 
     // Compact the queue to the minimum watermark across reconciled providers
     // (Req 11.4). Unreconciled providers are excluded by `getMinSyncedWatermark`

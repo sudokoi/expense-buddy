@@ -224,6 +224,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       onSettingsDownloaded: (settings) => emitSettingsDownloaded(settings),
       onNotify: (notification) =>
         expenseStore.trigger.setSyncNotification({ notification }),
+      onDirtyDaysCleared: () => expenseStore.trigger.clearDirtyDaysState(),
       conflictResolver: promptConflictResolution,
       onAuthError: ({ shouldSignOut }) => {
         if (shouldSignOut) {

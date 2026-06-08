@@ -75,6 +75,12 @@ export class GoogleDriveProvider implements SyncProvider {
   private config: GoogleDriveProviderConfig
   private credentialStore: CredentialStore
   private yearCache: DriveYearCache | null
+  /**
+   * Single-flight guard for token refresh. Concurrent callers that hit an
+   * expired token share one in-flight refresh instead of each issuing their own
+   * (which would race, and the last writer would clobber the others' tokens).
+   */
+  private refreshInFlight: Promise<string | null> | null = null
 
   constructor(
     config: GoogleDriveProviderConfig,
@@ -804,12 +810,28 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const expiresAt = entry.data["expires_at"]
     if (expiresAt && Date.now() >= parseInt(expiresAt, 10)) {
-      const refreshed = await this.tryRefreshToken(entry.data["refresh_token"])
+      const refreshed = await this.refreshAccessToken(entry.data["refresh_token"])
       if (refreshed) return refreshed
       return null
     }
 
     return accessToken
+  }
+
+  /**
+   * Coalesce concurrent token refreshes into a single in-flight request. Without
+   * this, two callers past expiry would both refresh and the second response
+   * would overwrite the first's freshly-saved token.
+   */
+  private refreshAccessToken(refreshToken: string | undefined): Promise<string | null> {
+    if (this.refreshInFlight) return this.refreshInFlight
+    const inFlight = this.tryRefreshToken(refreshToken).finally(() => {
+      if (this.refreshInFlight === inFlight) {
+        this.refreshInFlight = null
+      }
+    })
+    this.refreshInFlight = inFlight
+    return inFlight
   }
 
   private async tryRefreshToken(
@@ -867,6 +889,12 @@ export class GoogleDriveProvider implements SyncProvider {
         refresh_token: tokenData.refresh_token ?? existing?.data["refresh_token"] ?? "",
         expires_at: expiresAt ?? "",
         client_id: this.config.clientId ?? "",
+        // Preserve the persisted account email across refreshes; otherwise the
+        // first token refresh would erase it and getGoogleDriveTokenInfo would
+        // report a null email.
+        ...(existing?.data["account_email"]
+          ? { account_email: existing.data["account_email"] }
+          : {}),
       },
     })
   }

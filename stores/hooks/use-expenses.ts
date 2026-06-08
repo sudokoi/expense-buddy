@@ -15,10 +15,6 @@ export const useExpenses = () => {
   )
   const dirtyDays = useSelector(expenseStore, (state) => state.context.dirtyDays)
   const deletedDays = useSelector(expenseStore, (state) => state.context.deletedDays)
-  const clearDirtyDaysAfterSync = useCallback(
-    () => expenseStore.trigger.clearDirtyDaysAfterSync(),
-    [expenseStore]
-  )
 
   const activeExpenses = useMemo(() => getActiveExpenses(expenses), [expenses])
 
@@ -119,7 +115,6 @@ export const useExpenses = () => {
     deleteExpense,
     replaceAllExpenses,
     clearSyncNotification,
-    clearDirtyDaysAfterSync,
     reassignExpensesToOther,
     updateExpenseCategories,
   }

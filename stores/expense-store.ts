@@ -16,7 +16,6 @@ import {
   loadDirtyDays,
   markDirtyDay,
   markDeletedDay,
-  clearDirtyDays,
 } from "../services/expense-dirty-days"
 import { enqueueSyncOp } from "../services/sync-queue"
 import { isDateEditable, isExpenseEditable } from "../services/read-only-window"
@@ -530,17 +529,6 @@ export const expenseStore = createStore({
       dirtyDays: [],
       deletedDays: [],
     }),
-
-    clearDirtyDaysAfterSync: (context, _event, enqueue) => {
-      enqueue.effect(async () => {
-        await clearDirtyDays()
-      })
-      return {
-        ...context,
-        dirtyDays: [],
-        deletedDays: [],
-      }
-    },
 
     reassignExpensesToOther: (context, event: { fromCategory: string }, enqueue) => {
       const now = new Date().toISOString()

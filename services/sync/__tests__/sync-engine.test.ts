@@ -191,6 +191,30 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(state.reconciled).toBe(true)
   }, 10000)
 
+  it("clears in-memory dirty days (onDirtyDaysCleared) after a successful sync", async () => {
+    // A reconciled provider running the normal flow durably pushes dirty days
+    // and clears them. The orchestrator must also signal the store to clear its
+    // in-memory copy, otherwise the UI shows phantom pending changes.
+    const provider = makeProvider(async () => emptyRemoteSnapshot())
+    const state = { reconciled: true }
+    const deps = makeDeps(provider, state)
+    const clearCalls: number[] = []
+    let onClearedCount = 0
+    deps.dirtyDays.clear = async () => {
+      clearCalls.push(Date.now())
+    }
+    deps.onDirtyDaysCleared = () => {
+      onClearedCount += 1
+    }
+    const orchestrator = new SyncOrchestrator(deps)
+
+    const result = await orchestrator.manualSync()
+
+    expect(result.success).not.toBe(false)
+    expect(clearCalls.length).toBe(1)
+    expect(onClearedCount).toBe(1)
+  }, 10000)
+
   it("returns a distinct promise for a run requested while another is in flight", async () => {
     // A manual run requested while a run is already in flight must NOT receive
     // the stale in-flight promise; it gets a promise bound to the coalesced

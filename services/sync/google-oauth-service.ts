@@ -85,7 +85,8 @@ async function exchangeCodeForTokens(
 function storeTokens(
   credentialId: string,
   tokens: GoogleDriveTokenResult,
-  clientId: string
+  clientId: string,
+  accountEmail?: string
 ): Promise<void> {
   const expiresAt = String(Date.now() + tokens.expiresIn * 1000)
   return credentialStore.save(credentialId, {
@@ -96,6 +97,7 @@ function storeTokens(
       refresh_token: tokens.refreshToken,
       expires_at: expiresAt,
       client_id: clientId,
+      ...(accountEmail ? { account_email: accountEmail } : {}),
     },
   })
 }
@@ -174,8 +176,6 @@ export async function initiateGoogleDriveOAuth(
 
   const providerId = `google_drive_${Date.now()}`
 
-  await storeTokens(providerId, tokens, clientId)
-
   let accountEmail = ""
   if (tokens.accessToken) {
     try {
@@ -190,6 +190,8 @@ export async function initiateGoogleDriveOAuth(
       // Non-critical
     }
   }
+
+  await storeTokens(providerId, tokens, clientId, accountEmail)
 
   logAsync(
     "INFO",
@@ -232,7 +234,7 @@ async function initiateAndroidGoogleDriveOAuth(
     tokenExchangeUrl
   )
   const providerId = `google_drive_${Date.now()}`
-  await storeTokens(providerId, tokens, webClientId)
+  await storeTokens(providerId, tokens, webClientId, email)
 
   return { providerId, accountEmail: email }
 }

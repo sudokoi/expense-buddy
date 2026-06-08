@@ -186,10 +186,13 @@ export async function initializeProviderStore(
 ): Promise<void> {
   try {
     const state = await providerSettingsStore.load()
+    const reconciledFlags = await Promise.all(
+      state.providers.map((p) => isProviderReconciled(p.id))
+    )
     const reconciledMap: Record<string, boolean> = {}
-    for (const p of state.providers) {
-      reconciledMap[p.id] = await isProviderReconciled(p.id)
-    }
+    state.providers.forEach((p, index) => {
+      reconciledMap[p.id] = reconciledFlags[index]
+    })
     store.trigger.loadProviders({
       providers: state.providers,
       activeProviderId: state.activeProviderId,

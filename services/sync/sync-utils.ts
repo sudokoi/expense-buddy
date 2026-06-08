@@ -1,9 +1,14 @@
-/** FNV-1a style hash for file content dedup */
+import { computeContentHash } from "../hash-storage"
+
+/**
+ * Content hash for file dedup / change detection.
+ *
+ * Delegates to the canonical {@link computeContentHash} (djb2) so there is a
+ * single hashing implementation across the sync layer. Kept as a named export
+ * because provider snapshot code references `simpleHash`; the output is
+ * identical to the previous inline implementation, so existing stored manifest
+ * hashes remain valid.
+ */
 export function simpleHash(content: string): string {
-  let hash = 5381
-  for (let i = 0; i < content.length; i++) {
-    hash = ((hash << 5) + hash) ^ content.charCodeAt(i)
-    hash = hash >>> 0
-  }
-  return hash.toString(16)
+  return computeContentHash(content)
 }

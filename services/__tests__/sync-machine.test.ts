@@ -15,6 +15,7 @@ import type { SyncCallbacks } from "../sync-machine"
 import type { Expense } from "../../types/expense"
 import type { TrueConflict, MergeResult } from "../merge-engine"
 import type { SyncProvider } from "../sync/provider-types"
+import type { syncWithProvider, firstTimeSync } from "../sync/sync-with-provider"
 
 // Mock expo-secure-store before any imports that depend on it.
 jest.mock("expo-secure-store", () => ({
@@ -34,12 +35,20 @@ jest.mock("react-native", () => ({
 }))
 
 // Mock the sync-with-provider module
-const mockSyncWithProvider = jest.fn<any, any[]>()
-const mockFirstTimeSync = jest.fn<any, any[]>()
+const mockSyncWithProvider = jest.fn<
+  ReturnType<typeof syncWithProvider>,
+  Parameters<typeof syncWithProvider>
+>()
+const mockFirstTimeSync = jest.fn<
+  ReturnType<typeof firstTimeSync>,
+  Parameters<typeof firstTimeSync>
+>()
 
 jest.mock("../sync/sync-with-provider", () => ({
-  syncWithProvider: (...args: any[]) => mockSyncWithProvider(...args),
-  firstTimeSync: (...args: any[]) => mockFirstTimeSync(...args),
+  syncWithProvider: (...args: Parameters<typeof syncWithProvider>) =>
+    mockSyncWithProvider(...args),
+  firstTimeSync: (...args: Parameters<typeof firstTimeSync>) =>
+    mockFirstTimeSync(...args),
 }))
 
 // Import mocked functions
