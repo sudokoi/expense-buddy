@@ -43,7 +43,7 @@ function makeProvider(
   return {
     kind: "github",
     providerId: "p1",
-    testConnection: jest.fn(async () => ({ ok: true, label: "Test" })),
+    testConnection: jest.fn(async () => ({ ok: true as const, label: "Test" })),
     readSnapshot: jest.fn(readSnapshotImpl),
     writeSnapshot: jest.fn(async () => {}),
     getStatus: jest.fn(async () => ({ connected: true, lastSyncTime: null })),
