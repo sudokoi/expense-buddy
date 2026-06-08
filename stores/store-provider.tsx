@@ -44,15 +44,12 @@ import {
   ProviderStore,
 } from "./provider-store"
 import { filterStore as defaultFilterStore, initializeFilterStore } from "./filter-store"
-import { syncMachine } from "../services/sync-machine"
 import { githubAuthMachine } from "../services/github-auth-machine"
 import { migratePaymentInstrumentsOnStartup } from "../services/payment-instruments-migration"
 import { requestBackgroundSmsPermissions } from "../services/background-sms/background-sms-permissions"
-import { DeferredProvider } from "../services/sync/deferred-provider"
 import { logAsync } from "../services/logger"
-import { createProvider } from "../services/sync/provider-registry"
-import { getActiveProviderConfig } from "../services/sync-config"
 import { syncOrchestrator } from "../services/sync/sync-engine"
+import { promptConflictResolution } from "../services/sync/conflict-prompt"
 
 // Register provider factories at import time
 import "../services/sync"
@@ -65,7 +62,6 @@ interface StoreContextValue {
   updateStore: UpdateStore
   providerStore: ProviderStore
   filterStore: typeof defaultFilterStore
-  syncActor: ActorRefFrom<typeof syncMachine>
   githubAuthActor: ActorRefFrom<typeof githubAuthMachine>
 }
 
@@ -80,7 +76,6 @@ interface StoreProviderProps {
   updateStore?: UpdateStore
   providerStore?: ProviderStore
   filterStore?: typeof defaultFilterStore
-  syncActor?: ActorRefFrom<typeof syncMachine>
   githubAuthActor?: ActorRefFrom<typeof githubAuthMachine>
   skipInitialization?: boolean
 }
@@ -94,36 +89,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   updateStore = defaultUpdateStore,
   providerStore: providedProviderStore,
   filterStore = defaultFilterStore,
-  syncActor: providedSyncActor,
   githubAuthActor: providedGitHubAuthActor,
   skipInitialization = false,
 }) => {
   const initializedRef = useRef(false)
-  const deferredProviderRef = useRef<DeferredProvider | null>(null)
-
-  // Create sync actor once on mount (using ref to avoid recreating)
-  const syncActorRef = useRef<ActorRefFrom<typeof syncMachine> | null>(null)
-  if (!syncActorRef.current && !providedSyncActor) {
-    const deferredProvider = new DeferredProvider(async () => {
-      const snapshot = providerStore.getSnapshot()
-      const activeConfig = snapshot.context.activeProviderId
-        ? snapshot.context.providers.find(
-            (p) => p.id === snapshot.context.activeProviderId
-          )
-        : null
-      if (!activeConfig) {
-        throw new Error("No active provider config found")
-      }
-      return createProvider(activeConfig)
-    })
-    deferredProviderRef.current = deferredProvider
-    syncActorRef.current = createActor(syncMachine, {
-      input: { provider: deferredProvider },
-    })
-    syncActorRef.current.start()
-    logAsync("INFO", "INIT", "SYNC_ACTOR_CREATED")
-  }
-  const syncActor = providedSyncActor ?? syncActorRef.current!
 
   // Create GitHub auth actor once on mount
   const githubAuthActorRef = useRef<ActorRefFrom<typeof githubAuthMachine> | null>(null)
@@ -135,18 +104,15 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   const githubAuthActor = providedGitHubAuthActor ?? githubAuthActorRef.current!
   const providerStore = providedProviderStore ?? defaultProviderStore
 
-  // Cleanup sync actors on unmount
+  // Cleanup actors on unmount
   useEffect(() => {
     return () => {
-      if (syncActorRef.current) {
-        syncActorRef.current.stop()
-      }
       if (githubAuthActorRef.current) {
         githubAuthActorRef.current.stop()
       }
       cleanupUpdateStore()
     }
-  }, [providedSyncActor, providedGitHubAuthActor])
+  }, [providedGitHubAuthActor])
 
   // Initialize stores when component mounts (inside React tree where RN is ready)
   useEffect(() => {
@@ -193,34 +159,10 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         logAsync("INFO", "INIT", "UPDATE_STORE_INIT_DONE")
       }
 
-      try {
-        const activeConfig = await getActiveProviderConfig()
-        if (activeConfig && deferredProviderRef.current) {
-          const provider = createProvider(activeConfig)
-          deferredProviderRef.current.resolve(provider)
-          logAsync(
-            "INFO",
-            "INIT",
-            `PROVIDER_RESOLVED kind=${activeConfig.kind} id=${activeConfig.id}`
-          )
-        } else {
-          logAsync("INFO", "INIT", "PROVIDER_RESOLUTION_SKIPPED noActiveConfig")
-        }
-      } catch (error) {
-        logAsync("WARN", "INIT", `PROVIDER_RESOLUTION_FAILED error=${error}`)
-        console.warn("Failed to resolve sync provider:", error)
-      }
-
-      if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
-        setTimeout(() => {
-          if (deferredProviderRef.current && !deferredProviderRef.current.isResolved) {
-            logAsync("WARN", "INIT", "PROVIDER_TIMEOUT_UNRESOLVED")
-            console.warn(
-              "Sync provider not resolved within timeout; sync will retry on next attempt"
-            )
-          }
-        }, 30000)
-      }
+      // Provider binding for sync is owned by the SyncOrchestrator: the effect
+      // below calls `syncOrchestrator.rebindProvider()` on mount and on every
+      // active-provider change, which fires the activation-triggered first
+      // reconciliation. No separate provider resolution is needed here.
 
       logAsync("INFO", "INIT", "INITIALIZATION_COMPLETE")
     })()
@@ -282,6 +224,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       onSettingsDownloaded: (settings) => emitSettingsDownloaded(settings),
       onNotify: (notification) =>
         expenseStore.trigger.setSyncNotification({ notification }),
+      conflictResolver: promptConflictResolution,
+      onAuthError: ({ shouldSignOut }) => {
+        if (shouldSignOut) {
+          settingsStore.trigger.clearSyncConfig()
+        }
+      },
     })
 
     let lastActiveProviderId = providerStore.getSnapshot().context.activeProviderId
@@ -304,7 +252,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     })
 
     return () => subscription.unsubscribe()
-  }, [expenseStore, providerStore, skipInitialization])
+  }, [expenseStore, providerStore, settingsStore, skipInitialization])
 
   const value = useMemo(
     () => ({
@@ -315,7 +263,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       updateStore,
       providerStore,
       filterStore,
-      syncActor,
       githubAuthActor,
     }),
     [
@@ -326,7 +273,6 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       updateStore,
       providerStore,
       filterStore,
-      syncActor,
       githubAuthActor,
     ]
   )

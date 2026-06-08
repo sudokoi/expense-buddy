@@ -110,6 +110,8 @@ export interface SyncEngineDeps {
   onNotify?: (notification: SyncNotification) => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
+  /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
+  onAuthError?: (info: { errorCode: string; shouldSignOut: boolean }) => void
   /** Debounce window (ms) for coalescing background `requestSync` bursts. */
   debounceMs?: number
 }
@@ -132,6 +134,8 @@ export interface SyncEngineStoreBindings {
   onNotify?: (notification: SyncNotification) => void
   /** Resolve true conflicts surfaced by the merge engine. */
   conflictResolver?: ConflictResolver
+  /** Surface an auth error (e.g. to clear sync config when shouldSignOut). */
+  onAuthError?: (info: { errorCode: string; shouldSignOut: boolean }) => void
 }
 
 /**
@@ -166,7 +170,21 @@ export interface SyncEngineState {
   lastError?: string
   /** ISO timestamp of the last completed run. */
   lastRunAt?: string
+  /** Outcome of the most recently completed run (for UI status display). */
+  lastOutcome: SyncOutcome
+  /** Monotonic counter incremented each time a run completes (lets the UI
+   *  detect a fresh completion even when the outcome value is unchanged). */
+  runVersion: number
 }
+
+/** Coarse outcome of the most recent completed run, for UI status display. */
+export type SyncOutcome =
+  | "idle"
+  | "success"
+  | "in_sync"
+  | "error"
+  | "conflict"
+  | "skipped"
 
 /** Public API surface of the orchestrator. */
 export interface SyncEngine {
@@ -186,6 +204,12 @@ export interface SyncEngine {
   manualSync(): Promise<SyncRunResult>
   /** Current machine-facing state for the UI. */
   getState(): SyncEngineState
+  /**
+   * Subscribe to state changes. Returns an unsubscribe function. Designed for
+   * `useSyncExternalStore`: pair it with `getState()`, which returns a cached,
+   * referentially-stable snapshot that only changes when state actually changes.
+   */
+  subscribe(listener: () => void): () => void
   /**
    * Re-bind to a newly activated provider (add/switch). Tears down the previous
    * actor best-effort and fires the activation-triggered first reconciliation.
@@ -244,10 +268,45 @@ export class SyncOrchestrator implements SyncEngine {
   private activeProviderId: string | null = null
   private lastError: string | undefined
   private lastRunAt: string | undefined
+  private lastOutcome: SyncOutcome = "idle"
+  private runVersion = 0
+
+  // --- Reactive snapshot for the UI (cached for useSyncExternalStore). ---
+  private readonly listeners = new Set<() => void>()
+  private stateSnapshot: SyncEngineState
 
   constructor(deps: SyncEngineDeps) {
     this.deps = deps
     this.debounceMs = deps.debounceMs ?? DEFAULT_DEBOUNCE_MS
+    this.stateSnapshot = this.buildSnapshot()
+  }
+
+  /** Rebuild the cached snapshot and notify subscribers. */
+  private emitChange(): void {
+    this.stateSnapshot = this.buildSnapshot()
+    for (const listener of this.listeners) {
+      listener()
+    }
+  }
+
+  private buildSnapshot(): SyncEngineState {
+    return {
+      machineState: this.machineState,
+      running: this.inFlight !== null,
+      rerunPending: this.rerunPending,
+      activeProviderId: this.activeProviderId,
+      lastError: this.lastError,
+      lastRunAt: this.lastRunAt,
+      lastOutcome: this.lastOutcome,
+      runVersion: this.runVersion,
+    }
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
   }
 
   setStoreBindings(bindings: SyncEngineStoreBindings): void {
@@ -265,6 +324,9 @@ export class SyncOrchestrator implements SyncEngine {
     }
     if (bindings.conflictResolver) {
       this.deps.conflictResolver = bindings.conflictResolver
+    }
+    if (bindings.onAuthError) {
+      this.deps.onAuthError = bindings.onAuthError
     }
     logAsync("INFO", "SYNC_ENGINE", "STORE_BINDINGS_SET")
   }
@@ -299,14 +361,7 @@ export class SyncOrchestrator implements SyncEngine {
   }
 
   getState(): SyncEngineState {
-    return {
-      machineState: this.machineState,
-      running: this.inFlight !== null,
-      rerunPending: this.rerunPending,
-      activeProviderId: this.activeProviderId,
-      lastError: this.lastError,
-      lastRunAt: this.lastRunAt,
-    }
+    return this.stateSnapshot
   }
 
   async rebindProvider(): Promise<void> {
@@ -322,6 +377,7 @@ export class SyncOrchestrator implements SyncEngine {
 
     const config = await this.deps.getActiveProviderConfig()
     this.activeProviderId = config?.id ?? null
+    this.emitChange()
     logAsync(
       "INFO",
       "SYNC_ENGINE",
@@ -389,6 +445,9 @@ export class SyncOrchestrator implements SyncEngine {
       const head = await this.deps.queue.getSyncQueueWatermark()
       await this.deps.queue.setProviderWatermark(config.id, head)
       await this.persistLastSyncTime(config.id)
+      this.lastOutcome = "success"
+      this.runVersion += 1
+      this.emitChange()
       logAsync(
         "INFO",
         "SYNC_ENGINE",
@@ -402,6 +461,9 @@ export class SyncOrchestrator implements SyncEngine {
     // first reconciliation parks back in `awaitingInitialReconciliation`, so the
     // terminal error lives in machine context rather than the `error` state.
     this.lastError = final.context.error ?? this.lastError
+    this.lastOutcome = final.matches("conflict") ? "conflict" : "error"
+    this.runVersion += 1
+    this.emitChange()
     logAsync(
       "WARN",
       "SYNC_ENGINE",
@@ -424,6 +486,7 @@ export class SyncOrchestrator implements SyncEngine {
 
     const run = this.runOnce(reason).finally(() => {
       this.inFlight = null
+      this.emitChange()
       if (this.rerunPending) {
         this.rerunPending = false
         const nextReason = this.pendingReason
@@ -432,6 +495,7 @@ export class SyncOrchestrator implements SyncEngine {
     })
 
     this.inFlight = run
+    this.emitChange()
     return run
   }
 
@@ -491,7 +555,29 @@ export class SyncOrchestrator implements SyncEngine {
       await this.deps.queue.markProviderReconciled(config.id)
     }
 
-    return this.reconcileWatermarkAndApply(config.id, final, localExpenses)
+    const result = await this.reconcileWatermarkAndApply(config.id, final, localExpenses)
+    this.recordOutcome(result)
+    return result
+  }
+
+  /**
+   * Derive the coarse UI outcome from a run result, bump the run version, and
+   * notify subscribers. Called once per completed run.
+   */
+  private recordOutcome(result: SyncRunResult): void {
+    if (result.skipped) {
+      this.lastOutcome = "skipped"
+    } else if (result.pendingConflicts && result.pendingConflicts.length > 0) {
+      this.lastOutcome = "conflict"
+    } else if (result.success === false) {
+      this.lastOutcome = "error"
+    } else if (result.mergeResult === undefined && result.success) {
+      this.lastOutcome = "in_sync"
+    } else {
+      this.lastOutcome = "success"
+    }
+    this.runVersion += 1
+    this.emitChange()
   }
 
   /**
@@ -527,6 +613,7 @@ export class SyncOrchestrator implements SyncEngine {
     this.currentActor = actor
     const subscription = actor.subscribe((snapshot) => {
       this.machineState = snapshot.value as SyncMachineState
+      this.emitChange()
     })
     actor.start()
 
@@ -545,6 +632,7 @@ export class SyncOrchestrator implements SyncEngine {
             "SYNC_ENGINE",
             `AUTH_ERROR code=${info.errorCode} shouldSignOut=${info.shouldSignOut}`
           )
+          this.deps.onAuthError?.(info)
         },
       },
       conflictResolver: this.deps.conflictResolver,
@@ -581,6 +669,7 @@ export class SyncOrchestrator implements SyncEngine {
       this.currentActor = null
     }
     this.machineState = "idle"
+    this.emitChange()
 
     return final
   }

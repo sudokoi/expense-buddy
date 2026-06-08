@@ -17,7 +17,6 @@ import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { providerSettingsStore } from "../../services/sync/provider-settings-store"
-import { markReconciledInStore } from "../../stores/provider-store"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -27,9 +26,8 @@ import {
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { useSyncMachine } from "../../hooks/use-sync-machine"
+import { useSyncEngine } from "../../hooks/use-sync-engine"
 import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
-import { isProviderReconciled } from "../../services/sync-queue"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -81,7 +79,7 @@ export default function DashboardScreen() {
   const { settings, syncConfig } = useSettings()
   const { startSmsImportFromAdd } = useSmsImportActions()
   const { addNotification } = useNotifications()
-  const syncMachine = useSyncMachine()
+  const syncEngine = useSyncEngine()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -225,31 +223,22 @@ export default function DashboardScreen() {
     await startSmsImportFromAdd()
   }, [startSmsImportFromAdd])
 
-  const handleSync = React.useCallback(() => {
-    if (syncMachine.isSyncing) return
+  const handleSync = React.useCallback(async () => {
+    if (syncEngine.isSyncing) return
     logAsync("INFO", "UI_ACTION", "MANUAL_SYNC dashboard")
-    syncMachine.sync({
-      localExpenses: state.expenses,
-      settings: settings.syncSettings ? settings : undefined,
-      syncSettingsEnabled: settings.syncSettings,
-      callbacks: {
-        onError: (error) => {
-          addNotification(error, "error")
-          logAsync("ERROR", "UI_ACTION", `MANUAL_SYNC_FAILED error=${error}`)
-        },
-        onSuccess: async () => {
-          const activeConfig = await providerSettingsStore.getActiveConfig()
-          if (activeConfig && !(await isProviderReconciled(activeConfig.id))) {
-            await markReconciledInStore(activeConfig.id)
-          }
-          logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
-        },
-      },
-    })
-  }, [syncMachine, state.expenses, settings, addNotification])
+    const result = await syncEngine.manualSync()
+    if (result.error) {
+      addNotification(result.error, "error")
+      logAsync("ERROR", "UI_ACTION", `MANUAL_SYNC_FAILED error=${result.error}`)
+      return
+    }
+    if (!result.skipped) {
+      logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
+    }
+  }, [syncEngine, addNotification])
 
   React.useEffect(() => {
-    if (!syncMachine.isSyncing) {
+    if (!syncEngine.isSyncing) {
       syncSpin.stopAnimation()
       syncSpin.setValue(0)
       return
@@ -266,7 +255,7 @@ export default function DashboardScreen() {
 
     loop.start()
     return () => loop.stop()
-  }, [syncMachine.isSyncing, syncSpin])
+  }, [syncEngine.isSyncing, syncSpin])
 
   const syncRotate = syncSpin.interpolate({
     inputRange: [0, 1],
@@ -293,7 +282,7 @@ export default function DashboardScreen() {
                 </Animated.View>
               }
               tooltip={
-                syncMachine.isSyncing
+                syncEngine.isSyncing
                   ? t("settings.autoSync.syncing")
                   : t("settings.autoSync.syncNow")
               }

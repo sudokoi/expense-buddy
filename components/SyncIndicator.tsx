@@ -1,8 +1,8 @@
-import React from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { CheckCircle, XCircle } from "@tamagui/lucide-icons-2"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useSyncMachine } from "../hooks/use-sync-machine"
+import { useSyncEngine } from "../hooks/use-sync-engine"
 import {
   SEMANTIC_COLORS,
   getOverlayColors,
@@ -11,23 +11,42 @@ import {
 import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_ICON_SIZE } from "../constants/ui-tokens"
 
 /**
- * Global sync status indicator
+ * Global sync status indicator.
  *
- * Shows spinning indicator during sync, checkmark on success, X on error.
- * Visibility is derived directly from XState machine state:
- * - syncing: show spinner
- * - success: show checkmark (machine auto-resets after 2s)
- * - error: show X
- * - idle/inSync: hidden
+ * Driven by the SyncOrchestrator state:
+ * - running / syncing / reconciling: show spinner
+ * - just completed successfully (or in-sync): show checkmark for ~2s
+ * - just failed: show X for ~2s
+ * - otherwise hidden
  */
 export const SyncIndicator: React.FC = () => {
-  const { isSyncing, isSuccess, isError } = useSyncMachine()
+  const { isSyncing, lastOutcome, runVersion } = useSyncEngine()
   const insets = useSafeAreaInsets()
   const colorScheme = useColorScheme() ?? "light"
   const overlayColors = getOverlayColors(colorScheme)
 
-  // Derive visibility directly from machine state
-  // Machine auto-resets from success after 2 seconds
+  // Briefly surface the outcome of the most recently completed run. `runVersion`
+  // bumps once per completed run so we re-trigger even on repeated outcomes.
+  const [recentOutcome, setRecentOutcome] = useState<"success" | "error" | null>(null)
+  const lastVersionRef = useRef(runVersion)
+
+  useEffect(() => {
+    if (runVersion === lastVersionRef.current) return
+    lastVersionRef.current = runVersion
+    if (lastOutcome === "success" || lastOutcome === "in_sync") {
+      setRecentOutcome("success")
+    } else if (lastOutcome === "error") {
+      setRecentOutcome("error")
+    } else {
+      setRecentOutcome(null)
+      return
+    }
+    const timer = setTimeout(() => setRecentOutcome(null), 2000)
+    return () => clearTimeout(timer)
+  }, [runVersion, lastOutcome])
+
+  const isSuccess = !isSyncing && recentOutcome === "success"
+  const isError = !isSyncing && recentOutcome === "error"
   const visible = isSyncing || isSuccess || isError
 
   if (!visible) return null

@@ -123,4 +123,37 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(result.awaitingInitialReconciliation).not.toBe(true)
     expect(state.reconciled).toBe(true)
   }, 10000)
+
+  it("notifies subscribers and exposes a stable, updated snapshot for the UI", async () => {
+    const provider = makeProvider(async () => emptyRemoteSnapshot())
+    const state = { reconciled: true }
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state))
+
+    // getState() must be referentially stable between notifications so
+    // useSyncExternalStore does not loop.
+    const before = orchestrator.getState()
+    expect(orchestrator.getState()).toBe(before)
+    expect(before.running).toBe(false)
+    expect(before.lastOutcome).toBe("idle")
+
+    let notifications = 0
+    const unsubscribe = orchestrator.subscribe(() => {
+      notifications += 1
+    })
+
+    await orchestrator.manualSync()
+
+    expect(notifications).toBeGreaterThan(0)
+    const after = orchestrator.getState()
+    expect(after).not.toBe(before)
+    expect(after.running).toBe(false)
+    expect(after.runVersion).toBeGreaterThan(before.runVersion)
+    expect(["success", "in_sync"]).toContain(after.lastOutcome)
+
+    // After unsubscribing, no further notifications are delivered.
+    unsubscribe()
+    const count = notifications
+    await orchestrator.manualSync()
+    expect(notifications).toBe(count)
+  }, 10000)
 })
