@@ -451,6 +451,21 @@ export class SyncOrchestrator implements SyncEngine {
       // later point (which could swallow ops enqueued in between).
       const head = await this.deps.queue.getSyncQueueWatermark()
       await this.deps.queue.setProviderWatermark(config.id, head)
+
+      // Apply the merged result to the store. This is the whole point of a
+      // fresh-device reconciliation: remote history pulled by `firstTimeSync`
+      // must show up immediately, not on some later background sync. When the
+      // first sync only initialized an empty/local-only remote there is no merge
+      // result and nothing to apply.
+      const mergeResult = final.context.mergeResult
+      if (mergeResult) {
+        this.deps.onMerged?.(mergeResult.merged)
+        const notification = this.buildSyncNotification(mergeResult, false)
+        if (notification) {
+          this.deps.onNotify?.(notification)
+        }
+      }
+
       await this.persistLastSyncTime(config.id)
       this.lastOutcome = "success"
       this.runVersion += 1
@@ -458,7 +473,7 @@ export class SyncOrchestrator implements SyncEngine {
       logAsync(
         "INFO",
         "SYNC_ENGINE",
-        `FIRST_RECONCILIATION_SUCCESS providerId=${config.id} watermark=${head}`
+        `FIRST_RECONCILIATION_SUCCESS providerId=${config.id} watermark=${head} applied=${mergeResult ? mergeResult.merged.length : 0}`
       )
       return
     }

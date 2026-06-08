@@ -378,8 +378,14 @@ export const syncMachine = setup({
             guard: ({ event }) => event.output.success === true,
             target: "success",
             actions: [
-              ({ context }) => {
-                context.callbacks.onSuccess?.({ isFirstSync: true })
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              ({ context, event }) => {
+                context.callbacks.onSuccess?.({
+                  mergeResult: event.output.mergeResult,
+                  isFirstSync: true,
+                })
               },
               () => {
                 logAsync("INFO", "SYNC_MACHINE", "FIRST_TIME_SYNC_SUCCESS")

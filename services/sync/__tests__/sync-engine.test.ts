@@ -12,6 +12,9 @@ import { SyncOrchestrator, type SyncEngineDeps } from "../sync-engine"
 import type { ProviderConfig, SyncProvider, SyncSnapshot } from "../provider-types"
 import type { AppSettings } from "../../settings-manager"
 import type { Expense } from "../../../types/expense"
+import { exportToCSV } from "../../csv-handler"
+import { getFilenameForDay } from "../../daily-file-manager"
+import { getLocalDayKey } from "../../../utils/date"
 
 function makeExpense(date = "2025-06-01T00:00:00.000Z"): Expense {
   return {
@@ -23,6 +26,23 @@ function makeExpense(date = "2025-06-01T00:00:00.000Z"): Expense {
     createdAt: date,
     updatedAt: date,
   } as Expense
+}
+
+function remoteSnapshotWith(expenses: Expense[]): SyncSnapshot {
+  const files: Record<string, string> = {}
+  for (const e of expenses) {
+    files[getFilenameForDay(getLocalDayKey(e.date))] = exportToCSV([e])
+  }
+  return {
+    manifest: {
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      appVersion: "test",
+      files: [],
+    },
+    files,
+    remoteRevision: { kind: "git_sha", sha: "remote-sha-with-data" },
+  }
 }
 
 const CONFIG: ProviderConfig = {
@@ -105,6 +125,26 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(state.reconciled).toBe(true)
     expect(orchestrator.getState().lastError).toBeUndefined()
     expect(orchestrator.getState().machineState).toBe("idle")
+  }, 10000)
+
+  it("applies restored remote expenses to the store on first reconciliation", async () => {
+    // Fresh device: remote already has data. firstTimeSync merges it; the
+    // orchestrator must push the restored set to the store (onMerged) so it
+    // shows up immediately, not on a later background sync.
+    const restored = makeExpense("2025-06-01T00:00:00.000Z")
+    const provider = makeProvider(async () => remoteSnapshotWith([restored]))
+    const state = { reconciled: false }
+    const deps = makeDeps(provider, state, [])
+    const merged: Expense[][] = []
+    deps.onMerged = (expenses) => merged.push(expenses)
+    const orchestrator = new SyncOrchestrator(deps)
+
+    await orchestrator.rebindProvider()
+
+    expect(state.reconciled).toBe(true)
+    expect(merged.length).toBeGreaterThan(0)
+    const applied = merged[merged.length - 1]
+    expect(applied.map((e) => e.id)).toContain(restored.id)
   }, 10000)
 
   it("completes first reconciliation without writing when there is nothing to initialize", async () => {
