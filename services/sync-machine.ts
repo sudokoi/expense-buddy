@@ -417,6 +417,7 @@ export const syncMachine = setup({
           actions: [
             assign({
               error: ({ event }) => formatMachineError(event.error),
+              errorCode: ({ event }) => extractMachineErrorCode(event.error),
             }),
             ({ event }) => {
               logAsync(
@@ -611,4 +612,15 @@ export type { TrueConflict, MergeResult }
 function formatMachineError(error: unknown): string {
   if (error instanceof Error) return error.message
   return String(error)
+}
+
+/**
+ * Best-effort extraction of a structured error code from a thrown error.
+ * Provider errors (`SyncProviderError`) carry a `code` (e.g. "NETWORK",
+ * "AUTH_INVALID"); propagating it lets the orchestrator tell transient
+ * transport failures apart from persistent ones (auth/permission/corrupt).
+ */
+function extractMachineErrorCode(error: unknown): string | undefined {
+  const code = (error as { code?: unknown } | null | undefined)?.code
+  return typeof code === "string" ? code : undefined
 }

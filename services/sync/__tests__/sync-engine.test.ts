@@ -176,6 +176,40 @@ describe("SyncOrchestrator first reconciliation", () => {
     expect(state.reconciled).toBe(false)
   }, 10000)
 
+  it("surfaces a PERSISTENT first-reconciliation failure (auth) in the UI outcome", async () => {
+    // An auth/permission failure is not transient: the user must act, so the
+    // orchestrator surfaces it via lastOutcome instead of silently gating.
+    const provider = makeProvider(async () => {
+      const err = new Error("auth invalid") as Error & { code: string }
+      err.code = "AUTH_INVALID"
+      throw err
+    })
+    const state = { reconciled: false }
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state, [makeExpense()]))
+
+    await orchestrator.rebindProvider()
+
+    expect(state.reconciled).toBe(false)
+    expect(orchestrator.getState().lastOutcome).toBe("error")
+  }, 10000)
+
+  it("stays silent on a TRANSIENT first-reconciliation failure (network)", async () => {
+    // Network-not-ready on launch is transient and retried automatically; it
+    // must NOT flash an error in the SyncIndicator (lastOutcome stays idle).
+    const provider = makeProvider(async () => {
+      const err = new Error("network down") as Error & { code: string }
+      err.code = "NETWORK"
+      throw err
+    })
+    const state = { reconciled: false }
+    const orchestrator = new SyncOrchestrator(makeDeps(provider, state, [makeExpense()]))
+
+    await orchestrator.rebindProvider()
+
+    expect(state.reconciled).toBe(false)
+    expect(orchestrator.getState().lastOutcome).toBe("idle")
+  }, 10000)
+
   it("runs the normal sync flow once the provider is reconciled", async () => {
     // Reconciled provider with an (empty) remote -> the machine routes straight
     // into `syncing` (not the gate) and settles in-sync.

@@ -271,6 +271,15 @@ const RETRY_BASE_DELAY_MS = 1000
 const RETRY_MAX_DELAY_MS = 30000
 const RETRYABLE_WRITE_ERROR_CODES = new Set(["NETWORK", "RATE_LIMITED"])
 
+/**
+ * Error codes considered transient for the internal first-reconciliation step.
+ * A first reconciliation that fails with one of these (e.g. network not ready
+ * on launch) is retried silently and does NOT surface a user-facing error
+ * outcome, so the SyncIndicator never flashes a spurious error. Persistent
+ * failures (auth/permission/corrupt) and conflicts are surfaced instead.
+ */
+const TRANSIENT_FIRST_SYNC_ERROR_CODES = new Set(["NETWORK", "RATE_LIMITED"])
+
 type RunActor = Actor<typeof syncMachine>
 
 /**
@@ -582,13 +591,34 @@ export class SyncOrchestrator implements SyncEngine {
     // activation/launch. Conflicts require explicit user resolution. A failed
     // first reconciliation parks back in `awaitingInitialReconciliation`, so the
     // terminal error lives in machine context rather than the `error` state.
-    // Do NOT update lastOutcome/runVersion — transient first-reconciliation
-    // errors aren't meaningful to the user and would briefly flash a spurious
-    // error icon in the SyncIndicator.
+    //
+    // Surface ONLY persistent failures (auth/permission/corrupt) and unresolved
+    // conflicts. Transient transport errors (network/rate-limit) and uncoded
+    // failures from this internal setup step stay silent so the SyncIndicator
+    // doesn't flash a spurious error on launch (they retry automatically).
+    const errorCode = final.context.errorCode
+    const isConflict = final.matches("conflict")
+    const isPersistentFailure =
+      isConflict ||
+      (errorCode !== undefined && !TRANSIENT_FIRST_SYNC_ERROR_CODES.has(errorCode))
+
+    if (isPersistentFailure) {
+      this.lastError = final.context.error ?? this.lastError
+      this.lastOutcome = isConflict ? "conflict" : "error"
+      this.runVersion += 1
+      this.emitChange()
+      logAsync(
+        "WARN",
+        "SYNC_ENGINE",
+        `FIRST_RECONCILIATION_FAILED providerId=${config.id} state=${String(final.value)} code=${errorCode ?? "none"}`
+      )
+      return
+    }
+
     logAsync(
       "WARN",
       "SYNC_ENGINE",
-      `FIRST_RECONCILIATION_INCOMPLETE providerId=${config.id} state=${String(final.value)}`
+      `FIRST_RECONCILIATION_INCOMPLETE_TRANSIENT providerId=${config.id} state=${String(final.value)} code=${errorCode ?? "none"}`
     )
   }
 
