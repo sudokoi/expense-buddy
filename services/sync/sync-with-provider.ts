@@ -1,4 +1,4 @@
-import type { SyncProvider, SyncSnapshot } from "./provider-types"
+import type { SyncProvider, SyncSnapshot, RemoteRevision } from "./provider-types"
 import { SyncProviderError, SETTINGS_FILENAME } from "./provider-types"
 import { importFromCSV, exportToCSV } from "../csv-handler"
 import { groupExpensesByDay, getFilenameForDay } from "../daily-file-manager"
@@ -46,22 +46,20 @@ export async function syncWithProvider(
     localExpenses,
     localSettings,
     syncSettingsEnabled,
+    dirtyDays = [],
+    deletedDays = [],
     conflictResolver,
-    dirtyDays,
-    deletedDays,
   } = options
-
-  const filterPaths = buildFilterPaths(dirtyDays, deletedDays)
 
   logAsync(
     "INFO",
     "SYNC_CORE",
-    `SYNC_WITH_PROVIDER localCount=${localExpenses.length} hasFilterPaths=${filterPaths !== undefined} syncSettings=${syncSettingsEnabled}`
+    `SYNC_WITH_PROVIDER localCount=${localExpenses.length} syncSettings=${syncSettingsEnabled}`
   )
 
   let snapshot: SyncSnapshot | null
   try {
-    snapshot = await provider.readSnapshot(filterPaths)
+    snapshot = await provider.readSnapshot()
   } catch (error) {
     const formatted = formatError(error)
     logAsync(
@@ -129,13 +127,36 @@ export async function syncWithProvider(
     }
   }
 
-  const writeSnapshot = filterChangedFiles(snapshot, mergedSnapshot)
-  const writeFileCount = Object.keys(writeSnapshot.files).length
+  // UPLOAD SCOPE: only this device's changed days (dirty ∪ deleted),
+  // intersected with files that actually differ from remote. Fetch scope (the
+  // full remote merged above) and upload scope are two independent sets and are
+  // never collapsed into a single filter. Remote-only changes are already in
+  // mergeResult.merged; we do NOT re-upload remote days we did not touch.
+  const uploadSnapshot = buildUploadSnapshot({
+    before: snapshot,
+    mergedFull: mergedSnapshot,
+    dirtyDays,
+    deletedDays,
+    syncSettingsEnabled,
+  })
 
-  logAsync("INFO", "SYNC_CORE", `WRITE_SNAPSHOT files=${writeFileCount}`)
+  const uploadFileCount = Object.keys(uploadSnapshot.files).length
+
+  if (uploadFileCount === 0) {
+    // The merge only pulled remote changes (nothing of ours to push). Return the
+    // merged result so the orchestrator updates local state WITHOUT writing remote.
+    logAsync("INFO", "SYNC_CORE", "UPLOAD_EMPTY pullOnly leavingRemoteUnchanged")
+    return {
+      success: true,
+      mergeResult,
+      mergedSettings,
+    }
+  }
+
+  logAsync("INFO", "SYNC_CORE", `WRITE_SNAPSHOT files=${uploadFileCount}`)
 
   try {
-    await provider.writeSnapshot(writeSnapshot, snapshot.remoteRevision)
+    await provider.writeSnapshot(uploadSnapshot, snapshot.remoteRevision)
     logAsync("INFO", "SYNC_CORE", "WRITE_SNAPSHOT_SUCCESS")
   } catch (error) {
     const formatted = formatError(error)
@@ -412,6 +433,88 @@ function formatError(error: unknown): { message: string; code?: string } {
 }
 
 /**
+ * Build the upload-scoped snapshot. This is the explicit upload-scoping function
+ * that replaces the misuse of `filterChangedFiles` for upload selection in the
+ * normal sync cycle.
+ *
+ * Fetch scope (full remote) and upload scope (this device's dirty/deleted days)
+ * are two independent sets and must never be collapsed. This function emits:
+ *  - upserts only for dirty-day files whose merged content differs from `before`
+ *  - empty-string deletion markers for deleted/empty dirty-day files present in
+ *    `before` (the provider interprets "" as delete)
+ *  - the settings file only when settings sync is on AND it changed
+ *
+ * Remote-only day files this device never touched are intentionally excluded:
+ * they are already carried into the merged local state and must never be
+ * scheduled for deletion.
+ */
+function buildUploadSnapshot(args: {
+  before: SyncSnapshot
+  mergedFull: SyncSnapshot
+  dirtyDays: string[]
+  deletedDays: string[]
+  syncSettingsEnabled?: boolean
+}): SyncSnapshot {
+  const { before, mergedFull, dirtyDays, deletedDays, syncSettingsEnabled } = args
+
+  // The set of day-file paths THIS device changed.
+  const dirtyPaths = new Set(dirtyDays.map(getFilenameForDay))
+  const deletedPaths = new Set(deletedDays.map(getFilenameForDay))
+
+  const files: Record<string, string> = {}
+
+  // Upserts: only dirty day files whose content actually differs from remote.
+  for (const path of dirtyPaths) {
+    const next = mergedFull.files[path]
+    if (next !== undefined && next !== before.files[path]) {
+      files[path] = next
+    }
+  }
+
+  // Deletions: dirty/deleted day files now empty/absent -> empty-string marker.
+  for (const path of deletedPaths) {
+    const nextContent = mergedFull.files[path]
+    const stillPresent = nextContent !== undefined && nextContent.length > 0
+    if (!stillPresent && before.files[path] !== undefined) {
+      files[path] = "" // provider interprets "" as delete
+    }
+  }
+
+  // Settings file is uploaded only when settings sync is on and it changed.
+  if (syncSettingsEnabled) {
+    const next = mergedFull.files[SETTINGS_FILENAME]
+    if (next !== undefined && next !== before.files[SETTINGS_FILENAME]) {
+      files[SETTINGS_FILENAME] = next
+    }
+  }
+
+  return withManifest(files, mergedFull.remoteRevision)
+}
+
+/**
+ * Wrap a `path -> content` file map in a SyncSnapshot with a freshly computed
+ * manifest, carrying the supplied remote revision.
+ */
+function withManifest(
+  files: Record<string, string>,
+  remoteRevision: RemoteRevision | null
+): SyncSnapshot {
+  return {
+    manifest: {
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      appVersion: APP_CONFIG.version,
+      files: Object.entries(files).map(([path, content]) => ({
+        path,
+        hash: computeContentHash(content),
+      })),
+    },
+    files,
+    remoteRevision,
+  }
+}
+
+/**
  * Given the before and after snapshots, produce a minimal snapshot containing
  * only the files that actually differ — plus the settings file.
  *
@@ -419,15 +522,6 @@ function formatError(error: unknown): { message: string; code?: string } {
  * removed files, and skips untouched files entirely, reducing API calls on
  * successive syncs.
  */
-function buildFilterPaths(
-  dirtyDays?: string[],
-  deletedDays?: string[]
-): string[] | undefined {
-  const allDays = new Set([...(dirtyDays ?? []), ...(deletedDays ?? [])])
-  if (allDays.size === 0) return undefined
-  return Array.from(allDays).map(getFilenameForDay)
-}
-
 function filterChangedFiles(before: SyncSnapshot, after: SyncSnapshot): SyncSnapshot {
   const files: Record<string, string> = {}
 

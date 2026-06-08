@@ -72,9 +72,19 @@ export class SyncProviderError extends Error {
   }
 }
 
+export interface DriveYearRevision {
+  /** Drive file id for expense-buddy-<year>.json */
+  fileId: string
+  /** Drive monotonic file version (preferred drift signal) */
+  version: number
+  /** Fallback signal if version is unavailable */
+  contentHash?: string
+}
+
 export type RemoteRevision =
   | { kind: "git_sha"; sha: string }
-  | { kind: "drive"; fileVersions?: Record<string, string> }
+  // Per-year-file revision. Maps year -> per-year revision token.
+  | { kind: "drive"; fileVersions: Record<string, DriveYearRevision> }
 
 export interface SyncSnapshot {
   manifest: {
@@ -101,8 +111,21 @@ export interface SyncProvider {
   readonly providerId: string
 
   testConnection(): Promise<ConnectionTestResult>
-  readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null>
+
+  /**
+   * Fetch the FULL remote snapshot for merging. Returns null if no remote data.
+   * No filterPaths: the merge must always see the complete remote snapshot.
+   * Implementations MAY skip downloading prior-year files whose revision is
+   * unchanged, but MUST include every year present in local data so the merge
+   * is complete.
+   */
+  readSnapshot(): Promise<SyncSnapshot | null>
   deleteRemoteData?(): Promise<boolean>
+  /**
+   * Write only the changed/deleted files (upload snapshot). Performs optimistic
+   * concurrency against lastKnownRevision; throws SyncProviderError(CONFLICT)
+   * if the remote advanced since the snapshot was read.
+   */
   writeSnapshot(
     snapshot: SyncSnapshot,
     lastKnownRevision: RemoteRevision | null

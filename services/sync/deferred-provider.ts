@@ -84,8 +84,8 @@ export class DeferredProvider implements SyncProvider {
     return (await this.ensure()).testConnection()
   }
 
-  async readSnapshot(filterPaths?: string[]): Promise<SyncSnapshot | null> {
-    return (await this.ensure()).readSnapshot(filterPaths)
+  async readSnapshot(): Promise<SyncSnapshot | null> {
+    return (await this.ensure()).readSnapshot()
   }
 
   async writeSnapshot(

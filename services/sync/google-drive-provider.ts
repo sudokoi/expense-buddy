@@ -3,6 +3,7 @@ import type {
   SyncProvider,
   SyncSnapshot,
   RemoteRevision,
+  DriveYearRevision,
   ConnectionTestResult,
   ProviderStatus,
   CredentialStore,
@@ -118,7 +119,7 @@ export class GoogleDriveProvider implements SyncProvider {
         )
       : null
 
-    const fileVersions: Record<string, string> = {}
+    const fileVersions: Record<string, DriveYearRevision> = {}
 
     for (const file of yearFiles) {
       const fileYear = file.name.slice(YEAR_FILE_PREFIX.length, -YEAR_FILE_SUFFIX.length)
@@ -127,7 +128,11 @@ export class GoogleDriveProvider implements SyncProvider {
       const content = await this.downloadFile(token, file.id)
       if (!content) continue
 
-      fileVersions[fileYear] = simpleHash(content)
+      fileVersions[fileYear] = {
+        fileId: file.id,
+        version: file.version,
+        contentHash: simpleHash(content),
+      }
 
       const parsed = this.parseYearFile(content)
       for (const [path, fileContent] of Object.entries(parsed.f)) {
@@ -226,7 +231,10 @@ export class GoogleDriveProvider implements SyncProvider {
         lastKnownRevision.fileVersions
       ) {
         const knownVersion = lastKnownRevision.fileVersions[yearStr]
-        if (knownVersion && simpleHash(existingContent) !== knownVersion) {
+        if (
+          knownVersion?.contentHash !== undefined &&
+          simpleHash(existingContent) !== knownVersion.contentHash
+        ) {
           throw new SyncProviderErrorClass(
             "CONFLICT",
             "google_drive",

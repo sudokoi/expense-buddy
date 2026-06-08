@@ -309,7 +309,7 @@ describe("GoogleDriveProvider", () => {
         .mockResolvedValueOnce(downloadResponse)
         .mockResolvedValueOnce(updateResponse)
 
-      const revision: RemoteRevision = { kind: "drive" }
+      const revision: RemoteRevision = { kind: "drive", fileVersions: {} }
 
       const smallSnapshot: SyncSnapshot = {
         manifest: {
