@@ -55,7 +55,7 @@ describe("Store Helpers", () => {
       })
 
       it("should return 'modified' when syncSettings differs from default", () => {
-        const settings = createSettings({ syncSettings: true })
+        const settings = createSettings({ syncSettings: false })
         const result = computeSettingsSyncState(settings, null)
         expect(result).toBe("modified")
       })

@@ -128,7 +128,7 @@ jobs:
         if: matrix.profile == 'production'
         continue-on-error: true
         run: |
-          eas submit --platform android --profile production --track internal --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
+          eas submit --platform android --profile production --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
 
       - name: 💬 Comment on merged PRs
         if: matrix.profile == 'production'
