@@ -121,20 +121,24 @@ export class GitHubProvider implements SyncProvider {
         `GitHubProvider: readSnapshot - downloading ${expenseEntries.length} expense file(s)`
       )
 
-      for (const entry of expenseEntries) {
-        try {
-          const fileData = await downloadCSV(
-            token,
-            this.config.repo,
-            this.config.branch,
-            entry.path,
-            signal
+      // Download expense files in parallel batches to reduce wall-clock time
+      // while avoiding too many concurrent connections. Batch size of 6 keeps
+      // within typical browser/RN per-origin connection limits.
+      const BATCH_SIZE = 6
+      for (let i = 0; i < expenseEntries.length; i += BATCH_SIZE) {
+        const batch = expenseEntries.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.allSettled(
+          batch.map((entry) =>
+            downloadCSV(token, this.config.repo, this.config.branch, entry.path, signal)
           )
-          if (fileData) {
-            files[entry.path] = fileData.content
+        )
+        for (let j = 0; j < batch.length; j++) {
+          const result = batchResults[j]
+          if (result.status === "fulfilled" && result.value) {
+            files[batch[j].path] = result.value.content
+          } else {
+            failedDownloads++
           }
-        } catch {
-          failedDownloads++
         }
       }
 

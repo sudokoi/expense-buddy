@@ -136,7 +136,9 @@ describe("SyncOrchestrator first reconciliation", () => {
     const state = { reconciled: false }
     const deps = makeDeps(provider, state, [])
     const merged: Expense[][] = []
-    deps.onMerged = (expenses) => merged.push(expenses)
+    deps.onMerged = async (expenses) => {
+      merged.push(expenses)
+    }
     const orchestrator = new SyncOrchestrator(deps)
 
     await orchestrator.rebindProvider()

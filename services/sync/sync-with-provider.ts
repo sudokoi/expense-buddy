@@ -132,10 +132,12 @@ export async function syncWithProvider(
   }
 
   // UPLOAD SCOPE: only this device's changed days (dirty ∪ deleted),
-  // intersected with files that actually differ from remote. Fetch scope (the
-  // full remote merged above) and upload scope are two independent sets and are
-  // never collapsed into a single filter. Remote-only changes are already in
-  // mergeResult.merged; we do NOT re-upload remote days we did not touch.
+  // intersected with files that actually differ from remote, PLUS any files
+  // whose content changed due to format differences (e.g. v3→v4 CSV format
+  // conversion). Fetch scope (the full remote merged above) and upload scope
+  // are two independent sets and are never collapsed into a single filter.
+  // Remote-only changes are already in mergeResult.merged; we do NOT re-upload
+  // remote days we did not touch.
   const uploadSnapshot = buildUploadSnapshot({
     before: snapshot,
     mergedFull: mergedSnapshot,
@@ -531,6 +533,18 @@ function buildUploadSnapshot(args: {
     }
   }
 
+  // FORMAT CONVERSION: include files whose content changed between the remote
+  // and merged snapshot purely due to format differences (e.g. v3→v4 CSV
+  // format). Do NOT override dirty-day files — those already carry actual data
+  // changes from this device. Adding them here ensures every sync cycle
+  // converts a batch until all remote files use the current format.
+  const formatChanges = filterChangedFiles(before, mergedFull)
+  for (const [path, content] of Object.entries(formatChanges.files)) {
+    if (!(path in files)) {
+      files[path] = content
+    }
+  }
+
   // The covered day range is derived from the FULL merged data (every day file
   // in mergedFull), NOT the changed-file subset, so a provider's deletion guard
   // can correctly tell an in-range explicit deletion from an out-of-range one.
@@ -594,12 +608,24 @@ function withManifest(
  * successive syncs.
  */
 function filterChangedFiles(before: SyncSnapshot, after: SyncSnapshot): SyncSnapshot {
+  // Build a lookup of path → hash from the before manifest for fast comparison.
+  const beforeHash = new Map<string, string>()
+  for (const entry of before.manifest.files) {
+    beforeHash.set(entry.path, entry.hash)
+  }
+
   const files: Record<string, string> = {}
 
   for (const [path, content] of Object.entries(after.files)) {
     const oldContent = before.files[path]
     if (path === SETTINGS_FILENAME || oldContent !== content) {
-      files[path] = content
+      // Belt-and-suspenders: skip if the content hash matches the before
+      // manifest exactly — the string differs only in a semantically
+      // meaningless way, and uploading would create a blank commit.
+      const afterHash = computeContentHash(content)
+      if (!beforeHash.has(path) || beforeHash.get(path) !== afterHash) {
+        files[path] = content
+      }
     }
   }
 

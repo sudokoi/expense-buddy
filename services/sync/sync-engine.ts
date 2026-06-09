@@ -110,8 +110,12 @@ export interface SyncEngineDeps {
   dirtyDays: DirtyDayPort
   /** Provider-scoped sync metadata accessors (last sync time, etc). */
   metadata?: SyncMetadataPort
-  /** Push merged results back into the expense store. */
-  onMerged?: (expenses: Expense[]) => void
+  /**
+   * Push merged results back into the expense store. Must persist to durable
+   * storage before updating in-memory state (write-through), so merged data
+   * survives an app restart regardless of when the XState effect runs.
+   */
+  onMerged?: (expenses: Expense[]) => Promise<void>
   /** Surface settings downloaded from the remote. */
   onSettingsDownloaded?: (settings: AppSettings) => void
   /** Surface a user-facing sync notification. */
@@ -149,8 +153,8 @@ export interface SyncEngineStoreBindings {
   getLocalExpenses?: () => Expense[]
   /** Whether the local expense store has finished loading (see SyncEngineDeps). */
   isLocalDataReady?: () => boolean
-  /** Push merged results back into the expense store. */
-  onMerged?: (expenses: Expense[]) => void
+  /** Push merged results back into the expense store (write-through). */
+  onMerged?: (expenses: Expense[]) => Promise<void>
   /** Surface settings downloaded from the remote. */
   onSettingsDownloaded?: (settings: AppSettings) => void
   /** Surface a user-facing sync notification. */
@@ -328,6 +332,10 @@ export class SyncOrchestrator implements SyncEngine {
   // reconciliation was deferred because local data wasn't loaded yet. Run via
   // `notifyLocalDataReady()` once the store signals readiness.
   private deferredFirstReconciliation: ProviderConfig | null = null
+  // When a rebind was requested while a run was in flight, this flag triggers
+  // the rebind after the current run settles (see runSynchronized/trigger's
+  // finally handler).
+  private pendingRebind = false
   private lastError: string | undefined
   private lastRunAt: string | undefined
   private lastOutcome: SyncOutcome = "idle"
@@ -441,6 +449,16 @@ export class SyncOrchestrator implements SyncEngine {
   }
 
   async rebindProvider(): Promise<void> {
+    // If a sync is in flight, defer the rebind. Tearing down the actor mid-run
+    // would corrupt the reconciliation (e.g. provider deactivation during
+    // migration first reconciliation). The rebind runs after the current run
+    // completes via the serialization gate's finally handler.
+    if (this.inFlight) {
+      this.pendingRebind = true
+      logAsync("INFO", "SYNC_ENGINE", "REBIND_DEFERRED syncInFlight")
+      return
+    }
+
     // Teardown of the previous actor is best-effort and must never block the
     // rebind (Requirement 2.7).
     try {
@@ -507,13 +525,24 @@ export class SyncOrchestrator implements SyncEngine {
    * no-op and the reconciliation is retried on the next activation/launch (or a
    * manual sync) — Requirements 4.5, 4.6.
    *
-   * NOTE: once the real machine gate lands (task 8.1) this becomes an explicit
-   * `START_FIRST_SYNC` send into a fresh actor. Against the current machine
-   * contract the `SYNC` event drives the first-time-sync flow
-   * (`awaitingInitialReconciliation` → `reconcilingFirstSync`), so the
-   * orchestrator owns the persisted reconciliation flag here.
+   * Runs under the shared serialization gate (`runSynchronized`): if a sync run
+   * is already in flight, the first reconciliation is deferred to the in-flight
+   * run (which handles unreconciled providers for manual/retry reasons). This
+   * prevents the concurrent-actor race that caused data loss in v4.0.0.
    */
   private async runFirstReconciliation(config: ProviderConfig): Promise<void> {
+    // Serialization guard: if a run is already in flight, skip — the in-flight
+    // run will handle the first reconciliation via `runOnce`, which already
+    // drives the first-sync flow for unreconciled providers on manual/retry.
+    if (this.inFlight) {
+      logAsync(
+        "INFO",
+        "SYNC_ENGINE",
+        `FIRST_RECONCILIATION_SKIPPED_IN_FLIGHT providerId=${config.id}`
+      )
+      return
+    }
+
     // Never reconcile against a not-yet-loaded local set: merging with empty
     // local data could drop local-only expenses that haven't synced yet (e.g.
     // immediately after an app update, before the expense store finishes
@@ -530,6 +559,24 @@ export class SyncOrchestrator implements SyncEngine {
       return
     }
 
+    // Execute under the shared serialization gate so concurrent trigger() calls
+    // queue behind this first reconciliation rather than spawning a second actor.
+    await this.runSynchronized(
+      async () => {
+        await this.executeFirstReconciliation(config)
+        // runSynchronized expects SyncRunResult; we return a dummy result since
+        // the first reconciliation's outcome is communicated via internal state.
+        return { skipped: true }
+      },
+      { coalesce: false }
+    )
+  }
+
+  /**
+   * The actual first-reconciliation logic, extracted so it can be wrapped by
+   * the shared serialization gate in `runFirstReconciliation`.
+   */
+  private async executeFirstReconciliation(config: ProviderConfig): Promise<void> {
     const provider = this.deps.createProvider(config)
     const { dirtyDays, deletedDays } = await this.deps.dirtyDays.load()
     const localExpenses = this.deps.getLocalExpenses()
@@ -568,6 +615,35 @@ export class SyncOrchestrator implements SyncEngine {
     this.lastRunAt = new Date().toISOString()
 
     if (final.matches("success") || final.matches("inSync")) {
+      // Apply the merged result to the store FIRST (write-through persist)
+      // before committing the reconciled flag or watermark. If the store
+      // persist fails, the reconciliation stays incomplete so a retry will
+      // re-merge rather than skip past the data.
+      const mergeResult = final.context.mergeResult
+      if (mergeResult) {
+        try {
+          await this.deps.onMerged?.(mergeResult.merged)
+        } catch (error) {
+          logAsync(
+            "ERROR",
+            "SYNC_ENGINE",
+            `FIRST_RECONCILIATION_ON_MERGED_FAILED error=${String(error)}`
+          )
+          // onMerged failed (persist threw): do NOT mark reconciled or advance
+          // the watermark. The provider stays gated and the reconciliation will
+          // be retried on next activation/launch.
+          this.lastError = String(error)
+          this.lastOutcome = "error"
+          this.runVersion += 1
+          this.emitChange()
+          return
+        }
+        const notification = this.buildSyncNotification(mergeResult, false)
+        if (notification) {
+          this.deps.onNotify?.(notification)
+        }
+      }
+
       this.lastError = undefined
       await this.deps.queue.markProviderReconciled(config.id)
       this.deps.onReconciled?.(config.id)
@@ -578,20 +654,6 @@ export class SyncOrchestrator implements SyncEngine {
       // later point (which could swallow ops enqueued in between).
       const head = await this.deps.queue.getSyncQueueWatermark()
       await this.deps.queue.setProviderWatermark(config.id, head)
-
-      // Apply the merged result to the store. This is the whole point of a
-      // fresh-device reconciliation: remote history pulled by `firstTimeSync`
-      // must show up immediately, not on some later background sync. When the
-      // first sync only initialized an empty/local-only remote there is no merge
-      // result and nothing to apply.
-      const mergeResult = final.context.mergeResult
-      if (mergeResult) {
-        this.deps.onMerged?.(mergeResult.merged)
-        const notification = this.buildSyncNotification(mergeResult, false)
-        if (notification) {
-          this.deps.onNotify?.(notification)
-        }
-      }
 
       await this.persistLastSyncTime(config.id)
       this.lastOutcome = "success"
@@ -638,6 +700,56 @@ export class SyncOrchestrator implements SyncEngine {
       "SYNC_ENGINE",
       `FIRST_RECONCILIATION_INCOMPLETE_TRANSIENT providerId=${config.id} state=${String(final.value)} code=${errorCode ?? "none"}`
     )
+  }
+
+  /**
+   * Execute a function under the shared serialization gate. If a run is already
+   * in flight, either queue a re-run (for callers that can coalesce) or return
+   * a skipped result (for first reconciliation that will be handled by the
+   * in-flight run).
+   */
+  private async runSynchronized<T>(
+    fn: () => Promise<T>,
+    options?: { coalesce?: boolean }
+  ): Promise<T> {
+    if (this.inFlight) {
+      if (options?.coalesce !== false) {
+        this.rerunPending = true
+        this.pendingReason = "manual"
+        // Return a promise bound to the NEXT (coalesced) run.
+        return new Promise<T>((resolve, reject) => {
+          this.pendingWaiters.push({ resolve: resolve as any, reject: reject as any })
+        })
+      }
+      // Non-coalescing callers (e.g. first reconciliation) skip when a run
+      // is already in flight — the in-flight run will handle it.
+      return undefined as T
+    }
+
+    const run = fn().finally(() => {
+      this.inFlight = null
+      this.emitChange()
+      // Process pending rebind before any queued re-run so provider state
+      // is current before the next sync cycle.
+      if (this.pendingRebind) {
+        this.pendingRebind = false
+        void this.rebindProvider()
+      }
+      if (this.rerunPending) {
+        this.rerunPending = false
+        const nextReason = this.pendingReason
+        const waiters = this.pendingWaiters
+        this.pendingWaiters = []
+        this.trigger(nextReason).then(
+          (result) => waiters.forEach((w) => w.resolve(result)),
+          (error) => waiters.forEach((w) => w.reject(error))
+        )
+      }
+    })
+
+    this.inFlight = run as unknown as Promise<SyncRunResult>
+    this.emitChange()
+    return run
   }
 
   /**
@@ -1032,24 +1144,56 @@ export class SyncOrchestrator implements SyncEngine {
       reconciledSettings = applyQueuedOpsToSettings(currentSettings, opsAfter)
     }
 
-    // Advance the watermark to the last applied op (or leave it where it is when
-    // there were no new ops). This only runs on a successful run+write.
+    // Build notification now (doesn't depend on onMerged succeeding).
+    const notification = this.buildSyncNotification(context.mergeResult, false)
+
+    // Apply merged data to the local store BEFORE committing the watermark or
+    // cleaning up. onMerged is write-through (persist → update in-memory state),
+    // so failing here means the data is not durably on disk. Do NOT advance the
+    // watermark or clear dirty days — the next sync cycle will re-process.
+    try {
+      await this.deps.onMerged?.(reconciledExpenses)
+    } catch (error) {
+      logAsync(
+        "ERROR",
+        "SYNC_ENGINE",
+        `RECONCILE_ON_MERGED_FAILED error=${String(error)}`
+      )
+      // Write-through persist failed: return error without advancing watermark.
+      // The push to remote already succeeded, so the next retry will re-push the
+      // same content (harmless duplicate commit) and retry the persist.
+      this.lastError = String(error)
+      this.lastOutcome = "error"
+      this.runVersion += 1
+      this.emitChange()
+      return {
+        success: false,
+        error: String(error),
+        errorCode: "ON_MERGED_FAILED",
+        mergeResult: context.mergeResult,
+      }
+    }
+    if (reconciledSettings) {
+      this.deps.onSettingsDownloaded?.(reconciledSettings)
+    }
+    if (notification) {
+      this.deps.onNotify?.(notification)
+    }
+
+    // onMerged succeeded — now it is safe to advance the watermark and clean up.
     const lastAppliedId =
       opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
     if (lastAppliedId !== watermark) {
       await this.deps.queue.setProviderWatermark(providerId, lastAppliedId)
     }
 
-    // Dirty/deleted days have now been durably pushed: clear them. (Only ever
-    // reached on success — a failed write returns above without clearing.)
+    // Dirty/deleted days have now been durably pushed AND persisted locally:
+    // clear them.
     await this.deps.dirtyDays.clear()
-    // Keep the store's in-memory dirty/deleted days consistent with durable
-    // storage, otherwise the UI shows phantom pending changes after a sync.
     this.deps.onDirtyDaysCleared?.()
 
     // Compact the queue to the minimum watermark across reconciled providers
-    // (Req 11.4). Unreconciled providers are excluded by `getMinSyncedWatermark`
-    // so they don't block compaction.
+    // (Req 11.4).
     const minWatermark = await this.deps.queue.getMinSyncedWatermark()
     if (minWatermark > 0) {
       await this.deps.queue.clearSyncOpsUpTo(minWatermark)
@@ -1058,23 +1202,6 @@ export class SyncOrchestrator implements SyncEngine {
     // Record the provider-scoped last sync time now that the run+write
     // succeeded (Requirement 11.1).
     await this.persistLastSyncTime(providerId)
-
-    // Build the user-facing notification from the merge result. By this point
-    // all ops in the batch have been durably pushed and the watermark advanced
-    // past them — there are no unprocessed ops, so pass false for hasPendingOps
-    // (matching runFirstReconciliation at line 590). The "pending changes"
-    // scenario (read-only sync that couldn't push) can never reach here because
-    // it would be an error/conflict path, not a successful reconciliation.
-    const notification = this.buildSyncNotification(context.mergeResult, false)
-
-    // Push results back to the store/UI via the injected callbacks.
-    this.deps.onMerged?.(reconciledExpenses)
-    if (reconciledSettings) {
-      this.deps.onSettingsDownloaded?.(reconciledSettings)
-    }
-    if (notification) {
-      this.deps.onNotify?.(notification)
-    }
 
     logAsync(
       "INFO",

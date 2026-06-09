@@ -34,6 +34,7 @@ import {
   updateStore as defaultUpdateStore,
   UpdateStore,
 } from "./update-store"
+import { persistExpensesSnapshot } from "../services/expense-storage"
 import {
   notificationStore as defaultNotificationStore,
   NotificationStore,
@@ -224,7 +225,13 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     syncOrchestrator.setStoreBindings({
       getLocalExpenses: () => expenseStore.getSnapshot().context.expenses,
       isLocalDataReady: () => !expenseStore.getSnapshot().context.isLoading,
-      onMerged: (expenses) => expenseStore.trigger.replaceExpenses({ expenses }),
+      // Write-through: persist to AsyncStorage BEFORE updating in-memory state.
+      // Merged data survives app restart even if the replaceExpenses effect
+      // hasn't run yet.
+      onMerged: async (expenses) => {
+        await persistExpensesSnapshot(expenses)
+        expenseStore.trigger.replaceExpenses({ expenses })
+      },
       onSettingsDownloaded: (settings) => emitSettingsDownloaded(settings),
       onNotify: (notification) =>
         expenseStore.trigger.setSyncNotification({ notification }),
