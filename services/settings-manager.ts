@@ -54,11 +54,11 @@ export interface AppSettings {
  */
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
-  syncSettings: false,
+  syncSettings: true,
   defaultPaymentMethod: undefined,
   defaultCurrency: getSystemCurrency(),
   language: "system",
-  enableMathExpressions: true,
+  enableMathExpressions: false,
   useMlOnlyForSmsImports: false,
   backgroundSmsImportEnabled: false,
   autoSyncEnabled: false,

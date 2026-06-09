@@ -464,6 +464,20 @@ export class SyncOrchestrator implements SyncEngine {
       return
     }
 
+    // Skip the first reconciliation if this provider was already reconciled on a
+    // previous launch — the regular sync pipeline (on_launch/on_change signals)
+    // handles incremental updates and respects the auto-sync setting. Without
+    // this guard, `firstTimeSync` runs network I/O on every app launch even when
+    // auto-sync is disabled.
+    if (await this.deps.queue.isProviderReconciled(config.id)) {
+      logAsync(
+        "INFO",
+        "SYNC_ENGINE",
+        `REBIND_SKIP_RECONCILIATION providerId=${config.id} alreadyReconciled`
+      )
+      return
+    }
+
     // Activation (provider add/switch) is the explicit first-sync trigger: fire
     // the activation-driven first reconciliation against the freshly-bound
     // provider (Requirements 4.1, 4.5). Reconciliation runs on a brand-new actor
@@ -1045,11 +1059,13 @@ export class SyncOrchestrator implements SyncEngine {
     // succeeded (Requirement 11.1).
     await this.persistLastSyncTime(providerId)
 
-    // Build the user-facing notification from the merge result.
-    const notification = this.buildSyncNotification(
-      context.mergeResult,
-      opsAfter.length > 0
-    )
+    // Build the user-facing notification from the merge result. By this point
+    // all ops in the batch have been durably pushed and the watermark advanced
+    // past them — there are no unprocessed ops, so pass false for hasPendingOps
+    // (matching runFirstReconciliation at line 590). The "pending changes"
+    // scenario (read-only sync that couldn't push) can never reach here because
+    // it would be an error/conflict path, not a successful reconciliation.
+    const notification = this.buildSyncNotification(context.mergeResult, false)
 
     // Push results back to the store/UI via the injected callbacks.
     this.deps.onMerged?.(reconciledExpenses)

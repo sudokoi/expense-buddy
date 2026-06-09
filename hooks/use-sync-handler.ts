@@ -74,8 +74,9 @@ export function useSyncHandler() {
     // Success / in-sync. The merged result, dirty-day clearing, watermark, and
     // the success toast are handled by the orchestrator. Only the local
     // settings-change flag is the orchestrator's blind spot, so clear it here
-    // when settings sync is on and there are no still-pending expense ops.
-    if (settings.syncSettings && !result.pendingExpenseOps) {
+    // when settings sync is on. The watermark advancement confirms all ops
+    // were pushed, so pendingExpenseOps is not a concern here.
+    if (settings.syncSettings) {
       clearSettingsChangeFlag()
     }
   }, [
