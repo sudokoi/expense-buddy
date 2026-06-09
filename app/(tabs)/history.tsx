@@ -12,13 +12,13 @@ import {
   useCategories,
 } from "../../stores/hooks"
 import { logAsync } from "../../services/logger"
-import { useFilters, useFilterPersistence } from "../../stores/filter-store"
+import { useFilters, useFilterPersistence } from "../../stores/hooks"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { getLocalDayKey, formatDate } from "../../utils/date"
+import { isExpenseEditable } from "../../services/read-only-window"
 import type { Expense, PaymentMethodType } from "../../types/expense"
 import type { Category } from "../../types/category"
-import { syncDownMore } from "../../services/sync-manager"
 import {
   findInstrumentById,
   formatPaymentInstrumentLabel,
@@ -26,7 +26,7 @@ import {
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
-import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import { SwipeableExpenseRow } from "../../components/ui/SwipeableExpenseRow"
 import { useTranslation } from "react-i18next"
 import { FilterSheet } from "../../components/history/FilterSheet"
 import type {
@@ -34,11 +34,7 @@ import type {
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
-import {
-  formatMonthLabel,
-  getAvailableMonths,
-  isTimeWindowCovered,
-} from "../../utils/analytics/time"
+import { formatMonthLabel, getAvailableMonths } from "../../utils/analytics/time"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -139,9 +135,9 @@ function methodShortLabel(method: string): string {
 export default function HistoryScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const { state, deleteExpense, replaceAllExpenses } = useExpenses()
+  const { state, deleteExpense } = useExpenses()
   const { addNotification } = useNotifications()
-  const { syncConfig, settings } = useSettings()
+  const { settings } = useSettings()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
@@ -166,8 +162,6 @@ export default function HistoryScreen() {
 
   // Local UI state
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
-  const [hasMore, setHasMore] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showFilterSheet, setShowFilterSheet] = useState(false)
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -221,12 +215,6 @@ export default function HistoryScreen() {
 
     return sections
   }, [filteredExpenses])
-
-  const shouldShowLoadMore = useMemo(() => {
-    if (!hasMore || !syncConfig || filters.selectedMonth) return false
-
-    return !isTimeWindowCovered(state.expenses, filters.timeWindow)
-  }, [filters.selectedMonth, filters.timeWindow, hasMore, syncConfig, state.expenses])
 
   React.useEffect(() => {
     if (!filters.selectedMonth) return
@@ -488,27 +476,6 @@ export default function HistoryScreen() {
     }
   }, [deletingExpenseId, deleteExpense, addNotification, t])
 
-  const handleLoadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
-
-    setIsLoadingMore(true)
-    try {
-      const result = await syncDownMore(state.expenses, 7)
-
-      if (result.success && result.expenses) {
-        replaceAllExpenses(result.expenses)
-        setHasMore(result.hasMore || false)
-        addNotification(result.message, "success")
-      } else {
-        addNotification(result.error || result.message, "error")
-      }
-    } catch {
-      addNotification(t("history.loadError"), "error")
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [isLoadingMore, hasMore, state.expenses, replaceAllExpenses, addNotification, t])
-
   // Render item for FlashList
   const renderFlashListItem = useCallback(
     ({
@@ -532,15 +499,17 @@ export default function HistoryScreen() {
         categoryByLabel.get(item.expense.category) ??
         getFallbackCategory(item.expense.category)
 
+      const isReadOnly = !isExpenseEditable(item.expense)
+
       return (
-        <ExpenseRow
+        <SwipeableExpenseRow
           expense={item.expense}
           categoryInfo={categoryInfo}
           subtitleMode="time"
           onEdit={handleEdit}
           onDelete={handleDelete}
           instruments={allInstruments}
-          showActions
+          isReadOnly={isReadOnly}
         />
       )
     },
@@ -564,24 +533,6 @@ export default function HistoryScreen() {
       layout.size = item.type === "header" ? 32 : 90
     },
     []
-  )
-
-  // List footer component
-  const ListFooterComponent = useMemo(
-    () =>
-      shouldShowLoadMore ? (
-        <YStack p={UI_SPACE.gutter} items="center">
-          <Button
-            size="$control"
-            theme="accent"
-            onPress={handleLoadMore}
-            disabled={isLoadingMore}
-          >
-            {isLoadingMore ? t("history.loading") : t("history.loadMore")}
-          </Button>
-        </YStack>
-      ) : null,
-    [handleLoadMore, isLoadingMore, shouldShowLoadMore, t]
   )
 
   // Content container style
@@ -764,7 +715,6 @@ export default function HistoryScreen() {
           overrideItemLayout={overrideItemLayout}
           contentContainerStyle={contentContainerStyle}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={ListFooterComponent}
         />
       </View>
 

@@ -182,6 +182,7 @@ export default function GitHubRepoPickerScreen() {
   }, [t])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load()
   }, [load])
 
@@ -268,6 +269,7 @@ export default function GitHubRepoPickerScreen() {
           focusStyle={{
             borderColor: ACCENT_COLORS.primary,
           }}
+          placeholderTextColor="$color"
           placeholder={t("repoPicker.searchPlaceholder")}
           value={query}
           onChangeText={setQuery}

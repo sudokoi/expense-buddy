@@ -1,4 +1,5 @@
 import { PermissionsAndroid, Platform } from "react-native"
+import { logAsync } from "../logger"
 
 export interface BackgroundSmsPermissionResult {
   granted: boolean
@@ -39,6 +40,12 @@ export async function requestBackgroundSmsPermissions(): Promise<BackgroundSmsPe
       notificationsGranted = notificationResult === PermissionsAndroid.RESULTS.GRANTED
     }
   }
+
+  logAsync(
+    "INFO",
+    "SMS_MODULE",
+    `requestBackgroundSmsPermissions granted=${receiveSmsGranted && notificationsGranted} receiveSms=${receiveSmsGranted} notifications=${notificationsGranted}`
+  )
 
   return {
     granted: receiveSmsGranted && notificationsGranted,

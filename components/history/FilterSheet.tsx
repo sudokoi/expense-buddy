@@ -10,6 +10,7 @@ import { YStack, XStack, H4, Button, Text, Sheet, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
+import { IconActionButton } from "../ui/IconActionButton"
 import { logAsync } from "../../services/logger"
 import type {
   TimeWindow,
@@ -259,12 +260,13 @@ export const FilterSheet = React.memo(function FilterSheet({
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("common.reset")}
               </Button>
-              <Button
+              <IconActionButton
                 size="$compact"
                 chromeless
                 icon={X}
                 onPress={handleApply}
                 aria-label={t("common.close")}
+                tooltip={t("common.close")}
               />
             </XStack>
           </XStack>

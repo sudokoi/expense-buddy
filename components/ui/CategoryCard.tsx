@@ -1,8 +1,7 @@
 import { Card, Text } from "tamagui"
-import { memo, useMemo } from "react"
+import { memo } from "react"
 import { useTranslation } from "react-i18next"
-import { getColorValue } from "../../tamagui.config"
-import { getReadableTextColor } from "../../constants/theme-colors"
+import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
 import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
@@ -26,11 +25,8 @@ export const CategoryCard = memo(function CategoryCard({
   compact = false,
 }: CategoryCardProps) {
   const { t } = useTranslation()
-  const resolvedColor = useMemo(() => getColorValue(categoryColor), [categoryColor])
-  const selectedTextColor = useMemo(
-    () => getReadableTextColor(resolvedColor),
-    [resolvedColor]
-  )
+  const { resolvedColor, iconColor: selectedTextColor } =
+    useResolvedCategoryColor(categoryColor)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 

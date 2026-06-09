@@ -1,3 +1,8 @@
+// Mock expo (native module host)
+jest.mock("expo", () => ({
+  requireOptionalNativeModule: jest.fn(() => null),
+}))
+
 // Mock Expo Localization
 jest.mock("expo-localization", () => ({
   getLocales: jest.fn(() => [

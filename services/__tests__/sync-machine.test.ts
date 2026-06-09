@@ -1,11 +1,12 @@
 /**
- * Integration tests for the Sync State Machine (Git-Style Unified Flow)
+ * Integration tests for the Sync State Machine (Provider-Based Flow)
  *
- * These tests verify the sync-machine.ts implementation with the unified
- * fetch-merge-push flow, including:
+ * These tests verify the sync-machine.ts implementation with the
+ * provider-based sync flow, including:
  * - State transitions through the unified sync flow
  * - Callback invocation with correct data
  * - Conflict detection and resolution
+ * - Initial reconciliation flow
  * - Error handling
  */
 
@@ -13,9 +14,10 @@ import { createActor } from "xstate"
 import type { SyncCallbacks } from "../sync-machine"
 import type { Expense } from "../../types/expense"
 import type { TrueConflict, MergeResult } from "../merge-engine"
-import type { GitStyleSyncResult, ConflictResolution } from "../sync-manager"
+import type { SyncProvider } from "../sync/provider-types"
+import type { syncWithProvider, firstTimeSync } from "../sync/sync-with-provider"
 
-// expo-secure-store is ESM in node_modules; mock it before importing sync-machine.
+// Mock expo-secure-store before any imports that depend on it.
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),
@@ -32,20 +34,25 @@ jest.mock("react-native", () => ({
   Platform: { OS: "ios" },
 }))
 
-// Import sync-machine after mocks are registered.
-const { syncMachine } = require("../sync-machine") as typeof import("../sync-machine")
+// Mock the sync-with-provider module
+const mockSyncWithProvider = jest.fn<
+  ReturnType<typeof syncWithProvider>,
+  Parameters<typeof syncWithProvider>
+>()
+const mockFirstTimeSync = jest.fn<
+  ReturnType<typeof firstTimeSync>,
+  Parameters<typeof firstTimeSync>
+>()
 
-// Mock the sync-manager module
-jest.mock("../sync-manager", () => ({
-  gitStyleSync: jest.fn(),
-  loadSyncConfig: jest.fn(),
+jest.mock("../sync/sync-with-provider", () => ({
+  syncWithProvider: (...args: Parameters<typeof syncWithProvider>) =>
+    mockSyncWithProvider(...args),
+  firstTimeSync: (...args: Parameters<typeof firstTimeSync>) =>
+    mockFirstTimeSync(...args),
 }))
 
 // Import mocked functions
-import { gitStyleSync, loadSyncConfig } from "../sync-manager"
-
-const mockGitStyleSync = gitStyleSync as jest.MockedFunction<typeof gitStyleSync>
-const mockLoadSyncConfig = loadSyncConfig as jest.MockedFunction<typeof loadSyncConfig>
+import { syncMachine } from "../sync-machine"
 
 // Test data factories
 function createTestExpense(overrides: Partial<Expense> = {}): Expense {
@@ -75,15 +82,18 @@ function createMergeResult(overrides: Partial<MergeResult> = {}): MergeResult {
   }
 }
 
-describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
+const mockProvider: SyncProvider = {
+  kind: "github",
+  providerId: "test",
+  testConnection: jest.fn(),
+  readSnapshot: jest.fn(),
+  writeSnapshot: jest.fn(),
+  getStatus: jest.fn(),
+}
+
+describe("Sync Machine Integration Tests (Provider-Based Flow)", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Default: sync is configured
-    mockLoadSyncConfig.mockResolvedValue({
-      token: "test-token",
-      repo: "test/repo",
-      branch: "main",
-    })
   })
 
   describe("Unified Sync Flow State Transitions", () => {
@@ -93,19 +103,16 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         addedFromLocal: [createTestExpense()],
       })
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: true,
-        message: "Synced 1 expense",
         mergeResult,
-        filesUploaded: 1,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
-      // Track state transitions
       const states: string[] = []
       actor.subscribe((snapshot) => {
         states.push(snapshot.value as string)
@@ -115,9 +122,9 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
-      // Wait for async operations
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       expect(states).toContain("syncing")
@@ -131,51 +138,50 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         merged: [createTestExpense()],
       })
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: true,
-        message: "Already in sync",
         mergeResult,
-        filesUploaded: 0,
-        filesSkipped: 1,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+        isInSync: true,
+      })
 
-      const onInSync = jest.fn()
-      const actor = createActor(syncMachine)
+      const onSuccess = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
-        callbacks: { onInSync },
+        initialReconciliationComplete: true,
+        callbacks: { onSuccess },
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      expect(onInSync).toHaveBeenCalled()
+      expect(onSuccess).toHaveBeenCalledWith({ mergeResult })
 
       actor.stop()
     })
 
     it("should transition to error state on sync failure", async () => {
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: false,
-        message: "Sync failed",
         error: "Network error",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
       const onError = jest.fn()
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -187,24 +193,170 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
       actor.stop()
     })
 
-    it("should transition to error when no sync config", async () => {
-      mockLoadSyncConfig.mockResolvedValue(null)
+    it("should transition through initial reconciliation on first sync", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: true,
+        isFirstSync: true,
+      })
 
-      const onError = jest.fn()
-      const actor = createActor(syncMachine)
+      mockFirstTimeSync.mockResolvedValue({
+        success: true,
+        isFirstSync: true,
+      })
+
+      const onSuccess = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      const states: string[] = []
+      actor.subscribe((snapshot) => {
+        states.push(snapshot.value as string)
+      })
+
+      // Background SYNC for an unreconciled provider enters the real gate.
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: { onSuccess },
+      })
+
+      expect(states).toContain("awaitingInitialReconciliation")
+
+      // Activation-driven trigger advances the gate into reconciliation.
+      actor.send({ type: "START_FIRST_SYNC" })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(states).toContain("reconcilingFirstSync")
+      expect(states).toContain("success")
+      expect(onSuccess).toHaveBeenCalledWith({ isFirstSync: true })
+
+      actor.stop()
+    })
+
+    it("should ignore background SYNC events while awaiting initial reconciliation", async () => {
+      const onSuccess = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
-        localExpenses: [],
+        localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
-        callbacks: { onError },
+        callbacks: { onSuccess },
+      })
+
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
+
+      // A second background SYNC must not pass the gate.
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: { onSuccess },
+      })
+
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
+      expect(mockFirstTimeSync).not.toHaveBeenCalled()
+
+      actor.stop()
+    })
+
+    it("should run a normal sync when the provider is already reconciled", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: true,
+      })
+
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      const states: string[] = []
+      actor.subscribe((snapshot) => {
+        states.push(snapshot.value as string)
+      })
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
+        callbacks: {},
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      expect(actor.getSnapshot().value).toBe("error")
-      expect(onError).toHaveBeenCalledWith("githubSync.manager.noConfigFound")
+      expect(states).toContain("syncing")
+      expect(states).not.toContain("awaitingInitialReconciliation")
+
+      actor.stop()
+    })
+
+    it("reaches success after first reconciliation", async () => {
+      mockFirstTimeSync.mockResolvedValue({
+        success: true,
+        isFirstSync: true,
+      })
+
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: {},
+      })
+
+      actor.send({ type: "START_FIRST_SYNC" })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("success")
+
+      actor.stop()
+    })
+
+    it("should return to the gate when firstTimeSync fails", async () => {
+      mockFirstTimeSync.mockResolvedValue({
+        success: false,
+        error: "Failed to create initial snapshot",
+      })
+
+      const onError = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      const states: string[] = []
+      actor.subscribe((snapshot) => {
+        states.push(snapshot.value as string)
+      })
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [createTestExpense()],
+        syncSettingsEnabled: false,
+        callbacks: { onError },
+      })
+
+      actor.send({ type: "START_FIRST_SYNC" })
+
+      await new Promise((resolve) => setTimeout(resolve, 150))
+
+      // On failure the machine stays gated rather than entering the error state.
+      expect(states).toContain("reconcilingFirstSync")
+      expect(states).not.toContain("error")
+      expect(actor.getSnapshot().value).toBe("awaitingInitialReconciliation")
 
       actor.stop()
     })
@@ -229,24 +381,24 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         trueConflicts: [trueConflict],
       })
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: false,
-        message: "Conflicts detected",
         mergeResult,
-        error: "Conflicts detected but no conflict handler provided",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+        pendingConflicts: [trueConflict],
+        error: "Conflicts detected",
+      })
 
       const onConflict = jest.fn()
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [localExpense],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onConflict },
       })
 
@@ -274,29 +426,25 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
       }
 
       // First call returns conflicts
-      const conflictResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValueOnce({
         success: false,
-        message: "Conflicts detected",
         mergeResult: createMergeResult({ trueConflicts: [trueConflict] }),
+        pendingConflicts: [trueConflict],
         error: "Conflicts detected",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
+      })
 
       // Second call (after resolution) succeeds
-      const successResult: GitStyleSyncResult = {
+      const successMergeResult = createMergeResult({
+        merged: [localExpense],
+      })
+      mockSyncWithProvider.mockResolvedValueOnce({
         success: true,
-        message: "Synced after conflict resolution",
-        mergeResult: createMergeResult({ merged: [localExpense] }),
-        filesUploaded: 1,
-        filesSkipped: 0,
-      }
+        mergeResult: successMergeResult,
+      })
 
-      mockGitStyleSync
-        .mockResolvedValueOnce(conflictResult)
-        .mockResolvedValueOnce(successResult)
-
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       const states: string[] = []
@@ -309,16 +457,17 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         type: "SYNC",
         localExpenses: [localExpense],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
       expect(actor.getSnapshot().value).toBe("conflict")
 
       // Resolve conflicts
-      const resolutions: ConflictResolution[] = [
-        { expenseId: "conflict-1", choice: "local" },
-      ]
-      actor.send({ type: "RESOLVE_CONFLICTS", resolutions })
+      actor.send({
+        type: "RESOLVE_CONFLICTS",
+        resolutions: [{ expenseId: "conflict-1", choice: "local" }],
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -336,23 +485,23 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         reason: "equal_timestamps",
       }
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: false,
-        message: "Conflicts detected",
         mergeResult: createMergeResult({ trueConflicts: [trueConflict] }),
+        pendingConflicts: [trueConflict],
         error: "Conflicts detected",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -367,7 +516,7 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
   })
 
   describe("Callback Invocation with Correct Data", () => {
-    it("onSuccess callback should receive syncResult and mergeResult", async () => {
+    it("onSuccess callback should receive mergeResult", async () => {
       const mergedExpenses = [
         createTestExpense({ note: "Expense 1" }),
         createTestExpense({ note: "Expense 2" }),
@@ -379,39 +528,33 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         updatedFromLocal: [mergedExpenses[1]],
       })
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: true,
-        message: "Synced 2 expenses",
         mergeResult,
-        filesUploaded: 2,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
-      let receivedResult:
-        | { syncResult?: GitStyleSyncResult; mergeResult?: MergeResult }
-        | undefined
+      let receivedResult: { mergeResult?: MergeResult; isFirstSync?: boolean } | undefined
 
       const onSuccess: SyncCallbacks["onSuccess"] = (result) => {
         receivedResult = result
       }
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onSuccess },
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       expect(receivedResult).toBeDefined()
-      expect(receivedResult?.syncResult).toBeDefined()
-      expect(receivedResult?.syncResult?.success).toBe(true)
-      expect(receivedResult?.syncResult?.filesUploaded).toBe(2)
       expect(receivedResult?.mergeResult).toBeDefined()
       expect(receivedResult?.mergeResult?.merged).toHaveLength(2)
       expect(receivedResult?.mergeResult?.addedFromRemote).toHaveLength(1)
@@ -433,15 +576,12 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         reason: "within_threshold",
       }
 
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: false,
-        message: "Conflicts detected",
         mergeResult: createMergeResult({ trueConflicts: [conflict1, conflict2] }),
+        pendingConflicts: [conflict1, conflict2],
         error: "Conflicts detected",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
       let receivedConflicts: TrueConflict[] | undefined
 
@@ -449,13 +589,16 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         receivedConflicts = conflicts
       }
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onConflict },
       })
 
@@ -472,14 +615,10 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
     })
 
     it("onError callback should receive error message", async () => {
-      const syncResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValue({
         success: false,
-        message: "Sync failed",
         error: "Failed to fetch remote expenses",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      })
 
       let receivedError: string | undefined
 
@@ -487,13 +626,16 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
         receivedError = error
       }
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -507,16 +649,19 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
 
   describe("Error Handling", () => {
     it("should handle network errors during sync", async () => {
-      mockGitStyleSync.mockRejectedValue(new Error("Network error"))
+      mockSyncWithProvider.mockRejectedValue(new Error("Network error"))
 
       const onError = jest.fn()
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -530,38 +675,41 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
 
     it("should allow retry from error state", async () => {
       // First call fails
-      mockGitStyleSync.mockRejectedValueOnce(new Error("Network error"))
+      mockSyncWithProvider.mockRejectedValueOnce(new Error("Network error"))
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
       expect(actor.getSnapshot().value).toBe("error")
 
-      // Second call succeeds
-      const successResult: GitStyleSyncResult = {
+      // Second call succeeds (returns isInSync for quick transition through inSync)
+      const mergeResult = createMergeResult({
+        merged: [createTestExpense()],
+      })
+      mockSyncWithProvider.mockResolvedValue({
         success: true,
-        message: "Synced",
-        mergeResult: createMergeResult(),
-        filesUploaded: 0,
-        filesSkipped: 1,
-      }
-      mockGitStyleSync.mockResolvedValue(successResult)
+        mergeResult,
+        isInSync: true,
+      })
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 150))
-      // Should have transitioned through inSync back to idle
       expect(actor.getSnapshot().value).toBe("idle")
 
       actor.stop()
@@ -576,27 +724,29 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
       }
 
       // First call returns conflicts
-      const conflictResult: GitStyleSyncResult = {
+      mockSyncWithProvider.mockResolvedValueOnce({
         success: false,
-        message: "Conflicts detected",
         mergeResult: createMergeResult({ trueConflicts: [trueConflict] }),
+        pendingConflicts: [trueConflict],
         error: "Conflicts detected",
-        filesUploaded: 0,
-        filesSkipped: 0,
-      }
+      })
 
-      mockGitStyleSync
-        .mockResolvedValueOnce(conflictResult)
-        .mockRejectedValueOnce(new Error("Push failed after resolution"))
+      // Second call (after resolution) fails
+      mockSyncWithProvider.mockRejectedValueOnce(
+        new Error("Push failed after resolution")
+      )
 
       const onError = jest.fn()
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
         callbacks: { onError },
       })
 
@@ -620,24 +770,93 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
     })
   })
 
+  describe("Auth Error Handling", () => {
+    it("should invoke onAuthError callback when errorCode is AUTH_MISSING", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: false,
+        error: "Missing authentication",
+        errorCode: "AUTH_MISSING",
+      })
+
+      const onAuthError = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [],
+        syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
+        callbacks: { onAuthError },
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("error")
+      expect(onAuthError).toHaveBeenCalledWith({
+        errorCode: "AUTH_MISSING",
+        shouldSignOut: false,
+      })
+
+      actor.stop()
+    })
+
+    it("should invoke onAuthError with shouldSignOut=true for AUTH_INVALID", async () => {
+      mockSyncWithProvider.mockResolvedValue({
+        success: false,
+        error: "Invalid token",
+        errorCode: "AUTH_INVALID",
+      })
+
+      const onAuthError = jest.fn()
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
+      actor.start()
+
+      actor.send({
+        type: "SYNC",
+        localExpenses: [],
+        syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
+        callbacks: { onAuthError },
+      })
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      expect(actor.getSnapshot().value).toBe("error")
+      expect(onAuthError).toHaveBeenCalledWith({
+        errorCode: "AUTH_INVALID",
+        shouldSignOut: true,
+      })
+
+      actor.stop()
+    })
+  })
+
   describe("RESET Event", () => {
     it("should reset from success state to idle", async () => {
-      const syncResult: GitStyleSyncResult = {
-        success: true,
-        message: "Synced",
-        mergeResult: createMergeResult(),
-        filesUploaded: 1,
-        filesSkipped: 0,
-      }
-      mockGitStyleSync.mockResolvedValue(syncResult)
+      const mergeResult = createMergeResult({
+        merged: [createTestExpense()],
+      })
 
-      const actor = createActor(syncMachine)
+      mockSyncWithProvider.mockResolvedValue({
+        success: true,
+        mergeResult,
+      })
+
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [createTestExpense()],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))
@@ -650,15 +869,18 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
     })
 
     it("should reset from error state to idle", async () => {
-      mockGitStyleSync.mockRejectedValue(new Error("Failed"))
+      mockSyncWithProvider.mockRejectedValue(new Error("Failed"))
 
-      const actor = createActor(syncMachine)
+      const actor = createActor(syncMachine, {
+        input: { provider: mockProvider },
+      })
       actor.start()
 
       actor.send({
         type: "SYNC",
         localExpenses: [],
         syncSettingsEnabled: false,
+        initialReconciliationComplete: true,
       })
 
       await new Promise((resolve) => setTimeout(resolve, 100))

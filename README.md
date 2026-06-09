@@ -13,9 +13,9 @@
   <a href="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml"><img src="https://github.com/sudokoi/expense-buddy/actions/workflows/release-local.yml/badge.svg" alt="Build Status" /></a>
 </p>
 
-Expense Buddy is a privacy-first expense tracker built with React Native and Expo, designed around one core idea: turn transaction SMS messages into draft expenses automatically, let you review them on-device, and keep the confirmed data synced to a GitHub repository you control.
+Expense Buddy is a **privacy-first expense tracker for Android**, built with React Native and Expo and distributed through Google Play. The core idea: turn transaction SMS messages into draft expenses automatically, let you review them on-device, and keep the confirmed data synced to a sync provider you control.
 
-Manual entry, analytics, multi-currency support, and GitHub sync are all there, but the product's differentiator is the import pipeline: scan recent Android SMS messages, extract likely expenses, stage them locally, and import only what you approve.
+Manual entry, analytics, multi-currency support, and sync are all there, but the product's differentiator is the import pipeline: scan recent Android SMS messages, extract likely expenses, stage them locally, and import only what you approve.
 
 ## Why Expense Buddy
 
@@ -23,7 +23,7 @@ Manual entry, analytics, multi-currency support, and GitHub sync are all there, 
 - Surface new matched transactions with local Android notifications that reopen the review flow
 - Keep raw SMS content on-device and out of GitHub sync
 - Review, edit, reject, or dismiss imported items before they become expenses
-- Sync confirmed expenses across devices using your own private GitHub repository
+- Sync confirmed expenses across devices using GitHub or Google Drive
 - Track expenses manually too, with custom categories, payment methods, and saved instruments
 - Explore spending with charts, filters, and multi-currency analytics
 
@@ -55,8 +55,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### SMS Import and Review
 
-- Android-only SMS import using the native `expense-buddy-sms-parser` parsing engine (pure Kotlin, no JS bridge)
-- Android-only background transaction alerts using the native `expense-buddy-sms-module` module
+- SMS import using the native `expense-buddy-sms-parser` parsing engine (pure Kotlin, no JS bridge)
+- Background transaction alerts using the native `expense-buddy-sms-module` module
 - Zero-hop native sync: a single `syncInboxAsync` bridge call reads, parses, classifies, deduplicates, and queues items in native Room — JS only receives a count
 - Inline `READ_SMS` permission handling through the native module
 - Optional Settings toggle for background SMS alerts with `RECEIVE_SMS` and `POST_NOTIFICATIONS` gating
@@ -75,14 +75,12 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Full create, edit, delete, and soft-delete sync behavior
 - Day-level detail view and searchable history
 
-### GitHub Sync
+### Sync
 
-- Private repository sync using a fetch-merge-push workflow
-- Daily CSV files in `expenses-YYYY-MM-DD.csv` format
-- Optional settings sync for non-sensitive app settings
-- Dirty-day tracking so only changed dates are re-uploaded
-- Differential fetch and upload using remote blob SHA caching
-- Timestamp-based auto-resolution with true conflict detection when needed
+- **GitHub** — private repository sync using a fetch-merge-push workflow; daily CSV files, optional settings sync
+- **Google Drive** — sync via REST Drive API v3; per-year JSON files in Drive's private `appDataFolder`; native Google Sign-In; automatic OAuth token refresh
+- Multi-provider framework with credential store, per-provider watermarks, and queue compaction
+- Activation-triggered first reconciliation on provider add/switch
 - Manual sync controls plus optional auto-sync on launch or on change
 
 ### Analytics
@@ -95,7 +93,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 ### User Experience
 
 - Works on Android, iOS, and Web for core expense tracking
-- SMS import is Android-only and requires a native build
+- SMS import requires a native build
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
 - Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
@@ -141,22 +139,48 @@ yarn start
 - Android: `yarn android`
 - Web: `yarn web`
 
-## GitHub Sync Setup
+## Sync Setup
 
-### Sign in with GitHub on Android
+### GitHub
 
-1. Go to Settings > GitHub Sync.
-2. Tap Sign in with GitHub.
-3. Approve the device-flow code in the browser.
-4. Pick a personal repository you own and can write to.
-5. Save the branch and test the connection.
-
-### Token-based setup for Web or fallback use
-
-1. Create a GitHub Personal Access Token.
-2. Grant `Contents: Read and write` for a fine-grained token, or use the classic `repo` scope for a private repository.
-3. In the app, enter the token, repository in `owner/repo` format, and branch.
+1. Go to Settings > GitHub Config.
+2. Create a GitHub Personal Access Token with `Contents: Read and write` scope.
+3. Enter the token, repository in `owner/repo` format, and branch.
 4. Save the config and test the connection.
+
+_On Android, you can also sign in with GitHub using the device authorization flow and pick a repository directly._
+
+### Google Drive
+
+1. Go to Settings > Google Drive Config.
+2. Tap Add Google Drive and sign in with your Google account.
+3. The app stores a compressed expense archive in your app-specific `appDataFolder` — invisible to other Drive apps.
+4. Test the connection and save.
+
+_Google Drive sync requires an Android device and a Google account with the app authorized to use Drive API. An **Android OAuth client** must be configured in Google Cloud Console (see setup steps below)._
+
+#### Google Cloud Console — Android OAuth Client Setup
+
+The app uses `play-services-auth` (GoogleSignInClient) for native Android sign-in, not a browser redirect. You must create an Android OAuth client in the same GCP project as the existing web client.
+
+1. Go to [Google Cloud Console > APIs & Services > Credentials](https://console.developers.google.com/apis/credentials).
+2. Select the same project that contains the web client ID (`124317329894-...`).
+3. Click **Create Credentials** → **OAuth client ID**.
+4. For **Application type**, select **Android**.
+5. Provide a name (e.g. "Expense Buddy Android").
+6. For **Package name**, enter: `com.sudokoi.expensebuddy`
+7. For **SHA-1 certificate fingerprint**, add the debug and release fingerprints:
+   - **Debug** (local development):
+     ```
+     keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android -keypass android
+     ```
+   - **Release** (production signing):
+     Obtain from your app signing key (Play Console or your keystore).
+8. Click **Create**. Copy the client ID (it ends with `.apps.googleusercontent.com`).
+9. Still in the same project, verify that the **Drive API** is enabled: go to [Enabled APIs & Services](https://console.developers.google.com/apis/enabled) and ensure `Google Drive API` is listed. Enable it if not.
+10. Review the **OAuth consent screen**: ensure the required fields (app name, support email) are filled and the `../auth/drive.file` scope is listed if you publish the app.
+
+> **The Android OAuth client ID is NOT stored in the code.** Google Play Services identifies the app by package name + signing certificate, so no code change is needed after creating the client. The existing web client ID (`GOOGLE_DRIVE_OAUTH_CLIENT_ID`) is still required for the server-side token exchange.
 
 ### Auto-sync options
 
@@ -173,7 +197,7 @@ Key implementation details:
 - file-based routing under `app/`
 - XState stores for expenses, settings, filters, notifications, and UI state
 - React Context provider for SMS review queue (native-owned Room persistence, not an XState store)
-- service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
+- service-layer sync engine with a provider framework supporting GitHub and Google Drive — provider registry, credential store, per-provider state, and queue compaction
 - single native Android SMS module (`expense-buddy-sms-module`) handling permissions, inbox scanning, ML classification, and queue persistence — `expense-buddy-sms-parser` is a pure Kotlin library with no JS bridge
 - property-based and unit tests across storage, sync, parsing, and store behavior
 - tracked Expo native modules for background SMS alerts and Play Core integrations
@@ -212,9 +236,22 @@ expense-buddy/
 │   ├── background-sms/
 │   │   ├── android-background-sms-module.ts
 │   │   └── background-sms-permissions.ts
-│   ├── github-sync.ts          # GitHub API client
-│   ├── sync-machine.ts         # sync state machine
-│   ├── sync-manager.ts         # sync orchestration
+│   ├── sync/                   # multi-provider sync framework
+│   │   ├── provider-types.ts
+│   │   ├── provider-registry.ts
+│   │   ├── credential-store.ts
+│   │   ├── provider-state-store.ts
+│   │   ├── provider-settings-store.ts
+│   │   ├── deferred-provider.ts
+│   │   ├── sync-with-provider.ts
+│   │   ├── github-provider.ts
+│   │   ├── google-drive-provider.ts
+│   │   └── index.ts
+│   ├── github-sync.ts          # GitHub API client (legacy)
+│   ├── sync-machine.ts         # XState sync machine (provider via input)
+│   ├── sync-manager.ts         # legacy sync orchestration
+│   ├── sync-queue.ts           # per-provider watermarks
+│   ├── sync-config.ts          # provider config and migration
 │   ├── merge-engine.ts         # conflict resolution and merge logic
 │   ├── expense-storage.ts      # local expense persistence
 │   ├── settings-manager.ts     # settings persistence and sync support
@@ -256,7 +293,7 @@ The test suite includes unit tests and property-based tests for sync, storage, p
 
 The app does not require user-provided environment variables.
 
-The GitHub OAuth Client ID is configured in `app.config.js` and can be overridden for local Expo development with `EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID`.
+OAuth client IDs for GitHub and Google Drive are configured in `app.config.js` and can be overridden for local development with `EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID` and `EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID`.
 
 Build profiles are defined in `eas.json`:
 
@@ -290,7 +327,7 @@ Release automation is documented in [.github/RELEASE.md](.github/RELEASE.md).
 
 ## Privacy
 
-Expense Buddy does not collect user data. Expense data lives on-device by default, and optional sync writes only to the GitHub repository you configure. Raw SMS import data is processed locally and is not uploaded as part of sync.
+Expense Buddy does not collect user data. Expense data lives on-device by default, and optional sync writes only to the GitHub repository or Google Drive `appDataFolder` you configure. Raw SMS import data is processed locally and is not uploaded as part of sync.
 
 See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 

@@ -13,7 +13,14 @@ import {
 import { logAsync } from "../../services/logger"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Plus,
+} from "@tamagui/lucide-icons-2"
 import { Keyboard, Platform } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -36,6 +43,7 @@ import {
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { isDateEditable } from "../../services/read-only-window"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import {
   UI_SPACE,
@@ -277,10 +285,19 @@ export default function AddExpenseScreen() {
   }
 
   const onChangeDate = (_event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date
     setShowDatePicker(false)
-    setDate(currentDate)
+    if (!selectedDate) return
+    // Reject back-dated selections that fall outside the read-only authoring window.
+    if (!isDateEditable(selectedDate.toISOString())) {
+      addNotification(t("history.readOnly.blocked"), "error")
+      return
+    }
+    setDate(selectedDate)
   }
+
+  // Disable Save when the chosen date is outside the editable window (defensive;
+  // the date picker already rejects such selections).
+  const isDateReadOnly = useMemo(() => !isDateEditable(date.toISOString()), [date])
 
   return (
     <YStack flex={1} bg="$background">
@@ -302,6 +319,7 @@ export default function AddExpenseScreen() {
               }}
               disabled={isScanningSmsImports}
               fontWeight={UI_FONT_WEIGHT.bold}
+              icon={Download}
             >
               {isScanningSmsImports
                 ? t("settings.smsImport.actions.scanning")
@@ -332,6 +350,7 @@ export default function AddExpenseScreen() {
                 size="$prominent"
                 px="$section"
                 bg="$background"
+                placeholderTextColor="$color"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -410,6 +429,7 @@ export default function AddExpenseScreen() {
               {t("add.note")}
             </Label>
             <Input
+              placeholderTextColor="$color"
               placeholder={t("add.notePlaceholder")}
               value={note}
               onChangeText={setNote}
@@ -508,6 +528,7 @@ export default function AddExpenseScreen() {
                         focusStyle={{
                           borderColor: ACCENT_COLORS.primary,
                         }}
+                        placeholderTextColor="$color"
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
@@ -537,6 +558,7 @@ export default function AddExpenseScreen() {
               borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
               onPress={() => handleSave({ stayOnAdd: true })}
+              disabled={isDateReadOnly}
               icon={<Plus size="$icon" />}
               fontWeight={UI_FONT_WEIGHT.bold}
             >
@@ -547,6 +569,7 @@ export default function AddExpenseScreen() {
               size="$control"
               theme="accent"
               onPress={() => handleSave({ stayOnAdd: false })}
+              disabled={isDateReadOnly}
               icon={<Check size="$icon" />}
               fontWeight={UI_FONT_WEIGHT.bold}
             >

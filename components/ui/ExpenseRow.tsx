@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useRef } from "react"
-import { XStack, YStack, Text, Button } from "tamagui"
+import { XStack, YStack, Text } from "tamagui"
 
 import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
 
@@ -10,6 +10,7 @@ import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import { ExpenseCard } from "./ExpenseCard"
 import { AmountText } from "./AmountText"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { IconActionButton } from "./IconActionButton"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
@@ -89,19 +90,21 @@ export const ExpenseRow = memo(function ExpenseRow({
 
         {showActions ? (
           <>
-            <Button
+            <IconActionButton
               size="$chip"
               icon={Edit3}
               chromeless
               onPress={handleEdit}
               aria-label={t("common.edit")}
+              tooltip={t("common.edit")}
             />
-            <Button
+            <IconActionButton
               size="$chip"
               icon={Trash}
               chromeless
               onPress={handleDelete}
               aria-label={t("common.delete")}
+              tooltip={t("common.delete")}
             />
           </>
         ) : null}

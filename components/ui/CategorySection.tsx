@@ -4,6 +4,7 @@ import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
+import { IconActionButton } from "./IconActionButton"
 import { useTranslation } from "react-i18next"
 import {
   UI_RADIUS,
@@ -157,16 +158,17 @@ export const CategorySection = memo(function CategorySection({
                       gap={0}
                       width={24}
                     >
-                      <Button
+                      <IconActionButton
                         size="$chip"
                         chromeless
                         icon={<ChevronUp size={UI_ICON_SIZE.small} />}
                         onPress={() => handleMoveUp(index)}
                         disabled={index === 0}
                         opacity={index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium}
-                        aria-label={`Move ${category.label} up`}
+                        aria-label={t("common.moveUpLabel", { label: category.label })}
+                        tooltip={t("common.moveUpLabel", { label: category.label })}
                       />
-                      <Button
+                      <IconActionButton
                         size="$chip"
                         chromeless
                         icon={<ChevronDown size={UI_ICON_SIZE.small} />}
@@ -177,7 +179,8 @@ export const CategorySection = memo(function CategorySection({
                             ? UI_OPACITY.minimal
                             : UI_OPACITY.medium
                         }
-                        aria-label={`Move ${category.label} down`}
+                        aria-label={t("common.moveDownLabel", { label: category.label })}
+                        tooltip={t("common.moveDownLabel", { label: category.label })}
                       />
                     </YStack>
 

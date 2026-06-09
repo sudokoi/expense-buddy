@@ -26,6 +26,7 @@ import {
 } from "../../../utils/amount-input"
 import { validateIdentifier } from "../../../utils/payment-method-validation"
 import { isPaymentInstrumentMethod } from "../../../services/payment-instruments"
+import { isDateEditable, isExpenseEditable } from "../../../services/read-only-window"
 import type {
   ExpenseCategory,
   PaymentMethodType,
@@ -112,6 +113,15 @@ export default function EditExpenseScreen() {
     if (!paymentMethodType) return null
     return PAYMENT_METHODS.find((pm) => pm.value === paymentMethodType) || null
   }, [paymentMethodType])
+
+  // An entry already in the read-only zone cannot be edited at all; a within-window
+  // entry still cannot be back-dated to a target date outside the window.
+  const isReadOnly = useMemo(
+    () => (expense ? !isExpenseEditable(expense) : false),
+    [expense]
+  )
+  const isTargetDateReadOnly = useMemo(() => !isDateEditable(date), [date])
+  const saveDisabled = isReadOnly || isTargetDateReadOnly
 
   const handleCategorySelect = useCallback((value: ExpenseCategory) => {
     setCategory(value)
@@ -237,6 +247,11 @@ export default function EditExpenseScreen() {
                   onChange={(event, selectedDate) => {
                     setShowDatePicker(Platform.OS === "ios")
                     if (selectedDate && event.type !== "dismissed") {
+                      // Reject moving the entry to a date outside the editable window.
+                      if (!isDateEditable(selectedDate.toISOString())) {
+                        addNotification(t("history.readOnly.blocked"), "error")
+                        return
+                      }
                       const originalDate = date ? parseISO(date) : new Date()
                       selectedDate.setHours(
                         originalDate.getHours(),
@@ -286,6 +301,7 @@ export default function EditExpenseScreen() {
                     ? t("history.editDialog.fields.amountPlaceholder")
                     : t("history.editDialog.fields.amountPlaceholderNumeric")
                 }
+                placeholderTextColor="$color"
                 keyboardType={amountInputProps.keyboardType}
                 inputMode={amountInputProps.inputMode}
               />
@@ -336,6 +352,7 @@ export default function EditExpenseScreen() {
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               selectTextOnFocus
+              placeholderTextColor="$color"
             />
           </YStack>
 
@@ -407,6 +424,7 @@ export default function EditExpenseScreen() {
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
+                    placeholderTextColor="$color"
                   />
                 )}
               </YStack>
@@ -422,7 +440,12 @@ export default function EditExpenseScreen() {
             <Button size="$control" onPress={() => router.back()}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" theme="accent" onPress={handleSave}>
+            <Button
+              size="$control"
+              theme="accent"
+              onPress={handleSave}
+              disabled={saveDisabled}
+            >
               {t("common.save")}
             </Button>
           </XStack>

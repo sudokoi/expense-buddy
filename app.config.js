@@ -4,6 +4,23 @@ const { version } = require("./package.json")
 // Used for Android device-flow login. Expo Go can override via EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID.
 const GITHUB_OAUTH_CLIENT_ID = "Ov23lihYBxLtgot0H8Nq"
 
+// Google OAuth Web Client ID (not a secret).
+// Used for Android Google Drive token exchange (server auth code from native GoogleSignIn).
+// Expo Go can override via EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID.
+// An Android OAuth client must also be created in the same GCP project for native sign-in.
+// See README for full setup steps.
+// Create web client at https://console.cloud.google.com/apis/credentials
+const GOOGLE_DRIVE_OAUTH_CLIENT_ID =
+  "124317329894-agi8vt3khsle4vcv6u8i3dfsf1f2aplj.apps.googleusercontent.com"
+
+// Google OAuth Token Exchange Worker URL.
+// A Cloudflare Worker that proxies the OAuth token exchange with the client_secret.
+// The client_secret is stored as a Worker secret, never in the app binary.
+// Set EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URL to override.
+// Deploy: cd workers/google-token-exchange && npx wrangler deploy && npx wrangler secret put CLIENT_ID && npx wrangler secret put CLIENT_SECRET
+const GOOGLE_TOKEN_EXCHANGE_URL =
+  "https://expense-buddy-token-exchange.sudokoi.workers.dev"
+
 /**
  * Converts a semantic version string to a numeric version code for app stores.
  *
@@ -170,6 +187,9 @@ export default {
       auth: {
         githubOAuthClientId:
           process.env.EXPO_PUBLIC_GITHUB_OAUTH_CLIENT_ID || GITHUB_OAUTH_CLIENT_ID,
+        googleDriveOAuthClientId: GOOGLE_DRIVE_OAUTH_CLIENT_ID,
+        googleTokenExchangeUrl:
+          process.env.EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URL || GOOGLE_TOKEN_EXCHANGE_URL,
       },
       eas: {
         projectId: "facbe508-0deb-4c1d-9625-b49b672a98f1",

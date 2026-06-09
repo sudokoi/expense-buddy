@@ -1,6 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { secureStorage } from "./secure-storage"
 import { validatePAT, GitHubApiError } from "./github-sync"
 import { getUserFriendlyMessage } from "./error-utils"
+import { providerSettingsStore } from "./sync/provider-settings-store"
+import { credentialStore } from "./sync/credential-store"
+import type { ProviderConfig, GitHubProviderConfig } from "./sync/provider-types"
 import i18next from "i18next"
 import type { SyncConfig, SyncResult } from "../types/sync"
 
@@ -12,6 +16,23 @@ export async function saveSyncConfig(config: SyncConfig): Promise<void> {
   await secureStorage.setItem(GITHUB_TOKEN_KEY, config.token.trim())
   await secureStorage.setItem(GITHUB_REPO_KEY, config.repo.trim())
   await secureStorage.setItem(GITHUB_BRANCH_KEY, config.branch.trim())
+
+  await credentialStore.save("github_pat", {
+    credentialId: "github_pat",
+    kind: "github_pat",
+    data: { token: config.token.trim() },
+  })
+
+  const providerConfig: GitHubProviderConfig = {
+    kind: "github",
+    id: "default",
+    label: config.repo.trim(),
+    credentialId: "github_pat",
+    repo: config.repo.trim(),
+    branch: config.branch.trim(),
+  }
+  await providerSettingsStore.addProvider(providerConfig)
+  await providerSettingsStore.setActiveProvider("default")
 }
 
 export async function loadSyncConfig(): Promise<SyncConfig | null> {
@@ -20,7 +41,15 @@ export async function loadSyncConfig(): Promise<SyncConfig | null> {
   const branch = await secureStorage.getItem(GITHUB_BRANCH_KEY)
 
   if (!token || !repo || !branch) {
-    return null
+    const active = await providerSettingsStore.getActiveConfig()
+    if (!active || active.kind !== "github") return null
+    const entry = await credentialStore.get(active.credentialId)
+    if (!entry) return null
+    return {
+      token: entry.data["token"] ?? "",
+      repo: active.repo,
+      branch: active.branch,
+    }
   }
 
   return { token, repo, branch }
@@ -30,6 +59,13 @@ export async function clearSyncConfig(): Promise<void> {
   await secureStorage.deleteItem(GITHUB_TOKEN_KEY)
   await secureStorage.deleteItem(GITHUB_REPO_KEY)
   await secureStorage.deleteItem(GITHUB_BRANCH_KEY)
+  await credentialStore.delete("github_pat")
+
+  const state = await providerSettingsStore.load()
+  const githubProviders = state.providers.filter((p) => p.kind === "github")
+  for (const provider of githubProviders) {
+    await providerSettingsStore.removeProvider(provider.id)
+  }
 }
 
 export async function testConnection(): Promise<SyncResult> {
@@ -87,5 +123,56 @@ export async function testConnection(): Promise<SyncResult> {
       message: i18next.t("githubSync.manager.connectionFailed"),
       error: getUserFriendlyMessage(error),
     }
+  }
+}
+
+export async function getActiveProviderConfig(): Promise<ProviderConfig | null> {
+  return providerSettingsStore.getActiveConfig()
+}
+
+const MIGRATION_KEY = "sync.migration.v1"
+
+/**
+ * Migrates old single-GitHub config to the multi-provider format.
+ *
+ * Checks if old SecureStorage keys exist but no provider store data,
+ * then creates a GitHub provider entry from the old config.
+ *
+ * Idempotent: writes a migration marker key on success.
+ * Safe to re-run: skips if migration marker exists or providers already exist.
+ */
+export async function migrateSyncConfig(): Promise<void> {
+  try {
+    const alreadyMigrated = await AsyncStorage.getItem(MIGRATION_KEY)
+    if (alreadyMigrated) return
+
+    const providerState = await providerSettingsStore.load()
+    if (providerState.providers.length > 0) return
+
+    const token = await secureStorage.getItem(GITHUB_TOKEN_KEY)
+    const repo = await secureStorage.getItem(GITHUB_REPO_KEY)
+    const branch = await secureStorage.getItem(GITHUB_BRANCH_KEY)
+
+    if (!token || !repo || !branch) return
+
+    await credentialStore.save("github_pat", {
+      credentialId: "github_pat",
+      kind: "github_pat",
+      data: { token: token.trim() },
+    })
+
+    const providerConfig: GitHubProviderConfig = {
+      kind: "github",
+      id: "default",
+      label: repo.trim(),
+      credentialId: "github_pat",
+      repo: repo.trim(),
+      branch: branch.trim(),
+    }
+    await providerSettingsStore.addProvider(providerConfig)
+    await providerSettingsStore.setActiveProvider("default")
+    await AsyncStorage.setItem(MIGRATION_KEY, "true")
+  } catch (error) {
+    console.warn("Sync config migration failed (will retry):", error)
   }
 }

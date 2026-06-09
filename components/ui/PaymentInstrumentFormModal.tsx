@@ -224,6 +224,7 @@ function PaymentInstrumentForm({
           focusStyle={{
             borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
           }}
+          placeholderTextColor="$color"
         />
         {errors.nickname && (
           <Text fontSize="$caption" color="$red10">
@@ -251,6 +252,7 @@ function PaymentInstrumentForm({
           focusStyle={{
             borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
           }}
+          placeholderTextColor="$color"
         />
         {errors.lastDigits && (
           <Text fontSize="$caption" color="$red10">

@@ -18,14 +18,3 @@ export {
   getPendingSyncCount,
   saveLastSyncTime,
 } from "./sync-direction"
-export { syncUp } from "./sync-upload"
-export { syncDown, syncDownMore } from "./sync-download"
-export { fetchAllRemoteExpenses, classifyTreeEntries } from "./remote-fetch"
-
-export {
-  gitStyleSync,
-  ConflictResolution,
-  GitStyleSyncResult,
-  OnConflictCallback,
-} from "./git-style-sync"
-export { migrateToDailyFiles } from "./sync-migration"

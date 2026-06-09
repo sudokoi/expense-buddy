@@ -3,6 +3,9 @@ import { Expense } from "../types/expense"
 import { AppSettings } from "./settings-manager"
 import { Category } from "../types/category"
 import { getRandomCategoryColor } from "../constants/category-colors"
+import { providerStateStore } from "./sync/provider-state-store"
+import { providerSettingsStore } from "./sync/provider-settings-store"
+import { logAsync } from "./logger"
 
 const SYNC_QUEUE_KEY = "sync_queue_v1"
 const SYNC_QUEUE_VERSION = 1
@@ -159,18 +162,27 @@ export async function enqueueSyncOp(op: SyncQueueOpInput): Promise<SyncQueueOp> 
       ops: [...state.ops, nextOp],
     }
     await saveState(nextState)
+    logAsync(
+      "INFO",
+      "SYNC_QUEUE",
+      `ENQUEUE_OP id=${nextOp.id} type=${nextOp.type} queueSize=${nextState.ops.length}`
+    )
     return nextOp
   })
 }
 
 export async function getSyncQueueWatermark(): Promise<number> {
-  const state = await loadState()
-  return Math.max(0, state.nextId - 1)
+  return enqueueWrite(async () => {
+    const state = await loadState()
+    return Math.max(0, state.nextId - 1)
+  })
 }
 
 export async function getSyncOpsSince(watermark: number): Promise<SyncQueueOp[]> {
-  const state = await loadState()
-  return state.ops.filter((op) => op.id > watermark).sort((a, b) => a.id - b.id)
+  return enqueueWrite(async () => {
+    const state = await loadState()
+    return state.ops.filter((op) => op.id > watermark).sort((a, b) => a.id - b.id)
+  })
 }
 
 export async function clearSyncOpsUpTo(watermark: number): Promise<void> {
@@ -182,6 +194,11 @@ export async function clearSyncOpsUpTo(watermark: number): Promise<void> {
       ops: remaining,
     }
     await saveState(nextState)
+    logAsync(
+      "INFO",
+      "SYNC_QUEUE",
+      `CLEAR_OPS_UP_TO watermark=${watermark} removed=${state.ops.length - remaining.length} remaining=${remaining.length}`
+    )
   })
 }
 
@@ -352,4 +369,63 @@ function applyCategoryReorder(settings: AppSettings, labels: string[]): AppSetti
     }))
 
   return { ...settings, categories: [...reordered, ...missingCategories] }
+}
+
+export async function getProviderWatermark(providerId: string): Promise<number | null> {
+  return providerStateStore.get<number>(providerId, "watermark")
+}
+
+export async function setProviderWatermark(
+  providerId: string,
+  watermark: number
+): Promise<void> {
+  await providerStateStore.set(providerId, "watermark", watermark)
+  logAsync(
+    "INFO",
+    "SYNC_QUEUE",
+    `SET_PROVIDER_WATERMARK providerId=${providerId} watermark=${watermark}`
+  )
+}
+
+export async function markProviderReconciled(providerId: string): Promise<void> {
+  await providerStateStore.set(providerId, "reconciled", true)
+  logAsync("INFO", "SYNC_QUEUE", `MARK_PROVIDER_RECONCILED providerId=${providerId}`)
+}
+
+export async function isProviderReconciled(providerId: string): Promise<boolean> {
+  const reconciled = await providerStateStore.get<boolean>(providerId, "reconciled")
+  logAsync(
+    "INFO",
+    "SYNC_QUEUE",
+    `IS_PROVIDER_RECONCILED providerId=${providerId} result=${reconciled === true}`
+  )
+  return reconciled === true
+}
+
+/**
+ * Returns the minimum watermark across all providers that have completed
+ * initial reconciliation. Providers still in awaitingInitialReconciliation
+ * are excluded so they don't block compaction — they will reconcile against
+ * the full local dataset when activated.
+ *
+ * Returns 0 when no providers are reconciled (nothing to compact).
+ */
+export async function getMinSyncedWatermark(): Promise<number> {
+  const settings = await providerSettingsStore.load()
+
+  if (settings.providers.length === 0) return 0
+
+  const watermarks: number[] = []
+
+  for (const provider of settings.providers) {
+    const reconciled = await isProviderReconciled(provider.id)
+    if (!reconciled) continue
+
+    const watermark = await getProviderWatermark(provider.id)
+    if (watermark !== null) {
+      watermarks.push(watermark)
+    }
+  }
+
+  return watermarks.length > 0 ? Math.min(...watermarks) : 0
 }

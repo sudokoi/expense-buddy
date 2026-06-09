@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** May 22, 2026
+**Last Updated:** June 8, 2026
 
 ## Overview
 
@@ -13,16 +13,18 @@ Expense Buddy is a free, open-source expense tracking application licensed under
 
 Expense Buddy does not collect, store, transmit, or share any personal information or usage data with us or any third parties. The app operates entirely on your device.
 
+**OAuth token exchange note:** When you sign in with Google Drive, the app sends the OAuth authorization code to a Cloudflare Worker (`token-exchange.sudokoi.workers.dev`) that we operate. The Worker exchanges it for access/refresh tokens using the app's client secret (which cannot be stored in the APK). The Worker does **not** log, persist, or transmit the tokens anywhere — they are returned directly to your device and stored locally in Expo SecureStore. Your actual expense data never passes through this Worker.
+
 ## Data Storage
 
 All expense data you enter is stored locally on your device using:
 
-- **AsyncStorage** for expense records
-- **Expo SecureStore** for sensitive configuration (like GitHub tokens)
+- **AsyncStorage** for expense records, settings, filters, provider state, and queue metadata
+- **Expo SecureStore** for sensitive configuration (provider tokens, OAuth credentials)
 
-Your data never leaves your device unless you explicitly choose to sync it to GitHub (see below).
+Your data never leaves your device unless you explicitly choose to sync it (see below).
 
-## SMS Import (Android Only)
+## SMS Import
 
 If you enable SMS import on Android:
 
@@ -47,7 +49,7 @@ If you enable background SMS alerts on Android:
 - **No notification is shown while the app is already in the foreground**
 - **A local pending-review snapshot is kept on-device so notification taps can reopen the right review state offline**
 
-## Device Logging (Android Only)
+## Device Logging
 
 Expense Buddy includes an on-device logging system to help debug issues:
 
@@ -58,7 +60,9 @@ Expense Buddy includes an on-device logging system to help debug issues:
 - **Logs never leave your device** unless you voluntarily choose to share them when reporting a bug
 - **If you report a bug from Settings**, the app asks for your explicit permission before attaching log entries to the GitHub issue
 
-## GitHub Sync (Optional)
+## Sync (Optional)
+
+### GitHub
 
 If you choose to use the optional GitHub sync feature:
 
@@ -70,18 +74,38 @@ If you choose to use the optional GitHub sync feature:
 - **Your expense data is uploaded directly to your own GitHub repository**
 - **We have no access to your GitHub credentials or synced data**
 
-The sync happens directly between your device and GitHub's servers. We do not operate any intermediary servers and have no visibility into your synced data.
+### Google Drive
+
+If you choose to use the optional Google Drive sync feature:
+
+- **On Android, you sign in with your Google account** (native GoogleSignInClient)
+- **The app stores expenses in its private `appDataFolder`** — a Drive location visible only to the app, not to your normal Drive file listing
+- **Expenses are stored as per-year JSON files** in the `appDataFolder`
+- **Read and write access to this folder is required** — the app does not access any other Drive content
+- **OAuth token exchange runs through a Cloudflare Worker** to keep the client secret out of the APK — the Worker only sees the authorization code, never your expense data
+- **Your expense data is uploaded directly from your device to Google Drive** — the Worker is not involved in data sync
+- **We have no access to your Google credentials or synced data**
+
+### Common
+
+The sync happens directly between your device and the provider's servers. We have no visibility into your synced data.
+
+**Intermediary servers:** The only server we operate is a Cloudflare Worker used exclusively for Google OAuth token exchange. It processes authorization codes, returns tokens to your device, and does not persist or log any data. Your expense data never passes through this Worker.
 
 ## Third-Party Services
 
-The app does not integrate with any analytics, advertising, or tracking services. The only external service the app can connect to is GitHub, and only if you explicitly configure it.
+The app does not integrate with any analytics, advertising, or tracking services. The only external services the app can connect to are:
+
+- **GitHub** — for optional sync (your repository, your data)
+- **Google Drive** — for optional sync (your appDataFolder, your data)
+- **Cloudflare Workers** — for Google OAuth token exchange only; no expense data is sent here
 
 ## Permissions
 
 The app may request the following permissions:
 
-- **Internet Access**: Required only for the optional GitHub sync feature
-- **Secure Storage**: To safely store your GitHub token on your device
+- **Internet Access**: Required for optional sync features (GitHub, Google Drive)
+- **Secure Storage**: To safely store provider credentials on your device
 - **SMS Access (`READ_SMS`)**: Required only if you choose to use Android SMS import; the app requests it when you manually start a scan from Settings
 - **Background SMS Access (`RECEIVE_SMS`)**: Required only if you explicitly enable Android background SMS alerts from Settings
 - **Notifications (`POST_NOTIFICATIONS`)**: Required only if you explicitly enable Android background SMS alerts and allow local notifications
@@ -106,4 +130,4 @@ https://github.com/sudokoi/expense-buddy/issues
 
 ---
 
-**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync confirmed expense records to your own GitHub repository.
+**Summary:** Expense Buddy is a privacy-focused app. We don't collect your data. Everything stays on your device unless you choose to sync confirmed expense records to your own GitHub repository or Google Drive `appDataFolder`.

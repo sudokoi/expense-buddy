@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from "react"
 import { YStack, XStack, Button, Sheet, H4, ScrollView, Text } from "tamagui"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { X } from "@tamagui/lucide-icons-2"
+import { IconActionButton } from "../ui/IconActionButton"
 import { logAsync } from "../../services/logger"
 import type { TimeWindow } from "../../utils/analytics/time"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
@@ -245,12 +246,13 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("analytics.filtersModal.reset")}
               </Button>
-              <Button
+              <IconActionButton
                 size="$compact"
                 chromeless
                 icon={X}
                 onPress={handleApply}
                 aria-label={t("common.close")}
+                tooltip={t("common.close")}
               />
             </XStack>
           </XStack>

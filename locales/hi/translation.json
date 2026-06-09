@@ -62,11 +62,15 @@
     "save": "सहेजें",
     "done": "हो गया",
     "close": "बंद करें",
+    "back": "वापस",
+    "clear": "साफ़ करें",
     "madeBy": "द्वारा निर्मित",
     "giveStar": "एक ⭐️ दें",
     "editLabel": "{{label}} संपादित करें",
     "deleteLabel": "{{label}} हटाएं",
     "removeLabel": "{{label}} हटाएं",
+    "moveUpLabel": "{{label}} को ऊपर ले जाएं",
+    "moveDownLabel": "{{label}} को नीचे ले जाएं",
     "optional": "(वैकल्पिक)",
     "all": "सभी",
     "none": "कोई नहीं",
@@ -86,6 +90,10 @@
     "title": "व्यय इतिहास",
     "emptyTitle": "अभी तक कोई खर्च नहीं।",
     "emptySubtitle": "खर्च जोड़ें टैब से एक जोड़ें।",
+    "readOnly": {
+      "blocked": "6 महीने से पुरानी प्रविष्टियाँ लॉक हैं और इन्हें बदला नहीं जा सकता।"
+    },
+    "saveFailed": "आपके बदलाव सहेजे नहीं जा सके। कृपया पुनः प्रयास करें।",
     "deleteDialog": {
       "title": "व्यय हटाएं",
       "description": "क्या आप वाकई इस व्यय को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
@@ -116,6 +124,7 @@
     "updated": "व्यय अपडेट किया गया",
     "deleted": "व्यय हटाया गया",
     "loadError": "अधिक खर्च लोड करने में विफल",
+    "loadMoreNotAvailable": "वर्तमान सिंक प्रदाता के साथ उपलब्ध नहीं है",
     "noResultsTitle": "कोई मिलान खर्च नहीं",
     "noResultsSubtitle": "अपने फिल्टर समायोजित करने का प्रयास करें",
     "filterSheet": {
@@ -315,6 +324,40 @@
       "successSignIn": "गिटहब साइन-इन सफल",
       "validationError": "कृपया सत्यापन त्रुटियों को ठीक करें"
     },
+    "providers": {
+      "title": "Providers",
+      "active": "ACTIVE",
+      "needsSetup": "NEEDS SETUP",
+      "noProviders": "No sync providers configured yet",
+      "addGithub": "Configure GitHub",
+      "addGoogleDrive": "Add Google Drive",
+      "removeTitle": "Remove Provider",
+      "removeMessage": "Remove \"{{label}}\"? This will not delete remote data.",
+      "deleteBackupTitle": "Delete Backup",
+      "deleteBackupMessage": "Delete the Google Drive backup for \"{{label}}\"? This permanently removes the remote archive from appDataFolder. Your local data and provider configuration will stay on this device.",
+      "deleteBackup": "Delete Backup",
+      "deleteBackupSuccess": "Google Drive backup deleted",
+      "deleteBackupMissing": "No Google Drive backup was found",
+      "remove": "Remove",
+      "removed": "Provider removed",
+      "activated": "Provider activated",
+      "edit": "Edit",
+      "test": "Test",
+      "testing": "Testing...",
+      "connectionOk": "Connection successful",
+      "github": "GitHub",
+      "googleDrive": "Google Drive",
+      "googleDriveDesc": "Google Drive (appDataFolder)"
+    },
+    "googleDrive": {
+      "configTitle": "Google Drive",
+      "help": "Sign in with your Google account to enable Drive backup. Available on Android only.",
+      "clientIdMissing": "Google Drive configured nhi hai. EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_ID set karein.",
+      "nativeModuleError": "Google Auth native module nahi mila. `npx expo prebuild --clean && npx expo run:android` se rebuild karein.",
+      "authFailed": "Google Drive authorization failed. Google account check karein aur phir se try karein.",
+      "configured": "Google Drive configure ho gaya",
+      "tokenExchangeUrlMissing": "Google Drive configured nhi hai. EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URL set karein."
+    },
     "autoSync": {
       "title": "ऑटो-सिंक और विकल्प",
       "enable": "ऑटो-सिंक सक्षम करें",
@@ -326,7 +369,9 @@
       "onLaunchHelp": "ऐप शुरू होने पर सिंक करें",
       "onChange": "हर बदलाव पर",
       "onChangeHelp": "बदलाव करने के तुरंत बाद सिंक करें",
+      "reconciliationRequired": "पहला सिंक आवश्यक है। कृपया पहले \"पहला सिंक\" करें।",
       "syncNow": "अभी सिंक करें",
+      "firstSync": "पहला सिंक",
       "syncing": "सिंक हो रहा है..."
     },
     "categories": {
@@ -497,6 +542,8 @@
     "today": "आज",
     "yesterday": "कल",
     "tomorrow": "कल (आने वाला)",
+    "previousDay": "पिछला दिन",
+    "nextDay": "अगला दिन",
     "totalSpent": "कुल व्यय",
     "empty": "इस दिन के लिए कोई खर्च नहीं"
   },

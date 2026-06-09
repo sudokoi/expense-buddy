@@ -62,11 +62,15 @@
     "save": "保存",
     "done": "完了",
     "close": "閉じる",
+    "back": "戻る",
+    "clear": "クリア",
     "madeBy": "作成者",
     "giveStar": "スターを付ける ⭐️",
     "editLabel": "{{label}}を編集",
     "deleteLabel": "{{label}}を削除",
     "removeLabel": "{{label}}を削除",
+    "moveUpLabel": "{{label}}を上に移動",
+    "moveDownLabel": "{{label}}を下に移動",
     "optional": "(任意)",
     "all": "すべて",
     "none": "なし",
@@ -86,6 +90,10 @@
     "title": "支出履歴",
     "emptyTitle": "支出がまだありません。",
     "emptySubtitle": "「支出を追加」タブから追加してください。",
+    "readOnly": {
+      "blocked": "6か月より前の項目はロックされており、変更できません。"
+    },
+    "saveFailed": "変更を保存できませんでした。もう一度お試しください。",
     "deleteDialog": {
       "title": "支出を削除",
       "description": "本当にこの支出を削除しますか？この操作は取り消せません。"
@@ -116,6 +124,7 @@
     "updated": "支出を更新しました",
     "deleted": "支出を削除しました",
     "loadError": "支出の読み込みに失敗しました",
+    "loadMoreNotAvailable": "現在の同期プロバイダーでは利用できません",
     "noResultsTitle": "一致する支出がありません",
     "noResultsSubtitle": "フィルターを調整してみてください",
     "filterSheet": {
@@ -233,7 +242,7 @@
       "about": "アプリ情報"
     },
     "sync": {
-      "description": "GitHub を接続し、手動同期と自動同期の動作を管理します。"
+      "description": "同期プロバイダーを設定し、手動同期と自動同期を管理します。"
     },
     "payment": {
       "description": "支払いのデフォルト、保存済み手段、カテゴリーを一か所で管理します。",
@@ -315,6 +324,40 @@
       "successSignIn": "GitHubサインインに成功しました",
       "validationError": "検証エラーを修正してください"
     },
+    "providers": {
+      "title": "Providers",
+      "active": "ACTIVE",
+      "needsSetup": "NEEDS SETUP",
+      "noProviders": "No sync providers configured yet",
+      "addGithub": "Configure GitHub",
+      "addGoogleDrive": "Add Google Drive",
+      "removeTitle": "Remove Provider",
+      "removeMessage": "Remove \"{{label}}\"? This will not delete remote data.",
+      "deleteBackupTitle": "Delete Backup",
+      "deleteBackupMessage": "Delete the Google Drive backup for \"{{label}}\"? This permanently removes the remote archive from appDataFolder. Your local data and provider configuration will stay on this device.",
+      "deleteBackup": "Delete Backup",
+      "deleteBackupSuccess": "Google Drive backup deleted",
+      "deleteBackupMissing": "No Google Drive backup was found",
+      "remove": "Remove",
+      "removed": "Provider removed",
+      "activated": "Provider activated",
+      "edit": "Edit",
+      "test": "Test",
+      "testing": "Testing...",
+      "connectionOk": "Connection successful",
+      "github": "GitHub",
+      "googleDrive": "Google Drive",
+      "googleDriveDesc": "Google Drive (appDataFolder)"
+    },
+    "googleDrive": {
+      "configTitle": "Google Drive",
+      "help": "GoogleアカウントでサインインするとDriveバックアップが利用できます。Androidのみ対応。",
+      "clientIdMissing": "Google Driveが設定されていません。環境変数EXPO_PUBLIC_GOOGLE_DRIVE_OAUTH_CLIENT_IDを設定してください。",
+      "nativeModuleError": "Google Authネイティブモジュールが見つかりません。`npx expo prebuild --clean && npx expo run:android`で再ビルドしてください。",
+      "authFailed": "Google Driveの認証に失敗しました。Googleアカウントを確認して、もう一度お試しください。",
+      "configured": "Google Driveを設定しました",
+      "tokenExchangeUrlMissing": "Google Driveが設定されていません。環境変数EXPO_PUBLIC_GOOGLE_TOKEN_EXCHANGE_URLを設定してください。"
+    },
     "autoSync": {
       "title": "自動同期とオプション",
       "enable": "自動同期を有効にする",
@@ -326,7 +369,9 @@
       "onLaunchHelp": "アプリ開始時に同期",
       "onChange": "変更ごと",
       "onChangeHelp": "変更を加えた直後に同期",
+      "reconciliationRequired": "初回同期が必要です。先に「初回同期」を実行してください。",
       "syncNow": "今すぐ同期",
+      "firstSync": "初回同期",
       "syncing": "同期中..."
     },
     "categories": {
@@ -497,6 +542,8 @@
     "today": "今日",
     "yesterday": "昨日",
     "tomorrow": "明日",
+    "previousDay": "前の日",
+    "nextDay": "次の日",
     "totalSpent": "総支出",
     "empty": "この日の支出はありません"
   },

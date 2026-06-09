@@ -8,6 +8,7 @@ import {
   formatPaymentInstrumentLabel,
   getActivePaymentInstruments,
 } from "../../../services/payment-instruments"
+import { IconActionButton } from "../IconActionButton"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
 import {
@@ -221,7 +222,7 @@ export function PaymentInstrumentsSection() {
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
-                            <Button
+                            <IconActionButton
                               size="$chip"
                               chromeless
                               icon={Edit3}
@@ -229,13 +230,19 @@ export function PaymentInstrumentsSection() {
                               aria-label={t("common.editLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
                               })}
+                              tooltip={t("common.editLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
                             />
-                            <Button
+                            <IconActionButton
                               size="$chip"
                               chromeless
                               icon={Trash}
                               onPress={() => handleDelete(inst)}
                               aria-label={t("common.removeLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
+                              tooltip={t("common.removeLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
                               })}
                             />

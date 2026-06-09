@@ -1,279 +1,250 @@
-/**
- * XState v5 Sync Machine - Git-Style Unified Flow
- *
- * A state machine that manages the GitHub sync flow with a unified fetch-merge-push approach.
- * Uses callbacks for side effects (notifications, alerts) instead of useEffect.
- *
- * State Flow:
- * idle → fetching → merging → [conflict] → pushing → success
- *
- * XState v5 Best Practices Applied:
- * - Uses setup() for proper type inference
- * - Guards use inline functions in transitions for proper event typing
- * - Actions use assign() for context updates
- * - Callbacks are invoked in transition actions to access event.output directly
- * - Actors are defined in setup() for proper typing
- */
 import { setup, assign, fromPromise } from "xstate"
+import type { SyncProvider } from "./sync/provider-types"
+import { syncWithProvider, firstTimeSync } from "./sync/sync-with-provider"
 import { Expense } from "../types/expense"
-import { AppSettings, computeSettingsHash } from "./settings-manager"
-import {
-  gitStyleSync,
-  GitStyleSyncResult,
-  ConflictResolution,
-  loadSyncConfig,
-} from "./sync-manager"
+import type { AppSettings } from "./settings-manager"
 import { TrueConflict, MergeResult } from "./merge-engine"
 import i18next from "i18next"
+import { logAsync } from "./logger"
 
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Callbacks for handling sync events - passed as input to avoid useEffect
- */
 export interface SyncCallbacks {
-  /** Called when true conflicts are detected that need user resolution */
   onConflict?: (conflicts: TrueConflict[]) => void
-  /** Called when sync completes successfully */
-  onSuccess?: (result: {
-    syncResult?: GitStyleSyncResult
-    mergeResult?: MergeResult
-  }) => void
-  /** Called when already in sync (no changes needed) */
-  onInSync?: () => void
-  /** Called when an error occurs */
+  onSuccess?: (result: { mergeResult?: MergeResult; isFirstSync?: boolean }) => void
   onError?: (error: string) => void
-
-  /** Called specifically when GitHub auth/permission fails (401/403) */
-  onAuthError?: (info: {
-    status: 401 | 403
-    message: string
-    shouldSignOut: boolean
-  }) => void
+  onAuthError?: (info: { errorCode: string; shouldSignOut: boolean }) => void
 }
 
-/**
- * Conflict resolution handler that returns user's choices
- */
 export type ConflictResolver = (
   conflicts: TrueConflict[]
-) => Promise<ConflictResolution[] | undefined>
+) => Promise<{ expenseId: string; choice: "local" | "remote" }[] | undefined>
 
 export interface SyncMachineContext {
-  // Input data
+  provider: SyncProvider
   localExpenses: Expense[]
+  dirtyDays?: string[]
+  deletedDays?: string[]
   settings?: AppSettings
   syncSettingsEnabled: boolean
-
-  // Callbacks for side effects
   callbacks: SyncCallbacks
-
-  // Conflict resolution
   conflictResolver?: ConflictResolver
   pendingConflicts?: TrueConflict[]
-
-  // Results
-  syncResult?: GitStyleSyncResult
   mergeResult?: MergeResult
-
-  // Error
   error?: string
+  errorCode?: string
 }
 
 export type SyncMachineEvent =
   | {
       type: "SYNC"
       localExpenses: Expense[]
+      dirtyDays?: string[]
+      deletedDays?: string[]
       settings?: AppSettings
       syncSettingsEnabled: boolean
       callbacks?: SyncCallbacks
       conflictResolver?: ConflictResolver
+      // The orchestrator's persisted per-provider reconciliation flag, supplied
+      // on every SYNC. This is the single source of truth for the gate decision;
+      // the machine does not keep its own copy in context.
+      initialReconciliationComplete?: boolean
     }
   | {
       type: "RESOLVE_CONFLICTS"
-      resolutions: ConflictResolution[]
+      resolutions: { expenseId: string; choice: "local" | "remote" }[]
     }
+  // Activation-driven trigger emitted by the orchestrator on provider
+  // activation/rebind (and on manual retry / next launch) to advance the
+  // awaitingInitialReconciliation gate into reconcilingFirstSync.
+  | { type: "START_FIRST_SYNC" }
   | { type: "CANCEL" }
   | { type: "RESET" }
 
-/**
- * Result from the unified sync actor
- */
 interface UnifiedSyncActorResult {
   success: boolean
-  syncResult?: GitStyleSyncResult
   mergeResult?: MergeResult
   pendingConflicts?: TrueConflict[]
   error?: string
+  errorCode?: string
   isInSync?: boolean
+  isFirstSync?: boolean
 }
-
-// =============================================================================
-// State Machine Definition
-// =============================================================================
 
 export const syncMachine = setup({
   types: {
     context: {} as SyncMachineContext,
     events: {} as SyncMachineEvent,
+    input: {} as { provider: SyncProvider },
   },
   actors: {
-    /**
-     * Unified sync actor that performs fetch → merge → push
-     * If conflicts are detected, it returns them for user resolution
-     */
     unifiedSync: fromPromise<
       UnifiedSyncActorResult,
       {
+        provider: SyncProvider
         localExpenses: Expense[]
         settings?: AppSettings
         syncSettingsEnabled: boolean
+        dirtyDays?: string[]
+        deletedDays?: string[]
         conflictResolver?: ConflictResolver
       }
     >(async ({ input }) => {
-      // Check if sync is configured
-      const config = await loadSyncConfig()
-      if (!config) {
-        return {
-          success: false,
-          error: i18next.t("githubSync.manager.noConfigFound"),
-        }
-      }
-
-      // Perform git-style sync with optional conflict resolver and settings
-      const result = await gitStyleSync(
-        input.localExpenses,
-        input.conflictResolver,
-        input.settings,
-        input.syncSettingsEnabled
-      )
-
-      // Check if there are unresolved conflicts
-      if (
-        !result.success &&
-        result.mergeResult?.trueConflicts &&
-        result.mergeResult.trueConflicts.length > 0
-      ) {
-        return {
-          success: false,
-          syncResult: result,
-          mergeResult: result.mergeResult,
-          pendingConflicts: result.mergeResult.trueConflicts,
-          error: result.error,
-        }
-      }
-
-      // Check if already in sync (no changes made)
-      const settingsUnchanged =
-        !input.settings ||
-        !result.mergedSettings ||
-        computeSettingsHash(input.settings) === computeSettingsHash(result.mergedSettings)
-      const localFilesUpdated = result.localFilesUpdated ?? result.filesUploaded ?? 0
-
-      if (
-        result.success &&
-        localFilesUpdated === 0 &&
-        !result.settingsSynced &&
-        result.mergeResult?.addedFromRemote.length === 0 &&
-        result.mergeResult?.updatedFromRemote.length === 0 &&
-        settingsUnchanged
-      ) {
-        return {
-          success: true,
-          syncResult: result,
-          mergeResult: result.mergeResult,
-          isInSync: true,
-        }
-      }
-
-      return {
-        success: result.success,
-        syncResult: result,
-        mergeResult: result.mergeResult,
-        error: result.error,
-      }
+      const result = await syncWithProvider({
+        provider: input.provider,
+        localExpenses: input.localExpenses,
+        localSettings: input.settings,
+        syncSettingsEnabled: input.syncSettingsEnabled,
+        dirtyDays: input.dirtyDays,
+        deletedDays: input.deletedDays,
+        conflictResolver: input.conflictResolver,
+      })
+      return result
     }),
 
-    /**
-     * Retry sync after conflict resolution
-     */
     retryAfterConflict: fromPromise<
       UnifiedSyncActorResult,
       {
+        provider: SyncProvider
         localExpenses: Expense[]
         settings?: AppSettings
         syncSettingsEnabled: boolean
-        resolutions: ConflictResolution[]
+        dirtyDays?: string[]
+        deletedDays?: string[]
+        conflictResolver?: ConflictResolver
+        resolutions: { expenseId: string; choice: "local" | "remote" }[]
       }
     >(async ({ input }) => {
-      // Create a resolver that returns the provided resolutions
-      const resolver = async () => input.resolutions
+      const resolver =
+        input.resolutions.length > 0
+          ? async () => input.resolutions
+          : input.conflictResolver
+      const result = await syncWithProvider({
+        provider: input.provider,
+        localExpenses: input.localExpenses,
+        localSettings: input.settings,
+        syncSettingsEnabled: input.syncSettingsEnabled,
+        dirtyDays: input.dirtyDays,
+        deletedDays: input.deletedDays,
+        conflictResolver: resolver,
+      })
+      return result
+    }),
 
-      const result = await gitStyleSync(
+    firstTimeSync: fromPromise<
+      UnifiedSyncActorResult,
+      {
+        provider: SyncProvider
+        localExpenses: Expense[]
+        settings?: AppSettings
+        syncSettingsEnabled: boolean
+      }
+    >(async ({ input }) => {
+      const result = await firstTimeSync(
+        input.provider,
         input.localExpenses,
-        resolver,
         input.settings,
         input.syncSettingsEnabled
       )
-
+      return result
+    }),
+  },
+  actions: {
+    assignSyncContext: assign(({ event }) => {
+      if (event.type !== "SYNC") return {}
       return {
-        success: result.success,
-        syncResult: result,
-        mergeResult: result.mergeResult,
-        error: result.error,
+        localExpenses: event.localExpenses,
+        dirtyDays: event.dirtyDays,
+        deletedDays: event.deletedDays,
+        settings: event.settings,
+        syncSettingsEnabled: event.syncSettingsEnabled,
+        callbacks: event.callbacks || {},
+        conflictResolver: event.conflictResolver,
+        mergeResult: undefined,
+        pendingConflicts: undefined,
+        error: undefined,
+        errorCode: undefined,
       }
     }),
   },
   delays: {
     SUCCESS_DISPLAY_TIME: 2000,
+    ERROR_DISPLAY_TIME: 5000,
     IN_SYNC_DISPLAY_TIME: 100,
+    CONFLICT_DISPLAY_TIME: 30000,
+    SYNC_TIMEOUT: 60000,
   },
 }).createMachine({
   id: "sync",
   initial: "idle",
-  context: {
+  context: ({ input }) => ({
+    provider: input.provider,
     localExpenses: [],
     syncSettingsEnabled: false,
     callbacks: {},
-  },
+  }),
   states: {
     idle: {
       on: {
-        SYNC: {
-          target: "syncing",
-          actions: assign({
-            localExpenses: ({ event }) => event.localExpenses,
-            settings: ({ event }) => event.settings,
-            syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            callbacks: ({ event }) => event.callbacks || {},
-            conflictResolver: ({ event }) => event.conflictResolver,
-            // Clear previous results
-            syncResult: undefined,
-            mergeResult: undefined,
-            pendingConflicts: undefined,
-            error: undefined,
-          }),
-        },
+        SYNC: [
+          {
+            // Provider already reconciled on this device -> run a normal sync.
+            guard: ({ event }) => event.initialReconciliationComplete === true,
+            target: "syncing",
+            actions: [
+              "assignSyncContext",
+              ({ context }) => {
+                logAsync(
+                  "INFO",
+                  "SYNC_MACHINE",
+                  `SYNC_STARTED expenseCount=${context.localExpenses.length} settingsSync=${context.syncSettingsEnabled}`
+                )
+              },
+            ],
+          },
+          {
+            // Not reconciled -> enter the REAL gate. Background auto-sync waits
+            // here until the orchestrator emits START_FIRST_SYNC on activation.
+            target: "awaitingInitialReconciliation",
+            actions: [
+              "assignSyncContext",
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_AWAITING_INITIAL_RECONCILIATION")
+              },
+            ],
+          },
+        ],
       },
     },
 
-    /**
-     * Unified syncing state - performs fetch → merge → push
-     * This replaces the old checkingRemote → pushing/pulling flow
-     */
     syncing: {
+      entry: () => {
+        logAsync("INFO", "SYNC_MACHINE", "SYNC_IN_PROGRESS")
+      },
+      after: {
+        SYNC_TIMEOUT: {
+          target: "error",
+          actions: [
+            assign({
+              error: "Sync timed out after 60 seconds",
+              errorCode: "TIMEOUT",
+            }),
+            () => {
+              logAsync("ERROR", "SYNC_MACHINE", "SYNC_TIMEOUT")
+            },
+          ],
+        },
+      },
       invoke: {
         src: "unifiedSync",
         input: ({ context }) => ({
+          provider: context.provider,
           localExpenses: context.localExpenses,
           settings: context.settings,
           syncSettingsEnabled: context.syncSettingsEnabled,
+          dirtyDays: context.dirtyDays,
+          deletedDays: context.deletedDays,
           conflictResolver: context.conflictResolver,
         }),
         onDone: [
-          // Check for conflicts that need resolution
           {
             guard: ({ event }) =>
               event.output.pendingConflicts !== undefined &&
@@ -282,100 +253,124 @@ export const syncMachine = setup({
             actions: [
               assign({
                 pendingConflicts: ({ event }) => event.output.pendingConflicts,
-                syncResult: ({ event }) => event.output.syncResult,
                 mergeResult: ({ event }) => event.output.mergeResult,
               }),
-              // Notify about conflicts
               ({ context, event }) => {
                 if (event.output.pendingConflicts) {
                   context.callbacks.onConflict?.(event.output.pendingConflicts)
                 }
+                logAsync(
+                  "WARN",
+                  "SYNC_MACHINE",
+                  `SYNC_CONFLICTS count=${event.output.pendingConflicts?.length ?? 0}`
+                )
               },
             ],
           },
-          // Check if already in sync
           {
             guard: ({ event }) => event.output.isInSync === true,
             target: "inSync",
-            actions: assign({
-              syncResult: ({ event }) => event.output.syncResult,
-              mergeResult: ({ event }) => event.output.mergeResult,
-            }),
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_IN_SYNC")
+              },
+            ],
           },
-          // Success case
+          {
+            guard: ({ event }) => event.output.isFirstSync === true,
+            target: "awaitingInitialReconciliation",
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "FIRST_TIME_SYNC")
+              },
+            ],
+          },
           {
             guard: ({ event }) => event.output.success === true,
             target: "success",
             actions: [
               assign({
-                syncResult: ({ event }) => event.output.syncResult,
                 mergeResult: ({ event }) => event.output.mergeResult,
               }),
-              // Invoke success callback
               ({ context, event }) => {
                 context.callbacks.onSuccess?.({
-                  syncResult: event.output.syncResult,
                   mergeResult: event.output.mergeResult,
                 })
               },
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "SYNC_SUCCESS")
+              },
             ],
           },
-          // Error case
           {
             target: "error",
-            actions: assign({
-              syncResult: ({ event }) => event.output.syncResult,
-              mergeResult: ({ event }) => event.output.mergeResult,
-              error: ({ event }) =>
-                event.output.error || i18next.t("githubSync.manager.syncFailed"),
-            }),
+            actions: [
+              assign({
+                mergeResult: ({ event }) => event.output.mergeResult,
+                error: ({ event }) =>
+                  event.output.error || i18next.t("githubSync.manager.syncFailed"),
+                errorCode: ({ event }) => event.output.errorCode,
+              }),
+              ({ event }) => {
+                logAsync(
+                  "ERROR",
+                  "SYNC_MACHINE",
+                  `SYNC_FAILED error=${event.output.error ?? "unknown"} code=${event.output.errorCode ?? "none"}`
+                )
+              },
+            ],
           },
         ],
         onError: {
           target: "error",
-          actions: assign({
-            error: ({ event }) => String(event.error),
-          }),
+          actions: [
+            assign({
+              error: ({ event }) => formatMachineError(event.error),
+            }),
+            ({ event }) => {
+              logAsync(
+                "ERROR",
+                "SYNC_MACHINE",
+                `SYNC_INVOKE_ERROR error=${formatMachineError(event.error)}`
+              )
+            },
+          ],
         },
       },
     },
 
-    /**
-     * Conflict state - waiting for user to resolve true conflicts
-     * User can choose keep-local, keep-remote for each conflict, or cancel
-     */
-    conflict: {
+    awaitingInitialReconciliation: {
+      entry: () => {
+        logAsync("INFO", "SYNC_MACHINE", "AWAITING_INITIAL_RECONCILIATION")
+      },
+      // No `after: { 0: ... }` auto-advance. This is the real gate: it advances
+      // only on an explicit, activation-driven START_FIRST_SYNC emitted by the
+      // orchestrator. Background SYNC events are ignored so auto-sync cannot
+      // pass the gate before the first reconciliation succeeds.
       on: {
-        RESOLVE_CONFLICTS: {
-          target: "pushing",
-          actions: assign({
-            // Store resolutions for the retry
-          }),
+        START_FIRST_SYNC: "reconcilingFirstSync",
+        SYNC: {
+          // Ignored: background auto-sync stays gated (self-transition, no action).
+          target: "awaitingInitialReconciliation",
         },
-        CANCEL: {
-          target: "idle",
-          actions: assign({
-            pendingConflicts: undefined,
-            error: undefined,
-          }),
-        },
+        RESET: "idle",
       },
     },
 
-    /**
-     * Pushing state - retry sync after conflict resolution
-     */
-    pushing: {
+    reconcilingFirstSync: {
       invoke: {
-        src: "retryAfterConflict",
-        input: ({ context, event }) => ({
+        src: "firstTimeSync",
+        input: ({ context }) => ({
+          provider: context.provider,
           localExpenses: context.localExpenses,
           settings: context.settings,
           syncSettingsEnabled: context.syncSettingsEnabled,
-          resolutions:
-            event.type === "RESOLVE_CONFLICTS"
-              ? event.resolutions
-              : ([] as ConflictResolution[]),
         }),
         onDone: [
           {
@@ -383,13 +378,118 @@ export const syncMachine = setup({
             target: "success",
             actions: [
               assign({
-                syncResult: ({ event }) => event.output.syncResult,
+                mergeResult: ({ event }) => event.output.mergeResult,
+              }),
+              ({ context, event }) => {
+                context.callbacks.onSuccess?.({
+                  mergeResult: event.output.mergeResult,
+                  isFirstSync: true,
+                })
+              },
+              () => {
+                logAsync("INFO", "SYNC_MACHINE", "FIRST_TIME_SYNC_SUCCESS")
+              },
+            ],
+          },
+          {
+            // Reconciliation failed -> stay gated. The orchestrator retries on
+            // the next provider activation / app launch / manual retry.
+            target: "awaitingInitialReconciliation",
+            actions: [
+              assign({
+                error: ({ event }) =>
+                  event.output.error || i18next.t("githubSync.manager.syncFailed"),
+                errorCode: ({ event }) => event.output.errorCode,
+              }),
+              ({ event }) => {
+                logAsync(
+                  "ERROR",
+                  "SYNC_MACHINE",
+                  `FIRST_TIME_SYNC_FAILED error=${event.output.error ?? "unknown"} code=${event.output.errorCode ?? "none"}`
+                )
+              },
+            ],
+          },
+        ],
+        onError: {
+          target: "awaitingInitialReconciliation",
+          actions: [
+            assign({
+              error: ({ event }) => formatMachineError(event.error),
+              errorCode: ({ event }) => extractMachineErrorCode(event.error),
+            }),
+            ({ event }) => {
+              logAsync(
+                "ERROR",
+                "SYNC_MACHINE",
+                `FIRST_TIME_SYNC_INVOKE_ERROR error=${formatMachineError(event.error)}`
+              )
+            },
+          ],
+        },
+      },
+      // Defensive: a CANCEL during first reconciliation abandons the attempt and
+      // returns to the gate (stays unreconciled). No current caller sends this,
+      // but without a handler the event would be silently dropped.
+      on: {
+        CANCEL: "awaitingInitialReconciliation",
+      },
+    },
+
+    conflict: {
+      after: {
+        CONFLICT_DISPLAY_TIME: {
+          target: "idle",
+          actions: assign({
+            pendingConflicts: undefined,
+            error: undefined,
+            errorCode: undefined,
+          }),
+        },
+      },
+      on: {
+        RESOLVE_CONFLICTS: {
+          target: "pushing",
+        },
+        CANCEL: {
+          target: "idle",
+          actions: assign({
+            pendingConflicts: undefined,
+            error: undefined,
+            errorCode: undefined,
+          }),
+        },
+        RESET: "idle",
+      },
+    },
+
+    pushing: {
+      invoke: {
+        src: "retryAfterConflict",
+        input: ({ context, event }) => ({
+          provider: context.provider,
+          localExpenses: context.localExpenses,
+          settings: context.settings,
+          syncSettingsEnabled: context.syncSettingsEnabled,
+          dirtyDays: context.dirtyDays,
+          deletedDays: context.deletedDays,
+          conflictResolver: context.conflictResolver,
+          resolutions:
+            event.type === "RESOLVE_CONFLICTS"
+              ? event.resolutions
+              : ([] as { expenseId: string; choice: "local" | "remote" }[]),
+        }),
+        onDone: [
+          {
+            guard: ({ event }) => event.output.success === true,
+            target: "success",
+            actions: [
+              assign({
                 mergeResult: ({ event }) => event.output.mergeResult,
                 pendingConflicts: undefined,
               }),
               ({ context, event }) => {
                 context.callbacks.onSuccess?.({
-                  syncResult: event.output.syncResult,
                   mergeResult: event.output.mergeResult,
                 })
               },
@@ -398,16 +498,17 @@ export const syncMachine = setup({
           {
             target: "error",
             actions: assign({
-              syncResult: ({ event }) => event.output.syncResult,
+              mergeResult: ({ event }) => event.output.mergeResult,
               error: ({ event }) =>
                 event.output.error || i18next.t("githubSync.manager.syncFailed"),
+              errorCode: ({ event }) => event.output.errorCode,
             }),
           },
         ],
         onError: {
           target: "error",
           actions: assign({
-            error: ({ event }) => String(event.error),
+            error: ({ event }) => formatMachineError(event.error),
           }),
         },
       },
@@ -415,10 +516,13 @@ export const syncMachine = setup({
 
     inSync: {
       entry: ({ context }) => {
-        context.callbacks.onInSync?.()
+        context.callbacks.onSuccess?.({ mergeResult: context.mergeResult })
       },
       after: {
         IN_SYNC_DISPLAY_TIME: "idle",
+      },
+      on: {
+        RESET: "idle",
       },
     },
 
@@ -432,21 +536,39 @@ export const syncMachine = setup({
     },
 
     error: {
+      after: {
+        ERROR_DISPLAY_TIME: {
+          target: "idle",
+          actions: assign({
+            error: undefined,
+            errorCode: undefined,
+          }),
+        },
+      },
       entry: ({ context }) => {
-        const authStatus = context.syncResult?.authStatus
-        if (authStatus === 401 || authStatus === 403) {
-          const message =
-            context.syncResult?.error ||
-            context.error ||
-            i18next.t("githubSync.manager.authRequired")
+        const errorCode = context.errorCode
+        const isAuthError =
+          errorCode === "AUTH_MISSING" ||
+          errorCode === "AUTH_EXPIRED" ||
+          errorCode === "AUTH_INVALID" ||
+          errorCode === "PERMISSION_DENIED"
+
+        if (isAuthError) {
           context.callbacks.onAuthError?.({
-            status: authStatus,
-            message,
-            shouldSignOut: Boolean(context.syncResult?.shouldSignOut),
+            errorCode,
+            shouldSignOut:
+              errorCode === "AUTH_INVALID" || errorCode === "PERMISSION_DENIED",
           })
         }
+
         context.callbacks.onError?.(
           context.error || i18next.t("githubSync.errors.unknown", { status: "unknown" })
+        )
+
+        logAsync(
+          isAuthError ? "WARN" : "ERROR",
+          "SYNC_MACHINE",
+          `SYNC_ERROR_STATE error=${context.error ?? "unknown"} code=${errorCode ?? "none"} isAuthError=${isAuthError}`
         )
       },
       on: {
@@ -455,11 +577,14 @@ export const syncMachine = setup({
           target: "syncing",
           actions: assign({
             localExpenses: ({ event }) => event.localExpenses,
+            dirtyDays: ({ event }) => event.dirtyDays,
+            deletedDays: ({ event }) => event.deletedDays,
             settings: ({ event }) => event.settings,
             syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
             callbacks: ({ event }) => event.callbacks || {},
             conflictResolver: ({ event }) => event.conflictResolver,
             error: undefined,
+            errorCode: undefined,
             pendingConflicts: undefined,
           }),
         },
@@ -468,15 +593,33 @@ export const syncMachine = setup({
   },
 })
 
-// Type exports for external use
 export type SyncMachineState =
   | "idle"
   | "syncing"
+  | "awaitingInitialReconciliation"
+  | "reconcilingFirstSync"
   | "conflict"
   | "pushing"
   | "inSync"
   | "success"
   | "error"
 
-// Re-export types for convenience
-export type { TrueConflict, MergeResult, ConflictResolution, GitStyleSyncResult }
+export type ConflictResolution = { expenseId: string; choice: "local" | "remote" }
+
+export type { TrueConflict, MergeResult }
+
+function formatMachineError(error: unknown): string {
+  if (error instanceof Error) return error.message
+  return String(error)
+}
+
+/**
+ * Best-effort extraction of a structured error code from a thrown error.
+ * Provider errors (`SyncProviderError`) carry a `code` (e.g. "NETWORK",
+ * "AUTH_INVALID"); propagating it lets the orchestrator tell transient
+ * transport failures apart from persistent ones (auth/permission/corrupt).
+ */
+function extractMachineErrorCode(error: unknown): string | undefined {
+  const code = (error as { code?: unknown } | null | undefined)?.code
+  return typeof code === "string" ? code : undefined
+}

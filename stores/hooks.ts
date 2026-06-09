@@ -4,3 +4,10 @@ export { useNotifications } from "./hooks/use-notifications"
 export { useCategories } from "./hooks/use-categories"
 export { useUIState } from "./hooks/use-ui-state"
 export { useSmsImportReview } from "../providers/sms-import-review-provider"
+export {
+  useProviderManagement,
+  ProviderCardStatus,
+} from "./hooks/use-provider-management"
+export { useFilters } from "./hooks/use-filters"
+export { useFilterPersistence } from "./filter-store"
+export { ProviderConnectionStatus } from "./provider-store"

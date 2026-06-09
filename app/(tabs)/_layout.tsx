@@ -1,4 +1,5 @@
-import { Tabs } from "expo-router"
+import { Tabs, usePathname } from "expo-router"
+import { useEffect } from "react"
 import { useTheme } from "tamagui"
 import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -6,11 +7,17 @@ import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { logAsync } from "../../services/logger"
 
 export default function TabLayout() {
   const theme = useTheme()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    logAsync("INFO", "NAV", `TAB_CHANGE route=${pathname}`)
+  }, [pathname])
 
   return (
     <Tabs

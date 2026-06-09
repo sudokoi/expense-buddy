@@ -26,7 +26,7 @@ import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFilte
 import { Filter } from "@tamagui/lucide-icons-2"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
-import { useFilters, useFilterPersistence } from "../../stores/filter-store"
+import { useFilters, useFilterPersistence } from "../../stores/hooks"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { getCurrencySymbol } from "../../utils/currency"

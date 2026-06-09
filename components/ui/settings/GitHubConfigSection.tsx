@@ -50,6 +50,8 @@ export interface GitHubConfigSectionProps {
   onConnectionStatusChange: (status: "idle" | "success" | "error") => void
   /** Callback to show notification */
   onNotification: (message: string, type: "success" | "error" | "info") => void
+  /** When true, the accordion starts expanded */
+  defaultExpanded?: boolean
 }
 
 // Memoized theme colors
@@ -76,6 +78,7 @@ export function GitHubConfigSection({
   connectionStatus,
   onConnectionStatusChange,
   onNotification,
+  defaultExpanded = false,
 }: GitHubConfigSectionProps) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -265,7 +268,11 @@ export function GitHubConfigSection({
   }, [])
 
   return (
-    <Accordion type="single" collapsible defaultValue={undefined}>
+    <Accordion
+      type="single"
+      collapsible
+      defaultValue={defaultExpanded ? "github-config" : undefined}
+    >
       <Accordion.Item value="github-config">
         <Accordion.Trigger
           bg="$backgroundHover"
@@ -356,6 +363,7 @@ export function GitHubConfigSection({
                   focusStyle={{
                     borderColor: configErrors.token ? "$red10" : ACCENT_COLORS.primary,
                   }}
+                  placeholderTextColor="$color"
                 />
                 {configErrors.token ? (
                   <Text fontSize="$caption" color="$red10">
@@ -445,6 +453,7 @@ export function GitHubConfigSection({
                   focusStyle={{
                     borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
                   }}
+                  placeholderTextColor="$color"
                 />
               ) : (
                 <YStack gap="$control">
@@ -459,6 +468,7 @@ export function GitHubConfigSection({
                     focusStyle={{
                       borderColor: configErrors.repo ? "$red10" : ACCENT_COLORS.primary,
                     }}
+                    placeholderTextColor="$color"
                   />
                   <Button size="$compact" onPress={handleChooseRepo} disabled={!token}>
                     {repo
@@ -488,6 +498,7 @@ export function GitHubConfigSection({
                 focusStyle={{
                   borderColor: configErrors.branch ? "$red10" : ACCENT_COLORS.primary,
                 }}
+                placeholderTextColor="$color"
               />
               {configErrors.branch && (
                 <Text fontSize="$caption" color="$red10">

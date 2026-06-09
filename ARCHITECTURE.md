@@ -1,6 +1,6 @@
 # Architecture
 
-Expense Buddy is an Expo Router application with a local-first architecture. The app treats the device as the primary execution environment, GitHub as an optional user-controlled sync backend, and SMS import as a review-first pipeline that never requires a server.
+Expense Buddy is an Expo Router application with a local-first architecture. The app treats the device as the primary execution environment, optional sync providers (GitHub, Google Drive) as user-controlled backends, and SMS import as a review-first pipeline that never requires a server.
 
 This document focuses on the current architecture shape, the reasons behind the main boundaries, and the parts of the system that are most important when extending the app.
 
@@ -56,15 +56,16 @@ The sync state machine coordinates fetch, merge, push, conflict, and error state
 
 ## Persistence Model
 
-| Data               | Local storage          | Remote storage                     | Notes                                                                                                |
-| ------------------ | ---------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Expenses           | AsyncStorage snapshot  | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`                                                          |
-| Settings           | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                             |
-| GitHub credentials | Secure storage         | No                                 | Token and repo configuration stay on-device                                                          |
-| Filters            | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                         |
-| SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-sms-module` |
-| Dirty-day metadata | AsyncStorage           | No                                 | Used to minimize sync work                                                                           |
-| Remote SHA cache   | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                     |
+| Data                    | Local storage          | Remote storage                     | Notes                                                                                                |
+| ----------------------- | ---------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Expenses                | AsyncStorage snapshot  | Depends on active provider         | Soft deletes are preserved with `deletedAt`                                                          |
+| Settings                | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                             |
+| Provider credentials    | Secure storage         | No                                 | Per-provider tokens (GitHub PAT, Google OAuth) stored via `CredentialStore`                          |
+| Provider state & config | AsyncStorage           | No                                 | Active provider ID, per-provider metadata, reconciliation statuses                                   |
+| Filters                 | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                         |
+| SMS review queue        | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-sms-module` |
+| Dirty-day metadata      | AsyncStorage           | No                                 | Used to minimize sync work                                                                           |
+| Remote SHA cache        | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                     |
 
 This split supports offline-first behavior while keeping the sync format small and inspectable.
 
@@ -74,7 +75,6 @@ SMS import is intentionally narrow in the current product scope.
 
 Current constraints:
 
-- Android only
 - Recent-window scanning rather than full historical inbox import
 - Receiver-driven new-message detection rather than polling or scheduled background work
 - Deterministic extraction for explainable matches
@@ -87,7 +87,7 @@ Runtime flow:
 1. The app checks SMS permission status on startup without prompting.
 2. If permission was already granted, the provider fetches the pending review queue from native Room.
 3. A manual scan from Settings requests `READ_SMS` inline when needed.
-4. An Android-only Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
+4. A Settings toggle can also request `RECEIVE_SMS` and `POST_NOTIFICATIONS` before enabling background alerts.
 5. `ExpenseBuddySmsModule` provides `syncInboxAsync` which queries recent SMS from the ContentProvider, and natively parses each message using `SmsMessageParser` (from `expense-buddy-sms-parser`) for amount extraction, merchant hints, date context, payment method hints, and a regex fallback category suggestion.
 6. The native sync pipeline then directly runs LiteRT category inference on the parsed messages, replacing the regex category suggestion only when the model clears its confidence gate.
 7. `SmsMessageParser.createFingerprint` generates a deterministic SHA-256 fingerprint from sender, body, timestamp (quantized to 3-minute windows), and amount for dedup.
@@ -125,42 +125,82 @@ Module dependency structure:
 Related decisions:
 
 - [ADR-002: Regex-First SMS Import](./decisions/adr-002-regex-first-sms-import.md)
-- [ADR-004: Android-Only Scope and Play Permission Gate](./decisions/adr-004-android-only-scope-and-play-permission-gate.md)
-- [ADR-005: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-005-background-sms-alerts.md)
-- [ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence](./decisions/adr-006-native-owned-sms-review-queue.md)
-- [ADR-007: On-Device Structured Logging](./decisions/adr-007-device-logging.md)
-- [On-Device ML SMS Categorization Proposal](./decisions/proposal-on-device-ml-sms-categorization.md)
+- [ADR-003: On-Device ML SMS Categorization](./decisions/adr-003-on-device-ml-sms-categorization.md)
+- [ADR-004: Review-First Local-Only SMS Staging](./decisions/adr-004-review-first-local-only-sms-staging.md)
+- [ADR-005: Android-Only Scope and Play Permission Gate](./decisions/adr-005-android-only-scope-and-play-permission-gate.md)
+- [ADR-006: Android Background SMS Alerts Stay Local and Review-First](./decisions/adr-006-background-sms-alerts.md)
+- [ADR-007: Native-Owned SMS Review Queue with Room-Based Persistence](./decisions/adr-007-native-owned-sms-review-queue.md)
+- [ADR-008: On-Device Structured Logging](./decisions/adr-008-device-logging.md)
 
-## GitHub Sync Architecture
+## Sync Architecture
 
-The sync system follows a fetch-merge-push model so local and remote edits are reconciled before upload.
+The sync system is built around a **provider framework** that abstracts remote storage behind a common `SyncProvider` interface. Each provider implements `readSnapshot()` and `writeSnapshot(snapshot, lastKnownRevision)` at the snapshot level — the caller never deals with individual files or API differences.
 
-Sync phases:
+### Provider Framework
 
-1. Determine whether the current action is a fetch, push, combined sync, or conflict resolution step.
-2. Fetch the remote repository tree through the Git Trees API.
-3. Compare remote blob SHAs against the local SHA cache.
-4. Download only changed daily files when needed.
-5. Merge remote and local expenses by expense ID.
-6. Resolve most conflicts automatically using timestamps, and surface true conflicts when edits are too close together.
-7. Upload only dirty day files and confirmed deletions.
-8. Update local caches and clear dirty-day metadata after success.
+| Component                | Responsibility                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `SyncProvider` interface | `readSnapshot()`, `writeSnapshot()`, `testConnection()`, `getStatus()`                          |
+| `CredentialStore`        | Opaque per-provider credential storage backed by SecureStore                                    |
+| `ProviderStateStore`     | Per-provider metadata (last sync time, connection status, reconciliation state)                 |
+| `ProviderSettingsStore`  | CRUD for provider configurations and active-provider selection                                  |
+| `DeferredProvider`       | Resolves the active provider lazily — created from a config, then bridges to the XState machine |
 
-Key data model rules:
+Providers are registered via a factory registry (`provider-registry.ts`) using module-level DI — no DI container library. This keeps provider creation explicit and testable while supporting future providers without changing the orchestration code.
 
-- expenses are stored remotely as `expenses-YYYY-MM-DD.csv`
-- deletions are represented by `deletedAt` instead of hard removal
-- settings sync is optional and separated from credentials
-- conflict resolution favors correctness over minimizing prompts
+Key design rules:
 
-Optimization strategy:
+- At most one provider per _kind_ (github, google_drive); future providers add new kinds, not duplicates
+- One active provider at a time; inactive providers remain configured and can be used independently (e.g., GitHub PAT for bug reporting)
+- The XState machine receives the provider via `input`, not a direct import — this keeps the machine independent of which provider is active
 
-- Git Trees API reduces fetch overhead by retrieving the remote tree and blob SHAs in one call
-- remote SHA caching skips downloads for unchanged files
-- dirty-day tracking limits hashing and uploads to changed dates only
-- batched writes keep uploads atomic at the commit level
+### GitHub Sync
 
-The sync engine is designed so a user can stay productive offline and reconcile later without losing the edit history needed for conflict handling.
+The `GitHubProvider` in `services/sync/github-provider.ts` uses the Git Trees API to list remote files, downloads only changed daily files, merges, and pushes through Git Blobs/Trees/Commits APIs. The old `github-sync.ts` functions were removed after the provider framework stabilized.
+
+GitHub sync follows a fetch-merge-push model:
+
+1. Fetch the remote repository tree through the Git Trees API.
+2. Compare remote blob SHAs against the local SHA cache.
+3. Download only changed daily files when needed.
+4. Merge remote and local expenses by expense ID.
+5. Resolve most conflicts automatically using timestamps, and surface true conflicts when edits are too close together.
+6. Upload only dirty day files and confirmed deletions using batch commits.
+7. Update local caches and clear dirty-day metadata after success.
+
+Daily CSV files (`expenses-YYYY-MM-DD.csv`), soft deletes via `deletedAt`, optional settings sync, dirty-day tracking, and SHA caching all carry over from the legacy design.
+
+### Google Drive Sync
+
+`GoogleDriveProvider` (`services/sync/google-drive-provider.ts`) uses the REST Drive API v3 directly (no Google SDK). Expenses are stored as per-year JSON files (`expense-buddy-<year>.json`) in the app's `appDataFolder` — a special Drive location invisible to other Drive apps.
+
+Key design decisions:
+
+- **Stale-write detection**: Each year file's content hash is captured during `readSnapshot` and stored in the `remoteRevision`. Before writing, the provider re-reads the file and compares its hash against the stored version. A mismatch means a concurrent write, which surfaces a `CONFLICT` error rather than silently overwriting.
+- **OAuth token refresh**: Tokens are stored in `CredentialStore` with `access_token`, `refresh_token`, and `expires_at`. The provider refreshes automatically when the token is expired.
+- **Android-native OAuth**: Google Drive auth uses the native `play-services-auth` GoogleSignInClient via the `expense-buddy-google-auth` Expo module, not a browser-based OAuth redirect. This complies with Google's current policy which rejects custom-scheme redirect URIs for Android apps.
+- **Native auth required**: Drive sync requires the native Google identity flow; a web fallback (AsyncStorage Drive mock) is acceptable because Drive is unavailable on web.
+- **Per-year JSON format**: Each year file bundles all day-level CSV content for that year into a JSON map (`{ v: 1, f: { "expenses-2026-01-01.csv": "id,amount\n...", ... } }`). This avoids creating hundreds of individual Drive files while keeping reads incremental — only the year files containing dirty days are downloaded.
+
+### Queue Compaction
+
+The sync queue tracks all local edits with a global sequence number. When a provider syncs successfully, it records a per-provider watermark (`setProviderWatermark`). The minimum watermark across all _reconciled_ providers (`getMinSyncedWatermark()`) determines how far back the queue can be compacted. Providers that have never completed a first sync are excluded from the minimum calculation — this prevents a new provider from preventing compaction of edits that all active providers have already seen.
+
+### Sync Machine
+
+The XState v5 sync machine (`services/sync-machine.ts`) receives the provider via `input` and manages the full lifecycle: `idle → syncing → (success | inSync | awaitingInitialReconciliation → reconcilingFirstSync | conflict | error)`. The machine detects auth errors by checking an `errorCode` field on the result — when the error is `AUTH_MISSING`, `AUTH_EXPIRED`, `AUTH_INVALID`, or `PERMISSION_DENIED`, the machine enters an auth-required state that the UI can respond to.
+
+### Read-Only Window
+
+A 180-day read-only window (`services/read-only-window.ts`) prevents edits to expenses older than 180 days. The window is computed from the earliest of the local expense date or the `firstAppLaunch` timestamp stored in settings. It is checked at write time inside the `expenseStore`. Expenses whose date falls inside the window allow full CRUD; expenses outside it are read-only. The window can only be widened (shortened) through a store update — it cannot be narrowed once set.
+
+Hooks and UI check `readOnlyUntil` to disable editing controls. The window also avoids stale corrections of synced records that all devices have already agreed on.
+
+### Sync Config Migration
+
+A `migrateSyncConfig()` function converts old single-provider SecureStorage keys (`github_pat`, `github_repo`, `github_branch`) into the new multi-provider format (`providerSettingsStore` + `credentialStore`). It runs once at app startup via `initializeSettingsStore` and is idempotent via a migration marker key.
+
+Related decision: [ADR-009](./decisions/adr-009-multi-provider-sync-and-google-drive.md)
 
 ## Update and Review Architecture
 
@@ -224,7 +264,7 @@ Bug report flow (Settings > About > Report an Issue):
 2. On user consent, `getLogsAsStringAsync(200)` retrieves formatted entries via the TurboModule
 3. The GitHub new-issue URL opens with logs pre-filled in the body parameter
 
-Related decision: [ADR-007](./decisions/adr-007-device-logging.md)
+Related decision: [ADR-008](./decisions/adr-008-device-logging.md)
 
 ## Internationalization and App Shell
 
@@ -269,4 +309,4 @@ Before adding new architecture layers, prefer extending the existing seams:
 - keep screen hooks as orchestration layers, not persistence layers
 - prefer explicit ADRs for changes that alter sync, import, or platform scope
 
-If a future change introduces on-device ML parsing beyond the current category suggestion path or a new sync target, that change should be documented in a new ADR before it is treated as the default architecture.
+If a future change introduces on-device ML parsing beyond the current category suggestion path or a new sync provider, that change should be documented in a new ADR before it is treated as the default architecture.

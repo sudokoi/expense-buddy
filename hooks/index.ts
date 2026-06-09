@@ -5,7 +5,7 @@ export * from "./use-analytics-charts"
 export * from "./use-analytics-statistics"
 
 // Machine hooks
-export * from "./use-sync-machine"
+export * from "./use-sync-engine"
 export * from "./use-github-auth-machine"
 
 // Update/Changelog hooks

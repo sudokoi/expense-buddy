@@ -1,6 +1,6 @@
 # Google Play Store Listing
 
-Last updated: 2026-05-22
+Last updated: 2026-06-08
 
 Use this file as the source of truth for Google Play Store presence updates.
 
@@ -10,7 +10,7 @@ Expense Buddy
 
 ## Short description
 
-Private expense tracker with review-first SMS import and GitHub sync
+Private expense tracker with review-first SMS import, GitHub, and Google Drive sync
 
 ## Full description
 
@@ -25,7 +25,7 @@ Why people use Expense Buddy:
 - Private local storage by default
 - Charts and filters for spending insights
 - Custom categories, payment methods, and saved instruments
-- Optional GitHub sync for backup across your own devices
+- Optional GitHub and Google Drive sync for backup across your own devices
 - No ads, no analytics, no forced cloud account
 
 What makes it different:
@@ -59,12 +59,13 @@ See where your money goes:
 - Category and payment-method breakdowns
 - Filters for time range, amount, category, method, and instrument
 
-Optional GitHub sync:
+Optional GitHub and Google Drive sync:
 
-- Sync confirmed expense records to a private repository you own
-- Choose your repository and branch
+- Sync confirmed expense records to a private GitHub repository or your Google Drive appDataFolder
+- GitHub: choose your repository and branch; Google Drive: native Google Sign-In with per-year JSON files
 - Works offline first and syncs when you decide
-- Raw SMS data and review metadata are not uploaded to GitHub
+- At most one active provider at a time; inactive providers remain configured
+- Raw SMS data and review metadata are not uploaded to any sync provider
 
 Private by design:
 
@@ -81,12 +82,12 @@ Privacy Policy: https://github.com/sudokoi/expense-buddy/blob/main/PRIVACY.md
 
 Keep these claims accurate in Play Store updates:
 
-- Describe SMS import as Android-only.
 - Describe SMS import as review-first.
 - Describe recent-message scanning as manual and user-triggered.
-- Describe background SMS alerts as optional, Android-only, local notifications behind an explicit Settings toggle.
+- Describe background SMS alerts as optional local notifications behind an explicit Settings toggle.
 - Describe Play-installed updates as native Google Play in-app updates.
 - If future direction is mentioned, clearly label it as planned and not current behavior.
 - Do not imply silent automatic expense creation.
 - Keep GitHub sync clearly optional.
+- Keep Google Drive sync clearly optional.
 - Keep privacy claims aligned with [PRIVACY.md](./../PRIVACY.md).

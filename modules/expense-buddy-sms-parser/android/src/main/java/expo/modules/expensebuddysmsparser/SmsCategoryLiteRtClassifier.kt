@@ -1,6 +1,7 @@
 package expo.modules.expensebuddysmsparser
 
 import android.content.Context
+import android.util.Log
 import org.json.JSONObject
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
@@ -32,14 +33,22 @@ class SmsCategoryLiteRtClassifier private constructor(
     private val lock = Any()
     private val tokenPattern = Regex("[a-z0-9]{${metadata.minTokenLength},${metadata.maxTokenLength}}")
 
-    override fun classify(requests: List<SmsCategoryPredictionRequest>): List<SmsCategoryPredictionResult> = requests.map(::classify)
+    override fun classify(requests: List<SmsCategoryPredictionRequest>): List<SmsCategoryPredictionResult> {
+        Log.d("ML_CLASSIFIER", "classify batchSize=${requests.size}")
+        return requests.map(::classify)
+    }
 
     private fun classify(request: SmsCategoryPredictionRequest): SmsCategoryPredictionResult {
         val features = buildFeatureSequence(request)
         val output = Array(1) { FloatArray(metadata.labels.size) }
 
         synchronized(lock) {
-            interpreter.run(arrayOf(features), output)
+            try {
+                interpreter.run(arrayOf(features), output)
+            } catch (e: Exception) {
+                Log.e("ML_CLASSIFIER", "interpreter.run failed: ${e.message}")
+                throw e
+            }
         }
 
         val probabilities = output[0]
@@ -55,11 +64,20 @@ class SmsCategoryLiteRtClassifier private constructor(
 
         val category = metadata.labels[bestIndex]
         val confidence = bestScore.coerceIn(0.0, 1.0)
+        val usePrediction = confidence >= metadata.minConfidence && category != "Other"
+
+        Log.d(
+            "ML_CLASSIFIER",
+            "classify messageId=${request.messageId} category=$category confidence=${"%.4f".format(
+                confidence,
+            )} usePrediction=$usePrediction",
+        )
+
         return SmsCategoryPredictionResult(
             messageId = request.messageId,
             category = category,
             confidence = confidence,
-            shouldUsePrediction = confidence >= metadata.minConfidence && category != "Other",
+            shouldUsePrediction = usePrediction,
             modelId = metadata.modelId,
         )
     }
@@ -120,17 +138,33 @@ class SmsCategoryLiteRtClassifier private constructor(
             return synchronized(this) {
                 instance?.let { return it }
 
+                Log.d("ML_CLASSIFIER", "getInstance loading model")
                 val metadata = loadMetadata(context)
-                val interpreter = Interpreter(loadModelBuffer(context), Interpreter.Options().setNumThreads(2))
+                Log.d(
+                    "ML_CLASSIFIER",
+                    "getInstance modelId=${metadata.modelId} labels=${metadata.labels} hashBucketSize=${metadata.hashBucketSize} minConfidence=${metadata.minConfidence}",
+                )
+
+                val modelBytes = loadModelBuffer(context)
+                Log.d("ML_CLASSIFIER", "getInstance modelSize=${modelBytes.capacity()} bytes")
+                val interpreter = Interpreter(modelBytes, Interpreter.Options().setNumThreads(2))
+
+                Log.d("ML_CLASSIFIER", "getInstance instance created")
                 SmsCategoryLiteRtClassifier(metadata, interpreter).also { instance = it }
             }
         }
 
         private fun loadMetadata(context: Context): SmsCategoryModelMetadata {
             val payload =
-                context.assets.open(METADATA_ASSET_PATH).use { input ->
-                    input.bufferedReader(Charsets.UTF_8).readText()
+                try {
+                    context.assets.open(METADATA_ASSET_PATH).use { input ->
+                        input.bufferedReader(Charsets.UTF_8).readText()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ML_CLASSIFIER", "loadMetadata failed to read ${METADATA_ASSET_PATH}: ${e.message}")
+                    throw e
                 }
+
             val json = JSONObject(payload)
             val labelsJson = json.getJSONArray("labels")
             val labels =
@@ -155,7 +189,14 @@ class SmsCategoryLiteRtClassifier private constructor(
         }
 
         private fun loadModelBuffer(context: Context): ByteBuffer {
-            val modelBytes = context.assets.open(MODEL_ASSET_PATH).use { input -> input.readBytes() }
+            val modelBytes =
+                try {
+                    context.assets.open(MODEL_ASSET_PATH).use { input -> input.readBytes() }
+                } catch (e: Exception) {
+                    Log.e("ML_CLASSIFIER", "loadModelBuffer failed to read ${MODEL_ASSET_PATH}: ${e.message}")
+                    throw e
+                }
+
             return ByteBuffer
                 .allocateDirect(modelBytes.size)
                 .order(ByteOrder.nativeOrder())

@@ -1,5 +1,6 @@
 package expo.modules.expensebuddysmsparser
 
+import android.util.Log
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.time.Instant
@@ -94,23 +95,28 @@ object SmsMessageParser {
     ): ParseResult {
         val normalizedBody = normalizeUnicode(body).trim()
         if (normalizedBody.isEmpty()) {
+            Log.d("SMS_PARSER", "skip reason=EMPTY_BODY sender=$sender")
             return ParseResult(null, SkipReason.EMPTY_BODY)
         }
 
         if (otpKeywords.containsMatchIn(normalizedBody)) {
+            Log.d("SMS_PARSER", "skip reason=OTP_MATCH sender=$sender")
             return ParseResult(null, SkipReason.OTP_MATCH)
         }
 
         if (isNegativeBankAlert(normalizedBody)) {
+            Log.d("SMS_PARSER", "skip reason=NEGATIVE_ALERT sender=$sender")
             return ParseResult(null, SkipReason.NEGATIVE_ALERT)
         }
 
         if (!debitKeywords.containsMatchIn(normalizedBody) || creditOnlyKeywords.containsMatchIn(normalizedBody)) {
+            Log.d("SMS_PARSER", "skip reason=NOT_DEBIT sender=$sender")
             return ParseResult(null, SkipReason.NOT_DEBIT)
         }
 
         val amount = parseAmount(normalizedBody)
         if (amount == null) {
+            Log.d("SMS_PARSER", "skip reason=AMOUNT_MISSING sender=$sender")
             return ParseResult(null, SkipReason.AMOUNT_MISSING)
         }
         val merchantName = inferMerchant(normalizedBody)
@@ -124,6 +130,13 @@ object SmsMessageParser {
                 receivedAt = receivedAt,
             )
         val fingerprint = createFingerprint(sender, body, receivedAt, amount)
+        val category = inferCategory(normalizedBody, merchantName)
+        val paymentMethod = inferPaymentMethod(normalizedBody)
+
+        Log.d(
+            "SMS_PARSER",
+            "parsed sender=$sender amount=$amount merchant=$merchantName category=$category paymentMethod=$paymentMethod fingerprint=$fingerprint",
+        )
 
         return ParseResult(
             SmsParsedMessage(
@@ -132,8 +145,8 @@ object SmsMessageParser {
                 amount = amount,
                 currency = "INR",
                 merchantName = merchantName,
-                categorySuggestion = inferCategory(normalizedBody, merchantName),
-                paymentMethodSuggestion = inferPaymentMethod(normalizedBody),
+                categorySuggestion = category,
+                paymentMethodSuggestion = paymentMethod,
                 noteSuggestion = merchantName?.let { "SMS import: $it" },
                 transactionDate = receivedAt,
                 matchedLocale = "en-IN",

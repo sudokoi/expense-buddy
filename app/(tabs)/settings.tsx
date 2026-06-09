@@ -1,9 +1,7 @@
-import { useState, useCallback, useMemo, useRef } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
 import { Alert, Linking, Platform, Pressable } from "react-native"
-import { getLogsForBugReportAsync } from "../../services/logger"
-import * as Clipboard from "expo-clipboard"
-import { ChevronRight } from "@tamagui/lucide-icons-2"
+import { ChevronRight, RefreshCw } from "@tamagui/lucide-icons-2"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
@@ -11,33 +9,28 @@ import {
   useNotifications,
   useSettings,
   useSmsImportReview,
+  useProviderManagement,
 } from "../../stores/hooks"
-import {
-  useSyncMachine,
-  TrueConflict,
-  ConflictResolution,
-} from "../../hooks/use-sync-machine"
+import { useSyncHandler } from "../../hooks/use-sync-handler"
 import { useUpdateCheck } from "../../hooks/use-update-check"
-import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
-import {
-  applyQueuedOpsToExpenses,
-  applyQueuedOpsToSettings,
-  clearSyncOpsUpTo,
-  getSyncOpsSince,
-  getSyncQueueWatermark,
-} from "../../services/sync-queue"
-import { loadDirtyDays, saveDirtyDays } from "../../services/expense-dirty-days"
+import { useReportIssue } from "../../hooks/use-report-issue"
+import { testConnection, SyncConfig } from "../../services/sync-manager"
+import { logAsync } from "../../services/logger"
 import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
+import { ProviderManagementSection } from "../../components/ui/settings/ProviderManagementSection"
+import { GoogleDriveConfigSection } from "../../components/ui/settings/GoogleDriveConfigSection"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
+import { GitHubConfigModal } from "../../components/ui/settings/GitHubConfigModal"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
 import { useTranslation } from "react-i18next"
 import { SEMANTIC_COLORS } from "../../constants/theme-colors"
+import type { ProviderConfig } from "../../services/sync/provider-types"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
@@ -46,15 +39,13 @@ export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
 
-  const { state, replaceAllExpenses, clearDirtyDaysAfterSync } = useExpenses()
+  const { state } = useExpenses()
   const { addNotification } = useNotifications()
   const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
 
-  // XState sync machine for the main sync flow
-  const syncMachine = useSyncMachine()
-  const isSyncing = syncMachine.isSyncing
+  const { handleSync, isSyncing, syncButtonText, needsFirstSync, hasActiveProvider } =
+    useSyncHandler()
 
-  // Update check hook for manual update checks from settings
   const {
     updateAvailable,
     latestVersion,
@@ -63,9 +54,10 @@ export default function SettingsScreen() {
     handleUpdate: startUpdate,
   } = useUpdateCheck()
 
+  const { handleReportIssue } = useReportIssue()
+
   const {
     settings,
-    hasUnsyncedChanges: hasUnsyncedSettingsChanges,
     syncConfig,
     setTheme,
     setSyncSettings,
@@ -76,28 +68,31 @@ export default function SettingsScreen() {
     updateSettings,
     setAutoSyncEnabled,
     setAutoSyncTiming,
-    replaceSettings,
-    clearSettingsChangeFlag,
     saveSyncConfig,
     clearSyncConfig,
   } = useSettings()
   const { isScanningSmsImports, openSmsImportReview, scanSmsImports } =
     useSmsImportActions()
 
-  // GitHub config state
+  const {
+    addProvider: addProviderManagement,
+    setActiveProvider: setActiveProviderManagement,
+    removeProvider: removeProviderManagement,
+    providers,
+  } = useProviderManagement()
+
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
-  const syncQueueWatermarkRef = useRef<number | null>(null)
-
-  // Derive isConfigured from syncConfig !== null
-  const isConfigured = syncConfig !== null
-
-  // Update check state - use hook's state for updateInfo
+  const [addingProviderKind, setAddingProviderKind] = useState<
+    "github" | "google_drive" | null
+  >(null)
+  const [showGitHubEditor, setShowGitHubEditor] = useState(false)
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
 
-  // Derive updateInfo from hook state for AppInfoSection compatibility
+  const isConfigured = syncConfig !== null || hasActiveProvider
+
   const updateInfo: UpdateInfo | null = useMemo(() => {
     if (latestVersion || updateAvailable) {
       return {
@@ -162,70 +157,33 @@ export default function SettingsScreen() {
     [addNotification, setBackgroundSmsImportEnabled, t]
   )
 
-  // GitHub config handlers
   const handleSaveConfig = useCallback(
     async (config: SyncConfig) => {
-      // Check if this is first-time configuration (no previous config existed)
       const isFirstTimeSetup = syncConfig === null
 
-      saveSyncConfig(config)
+      await saveSyncConfig(config)
+      await addProviderManagement({
+        kind: "github",
+        id: "default",
+        label: config.repo.trim(),
+        credentialId: "github_pat",
+        repo: config.repo.trim(),
+        branch: config.branch.trim(),
+      })
+      await setActiveProviderManagement("default")
       addNotification(t("settings.github.successConfig"), "success")
 
-      // Only prompt to download if this is first-time setup AND no local expenses
       if (isFirstTimeSetup && state.expenses.length === 0) {
-        Alert.alert(
-          t("settings.downloadPrompt.title"),
-          t("settings.downloadPrompt.message"),
-          [
-            { text: t("settings.downloadPrompt.notNow"), style: "cancel" },
-            {
-              text: t("settings.downloadPrompt.download"),
-              onPress: async () => {
-                try {
-                  // In restore flows, always attempt to download settings as well.
-                  // The downloaded settings may include categories/payment instruments.
-                  const result = await syncDown(7, true)
-                  if (result.success && result.expenses) {
-                    replaceAllExpenses(result.expenses)
-                    addNotification(
-                      t("settings.notifications.downloaded", {
-                        count: result.expenses.length,
-                      }),
-                      "success"
-                    )
-
-                    if (result.settings) {
-                      replaceSettings(result.settings)
-                      addNotification(
-                        t("settings.notifications.settingsApplied"),
-                        "success"
-                      )
-                    }
-
-                    if (!settings.autoSyncEnabled) {
-                      setAutoSyncEnabled(true)
-                      addNotification(t("settings.notifications.autoSyncEnabled"), "info")
-                    }
-                  } else {
-                    addNotification(result.error || result.message, "error")
-                  }
-                } catch (error) {
-                  addNotification(String(error), "error")
-                }
-              },
-            },
-          ]
-        )
+        handleSync()
       }
     },
     [
       syncConfig,
       state.expenses.length,
-      settings.autoSyncEnabled,
       saveSyncConfig,
-      setAutoSyncEnabled,
-      replaceAllExpenses,
-      replaceSettings,
+      addProviderManagement,
+      setActiveProviderManagement,
+      handleSync,
       addNotification,
       t,
     ]
@@ -259,14 +217,18 @@ export default function SettingsScreen() {
       {
         text: t("settings.clearDialog.clear"),
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
           clearSyncConfig()
+          const githubProviders = providers.filter((p) => p.kind === "github")
+          for (const p of githubProviders) {
+            await removeProviderManagement(p.id)
+          }
           setConnectionStatus("idle")
           addNotification(t("settings.notifications.configCleared"), "success")
         },
       },
     ])
-  }, [clearSyncConfig, addNotification, t])
+  }, [clearSyncConfig, removeProviderManagement, providers, addNotification, t])
 
   const handleConnectionStatusChange = useCallback(
     (status: "idle" | "success" | "error") => {
@@ -282,8 +244,17 @@ export default function SettingsScreen() {
     [addNotification]
   )
 
-  // App info handlers - use hook's checkForUpdates for manual checks
-  // This bypasses dismissal so users can always check for updates from settings
+  const handleAddProvider = useCallback((kind: "github" | "google_drive") => {
+    logAsync("INFO", "UI_ACTION", `SETTINGS_ADD_PROVIDER kind=${kind}`)
+    setAddingProviderKind(kind)
+    setShowGitHubEditor(false)
+  }, [])
+
+  const handleEditProvider = useCallback((_config: ProviderConfig) => {
+    setShowGitHubEditor(true)
+    setAddingProviderKind(null)
+  }, [])
+
   const handleCheckForUpdates = useCallback(async () => {
     setIsCheckingUpdate(true)
     try {
@@ -293,335 +264,6 @@ export default function SettingsScreen() {
     }
   }, [manualCheckForUpdates])
 
-  // Use hook's handleUpdate for the Play Store in-app update flow.
-  const handleStartUpdate = useCallback(async () => {
-    await startUpdate()
-  }, [startUpdate])
-
-  const handleOpenGitHub = useCallback(() => {
-    Linking.openURL(APP_CONFIG.github.url)
-  }, [])
-
-  const handleReportIssue = useCallback(() => {
-    const openNewIssue = () => {
-      Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
-    }
-    const openIssue = (issueNumber: number) => {
-      Linking.openURL(`${APP_CONFIG.github.url}/issues/${issueNumber}`)
-    }
-
-    Alert.alert(
-      t("settings.about.includeLogsTitle", {
-        defaultValue: "Include Device Logs?",
-      }),
-      t("settings.about.includeLogsMessage", {
-        defaultValue:
-          "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
-      }),
-      [
-        {
-          text: t("settings.about.attachLogs", {
-            defaultValue: "Attach Logs",
-          }),
-          onPress: async () => {
-            const token = syncConfig?.token
-            const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
-            const logs = await getLogsForBugReportAsync(token ? 500 : 50)
-
-            if (token && logs) {
-              try {
-                const response = await fetch(
-                  `https://api.github.com/repos/${appRepo}/issues`,
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      Accept: "application/vnd.github+json",
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      title: `[Bug Report] Expense Buddy v${APP_CONFIG.version}`,
-                      body: [
-                        "## Bug Description",
-                        "",
-                        "_Please describe the bug here._",
-                        "",
-                        "## Device Logs",
-                        "```",
-                        logs,
-                        "```",
-                      ].join("\n"),
-                    }),
-                  }
-                )
-                if (response.ok) {
-                  const issue = (await response.json()) as {
-                    number: number
-                    html_url: string
-                  }
-                  addNotification(
-                    t("settings.about.issueCreated", {
-                      defaultValue: "Issue created. Add details in the browser.",
-                    }),
-                    "success"
-                  )
-                  openIssue(issue.number)
-                  return
-                }
-              } catch {
-                // Fall through to clipboard fallback
-              }
-            }
-
-            if (logs) {
-              await Clipboard.setStringAsync(logs)
-              addNotification(
-                t("settings.about.logsCopied", {
-                  defaultValue:
-                    "Logs copied to clipboard. Paste them in the GitHub issue.",
-                }),
-                "info"
-              )
-            }
-            openNewIssue()
-          },
-        },
-        {
-          text: t("settings.about.dontAttach", { defaultValue: "Don't Attach" }),
-          onPress: openNewIssue,
-        },
-        {
-          text: t("common.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-        },
-      ]
-    )
-  }, [t, addNotification, syncConfig])
-
-  // Theme and settings handlers
-  const handleThemeChange = useCallback(
-    (theme: "light" | "dark" | "system") => {
-      setTheme(theme)
-    },
-    [setTheme]
-  )
-
-  const handleLanguageChange = useCallback(
-    (lang: string) => {
-      setLanguage(lang)
-    },
-    [setLanguage]
-  )
-
-  const handleCurrencyChange = useCallback(
-    (currency: string) => {
-      setDefaultCurrency(currency)
-    },
-    [setDefaultCurrency]
-  )
-
-  const handleSyncSettingsToggle = useCallback(
-    (enabled: boolean) => {
-      setSyncSettings(enabled)
-    },
-    [setSyncSettings]
-  )
-
-  // Calculate pending count for display on sync button
-  const pendingCount = useMemo(() => {
-    const uniqueDirtyDays = new Set([...state.dirtyDays, ...state.deletedDays])
-    const expenseChanges = uniqueDirtyDays.size
-    const settingsChanges = settings.syncSettings && hasUnsyncedSettingsChanges ? 1 : 0
-    return expenseChanges + settingsChanges
-  }, [
-    state.dirtyDays,
-    state.deletedDays,
-    settings.syncSettings,
-    hasUnsyncedSettingsChanges,
-  ])
-
-  // Sync button text with pending count
-  const syncButtonText = useMemo(() => {
-    if (isSyncing) return t("settings.autoSync.syncing")
-    if (pendingCount > 0) return `${t("settings.autoSync.syncNow")} (${pendingCount})`
-    return t("settings.autoSync.syncNow")
-  }, [isSyncing, pendingCount, t])
-
-  /**
-   * Show conflict resolution dialog for true conflicts
-   * Returns user's resolution choices or undefined if cancelled
-   */
-  const showConflictDialog = useCallback(
-    (conflicts: TrueConflict[]): Promise<ConflictResolution[] | undefined> => {
-      return new Promise((resolve) => {
-        const conflictCount = conflicts.length
-        const conflictSummary = conflicts
-          .slice(0, 3)
-          .map((c) => {
-            const localNote = c.localVersion.note || "Unnamed"
-            const remoteNote = c.remoteVersion.note || "Unnamed"
-            const localAmount = `${c.localVersion.amount}`
-            const remoteAmount = `${c.remoteVersion.amount}`
-
-            return `• Local: ${localNote} (${localAmount})\n  Remote: ${remoteNote} (${remoteAmount})`
-          })
-          .join("\n\n")
-        const moreText = conflictCount > 3 ? `\n\n...and ${conflictCount - 3} more` : ""
-
-        Alert.alert(
-          t("settings.conflicts.title", {
-            count: conflictCount,
-            s: conflictCount > 1 ? "s" : "",
-          }),
-          t("settings.conflicts.message", {
-            s: conflictCount > 1 ? "s" : "",
-            summary: `${conflictSummary}${moreText}`,
-          }),
-          [
-            {
-              text: t("common.cancel"),
-              style: "cancel",
-              onPress: () => resolve(undefined),
-            },
-            {
-              text: t("settings.conflicts.keepLocal"),
-              onPress: () => {
-                const resolutions: ConflictResolution[] = conflicts.map((c) => ({
-                  expenseId: c.expenseId,
-                  choice: "local" as const,
-                }))
-                resolve(resolutions)
-              },
-            },
-            {
-              text: t("settings.conflicts.keepRemote"),
-              onPress: () => {
-                const resolutions: ConflictResolution[] = conflicts.map((c) => ({
-                  expenseId: c.expenseId,
-                  choice: "remote" as const,
-                }))
-                resolve(resolutions)
-              },
-            },
-          ]
-        )
-      })
-    },
-    [t]
-  )
-
-  // Handle sync using XState machine with callbacks
-  const handleSync = useCallback(async () => {
-    const dirtyDaysState = await loadDirtyDays()
-    await saveDirtyDays({
-      ...dirtyDaysState.state,
-      dirtyDays: state.dirtyDays,
-      deletedDays: state.deletedDays,
-      updatedAt: new Date().toISOString(),
-    })
-    syncQueueWatermarkRef.current = await getSyncQueueWatermark()
-    syncMachine.sync({
-      localExpenses: state.expenses,
-      settings: settings.syncSettings ? settings : undefined,
-      syncSettingsEnabled: settings.syncSettings,
-      callbacks: {
-        onAuthError: ({ shouldSignOut }) => {
-          if (shouldSignOut) {
-            clearSyncConfig()
-          }
-        },
-        onConflict: async (conflicts: TrueConflict[]) => {
-          const resolutions = await showConflictDialog(conflicts)
-          if (resolutions) {
-            syncMachine.resolveConflicts(resolutions)
-          } else {
-            syncMachine.cancel()
-          }
-        },
-        onSuccess: async (result) => {
-          const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
-          const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
-          addNotification(
-            t("settings.notifications.syncComplete", {
-              localCount: localFilesUpdated,
-              remoteCount: remoteFilesUpdated,
-            }),
-            "success"
-          )
-
-          const watermark = syncQueueWatermarkRef.current
-          let opsAfter = watermark !== null ? await getSyncOpsSince(watermark) : []
-          if (watermark !== null && opsAfter.length === 0) {
-            const latestWatermark = await getSyncQueueWatermark()
-            if (latestWatermark > watermark) {
-              opsAfter = await getSyncOpsSince(watermark)
-            }
-          }
-
-          const baseExpenses = result.mergeResult?.merged ?? state.expenses
-          const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
-          const pendingExpenseOps = opsAfter.some((op) => op.type.startsWith("expense."))
-          const pendingSettingsOps = opsAfter.some(
-            (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
-          )
-
-          let settingsBase = settings
-          if (result.syncResult?.mergedSettings) {
-            settingsBase = result.syncResult.mergedSettings
-          } else if (result.syncResult?.mergedCategories) {
-            settingsBase = {
-              ...settingsBase,
-              categories: result.syncResult.mergedCategories,
-            }
-          }
-
-          const reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
-
-          if (watermark !== null) {
-            const lastAppliedId =
-              opsAfter.length > 0 ? opsAfter[opsAfter.length - 1].id : watermark
-            await clearSyncOpsUpTo(lastAppliedId)
-          }
-
-          if (!pendingExpenseOps) {
-            clearDirtyDaysAfterSync()
-          }
-          if (settings.syncSettings && !pendingSettingsOps) {
-            clearSettingsChangeFlag()
-          }
-
-          if (reconciledExpenses.length > 0) {
-            replaceAllExpenses(reconciledExpenses)
-          }
-
-          if (settings.syncSettings && result.syncResult?.mergedSettings) {
-            replaceSettings(reconciledSettings)
-          }
-        },
-        onInSync: () => {
-          addNotification(t("settings.notifications.alreadyInSync"), "success")
-        },
-        onError: (error) => {
-          addNotification(error, "error")
-        },
-      },
-    })
-  }, [
-    state.dirtyDays,
-    state.deletedDays,
-    state.expenses,
-    syncMachine,
-    settings,
-    clearSyncConfig,
-    showConflictDialog,
-    addNotification,
-    t,
-    clearDirtyDaysAfterSync,
-    clearSettingsChangeFlag,
-    replaceAllExpenses,
-    replaceSettings,
-  ])
-
   return (
     <ScreenContainer>
       <YStack gap="$gutter" maxW={UI_SPACE.empty * 15} self="center" width="100%">
@@ -629,7 +271,30 @@ export default function SettingsScreen() {
           title={t("settings.sections.sync")}
           description={t("settings.sync.description")}
         >
-          <GitHubConfigSection
+          <ProviderManagementSection
+            onNotification={handleNotification}
+            onAddProvider={handleAddProvider}
+            onEditProvider={handleEditProvider}
+          />
+
+          {addingProviderKind === "github" && (
+            <YStack mt={UI_SPACE.gutter}>
+              <GitHubConfigSection
+                syncConfig={syncConfig}
+                onSaveConfig={handleSaveConfig}
+                onTestConnection={handleTestConnection}
+                onClearConfig={handleClearConfig}
+                isTesting={isTesting}
+                connectionStatus={connectionStatus}
+                onConnectionStatusChange={handleConnectionStatusChange}
+                onNotification={handleNotification}
+              />
+            </YStack>
+          )}
+
+          <GitHubConfigModal
+            open={showGitHubEditor}
+            onClose={() => setShowGitHubEditor(false)}
             syncConfig={syncConfig}
             onSaveConfig={handleSaveConfig}
             onTestConnection={handleTestConnection}
@@ -640,6 +305,14 @@ export default function SettingsScreen() {
             onNotification={handleNotification}
           />
 
+          {addingProviderKind === "google_drive" && (
+            <GoogleDriveConfigSection
+              onNotification={handleNotification}
+              onCancel={() => setAddingProviderKind(null)}
+              onDone={() => setAddingProviderKind(null)}
+            />
+          )}
+
           {isConfigured && (
             <YStack gap="$gutter" mt={UI_SPACE.control}>
               <Button
@@ -647,6 +320,7 @@ export default function SettingsScreen() {
                 onPress={handleSync}
                 disabled={isSyncing}
                 theme="accent"
+                icon={isSyncing ? undefined : RefreshCw}
               >
                 {syncButtonText}
               </Button>
@@ -655,9 +329,10 @@ export default function SettingsScreen() {
                 autoSyncEnabled={settings.autoSyncEnabled}
                 autoSyncTiming={settings.autoSyncTiming}
                 syncSettings={settings.syncSettings}
+                reconciliationRequired={needsFirstSync}
                 onAutoSyncEnabledChange={setAutoSyncEnabled}
                 onAutoSyncTimingChange={setAutoSyncTiming}
-                onSyncSettingsChange={handleSyncSettingsToggle}
+                onSyncSettingsChange={setSyncSettings}
               />
             </YStack>
           )}
@@ -833,7 +508,7 @@ export default function SettingsScreen() {
               p="$section"
               style={{ borderRadius: UI_RADIUS.surface }}
             >
-              <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
+              <ThemeSelector value={settings.theme} onChange={setTheme} />
             </YStack>
           </YStack>
         </SettingsSection>
@@ -844,13 +519,12 @@ export default function SettingsScreen() {
         >
           <LocalizationSection
             languagePreference={settings.language}
-            onLanguageChange={handleLanguageChange}
+            onLanguageChange={setLanguage}
             defaultCurrency={settings.defaultCurrency}
-            onCurrencyChange={handleCurrencyChange}
+            onCurrencyChange={setDefaultCurrency}
           />
         </SettingsSection>
 
-        {/* APP INFORMATION Section */}
         <SettingsSection title={t("settings.sections.about")}>
           <AppInfoSection
             currentVersion={APP_CONFIG.version}
@@ -858,8 +532,8 @@ export default function SettingsScreen() {
             isUpdateReadyToInstall={isUpdateReadyToInstall}
             isCheckingUpdate={isCheckingUpdate}
             onCheckForUpdates={handleCheckForUpdates}
-            onStartUpdate={handleStartUpdate}
-            onOpenGitHub={handleOpenGitHub}
+            onStartUpdate={startUpdate}
+            onOpenGitHub={() => Linking.openURL(APP_CONFIG.github.url)}
             onReportIssue={handleReportIssue}
           />
         </SettingsSection>

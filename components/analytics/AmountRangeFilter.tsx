@@ -62,6 +62,7 @@ export function AmountRangeFilter({
           placeholder={`${symbol} Min`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
+          placeholderTextColor="$color"
         />
         <Text>to</Text>
         <Input
@@ -79,6 +80,7 @@ export function AmountRangeFilter({
           placeholder={`${symbol} Max`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
+          placeholderTextColor="$color"
         />
       </XStack>
       {error && (

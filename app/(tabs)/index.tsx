@@ -2,10 +2,11 @@ import { format, subDays } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses, useCategories } from "../../stores/hooks"
+import { useExpenses, useCategories, useNotifications } from "../../stores/hooks"
 import { useRouter } from "expo-router"
-import { Dimensions } from "react-native"
+import { Animated, Dimensions, Easing, Platform } from "react-native"
 import React, { startTransition } from "react"
+import { IconActionButton } from "../../components/ui/IconActionButton"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
@@ -15,6 +16,7 @@ import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
+import { providerSettingsStore } from "../../services/sync/provider-settings-store"
 import {
   formatCurrency,
   getCurrencySymbol,
@@ -23,12 +25,16 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
+import { useSyncEngine } from "../../hooks/use-sync-engine"
+import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
 import {
   UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
@@ -70,7 +76,10 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 export default function DashboardScreen() {
   const { state } = useExpenses()
   const { categories, getCategoryByLabel } = useCategories()
-  const { settings } = useSettings()
+  const { settings, syncConfig } = useSettings()
+  const { startSmsImportFromAdd } = useSmsImportActions()
+  const { addNotification } = useNotifications()
+  const syncEngine = useSyncEngine()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -78,6 +87,20 @@ export default function DashboardScreen() {
   const { t } = useTranslation()
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
+  const [hasNonGitHubProvider, setHasNonGitHubProvider] = React.useState(false)
+  const syncSpin = React.useRef(new Animated.Value(0)).current
+
+  React.useEffect(() => {
+    let cancelled = false
+    providerSettingsStore.getActiveConfig().then((config) => {
+      if (!cancelled) setHasNonGitHubProvider(config !== null && config.kind !== "github")
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const hasSyncProvider = syncConfig !== null || hasNonGitHubProvider
 
   // Singleton pass to group expenses by currency
   const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
@@ -188,10 +211,6 @@ export default function DashboardScreen() {
   }, [])
 
   // Memoized navigation handlers
-  const handleAddPress = React.useCallback(() => {
-    router.push("/(tabs)/add")
-  }, [router])
-
   const handleAnalyticsPress = React.useCallback(() => {
     router.push("/(tabs)/analytics")
   }, [router])
@@ -199,6 +218,49 @@ export default function DashboardScreen() {
   const handleHistoryPress = React.useCallback(() => {
     router.push("/(tabs)/history")
   }, [router])
+
+  const handleSmsImport = React.useCallback(async () => {
+    await startSmsImportFromAdd()
+  }, [startSmsImportFromAdd])
+
+  const handleSync = React.useCallback(async () => {
+    if (syncEngine.isSyncing) return
+    logAsync("INFO", "UI_ACTION", "MANUAL_SYNC dashboard")
+    const result = await syncEngine.manualSync()
+    if (result.error) {
+      addNotification(result.error, "error")
+      logAsync("ERROR", "UI_ACTION", `MANUAL_SYNC_FAILED error=${result.error}`)
+      return
+    }
+    if (!result.skipped) {
+      logAsync("INFO", "UI_ACTION", "MANUAL_SYNC_SUCCESS")
+    }
+  }, [syncEngine, addNotification])
+
+  React.useEffect(() => {
+    if (!syncEngine.isSyncing) {
+      syncSpin.stopAnimation()
+      syncSpin.setValue(0)
+      return
+    }
+
+    const loop = Animated.loop(
+      Animated.timing(syncSpin, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    )
+
+    loop.start()
+    return () => loop.stop()
+  }, [syncEngine.isSyncing, syncSpin])
+
+  const syncRotate = syncSpin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  })
 
   return (
     <ScreenContainer>
@@ -209,9 +271,33 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" theme="accent" onPress={handleAddPress}>
-          {t("common.add")}
-        </Button>
+        <XStack gap={UI_SPACE.control}>
+          {hasSyncProvider && (
+            <IconActionButton
+              size="$control"
+              onPress={handleSync}
+              icon={
+                <Animated.View style={{ transform: [{ rotate: syncRotate }] }}>
+                  <RefreshCw size={UI_ICON_SIZE.medium} />
+                </Animated.View>
+              }
+              tooltip={
+                syncEngine.isSyncing
+                  ? t("settings.autoSync.syncing")
+                  : t("settings.autoSync.syncNow")
+              }
+            />
+          )}
+          {Platform.OS === "android" ? (
+            <IconActionButton
+              size="$control"
+              theme="accent"
+              onPress={handleSmsImport}
+              icon={<Download size={UI_ICON_SIZE.medium} />}
+              tooltip={t("add.importSms")}
+            />
+          ) : null}
+        </XStack>
       </XStack>
 
       {/* Currency Filter - Show only if multiple currencies exist */}
