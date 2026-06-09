@@ -382,9 +382,9 @@ describe("Settings Manager Properties", () => {
       const loaded = await loadSettings()
 
       expect(loaded.theme).toBe("system")
-      expect(loaded.syncSettings).toBe(false)
+      expect(loaded.syncSettings).toBe(true)
       expect(loaded.defaultPaymentMethod).toBeUndefined()
-      expect(loaded.enableMathExpressions).toBe(true)
+      expect(loaded.enableMathExpressions).toBe(false)
       expect(loaded.useMlOnlyForSmsImports).toBe(false)
       expect(loaded.backgroundSmsImportEnabled).toBe(false)
       expect(loaded.autoSyncEnabled).toBe(false)

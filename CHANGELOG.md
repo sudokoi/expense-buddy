@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 4.0.0
+
+### Major Changes
+
+- [#76](https://github.com/sudokoi/expense-buddy/pull/76) [`fd5fec7`](https://github.com/sudokoi/expense-buddy/commit/fd5fec7c35b9e827bfc1ebbab48d5625bf98b7b9) Thanks [@sudokoi](https://github.com/sudokoi)! - feat: Google Drive sync, redesigned settings, swipeable expenses, and read-only window
+  - Add Google Drive as a new sync provider with native Google Sign-In and per-year JSON storage
+  - Redesign Settings with a multi-provider management section and swipeable provider cards
+  - Add swipeable expense rows with icon-only swipe actions
+  - Add 6-month read-only window for editing past expenses
+  - Rewrite sync engine with provider framework, per-provider watermarks, queue compaction, and first reconciliation
+
 ## 3.5.0
 
 ### Minor Changes
