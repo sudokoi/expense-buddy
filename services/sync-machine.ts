@@ -10,7 +10,6 @@ import { logAsync } from "./logger"
 export interface SyncCallbacks {
   onConflict?: (conflicts: TrueConflict[]) => void
   onSuccess?: (result: { mergeResult?: MergeResult; isFirstSync?: boolean }) => void
-  onInSync?: () => void
   onError?: (error: string) => void
   onAuthError?: (info: { errorCode: string; shouldSignOut: boolean }) => void
 }

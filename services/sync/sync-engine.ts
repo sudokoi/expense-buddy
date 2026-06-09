@@ -419,6 +419,10 @@ export class SyncOrchestrator implements SyncEngine {
     }
 
     // manual/retry bypass the debounce window.
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+      this.debounceTimer = null
+    }
     void this.trigger(reason)
   }
 

@@ -11,7 +11,7 @@ import type {
 } from "./provider-types"
 import { SyncProviderError as SyncProviderErrorClass } from "./provider-types"
 import { SETTINGS_FILENAME } from "./provider-types"
-import { simpleHash } from "./sync-utils"
+import { simpleHash, applyDeletionRangeGuard } from "./sync-utils"
 import { APP_CONFIG } from "../../constants/app-config"
 import { Platform } from "react-native"
 import { logAsync } from "../logger"
@@ -300,7 +300,11 @@ export class GoogleDriveProvider implements SyncProvider {
     // Settings are written to their own dedicated file, never folded into a
     // year body. Exclude it from the per-year grouping.
     const { [SETTINGS_FILENAME]: settingsContent, ...dayFiles } = snapshot.files
-    const filesByYear = this.groupFilesByYear(dayFiles, currentYear)
+
+    // Out-of-range deletion guard (consistent with GitHub provider): never
+    // delete a remote day file that falls outside the covered date range.
+    const safeFiles = applyDeletionRangeGuard(dayFiles, snapshot.coveredDayRange)
+    const filesByYear = this.groupFilesByYear(safeFiles, currentYear)
 
     logAsync(
       "INFO",
