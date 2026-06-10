@@ -414,6 +414,15 @@ export async function saveSettingsHash(hash: string): Promise<void> {
  * Compute a hash of the settings object for change detection
  * Uses the same djb2 algorithm as file hashes
  */
+/**
+ * Pre-computed hash of DEFAULT_SETTINGS for detecting pristine settings.
+ * Computed once at module load; stable because the hash excludes timestamps
+ * and other volatile fields. Used by the sync layer to decide whether local
+ * settings are "pristine" (never customized) to guard against default data
+ * overwriting the user's remote settings.
+ */
+export const DEFAULT_SETTINGS_HASH = computeSettingsHash(DEFAULT_SETTINGS)
+
 export function computeSettingsHash(settings: AppSettings): string {
   // Create a stable JSON representation (sorted keys)
   // Categories are sorted by label for consistent hashing

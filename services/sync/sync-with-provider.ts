@@ -15,7 +15,11 @@ import {
 } from "../merge-engine"
 import type { Expense } from "../../types/expense"
 import type { AppSettings } from "../settings-manager"
-import { hydrateSettingsFromJson } from "../settings-manager"
+import {
+  hydrateSettingsFromJson,
+  computeSettingsHash,
+  DEFAULT_SETTINGS_HASH,
+} from "../settings-manager"
 import { APP_CONFIG } from "../../constants/app-config"
 import { logAsync } from "../logger"
 
@@ -110,7 +114,7 @@ export async function syncWithProvider(
 
   if (syncSettingsEnabled && localSettings) {
     mergedSettings = remoteSettings
-      ? { ...remoteSettings, ...localSettings }
+      ? mergeSettings(localSettings, remoteSettings)
       : localSettings
   }
 
@@ -208,7 +212,7 @@ export async function firstTimeSync(
     let mergedSettings: AppSettings | undefined
     if (syncSettingsEnabled && localSettings) {
       mergedSettings = remoteSettings
-        ? { ...remoteSettings, ...localSettings }
+        ? mergeSettings(localSettings, remoteSettings)
         : localSettings
     }
 
@@ -380,6 +384,32 @@ async function resolveConflictsIfNeeded(
   }
 
   return { updatedResult: updated }
+}
+
+/**
+ * Merge local and remote settings with data-loss protection.
+ *
+ * Strategy:
+ *  1. If either side is pristine (matches DEFAULT_SETTINGS hash), prefer
+ *     the other — this prevents a fresh install or cleared app-data from
+ *     overwriting the user's real remote settings (the root cause of the
+ *     v4.0.0 data-loss bug).
+ *  2. If both sides have real user customizations, use last-writer-wins
+ *     by `updatedAt` timestamp, matching the semantics of expense and
+ *     category merges elsewhere in the sync layer.
+ *  3. If content is identical (same hash), return local as-is to avoid
+ *     unnecessary writes downstream.
+ */
+function mergeSettings(local: AppSettings, remote: AppSettings): AppSettings {
+  const localHash = computeSettingsHash(local)
+  const remoteHash = computeSettingsHash(remote)
+
+  if (localHash === remoteHash) return local
+
+  if (remoteHash === DEFAULT_SETTINGS_HASH) return local
+  if (localHash === DEFAULT_SETTINGS_HASH) return remote
+
+  return new Date(local.updatedAt) >= new Date(remote.updatedAt) ? local : remote
 }
 
 function parseExpensesFromSnapshot(snapshot: SyncSnapshot): Expense[] {
