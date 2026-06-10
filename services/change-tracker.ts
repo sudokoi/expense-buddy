@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem } from "./storage"
 import { hasSettingsChanged } from "./settings-manager"
 
 const PENDING_CHANGES_KEY = "pending_sync_changes"
@@ -20,7 +20,7 @@ interface StoredPendingChanges {
  */
 export async function loadPendingChanges(): Promise<PendingChanges> {
   try {
-    const stored = await AsyncStorage.getItem(PENDING_CHANGES_KEY)
+    const stored = await getItem(PENDING_CHANGES_KEY)
     if (stored) {
       const parsed: StoredPendingChanges = JSON.parse(stored)
       return {
@@ -45,7 +45,7 @@ export async function savePendingChanges(changes: PendingChanges): Promise<void>
       edited: Array.from(changes.edited),
       deleted: Array.from(changes.deleted),
     }
-    await AsyncStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(toStore))
+    await setItem(PENDING_CHANGES_KEY, JSON.stringify(toStore))
   } catch (error) {
     console.warn("Failed to save pending changes:", error)
   }
@@ -115,7 +115,7 @@ export async function trackDelete(expenseId: string): Promise<void> {
  */
 export async function clearPendingChanges(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(PENDING_CHANGES_KEY)
+    await removeItem(PENDING_CHANGES_KEY)
   } catch (error) {
     console.warn("Failed to clear pending changes:", error)
   }

@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "./storage"
 
 const DIRTY_DAYS_KEY = "expense_dirty_days"
 const DIRTY_DAYS_VERSION = 1
@@ -48,7 +48,7 @@ function enqueueWrite<T>(operation: () => Promise<T>): Promise<T> {
 async function saveState(state: DirtyDaysState): Promise<void> {
   await enqueueWrite(async () => {
     try {
-      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(state))
+      await setItem(DIRTY_DAYS_KEY, JSON.stringify(state))
     } catch (error) {
       console.warn("Failed to save dirty days:", error)
     }
@@ -57,7 +57,7 @@ async function saveState(state: DirtyDaysState): Promise<void> {
 
 export async function loadDirtyDays(): Promise<DirtyDaysLoadResult> {
   try {
-    const stored = await AsyncStorage.getItem(DIRTY_DAYS_KEY)
+    const stored = await getItem(DIRTY_DAYS_KEY)
     if (!stored) {
       return { state: { ...emptyState }, isTrusted: false }
     }
@@ -98,7 +98,7 @@ export async function markDirtyDay(dayKey: string): Promise<DirtyDaysState> {
       updatedAt: new Date().toISOString(),
     })
     try {
-      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
+      await setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
     } catch (error) {
       console.warn("Failed to save dirty days:", error)
     }
@@ -116,7 +116,7 @@ export async function markDeletedDay(dayKey: string): Promise<DirtyDaysState> {
       updatedAt: new Date().toISOString(),
     })
     try {
-      await AsyncStorage.setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
+      await setItem(DIRTY_DAYS_KEY, JSON.stringify(nextState))
     } catch (error) {
       console.warn("Failed to save dirty days:", error)
     }
@@ -135,7 +135,7 @@ export async function consumeDirtyDays(): Promise<DirtyDaysLoadResult> {
   return enqueueWrite(async () => {
     const result = await loadDirtyDays()
     try {
-      await AsyncStorage.setItem(
+      await setItem(
         DIRTY_DAYS_KEY,
         JSON.stringify({
           ...emptyState,

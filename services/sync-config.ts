@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "./storage"
 import { secureStorage } from "./secure-storage"
 import { validatePAT, GitHubApiError } from "./github-sync"
 import { getUserFriendlyMessage } from "./error-utils"
@@ -143,7 +143,7 @@ const MIGRATION_KEY = "sync.migration.v1"
  */
 export async function migrateSyncConfig(): Promise<void> {
   try {
-    const alreadyMigrated = await AsyncStorage.getItem(MIGRATION_KEY)
+    const alreadyMigrated = await getItem(MIGRATION_KEY)
     if (alreadyMigrated) return
 
     const providerState = await providerSettingsStore.load()
@@ -171,7 +171,7 @@ export async function migrateSyncConfig(): Promise<void> {
     }
     await providerSettingsStore.addProvider(providerConfig)
     await providerSettingsStore.setActiveProvider("default")
-    await AsyncStorage.setItem(MIGRATION_KEY, "true")
+    await setItem(MIGRATION_KEY, "true")
   } catch (error) {
     console.warn("Sync config migration failed (will retry):", error)
   }

@@ -1,3 +1,4 @@
+import { setItem, clear as clearStorage } from "../storage"
 import {
   applyQueuedOpsToExpenses,
   applyQueuedOpsToSettings,
@@ -15,23 +16,8 @@ import {
 import { Expense } from "../../types/expense"
 import { AppSettings, DEFAULT_SETTINGS } from "../settings-manager"
 
-const mockStorage: Map<string, string> = new Map()
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
-  setItem: jest.fn((key: string, value: string) => {
-    mockStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  removeItem: jest.fn((key: string) => {
-    mockStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
-
-beforeEach(() => {
-  mockStorage.clear()
-  jest.clearAllMocks()
+beforeEach(async () => {
+  await clearStorage()
 })
 
 function createExpense(id: string, note: string): Expense {
@@ -180,7 +166,7 @@ describe("sync-queue", () => {
     })
 
     it("getMinSyncedWatermark returns min across reconciled providers", async () => {
-      mockStorage.set(
+      await setItem(
         "sync.provider.state",
         JSON.stringify({
           activeProviderId: "github",
@@ -197,7 +183,7 @@ describe("sync-queue", () => {
     })
 
     it("getMinSyncedWatermark excludes non-reconciled providers", async () => {
-      mockStorage.set(
+      await setItem(
         "sync.provider.state",
         JSON.stringify({
           activeProviderId: "github",
@@ -207,14 +193,13 @@ describe("sync-queue", () => {
       await setProviderWatermark("github", 50)
       await setProviderWatermark("drive", 100)
       await markProviderReconciled("github")
-      // drive is NOT reconciled
 
       const min = await getMinSyncedWatermark()
       expect(min).toBe(50)
     })
 
     it("getMinSyncedWatermark returns 0 when no providers are reconciled", async () => {
-      mockStorage.set(
+      await setItem(
         "sync.provider.state",
         JSON.stringify({
           activeProviderId: "github",
@@ -222,7 +207,6 @@ describe("sync-queue", () => {
         })
       )
       await setProviderWatermark("github", 50)
-      // Not reconciled
 
       const min = await getMinSyncedWatermark()
       expect(min).toBe(0)

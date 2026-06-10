@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "./storage"
 import { Expense } from "../types/expense"
 import { AppSettings } from "./settings-manager"
 import { Category } from "../types/category"
@@ -118,7 +118,7 @@ function enqueueWrite<T>(operation: () => Promise<T>): Promise<T> {
 
 async function loadState(): Promise<SyncQueueState> {
   try {
-    const stored = await AsyncStorage.getItem(SYNC_QUEUE_KEY)
+    const stored = await getItem(SYNC_QUEUE_KEY)
     if (!stored) {
       return { ...emptyState }
     }
@@ -141,7 +141,7 @@ async function loadState(): Promise<SyncQueueState> {
 
 async function saveState(state: SyncQueueState): Promise<void> {
   try {
-    await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(state))
+    await setItem(SYNC_QUEUE_KEY, JSON.stringify(state))
   } catch (error) {
     console.warn("Failed to save sync queue:", error)
   }

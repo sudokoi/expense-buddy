@@ -12,7 +12,42 @@ jest.mock("expo-localization", () => ({
   isRTL: false,
 }))
 
-// Mock Async Storage
+// Mock MMKV (native module can't run in Jest)
+jest.mock("react-native-mmkv", () => {
+  const store = new Map<string, string>()
+  const mockMMKV = {
+    getString: jest.fn((key: string) => store.get(key) ?? undefined),
+    set: jest.fn((key: string, value: string) => {
+      store.set(key, value)
+    }),
+    getBoolean: jest.fn((key: string) => {
+      const v = store.get(key)
+      if (v === "true") return true
+      if (v === "false") return false
+      return undefined
+    }),
+    getNumber: jest.fn((key: string) => {
+      const v = store.get(key)
+      return v !== undefined ? Number(v) : undefined
+    }),
+    remove: jest.fn((key: string) => store.delete(key)),
+    getAllKeys: jest.fn(() => Array.from(store.keys())),
+    clearAll: jest.fn(() => store.clear()),
+    contains: jest.fn((key: string) => store.has(key)),
+    id: "expense-buddy",
+    length: 0,
+    size: 0,
+    byteSize: 0,
+    isReadOnly: false,
+    isEncrypted: false,
+  }
+  return {
+    createMMKV: jest.fn(() => mockMMKV),
+    createMockMMKV: jest.fn(() => mockMMKV),
+  }
+})
+
+// Keep AsyncStorage mocked for the one-time migration path in storage.ts
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(() => Promise.resolve()),
   getItem: jest.fn(() => Promise.resolve(null)),

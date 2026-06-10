@@ -1,18 +1,4 @@
-const mockStorage: Map<string, string> = new Map()
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
-  setItem: jest.fn((key: string, value: string) => {
-    mockStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  removeItem: jest.fn((key: string) => {
-    mockStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
-
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, clear as clearStorage } from "./storage"
 
 import {
   clearDirtyDays,
@@ -23,14 +9,11 @@ import {
   markDirtyDay,
 } from "./expense-dirty-days"
 
-describe("expense-dirty-days", () => {
-  beforeEach(() => {
-    mockStorage.clear()
-    ;(AsyncStorage.getItem as jest.Mock).mockClear()
-    ;(AsyncStorage.setItem as jest.Mock).mockClear()
-    ;(AsyncStorage.removeItem as jest.Mock).mockClear()
-  })
+beforeEach(async () => {
+  await clearStorage()
+})
 
+describe("expense-dirty-days", () => {
   it("loadDirtyDays SHALL return empty untrusted state when storage empty", async () => {
     const result = await loadDirtyDays()
 
@@ -73,8 +56,8 @@ describe("expense-dirty-days", () => {
     expect(consumed.state.dirtyDays).toEqual(["2025-01-04"])
 
     const key = dirtyDaysStorageKeyForTests()
-    const stored = mockStorage.get(key)
-    expect(stored).not.toBeUndefined()
+    const stored = await getItem(key)
+    expect(stored).not.toBeNull()
     const parsed = JSON.parse(stored!)
     expect(parsed.dirtyDays).toEqual([])
     expect(parsed.deletedDays).toEqual([])

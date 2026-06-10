@@ -64,6 +64,7 @@ jest.mock("react-native", () => ({
 }))
 
 // Import settings manager functions after mocking
+import { clear as clearStorage } from "./storage"
 import {
   markSettingsChanged,
   clearSettingsChanged,
@@ -73,9 +74,8 @@ import {
   AutoSyncTiming,
 } from "./settings-manager"
 
-// Clear mock storage before each test
-beforeEach(() => {
-  mockStorage.clear()
+beforeEach(async () => {
+  await clearStorage()
   mockSecureStorage.clear()
 })
 
@@ -201,7 +201,7 @@ describe("Settings Manager Properties", () => {
     it("should track changes correctly after modifications", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clearStorage()
 
           // Initially no changes
           const initialState = await hasSettingsChanged()
@@ -222,7 +222,7 @@ describe("Settings Manager Properties", () => {
     it("should clear changes after sync", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clearStorage()
 
           // Modify settings
           await saveSettings(settings)
@@ -248,7 +248,7 @@ describe("Settings Manager Properties", () => {
         fc.asyncProperty(
           fc.array(operationArb, { minLength: 1, maxLength: 10 }),
           async (operations) => {
-            mockStorage.clear()
+            await clearStorage()
 
             // Track expected state
             let expectedHasChanges = false
@@ -276,7 +276,7 @@ describe("Settings Manager Properties", () => {
     it("should report 1 changed record when modified, 0 when synced", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clearStorage()
 
           // Initially 0 changes
           const initial = await hasSettingsChanged()

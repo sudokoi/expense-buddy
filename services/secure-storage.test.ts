@@ -1,19 +1,5 @@
-/**
- * Unit tests for Secure Storage Module
- *
- * Tests the platform-aware secure storage operations (setItem, getItem, deleteItem).
- */
-
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as SecureStore from "expo-secure-store"
 import { Platform } from "react-native"
-
-// Mock AsyncStorage
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(() => Promise.resolve(null)),
-  setItem: jest.fn(() => Promise.resolve()),
-  removeItem: jest.fn(() => Promise.resolve()),
-}))
 
 // Mock expo-secure-store
 jest.mock("expo-secure-store", () => ({
@@ -25,29 +11,30 @@ jest.mock("expo-secure-store", () => ({
 // Mock react-native Platform
 jest.mock("react-native", () => ({
   Platform: {
-    OS: "ios",
+    OS: "android",
   },
 }))
 
-// Import after mocks are set up
 import { setItem, getItem, deleteItem, secureStorage } from "./secure-storage"
 
 describe("Secure Storage Module", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
+    ;(SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null)
+    ;(SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined)
+    ;(SecureStore.deleteItemAsync as jest.Mock).mockResolvedValue(undefined)
   })
 
-  describe("on native platforms (iOS/Android)", () => {
+  describe("on Android", () => {
     beforeAll(() => {
-      ;(Platform as { OS: string }).OS = "ios"
+      ;(Platform as { OS: string }).OS = "android"
     })
 
     describe("setItem", () => {
-      it("should store value using SecureStore on native", async () => {
+      it("should store value using SecureStore on Android", async () => {
         await setItem("test-key", "test-value")
 
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith("test-key", "test-value")
-        expect(AsyncStorage.setItem).not.toHaveBeenCalled()
       })
 
       it("should handle empty string values", async () => {
@@ -65,13 +52,12 @@ describe("Secure Storage Module", () => {
     })
 
     describe("getItem", () => {
-      it("should retrieve value using SecureStore on native", async () => {
+      it("should retrieve value using SecureStore on Android", async () => {
         ;(SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce("stored-value")
 
         const result = await getItem("test-key")
 
         expect(SecureStore.getItemAsync).toHaveBeenCalledWith("test-key")
-        expect(AsyncStorage.getItem).not.toHaveBeenCalled()
         expect(result).toBe("stored-value")
       })
 
@@ -85,58 +71,46 @@ describe("Secure Storage Module", () => {
     })
 
     describe("deleteItem", () => {
-      it("should delete value using SecureStore on native", async () => {
+      it("should delete value using SecureStore on Android", async () => {
         await deleteItem("test-key")
 
         expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("test-key")
-        expect(AsyncStorage.removeItem).not.toHaveBeenCalled()
       })
     })
   })
 
-  describe("on web platform", () => {
+  describe("on non-Android platforms", () => {
     beforeAll(() => {
-      ;(Platform as { OS: string }).OS = "web"
-    })
-
-    afterAll(() => {
       ;(Platform as { OS: string }).OS = "ios"
     })
 
+    afterAll(() => {
+      ;(Platform as { OS: string }).OS = "android"
+    })
+
     describe("setItem", () => {
-      it("should store value using AsyncStorage on web", async () => {
+      it("should be a no-op on non-Android", async () => {
         await setItem("test-key", "test-value")
 
-        expect(AsyncStorage.setItem).toHaveBeenCalledWith("test-key", "test-value")
         expect(SecureStore.setItemAsync).not.toHaveBeenCalled()
       })
     })
 
     describe("getItem", () => {
-      it("should retrieve value using AsyncStorage on web", async () => {
-        ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce("web-stored-value")
+      it("should return null on non-Android", async () => {
+        ;(SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce("stored-value")
 
         const result = await getItem("test-key")
 
-        expect(AsyncStorage.getItem).toHaveBeenCalledWith("test-key")
         expect(SecureStore.getItemAsync).not.toHaveBeenCalled()
-        expect(result).toBe("web-stored-value")
-      })
-
-      it("should return null for non-existent keys on web", async () => {
-        ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null)
-
-        const result = await getItem("non-existent-key")
-
         expect(result).toBeNull()
       })
     })
 
     describe("deleteItem", () => {
-      it("should delete value using AsyncStorage on web", async () => {
+      it("should be a no-op on non-Android", async () => {
         await deleteItem("test-key")
 
-        expect(AsyncStorage.removeItem).toHaveBeenCalledWith("test-key")
         expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled()
       })
     })
@@ -144,7 +118,7 @@ describe("Secure Storage Module", () => {
 
   describe("secureStorage object interface", () => {
     beforeAll(() => {
-      ;(Platform as { OS: string }).OS = "ios"
+      ;(Platform as { OS: string }).OS = "android"
     })
 
     it("should expose setItem method", async () => {

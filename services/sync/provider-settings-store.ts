@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "../storage"
 import type { ProviderConfig, SyncProvidersState } from "./provider-types"
 import { providerStateStore } from "./provider-state-store"
 import { credentialStore } from "./credential-store"
@@ -13,7 +13,7 @@ const DEFAULT_STATE: SyncProvidersState = {
 export const providerSettingsStore = {
   async load(): Promise<SyncProvidersState> {
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY)
+      const raw = await getItem(STORAGE_KEY)
       if (!raw) return { ...DEFAULT_STATE }
       const parsed = JSON.parse(raw) as SyncProvidersState
       return {
@@ -27,7 +27,7 @@ export const providerSettingsStore = {
   },
 
   async save(state: SyncProvidersState): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    await setItem(STORAGE_KEY, JSON.stringify(state))
   },
 
   async addProvider(config: ProviderConfig): Promise<void> {

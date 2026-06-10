@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "./storage"
 import { z } from "zod"
 import type { TimeWindow } from "../utils/analytics/time"
 import type {
@@ -97,7 +97,7 @@ function asNumberOrNull(value: unknown): number | null {
 
 export async function loadAnalyticsFilters(): Promise<AnalyticsFiltersState> {
   try {
-    const stored = await AsyncStorage.getItem(ANALYTICS_FILTERS_KEY)
+    const stored = await getItem(ANALYTICS_FILTERS_KEY)
     if (!stored) return { ...DEFAULT_ANALYTICS_FILTERS }
 
     const parsed = JSON.parse(stored) as Partial<AnalyticsFiltersState>
@@ -146,7 +146,7 @@ export async function saveAnalyticsFilters(
   }
 
   try {
-    await AsyncStorage.setItem(ANALYTICS_FILTERS_KEY, JSON.stringify(normalized))
+    await setItem(ANALYTICS_FILTERS_KEY, JSON.stringify(normalized))
   } catch (error) {
     console.warn("Failed to save analytics filters:", error)
     throw error

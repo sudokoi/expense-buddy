@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem, getAllKeys, multiRemove } from "../storage"
 
 const BASE_KEY = "sync.providers"
 
@@ -9,7 +9,7 @@ function buildKey(providerId: string, field: string): string {
 export const providerStateStore = {
   async get<T>(providerId: string, field: string): Promise<T | null> {
     try {
-      const raw = await AsyncStorage.getItem(buildKey(providerId, field))
+      const raw = await getItem(buildKey(providerId, field))
       if (!raw) return null
       return JSON.parse(raw) as T
     } catch {
@@ -19,7 +19,7 @@ export const providerStateStore = {
 
   async set<T>(providerId: string, field: string, value: T): Promise<void> {
     try {
-      await AsyncStorage.setItem(buildKey(providerId, field), JSON.stringify(value))
+      await setItem(buildKey(providerId, field), JSON.stringify(value))
     } catch (error) {
       console.warn(`Failed to save provider state (${providerId}/${field}):`, error)
     }
@@ -27,18 +27,18 @@ export const providerStateStore = {
 
   async remove(providerId: string, field: string): Promise<void> {
     try {
-      await AsyncStorage.removeItem(buildKey(providerId, field))
+      await removeItem(buildKey(providerId, field))
     } catch (error) {
       console.warn(`Failed to remove provider state (${providerId}/${field}):`, error)
     }
   },
 
   async clearProvider(providerId: string): Promise<void> {
-    const keys = await AsyncStorage.getAllKeys()
+    const keys = await getAllKeys()
     const prefix = buildKey(providerId, "")
     const toRemove = keys.filter((key) => key.startsWith(prefix))
     if (toRemove.length > 0) {
-      await AsyncStorage.multiRemove(toRemove)
+      await multiRemove(toRemove)
     }
   },
 }

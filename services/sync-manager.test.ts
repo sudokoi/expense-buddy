@@ -15,18 +15,7 @@ import {
 } from "./settings-manager"
 import { PaymentMethodType } from "../types/expense"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-
-// Mock AsyncStorage for testing
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  multiGet: jest.fn(() => Promise.resolve([])),
-  multiSet: jest.fn(() => Promise.resolve()),
-  multiRemove: jest.fn(() => Promise.resolve()),
-}))
+import { clear as clearStorage, setItem } from "./storage"
 
 // Mock expo-secure-store for testing
 jest.mock("expo-secure-store", () => ({
@@ -108,9 +97,6 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
 describe("Sync Manager Settings Integration Properties", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
-    ;(AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined)
-    ;(AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined)
   })
 
   /**
@@ -181,11 +167,13 @@ describe("Sync Manager Settings Integration Properties", () => {
     it("should skip upload when hash matches stored hash", async () => {
       await fc.assert(
         fc.asyncProperty(settingsArbitrary, async (settings) => {
+          await clearStorage()
+
           // Compute hash of settings
           const hash = computeSettingsHash(settings)
 
-          // Mock stored hash to match
-          ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(hash)
+          // Store hash to match
+          await setItem("settings_sync_hash", hash)
 
           // Get stored hash
           const storedHash = await getSettingsHash()

@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, multiGet, multiSet, multiRemove, removeItem } from "./storage"
 import type { Expense } from "../types/expense"
 
 export const LEGACY_EXPENSES_KEY = "expenses"
@@ -20,14 +20,14 @@ function safeJsonParse<T>(value: string | null): T | null {
 }
 
 async function loadExpenseIdsV1(): Promise<string[] | null> {
-  const raw = await AsyncStorage.getItem(EXPENSES_INDEX_KEY_V1)
+  const raw = await getItem(EXPENSES_INDEX_KEY_V1)
   const parsed = safeJsonParse<unknown>(raw)
   if (!Array.isArray(parsed)) return null
   return parsed.filter((v) => typeof v === "string") as string[]
 }
 
 async function saveExpenseIdsV1(ids: string[]): Promise<void> {
-  await AsyncStorage.setItem(EXPENSES_INDEX_KEY_V1, JSON.stringify(ids))
+  await setItem(EXPENSES_INDEX_KEY_V1, JSON.stringify(ids))
 }
 
 async function loadExpensesV1(): Promise<Expense[] | null> {
@@ -36,7 +36,7 @@ async function loadExpensesV1(): Promise<Expense[] | null> {
   if (ids.length === 0) return []
 
   const keys = ids.map((id) => expenseItemKeyV1(id))
-  const entries = await AsyncStorage.multiGet(keys)
+  const entries = await multiGet(keys)
 
   const expenses: Expense[] = []
   const existingIds: string[] = []
@@ -58,7 +58,7 @@ async function loadExpensesV1(): Promise<Expense[] | null> {
 }
 
 async function loadLegacyExpenses(): Promise<Expense[] | null> {
-  const raw = await AsyncStorage.getItem(LEGACY_EXPENSES_KEY)
+  const raw = await getItem(LEGACY_EXPENSES_KEY)
   const parsed = safeJsonParse<unknown>(raw)
   if (!parsed) return []
   if (!Array.isArray(parsed)) return []
@@ -88,7 +88,7 @@ export async function migrateLegacyExpensesToV1(expenses: Expense[]): Promise<vo
   const ids = expenses.map((e) => e.id)
 
   await saveExpenseIdsV1(ids)
-  await AsyncStorage.multiSet(
+  await multiSet(
     expenses.map((expense) => [expenseItemKeyV1(expense.id), JSON.stringify(expense)])
   )
 
@@ -96,12 +96,12 @@ export async function migrateLegacyExpensesToV1(expenses: Expense[]): Promise<vo
 }
 
 export async function removeLegacyExpensesKey(): Promise<void> {
-  await AsyncStorage.removeItem(LEGACY_EXPENSES_KEY)
+  await removeItem(LEGACY_EXPENSES_KEY)
 }
 
 export async function persistExpenseAdded(expense: Expense): Promise<void> {
   // Write item first (so a crash leaves index pointing to missing item rather than vice versa).
-  await AsyncStorage.setItem(expenseItemKeyV1(expense.id), JSON.stringify(expense))
+  await setItem(expenseItemKeyV1(expense.id), JSON.stringify(expense))
 
   const ids = (await loadExpenseIdsV1()) ?? []
   const nextIds = ids.includes(expense.id) ? ids : [expense.id, ...ids]
@@ -117,13 +117,13 @@ export async function persistExpensesAdded(expenses: Expense[]): Promise<void> {
   const nextIds = [...new Set([...expenses.map((expense) => expense.id), ...ids])]
   await saveExpenseIdsV1(nextIds)
 
-  await AsyncStorage.multiSet(
+  await multiSet(
     expenses.map((expense) => [expenseItemKeyV1(expense.id), JSON.stringify(expense)])
   )
 }
 
 export async function persistExpenseUpdated(expense: Expense): Promise<void> {
-  await AsyncStorage.setItem(expenseItemKeyV1(expense.id), JSON.stringify(expense))
+  await setItem(expenseItemKeyV1(expense.id), JSON.stringify(expense))
 
   const ids = (await loadExpenseIdsV1()) ?? []
   if (!ids.includes(expense.id)) {
@@ -135,7 +135,7 @@ export async function persistExpensesUpdated(expenses: Expense[]): Promise<void>
   if (expenses.length === 0) return
   const ids = (await loadExpenseIdsV1()) ?? []
   const nextIds = [...new Set([...ids, ...expenses.map((e) => e.id)])]
-  await AsyncStorage.multiSet(
+  await multiSet(
     expenses.map((expense) => [expenseItemKeyV1(expense.id), JSON.stringify(expense)])
   )
   await saveExpenseIdsV1(nextIds)
@@ -152,16 +152,14 @@ export async function persistExpensesSnapshot(expenses: Expense[]): Promise<void
 
   if (expenses.length > 0) {
     operations.push(
-      AsyncStorage.multiSet(
+      multiSet(
         expenses.map((expense) => [expenseItemKeyV1(expense.id), JSON.stringify(expense)])
       )
     )
   }
 
   if (removedIds.length > 0) {
-    operations.push(
-      AsyncStorage.multiRemove(removedIds.map((id) => expenseItemKeyV1(id)))
-    )
+    operations.push(multiRemove(removedIds.map((id) => expenseItemKeyV1(id))))
   }
 
   await Promise.all(operations)

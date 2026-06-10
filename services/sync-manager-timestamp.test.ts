@@ -42,8 +42,19 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(async (key, value) => mockStorage.set(key, value)),
   getItem: jest.fn(async (key) => mockStorage.get(key) || null),
   removeItem: jest.fn(async (key) => mockStorage.delete(key)),
+  clear: jest.fn(async () => mockStorage.clear()),
+  getAllKeys: jest.fn(async () => [...mockStorage.keys()]),
+  multiGet: jest.fn(async (keys: string[]) =>
+    keys.map((k) => [k, mockStorage.get(k) || null])
+  ),
+  multiSet: jest.fn(async (pairs: [string, string][]) =>
+    pairs.forEach(([k, v]) => mockStorage.set(k, v))
+  ),
+  multiRemove: jest.fn(async (keys: string[]) =>
+    keys.forEach((k) => mockStorage.delete(k))
+  ),
 }))
-jest.mock("react-native", () => ({ Platform: { OS: "ios" } }))
+jest.mock("react-native", () => ({ Platform: { OS: "android" } }))
 
 import { getLatestCommitTimestamp as mockGetLatestCommitTimestamp } from "./github-sync"
 

@@ -1,5 +1,5 @@
 import { createStore } from "@xstate/store"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "../services/storage"
 
 // AsyncStorage keys for UI state persistence
 const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
@@ -47,10 +47,7 @@ export const uiStateStore = createStore({
     setPaymentMethodExpanded: (context, event: { expanded: boolean }, enqueue) => {
       // Persist to AsyncStorage
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(
-          PAYMENT_METHOD_EXPANDED_KEY,
-          event.expanded ? "true" : "false"
-        )
+        await setItem(PAYMENT_METHOD_EXPANDED_KEY, event.expanded ? "true" : "false")
       })
 
       return {
@@ -65,10 +62,7 @@ export const uiStateStore = createStore({
     setPaymentInstrumentsExpanded: (context, event: { expanded: boolean }, enqueue) => {
       // Persist to AsyncStorage
       enqueue.effect(async () => {
-        await AsyncStorage.setItem(
-          PAYMENT_INSTRUMENTS_EXPANDED_KEY,
-          event.expanded ? "true" : "false"
-        )
+        await setItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY, event.expanded ? "true" : "false")
       })
 
       return {
@@ -87,8 +81,8 @@ export async function initializeUIStateStore(
 ): Promise<void> {
   try {
     const [expandedValue, instrumentsExpanded] = await Promise.all([
-      AsyncStorage.getItem(PAYMENT_METHOD_EXPANDED_KEY),
-      AsyncStorage.getItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY),
+      getItem(PAYMENT_METHOD_EXPANDED_KEY),
+      getItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY),
     ])
 
     store.trigger.loadUIState({

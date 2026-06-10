@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { setItem, getItem, clear as clearStorage } from "../storage"
 import {
   saveSyncConfig,
   loadSyncConfig,
@@ -15,24 +15,6 @@ jest.mock("../secure-storage", () => ({
     setItem: jest.fn(),
     getItem: jest.fn(),
     deleteItem: jest.fn(),
-  },
-}))
-
-jest.mock("../sync/credential-store", () => ({
-  credentialStore: {
-    save: jest.fn(),
-    get: jest.fn(),
-    delete: jest.fn(),
-  },
-}))
-
-jest.mock("../sync/provider-settings-store", () => ({
-  providerSettingsStore: {
-    load: jest.fn(() => ({ activeProviderId: null, providers: [] })),
-    addProvider: jest.fn(),
-    setActiveProvider: jest.fn(),
-    removeProvider: jest.fn(),
-    getActiveConfig: jest.fn(() => null),
   },
 }))
 
@@ -71,8 +53,9 @@ jest.mock("i18next", () => ({
   t: (key: string) => key,
 }))
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks()
+  await clearStorage()
   ;(secureStorage.getItem as jest.Mock).mockReset()
   ;(credentialStore.get as jest.Mock).mockReset()
 })
@@ -215,14 +198,13 @@ describe("getActiveProviderConfig", () => {
 
 describe("migrateSyncConfig", () => {
   it("skips if already migrated", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue("true")
+    await setItem("sync.migration.v1", "true")
 
     await migrateSyncConfig()
     expect(providerSettingsStore.addProvider).not.toHaveBeenCalled()
   })
 
   it("skips if providers already exist in store", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(secureStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(providerSettingsStore.load as jest.Mock).mockResolvedValue({
       activeProviderId: "default",
@@ -243,7 +225,6 @@ describe("migrateSyncConfig", () => {
   })
 
   it("skips if no old config exists", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(secureStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(providerSettingsStore.load as jest.Mock).mockResolvedValue({
       activeProviderId: null,
@@ -255,7 +236,6 @@ describe("migrateSyncConfig", () => {
   })
 
   it("migrates old config to provider store", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(secureStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === "github_pat") return Promise.resolve("ghp_legacy")
       if (key === "github_repo") return Promise.resolve("legacy/repo")
@@ -283,11 +263,13 @@ describe("migrateSyncConfig", () => {
       branch: "main",
     })
     expect(providerSettingsStore.setActiveProvider).toHaveBeenCalledWith("default")
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith("sync.migration.v1", "true")
+
+    const marker = await getItem("sync.migration.v1")
+    expect(marker).toBe("true")
   })
 
   it("is idempotent — migration marker prevents re-migration", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue("true")
+    await setItem("sync.migration.v1", "true")
 
     await migrateSyncConfig()
     await migrateSyncConfig()
@@ -297,7 +279,6 @@ describe("migrateSyncConfig", () => {
   })
 
   it("handles partial old config gracefully", async () => {
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
     ;(secureStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === "github_pat") return Promise.resolve("ghp_token")
       if (key === "github_repo") return Promise.resolve(null)

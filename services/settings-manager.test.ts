@@ -1,9 +1,4 @@
-/**
- * Property-based tests for Settings Manager
- *
- * Tests the settings persistence, serialization, and change tracking functionality.
- */
-
+import { clear as clearStorage, setItem } from "./storage"
 import fc from "fast-check"
 import {
   ThemePreference,
@@ -22,23 +17,8 @@ import { PaymentMethodType } from "../types/expense"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import type { PaymentInstrument } from "../types/payment-instrument"
 
-// Mock AsyncStorage for testing
-const mockStorage: Map<string, string> = new Map()
 const mockSecureStorage: Map<string, string> = new Map()
 
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
-  setItem: jest.fn((key: string, value: string) => {
-    mockStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  removeItem: jest.fn((key: string) => {
-    mockStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
-
-// Mock expo-secure-store for testing
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn((key: string) =>
     Promise.resolve(mockSecureStorage.get(key) ?? null)
@@ -53,20 +33,17 @@ jest.mock("expo-secure-store", () => ({
   }),
 }))
 
-// Mock react-native Platform
 jest.mock("react-native", () => ({
   Platform: {
-    OS: "ios", // Use non-web platform to test secure storage
+    OS: "android",
   },
 }))
 
-// Clear mock storage before each test
-beforeEach(() => {
-  mockStorage.clear()
+beforeEach(async () => {
+  await clearStorage()
   mockSecureStorage.clear()
 })
 
-// Arbitrary generators for settings types
 const themePreferenceArb = fc.constantFrom<ThemePreference>("light", "dark", "system")
 
 const paymentMethodTypeArb = fc.constantFrom<PaymentMethodType>(
@@ -101,40 +78,29 @@ const appSettingsArb = fc.record({
   paymentInstruments: fc.constant<PaymentInstrument[]>([]),
   paymentInstrumentsMigrationVersion: fc.constant(0),
   updatedAt: fc
-    .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
+    .integer({ min: 1577836800000, max: 1924905600000 })
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(9), // Always use latest version to avoid migration in tests
+  version: fc.constant(9),
 })
 
 describe("Settings Manager Properties", () => {
-  /**
-   * For any valid theme preference (light, dark, system), saving it to storage
-   * and then loading it back SHALL produce the same theme preference.
-   */
   describe("Theme persistence round-trip", () => {
     it("should persist and load theme preferences correctly", async () => {
       await fc.assert(
         fc.asyncProperty(themePreferenceArb, async (theme) => {
-          // Clear storage before each iteration
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
-          // Create settings with the theme
           const settings: AppSettings = {
             ...DEFAULT_SETTINGS,
             theme,
             updatedAt: new Date().toISOString(),
           }
-
-          // Save settings
           await saveSettings(settings)
 
-          // Load settings back
           const loaded = await loadSettings()
-
-          // Theme should match
           return loaded.theme === theme
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
@@ -143,9 +109,9 @@ describe("Settings Manager Properties", () => {
         fc.asyncProperty(
           fc.array(themePreferenceArb, { minLength: 1, maxLength: 5 }),
           async (themes) => {
-            mockStorage.clear()
+            // already imported
+            await clearStorage()
 
-            // Save and load each theme in sequence
             for (const theme of themes) {
               const settings: AppSettings = {
                 ...DEFAULT_SETTINGS,
@@ -155,33 +121,24 @@ describe("Settings Manager Properties", () => {
               await saveSettings(settings)
             }
 
-            // Final loaded theme should match the last saved theme
             const loaded = await loadSettings()
             return loaded.theme === themes[themes.length - 1]
           }
-        ),
-        { numRuns: 100 }
+        )
       )
     })
   })
 
-  /**
-   * For any valid AppSettings object, serializing to JSON and deserializing
-   * SHALL produce an equivalent object with all fields preserved.
-   */
   describe("Settings serialization round-trip", () => {
     it("should preserve all settings fields through save/load cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
-          // Save settings
           await saveSettings(settings)
-
-          // Load settings back
           const loaded = await loadSettings()
 
-          // All fields except updatedAt should match (updatedAt is updated on save)
           return (
             loaded.theme === settings.theme &&
             loaded.syncSettings === settings.syncSettings &&
@@ -197,21 +154,15 @@ describe("Settings Manager Properties", () => {
               JSON.stringify(settings.paymentInstruments) &&
             loaded.version === settings.version
           )
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
     it("should produce valid JSON when serializing settings", () => {
       fc.assert(
         fc.property(appSettingsArb, (settings) => {
-          // Serialize to JSON
           const json = JSON.stringify(settings)
-
-          // Parse back
           const parsed = JSON.parse(json) as AppSettings
-
-          // All fields should match
           return (
             parsed.theme === settings.theme &&
             parsed.syncSettings === settings.syncSettings &&
@@ -228,82 +179,56 @@ describe("Settings Manager Properties", () => {
             parsed.updatedAt === settings.updatedAt &&
             parsed.version === settings.version
           )
-        }),
-        { numRuns: 100 }
+        })
       )
     })
   })
 
-  /**
-   * For any settings modification, the updatedAt timestamp SHALL be updated
-   * to a value greater than or equal to the previous timestamp.
-   */
   describe("Timestamp updates on modification", () => {
     it("should update timestamp when saving settings", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
-          // Record time before save
           const beforeSave = new Date().toISOString()
-
-          // Small delay to ensure timestamp difference
           await new Promise((resolve) => setTimeout(resolve, 1))
-
-          // Save settings
           await saveSettings(settings)
 
-          // Load settings back
           const loaded = await loadSettings()
-
-          // updatedAt should be >= beforeSave
           return loaded.updatedAt >= beforeSave
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
     it("should have newer timestamp on subsequent saves", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, appSettingsArb, async (settings1, settings2) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
-          // Save first settings
           await saveSettings(settings1)
           const loaded1 = await loadSettings()
           const timestamp1 = loaded1.updatedAt
 
-          // Small delay to ensure timestamp difference
           await new Promise((resolve) => setTimeout(resolve, 2))
-
-          // Save second settings
           await saveSettings(settings2)
           const loaded2 = await loadSettings()
           const timestamp2 = loaded2.updatedAt
 
-          // Second timestamp should be >= first
           return timestamp2 >= timestamp1
-        }),
-        { numRuns: 100 }
+        })
       )
     })
   })
 
-  /**
-   * Additional unit tests for change tracking and hash functions
-   */
   describe("Change Tracking", () => {
     it("should track settings changes correctly", async () => {
-      mockStorage.clear()
-
-      // Initially no changes
       expect(await hasSettingsChanged()).toBe(false)
 
-      // Mark as changed
       await markSettingsChanged()
       expect(await hasSettingsChanged()).toBe(true)
 
-      // Clear changes
       await clearSettingsChanged()
       expect(await hasSettingsChanged()).toBe(false)
     })
@@ -316,19 +241,14 @@ describe("Settings Manager Properties", () => {
           const hash1 = computeSettingsHash(settings)
           const hash2 = computeSettingsHash(settings)
           return hash1 === hash2
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
     it("should compute different hashes for different themes", () => {
       const settings1: AppSettings = { ...DEFAULT_SETTINGS, theme: "light" }
       const settings2: AppSettings = { ...DEFAULT_SETTINGS, theme: "dark" }
-
-      const hash1 = computeSettingsHash(settings1)
-      const hash2 = computeSettingsHash(settings2)
-
-      expect(hash1).not.toBe(hash2)
+      expect(computeSettingsHash(settings1)).not.toBe(computeSettingsHash(settings2))
     })
 
     it("should compute different hashes for different defaultPaymentMethod", () => {
@@ -338,14 +258,9 @@ describe("Settings Manager Properties", () => {
         ...DEFAULT_SETTINGS,
         defaultPaymentMethod: undefined,
       }
-
-      const hash1 = computeSettingsHash(settings1)
-      const hash2 = computeSettingsHash(settings2)
-      const hash3 = computeSettingsHash(settings3)
-
-      expect(hash1).not.toBe(hash2)
-      expect(hash1).not.toBe(hash3)
-      expect(hash2).not.toBe(hash3)
+      expect(computeSettingsHash(settings1)).not.toBe(computeSettingsHash(settings2))
+      expect(computeSettingsHash(settings1)).not.toBe(computeSettingsHash(settings3))
+      expect(computeSettingsHash(settings2)).not.toBe(computeSettingsHash(settings3))
     })
 
     it("should ignore updatedAt when computing hash", () => {
@@ -357,30 +272,20 @@ describe("Settings Manager Properties", () => {
         ...DEFAULT_SETTINGS,
         updatedAt: "2024-12-31T23:59:59.999Z",
       }
-
-      const hash1 = computeSettingsHash(settings1)
-      const hash2 = computeSettingsHash(settings2)
-
-      expect(hash1).toBe(hash2)
+      expect(computeSettingsHash(settings1)).toBe(computeSettingsHash(settings2))
     })
 
     it("should save and retrieve hash correctly", async () => {
-      mockStorage.clear()
-
       const testHash = "abc123"
       await saveSettingsHash(testHash)
       const retrieved = await getSettingsHash()
-
       expect(retrieved).toBe(testHash)
     })
   })
 
   describe("Default Settings", () => {
     it("should return default settings when storage is empty", async () => {
-      mockStorage.clear()
-
       const loaded = await loadSettings()
-
       expect(loaded.theme).toBe("system")
       expect(loaded.syncSettings).toBe(true)
       expect(loaded.defaultPaymentMethod).toBeUndefined()
@@ -396,26 +301,17 @@ describe("Settings Manager Properties", () => {
     })
   })
 
-  /**
-   * For any settings object with defaultPaymentMethod set, serializing for sync
-   * and deserializing SHALL preserve the defaultPaymentMethod value.
-   */
   describe("Settings Sync Includes Default Payment Method", () => {
     it("should preserve defaultPaymentMethod through serialize/deserialize cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
-          // Save settings (simulates sync upload)
           await saveSettings(settings)
-
-          // Load settings back (simulates sync download)
           const loaded = await loadSettings()
-
-          // defaultPaymentMethod should be preserved
           return loaded.defaultPaymentMethod === settings.defaultPaymentMethod
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
@@ -425,9 +321,7 @@ describe("Settings Manager Properties", () => {
           optionalPaymentMethodTypeArb,
           optionalPaymentMethodTypeArb,
           (pm1, pm2) => {
-            // Skip if both are the same
             if (pm1 === pm2) return true
-
             const settings1: AppSettings = {
               ...DEFAULT_SETTINGS,
               defaultPaymentMethod: pm1,
@@ -436,76 +330,45 @@ describe("Settings Manager Properties", () => {
               ...DEFAULT_SETTINGS,
               defaultPaymentMethod: pm2,
             }
-
-            const hash1 = computeSettingsHash(settings1)
-            const hash2 = computeSettingsHash(settings2)
-
-            // Different payment methods should produce different hashes
-            return hash1 !== hash2
+            return computeSettingsHash(settings1) !== computeSettingsHash(settings2)
           }
-        ),
-        { numRuns: 100 }
+        )
       )
     })
 
     it("should preserve all payment method types through round-trip", async () => {
       await fc.assert(
         fc.asyncProperty(paymentMethodTypeArb, async (paymentMethod) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
 
           const settings: AppSettings = {
             ...DEFAULT_SETTINGS,
             defaultPaymentMethod: paymentMethod,
           }
-
-          // Save settings
           await saveSettings(settings)
-
-          // Load settings back
           const loaded = await loadSettings()
-
-          // Payment method should be preserved exactly
           return loaded.defaultPaymentMethod === paymentMethod
-        }),
-        { numRuns: 100 }
+        })
       )
     })
   })
 
   describe("Math entry setting", () => {
     it("should compute different hashes when enableMathExpressions differs", () => {
-      const settings1: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: true }
-      const settings2: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: false }
-
-      const hash1 = computeSettingsHash(settings1)
-      const hash2 = computeSettingsHash(settings2)
-
-      expect(hash1).not.toBe(hash2)
+      const s1: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: true }
+      const s2: AppSettings = { ...DEFAULT_SETTINGS, enableMathExpressions: false }
+      expect(computeSettingsHash(s1)).not.toBe(computeSettingsHash(s2))
     })
 
     it("should compute different hashes when useMlOnlyForSmsImports differs", () => {
-      const settings1: AppSettings = {
-        ...DEFAULT_SETTINGS,
-        useMlOnlyForSmsImports: true,
-      }
-      const settings2: AppSettings = {
-        ...DEFAULT_SETTINGS,
-        useMlOnlyForSmsImports: false,
-      }
-
-      const hash1 = computeSettingsHash(settings1)
-      const hash2 = computeSettingsHash(settings2)
-
-      expect(hash1).not.toBe(hash2)
+      const s1: AppSettings = { ...DEFAULT_SETTINGS, useMlOnlyForSmsImports: true }
+      const s2: AppSettings = { ...DEFAULT_SETTINGS, useMlOnlyForSmsImports: false }
+      expect(computeSettingsHash(s1)).not.toBe(computeSettingsHash(s2))
     })
   })
 
-  /**
-   * For any settings JSON missing autoSyncEnabled or autoSyncTiming fields (from older version),
-   * loading SHALL use default values (false and "on_launch" respectively).
-   */
-  describe(" Missing fields use defaults", () => {
-    // Arbitrary for v2 settings (missing autoSyncEnabled and autoSyncTiming)
+  describe("Missing fields use defaults", () => {
     const v2SettingsArb = fc.record({
       theme: themePreferenceArb,
       syncSettings: fc.boolean(),
@@ -513,81 +376,65 @@ describe("Settings Manager Properties", () => {
       updatedAt: fc
         .integer({ min: 1577836800000, max: 1924905600000 })
         .map((ms) => new Date(ms).toISOString()),
-      version: fc.constant(2), // Old version without auto-sync fields
+      version: fc.constant(2),
     })
 
     it("should use default autoSyncEnabled (false) when field is missing", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
           mockSecureStorage.clear()
 
-          // Save v2 settings directly to storage (bypassing saveSettings to simulate old data)
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
-          // Load settings - should apply defaults for missing fields
           const loaded = await loadSettings()
-
-          // autoSyncEnabled should default to false
           return loaded.autoSyncEnabled === false
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
     it("should use default autoSyncTiming (on_launch) when field is missing", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
           mockSecureStorage.clear()
 
-          // Save v2 settings directly to storage (bypassing saveSettings to simulate old data)
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
-          // Load settings - should apply defaults for missing fields
           const loaded = await loadSettings()
-
-          // autoSyncTiming should default to "on_launch"
           return loaded.autoSyncTiming === "on_launch"
-        }),
-        { numRuns: 100 }
+        })
       )
     })
 
     it("should preserve existing fields while applying defaults for missing ones", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          // already imported
+          await clearStorage()
           mockSecureStorage.clear()
 
-          // Save v2 settings directly to storage
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
-          // Load settings
           const loaded = await loadSettings()
-
-          // Existing fields should be preserved
           return (
             loaded.theme === v2Settings.theme &&
             loaded.syncSettings === v2Settings.syncSettings &&
             loaded.defaultPaymentMethod === v2Settings.defaultPaymentMethod &&
-            // New fields should have defaults
             loaded.autoSyncEnabled === false &&
             loaded.autoSyncTiming === "on_launch" &&
-            // New instrument fields should have defaults
             Array.isArray(loaded.paymentInstruments) &&
             loaded.paymentInstruments.length === 0 &&
             loaded.paymentInstrumentsMigrationVersion === 0 &&
-            // Language should default to "system"
             loaded.language === "system" &&
             loaded.enableMathExpressions === true &&
             loaded.useMlOnlyForSmsImports === false &&
             loaded.backgroundSmsImportEnabled === false &&
-            // Version should be upgraded to 9 (v2 -> v3 -> v4 -> v5 -> v6 -> v7 -> v8 -> v9)
             loaded.version === 9
           )
-        }),
-        { numRuns: 100 }
+        })
       )
     })
   })
