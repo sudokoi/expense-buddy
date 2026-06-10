@@ -608,24 +608,11 @@ function withManifest(
  * successive syncs.
  */
 function filterChangedFiles(before: SyncSnapshot, after: SyncSnapshot): SyncSnapshot {
-  // Build a lookup of path → hash from the before manifest for fast comparison.
-  const beforeHash = new Map<string, string>()
-  for (const entry of before.manifest.files) {
-    beforeHash.set(entry.path, entry.hash)
-  }
-
   const files: Record<string, string> = {}
 
   for (const [path, content] of Object.entries(after.files)) {
-    const oldContent = before.files[path]
-    if (path === SETTINGS_FILENAME || oldContent !== content) {
-      // Belt-and-suspenders: skip if the content hash matches the before
-      // manifest exactly — the string differs only in a semantically
-      // meaningless way, and uploading would create a blank commit.
-      const afterHash = computeContentHash(content)
-      if (!beforeHash.has(path) || beforeHash.get(path) !== afterHash) {
-        files[path] = content
-      }
+    if (path === SETTINGS_FILENAME || before.files[path] !== content) {
+      files[path] = content
     }
   }
 

@@ -531,18 +531,6 @@ export class SyncOrchestrator implements SyncEngine {
    * prevents the concurrent-actor race that caused data loss in v4.0.0.
    */
   private async runFirstReconciliation(config: ProviderConfig): Promise<void> {
-    // Serialization guard: if a run is already in flight, skip — the in-flight
-    // run will handle the first reconciliation via `runOnce`, which already
-    // drives the first-sync flow for unreconciled providers on manual/retry.
-    if (this.inFlight) {
-      logAsync(
-        "INFO",
-        "SYNC_ENGINE",
-        `FIRST_RECONCILIATION_SKIPPED_IN_FLIGHT providerId=${config.id}`
-      )
-      return
-    }
-
     // Never reconcile against a not-yet-loaded local set: merging with empty
     // local data could drop local-only expenses that haven't synced yet (e.g.
     // immediately after an app update, before the expense store finishes
@@ -773,6 +761,12 @@ export class SyncOrchestrator implements SyncEngine {
     const run = this.runOnce(reason).finally(() => {
       this.inFlight = null
       this.emitChange()
+      // Process deferred rebind before any queued re-run so provider state
+      // is current before the next sync cycle. Matches runSynchronized.
+      if (this.pendingRebind) {
+        this.pendingRebind = false
+        void this.rebindProvider()
+      }
       if (this.rerunPending) {
         this.rerunPending = false
         const nextReason = this.pendingReason

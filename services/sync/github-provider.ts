@@ -123,22 +123,37 @@ export class GitHubProvider implements SyncProvider {
 
       // Download expense files in parallel batches to reduce wall-clock time
       // while avoiding too many concurrent connections. Batch size of 6 keeps
-      // within typical browser/RN per-origin connection limits.
+      // within typical browser/RN per-origin connection limits. Each batch gets
+      // its own AbortController so a slow batch doesn't consume timeout from
+      // subsequent batches.
       const BATCH_SIZE = 6
+      const BATCH_TIMEOUT = 15000
       for (let i = 0; i < expenseEntries.length; i += BATCH_SIZE) {
         const batch = expenseEntries.slice(i, i + BATCH_SIZE)
-        const batchResults = await Promise.allSettled(
-          batch.map((entry) =>
-            downloadCSV(token, this.config.repo, this.config.branch, entry.path, signal)
+        const batchController = new AbortController()
+        const batchTimeout = setTimeout(() => batchController.abort(), BATCH_TIMEOUT)
+        try {
+          const batchResults = await Promise.allSettled(
+            batch.map((entry) =>
+              downloadCSV(
+                token,
+                this.config.repo,
+                this.config.branch,
+                entry.path,
+                batchController.signal
+              )
+            )
           )
-        )
-        for (let j = 0; j < batch.length; j++) {
-          const result = batchResults[j]
-          if (result.status === "fulfilled" && result.value) {
-            files[batch[j].path] = result.value.content
-          } else {
-            failedDownloads++
+          for (let j = 0; j < batch.length; j++) {
+            const result = batchResults[j]
+            if (result.status === "fulfilled" && result.value) {
+              files[batch[j].path] = result.value.content
+            } else {
+              failedDownloads++
+            }
           }
+        } finally {
+          clearTimeout(batchTimeout)
         }
       }
 

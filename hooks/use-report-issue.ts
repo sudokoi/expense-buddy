@@ -12,7 +12,27 @@ export function useReportIssue() {
   const { t } = useTranslation()
   const { addNotification } = useNotifications()
 
-  const handleReportIssue = useCallback(() => {
+  const handleReportIssue = useCallback(async () => {
+    const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
+
+    // Pre-check for GitHub credential to determine how many logs to include:
+    // 500 when we can POST directly to the API, 50 when the user must copy-paste.
+    let githubToken: string | undefined
+    let logCount = 50
+    try {
+      const state = await providerSettingsStore.load()
+      const githubProvider = state.providers.find((p) => p.kind === "github")
+      if (githubProvider) {
+        const entry = await credentialStore.get(githubProvider.credentialId)
+        if (entry) {
+          githubToken = entry.data["token"] ?? entry.data["access_token"]
+          logCount = 500
+        }
+      }
+    } catch {
+      /* ignore - token not available */
+    }
+
     const openNewIssue = () => {
       Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
     }
@@ -22,28 +42,12 @@ export function useReportIssue() {
 
     Alert.alert(
       t("settings.about.includeLogsTitle"),
-      t("settings.about.includeLogsMessage"),
+      t("settings.about.includeLogsMessage", { count: logCount }),
       [
         {
           text: t("settings.about.attachLogs"),
           onPress: async () => {
-            const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
-
-            let githubToken: string | undefined
-            try {
-              const state = await providerSettingsStore.load()
-              const githubProvider = state.providers.find((p) => p.kind === "github")
-              if (githubProvider) {
-                const entry = await credentialStore.get(githubProvider.credentialId)
-                if (entry) {
-                  githubToken = entry.data["token"] ?? entry.data["access_token"]
-                }
-              }
-            } catch {
-              /* ignore - token not available */
-            }
-
-            const logs = await getLogsForBugReportAsync(githubToken ? 500 : 50)
+            const logs = await getLogsForBugReportAsync(logCount)
 
             if (githubToken && logs) {
               try {
