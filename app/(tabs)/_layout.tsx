@@ -1,4 +1,5 @@
-import { Tabs } from "expo-router"
+import { Tabs, usePathname } from "expo-router"
+import { useEffect } from "react"
 import { useTheme } from "tamagui"
 import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -12,11 +13,16 @@ export default function TabLayout() {
   const theme = useTheme()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    logAsync("INFO", "NAV", `TAB_CHANGE route=${pathname}`)
+  }, [pathname])
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: ACCENT_COLORS.primary,
+        tabBarActiveTintColor: ACCENT_COLORS.primary, // Kawaii pink
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: theme.background.val,
@@ -33,9 +39,6 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="index"
-        listeners={{
-          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_DASHBOARD"),
-        }}
         options={{
           title: t("navigation.dashboard"),
           tabBarIcon: ({ color }) => (
@@ -45,9 +48,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="add"
-        listeners={{
-          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_ADD"),
-        }}
         options={{
           title: t("navigation.add"),
           tabBarIcon: ({ color }) => (
@@ -57,9 +57,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="analytics"
-        listeners={{
-          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_ANALYTICS"),
-        }}
         options={{
           title: t("navigation.analytics"),
           tabBarIcon: ({ color }) => (
@@ -69,9 +66,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="history"
-        listeners={{
-          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_HISTORY"),
-        }}
         options={{
           title: t("navigation.history"),
           tabBarIcon: ({ color }) => (
@@ -81,9 +75,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="settings"
-        listeners={{
-          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_SETTINGS"),
-        }}
         options={{
           title: t("navigation.settings"),
           tabBarIcon: ({ color }) => (

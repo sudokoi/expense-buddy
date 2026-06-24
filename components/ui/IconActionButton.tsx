@@ -1,10 +1,10 @@
 import { Button, Text, View, useTheme } from "tamagui"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, ComponentProps } from "react"
 import { StyleSheet } from "react-native"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface IconActionButtonProps {
-  icon: any
+  icon: ComponentProps<typeof Button>["icon"]
   onPress: () => void
   tooltip?: string
   disabled?: boolean
@@ -57,7 +57,7 @@ export function IconActionButton({
         onPress={handlePress}
         onLongPress={handleLongPress}
         disabled={disabled}
-        aria-label={accessibilityLabel}
+        aria-label={accessibilityLabel ?? tooltip}
       />
       {showTooltip && tooltip && (
         <View style={styles.tooltipContainer} pointerEvents="none">

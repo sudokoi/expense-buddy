@@ -348,6 +348,7 @@ export function GitHubConfigSection({
                   secureTextEntry
                   bg="$background"
                   placeholder={t("settings.github.tokenPlaceholder")}
+                  placeholderTextColor="$color"
                   value={token}
                   onChangeText={handleTokenChange}
                   size="$control"
@@ -437,6 +438,7 @@ export function GitHubConfigSection({
                 <Input
                   bg="$background"
                   placeholder={t("settings.github.repoPlaceholderWeb")}
+                  placeholderTextColor="$color"
                   value={repo}
                   onChangeText={handleRepoChange}
                   size="$control"
@@ -451,6 +453,7 @@ export function GitHubConfigSection({
                   <Input
                     bg="$background"
                     placeholder={t("settings.github.repoPlaceholderNative")}
+                    placeholderTextColor="$color"
                     value={repo}
                     readOnly
                     size="$control"
@@ -480,6 +483,7 @@ export function GitHubConfigSection({
               <Input
                 bg="$background"
                 placeholder="main"
+                placeholderTextColor="$color"
                 value={branch}
                 onChangeText={handleBranchChange}
                 size="$control"

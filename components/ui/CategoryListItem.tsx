@@ -5,9 +5,8 @@ import { Pressable, Alert } from "react-native"
 import { Pencil, Trash2 } from "@tamagui/lucide-icons-2"
 import { IconActionButton } from "./IconActionButton"
 import { Category } from "../../types/category"
-import { getColorValue } from "../../tamagui.config"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
-import { getReadableTextColor } from "../../constants/theme-colors"
+import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -42,8 +41,7 @@ export const CategoryListItem = memo(function CategoryListItem({
 }: CategoryListItemProps) {
   const { t } = useTranslation()
   // Resolve color for display
-  const resolvedColor = useMemo(() => getColorValue(category.color), [category.color])
-  const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
+  const { resolvedColor, iconColor } = useResolvedCategoryColor(category.color)
 
   // Handle edit press
   const handleEdit = useCallback(() => {

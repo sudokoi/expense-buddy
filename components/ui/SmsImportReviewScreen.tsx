@@ -602,6 +602,7 @@ export function SmsImportReviewScreen({
                         : current
                     )
                   }}
+                  placeholderTextColor="$color"
                 />
               </YStack>
 
@@ -709,6 +710,7 @@ export function SmsImportReviewScreen({
                         value={editingDraft.paymentMethodIdentifier ?? ""}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
+                        placeholderTextColor="$color"
                       />
                     )}
                   </YStack>
@@ -737,6 +739,7 @@ export function SmsImportReviewScreen({
                     )
                   }}
                   selectTextOnFocus
+                  placeholderTextColor="$color"
                 />
               </YStack>
 

@@ -406,6 +406,7 @@ export function PaymentInstrumentInlineDropdown({
             value={manualDigits}
             onChangeText={handleManualDigitsChange}
             maxLength={effectiveMaxLength}
+            placeholderTextColor="$color"
           />
         </YStack>
       )}
@@ -441,6 +442,7 @@ export function PaymentInstrumentInlineDropdown({
               focusStyle={{
                 borderColor: addErrors.nickname ? "$red10" : focusBorderColor,
               }}
+              placeholderTextColor="$color"
             />
             {addErrors.nickname && (
               <Text fontSize="$caption" color="$red10">
@@ -477,6 +479,7 @@ export function PaymentInstrumentInlineDropdown({
               focusStyle={{
                 borderColor: addErrors.lastDigits ? "$red10" : focusBorderColor,
               }}
+              placeholderTextColor="$color"
             />
             {addErrors.lastDigits && (
               <Text fontSize="$caption" color="$red10">

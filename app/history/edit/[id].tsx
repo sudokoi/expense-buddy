@@ -288,6 +288,7 @@ export default function EditExpenseScreen() {
                 }
                 keyboardType={amountInputProps.keyboardType}
                 inputMode={amountInputProps.inputMode}
+                placeholderTextColor="$color"
               />
             </XStack>
             {expressionPreview && (
@@ -336,6 +337,7 @@ export default function EditExpenseScreen() {
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               selectTextOnFocus
+              placeholderTextColor="$color"
             />
           </YStack>
 
@@ -407,6 +409,7 @@ export default function EditExpenseScreen() {
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
+                    placeholderTextColor="$color"
                   />
                 )}
               </YStack>

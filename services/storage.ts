@@ -36,12 +36,15 @@ async function ensureMigrated(): Promise<void> {
       }
       mmkv.set(MIGRATED_KEY, true)
       await AsyncStorage.clear()
+      migrated = true
     } catch (e) {
-      console.warn("Failed to migrate AsyncStorage to MMKV:", e)
-      mmkv.set(MIGRATED_KEY, true)
+      // Do NOT set MIGRATED_KEY or mark migrated here. AsyncStorage.clear()
+      // hasn't run, so the original data is still intact. Leaving the flag
+      // unset lets migration retry on the next launch (it is idempotent).
+      console.warn("Failed to migrate AsyncStorage to MMKV, will retry next launch:", e)
+    } finally {
+      migrationPromise = null
     }
-    migrated = true
-    migrationPromise = null
   })()
   return migrationPromise
 }
@@ -73,7 +76,8 @@ export async function removeItem(key: string): Promise<void> {
 export async function getAllKeys(): Promise<string[]> {
   await ensureMigrated()
   if (!mmkv) return AsyncStorage.getAllKeys().then((keys) => [...keys])
-  return mmkv.getAllKeys()
+  // Exclude the internal migration flag so callers only see real data keys.
+  return mmkv.getAllKeys().filter((key) => key !== MIGRATED_KEY)
 }
 
 export async function multiGet(keys: string[]): Promise<[string, string | null][]> {
@@ -108,6 +112,10 @@ export async function multiRemove(keys: string[]): Promise<void> {
 }
 
 export async function clear(): Promise<void> {
+  // Ensure migration runs first; otherwise a clear() before the first read
+  // would wipe MMKV (still empty) while leaving AsyncStorage intact, and the
+  // next read would migrate that stale data back in.
+  await ensureMigrated()
   if (!mmkv) {
     await AsyncStorage.clear()
     return

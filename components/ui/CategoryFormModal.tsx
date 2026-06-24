@@ -229,6 +229,7 @@ export function CategoryFormModal({
               focusStyle={{
                 borderColor: errors.label ? "$red10" : ACCENT_COLORS.primary,
               }}
+              placeholderTextColor="$color"
             />
             {errors.label && (
               <Text fontSize="$caption" color="$red10">

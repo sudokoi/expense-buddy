@@ -332,6 +332,7 @@ export default function AddExpenseScreen() {
                 size="$prominent"
                 px="$section"
                 bg="$background"
+                placeholderTextColor="$color"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -411,6 +412,7 @@ export default function AddExpenseScreen() {
             </Label>
             <Input
               placeholder={t("add.notePlaceholder")}
+              placeholderTextColor="$color"
               value={note}
               onChangeText={setNote}
               bg="$background"
@@ -521,6 +523,7 @@ export default function AddExpenseScreen() {
                         value={paymentMethodId}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
+                        placeholderTextColor="$color"
                       />
                     )}
                   </YStack>
