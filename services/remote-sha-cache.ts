@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem } from "./storage"
 
 const REMOTE_SHA_CACHE_KEY = "remote_sha_cache"
 
@@ -15,7 +15,7 @@ export interface RemoteSHACache {
  */
 export async function loadRemoteSHACache(): Promise<RemoteSHACache> {
   try {
-    const stored = await AsyncStorage.getItem(REMOTE_SHA_CACHE_KEY)
+    const stored = await getItem(REMOTE_SHA_CACHE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
       // Validate shape: must be a plain object with string values
@@ -36,7 +36,7 @@ export async function loadRemoteSHACache(): Promise<RemoteSHACache> {
  */
 export async function saveRemoteSHACache(cache: RemoteSHACache): Promise<void> {
   try {
-    await AsyncStorage.setItem(REMOTE_SHA_CACHE_KEY, JSON.stringify(cache))
+    await setItem(REMOTE_SHA_CACHE_KEY, JSON.stringify(cache))
   } catch (error) {
     console.warn("Failed to save remote SHA cache:", error)
   }
@@ -47,7 +47,7 @@ export async function saveRemoteSHACache(cache: RemoteSHACache): Promise<void> {
  */
 export async function clearRemoteSHACache(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(REMOTE_SHA_CACHE_KEY)
+    await removeItem(REMOTE_SHA_CACHE_KEY)
   } catch (error) {
     console.warn("Failed to clear remote SHA cache:", error)
   }

@@ -3,15 +3,19 @@
  *
  * Platform-aware secure storage abstraction that uses:
  * - expo-secure-store on native platforms (iOS/Android)
- * - @react-native-async-storage/async-storage on web
+ * - MMKV storage on web
  *
  * This module provides a unified interface for storing sensitive data
  * like authentication tokens and configuration.
  */
 
 import * as SecureStore from "expo-secure-store"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Platform } from "react-native"
+import {
+  getItem as getStorageItem,
+  setItem as setStorageItem,
+  removeItem,
+} from "./storage"
 
 /**
  * Secure storage interface for platform-agnostic storage operations
@@ -24,11 +28,11 @@ export interface SecureStorage {
 
 /**
  * Store a value securely
- * Uses SecureStore on native platforms, AsyncStorage on web
+ * Uses SecureStore on native platforms, MMKV on web
  */
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === "web") {
-    await AsyncStorage.setItem(key, value)
+    await setStorageItem(key, value)
   } else {
     await SecureStore.setItemAsync(key, value)
   }
@@ -40,7 +44,7 @@ async function setItem(key: string, value: string): Promise<void> {
  */
 async function getItem(key: string): Promise<string | null> {
   if (Platform.OS === "web") {
-    return await AsyncStorage.getItem(key)
+    return await getStorageItem(key)
   } else {
     return await SecureStore.getItemAsync(key)
   }
@@ -51,7 +55,7 @@ async function getItem(key: string): Promise<string | null> {
  */
 async function deleteItem(key: string): Promise<void> {
   if (Platform.OS === "web") {
-    await AsyncStorage.removeItem(key)
+    await removeItem(key)
   } else {
     await SecureStore.deleteItemAsync(key)
   }

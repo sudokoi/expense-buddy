@@ -8328,6 +8328,8 @@ __metadata:
     react-native-device-info: "npm:^15.0.1"
     react-native-gifted-charts: "npm:^1.4.70"
     react-native-keyboard-controller: "npm:1.18.5"
+    react-native-mmkv: "npm:^4.3.1"
+    react-native-nitro-modules: "npm:^0.35.9"
     react-native-reanimated: "npm:~4.1.6"
     react-native-safe-area-context: "npm:~5.6.2"
     react-native-screens: "npm:~4.16.0"
@@ -12938,6 +12940,27 @@ __metadata:
     react-native: "*"
     react-native-reanimated: ">=3.0.0"
   checksum: 10/2795a030cbf158a081b54bed81e7cb113a08daaefdbe566b4010465b86ebe29b238602c0411919af30425dd191dfeac573da9e2a913d2cbf31f9ad1de8dc1d98
+  languageName: node
+  linkType: hard
+
+"react-native-mmkv@npm:^4.3.1":
+  version: 4.3.2
+  resolution: "react-native-mmkv@npm:4.3.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  checksum: 10/200eac3939d89cc2182851a2cf7c2bfda519f78c870ed962b70c2873924d77a17e18eb3ecbe817670b01bdc6848eb2c093b4defc79c1aac0f3f0bee3d5408cdb
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@npm:^0.35.9":
+  version: 0.35.9
+  resolution: "react-native-nitro-modules@npm:0.35.9"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/f1554947b20d4bb2688cca88bd0f30091ce2652a5e3bf63b196f587ee4ae2ed09820e9e05e43acda4d4051b3dc952deb554ae495467aec6d9a4778443ad6c4e3
   languageName: node
   linkType: hard
 

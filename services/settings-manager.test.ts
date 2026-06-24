@@ -21,22 +21,9 @@ import {
 import { PaymentMethodType } from "../types/expense"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import type { PaymentInstrument } from "../types/payment-instrument"
+import { clear, setItem } from "./storage"
 
-// Mock AsyncStorage for testing
-const mockStorage: Map<string, string> = new Map()
 const mockSecureStorage: Map<string, string> = new Map()
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
-  setItem: jest.fn((key: string, value: string) => {
-    mockStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  removeItem: jest.fn((key: string) => {
-    mockStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
 
 // Mock expo-secure-store for testing
 jest.mock("expo-secure-store", () => ({
@@ -53,16 +40,9 @@ jest.mock("expo-secure-store", () => ({
   }),
 }))
 
-// Mock react-native Platform
-jest.mock("react-native", () => ({
-  Platform: {
-    OS: "ios", // Use non-web platform to test secure storage
-  },
-}))
-
 // Clear mock storage before each test
-beforeEach(() => {
-  mockStorage.clear()
+beforeEach(async () => {
+  await clear()
   mockSecureStorage.clear()
 })
 
@@ -116,7 +96,7 @@ describe("Settings Manager Properties", () => {
       await fc.assert(
         fc.asyncProperty(themePreferenceArb, async (theme) => {
           // Clear storage before each iteration
-          mockStorage.clear()
+          await clear()
 
           // Create settings with the theme
           const settings: AppSettings = {
@@ -143,7 +123,7 @@ describe("Settings Manager Properties", () => {
         fc.asyncProperty(
           fc.array(themePreferenceArb, { minLength: 1, maxLength: 5 }),
           async (themes) => {
-            mockStorage.clear()
+            await clear()
 
             // Save and load each theme in sequence
             for (const theme of themes) {
@@ -173,7 +153,7 @@ describe("Settings Manager Properties", () => {
     it("should preserve all settings fields through save/load cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Save settings
           await saveSettings(settings)
@@ -242,7 +222,7 @@ describe("Settings Manager Properties", () => {
     it("should update timestamp when saving settings", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Record time before save
           const beforeSave = new Date().toISOString()
@@ -266,7 +246,7 @@ describe("Settings Manager Properties", () => {
     it("should have newer timestamp on subsequent saves", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, appSettingsArb, async (settings1, settings2) => {
-          mockStorage.clear()
+          await clear()
 
           // Save first settings
           await saveSettings(settings1)
@@ -294,7 +274,7 @@ describe("Settings Manager Properties", () => {
    */
   describe("Change Tracking", () => {
     it("should track settings changes correctly", async () => {
-      mockStorage.clear()
+      await clear()
 
       // Initially no changes
       expect(await hasSettingsChanged()).toBe(false)
@@ -365,7 +345,7 @@ describe("Settings Manager Properties", () => {
     })
 
     it("should save and retrieve hash correctly", async () => {
-      mockStorage.clear()
+      await clear()
 
       const testHash = "abc123"
       await saveSettingsHash(testHash)
@@ -377,7 +357,7 @@ describe("Settings Manager Properties", () => {
 
   describe("Default Settings", () => {
     it("should return default settings when storage is empty", async () => {
-      mockStorage.clear()
+      await clear()
 
       const loaded = await loadSettings()
 
@@ -404,7 +384,7 @@ describe("Settings Manager Properties", () => {
     it("should preserve defaultPaymentMethod through serialize/deserialize cycle", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Save settings (simulates sync upload)
           await saveSettings(settings)
@@ -451,7 +431,7 @@ describe("Settings Manager Properties", () => {
     it("should preserve all payment method types through round-trip", async () => {
       await fc.assert(
         fc.asyncProperty(paymentMethodTypeArb, async (paymentMethod) => {
-          mockStorage.clear()
+          await clear()
 
           const settings: AppSettings = {
             ...DEFAULT_SETTINGS,
@@ -519,11 +499,11 @@ describe("Settings Manager Properties", () => {
     it("should use default autoSyncEnabled (false) when field is missing", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          await clear()
           mockSecureStorage.clear()
 
           // Save v2 settings directly to storage (bypassing saveSettings to simulate old data)
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
           // Load settings - should apply defaults for missing fields
           const loaded = await loadSettings()
@@ -538,11 +518,11 @@ describe("Settings Manager Properties", () => {
     it("should use default autoSyncTiming (on_launch) when field is missing", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          await clear()
           mockSecureStorage.clear()
 
           // Save v2 settings directly to storage (bypassing saveSettings to simulate old data)
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
           // Load settings - should apply defaults for missing fields
           const loaded = await loadSettings()
@@ -557,11 +537,11 @@ describe("Settings Manager Properties", () => {
     it("should preserve existing fields while applying defaults for missing ones", async () => {
       await fc.assert(
         fc.asyncProperty(v2SettingsArb, async (v2Settings) => {
-          mockStorage.clear()
+          await clear()
           mockSecureStorage.clear()
 
           // Save v2 settings directly to storage
-          mockStorage.set("app_settings", JSON.stringify(v2Settings))
+          await setItem("app_settings", JSON.stringify(v2Settings))
 
           // Load settings
           const loaded = await loadSettings()

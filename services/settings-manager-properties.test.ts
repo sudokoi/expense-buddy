@@ -8,6 +8,7 @@
 import fc from "fast-check"
 import { ThemePreference, AppSettings } from "./settings-manager"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
+import { clear } from "./storage"
 
 /**
  * Resolves the effective theme based on preference and system color scheme
@@ -19,51 +20,12 @@ function resolveEffectiveTheme(
   systemColorScheme: "light" | "dark" | null | undefined
 ): "light" | "dark" {
   if (preference === "system") {
-    // Default to light if system color scheme is not available
     return systemColorScheme === "dark" ? "dark" : "light"
   }
   return preference
 }
 
-// Mock AsyncStorage for testing
-const mockStorage: Map<string, string> = new Map()
-const mockSecureStorage: Map<string, string> = new Map()
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn((key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
-  setItem: jest.fn((key: string, value: string) => {
-    mockStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  removeItem: jest.fn((key: string) => {
-    mockStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
-
-// Mock expo-secure-store for testing
-jest.mock("expo-secure-store", () => ({
-  getItemAsync: jest.fn((key: string) =>
-    Promise.resolve(mockSecureStorage.get(key) ?? null)
-  ),
-  setItemAsync: jest.fn((key: string, value: string) => {
-    mockSecureStorage.set(key, value)
-    return Promise.resolve()
-  }),
-  deleteItemAsync: jest.fn((key: string) => {
-    mockSecureStorage.delete(key)
-    return Promise.resolve()
-  }),
-}))
-
-// Mock react-native Platform
-jest.mock("react-native", () => ({
-  Platform: {
-    OS: "ios", // Use non-web platform to test secure storage
-  },
-}))
-
-// Import settings manager functions after mocking
+// Import settings manager functions
 import {
   markSettingsChanged,
   clearSettingsChanged,
@@ -73,10 +35,9 @@ import {
   AutoSyncTiming,
 } from "./settings-manager"
 
-// Clear mock storage before each test
-beforeEach(() => {
-  mockStorage.clear()
-  mockSecureStorage.clear()
+// Clear storage before each test
+beforeEach(async () => {
+  await clear()
 })
 
 // Arbitrary generators for settings types
@@ -201,7 +162,7 @@ describe("Settings Manager Properties", () => {
     it("should track changes correctly after modifications", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Initially no changes
           const initialState = await hasSettingsChanged()
@@ -222,7 +183,7 @@ describe("Settings Manager Properties", () => {
     it("should clear changes after sync", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Modify settings
           await saveSettings(settings)
@@ -248,7 +209,7 @@ describe("Settings Manager Properties", () => {
         fc.asyncProperty(
           fc.array(operationArb, { minLength: 1, maxLength: 10 }),
           async (operations) => {
-            mockStorage.clear()
+            await clear()
 
             // Track expected state
             let expectedHasChanges = false
@@ -276,7 +237,7 @@ describe("Settings Manager Properties", () => {
     it("should report 1 changed record when modified, 0 when synced", async () => {
       await fc.assert(
         fc.asyncProperty(appSettingsArb, async (settings) => {
-          mockStorage.clear()
+          await clear()
 
           // Initially 0 changes
           const initial = await hasSettingsChanged()

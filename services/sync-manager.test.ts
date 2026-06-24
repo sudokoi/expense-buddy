@@ -15,18 +15,7 @@ import {
 } from "./settings-manager"
 import { PaymentMethodType } from "../types/expense"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-
-// Mock AsyncStorage for testing
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  multiGet: jest.fn(() => Promise.resolve([])),
-  multiSet: jest.fn(() => Promise.resolve()),
-  multiRemove: jest.fn(() => Promise.resolve()),
-}))
+import { clear, setItem } from "./storage"
 
 // Mock expo-secure-store for testing
 jest.mock("expo-secure-store", () => ({
@@ -106,11 +95,9 @@ const fullSettingsArbitrary: fc.Arbitrary<AppSettings> = fc.record({
 })
 
 describe("Sync Manager Settings Integration Properties", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
-    ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(null)
-    ;(AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined)
-    ;(AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined)
+    await clear()
   })
 
   /**
@@ -184,8 +171,8 @@ describe("Sync Manager Settings Integration Properties", () => {
           // Compute hash of settings
           const hash = computeSettingsHash(settings)
 
-          // Mock stored hash to match
-          ;(AsyncStorage.getItem as jest.Mock).mockResolvedValue(hash)
+          // Store hash to match
+          await setItem("settings_sync_hash", hash)
 
           // Get stored hash
           const storedHash = await getSettingsHash()

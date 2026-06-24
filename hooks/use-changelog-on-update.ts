@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "../services/storage"
 import { Linking } from "react-native"
 import { APP_CONFIG } from "../constants/app-config"
 import { getReleaseForVersion } from "../services/update-checker"
@@ -38,7 +38,7 @@ export function useChangelogOnUpdate({
 
   const close = useCallback(async () => {
     try {
-      await AsyncStorage.setItem(LAST_SEEN_CHANGELOG_VERSION_KEY, version)
+      await setItem(LAST_SEEN_CHANGELOG_VERSION_KEY, version)
     } catch (error) {
       console.warn("Failed to persist last seen changelog version:", error)
     } finally {
@@ -98,7 +98,7 @@ export function useChangelogOnUpdate({
 
     const run = async () => {
       try {
-        const lastSeen = await AsyncStorage.getItem(LAST_SEEN_CHANGELOG_VERSION_KEY)
+        const lastSeen = await getItem(LAST_SEEN_CHANGELOG_VERSION_KEY)
 
         const release = await getReleaseForVersion(version)
         const shouldOpen = shouldOpenChangelogModal({

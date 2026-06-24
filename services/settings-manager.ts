@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem } from "./storage"
 import * as SecureStore from "expo-secure-store"
 import { Platform } from "react-native"
 import { computeContentHash } from "./hash-storage"
@@ -143,7 +143,7 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
 // Helper functions for secure storage with platform check (same as sync-manager.ts)
 async function secureGetItem(key: string): Promise<string | null> {
   if (Platform.OS === "web") {
-    return await AsyncStorage.getItem(key)
+    return await getItem(key)
   } else {
     return await SecureStore.getItemAsync(key)
   }
@@ -151,7 +151,7 @@ async function secureGetItem(key: string): Promise<string | null> {
 
 async function secureDeleteItem(key: string): Promise<void> {
   if (Platform.OS === "web") {
-    await AsyncStorage.removeItem(key)
+    await removeItem(key)
   } else {
     await SecureStore.deleteItemAsync(key)
   }
@@ -226,7 +226,7 @@ function migrateV4ToV5(settings: AppSettings): AppSettings {
 async function migrateV5ToV6(settings: AppSettings): Promise<AppSettings> {
   let language = "system"
   try {
-    const saved = await AsyncStorage.getItem("user-language")
+    const saved = await getItem("user-language")
     if (saved) {
       language = saved
     }
@@ -284,7 +284,7 @@ function migrateV8ToV9(settings: AppSettings): AppSettings {
  */
 export async function loadSettings(): Promise<AppSettings> {
   try {
-    const stored = await AsyncStorage.getItem(SETTINGS_KEY)
+    const stored = await getItem(SETTINGS_KEY)
     if (stored) {
       let parsed = JSON.parse(stored) as AppSettings
 
@@ -348,7 +348,7 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
       ...settings,
       updatedAt: new Date().toISOString(),
     }
-    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settingsToSave))
+    await setItem(SETTINGS_KEY, JSON.stringify(settingsToSave))
   } catch (error) {
     console.warn("Failed to save settings:", error)
     throw error
@@ -360,7 +360,7 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
  */
 export async function markSettingsChanged(): Promise<void> {
   try {
-    await AsyncStorage.setItem(SETTINGS_CHANGED_KEY, "true")
+    await setItem(SETTINGS_CHANGED_KEY, "true")
   } catch (error) {
     console.warn("Failed to mark settings changed:", error)
   }
@@ -371,7 +371,7 @@ export async function markSettingsChanged(): Promise<void> {
  */
 export async function clearSettingsChanged(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(SETTINGS_CHANGED_KEY)
+    await removeItem(SETTINGS_CHANGED_KEY)
   } catch (error) {
     console.warn("Failed to clear settings changed flag:", error)
   }
@@ -382,7 +382,7 @@ export async function clearSettingsChanged(): Promise<void> {
  */
 export async function hasSettingsChanged(): Promise<boolean> {
   try {
-    const value = await AsyncStorage.getItem(SETTINGS_CHANGED_KEY)
+    const value = await getItem(SETTINGS_CHANGED_KEY)
     return value === "true"
   } catch (error) {
     console.warn("Failed to check settings changed:", error)
@@ -395,7 +395,7 @@ export async function hasSettingsChanged(): Promise<boolean> {
  */
 export async function getSettingsHash(): Promise<string | null> {
   try {
-    return await AsyncStorage.getItem(SETTINGS_HASH_KEY)
+    return await getItem(SETTINGS_HASH_KEY)
   } catch (error) {
     console.warn("Failed to get settings hash:", error)
     return null
@@ -407,7 +407,7 @@ export async function getSettingsHash(): Promise<string | null> {
  */
 export async function saveSettingsHash(hash: string): Promise<void> {
   try {
-    await AsyncStorage.setItem(SETTINGS_HASH_KEY, hash)
+    await setItem(SETTINGS_HASH_KEY, hash)
   } catch (error) {
     console.warn("Failed to save settings hash:", error)
   }

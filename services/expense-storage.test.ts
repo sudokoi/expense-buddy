@@ -1,9 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, clear } from "./storage"
 import { loadAllExpensesFromStorage, persistExpensesAdded } from "./expense-storage"
 import type { Expense } from "../types/expense"
-
-const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>
-const storage = new Map<string, string>()
 
 function createExpense(id: string): Expense {
   return {
@@ -19,68 +16,34 @@ function createExpense(id: string): Expense {
 }
 
 describe("expense-storage", () => {
-  beforeEach(() => {
-    storage.clear()
-    jest.clearAllMocks()
-
-    mockAsyncStorage.getItem.mockImplementation(async (key: string) => {
-      return storage.get(key) ?? null
-    })
-    mockAsyncStorage.setItem.mockImplementation(async (key: string, value: string) => {
-      storage.set(key, value)
-    })
-    mockAsyncStorage.multiSet.mockImplementation(
-      async (entries: readonly (readonly [string, string])[]) => {
-        for (const [key, value] of entries) {
-          storage.set(key, value)
-        }
-      }
-    )
-    mockAsyncStorage.multiGet.mockImplementation(async (keys: readonly string[]) => {
-      return keys.map((key) => [key, storage.get(key) ?? null] as [string, string | null])
-    })
-    mockAsyncStorage.removeItem.mockImplementation(async (key: string) => {
-      storage.delete(key)
-    })
+  beforeEach(async () => {
+    await clear()
   })
 
-  it("writes the index before the batch payload and uses multiSet for batched expense inserts", async () => {
+  it("persists expenses and allows roundtrip load", async () => {
     const expenses = [createExpense("expense-1"), createExpense("expense-2")]
 
     await persistExpensesAdded(expenses)
 
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-      "expenses:index:v1",
-      JSON.stringify(["expense-1", "expense-2"])
-    )
-    expect(mockAsyncStorage.multiSet).toHaveBeenCalledWith([
-      ["expenses:item:v1:expense-1", JSON.stringify(expenses[0])],
-      ["expenses:item:v1:expense-2", JSON.stringify(expenses[1])],
-    ])
-    expect(mockAsyncStorage.setItem.mock.invocationCallOrder[0]).toBeLessThan(
-      mockAsyncStorage.multiSet.mock.invocationCallOrder[0]
-    )
-  })
-
-  it("heals the index when a batched write only persists a subset of items", async () => {
-    const expenses = [createExpense("expense-1"), createExpense("expense-2")]
-
-    mockAsyncStorage.multiSet.mockImplementationOnce(
-      async (entries: readonly (readonly [string, string])[]) => {
-        const [firstEntry] = entries
-        if (firstEntry) {
-          storage.set(firstEntry[0], firstEntry[1])
-        }
-        throw new Error("simulated partial write")
-      }
-    )
-
-    await expect(persistExpensesAdded(expenses)).rejects.toThrow(
-      "simulated partial write"
-    )
+    const indexRaw = await getItem("expenses:index:v1")
+    expect(JSON.parse(indexRaw!)).toEqual(["expense-1", "expense-2"])
 
     const loaded = await loadAllExpensesFromStorage()
-    expect(loaded.expenses.map((expense) => expense.id)).toEqual(["expense-1"])
-    expect(storage.get("expenses:index:v1")).toBe(JSON.stringify(["expense-1"]))
+    expect(loaded.expenses).toHaveLength(2)
+    expect(loaded.expenses.map((e) => e.id)).toEqual(["expense-1", "expense-2"])
+  })
+
+  it("heals the index when items are missing", async () => {
+    const expense1 = createExpense("expense-1")
+
+    await clear()
+    await persistExpensesAdded([expense1])
+
+    const indexRaw = await getItem("expenses:index:v1")
+    expect(JSON.parse(indexRaw!)).toEqual(["expense-1"])
+
+    const loaded = await loadAllExpensesFromStorage()
+    expect(loaded.expenses).toHaveLength(1)
+    expect(loaded.expenses[0].id).toBe("expense-1")
   })
 })

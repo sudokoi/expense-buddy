@@ -4,16 +4,9 @@
  * Tests the platform-aware secure storage operations (setItem, getItem, deleteItem).
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as SecureStore from "expo-secure-store"
 import { Platform } from "react-native"
-
-// Mock AsyncStorage
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(() => Promise.resolve(null)),
-  setItem: jest.fn(() => Promise.resolve()),
-  removeItem: jest.fn(() => Promise.resolve()),
-}))
+import { getItem as getStorageItem, setItem as setStorageItem } from "./storage"
 
 // Mock expo-secure-store
 jest.mock("expo-secure-store", () => ({
@@ -31,10 +24,12 @@ jest.mock("react-native", () => ({
 
 // Import after mocks are set up
 import { setItem, getItem, deleteItem, secureStorage } from "./secure-storage"
+import { clear } from "./storage"
 
 describe("Secure Storage Module", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
+    await clear()
   })
 
   describe("on native platforms (iOS/Android)", () => {
@@ -47,7 +42,6 @@ describe("Secure Storage Module", () => {
         await setItem("test-key", "test-value")
 
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith("test-key", "test-value")
-        expect(AsyncStorage.setItem).not.toHaveBeenCalled()
       })
 
       it("should handle empty string values", async () => {
@@ -71,7 +65,6 @@ describe("Secure Storage Module", () => {
         const result = await getItem("test-key")
 
         expect(SecureStore.getItemAsync).toHaveBeenCalledWith("test-key")
-        expect(AsyncStorage.getItem).not.toHaveBeenCalled()
         expect(result).toBe("stored-value")
       })
 
@@ -89,7 +82,6 @@ describe("Secure Storage Module", () => {
         await deleteItem("test-key")
 
         expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith("test-key")
-        expect(AsyncStorage.removeItem).not.toHaveBeenCalled()
       })
     })
   })
@@ -104,28 +96,26 @@ describe("Secure Storage Module", () => {
     })
 
     describe("setItem", () => {
-      it("should store value using AsyncStorage on web", async () => {
+      it("should store value using storage module on web", async () => {
         await setItem("test-key", "test-value")
 
-        expect(AsyncStorage.setItem).toHaveBeenCalledWith("test-key", "test-value")
+        const stored = await getStorageItem("test-key")
+        expect(stored).toBe("test-value")
         expect(SecureStore.setItemAsync).not.toHaveBeenCalled()
       })
     })
 
     describe("getItem", () => {
-      it("should retrieve value using AsyncStorage on web", async () => {
-        ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce("web-stored-value")
+      it("should retrieve value using storage module on web", async () => {
+        await setStorageItem("test-key", "web-stored-value")
 
         const result = await getItem("test-key")
 
-        expect(AsyncStorage.getItem).toHaveBeenCalledWith("test-key")
-        expect(SecureStore.getItemAsync).not.toHaveBeenCalled()
         expect(result).toBe("web-stored-value")
+        expect(SecureStore.getItemAsync).not.toHaveBeenCalled()
       })
 
       it("should return null for non-existent keys on web", async () => {
-        ;(AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null)
-
         const result = await getItem("non-existent-key")
 
         expect(result).toBeNull()
@@ -133,10 +123,12 @@ describe("Secure Storage Module", () => {
     })
 
     describe("deleteItem", () => {
-      it("should delete value using AsyncStorage on web", async () => {
+      it("should delete value using storage module on web", async () => {
+        await setStorageItem("test-key", "test-value")
         await deleteItem("test-key")
 
-        expect(AsyncStorage.removeItem).toHaveBeenCalledWith("test-key")
+        const stored = await getStorageItem("test-key")
+        expect(stored).toBeNull()
         expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled()
       })
     })

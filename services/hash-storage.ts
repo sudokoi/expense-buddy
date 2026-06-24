@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem } from "./storage"
 
 const FILE_HASHES_KEY = "file_content_hashes"
 
@@ -28,7 +28,7 @@ export function computeContentHash(content: string): string {
  */
 export async function saveFileHashes(hashes: FileHashMap): Promise<void> {
   try {
-    await AsyncStorage.setItem(FILE_HASHES_KEY, JSON.stringify(hashes))
+    await setItem(FILE_HASHES_KEY, JSON.stringify(hashes))
   } catch (error) {
     console.warn("Failed to save file hashes:", error)
   }
@@ -39,7 +39,7 @@ export async function saveFileHashes(hashes: FileHashMap): Promise<void> {
  */
 export async function loadFileHashes(): Promise<FileHashMap> {
   try {
-    const stored = await AsyncStorage.getItem(FILE_HASHES_KEY)
+    const stored = await getItem(FILE_HASHES_KEY)
     if (stored) {
       return JSON.parse(stored)
     }
@@ -54,7 +54,7 @@ export async function loadFileHashes(): Promise<FileHashMap> {
  */
 export async function clearFileHashes(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(FILE_HASHES_KEY)
+    await removeItem(FILE_HASHES_KEY)
   } catch (error) {
     console.warn("Failed to clear file hashes:", error)
   }

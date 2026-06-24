@@ -7,7 +7,26 @@ jest.mock("expo-localization", () => ({
   isRTL: false,
 }))
 
-// Mock Async Storage
+// Mock MMKV for all tests
+jest.mock("react-native-mmkv", () => {
+  const mockStorage = new Map<string, string>()
+  return {
+    createMMKV: jest.fn(() => ({
+      getString: jest.fn((key: string) => mockStorage.get(key) ?? null),
+      set: jest.fn((key: string, value: string) => mockStorage.set(key, value)),
+      remove: jest.fn((key: string) => mockStorage.delete(key)),
+      getAllKeys: jest.fn(() => Array.from(mockStorage.keys())),
+      clearAll: jest.fn(() => mockStorage.clear()),
+      getBoolean: jest.fn((key: string) => {
+        const v = mockStorage.get(key)
+        return v === "true" ? true : v === "false" ? false : null
+      }),
+    })),
+    MMKV: class {},
+  }
+})
+
+// Mock Async Storage (kept for migration path)
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(() => Promise.resolve()),
   getItem: jest.fn(() => Promise.resolve(null)),

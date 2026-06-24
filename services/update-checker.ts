@@ -1,6 +1,6 @@
 import { APP_CONFIG } from "../constants/app-config"
 import { Platform } from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem, removeItem } from "./storage"
 import { extractChangelogSection } from "./changelog-parser"
 import { getPlayStoreUpdateInfo, PlayStoreInstallStatus } from "./play-store-update"
 import i18next from "i18next"
@@ -429,7 +429,7 @@ export async function checkForUpdatesOnLaunch(): Promise<UpdateInfo | null> {
  */
 export async function getDismissedVersion(): Promise<string | null> {
   try {
-    return await AsyncStorage.getItem(DISMISSED_VERSION_KEY)
+    return await getItem(DISMISSED_VERSION_KEY)
   } catch (error) {
     console.warn("Failed to get dismissed version:", error)
     return null
@@ -442,7 +442,7 @@ export async function getDismissedVersion(): Promise<string | null> {
  */
 export async function setDismissedVersion(version: string): Promise<void> {
   try {
-    await AsyncStorage.setItem(DISMISSED_VERSION_KEY, version)
+    await setItem(DISMISSED_VERSION_KEY, version)
   } catch (error) {
     console.warn("Failed to set dismissed version:", error)
   }
@@ -454,7 +454,7 @@ export async function setDismissedVersion(version: string): Promise<void> {
  */
 export async function clearDismissedVersion(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(DISMISSED_VERSION_KEY)
+    await removeItem(DISMISSED_VERSION_KEY)
   } catch (error) {
     console.warn("Failed to clear dismissed version:", error)
   }

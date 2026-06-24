@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { getItem, setItem } from "../services/storage"
 import { useEffect, useRef, useState } from "react"
 import { APP_CONFIG } from "../constants/app-config"
 import { requestPlayStoreReview } from "../services/play-store-review"
@@ -52,7 +52,7 @@ function createDefaultReviewState(now: number): PlayStoreReviewState {
 
 async function loadPlayStoreReviewState(now: number): Promise<PlayStoreReviewState> {
   try {
-    const raw = await AsyncStorage.getItem(REVIEW_STATE_KEY)
+    const raw = await getItem(REVIEW_STATE_KEY)
     if (!raw) {
       return createDefaultReviewState(now)
     }
@@ -77,7 +77,7 @@ async function loadPlayStoreReviewState(now: number): Promise<PlayStoreReviewSta
 }
 
 async function persistPlayStoreReviewState(state: PlayStoreReviewState): Promise<void> {
-  await AsyncStorage.setItem(REVIEW_STATE_KEY, JSON.stringify(state))
+  await setItem(REVIEW_STATE_KEY, JSON.stringify(state))
 }
 
 export function advancePlayStoreReviewSession(

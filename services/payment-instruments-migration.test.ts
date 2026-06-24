@@ -1,13 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  multiGet: jest.fn(() => Promise.resolve([])),
-  multiSet: jest.fn(() => Promise.resolve()),
-  multiRemove: jest.fn(() => Promise.resolve()),
-}))
+import { setItem, clear } from "./storage"
 
 jest.mock("./settings-manager", () => ({
   loadSettings: jest.fn(),
@@ -30,18 +21,17 @@ jest.mock("./payment-instruments", () => {
 import { migratePaymentInstrumentsOnStartup } from "./payment-instruments-migration"
 import { loadSettings, saveSettings, markSettingsChanged } from "./settings-manager"
 import { trackBulkEdit } from "./change-tracker"
+import { getItem } from "./storage"
 
 describe("migratePaymentInstrumentsOnStartup", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date("2025-01-01T00:00:00.000Z"))
-    ;(AsyncStorage.getItem as jest.Mock).mockReset()
-    ;(AsyncStorage.setItem as jest.Mock).mockReset()
-    ;(AsyncStorage.removeItem as jest.Mock).mockReset()
     ;(loadSettings as jest.Mock).mockReset()
     ;(saveSettings as jest.Mock).mockReset()
     ;(markSettingsChanged as jest.Mock).mockReset()
     ;(trackBulkEdit as jest.Mock).mockReset()
+    await clear()
   })
 
   afterEach(() => {
@@ -83,11 +73,7 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-      if (key === "expenses:index:v1") return Promise.resolve(null)
-      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
-      return Promise.resolve(null)
-    })
+    await setItem("expenses", JSON.stringify(expenses))
 
     await migratePaymentInstrumentsOnStartup()
 
@@ -101,26 +87,13 @@ describe("migratePaymentInstrumentsOnStartup", () => {
     })
     expect(savedSettings.paymentInstrumentsMigrationVersion).toBe(1)
 
-    // Persisted as v1: index via setItem, items via multiSet
-    const setItemCalls = (AsyncStorage.setItem as jest.Mock).mock.calls
-    const multiSetCalls = (AsyncStorage.multiSet as jest.Mock).mock.calls
+    const e1Raw = await getItem("expenses:item:v1:e1")
+    const e2Raw = await getItem("expenses:item:v1:e2")
+    expect(e1Raw).toBeTruthy()
+    expect(e2Raw).toBeTruthy()
 
-    // index write
-    const indexCall = setItemCalls.find((c) => c[0] === "expenses:index:v1")
-    expect(indexCall).toBeTruthy()
-    const updatedIds = JSON.parse(indexCall![1])
-    expect(updatedIds).toEqual(["e1", "e2"])
-
-    const allMultiSetEntries = multiSetCalls.flatMap(
-      (c) => c[0] as Array<[string, string]>
-    )
-    const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
-    const e2Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e2")
-    expect(e1Entry).toBeTruthy()
-    expect(e2Entry).toBeTruthy()
-
-    const updatedE1 = JSON.parse(e1Entry![1])
-    const updatedE2 = JSON.parse(e2Entry![1])
+    const updatedE1 = JSON.parse(e1Raw!)
+    const updatedE2 = JSON.parse(e2Raw!)
 
     for (const e of [updatedE1, updatedE2]) {
       expect(e.paymentMethod.instrumentId).toBe("inst_1")
@@ -154,11 +127,7 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-      if (key === "expenses:index:v1") return Promise.resolve(null)
-      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
-      return Promise.resolve(null)
-    })
+    await setItem("expenses", JSON.stringify(expenses))
 
     await migratePaymentInstrumentsOnStartup()
 
@@ -198,24 +167,15 @@ describe("migratePaymentInstrumentsOnStartup", () => {
       },
     ]
 
-    ;(AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-      if (key === "expenses:index:v1") return Promise.resolve(null)
-      if (key === "expenses") return Promise.resolve(JSON.stringify(expenses))
-      return Promise.resolve(null)
-    })
+    await setItem("expenses", JSON.stringify(expenses))
 
     await migratePaymentInstrumentsOnStartup()
 
-    // In relink pass it should only write expenses and track bulk edit
     expect(saveSettings).not.toHaveBeenCalled()
 
-    const multiSetCalls = (AsyncStorage.multiSet as jest.Mock).mock.calls
-    const allMultiSetEntries = multiSetCalls.flatMap(
-      (c) => c[0] as Array<[string, string]>
-    )
-    const e1Entry = allMultiSetEntries.find(([key]) => key === "expenses:item:v1:e1")
-    expect(e1Entry).toBeTruthy()
-    const updated = JSON.parse(e1Entry![1])
+    const e1Raw = await getItem("expenses:item:v1:e1")
+    expect(e1Raw).toBeTruthy()
+    const updated = JSON.parse(e1Raw!)
     expect(updated.paymentMethod.instrumentId).toBe("inst_1")
 
     expect(trackBulkEdit).toHaveBeenCalledTimes(1)
