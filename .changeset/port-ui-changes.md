@@ -2,14 +2,10 @@
 "expense-buddy": minor
 ---
 
-Port UI improvements from development branch
+UI and storage improvements
 
-- **MMKV storage**: Replace AsyncStorage with react-native-mmkv for faster local persistence. One-time migration from AsyncStorage on first launch. Graceful fallback to AsyncStorage in Expo Go or when MMKV is unavailable.
-- **IconActionButton**: New reusable chromeless icon button with long-press tooltip support. Applied across ExpenseRow actions, CategoryListItem actions, PaymentInstrumentsSection actions, sheet close buttons, day navigation, and search clear.
-- **Changelog rendering**: Render release notes with `react-native-markdown-display` for full markdown support (headings, ordered/unordered lists, fenced and inline code, links, blockquotes, and horizontal rules).
-- **Input placeholder contrast**: Set `placeholderTextColor` on all text inputs (add/edit expense, filters, category and payment forms, SMS review, GitHub config, repo picker) so placeholders remain legible in all themes.
-- **Native logging**: Added Android logging to the Play Core, SMS parser, and ML classifier native modules for better diagnostics.
-- **Play Store update resilience**: Guard native Play Core calls so update checks and status subscriptions degrade gracefully when the module is unavailable (e.g. Expo Go, iOS).
-- **Category color hook**: Extracted category color resolution into a shared `useResolvedCategoryColor` hook used by CategoryCard and CategoryListItem.
-- **Tab logging**: Log navigation changes via `usePathname` (`NAV / TAB_CHANGE route=…`), covering programmatic navigation in addition to tab presses.
-- **Translations**: Added `common.back`, `common.clearSearch`, `dayView.previousDay`, and `dayView.nextDay` keys across all 5 locales.
+- **Faster local storage**: Switched to MMKV for quicker app data persistence, with a one-time automatic migration of your existing data on first launch.
+- **Icon action buttons**: Compact icon-only buttons with long-press tooltips across expense rows, category and payment instrument actions, sheet close buttons, day navigation, and search.
+- **Richer changelog**: Release notes now render full markdown — headings, ordered and unordered lists, inline and fenced code, links, and blockquotes.
+- **Readable input placeholders**: Placeholder text now stays legible across all themes.
+- **Improved "Report an Issue"**: The prompt now shows the actual number of logs that will be attached — up to 500 when signed in to GitHub, or up to 200 copied to the clipboard otherwise.
