@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
 import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { logAsync } from "../../services/logger"
 
 export default function TabLayout() {
   const theme = useTheme()
@@ -15,7 +16,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: ACCENT_COLORS.primary, // Kawaii pink
+        tabBarActiveTintColor: ACCENT_COLORS.primary,
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: theme.background.val,
@@ -32,6 +33,9 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="index"
+        listeners={{
+          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_DASHBOARD"),
+        }}
         options={{
           title: t("navigation.dashboard"),
           tabBarIcon: ({ color }) => (
@@ -41,6 +45,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="add"
+        listeners={{
+          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_ADD"),
+        }}
         options={{
           title: t("navigation.add"),
           tabBarIcon: ({ color }) => (
@@ -50,6 +57,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="analytics"
+        listeners={{
+          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_ANALYTICS"),
+        }}
         options={{
           title: t("navigation.analytics"),
           tabBarIcon: ({ color }) => (
@@ -59,6 +69,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="history"
+        listeners={{
+          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_HISTORY"),
+        }}
         options={{
           title: t("navigation.history"),
           tabBarIcon: ({ color }) => (
@@ -68,6 +81,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="settings"
+        listeners={{
+          tabPress: () => logAsync("INFO", "UI_ACTION", "TAB_SETTINGS"),
+        }}
         options={{
           title: t("navigation.settings"),
           tabBarIcon: ({ color }) => (

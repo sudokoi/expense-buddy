@@ -30,7 +30,8 @@ import {
   getActivePaymentInstruments,
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../services/payment-instruments"
-import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { IconActionButton } from "../ui/IconActionButton"
 
 interface FilterSheetProps {
   open: boolean
@@ -259,12 +260,11 @@ export const FilterSheet = React.memo(function FilterSheet({
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("common.reset")}
               </Button>
-              <Button
-                size="$compact"
-                chromeless
-                icon={X}
+              <IconActionButton
+                icon={<X size={UI_ICON_SIZE.medium} />}
                 onPress={handleApply}
-                aria-label={t("common.close")}
+                tooltip={t("common.close")}
+                accessibilityLabel={t("common.close")}
               />
             </XStack>
           </XStack>

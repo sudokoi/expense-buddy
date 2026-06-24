@@ -1,14 +1,8 @@
 import { useMemo } from "react"
-import { Platform } from "react-native"
-import { Button, Text, YStack } from "tamagui"
+import { Button, YStack } from "tamagui"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { MarkdownText } from "./MarkdownText"
 import { useTranslation } from "react-i18next"
-
-const layoutStyles = {
-  notesText: {
-    ...(Platform.OS === "web" ? ({ whiteSpace: "pre-wrap" } as any) : undefined),
-  },
-} as const
 
 interface ChangelogSheetProps {
   open: boolean
@@ -51,15 +45,8 @@ export function ChangelogSheet({
         </>
       }
     >
-      <YStack pb="$gutter">
-        <Text
-          fontSize="$label"
-          lineHeight={22}
-          color="$color"
-          style={layoutStyles.notesText}
-        >
-          {normalizedNotes}
-        </Text>
+      <YStack style={{ paddingBottom: 16 }}>
+        <MarkdownText>{normalizedNotes}</MarkdownText>
       </YStack>
     </AppSheetScaffold>
   )

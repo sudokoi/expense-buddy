@@ -218,6 +218,8 @@ expense-buddy/
 │   ├── merge-engine.ts         # conflict resolution and merge logic
 │   ├── expense-storage.ts      # local expense persistence
 │   ├── settings-manager.ts     # settings persistence and sync support
+│   ├── secure-storage.ts       # encrypted secure storage
+│   ├── storage.ts              # MMKV adapter with AsyncStorage fallback
 │   ├── update-checker.ts
 │   └── auto-sync-service.ts
 ├── providers/                  # React Context providers

@@ -19,7 +19,8 @@ import { PaymentMethodFilter } from "./PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "./PaymentInstrumentFilter"
 import { CurrencyFilter } from "./CurrencyFilter"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { IconActionButton } from "../ui/IconActionButton"
 
 const layoutStyles = {
   sheetFrame: {
@@ -245,12 +246,11 @@ export const AnalyticsFiltersSheet = memo(function AnalyticsFiltersSheet({
               <Button size="$compact" chromeless onPress={handleResetDraft}>
                 {t("analytics.filtersModal.reset")}
               </Button>
-              <Button
-                size="$compact"
-                chromeless
-                icon={X}
+              <IconActionButton
+                icon={<X size={UI_ICON_SIZE.medium} />}
                 onPress={handleApply}
-                aria-label={t("common.close")}
+                tooltip={t("common.close")}
+                accessibilityLabel={t("common.close")}
               />
             </XStack>
           </XStack>

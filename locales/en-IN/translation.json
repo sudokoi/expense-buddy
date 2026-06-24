@@ -73,7 +73,9 @@
     "filters": "Filters",
     "clearFilters": "Clear Filters",
     "reset": "Reset",
-    "apply": "Apply"
+    "apply": "Apply",
+    "back": "Back",
+    "clearSearch": "Clear search"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -498,7 +500,9 @@
     "yesterday": "Yesterday",
     "tomorrow": "Tomorrow",
     "totalSpent": "Total Spent",
-    "empty": "No expenses for this day"
+    "empty": "No expenses for this day",
+    "previousDay": "Previous day",
+    "nextDay": "Next day"
   },
   "repoPicker": {
     "title": "Choose Repository",

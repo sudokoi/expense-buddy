@@ -14,7 +14,13 @@ import { formatCurrency } from "../../utils/currency"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { formatDate } from "../../utils/date"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
+import { IconActionButton } from "../../components/ui/IconActionButton"
 
 const FALLBACK_CATEGORY_CACHE = new Map<
   string,
@@ -132,12 +138,11 @@ export default function DayViewScreen() {
         items="center"
         justify="center"
       >
-        <Button
-          size="$compact"
-          chromeless
-          icon={ChevronLeft}
+        <IconActionButton
+          icon={<ChevronLeft size={UI_ICON_SIZE.medium} />}
           onPress={() => router.back()}
-          color="$color"
+          tooltip={t("common.back")}
+          accessibilityLabel={t("common.back")}
         />
         <YStack style={{ alignItems: "center" }}>
           <Text fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
@@ -157,11 +162,21 @@ export default function DayViewScreen() {
         px={UI_SPACE.gutter}
         pb={UI_SPACE.control}
       >
-        <Button size="$compact" chromeless icon={ArrowLeft} onPress={handlePrevDay} />
+        <IconActionButton
+          icon={<ArrowLeft size={UI_ICON_SIZE.medium} />}
+          onPress={handlePrevDay}
+          tooltip={t("dayView.previousDay")}
+          accessibilityLabel={t("dayView.previousDay")}
+        />
         <Text fontSize="$sectionTitle" fontWeight={UI_FONT_WEIGHT.bold} color="$color">
           {formatCurrency(totalSpent)}
         </Text>
-        <Button size="$compact" chromeless icon={ArrowRight} onPress={handleNextDay} />
+        <IconActionButton
+          icon={<ArrowRight size={UI_ICON_SIZE.medium} />}
+          onPress={handleNextDay}
+          tooltip={t("dayView.nextDay")}
+          accessibilityLabel={t("dayView.nextDay")}
+        />
       </XStack>
 
       <Text

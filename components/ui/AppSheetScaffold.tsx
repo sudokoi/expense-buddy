@@ -1,9 +1,10 @@
 import type { ReactNode } from "react"
 import type { ViewStyle } from "react-native"
 import { useTranslation } from "react-i18next"
-import { Button, H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
+import { H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
 import { X } from "@tamagui/lucide-icons-2"
-import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { IconActionButton } from "./IconActionButton"
 
 type AppSheetScaffoldProps = {
   open: boolean
@@ -74,12 +75,11 @@ export function AppSheetScaffold({
               ) : null}
             </YStack>
 
-            <Button
-              size="$compact"
-              chromeless
-              icon={X}
+            <IconActionButton
+              icon={<X size={UI_ICON_SIZE.medium} />}
               onPress={onClose}
-              aria-label={t("common.close")}
+              tooltip={t("common.close")}
+              accessibilityLabel={t("common.close")}
             />
           </XStack>
 

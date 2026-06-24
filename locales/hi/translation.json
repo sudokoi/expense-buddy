@@ -73,7 +73,9 @@
     "filters": "फिल्टर",
     "clearFilters": "फिल्टर साफ़ करें",
     "reset": "रीसेट",
-    "apply": "लागू करें"
+    "apply": "लागू करें",
+    "back": "वापस",
+    "clearSearch": "खोज साफ़ करें"
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",
@@ -498,7 +500,9 @@
     "yesterday": "कल",
     "tomorrow": "कल (आने वाला)",
     "totalSpent": "कुल व्यय",
-    "empty": "इस दिन के लिए कोई खर्च नहीं"
+    "empty": "इस दिन के लिए कोई खर्च नहीं",
+    "previousDay": "पिछला दिन",
+    "nextDay": "अगला दिन"
   },
   "repoPicker": {
     "title": "रिपोजिटरी चुनें",

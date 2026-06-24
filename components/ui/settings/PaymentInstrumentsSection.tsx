@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { YStack, XStack, Text, Button, Accordion } from "tamagui"
 import { Alert } from "react-native"
 import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
+import { IconActionButton } from "../IconActionButton"
 import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
@@ -221,21 +222,23 @@ export function PaymentInstrumentsSection() {
                             <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
-                            <Button
-                              size="$chip"
-                              chromeless
-                              icon={Edit3}
+                            <IconActionButton
+                              icon={<Edit3 size={UI_ICON_SIZE.small} />}
                               onPress={() => handleEdit(inst)}
-                              aria-label={t("common.editLabel", {
+                              tooltip={t("common.editLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
+                              accessibilityLabel={t("common.editLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
                               })}
                             />
-                            <Button
-                              size="$chip"
-                              chromeless
-                              icon={Trash}
+                            <IconActionButton
+                              icon={<Trash size={UI_ICON_SIZE.small} />}
                               onPress={() => handleDelete(inst)}
-                              aria-label={t("common.removeLabel", {
+                              tooltip={t("common.removeLabel", {
+                                label: formatPaymentInstrumentLabel(inst),
+                              })}
+                              accessibilityLabel={t("common.removeLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
                               })}
                             />
