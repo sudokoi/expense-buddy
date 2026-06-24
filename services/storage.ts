@@ -46,11 +46,6 @@ async function ensureMigrated(): Promise<void> {
   return migrationPromise
 }
 
-function getMmkvOrThrow() {
-  if (!mmkv) throw new Error("MMKV not available in this environment")
-  return mmkv
-}
-
 export async function getItem(key: string): Promise<string | null> {
   await ensureMigrated()
   if (!mmkv) return AsyncStorage.getItem(key)
