@@ -26,6 +26,14 @@ jest.mock("react-native-mmkv", () => {
   }
 })
 
+// Mock the logger (its native module imports `expo`, which isn't transformed
+// in this jest setup). logAsync is fire-and-forget, so a no-op is sufficient.
+jest.mock("./services/logger", () => ({
+  logAsync: jest.fn(() => Promise.resolve()),
+  getLogsForBugReportAsync: jest.fn(() => Promise.resolve("")),
+  clearLogsAsync: jest.fn(() => Promise.resolve()),
+}))
+
 // Mock Async Storage (kept for migration path)
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(() => Promise.resolve()),

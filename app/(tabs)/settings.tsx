@@ -42,6 +42,17 @@ import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
+/**
+ * Counts the number of log entries in the bug-report string. Each entry starts
+ * with a "[yyyy-MM-dd ..." timestamp; stacktrace continuation lines do not, so
+ * this reflects the actual number of entries that will be attached/copied.
+ */
+function countAttachedLogEntries(logs: string): number {
+  if (!logs) return 0
+  const matches = logs.match(/^\[\d{4}-\d{2}-\d{2} /gm)
+  return matches ? matches.length : 0
+}
+
 export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
@@ -302,7 +313,15 @@ export default function SettingsScreen() {
     Linking.openURL(APP_CONFIG.github.url)
   }, [])
 
-  const handleReportIssue = useCallback(() => {
+  const handleReportIssue = useCallback(async () => {
+    const token = syncConfig?.token
+    const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
+    // Signed in: attach up to 500 logs via the API. Otherwise: copy up to 200
+    // to the clipboard. Fetch first so the prompt can show the real count.
+    const maxLogs = token ? 500 : 200
+    const logs = await getLogsForBugReportAsync(maxLogs)
+    const logCount = countAttachedLogEntries(logs)
+
     const openNewIssue = () => {
       Linking.openURL(`${APP_CONFIG.github.url}/issues/new/choose`)
     }
@@ -315,8 +334,9 @@ export default function SettingsScreen() {
         defaultValue: "Include Device Logs?",
       }),
       t("settings.about.includeLogsMessage", {
+        count: logCount,
         defaultValue:
-          "The last 200 device logs will be attached to help debug the issue. These contain app operation details only — no SMS content, financial data, or personal information.",
+          "{{count}} recent device logs will be attached to help debug the issue. They contain app operation details only — no SMS content, financial data, or personal information.",
       }),
       [
         {
@@ -324,10 +344,6 @@ export default function SettingsScreen() {
             defaultValue: "Attach Logs",
           }),
           onPress: async () => {
-            const token = syncConfig?.token
-            const appRepo = APP_CONFIG.github.url.replace(/^https?:\/\/github\.com\//, "")
-            const logs = await getLogsForBugReportAsync(token ? 500 : 50)
-
             if (token && logs) {
               try {
                 const response = await fetch(

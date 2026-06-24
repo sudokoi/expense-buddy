@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { logAsync } from "./logger"
 
 function createMmkvOrNull() {
   try {
@@ -37,11 +38,22 @@ async function ensureMigrated(): Promise<void> {
       mmkv.set(MIGRATED_KEY, true)
       await AsyncStorage.clear()
       migrated = true
+      void logAsync(
+        "INFO",
+        "STORAGE",
+        `MMKV migration complete: migrated ${keys.length} key(s) from AsyncStorage`
+      )
     } catch (e) {
       // Do NOT set MIGRATED_KEY or mark migrated here. AsyncStorage.clear()
       // hasn't run, so the original data is still intact. Leaving the flag
       // unset lets migration retry on the next launch (it is idempotent).
       console.warn("Failed to migrate AsyncStorage to MMKV, will retry next launch:", e)
+      void logAsync(
+        "WARN",
+        "STORAGE",
+        "MMKV migration failed; AsyncStorage left intact, will retry next launch",
+        e instanceof Error ? (e.stack ?? e.message) : String(e)
+      )
     } finally {
       migrationPromise = null
     }
