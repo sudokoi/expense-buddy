@@ -5,8 +5,11 @@ import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
-import React, { startTransition } from "react"
+import React, { startTransition, useCallback } from "react"
+import { RefreshCw } from "@tamagui/lucide-icons-2"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
+import { IconActionButton } from "../../components/ui/IconActionButton"
+import { useSyncMachine } from "../../hooks/use-sync-machine"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CARD_COLORS } from "../../constants/theme-colors"
@@ -76,6 +79,7 @@ export default function DashboardScreen() {
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
   const { t } = useTranslation()
+  const syncMachine = useSyncMachine()
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
 
@@ -200,6 +204,14 @@ export default function DashboardScreen() {
     router.push("/(tabs)/history")
   }, [router])
 
+  const handleSync = useCallback(() => {
+    syncMachine.sync({
+      localExpenses: state.activeExpenses,
+      settings: settings.syncSettings ? settings : undefined,
+      syncSettingsEnabled: settings.syncSettings,
+    })
+  }, [syncMachine, state.activeExpenses, settings])
+
   return (
     <ScreenContainer>
       {/* Header */}
@@ -209,9 +221,18 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <Button size="$control" theme="accent" onPress={handleAddPress}>
-          {t("common.add")}
-        </Button>
+        <XStack gap="$control" items="center">
+          <IconActionButton
+            icon={<RefreshCw size={20} />}
+            onPress={handleSync}
+            tooltip={t("autoSync.syncNow")}
+            disabled={syncMachine.isSyncing}
+            accessibilityLabel={t("autoSync.syncNow")}
+          />
+          <Button size="$control" theme="accent" onPress={handleAddPress}>
+            {t("common.add")}
+          </Button>
+        </XStack>
       </XStack>
 
       {/* Currency Filter - Show only if multiple currencies exist */}
