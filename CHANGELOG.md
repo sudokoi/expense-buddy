@@ -1,5 +1,14 @@
 # expense-buddy
 
+## 3.6.1
+
+### Patch Changes
+
+- [#87](https://github.com/sudokoi/expense-buddy/pull/87) [`5b3ab0e`](https://github.com/sudokoi/expense-buddy/commit/5b3ab0ef73c57b0a389544f193060f863018dfd8) Thanks [@sudokoi](https://github.com/sudokoi)! - Dashboard sync and import refinements
+  - **Accurate sync count**: Syncing from the dashboard now clears pending changes the same way as syncing from Settings, so the pending count shown on the Settings sync button resets correctly.
+  - **Animated sync icon**: The dashboard sync icon spins while a sync is in progress to make it clear something is happening.
+  - **Import from dashboard**: The dashboard "Add" button is now an "Import" button that opens the SMS import flow directly.
+
 ## 3.6.0
 
 ### Minor Changes
