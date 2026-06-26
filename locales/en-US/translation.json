@@ -55,6 +55,7 @@
   },
   "common": {
     "add": "+ Add",
+    "import": "Import",
     "seeAll": "See All",
     "edit": "Edit",
     "cancel": "Cancel",

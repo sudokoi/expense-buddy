@@ -5,11 +5,12 @@ import { BarChart } from "react-native-gifted-charts"
 import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
-import React, { startTransition, useCallback } from "react"
+import React, { startTransition } from "react"
 import { RefreshCw } from "@tamagui/lucide-icons-2"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { IconActionButton } from "../../components/ui/IconActionButton"
-import { useSyncMachine } from "../../hooks/use-sync-machine"
+import { useSyncAction } from "../../hooks/use-sync-action"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { SectionHeader } from "../../components/ui/SectionHeader"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { CARD_COLORS } from "../../constants/theme-colors"
@@ -79,7 +80,8 @@ export default function DashboardScreen() {
   const router = useRouter()
   const screenWidth = Dimensions.get("window").width
   const { t } = useTranslation()
-  const syncMachine = useSyncMachine()
+  const { handleSync, isSyncing } = useSyncAction()
+  const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
 
   const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
 
@@ -192,9 +194,9 @@ export default function DashboardScreen() {
   }, [])
 
   // Memoized navigation handlers
-  const handleAddPress = React.useCallback(() => {
-    router.push("/(tabs)/add")
-  }, [router])
+  const handleImportPress = React.useCallback(() => {
+    void startSmsImportFromAdd()
+  }, [startSmsImportFromAdd])
 
   const handleAnalyticsPress = React.useCallback(() => {
     router.push("/(tabs)/analytics")
@@ -203,14 +205,6 @@ export default function DashboardScreen() {
   const handleHistoryPress = React.useCallback(() => {
     router.push("/(tabs)/history")
   }, [router])
-
-  const handleSync = useCallback(() => {
-    syncMachine.sync({
-      localExpenses: state.activeExpenses,
-      settings: settings.syncSettings ? settings : undefined,
-      syncSettingsEnabled: settings.syncSettings,
-    })
-  }, [syncMachine, state.activeExpenses, settings])
 
   return (
     <ScreenContainer>
@@ -226,11 +220,19 @@ export default function DashboardScreen() {
             icon={<RefreshCw size={20} />}
             onPress={handleSync}
             tooltip={t("autoSync.syncNow")}
-            disabled={syncMachine.isSyncing}
+            disabled={isSyncing}
+            spinning={isSyncing}
             accessibilityLabel={t("autoSync.syncNow")}
           />
-          <Button size="$control" theme="accent" onPress={handleAddPress}>
-            {t("common.add")}
+          <Button
+            size="$control"
+            theme="accent"
+            onPress={handleImportPress}
+            disabled={isScanningSmsImports}
+          >
+            {isScanningSmsImports
+              ? t("settings.smsImport.actions.scanning")
+              : t("common.import")}
           </Button>
         </XStack>
       </XStack>
