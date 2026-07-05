@@ -19,6 +19,8 @@ interface IconActionButtonProps {
   accessibilityLabel?: string
   /** When true, the icon spins continuously to signal an in-progress action. */
   spinning?: boolean
+  /** Horizontal alignment of the tooltip relative to the button. Defaults to "right". */
+  tooltipAlign?: "left" | "center" | "right"
 }
 
 /**
@@ -67,6 +69,7 @@ export function IconActionButton({
   disabled,
   accessibilityLabel,
   spinning = false,
+  tooltipAlign = "right",
 }: IconActionButtonProps) {
   const theme = useTheme()
   const [showTooltip, setShowTooltip] = useState(false)
@@ -112,7 +115,7 @@ export function IconActionButton({
         />
       </SpinningIcon>
       {showTooltip && tooltip && (
-        <View style={styles.tooltipContainer} pointerEvents="none">
+        <View style={[styles.tooltipContainer, tooltipContainerStyle[tooltipAlign]]} pointerEvents="none">
           <View style={[styles.tooltip, { backgroundColor: theme.color?.val }]}>
             <Text fontSize="$body" color="$background">
               {tooltip}
@@ -124,13 +127,16 @@ export function IconActionButton({
   )
 }
 
+const tooltipContainerStyle = {
+  left: { left: 0, right: "auto" as const, alignItems: "flex-start" as const },
+  center: { left: "50%" as const, right: "auto" as const, transform: [{ translateX: "-50%" as const }] },
+  right: { right: 0, left: "auto" as const, alignItems: "flex-end" as const },
+}
+
 const styles = StyleSheet.create({
   tooltipContainer: {
     position: "absolute",
     top: "100%",
-    left: 0,
-    right: 0,
-    alignItems: "center",
     paddingTop: UI_SPACE.micro,
     zIndex: 1000,
   },
@@ -138,5 +144,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: UI_SPACE.control,
     paddingVertical: UI_SPACE.micro,
     borderRadius: 4,
+    minWidth: 100,
   },
 })

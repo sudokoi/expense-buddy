@@ -223,6 +223,7 @@ export default function DashboardScreen() {
             disabled={isSyncing}
             spinning={isSyncing}
             accessibilityLabel={t("autoSync.syncNow")}
+            tooltipAlign="right"
           />
           <IconActionButton
             icon={<Download size={20} />}
@@ -231,6 +232,7 @@ export default function DashboardScreen() {
             disabled={isScanningSmsImports}
             spinning={isScanningSmsImports}
             accessibilityLabel={t("settings.smsImport.actions.review")}
+            tooltipAlign="right"
           />
         </XStack>
       </XStack>
