@@ -215,7 +215,11 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <XStack gap={UI_SPACE.control} items="center" style={{ paddingHorizontal: UI_SPACE.micro }}>
+        <XStack
+          gap={UI_SPACE.control}
+          items="center"
+          style={{ paddingHorizontal: UI_SPACE.micro }}
+        >
           <IconActionButton
             icon={<RefreshCw size={20} />}
             onPress={handleSync}

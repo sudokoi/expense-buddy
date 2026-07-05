@@ -117,7 +117,10 @@ export function IconActionButton({
         />
       </SpinningIcon>
       {showTooltip && tooltip && (
-        <View style={[styles.tooltipContainer, tooltipContainerStyle[tooltipAlign]]} pointerEvents="none">
+        <View
+          style={[styles.tooltipContainer, tooltipContainerStyle[tooltipAlign]]}
+          pointerEvents="none"
+        >
           <View style={[styles.tooltip, { backgroundColor: theme.color?.val }]}>
             <Text fontSize="$body" color="$background">
               {tooltip}
@@ -131,7 +134,11 @@ export function IconActionButton({
 
 const tooltipContainerStyle = {
   left: { left: 0, right: "auto" as const, alignItems: "flex-start" as const },
-  center: { left: "50%" as const, right: "auto" as const, transform: [{ translateX: "-50%" as const }] },
+  center: {
+    left: "50%" as const,
+    right: "auto" as const,
+    transform: [{ translateX: "-50%" as const }],
+  },
   right: { right: 0, left: "auto" as const, alignItems: "flex-end" as const },
 }
 
