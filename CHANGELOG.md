@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.6.2
+
+### Patch Changes
+
+- [#89](https://github.com/sudokoi/expense-buddy/pull/89) [`85eeb52`](https://github.com/sudokoi/expense-buddy/commit/85eeb52d8a8638312273ca6eec7c1c008032c4ef) Thanks [@sudokoi](https://github.com/sudokoi)! - Some UI enhancements
+  - Dismiss Android notification when user performs any SMS review action (accept/reject/dismiss)
+  - Replace SMS import text button with icon button on dashboard for consistent UI
+
 ## 3.6.1
 
 ### Patch Changes
