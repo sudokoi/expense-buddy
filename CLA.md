@@ -40,10 +40,10 @@ You agree to notify the Project of any facts or circumstances of which you becom
 
 By signing below, you agree to the terms of this Agreement.
 
-**Signature:** ************\_\_\_************
+**Signature:** \***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***
 
-**Name:** ************\_\_\_************
+**Name:** \***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***
 
-**Date:** ************\_\_\_************
+**Date:** \***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***
 
-**GitHub Username:** ************\_\_\_************
+**GitHub Username:** \***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***

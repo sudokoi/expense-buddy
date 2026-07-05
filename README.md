@@ -303,7 +303,7 @@ See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request. Please follow our [Code of Conduct](./CODE_OF_CONDUCT.md). For security vulnerabilities, see our [Security Policy](./SECURITY.md).
 
 This project uses a strict issue-first contribution process. If you want to propose a fix, feature, refactor, or documentation change, open an issue first and discuss the problem and proposed solution before sending code.
 

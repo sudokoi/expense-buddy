@@ -2,6 +2,8 @@
 
 Thanks for taking the time to contribute.
 
+Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. For security vulnerabilities, see our [Security Policy](./SECURITY.md).
+
 This project is intentionally opinionated about incoming contributions. The goal is to keep the codebase focused, avoid speculative work, and avoid low-signal AI-generated churn.
 
 ## When To Contribute
@@ -99,5 +101,13 @@ By submitting a contribution, you confirm that:
 - you have the right to contribute the submitted work
 - the contribution is your own work or you have permission to submit it
 - the project may distribute the contribution under the repository license
+
+### Contributor License Agreement
+
+External contributors must sign the [CLA](./CLA.md) before their pull request can be merged. When you open a PR, the CLA bot will ask you to sign by commenting:
+
+> I have read the CLA Document and I hereby sign the CLA
+
+Organization members are exempt from signing.
 
 The project license is [AGPL-3.0-only](./LICENSE).
