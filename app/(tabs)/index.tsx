@@ -6,7 +6,7 @@ import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
 import React, { startTransition } from "react"
-import { RefreshCw } from "@tamagui/lucide-icons-2"
+import { RefreshCw, MessageSquareText } from "@tamagui/lucide-icons-2"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { IconActionButton } from "../../components/ui/IconActionButton"
 import { useSyncAction } from "../../hooks/use-sync-action"
@@ -215,7 +215,7 @@ export default function DashboardScreen() {
             {t("dashboard.welcome")}
           </Text>
         </YStack>
-        <XStack gap="$control" items="center">
+        <XStack gap={UI_SPACE.control} items="center">
           <IconActionButton
             icon={<RefreshCw size={20} />}
             onPress={handleSync}
@@ -224,16 +224,14 @@ export default function DashboardScreen() {
             spinning={isSyncing}
             accessibilityLabel={t("autoSync.syncNow")}
           />
-          <Button
-            size="$control"
-            theme="accent"
+          <IconActionButton
+            icon={<MessageSquareText size={20} />}
             onPress={handleImportPress}
+            tooltip={t("settings.smsImport.actions.review")}
             disabled={isScanningSmsImports}
-          >
-            {isScanningSmsImports
-              ? t("settings.smsImport.actions.scanning")
-              : t("common.import")}
-          </Button>
+            spinning={isScanningSmsImports}
+            accessibilityLabel={t("settings.smsImport.actions.review")}
+          />
         </XStack>
       </XStack>
 
