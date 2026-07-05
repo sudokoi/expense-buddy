@@ -28,7 +28,7 @@ jobs:
           stale-issue-label: "stale"
 
           # Exempt labels (never stale these)
-          exempt-issue-labels: "bug,confirmed,security,pinned,help-wanted,good-first-issue,needs-triage"
+          exempt-issue-labels: "bug,confirmed,security,pinned,help wanted,good first issue,needs-triage"
 
           # Messages
           stale-issue-message: >
