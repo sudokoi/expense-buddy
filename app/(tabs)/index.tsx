@@ -6,7 +6,7 @@ import { useExpenses, useCategories } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
 import React, { startTransition } from "react"
-import { RefreshCw, MessageSquareText } from "@tamagui/lucide-icons-2"
+import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { IconActionButton } from "../../components/ui/IconActionButton"
 import { useSyncAction } from "../../hooks/use-sync-action"
@@ -225,7 +225,7 @@ export default function DashboardScreen() {
             accessibilityLabel={t("autoSync.syncNow")}
           />
           <IconActionButton
-            icon={<MessageSquareText size={20} />}
+            icon={<Download size={20} />}
             onPress={handleImportPress}
             tooltip={t("settings.smsImport.actions.review")}
             disabled={isScanningSmsImports}
