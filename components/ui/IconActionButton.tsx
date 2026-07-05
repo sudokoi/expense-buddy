@@ -107,8 +107,8 @@ export function IconActionButton({
         <Button
           chromeless
           size="$compact"
-          px={12}
-          py={12}
+          px={UI_SPACE.micro}
+          py={UI_SPACE.micro}
           icon={icon}
           onPress={handlePress}
           onLongPress={handleLongPress}
