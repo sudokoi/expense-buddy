@@ -1,0 +1,44 @@
+name: "Close Stale Issues"
+
+on:
+  schedule:
+    - cron: "30 1 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+  actions: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/stale@v10
+        with:
+          # Issues only — no PR staleness
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+
+          # Issue timing
+          days-before-stale: 30
+          days-before-close: 7
+
+          # Labels
+          stale-issue-label: "stale"
+
+          # Exempt labels (never stale these)
+          exempt-issue-labels: "bug,confirmed,security,pinned,help-wanted,good-first-issue,needs-triage"
+
+          # Messages
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed in 7 days if no further activity occurs.
+            If this is still relevant, please leave a comment or remove the stale label.
+          close-issue-message: >
+            This issue has been closed due to inactivity. Feel free to reopen if still relevant.
+
+          # Behavior
+          remove-stale-when-updated: true
+          operations-per-run: 50
+          close-issue-reason: "not_planned"
