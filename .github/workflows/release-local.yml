@@ -36,7 +36,7 @@ jobs:
       - name: 📦 Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24.x
+          node-version-file: ".node-version"
 
       - name: ☕ Setup Java
         uses: actions/setup-java@v4
@@ -45,7 +45,7 @@ jobs:
           java-version: "17"
 
       - name: 🤖 Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: 📁 Get yarn cache directory
         id: yarn-cache
@@ -78,7 +78,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: 🛠️ Setup EAS CLI
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@v9
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
@@ -265,7 +265,7 @@ jobs:
           merge-multiple: true
 
       - name: 🎉 Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             expense-buddy-${{ steps.version.outputs.version_name }}-internal.apk
