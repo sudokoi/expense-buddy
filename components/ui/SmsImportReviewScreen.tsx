@@ -815,7 +815,7 @@ export function SmsImportReviewScreen({
                               {getLocalizedCategoryLabel(
                                 resolvedSuggestions.get(item.id)?.category ??
                                   item.categorySuggestion ??
-                                  t("categories.other"),
+                                  t("settings.categories.other"),
                                 t
                               )}
                             </Text>
