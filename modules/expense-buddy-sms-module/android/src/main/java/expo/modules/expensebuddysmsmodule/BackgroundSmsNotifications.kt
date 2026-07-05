@@ -128,6 +128,11 @@ object BackgroundSmsNotificationManager {
                 .build()
         }
 
+    fun dismissNotification(context: Context) {
+        NotificationManagerCompat.from(context).cancel(TRANSACTION_IMPORT_NOTIFICATION_ID)
+        LoggerApi.d("SMS_NOTIF", "Notification dismissed")
+    }
+
     private fun hasNotificationPermission(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true

@@ -16,6 +16,7 @@ import {
   rejectReviewItemsAsync,
   dismissReviewItemAsync,
   dismissReviewItemsAsync,
+  dismissNotificationAsync,
 } from "../services/background-sms/android-background-sms-module"
 import ExpenseBuddySmsModule from "../modules/expense-buddy-sms-module"
 
@@ -101,29 +102,35 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
 
   const markItemAccepted = useCallback(async (fingerprint: string) => {
     await approveReviewItemAsync(fingerprint)
+    void dismissNotificationAsync()
   }, [])
 
   const markItemsAccepted = useCallback(
     async (acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>) => {
       await approveReviewItemsAsync(acceptedItems.map((i) => i.fingerprint))
+      void dismissNotificationAsync()
     },
     []
   )
 
   const markItemsRejected = useCallback(async (fingerprints: string[]) => {
     await rejectReviewItemsAsync(fingerprints)
+    void dismissNotificationAsync()
   }, [])
 
   const markItemRejected = useCallback(async (fingerprint: string) => {
     await rejectReviewItemAsync(fingerprint)
+    void dismissNotificationAsync()
   }, [])
 
   const markItemsDismissed = useCallback(async (fingerprints: string[]) => {
     await dismissReviewItemsAsync(fingerprints)
+    void dismissNotificationAsync()
   }, [])
 
   const dismissItem = useCallback(async (fingerprint: string) => {
     await dismissReviewItemAsync(fingerprint)
+    void dismissNotificationAsync()
   }, [])
 
   const clearResolvedItems = useCallback(() => {

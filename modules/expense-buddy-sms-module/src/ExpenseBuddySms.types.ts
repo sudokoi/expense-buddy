@@ -55,4 +55,5 @@ export interface ExpenseBuddySmsNativeModule extends NativeModule {
   approveItemsAsync(fingerprints: string[]): Promise<void>
   rejectItemsAsync(fingerprints: string[]): Promise<void>
   dismissItemsAsync(fingerprints: string[]): Promise<void>
+  dismissNotificationAsync(): Promise<void>
 }

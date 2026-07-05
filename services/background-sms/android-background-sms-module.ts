@@ -175,6 +175,17 @@ export async function dismissReviewItemsAsync(fingerprints: string[]): Promise<v
   }
 }
 
+export async function dismissNotificationAsync(): Promise<void> {
+  const module = getBackgroundSmsModule()
+  if (!module) return
+
+  try {
+    await module.dismissNotificationAsync()
+  } catch (e) {
+    await logAsync("ERROR", "JS_MODULE", `dismissNotificationAsync failed: ${e}`)
+  }
+}
+
 function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
   const statusMap: Record<string, SmsImportReviewItem["status"]> = {
     PENDING: "pending",

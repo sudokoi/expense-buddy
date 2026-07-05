@@ -336,6 +336,11 @@ class ExpenseBuddySmsModule : Module() {
                 }
             }
 
+            AsyncFunction("dismissNotificationAsync") {
+                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                BackgroundSmsNotificationManager.dismissNotification(reactContext)
+            }
+
             OnDestroy {
                 moduleScope.cancel()
             }
