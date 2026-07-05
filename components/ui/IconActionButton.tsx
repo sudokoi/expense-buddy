@@ -9,7 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_RADIUS } from "../../constants/ui-tokens"
 
 interface IconActionButtonProps {
   icon: ComponentProps<typeof Button>["icon"]
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   tooltip: {
     paddingHorizontal: UI_SPACE.control,
     paddingVertical: UI_SPACE.micro,
-    borderRadius: 4,
+    borderRadius: UI_RADIUS.control,
     minWidth: 100,
   },
 })
