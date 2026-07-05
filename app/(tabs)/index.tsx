@@ -219,10 +219,10 @@ export default function DashboardScreen() {
           <IconActionButton
             icon={<RefreshCw size={20} />}
             onPress={handleSync}
-            tooltip={t("autoSync.syncNow")}
+            tooltip={t("settings.autoSync.syncNow")}
             disabled={isSyncing}
             spinning={isSyncing}
-            accessibilityLabel={t("autoSync.syncNow")}
+            accessibilityLabel={t("settings.autoSync.syncNow")}
             tooltipAlign="right"
           />
           <IconActionButton
