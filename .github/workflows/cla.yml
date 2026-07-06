@@ -13,6 +13,7 @@ concurrency:
 permissions:
   pull-requests: write
   contents: write
+  actions: write
 
 jobs:
   cla:
@@ -32,5 +33,5 @@ jobs:
           url-to-cladocument: "https://github.com/sudokoi/expense-buddy/blob/main/CLA.md"
           branch: "cla-signatures"
           allowlist: "dependabot[bot],github-actions[bot],pullfrog[bot]"
-          allow-organization-members: true
+          allow-organization-members: false
           blockchain-storage-flag: false
