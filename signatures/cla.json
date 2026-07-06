@@ -1,3 +1,12 @@
 {
-  "signedContributors": []
+  "signedContributors": [
+    {
+      "id": 22864071,
+      "name": "sudokoi",
+      "pullRequestNo": 91,
+      "comment_id": 4889004106,
+      "created_at": "2026-07-06T04:12:50Z",
+      "repoId": 1115552170
+    }
+  ]
 }
