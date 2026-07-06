@@ -11,3 +11,4 @@ Unified the History and Analytics filters into one shared filter screen with app
 - **Consistent visibility**: The currency control now appears only when more than one currency exists, across all surfaces.
 - **Search and amount range in Analytics**: Search query and amount range filters now apply to Analytics too, not just History.
 - **Dashboard header fix**: The sync and import buttons are aligned to the right of the "Welcome back" header again.
+- **Clear Filters fix**: In History, the "Clear Filters" action (shown when no expenses match) now resets everything to show all expenses; previously it reset to the last-7-days default and could leave the list empty.

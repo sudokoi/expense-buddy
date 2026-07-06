@@ -227,17 +227,11 @@ export default function DashboardScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <XStack width="100%" justify="space-between" items="center" mb={UI_SPACE.gutter}>
-        <YStack flex={1}>
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
-            {t("dashboard.welcome")}
-          </Text>
-        </YStack>
-        <XStack
-          gap={UI_SPACE.control}
-          items="center"
-          style={{ flexShrink: 0, paddingHorizontal: UI_SPACE.micro }}
-        >
+      <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
+        <Text color="$color" opacity={UI_OPACITY.subtle}>
+          {t("dashboard.welcome")}
+        </Text>
+        <XStack gap={UI_SPACE.control} items="center" px={UI_SPACE.micro}>
           <IconActionButton
             icon={<RefreshCw size={20} />}
             onPress={handleSync}

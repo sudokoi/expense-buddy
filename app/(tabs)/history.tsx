@@ -161,7 +161,7 @@ export default function HistoryScreen() {
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
     setSelectedCurrency,
-    reset,
+    applyFilters,
   } = useFilters()
 
   // Initialize filter persistence (loads persisted filters from storage on mount)
@@ -644,9 +644,23 @@ export default function HistoryScreen() {
   }, [router])
 
   const handleResetFilters = useCallback(() => {
-    reset()
+    // Clear every filter to "show everything". Note: the store's reset() defaults
+    // timeWindow to "7d", which would leave the list empty when all expenses are
+    // older than 7 days (so the button appeared to do nothing). Use "all" instead.
+    applyFilters({
+      timeWindow: "all",
+      selectedMonth: null,
+      selectedCategories: [],
+      selectedPaymentMethods: [],
+      selectedPaymentInstruments: [],
+      selectedCurrency: null,
+      searchQuery: "",
+      minAmount: null,
+      maxAmount: null,
+    })
+    void saveFilters().catch((error) => console.warn("Failed to persist filters:", error))
     logAsync("INFO", "UI_ACTION", "RESET_FILTERS")
-  }, [reset])
+  }, [applyFilters, saveFilters])
 
   // Empty state
   if (state.activeExpenses.length === 0) {
