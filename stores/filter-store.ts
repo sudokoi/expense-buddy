@@ -1,6 +1,6 @@
 import { createStore } from "@xstate/store"
 import { useSelector } from "@xstate/store-react"
-import { useEffect, useCallback, useMemo, useRef } from "react"
+import { useEffect, useCallback, useMemo } from "react"
 import {
   AnalyticsFiltersState,
   DEFAULT_ANALYTICS_FILTERS,
@@ -12,9 +12,6 @@ import type {
   PaymentInstrumentSelectionKey,
   PaymentMethodSelectionKey,
 } from "../types/analytics"
-
-// Debounce delay for search queries (ms)
-const SEARCH_DEBOUNCE_MS = 300
 
 interface FilterContext extends AnalyticsFiltersState {
   isHydrated: boolean
@@ -82,17 +79,6 @@ export const filterStore = createStore({
     setSelectedCurrency: (context, event: { currency: string | null }) => ({
       ...context,
       selectedCurrency: event.currency,
-    }),
-
-    setSearchQuery: (context, event: { query: string }) => ({
-      ...context,
-      searchQuery: event.query,
-    }),
-
-    setAmountRange: (context, event: { min: number | null; max: number | null }) => ({
-      ...context,
-      minAmount: event.min,
-      maxAmount: event.max,
     }),
 
     markSaved: (context) => ({
@@ -218,38 +204,8 @@ export function useFilters() {
     filterStore.trigger.setSelectedCurrency({ currency })
   }, [])
 
-  // Debounced search query to reduce re-renders while typing
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const setSearchQuery = useCallback((query: string) => {
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    // Set new timeout
-    searchTimeoutRef.current = setTimeout(() => {
-      filterStore.trigger.setSearchQuery({ query })
-    }, SEARCH_DEBOUNCE_MS)
-  }, [])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const setAmountRange = useCallback((min: number | null, max: number | null) => {
-    filterStore.trigger.setAmountRange({ min, max })
-  }, [])
-
   const reset = useCallback(() => {
     filterStore.trigger.reset()
-  }, [])
-
-  const markSaved = useCallback(() => {
-    filterStore.trigger.markSaved()
   }, [])
 
   return {
@@ -266,10 +222,7 @@ export function useFilters() {
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
     setSelectedCurrency,
-    setSearchQuery,
-    setAmountRange,
     reset,
-    markSaved,
   }
 }
 

@@ -191,6 +191,19 @@ function RootLayoutNav() {
             },
           }}
         />
+
+        <Stack.Screen
+          name="filters"
+          options={{
+            headerStyle: {
+              backgroundColor: theme.background.val,
+            },
+            headerTintColor: theme.color.val,
+            contentStyle: {
+              backgroundColor: theme.background.val,
+            },
+          }}
+        />
       </Stack>
     </ThemeProvider>
   )

@@ -50,7 +50,10 @@ export function useAnalyticsBase(
   selectedCategories: string[],
   selectedPaymentMethods: PaymentMethodSelectionKey[],
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[],
-  selectedCurrency: string | null = null
+  selectedCurrency: string | null = null,
+  searchQuery: string = "",
+  minAmount: number | null = null,
+  maxAmount: number | null = null
 ): AnalyticsBaseResult {
   const { state } = useExpenses()
   const { settings } = useSettings()
@@ -140,9 +143,9 @@ export function useAnalyticsBase(
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
-      searchQuery: "", // Search is not used in analytics base hook
-      minAmount: null,
-      maxAmount: null,
+      searchQuery,
+      minAmount,
+      maxAmount,
     }),
     [
       timeWindow,
@@ -150,6 +153,9 @@ export function useAnalyticsBase(
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
+      searchQuery,
+      minAmount,
+      maxAmount,
     ]
   )
 

@@ -76,7 +76,8 @@
     "reset": "リセット",
     "apply": "適用",
     "back": "戻る",
-    "clearSearch": "検索をクリア"
+    "clearSearch": "検索をクリア",
+    "default": "デフォルト"
   },
   "navigation": {
     "dashboard": "ダッシュボード",

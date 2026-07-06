@@ -28,12 +28,17 @@ import {
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { useTranslation } from "react-i18next"
-import { FilterSheet } from "../../components/history/FilterSheet"
 import type {
   PaymentMethodSelectionKey,
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
+import { groupExpensesByCurrency } from "../../utils/analytics/currency"
+import {
+  getCurrencySymbol,
+  getFallbackCurrency,
+  computeEffectiveCurrency,
+} from "../../utils/currency"
 import {
   formatMonthLabel,
   getAvailableMonths,
@@ -150,53 +155,77 @@ export default function HistoryScreen() {
     filters,
     activeCount,
     hasActive,
-    isHydrated,
     setTimeWindow,
     setSelectedMonth,
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
-    setSearchQuery,
-    setAmountRange,
+    setSelectedCurrency,
     reset,
   } = useFilters()
 
-  // Filter persistence
+  // Initialize filter persistence (loads persisted filters from storage on mount)
   const { save: saveFilters } = useFilterPersistence()
 
   // Local UI state
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [showFilterSheet, setShowFilterSheet] = useState(false)
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
-  // Handle back button to close dialogs instead of navigating
+  // Handle back button to close the delete dialog instead of navigating
   React.useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
       if (deletingExpenseId) {
         setDeletingExpenseId(null)
         return true
       }
-      if (showFilterSheet) {
-        setShowFilterSheet(false)
-        return true
-      }
       return false
     })
 
     return () => backHandler.remove()
-  }, [deletingExpenseId, showFilterSheet])
+  }, [deletingExpenseId])
+
+  // Group by currency so the list can be scoped to a single currency, matching
+  // the dashboard and analytics behavior (mixing currencies isn't meaningful).
+  const { availableCurrencies, expensesByCurrency } = useMemo(() => {
+    const grouped = groupExpensesByCurrency(state.activeExpenses, getFallbackCurrency())
+    return {
+      availableCurrencies: Array.from(grouped.keys()).sort(),
+      expensesByCurrency: grouped,
+    }
+  }, [state.activeExpenses])
+
+  const effectiveCurrency = useMemo(
+    () =>
+      computeEffectiveCurrency(
+        filters.selectedCurrency,
+        availableCurrencies,
+        expensesByCurrency,
+        settings.defaultCurrency
+      ),
+    [
+      filters.selectedCurrency,
+      availableCurrencies,
+      expensesByCurrency,
+      settings.defaultCurrency,
+    ]
+  )
+
+  const currencyExpenses = useMemo(
+    () => expensesByCurrency.get(effectiveCurrency) ?? [],
+    [expensesByCurrency, effectiveCurrency]
+  )
 
   // Apply all filters in single pass for optimal performance
   const filteredExpenses = useMemo(() => {
-    return applyAllFilters(state.activeExpenses, filters, allInstruments)
-  }, [state.activeExpenses, filters, allInstruments])
+    return applyAllFilters(currencyExpenses, filters, allInstruments)
+  }, [currencyExpenses, filters, allInstruments])
 
   const availableMonths = useMemo(() => {
-    return getAvailableMonths(state.activeExpenses)
-  }, [state.activeExpenses])
+    return getAvailableMonths(currencyExpenses)
+  }, [currencyExpenses])
 
   // Group filtered expenses by date
   const groupedExpenses = useMemo(() => {
@@ -370,6 +399,21 @@ export default function HistoryScreen() {
       })
     }
 
+    // Currency chip - only relevant when more than one currency exists.
+    // Clearing reverts to the default currency everywhere (shared store) and
+    // persists so the reset sticks across the app.
+    if (availableCurrencies.length > 1) {
+      chips.push({
+        label: `${t("settings.localization.currency")}: ${effectiveCurrency} (${getCurrencySymbol(effectiveCurrency)})`,
+        onRemove: () => {
+          startTransition(() => setSelectedCurrency(null))
+          void saveFilters().catch((error) =>
+            console.warn("Failed to persist currency selection:", error)
+          )
+        },
+      })
+    }
+
     // Category chip - always show
     if (filters.selectedCategories.length === 0) {
       chips.push({
@@ -459,6 +503,10 @@ export default function HistoryScreen() {
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
+    setSelectedCurrency,
+    saveFilters,
+    availableCurrencies,
+    effectiveCurrency,
     formatListBreakdown,
     paymentMethodLabel,
     formatSelectedPaymentInstrumentLabel,
@@ -590,15 +638,10 @@ export default function HistoryScreen() {
     [insets.bottom]
   )
 
-  // Filter sheet handlers
+  // Open the shared filters screen
   const handleOpenFilterSheet = useCallback(() => {
-    setShowFilterSheet(true)
-  }, [])
-
-  const handleCloseFilterSheet = useCallback(() => {
-    setShowFilterSheet(false)
-    saveFilters()
-  }, [saveFilters])
+    router.push("/filters" as Href)
+  }, [router])
 
   const handleResetFilters = useCallback(() => {
     reset()
@@ -690,25 +733,6 @@ export default function HistoryScreen() {
             {t("common.clearFilters")}
           </Button>
         </YStack>
-
-        {/* Filter Sheet */}
-        <FilterSheet
-          open={showFilterSheet}
-          onClose={handleCloseFilterSheet}
-          filters={filters}
-          isHydrated={isHydrated}
-          allInstruments={allInstruments}
-          categories={categories}
-          availableMonths={availableMonths}
-          onTimeWindowChange={setTimeWindow}
-          onMonthChange={setSelectedMonth}
-          onCategoriesChange={setSelectedCategories}
-          onPaymentMethodsChange={setSelectedPaymentMethods}
-          onPaymentInstrumentsChange={setSelectedPaymentInstruments}
-          onSearchChange={setSearchQuery}
-          onAmountRangeChange={setAmountRange}
-          _onReset={handleResetFilters}
-        />
       </YStack>
     )
   }
@@ -799,25 +823,6 @@ export default function HistoryScreen() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
-
-      {/* Filter Sheet */}
-      <FilterSheet
-        open={showFilterSheet}
-        onClose={handleCloseFilterSheet}
-        filters={filters}
-        isHydrated={isHydrated}
-        allInstruments={allInstruments}
-        categories={categories}
-        availableMonths={availableMonths}
-        onTimeWindowChange={setTimeWindow}
-        onMonthChange={setSelectedMonth}
-        onCategoriesChange={setSelectedCategories}
-        onPaymentMethodsChange={setSelectedPaymentMethods}
-        onPaymentInstrumentsChange={setSelectedPaymentInstruments}
-        onSearchChange={setSearchQuery}
-        onAmountRangeChange={setAmountRange}
-        _onReset={handleResetFilters}
-      />
     </YStack>
   )
 }

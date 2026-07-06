@@ -76,7 +76,8 @@
     "reset": "रीसेट",
     "apply": "लागू करें",
     "back": "वापस",
-    "clearSearch": "खोज साफ़ करें"
+    "clearSearch": "खोज साफ़ करें",
+    "default": "डिफ़ॉल्ट"
   },
   "navigation": {
     "dashboard": "डैशबोर्ड",

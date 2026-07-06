@@ -1,4 +1,5 @@
-import { useState, startTransition, useCallback, memo, useMemo, useEffect } from "react"
+import { startTransition, useCallback, memo, useMemo, useEffect } from "react"
+import { useRouter, type Href } from "expo-router"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 
 import {
@@ -22,7 +23,6 @@ import {
   formatPaymentInstrumentLabel,
   getActivePaymentInstruments,
 } from "../../services/payment-instruments"
-import { AnalyticsFiltersSheet } from "../../components/analytics/AnalyticsFiltersSheet"
 import { Filter } from "@tamagui/lucide-icons-2"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
@@ -110,11 +110,14 @@ export default function AnalyticsScreen() {
     setSelectedCurrency,
   } = useFilters()
 
-  // Initialize filter persistence (loads from storage on mount, provides save function)
-  const { save } = useFilterPersistence()
+  // Initialize filter persistence (loads persisted filters from storage on mount)
+  const { save: saveFilters } = useFilterPersistence()
 
-  // Filters sheet open state
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const router = useRouter()
+
+  const openFilters = useCallback(() => {
+    router.push("/filters" as Href)
+  }, [router])
 
   // Destructure filter values for convenience
   const {
@@ -124,6 +127,9 @@ export default function AnalyticsScreen() {
     selectedPaymentMethods,
     selectedPaymentInstruments,
     selectedCurrency,
+    searchQuery,
+    minAmount,
+    maxAmount,
   } = filters
 
   // Get analytics data from focused hooks
@@ -141,7 +147,10 @@ export default function AnalyticsScreen() {
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
-    selectedCurrency
+    selectedCurrency,
+    searchQuery,
+    minAmount,
+    maxAmount
   )
 
   const {
@@ -195,9 +204,12 @@ export default function AnalyticsScreen() {
       onPress: () => {
         logAsync("INFO", "UI_ACTION", "ANALYTICS_CURRENCY_FILTER")
         startTransition(() => setSelectedCurrency(c))
+        void saveFilters().catch((error) =>
+          console.warn("Failed to persist currency selection:", error)
+        )
       },
     }))
-  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency])
+  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency, saveFilters])
 
   const selectedPaymentMethodForChart: PaymentMethodType | null =
     selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
@@ -389,9 +401,9 @@ export default function AnalyticsScreen() {
       })
     }
 
-    // Show Currency Chip if multiple available or purely informational if simplistic
-    // User requested: "show applied currency in the applied filters"
-    if (availableCurrencies.length > 0) {
+    // Show the applied currency chip only when more than one currency exists,
+    // matching the dashboard, History, and the filter screen.
+    if (availableCurrencies.length > 1) {
       chips.push({
         key: "currency",
         label: `${t("settings.localization.currency")}: ${effectiveCurrency} (${getCurrencySymbol(effectiveCurrency)})`,
@@ -499,39 +511,6 @@ export default function AnalyticsScreen() {
     })
   }, [applyFilters, availableMonths, filters, selectedMonth])
 
-  const handleApplyFilters = useCallback(
-    (next) => {
-      // When payment methods are reset to "All", ensure instruments reset too.
-      const normalizedPaymentInstruments =
-        next.selectedPaymentMethods.length === 0 ? [] : next.selectedPaymentInstruments
-
-      // Apply all filters at once to the store
-      startTransition(() => {
-        applyFilters({
-          timeWindow: next.timeWindow,
-          selectedMonth: next.selectedMonth,
-          selectedCategories: next.selectedCategories,
-          selectedPaymentMethods: next.selectedPaymentMethods,
-          selectedPaymentInstruments: normalizedPaymentInstruments,
-          selectedCurrency: next.selectedCurrency,
-          searchQuery: filters.searchQuery,
-          minAmount: filters.minAmount,
-          maxAmount: filters.maxAmount,
-        })
-      })
-
-      // Persist to storage
-      void save().catch((error) =>
-        console.warn("Failed to persist analytics filters:", error)
-      )
-
-      logAsync("INFO", "UI_ACTION", "APPLY_ANALYTICS_FILTERS")
-
-      setFiltersOpen(false)
-    },
-    [applyFilters, save, filters.searchQuery, filters.minAmount, filters.maxAmount]
-  )
-
   return (
     <ScreenContainer>
       <Header />
@@ -555,7 +534,7 @@ export default function AnalyticsScreen() {
               borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
               disabled={!filtersHydrated}
-              onPress={() => setFiltersOpen(true)}
+              onPress={openFilters}
               rounded={UI_RADIUS.round}
             >
               <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
@@ -567,7 +546,7 @@ export default function AnalyticsScreen() {
           size="$chip"
           px="$control"
           disabled={!filtersHydrated}
-          onPress={() => setFiltersOpen(true)}
+          onPress={openFilters}
           icon={Filter}
           theme={activeCount > 0 ? "accent" : undefined}
         >
@@ -643,22 +622,6 @@ export default function AnalyticsScreen() {
           )}
         </>
       )}
-
-      <AnalyticsFiltersSheet
-        open={filtersOpen}
-        isHydrating={!filtersHydrated}
-        timeWindow={timeWindow}
-        selectedMonth={selectedMonth}
-        availableMonths={availableMonths}
-        selectedCategories={selectedCategories}
-        selectedPaymentMethods={selectedPaymentMethods}
-        paymentInstruments={paymentInstruments}
-        selectedPaymentInstruments={selectedPaymentInstruments}
-        availableCurrencies={availableCurrencies}
-        selectedCurrency={selectedCurrency}
-        effectiveCurrency={effectiveCurrency}
-        onApply={handleApplyFilters}
-      />
     </ScreenContainer>
   )
 }

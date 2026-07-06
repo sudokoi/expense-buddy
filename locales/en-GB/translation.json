@@ -76,7 +76,8 @@
     "reset": "Reset",
     "apply": "Apply",
     "back": "Back",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "default": "Default"
   },
   "navigation": {
     "dashboard": "Dashboard",

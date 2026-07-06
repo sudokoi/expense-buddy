@@ -27,6 +27,7 @@ import {
 } from "../../utils/currency"
 import { groupExpensesByCurrency } from "../../utils/analytics/currency"
 import { useSettings } from "../../stores/hooks"
+import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -83,7 +84,24 @@ export default function DashboardScreen() {
   const { handleSync, isSyncing } = useSyncAction()
   const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
 
-  const [selectedCurrency, setSelectedCurrency] = React.useState<string | null>(null)
+  // Currency selection is shared across the app via the filter store, so choosing
+  // a currency here also scopes History and Analytics (and vice versa).
+  const {
+    filters: { selectedCurrency },
+    setSelectedCurrency,
+  } = useFilters()
+  const { save: saveFilters } = useFilterPersistence()
+
+  const handleCurrencySelect = React.useCallback(
+    (currency: string) => {
+      logAsync("INFO", "UI_ACTION", "DASHBOARD_CURRENCY_FILTER")
+      startTransition(() => setSelectedCurrency(currency))
+      void saveFilters().catch((error) =>
+        console.warn("Failed to persist currency selection:", error)
+      )
+    },
+    [setSelectedCurrency, saveFilters]
+  )
 
   // Singleton pass to group expenses by currency
   const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
@@ -209,8 +227,8 @@ export default function DashboardScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
-        <YStack>
+      <XStack width="100%" justify="space-between" items="center" mb={UI_SPACE.gutter}>
+        <YStack flex={1}>
           <Text color="$color" opacity={UI_OPACITY.subtle}>
             {t("dashboard.welcome")}
           </Text>
@@ -218,7 +236,7 @@ export default function DashboardScreen() {
         <XStack
           gap={UI_SPACE.control}
           items="center"
-          style={{ paddingHorizontal: UI_SPACE.micro }}
+          style={{ flexShrink: 0, paddingHorizontal: UI_SPACE.micro }}
         >
           <IconActionButton
             icon={<RefreshCw size={20} />}
@@ -253,10 +271,7 @@ export default function DashboardScreen() {
               key={c}
               size="$chip"
               px="$control"
-              onPress={() => {
-                logAsync("INFO", "UI_ACTION", "DASHBOARD_CURRENCY_FILTER")
-                startTransition(() => setSelectedCurrency(c))
-              }}
+              onPress={() => handleCurrencySelect(c)}
               theme={effectiveCurrency === c ? "accent" : undefined}
               borderColor="$borderColor"
               borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}
