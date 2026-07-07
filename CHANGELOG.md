@@ -1,5 +1,11 @@
 # expense-buddy
 
+## 3.7.1
+
+### Patch Changes
+
+- [`0eab88e`](https://github.com/sudokoi/expense-buddy/commit/0eab88e20738e6ee7ad68e9e2f5b33dc8d582d4d) Thanks [@sudokoi](https://github.com/sudokoi)! - Remove sms button icon spin and add download icon to add expense screen
+
 ## 3.7.0
 
 ### Minor Changes
