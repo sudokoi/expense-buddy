@@ -229,7 +229,7 @@ export default function FiltersScreen() {
           )}
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.time")}
             </Text>
             <TimeWindowSelector
@@ -239,7 +239,7 @@ export default function FiltersScreen() {
           </YStack>
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.month")}
             </Text>
             <MonthSelector
@@ -251,7 +251,7 @@ export default function FiltersScreen() {
 
           {availableCurrencies.length > 1 && (
             <YStack gap="$control">
-              <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
                 {t("settings.localization.currency")}
               </Text>
               <CurrencyFilter
@@ -264,14 +264,14 @@ export default function FiltersScreen() {
           )}
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.search")}
             </Text>
             <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
           </YStack>
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.amountRange")}
             </Text>
             <AmountRangeFilter
@@ -282,7 +282,7 @@ export default function FiltersScreen() {
           </YStack>
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.category")}
             </Text>
             <CategoryFilter
@@ -292,7 +292,7 @@ export default function FiltersScreen() {
           </YStack>
 
           <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
               {t("history.filterSheet.paymentMethod")}
             </Text>
             <PaymentMethodFilter
@@ -303,7 +303,7 @@ export default function FiltersScreen() {
 
           {showPaymentInstrumentFilter && (
             <YStack gap="$control">
-              <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
                 {t("history.filterSheet.paymentInstrument")}
               </Text>
               <PaymentInstrumentFilter

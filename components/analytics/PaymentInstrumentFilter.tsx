@@ -25,9 +25,6 @@ const styles = {
   },
   contentContainer: {
     paddingHorizontal: UI_SPACE.micro,
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 } as const
 

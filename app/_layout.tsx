@@ -195,6 +195,7 @@ function RootLayoutNav() {
         <Stack.Screen
           name="filters"
           options={{
+            presentation: "modal",
             headerStyle: {
               backgroundColor: theme.background.val,
             },
