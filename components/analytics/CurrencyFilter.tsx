@@ -1,7 +1,9 @@
+import { memo } from "react"
 import { XStack, Button } from "tamagui"
+import { ScrollView } from "react-native"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -11,7 +13,16 @@ interface CurrencyFilterProps {
   onChange: (currency: string | null) => void
 }
 
-export function CurrencyFilter({
+const styles = {
+  scrollView: {
+    marginBottom: UI_SPACE.gutter,
+  },
+  contentContainer: {
+    paddingHorizontal: UI_SPACE.micro,
+  },
+} as const
+
+export const CurrencyFilter = memo(function CurrencyFilter({
   availableCurrencies,
   selectedCurrency,
   defaultCurrency,
@@ -21,39 +32,48 @@ export function CurrencyFilter({
 
   if (availableCurrencies.length <= 1) return null
 
-  // No explicit selection means "auto / default" (resolved to the default currency).
   const isDefaultSelected = !selectedCurrency
 
   return (
-    <XStack flexWrap="wrap" gap="$control">
-      <Button
-        size="$compact"
-        px="$section"
-        theme={isDefaultSelected ? "accent" : undefined}
-        onPress={() => onChange(null)}
-        borderWidth={UI_BORDER_WIDTH.thin}
-        borderColor="$borderColor"
-      >
-        {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
-      </Button>
+    <ScrollView
+      horizontal
+      nestedScrollEnabled
+      showsHorizontalScrollIndicator={false}
+      style={styles.scrollView}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <XStack gap="$control">
+        <Button
+          size="$chip"
+          px="$control"
+          theme={isDefaultSelected ? "accent" : undefined}
+          onPress={() => onChange(null)}
+          borderColor="$borderColor"
+          borderWidth={!isDefaultSelected ? UI_BORDER_WIDTH.thin : 0}
+        >
+          {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
+        </Button>
 
-      {availableCurrencies.map((currency) => {
-        const isSelected = selectedCurrency === currency
+        {availableCurrencies.map((currency) => {
+          const isSelected = selectedCurrency === currency
 
-        return (
-          <Button
-            key={currency}
-            size="$compact"
-            px="$section"
-            theme={isSelected ? "accent" : undefined}
-            onPress={() => onChange(currency)}
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor="$borderColor"
-          >
-            {currency} ({getCurrencySymbol(currency)})
-          </Button>
-        )
-      })}
-    </XStack>
+          return (
+            <Button
+              key={currency}
+              size="$chip"
+              px="$control"
+              theme={isSelected ? "accent" : undefined}
+              onPress={() => onChange(currency)}
+              borderColor="$borderColor"
+              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+            >
+              {currency} ({getCurrencySymbol(currency)})
+            </Button>
+          )
+        })}
+      </XStack>
+    </ScrollView>
   )
-}
+})
+
+export type { CurrencyFilterProps }
