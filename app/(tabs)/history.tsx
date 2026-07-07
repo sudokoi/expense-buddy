@@ -46,7 +46,6 @@ import {
   UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
-  UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
@@ -684,13 +683,23 @@ export default function HistoryScreen() {
   if (filteredExpenses.length === 0 && hasActive) {
     return (
       <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
-        {/* Filter Button */}
+        {/* Filter row: chips + filter button inline */}
         <XStack
-          flexDirection="row"
-          items="center"
-          gap={UI_SPACE.control}
           mb={UI_SPACE.section}
+          gap="$control"
+          style={{ alignItems: "center" }}
         >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: UI_SPACE.control }}
+            style={{ flex: 1 }}
+          >
+            {filterChips.map((chip, index) => (
+              <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+            ))}
+          </ScrollView>
+
           <Button
             size="$chip"
             px="$control"
@@ -698,29 +707,11 @@ export default function HistoryScreen() {
             onPress={handleOpenFilterSheet}
             theme={activeCount > 0 ? "accent" : undefined}
           >
-            {t("common.filters")}
-            {activeCount > 0 && (
-              <Text
-                fontSize="$caption"
-                fontWeight={UI_FONT_WEIGHT.bold}
-                style={{ marginLeft: UI_SPACE.micro }}
-              >
-                ({activeCount})
-              </Text>
-            )}
+            {activeCount > 0
+              ? `${t("common.filters")} (${activeCount})`
+              : t("common.filters")}
           </Button>
         </XStack>
-
-        {/* Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: UI_SPACE.control }}
-        >
-          {filterChips.map((chip, index) => (
-            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
-          ))}
-        </ScrollView>
 
         <YStack flex={1} items="center" justify="center" p={UI_SPACE.gutter}>
           <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
@@ -747,13 +738,23 @@ export default function HistoryScreen() {
 
   return (
     <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
-      {/* Filter Button */}
+      {/* Filter row: chips + filter button inline */}
       <XStack
-        flexDirection="row"
-        items="center"
-        gap={UI_SPACE.control}
         mb={UI_SPACE.section}
+        gap="$control"
+        style={{ alignItems: "center" }}
       >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: UI_SPACE.control }}
+          style={{ flex: 1 }}
+        >
+          {filterChips.map((chip, index) => (
+            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+          ))}
+        </ScrollView>
+
         <Button
           size="$chip"
           px="$control"
@@ -761,30 +762,11 @@ export default function HistoryScreen() {
           onPress={handleOpenFilterSheet}
           theme={activeCount > 0 ? "accent" : undefined}
         >
-          {t("common.filters")}
-          {activeCount > 0 && (
-            <Text
-              fontSize="$caption"
-              fontWeight={UI_FONT_WEIGHT.bold}
-              style={{ marginLeft: UI_SPACE.micro }}
-            >
-              ({activeCount})
-            </Text>
-          )}
+          {activeCount > 0
+            ? `${t("common.filters")} (${activeCount})`
+            : t("common.filters")}
         </Button>
       </XStack>
-
-      {/* Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: UI_SPACE.control }}
-        style={{ marginBottom: UI_SPACE.section, flexGrow: 0 }}
-      >
-        {filterChips.map((chip, index) => (
-          <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
-        ))}
-      </ScrollView>
 
       {/* List - FlashList for optimal performance with large datasets */}
       <View style={{ flex: 1, opacity: isFilterStale ? 0.6 : 1 }}>
