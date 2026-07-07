@@ -2,7 +2,7 @@ import { format, subDays } from "date-fns"
 import { getLocalDayKey, formatDate } from "../../utils/date"
 import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "tamagui"
 import { BarChart } from "react-native-gifted-charts"
-import { useExpenses, useCategories } from "../../stores/hooks"
+import { useCategories, useDerivedExpenseData } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
 import React, { startTransition } from "react"
@@ -19,14 +19,7 @@ import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
-import {
-  formatCurrency,
-  getCurrencySymbol,
-  getFallbackCurrency,
-  computeEffectiveCurrency,
-} from "../../utils/currency"
-import { groupExpensesByCurrency } from "../../utils/analytics/currency"
-import { useSettings } from "../../stores/hooks"
+import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import {
   UI_RADIUS,
@@ -73,9 +66,7 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
 })
 
 export default function DashboardScreen() {
-  const { state } = useExpenses()
   const { categories, getCategoryByLabel } = useCategories()
-  const { settings } = useSettings()
   // Keep theme only for BarChart which requires raw color values
   const theme = useTheme()
   const router = useRouter()
@@ -86,11 +77,12 @@ export default function DashboardScreen() {
 
   // Currency selection is shared across the app via the filter store, so choosing
   // a currency here also scopes History and Analytics (and vice versa).
-  const {
-    filters: { selectedCurrency },
-    setSelectedCurrency,
-  } = useFilters()
+  const { setSelectedCurrency } = useFilters()
   const { save: saveFilters } = useFilterPersistence()
+
+  // Pre-computed derived data (shared across all tabs)
+  const { availableCurrencies, currencyExpenses, effectiveCurrency } =
+    useDerivedExpenseData()
 
   const handleCurrencySelect = React.useCallback(
     (currency: string) => {
@@ -102,32 +94,6 @@ export default function DashboardScreen() {
     },
     [setSelectedCurrency, saveFilters]
   )
-
-  // Singleton pass to group expenses by currency
-  const { availableCurrencies, expensesByCurrency } = React.useMemo(() => {
-    const grouped = groupExpensesByCurrency(state.activeExpenses, getFallbackCurrency())
-    const available = Array.from(grouped.keys()).sort()
-    return { availableCurrencies: available, expensesByCurrency: grouped }
-  }, [state.activeExpenses])
-
-  // Determine effective currency
-  const effectiveCurrency = React.useMemo(() => {
-    return computeEffectiveCurrency(
-      selectedCurrency,
-      availableCurrencies,
-      expensesByCurrency,
-      settings.defaultCurrency
-    )
-  }, [
-    selectedCurrency,
-    availableCurrencies,
-    expensesByCurrency,
-    settings.defaultCurrency,
-  ])
-
-  const currencyExpenses = React.useMemo(() => {
-    return expensesByCurrency.get(effectiveCurrency) || []
-  }, [expensesByCurrency, effectiveCurrency])
 
   // Use currencyExpenses for calculations
   const totalExpenses = React.useMemo(

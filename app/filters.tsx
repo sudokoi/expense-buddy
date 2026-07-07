@@ -26,10 +26,7 @@ import { PaymentInstrumentFilter } from "../components/analytics/PaymentInstrume
 import { CurrencyFilter } from "../components/analytics/CurrencyFilter"
 
 import { useFilters, useFilterPersistence } from "../stores/filter-store"
-import { useExpenses, useSettings } from "../stores/hooks"
-import { getAvailableMonths } from "../utils/analytics/time"
-import { groupExpensesByCurrency } from "../utils/analytics/currency"
-import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
+import { useSettings, useDerivedExpenseData } from "../stores/hooks"
 import {
   getActivePaymentInstruments,
   PAYMENT_INSTRUMENT_METHODS,
@@ -52,37 +49,22 @@ export default function FiltersScreen() {
 
   const { filters, isHydrated, applyFilters } = useFilters()
   const { save: saveFilters } = useFilterPersistence()
-  const { state } = useExpenses()
   const { settings } = useSettings()
+  const {
+    availableMonths,
+    availableCurrencies,
+    defaultCurrency,
+    effectiveSelectedMonth,
+  } = useDerivedExpenseData()
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
-  const availableMonths = useMemo(
-    () => getAvailableMonths(state.activeExpenses),
-    [state.activeExpenses]
-  )
-
-  // Currency is shared across tabs, so it lives in the common filter screen too.
-  // `defaultCurrency` is the currency used when nothing is explicitly selected,
-  // shown on the Default chip so the resolved currency is always visible.
-  const { availableCurrencies, defaultCurrency } = useMemo(() => {
-    const grouped = groupExpensesByCurrency(state.activeExpenses, getFallbackCurrency())
-    const available = Array.from(grouped.keys()).sort()
-    return {
-      availableCurrencies: available,
-      defaultCurrency: computeEffectiveCurrency(
-        null,
-        available,
-        grouped,
-        settings.defaultCurrency
-      ),
-    }
-  }, [state.activeExpenses, settings.defaultCurrency])
-
-  // Local draft state, seeded from the current store values.
+  // Local draft state, seeded from the resolved (effective) values.
+  // effectiveSelectedMonth is used instead of filters.selectedMonth because
+  // the stored month may be stale (not available for the current currency).
   const [draftTimeWindow, setDraftTimeWindow] = useState<TimeWindow>(filters.timeWindow)
   const [draftSelectedMonth, setDraftSelectedMonth] = useState<string | null>(
-    filters.selectedMonth
+    effectiveSelectedMonth
   )
   const [draftCategories, setDraftCategories] = useState<string[]>(
     filters.selectedCategories

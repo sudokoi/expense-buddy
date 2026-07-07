@@ -1,4 +1,10 @@
-import React, { startTransition, useCallback, useMemo, useState } from "react"
+import React, {
+  startTransition,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+} from "react"
 import { YStack, Text, XStack, Button, H6, Dialog, ScrollView } from "tamagui"
 import { Filter, X } from "@tamagui/lucide-icons-2"
 import { BackHandler, View } from "react-native"
@@ -10,6 +16,7 @@ import {
   useNotifications,
   useSettings,
   useCategories,
+  useDerivedExpenseData,
 } from "../../stores/hooks"
 import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
@@ -33,17 +40,8 @@ import type {
   PaymentInstrumentSelectionKey,
 } from "../../types/analytics"
 import { applyAllFilters } from "../../utils/analytics/filters"
-import { groupExpensesByCurrency } from "../../utils/analytics/currency"
-import {
-  getCurrencySymbol,
-  getFallbackCurrency,
-  computeEffectiveCurrency,
-} from "../../utils/currency"
-import {
-  formatMonthLabel,
-  getAvailableMonths,
-  isTimeWindowCovered,
-} from "../../utils/analytics/time"
+import { getCurrencySymbol } from "../../utils/currency"
+import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -150,7 +148,7 @@ export default function HistoryScreen() {
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
 
-  // Filter state from store
+  // Filter state from shared store (single source of truth for all tabs)
   const {
     filters,
     activeCount,
@@ -174,6 +172,23 @@ export default function HistoryScreen() {
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
 
+  // Pre-computed derived data (shared across tabs — single-pass derivation,
+  // avoids redundant expense iterations on each screen mount)
+  const {
+    availableCurrencies,
+    availableMonths,
+    currencyExpenses,
+    effectiveCurrency,
+    effectiveSelectedMonth,
+  } = useDerivedExpenseData()
+
+  // Defer the filters object so the expensive computation chain (filter → sort →
+  // group → flatten) runs as a low-priority background render. The filter chips
+  // and controls use `filters` directly (instant updates), while the list uses
+  // `deferredFilters` (may lag one frame behind but keeps the UI responsive).
+  const deferredFilters = useDeferredValue(filters)
+  const isFilterStale = deferredFilters !== filters
+
   // Handle back button to close the delete dialog instead of navigating
   React.useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -187,45 +202,22 @@ export default function HistoryScreen() {
     return () => backHandler.remove()
   }, [deletingExpenseId])
 
-  // Group by currency so the list can be scoped to a single currency, matching
-  // the dashboard and analytics behavior (mixing currencies isn't meaningful).
-  const { availableCurrencies, expensesByCurrency } = useMemo(() => {
-    const grouped = groupExpensesByCurrency(state.activeExpenses, getFallbackCurrency())
-    return {
-      availableCurrencies: Array.from(grouped.keys()).sort(),
-      expensesByCurrency: grouped,
-    }
-  }, [state.activeExpenses])
+  // === Expensive computation chain (uses deferredFilters for concurrent rendering) ===
 
-  const effectiveCurrency = useMemo(
-    () =>
-      computeEffectiveCurrency(
-        filters.selectedCurrency,
-        availableCurrencies,
-        expensesByCurrency,
-        settings.defaultCurrency
-      ),
-    [
-      filters.selectedCurrency,
-      availableCurrencies,
-      expensesByCurrency,
-      settings.defaultCurrency,
-    ]
-  )
-
-  const currencyExpenses = useMemo(
-    () => expensesByCurrency.get(effectiveCurrency) ?? [],
-    [expensesByCurrency, effectiveCurrency]
-  )
-
-  // Apply all filters in single pass for optimal performance
+  // Apply all filters in single pass. Month resolution is done inline using the
+  // same deferred timestamp as other filter values — this avoids temporal
+  // inconsistency between month and other filter fields.
   const filteredExpenses = useMemo(() => {
-    return applyAllFilters(currencyExpenses, filters, allInstruments)
-  }, [currencyExpenses, filters, allInstruments])
-
-  const availableMonths = useMemo(() => {
-    return getAvailableMonths(currencyExpenses)
-  }, [currencyExpenses])
+    const resolvedFilters = {
+      ...deferredFilters,
+      selectedMonth:
+        deferredFilters.selectedMonth &&
+        availableMonths.includes(deferredFilters.selectedMonth)
+          ? deferredFilters.selectedMonth
+          : null,
+    }
+    return applyAllFilters(currencyExpenses, resolvedFilters, allInstruments)
+  }, [currencyExpenses, deferredFilters, allInstruments, availableMonths])
 
   // Group filtered expenses by date
   const groupedExpenses = useMemo(() => {
@@ -252,16 +244,16 @@ export default function HistoryScreen() {
   }, [filteredExpenses])
 
   const shouldShowLoadMore = useMemo(() => {
-    if (!hasMore || !syncConfig || filters.selectedMonth) return false
+    if (!hasMore || !syncConfig || deferredFilters.selectedMonth) return false
 
-    return !isTimeWindowCovered(state.expenses, filters.timeWindow)
-  }, [filters.selectedMonth, filters.timeWindow, hasMore, syncConfig, state.expenses])
-
-  React.useEffect(() => {
-    if (!filters.selectedMonth) return
-    if (availableMonths.includes(filters.selectedMonth)) return
-    setSelectedMonth(null)
-  }, [availableMonths, filters.selectedMonth, setSelectedMonth])
+    return !isTimeWindowCovered(state.expenses, deferredFilters.timeWindow)
+  }, [
+    deferredFilters.selectedMonth,
+    deferredFilters.timeWindow,
+    hasMore,
+    syncConfig,
+    state.expenses,
+  ])
 
   // Flatten for FlashList
   const flattenedExpenses = useMemo(() => {
@@ -279,6 +271,8 @@ export default function HistoryScreen() {
 
     return items
   }, [groupedExpenses])
+
+  // === End expensive chain ===
 
   const categoryByLabel = useMemo(() => {
     const map = new Map<string, Category>()
@@ -378,15 +372,17 @@ export default function HistoryScreen() {
     return false
   }, [allInstruments, filters.selectedPaymentMethods])
 
-  // Generate filter chips (matching analytics tab style)
+  // Generate filter chips (uses `filters` directly for instant chip label updates,
+  // but uses effectiveSelectedMonth to avoid showing a stale month chip when the
+  // stored month doesn't exist for the current currency)
   const filterChips = useMemo(() => {
     const chips: Array<{ label: string; onRemove: () => void }> = []
 
     // Time chip - always show
-    if (filters.selectedMonth) {
+    if (effectiveSelectedMonth) {
       chips.push({
         label: t("analytics.filters.month", {
-          month: formatMonthLabel(filters.selectedMonth),
+          month: formatMonthLabel(effectiveSelectedMonth),
         }),
         onRemove: () => startTransition(() => setSelectedMonth(null)),
       })
@@ -497,6 +493,7 @@ export default function HistoryScreen() {
     return chips
   }, [
     filters,
+    effectiveSelectedMonth,
     t,
     setTimeWindow,
     setSelectedMonth,
@@ -607,8 +604,6 @@ export default function HistoryScreen() {
   // Override item layout for different item types (headers are smaller than expenses)
   const overrideItemLayout = useCallback(
     (layout: { span?: number; size?: number }, item: { type: "header" | "expense" }) => {
-      // Headers are approximately 32px (H6 with paddingVertical: 8)
-      // Expense cards are approximately 90px (card with content and margin)
       layout.size = item.type === "header" ? 32 : 90
     },
     []
@@ -644,9 +639,8 @@ export default function HistoryScreen() {
   }, [router])
 
   const handleResetFilters = useCallback(() => {
-    // Clear every filter to "show everything". Note: the store's reset() defaults
-    // timeWindow to "7d", which would leave the list empty when all expenses are
-    // older than 7 days (so the button appeared to do nothing). Use "all" instead.
+    // Clear every filter to "show everything". Uses "all" for timeWindow because
+    // the store's reset() defaults to "7d" which hides older expenses.
     applyFilters({
       timeWindow: "all",
       selectedMonth: null,
@@ -793,7 +787,7 @@ export default function HistoryScreen() {
       </ScrollView>
 
       {/* List - FlashList for optimal performance with large datasets */}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, opacity: isFilterStale ? 0.6 : 1 }}>
         <FlashList
           data={flattenedExpenses}
           renderItem={renderFlashListItem}
