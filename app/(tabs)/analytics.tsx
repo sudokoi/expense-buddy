@@ -504,7 +504,11 @@ export default function AnalyticsScreen() {
       <XStack
         mb="$gutter"
         gap="$control"
-        style={{ alignItems: "center", justifyContent: "space-between" }}
+        style={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          overflow: "visible",
+        }}
       >
         <ScrollView
           horizontal
