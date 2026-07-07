@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react"
-import { useExpenses, useSettings } from "../stores/hooks"
+import { useSettings, useDerivedExpenseData } from "../stores/hooks"
 import { Expense } from "../types/expense"
 import { isWithinInterval, parseISO } from "date-fns"
 import type { PaymentInstrument } from "../types/payment-instrument"
@@ -15,14 +15,8 @@ import {
   filterExpensesByPaymentMethods,
   filterExpensesByPaymentInstruments,
 } from "../utils/analytics/filters"
-import { groupExpensesByCurrency } from "../utils/analytics/currency"
-import {
-  filterExpensesByTimeWindow,
-  getDateRangeForMonth,
-  getAvailableMonths,
-} from "../utils/analytics/time"
+import { filterExpensesByTimeWindow, getDateRangeForMonth } from "../utils/analytics/time"
 import { applyAllFilters } from "../utils/analytics/filters"
-import { getFallbackCurrency, computeEffectiveCurrency } from "../utils/currency"
 
 export interface AnalyticsBaseResult {
   filteredExpenses: Expense[]
@@ -32,6 +26,8 @@ export interface AnalyticsBaseResult {
   isLoading: boolean
   paymentInstruments: PaymentInstrument[]
   availableMonths: string[]
+  /** The effective selectedMonth — null if stored month doesn't exist for current currency */
+  effectiveSelectedMonth: string | null
   filterByTimeWindow: (expenses: Expense[]) => Expense[]
   filterByCategories: (expenses: Expense[]) => Expense[]
   filterByPaymentMethods: (expenses: Expense[]) => Expense[]
@@ -40,61 +36,41 @@ export interface AnalyticsBaseResult {
 
 /**
  * Base analytics hook that handles:
- * - Currency grouping and selection
+ * - Currency grouping and selection (via shared useDerivedExpenseData)
  * - Filtering pipeline (Time → Categories → Payment Methods → Payment Instruments)
  * - Date range calculation
+ *
+ * Currency and month resolution are handled internally via useDerivedExpenseData
+ * which reads from the shared filter store. No need to pass them as parameters.
  */
 export function useAnalyticsBase(
   timeWindow: TimeWindow,
-  selectedMonth: string | null,
   selectedCategories: string[],
   selectedPaymentMethods: PaymentMethodSelectionKey[],
   selectedPaymentInstruments: PaymentInstrumentSelectionKey[],
-  selectedCurrency: string | null = null,
   searchQuery: string = "",
   minAmount: number | null = null,
   maxAmount: number | null = null
 ): AnalyticsBaseResult {
-  const { state } = useExpenses()
   const { settings } = useSettings()
-  const { activeExpenses, isLoading } = state
+  const {
+    availableCurrencies,
+    availableMonths,
+    currencyExpenses,
+    effectiveCurrency,
+    effectiveSelectedMonth,
+    isLoading,
+  } = useDerivedExpenseData()
 
   const paymentInstruments = useMemo(() => {
     return (settings.paymentInstruments ?? []) as PaymentInstrument[]
   }, [settings.paymentInstruments])
 
-  // 1. Group ALL active expenses by currency to determine available currencies
-  const { availableCurrencies, expensesByCurrency } = useMemo(() => {
-    const grouped = groupExpensesByCurrency(activeExpenses, getFallbackCurrency())
-    const available = Array.from(grouped.keys()).sort()
-    return { availableCurrencies: available, expensesByCurrency: grouped }
-  }, [activeExpenses])
-
-  // 2. Determine effective currency
-  const effectiveCurrency = useMemo(() => {
-    return computeEffectiveCurrency(
-      selectedCurrency,
-      availableCurrencies,
-      expensesByCurrency,
-      settings.defaultCurrency
-    )
-  }, [
-    selectedCurrency,
-    availableCurrencies,
-    expensesByCurrency,
-    settings.defaultCurrency,
-  ])
-
-  // 3. Get expenses for the effective currency (ALL TIME)
-  const currencyExpenses = useMemo(() => {
-    return expensesByCurrency.get(effectiveCurrency) || []
-  }, [expensesByCurrency, effectiveCurrency])
-
   // Memoized filter callbacks
   const filterByTimeWindow = useCallback(
     (expenses: Expense[]): Expense[] => {
-      if (selectedMonth) {
-        const { start, end } = getDateRangeForMonth(selectedMonth)
+      if (effectiveSelectedMonth) {
+        const { start, end } = getDateRangeForMonth(effectiveSelectedMonth)
         return expenses.filter((expense) => {
           try {
             const expenseDate = parseISO(expense.date)
@@ -107,7 +83,7 @@ export function useAnalyticsBase(
 
       return filterExpensesByTimeWindow(expenses, timeWindow)
     },
-    [selectedMonth, timeWindow]
+    [effectiveSelectedMonth, timeWindow]
   )
 
   const filterByCategories = useCallback(
@@ -135,11 +111,13 @@ export function useAnalyticsBase(
     [selectedPaymentInstruments, paymentInstruments]
   )
 
-  // 4. Apply all filters in single pass for optimal performance
+  // Apply all filters in single pass for optimal performance.
+  // Uses effectiveSelectedMonth (null when the stored month doesn't exist for
+  // the current currency) ensuring filtering is always consistent.
   const filterState = useMemo(
     () => ({
       timeWindow,
-      selectedMonth,
+      selectedMonth: effectiveSelectedMonth,
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
@@ -149,7 +127,7 @@ export function useAnalyticsBase(
     }),
     [
       timeWindow,
-      selectedMonth,
+      effectiveSelectedMonth,
       selectedCategories,
       selectedPaymentMethods,
       selectedPaymentInstruments,
@@ -163,14 +141,10 @@ export function useAnalyticsBase(
     return applyAllFilters(currencyExpenses, filterState, paymentInstruments)
   }, [currencyExpenses, filterState, paymentInstruments])
 
-  const availableMonths = useMemo(() => {
-    return getAvailableMonths(currencyExpenses)
-  }, [currencyExpenses])
-
   // Compute date range
   const dateRange = useMemo(() => {
-    return getDateRangeForFilters(timeWindow, selectedMonth, filteredExpenses)
-  }, [timeWindow, selectedMonth, filteredExpenses])
+    return getDateRangeForFilters(timeWindow, effectiveSelectedMonth, filteredExpenses)
+  }, [timeWindow, effectiveSelectedMonth, filteredExpenses])
 
   return {
     filteredExpenses,
@@ -180,6 +154,7 @@ export function useAnalyticsBase(
     isLoading,
     paymentInstruments,
     availableMonths,
+    effectiveSelectedMonth,
     filterByTimeWindow,
     filterByCategories,
     filterByPaymentMethods,

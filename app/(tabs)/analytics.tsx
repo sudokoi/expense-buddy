@@ -1,4 +1,4 @@
-import { startTransition, useCallback, memo, useMemo, useEffect } from "react"
+import { startTransition, useCallback, memo, useMemo } from "react"
 import { useRouter, type Href } from "expo-router"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 
@@ -103,7 +103,6 @@ export default function AnalyticsScreen() {
     filters,
     activeCount,
     isHydrated: filtersHydrated,
-    applyFilters,
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
@@ -122,11 +121,9 @@ export default function AnalyticsScreen() {
   // Destructure filter values for convenience
   const {
     timeWindow,
-    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
-    selectedCurrency,
     searchQuery,
     minAmount,
     maxAmount,
@@ -140,14 +137,12 @@ export default function AnalyticsScreen() {
     dateRange,
     isLoading,
     paymentInstruments,
-    availableMonths,
+    effectiveSelectedMonth,
   } = useAnalyticsBase(
     timeWindow,
-    selectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     selectedPaymentInstruments,
-    selectedCurrency,
     searchQuery,
     minAmount,
     maxAmount
@@ -162,7 +157,7 @@ export default function AnalyticsScreen() {
 
   const { statistics } = useAnalyticsStatistics(
     filteredExpenses,
-    selectedMonth ? "all" : timeWindow,
+    effectiveSelectedMonth ? "all" : timeWindow,
     dateRange
   )
 
@@ -385,11 +380,11 @@ export default function AnalyticsScreen() {
   const appliedChips = useMemo(() => {
     const chips: Array<{ key: string; label: string }> = []
 
-    if (selectedMonth) {
+    if (effectiveSelectedMonth) {
       chips.push({
         key: "month",
         label: t("analytics.filters.month", {
-          month: formatMonthLabel(selectedMonth),
+          month: formatMonthLabel(effectiveSelectedMonth),
         }),
       })
     } else {
@@ -487,7 +482,7 @@ export default function AnalyticsScreen() {
   }, [
     t,
     timeWindow,
-    selectedMonth,
+    effectiveSelectedMonth,
     selectedCategories,
     selectedPaymentMethods,
     showPaymentInstrumentFilter,
@@ -501,15 +496,6 @@ export default function AnalyticsScreen() {
     availableCurrencies,
     effectiveCurrency,
   ])
-
-  useEffect(() => {
-    if (!selectedMonth) return
-    if (availableMonths.includes(selectedMonth)) return
-    applyFilters({
-      ...filters,
-      selectedMonth: null,
-    })
-  }, [applyFilters, availableMonths, filters, selectedMonth])
 
   return (
     <ScreenContainer>

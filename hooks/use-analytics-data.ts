@@ -27,25 +27,21 @@ export interface AnalyticsData
  * @param selectedCategories - Categories to filter by (empty array = all categories)
  * @param selectedPaymentMethods - Payment methods to filter by
  * @param selectedPaymentInstruments - Payment instruments to filter by
- * @param selectedCurrency - Selected currency code (null = auto)
  * @returns Analytics data including filtered expenses, chart data, and statistics
  */
 export function useAnalyticsData(
   timeWindow: TimeWindow,
   selectedCategories: string[],
   selectedPaymentMethods: PaymentMethodSelectionKey[],
-  selectedPaymentInstruments: PaymentInstrumentSelectionKey[],
-  selectedCurrency: string | null = null
+  selectedPaymentInstruments: PaymentInstrumentSelectionKey[]
 ): AnalyticsData {
   const { t } = useTranslation()
 
   const base = useAnalyticsBase(
     timeWindow,
-    null,
     selectedCategories,
     selectedPaymentMethods,
-    selectedPaymentInstruments,
-    selectedCurrency
+    selectedPaymentInstruments
   )
 
   const charts = useAnalyticsCharts(

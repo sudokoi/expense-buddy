@@ -49,7 +49,7 @@ export interface AnalyticsFiltersState {
 }
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFiltersState = {
-  timeWindow: "7d",
+  timeWindow: "all",
   selectedMonth: null,
   selectedCategories: [],
   selectedPaymentMethods: [],

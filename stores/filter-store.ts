@@ -231,9 +231,14 @@ export function useFilters() {
 // ============================================================================
 
 export function useFilterPersistence() {
-  // Load on mount
+  // Load on mount — only hydrate once to avoid overwriting in-memory state
+  // with stale storage values when multiple consumers mount (e.g., Filters screen
+  // opening while History tab is already mounted and hydrated).
   useEffect(() => {
+    if (filterStore.getSnapshot().context.isHydrated) return
     loadAnalyticsFilters().then((stored) => {
+      // Double-check after async: another consumer may have hydrated while we awaited
+      if (filterStore.getSnapshot().context.isHydrated) return
       filterStore.trigger.hydrate({ filters: stored })
     })
   }, [])
