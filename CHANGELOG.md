@@ -1,5 +1,17 @@
 # expense-buddy
 
+## 3.8.0
+
+### Minor Changes
+
+- [#94](https://github.com/sudokoi/expense-buddy/pull/94) [`e9f6e0e`](https://github.com/sudokoi/expense-buddy/commit/e9f6e0e69feb3839e83c9473be627cc57dbcd3f1) Thanks [@sudokoi](https://github.com/sudokoi)! - Optimize filter UI performance and fix stale-state bugs
+  - Shared `useDerivedExpenseData` hook: single-pass currency grouping, month extraction, and currency resolution across all tabs
+  - `useDeferredValue` in History tab keeps UI responsive during heavy filter re-renders
+  - Remove collapsible sections from Filters screen (flat layout, faster mount)
+  - Fix empty list after filter reset (default timeWindow changed to "all")
+  - Fix stale month chip when switching currencies (derived `effectiveSelectedMonth`)
+  - Remove dead `getAvailableMonths` utility (scoped derivation in hook)
+
 ## 3.7.1
 
 ### Patch Changes
