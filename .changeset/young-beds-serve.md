@@ -2,18 +2,11 @@
 "expense-buddy": minor
 ---
 
-Extract shared expense derivations into `useDerivedExpenseData` hook
+Optimize filter UI performance and fix stale-state bugs
 
-- Consolidates currency grouping, available months, and effective currency
-  resolution into a single-pass derivation shared across all tabs
-- Removes redundant expense iterations (Dashboard, History, Filters,
-  Analytics each previously computed these independently)
-- Replaces imperative `useEffect`-based month validation with a pure
-  derived value (`effectiveSelectedMonth`)
-- Adds `useDeferredValue` in History tab for responsive UI during
-  expensive filter/sort/group computations
-- Fixes filter persistence race condition where multiple consumers
-  mounting simultaneously caused stale storage to overwrite in-memory state
-- Changes default timeWindow from "7d" to "all" for consistent reset behavior
-- Removes `selectedCurrency` and `selectedMonth` parameters from
-  `useAnalyticsBase` (consumed internally from shared filter store)
+- Shared `useDerivedExpenseData` hook: single-pass currency grouping, month extraction, and currency resolution across all tabs
+- `useDeferredValue` in History tab keeps UI responsive during heavy filter re-renders
+- Remove collapsible sections from Filters screen (flat layout, faster mount)
+- Fix empty list after filter reset (default timeWindow changed to "all")
+- Fix stale month chip when switching currencies (derived `effectiveSelectedMonth`)
+- Remove dead `getAvailableMonths` utility (scoped derivation in hook)

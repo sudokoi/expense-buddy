@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
 import { ScreenContainer } from "../components/ui/ScreenContainer"
-import { CollapsibleSection } from "../components/analytics/CollapsibleSection"
 import { TimeWindowSelector } from "../components/analytics/TimeWindowSelector"
 import { MonthSelector } from "../components/analytics/MonthSelector"
 import { SearchFilter } from "../components/analytics/SearchFilter"
@@ -38,7 +37,7 @@ import type {
   PaymentMethodSelectionKey,
 } from "../types/analytics"
 import type { PaymentInstrument } from "../types/payment-instrument"
-import { UI_SPACE, UI_OPACITY } from "../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -222,74 +221,98 @@ export default function FiltersScreen() {
       />
 
       <ScreenContainer contentContainerStyle={{ paddingBottom: 0 }}>
-        <YStack gap="$control">
+        <YStack gap="$section">
           {!isHydrated && (
             <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
               {t("history.filterSheet.loading")}
             </Text>
           )}
 
-          <CollapsibleSection title={t("history.filterSheet.time")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.time")}
+            </Text>
             <TimeWindowSelector
               value={draftTimeWindow}
               onChange={handleTimeWindowChange}
             />
-          </CollapsibleSection>
+          </YStack>
 
-          <CollapsibleSection title={t("history.filterSheet.month")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.month")}
+            </Text>
             <MonthSelector
               value={draftSelectedMonth}
               availableMonths={availableMonths}
               onChange={handleMonthChange}
             />
-          </CollapsibleSection>
+          </YStack>
 
           {availableCurrencies.length > 1 && (
-            <CollapsibleSection title={t("settings.localization.currency")}>
+            <YStack gap="$control">
+              <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+                {t("settings.localization.currency")}
+              </Text>
               <CurrencyFilter
                 availableCurrencies={availableCurrencies}
                 selectedCurrency={draftCurrency}
                 defaultCurrency={defaultCurrency}
                 onChange={setDraftCurrency}
               />
-            </CollapsibleSection>
+            </YStack>
           )}
 
-          <CollapsibleSection title={t("history.filterSheet.search")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.search")}
+            </Text>
             <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
-          </CollapsibleSection>
+          </YStack>
 
-          <CollapsibleSection title={t("history.filterSheet.amountRange")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.amountRange")}
+            </Text>
             <AmountRangeFilter
               minAmount={draftMinAmount}
               maxAmount={draftMaxAmount}
               onChange={handleAmountRangeChange}
             />
-          </CollapsibleSection>
+          </YStack>
 
-          <CollapsibleSection title={t("history.filterSheet.category")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.category")}
+            </Text>
             <CategoryFilter
               selectedCategories={draftCategories}
               onChange={setDraftCategories}
             />
-          </CollapsibleSection>
+          </YStack>
 
-          <CollapsibleSection title={t("history.filterSheet.paymentMethod")}>
+          <YStack gap="$control">
+            <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+              {t("history.filterSheet.paymentMethod")}
+            </Text>
             <PaymentMethodFilter
               selected={draftPaymentMethods}
               onChange={handlePaymentMethodsChange}
             />
-          </CollapsibleSection>
+          </YStack>
 
           {showPaymentInstrumentFilter && (
-            <CollapsibleSection title={t("history.filterSheet.paymentInstrument")}>
+            <YStack gap="$control">
+              <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label" color="$color">
+                {t("history.filterSheet.paymentInstrument")}
+              </Text>
               <PaymentInstrumentFilter
                 instruments={allInstruments}
                 selectedPaymentMethods={draftPaymentMethods}
                 selected={draftPaymentInstruments}
                 onChange={setDraftPaymentInstruments}
               />
-            </CollapsibleSection>
+            </YStack>
           )}
 
           <XStack
