@@ -246,7 +246,6 @@ export default function DashboardScreen() {
             onPress={handleImportPress}
             tooltip={t("settings.smsImport.actions.review")}
             disabled={isScanningSmsImports}
-            spinning={isScanningSmsImports}
             accessibilityLabel={t("settings.smsImport.actions.review")}
             tooltipAlign="right"
           />
