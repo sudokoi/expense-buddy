@@ -687,7 +687,7 @@ export default function HistoryScreen() {
         <XStack
           mb={UI_SPACE.section}
           gap="$control"
-          style={{ alignItems: "center" }}
+          style={{ alignItems: "center", overflow: "visible" }}
         >
           <ScrollView
             horizontal
@@ -739,11 +739,7 @@ export default function HistoryScreen() {
   return (
     <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
       {/* Filter row: chips + filter button inline */}
-      <XStack
-        mb={UI_SPACE.section}
-        gap="$control"
-        style={{ alignItems: "center" }}
-      >
+      <XStack mb={UI_SPACE.section} gap="$control" style={{ alignItems: "center" }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
