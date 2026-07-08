@@ -43,17 +43,34 @@ export const filterStore = createStore({
     }),
 
     // Individual filter updates (for real-time UI)
-    setTimeWindow: (context, event: { timeWindow: TimeWindow }) => ({
-      ...context,
-      timeWindow: event.timeWindow,
-      selectedMonth: null,
-    }),
+    setTimeWindow: (context, event: { timeWindow: TimeWindow }) => {
+      // No-op when the window is unchanged and the month is already cleared,
+      // so unrelated store events don't allocate a new context.
+      if (context.timeWindow === event.timeWindow && context.selectedMonth === null) {
+        return context
+      }
+      return {
+        ...context,
+        timeWindow: event.timeWindow,
+        selectedMonth: null,
+      }
+    },
 
-    setSelectedMonth: (context, event: { month: string | null }) => ({
-      ...context,
-      selectedMonth: event.month,
-      timeWindow: event.month ? "all" : context.timeWindow,
-    }),
+    setSelectedMonth: (context, event: { month: string | null }) => {
+      const nextTimeWindow = event.month ? "all" : context.timeWindow
+      // No-op when both the month and the derived time window are unchanged.
+      if (
+        context.selectedMonth === event.month &&
+        context.timeWindow === nextTimeWindow
+      ) {
+        return context
+      }
+      return {
+        ...context,
+        selectedMonth: event.month,
+        timeWindow: nextTimeWindow,
+      }
+    },
 
     setSelectedCategories: (context, event: { categories: string[] }) => ({
       ...context,

@@ -268,6 +268,16 @@ export const settingsStore = createStore({
     ) => {
       const newHash = event.syncedSettingsHash ?? computeSettingsHash(event.settings)
 
+      // No-op when the downloaded settings are already synced and unchanged:
+      // returning a fresh settings identity would force a needless re-derive
+      // of dependent data and re-run the save effect.
+      if (
+        context.settingsSyncState === "synced" &&
+        context.syncedSettingsHash === newHash
+      ) {
+        return context
+      }
+
       enqueue.effect(async () => {
         await saveSettings(event.settings)
         await syncBackgroundSmsEnabledBestEffort(
