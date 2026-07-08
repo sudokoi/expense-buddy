@@ -4,7 +4,7 @@ import { useExpenses } from "../../stores/hooks"
 import { useMemo, useCallback } from "react"
 import { parseISO, isSameDay, addDays, subDays } from "date-fns"
 import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons-2"
-import { SectionList } from "react-native"
+import { FlashList } from "@shopify/flash-list"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import type { Expense } from "../../types/expense"
 import { Category } from "../../types/category"
@@ -55,21 +55,10 @@ export default function DayViewScreen() {
       .sort((a, b) => b.date.localeCompare(a.date)) // Sort time desc
   }, [state.activeExpenses, targetDate])
 
-  // Group by category for display? Or just list?
-  // Design: Just a simple list for the day view is fine, maybe grouped by hour if density is high,
-  // but "Expenses for <Date>" suggests a single list.
-  // We can reuse the SectionList structure if we want headers, or just FlatList.
-  // Reusing SectionList with a single section for simplicity if we want to stick to patterns.
-  // Actually, list is small enough, simple map or FlatList is fine.
-  // Let's stick to SectionList for consistency with HistoryScreen if we want identical look.
-  // But HistoryScreen groups by Day. Here we are IN a day.
-  // So a FlatList is better.
-  // But wait, user might want to edit/delete from here too?
-  // Yes, reuse ExpenseRow logic.
+  // A single day's expenses render as one flat list (History groups by day,
+  // but here we're already inside one), so a FlashList is lighter than the
+  // SectionList used by History's grouped view.
 
-  // NOTE: Day View currently is read-only in terms of editing/deleting?
-  // The original prompt implies "DayView" in verification plan.
-  // Let's add edit/delete support if easy, or just view.
   // HistoryScreen handles edit/delete.
   // We can pass `onEdit` `onDelete` if we want full fidelity.
   // For now, let's keep it simple: View only, maybe tap to edit later?
@@ -196,8 +185,8 @@ export default function DayViewScreen() {
           </Text>
         </YStack>
       ) : (
-        <SectionList
-          sections={[{ title: "Expenses", data: dailyExpenses }]}
+        <FlashList
+          data={dailyExpenses}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: UI_SPACE.gutter }}

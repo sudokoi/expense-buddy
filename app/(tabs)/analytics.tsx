@@ -2,11 +2,9 @@ import { startTransition, useCallback, memo, useMemo } from "react"
 import { useRouter, type Href } from "expo-router"
 import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
 
-import {
-  useAnalyticsBase,
-  useAnalyticsCharts,
-  useAnalyticsStatistics,
-} from "../../hooks/use-analytics-data"
+import { useAnalyticsBase } from "../../hooks/use-analytics-base"
+import { useAnalyticsCharts } from "../../hooks/use-analytics-charts"
+import { useAnalyticsStatistics } from "../../hooks/use-analytics-statistics"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
