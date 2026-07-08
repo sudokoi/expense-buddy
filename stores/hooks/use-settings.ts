@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "../store-provider"
 import {
@@ -114,31 +114,54 @@ export const useSettings = () => {
     [settingsStore]
   )
 
-  return {
-    settings,
-    isLoading,
-    effectiveTheme,
-    hasUnsyncedChanges,
-    defaultPaymentMethod: settings.defaultPaymentMethod,
-    enableMathExpressions: settings.enableMathExpressions,
-    autoSyncEnabled: settings.autoSyncEnabled,
-    autoSyncTiming: settings.autoSyncTiming,
-    syncConfig,
-    setTheme,
-    setSyncSettings,
-    setDefaultPaymentMethod,
-    setEnableMathExpressions,
-    setBackgroundSmsImportEnabled,
-    setAutoSyncEnabled,
-    setAutoSyncTiming,
-    updateSettings,
-    replaceSettings,
-    clearSettingsChangeFlag,
-    saveSyncConfig,
-    clearSyncConfig,
-    setDefaultCurrency,
-    setLanguage,
-  }
+  return useMemo(
+    () => ({
+      settings,
+      isLoading,
+      effectiveTheme,
+      hasUnsyncedChanges,
+      defaultPaymentMethod: settings.defaultPaymentMethod,
+      enableMathExpressions: settings.enableMathExpressions,
+      autoSyncEnabled: settings.autoSyncEnabled,
+      autoSyncTiming: settings.autoSyncTiming,
+      syncConfig,
+      setTheme,
+      setSyncSettings,
+      setDefaultPaymentMethod,
+      setEnableMathExpressions,
+      setBackgroundSmsImportEnabled,
+      setAutoSyncEnabled,
+      setAutoSyncTiming,
+      updateSettings,
+      replaceSettings,
+      clearSettingsChangeFlag,
+      saveSyncConfig,
+      clearSyncConfig,
+      setDefaultCurrency,
+      setLanguage,
+    }),
+    [
+      settings,
+      isLoading,
+      effectiveTheme,
+      hasUnsyncedChanges,
+      syncConfig,
+      setTheme,
+      setSyncSettings,
+      setDefaultPaymentMethod,
+      setEnableMathExpressions,
+      setBackgroundSmsImportEnabled,
+      setAutoSyncEnabled,
+      setAutoSyncTiming,
+      updateSettings,
+      replaceSettings,
+      clearSettingsChangeFlag,
+      saveSyncConfig,
+      clearSyncConfig,
+      setDefaultCurrency,
+      setLanguage,
+    ]
+  )
 }
 
 export const useThemeSettings = () => {
