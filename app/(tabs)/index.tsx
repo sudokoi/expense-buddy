@@ -6,6 +6,7 @@ import { useCategories, useDerivedExpenseData } from "../../stores/hooks"
 import { useRouter } from "expo-router"
 import { Dimensions } from "react-native"
 import React, { startTransition } from "react"
+import type { PaymentInstrument } from "../../types/payment-instrument"
 import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { IconActionButton } from "../../components/ui/IconActionButton"
@@ -49,6 +50,10 @@ interface RecentExpenseItemProps {
   categoryInfo: Pick<Category, "label" | "icon" | "color">
 }
 
+// Stable empty list so RecentExpenseItem's memoized ExpenseRow isn't passed a
+// fresh [] identity on every dashboard render.
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
+
 const RecentExpenseItem = React.memo(function RecentExpenseItem({
   expense,
   categoryInfo,
@@ -57,7 +62,7 @@ const RecentExpenseItem = React.memo(function RecentExpenseItem({
     <ExpenseRow
       expense={expense}
       categoryInfo={categoryInfo}
-      instruments={[]}
+      instruments={EMPTY_INSTRUMENTS}
       subtitleMode="date"
       showPaymentMethod={false}
       showActions={false}

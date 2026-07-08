@@ -20,6 +20,20 @@ import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_ICON_SIZE } from "../constants/ui-t
  * - error: show X
  * - idle/inSync: hidden
  */
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    right: UI_SPACE.block,
+    zIndex: UI_Z_INDEX.floating,
+    borderRadius: UI_RADIUS.surface,
+    padding: UI_SPACE.control,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+})
+
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
   const insets = useSafeAreaInsets()
@@ -31,23 +45,6 @@ export const SyncIndicator: React.FC = () => {
   const visible = isSyncing || isSuccess || isError
 
   if (!visible) return null
-
-  const styles = StyleSheet.create({
-    container: {
-      position: "absolute",
-      top: insets.top + UI_SPACE.gutter,
-      right: UI_SPACE.block,
-      zIndex: UI_Z_INDEX.floating,
-      backgroundColor: overlayColors.background,
-      borderRadius: UI_RADIUS.surface,
-      padding: UI_SPACE.control,
-      shadowColor: overlayColors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-  })
 
   const getIcon = () => {
     if (isSyncing) {
@@ -62,5 +59,18 @@ export const SyncIndicator: React.FC = () => {
     return null
   }
 
-  return <View style={styles.container}>{getIcon()}</View>
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          top: insets.top + UI_SPACE.gutter,
+          backgroundColor: overlayColors.background,
+          shadowColor: overlayColors.shadow,
+        },
+      ]}
+    >
+      {getIcon()}
+    </View>
+  )
 }
