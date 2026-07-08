@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 3.8.1
+
+### Patch Changes
+
+- [#96](https://github.com/sudokoi/expense-buddy/pull/96) [`afdc651`](https://github.com/sudokoi/expense-buddy/commit/afdc65116a8397f617289aa9f39a9c45ed062bf7) Thanks [@sudokoi](https://github.com/sudokoi)! - Perf pass: share derived expense data via a single provider, memoize store-hook
+  return objects, use `FlashList` in the Day view, skip no-op store updates, and
+  hoist per-render allocations (styles, empty arrays, nav log) out of hot paths.
+
 ## 3.8.0
 
 ### Minor Changes
