@@ -2,6 +2,7 @@ import { useColorScheme } from "react-native"
 import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
 import { config } from "../tamagui.config"
 import { StoreProvider } from "../stores/store-provider"
+import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-data"
 import { useThemeSettings } from "../stores/hooks"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 
@@ -40,9 +41,11 @@ export function Provider({
 }: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
   return (
     <StoreProvider>
-      <SmsImportReviewProvider>
-        <ThemedProvider {...rest}>{children}</ThemedProvider>
-      </SmsImportReviewProvider>
+      <DerivedExpenseDataProvider>
+        <SmsImportReviewProvider>
+          <ThemedProvider {...rest}>{children}</ThemedProvider>
+        </SmsImportReviewProvider>
+      </DerivedExpenseDataProvider>
     </StoreProvider>
   )
 }
