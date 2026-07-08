@@ -119,6 +119,12 @@ export default function DayViewScreen() {
     [categoryByLabel, settings.paymentInstruments]
   )
 
+  const getItemType = useCallback(() => "expense" as const, [])
+
+  const overrideItemLayout = useCallback((layout: { span?: number; size?: number }) => {
+    layout.size = 90
+  }, [])
+
   return (
     <YStack flex={1} bg="$background" style={{ paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -192,6 +198,8 @@ export default function DayViewScreen() {
           data={dailyExpenses}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
+          getItemType={getItemType}
+          overrideItemLayout={overrideItemLayout}
           contentContainerStyle={{ paddingBottom: UI_SPACE.gutter }}
         />
       )}
