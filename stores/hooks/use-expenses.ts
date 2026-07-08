@@ -104,23 +104,42 @@ export const useExpenses = () => {
     [expenseStore]
   )
 
-  return {
-    state: {
+  return useMemo(
+    () => ({
+      state: {
+        expenses,
+        activeExpenses,
+        isLoading,
+        syncNotification,
+        dirtyDays,
+        deletedDays,
+      },
+      addExpense,
+      addExpenses,
+      editExpense,
+      deleteExpense,
+      replaceAllExpenses,
+      clearSyncNotification,
+      clearDirtyDaysAfterSync,
+      reassignExpensesToOther,
+      updateExpenseCategories,
+    }),
+    [
       expenses,
       activeExpenses,
       isLoading,
       syncNotification,
       dirtyDays,
       deletedDays,
-    },
-    addExpense,
-    addExpenses,
-    editExpense,
-    deleteExpense,
-    replaceAllExpenses,
-    clearSyncNotification,
-    clearDirtyDaysAfterSync,
-    reassignExpensesToOther,
-    updateExpenseCategories,
-  }
+      addExpense,
+      addExpenses,
+      editExpense,
+      deleteExpense,
+      replaceAllExpenses,
+      clearSyncNotification,
+      clearDirtyDaysAfterSync,
+      reassignExpensesToOther,
+      updateExpenseCategories,
+    ]
+  )
 }
