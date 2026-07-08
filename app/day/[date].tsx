@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, ChevronLeft } from "@tamagui/lucide-icons-2"
 import { FlashList } from "@shopify/flash-list"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import type { Expense } from "../../types/expense"
+import type { PaymentInstrument } from "../../types/payment-instrument"
 import { Category } from "../../types/category"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
@@ -26,6 +27,8 @@ const FALLBACK_CATEGORY_CACHE = new Map<
   string,
   Pick<Category, "label" | "icon" | "color">
 >()
+
+const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
   let info = FALLBACK_CATEGORY_CACHE.get(label)
@@ -108,7 +111,7 @@ export default function DayViewScreen() {
           expense={item}
           categoryInfo={categoryInfo}
           subtitleMode="time"
-          instruments={settings.paymentInstruments ?? []}
+          instruments={settings.paymentInstruments ?? EMPTY_INSTRUMENTS}
           showActions={false}
         />
       )

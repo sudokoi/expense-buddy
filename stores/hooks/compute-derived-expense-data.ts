@@ -86,15 +86,18 @@ export function computeDerivedExpenseData(
   const effectiveSelectedMonth =
     selectedMonth && availableMonths.includes(selectedMonth) ? selectedMonth : null
 
-  // Default currency resolves the same way as effectiveCurrency but with no
-  // user selection, representing what the currency would be when the user has
-  // never overridden it.
-  const defaultCurrency = computeEffectiveCurrency(
-    null,
-    availableCurrencies,
-    groups,
-    defaultCurrencySetting
-  )
+  // Default currency is what effectiveCurrency resolves to with no user
+  // selection. When selectedCurrency is already null, effectiveCurrency is
+  // exactly that, so we reuse it; otherwise recompute without the selection.
+  const defaultCurrency =
+    selectedCurrency === null
+      ? effectiveCurrency
+      : computeEffectiveCurrency(
+          null,
+          availableCurrencies,
+          groups,
+          defaultCurrencySetting
+        )
 
   return {
     expensesByCurrency: groups,
