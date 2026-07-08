@@ -49,8 +49,8 @@ export default function SettingsScreen() {
   const { addNotification } = useNotifications()
   const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
 
-  // Shared sync flow (also used by the Dashboard) - handles conflict
-  // resolution and post-sync reconciliation so the pending count stays correct.
+  // Same sync path the rest of the app uses: conflict resolution plus
+  // post-sync reconciliation keep the pending count accurate after a merge.
   const { handleSync, isSyncing, pendingCount } = useSyncAction()
 
   // Update check hook for manual update checks from settings
