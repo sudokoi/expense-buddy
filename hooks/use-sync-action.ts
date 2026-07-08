@@ -5,8 +5,8 @@
  * conflict resolution and post-sync reconciliation (clearing dirty days,
  * settings change flags, and applying queued ops that landed during the sync).
  *
- * Both the Settings screen and the Dashboard use this hook so the pending sync
- * count stays consistent regardless of where the sync was triggered from.
+ * The pending sync count is read from shared store state, so it stays correct
+ * no matter which screen triggers the sync — every consumer sees the same value.
  */
 import { useCallback, useMemo, useRef } from "react"
 import { Alert } from "react-native"

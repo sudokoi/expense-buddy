@@ -570,7 +570,11 @@ export const settingsStore = createStore({
     },
 
     /**
-     * Replace all categories (used for sync)
+     * Replace the entire category set with the incoming set.
+     *
+     * Sync treats categories as a single source of truth rather than merging
+     * deltas, so an incoming set overwrites the local one wholesale (after
+     * sanitizing each entry) instead of applying per-item patches.
      */
     replaceCategories: (context, event: { categories: Category[] }, enqueue) => {
       const sanitizedCategories = event.categories.map((c) => ({

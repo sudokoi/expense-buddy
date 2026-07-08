@@ -136,8 +136,10 @@ export type SettingsSyncState = "synced" | "modified"
 /**
  * Compute settings sync state by comparing current settings hash against synced hash
  *
- * This helper determines whether local settings have been modified since the last sync.
- * It's used by the settings store to track whether settings need to be uploaded.
+ * Returns "modified" when the current settings no longer match the last
+ * successfully synced hash, meaning there are local changes awaiting upload.
+ * A null synced hash means settings have never been synced, which is treated
+ * as modified so the first sync uploads the current state.
  *
  * @param currentSettings - Current app settings
  * @param syncedHash - Hash of settings from last successful sync (null if never synced)
