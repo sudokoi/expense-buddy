@@ -16,7 +16,9 @@ export default function TabLayout() {
   const pathname = usePathname()
 
   useEffect(() => {
-    logAsync("INFO", "NAV", `TAB_CHANGE route=${pathname}`)
+    if (__DEV__) {
+      logAsync("INFO", "NAV", `TAB_CHANGE route=${pathname}`)
+    }
   }, [pathname])
 
   return (
