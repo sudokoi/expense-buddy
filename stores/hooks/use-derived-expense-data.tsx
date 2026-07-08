@@ -51,37 +51,6 @@ export function DerivedExpenseDataProvider({ children }: { children: React.React
 }
 
 /**
- * Derives expense data directly from the stores, without sharing a computed
- * value with the rest of the tree. Kept separate from the provider so hook
- * order stays stable when the provider is not mounted.
- */
-export function useDerivedExpenseDataStandalone(): DerivedExpenseData {
-  const { state } = useExpenses()
-  const { settings } = useSettings()
-  const {
-    filters: { selectedCurrency, selectedMonth },
-  } = useFilters()
-
-  return useMemo(
-    () =>
-      computeDerivedExpenseData(
-        state.activeExpenses,
-        settings.defaultCurrency,
-        selectedCurrency,
-        selectedMonth,
-        state.isLoading
-      ),
-    [
-      state.activeExpenses,
-      settings.defaultCurrency,
-      selectedCurrency,
-      selectedMonth,
-      state.isLoading,
-    ]
-  )
-}
-
-/**
  * Returns the derived expense data computed once by `DerivedExpenseDataProvider`.
  * Throws if no provider is mounted, since a missing provider means the shared
  * derivation was never set up.
@@ -90,8 +59,7 @@ export function useDerivedExpenseData(): DerivedExpenseData {
   const context = useContext(DerivedExpenseDataContext)
   if (!context) {
     throw new Error(
-      "useDerivedExpenseData must be used within a DerivedExpenseDataProvider. " +
-        "In isolated tests, use useDerivedExpenseDataStandalone instead."
+      "useDerivedExpenseData must be used within a DerivedExpenseDataProvider."
     )
   }
   return context
