@@ -14,8 +14,6 @@ interface StatisticsCardsProps {
   currencyCode?: string
   /** Full-period total (ignoring category/payment/etc filters) shown as subtext */
   fullPeriodTotalSpending?: number
-  /** Hide subtext when no filters are active */
-  hasActiveFilters?: boolean
 }
 
 /**
@@ -26,12 +24,16 @@ export const StatisticsCards = memo(function StatisticsCards({
   statistics,
   currencyCode = "INR",
   fullPeriodTotalSpending,
-  hasActiveFilters = false,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
 
-  const showSubtext = hasActiveFilters && fullPeriodTotalSpending !== undefined
+  // Only show the subtext when a non-time filter is in effect. When only the
+  // time window/month is active, the full-period total equals the headline
+  // total, so the subtext would just repeat it.
+  const showSubtext =
+    fullPeriodTotalSpending !== undefined &&
+    fullPeriodTotalSpending !== statistics.totalSpending
 
   const formatDateStr = (dateStr: string): string => {
     try {

@@ -594,7 +594,6 @@ export default function AnalyticsScreen() {
                 statistics={statistics}
                 currencyCode={effectiveCurrency}
                 fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
-                hasActiveFilters={activeCount > 0}
               />
               {/* Currency Filter - Show only if multiple currencies exist */}
               {availableCurrencies.length > 1 && (
