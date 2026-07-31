@@ -2,17 +2,6 @@
   "currency": {
     "symbol": "¥"
   },
-  "dashboard": {
-    "title": "ダッシュボード",
-    "welcome": "お帰りなさい！",
-    "totalSpent": "総支出",
-    "entries": "件数",
-    "last7Days": "過去7日間",
-    "viewAnalytics": "分析を見る",
-    "noData": "データがまだありません。",
-    "recentTransactions": "最近の取引",
-    "noRecent": "最近の取引はありません。"
-  },
   "paymentMethods": {
     "cash": "現金",
     "amazonPay": "Amazon Pay",
@@ -80,7 +69,6 @@
     "default": "デフォルト"
   },
   "navigation": {
-    "dashboard": "ダッシュボード",
     "add": "支出を追加",
     "analytics": "分析",
     "history": "履歴",
@@ -200,7 +188,8 @@
       "totalSpent": "総支出",
       "dailyAvg": "一日平均",
       "topCategory": "最多カテゴリー",
-      "peakDay": "ピーク日"
+      "peakDay": "ピーク日",
+      "ofTotal": "{{total}} 中"
     },
     "charts": {
       "common": {
@@ -495,16 +484,6 @@
       "emptyTitle": "確認するSMS取り込みはありません。",
       "emptyDescription": "取り込みの確認を始めるには、設定または支出追加から最近のメッセージをスキャンしてください。"
     }
-  },
-  "dayView": {
-    "title": "{{date}} の支出",
-    "today": "今日",
-    "yesterday": "昨日",
-    "tomorrow": "明日",
-    "totalSpent": "総支出",
-    "empty": "この日の支出はありません",
-    "previousDay": "前日",
-    "nextDay": "翌日"
   },
   "repoPicker": {
     "title": "リポジトリを選択",

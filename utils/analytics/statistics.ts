@@ -14,6 +14,7 @@ export interface AnalyticsStatistics {
     amount: number
   } | null
   daysInPeriod: number
+  fullPeriodTotalSpending?: number
 }
 
 /**

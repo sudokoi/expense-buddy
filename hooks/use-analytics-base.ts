@@ -20,6 +20,7 @@ import { applyAllFilters } from "../utils/analytics/filters"
 
 export interface AnalyticsBaseResult {
   filteredExpenses: Expense[]
+  timeWindowExpenses: Expense[]
   availableCurrencies: string[]
   effectiveCurrency: string
   dateRange: DateRange
@@ -141,6 +142,13 @@ export function useAnalyticsBase(
     return applyAllFilters(currencyExpenses, filterState, paymentInstruments)
   }, [currencyExpenses, filterState, paymentInstruments])
 
+  // Expenses filtered only by time window/month (and currency), with all other
+  // filters (category, payment method, instrument, search, amount) ignored.
+  // Used to compute the full-period total shown as subtext on the stats cards.
+  const timeWindowExpenses = useMemo(() => {
+    return filterByTimeWindow(currencyExpenses)
+  }, [filterByTimeWindow, currencyExpenses])
+
   // Compute date range
   const dateRange = useMemo(() => {
     return getDateRangeForFilters(timeWindow, effectiveSelectedMonth, filteredExpenses)
@@ -148,6 +156,7 @@ export function useAnalyticsBase(
 
   return {
     filteredExpenses,
+    timeWindowExpenses,
     availableCurrencies,
     effectiveCurrency,
     dateRange,

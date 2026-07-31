@@ -1,396 +1,648 @@
-import { format, subDays } from "date-fns"
-import { getLocalDayKey, formatDate } from "../../utils/date"
-import { YStack, H4, XStack, Card, Text, Button, useTheme, ScrollView } from "tamagui"
-import { BarChart } from "react-native-gifted-charts"
-import { useCategories, useDerivedExpenseData } from "../../stores/hooks"
-import { useRouter } from "expo-router"
-import { Dimensions } from "react-native"
-import React, { startTransition } from "react"
-import type { PaymentInstrument } from "../../types/payment-instrument"
-import { RefreshCw, Download } from "@tamagui/lucide-icons-2"
+import { startTransition, useCallback, memo, useMemo } from "react"
+import { useRouter, type Href } from "expo-router"
+import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
+
+import { useAnalyticsBase } from "../../hooks/use-analytics-base"
+import { useAnalyticsCharts } from "../../hooks/use-analytics-charts"
+import { useAnalyticsStatistics } from "../../hooks/use-analytics-statistics"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
-import { IconActionButton } from "../../components/ui/IconActionButton"
-import { useSyncAction } from "../../hooks/use-sync-action"
-import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { SectionHeader } from "../../components/ui/SectionHeader"
-import { ExpenseRow } from "../../components/ui/ExpenseRow"
-import { CARD_COLORS } from "../../constants/theme-colors"
-import { CATEGORY_COLORS } from "../../constants/category-colors"
-import type { Expense } from "../../types/expense"
-import type { Category } from "../../types/category"
+import { StatisticsCards } from "../../components/analytics/StatisticsCards"
+import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
+import { PieChartSection } from "../../components/analytics/PieChartSection"
+import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
+import { LineChartSection } from "../../components/analytics/LineChartSection"
+import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
+import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import type { PaymentMethodType } from "../../types/expense"
+import { formatMonthLabel } from "../../utils/analytics/time"
+import {
+  PAYMENT_INSTRUMENT_METHODS,
+  findInstrumentById,
+  formatPaymentInstrumentLabel,
+  getActivePaymentInstruments,
+} from "../../services/payment-instruments"
+import { Filter, RefreshCw, Download } from "@tamagui/lucide-icons-2"
+import type { PaymentInstrument } from "../../types/payment-instrument"
+import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
+import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
-import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
-import { useFilters, useFilterPersistence } from "../../stores/filter-store"
+import { getCurrencySymbol } from "../../utils/currency"
+import { useSyncAction } from "../../hooks/use-sync-action"
+import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
+import { IconActionButton } from "../../components/ui/IconActionButton"
 import {
   UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
-  UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
-const FALLBACK_CATEGORY_CACHE = new Map<
-  string,
-  Pick<Category, "label" | "icon" | "color">
->()
+const INSTRUMENT_OTHERS_ID = "__others__"
 
-function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "color"> {
-  let info = FALLBACK_CATEGORY_CACHE.get(label)
-  if (!info) {
-    info = { label, icon: "Circle", color: CATEGORY_COLORS.Other }
-    FALLBACK_CATEGORY_CACHE.set(label, info)
+// Moved helper functions outside component or use hooks/t inside
+// To use translations in helpers, we need to pass t or return keys?
+// Easier to refactor helpers to component scope or pass t.
+
+function methodShortLabel(method: string): string {
+  switch (method) {
+    case "Credit Card":
+      return "CC"
+    case "Debit Card":
+      return "DC"
+    case "UPI":
+      return "UPI"
+    default:
+      return method
   }
-  return info
 }
 
-// Memoized recent expense item component
-interface RecentExpenseItemProps {
-  expense: Expense
-  categoryInfo: Pick<Category, "label" | "icon" | "color">
-}
-
-// Stable empty list so RecentExpenseItem's memoized ExpenseRow isn't passed a
-// fresh [] identity on every dashboard render.
-const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
-
-const RecentExpenseItem = React.memo(function RecentExpenseItem({
-  expense,
-  categoryInfo,
-}: RecentExpenseItemProps) {
+// Memoized empty state component
+const EmptyState = memo(function EmptyState({
+  title,
+  subtitle,
+}: {
+  title: string
+  subtitle: string
+}) {
   return (
-    <ExpenseRow
-      expense={expense}
-      categoryInfo={categoryInfo}
-      instruments={EMPTY_INSTRUMENTS}
-      subtitleMode="date"
-      showPaymentMethod={false}
-      showActions={false}
-    />
+    <YStack items="center" justify="center" p={UI_SPACE.empty}>
+      <Text color="$color" opacity={UI_OPACITY.subtle} text="center">
+        {title}
+      </Text>
+      <Text color="$color" opacity={UI_OPACITY.ghost} text="center" mt={UI_SPACE.control}>
+        {subtitle}
+      </Text>
+    </YStack>
   )
 })
 
-export default function DashboardScreen() {
-  const { categories, getCategoryByLabel } = useCategories()
-  // Keep theme only for BarChart which requires raw color values
-  const theme = useTheme()
-  const router = useRouter()
-  const screenWidth = Dimensions.get("window").width
+// Memoized header component
+const Header = memo(function Header() {
   const { t } = useTranslation()
   const { handleSync, isSyncing } = useSyncAction()
   const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
 
-  // Currency selection is shared across the app via the filter store, so choosing
-  // a currency here also scopes History and Analytics (and vice versa).
-  const { setSelectedCurrency } = useFilters()
-  const { save: saveFilters } = useFilterPersistence()
-
-  // Pre-computed derived data (shared across all tabs)
-  const { availableCurrencies, currencyExpenses, effectiveCurrency } =
-    useDerivedExpenseData()
-
-  const handleCurrencySelect = React.useCallback(
-    (currency: string) => {
-      logAsync("INFO", "UI_ACTION", "DASHBOARD_CURRENCY_FILTER")
-      startTransition(() => setSelectedCurrency(currency))
-      void saveFilters().catch((error) =>
-        console.warn("Failed to persist currency selection:", error)
-      )
-    },
-    [setSelectedCurrency, saveFilters]
-  )
-
-  // Use currencyExpenses for calculations
-  const totalExpenses = React.useMemo(
-    () => currencyExpenses.reduce((sum, item) => sum + item.amount, 0),
-    [currencyExpenses]
-  )
-  const recentExpenses = React.useMemo(
-    () => currencyExpenses.slice(0, 5),
-    [currencyExpenses]
-  )
-
-  const categoryByLabel = React.useMemo(() => {
-    const map = new Map<string, Category>()
-    for (const category of categories) {
-      map.set(category.label, category)
-    }
-    return map
-  }, [categories])
-
-  const chartData = React.useMemo(() => {
-    const grouped: Record<string, Record<string, number>> = {}
-    const last7Days: string[] = []
-
-    // Generate last 7 days keys
-    for (let i = 6; i >= 0; i--) {
-      const d = subDays(new Date(), i)
-      last7Days.push(format(d, "yyyy-MM-dd"))
-    }
-
-    // Aggregate using currencyExpenses (excludes soft-deleted)
-    currencyExpenses.forEach((e) => {
-      const dateKey = getLocalDayKey(e.date)
-      if (!grouped[dateKey]) grouped[dateKey] = {}
-      if (!grouped[dateKey][e.category]) grouped[dateKey][e.category] = 0
-      grouped[dateKey][e.category] += e.amount
-    })
-
-    // Format for Chart - only include days with actual expenses
-    return last7Days
-      .map((dateKey) => {
-        const dayExpenses = grouped[dateKey] || {}
-        const stacks = Object.keys(dayExpenses).map((cat) => {
-          const categoryConfig = getCategoryByLabel(cat)
-          return {
-            value: dayExpenses[cat],
-            color: categoryConfig?.color || CATEGORY_COLORS.Other,
-            marginBottom: UI_SPACE.micro / 2,
-          }
-        })
-
-        return {
-          stacks: stacks,
-          label: formatDate(dateKey, "dd/MM"), // Use formatDate for localized month if needed eventually, though dd/MM is numeric
-          onPress: () => router.push(`/day/${dateKey}`),
-          dateKey, // Keep for filtering
-        }
-      })
-      .filter((item) => item.stacks.length > 0) // Only show days with data
-  }, [currencyExpenses, router, getCategoryByLabel])
-
-  const hasData = chartData.some((d) => d.stacks && d.stacks.length > 0)
-
-  // Generate a unique key for the chart based on data to force re-render
-  const chartKey = React.useMemo(() => {
-    const total = currencyExpenses.reduce((sum, e) => sum + e.amount, 0)
-    return `chart-${currencyExpenses.length}-${total}`
-  }, [currencyExpenses])
-
-  // Get theme colors for BarChart which requires raw color values (third-party component)
-  const chartTextColor = theme.color.val as string
-
-  // Format Y-axis labels to handle large numbers (e.g., 27000 → 27K)
-  const formatYLabel = React.useCallback((value: string) => {
-    const num = parseFloat(value)
-    if (num >= 100000) {
-      return `${(num / 100000).toFixed(1)}L`
-    }
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(0)}K`
-    }
-    return value
-  }, [])
-
-  // Memoized navigation handlers
-  const handleImportPress = React.useCallback(() => {
+  const handleImportPress = useCallback(() => {
     void startSmsImportFromAdd()
   }, [startSmsImportFromAdd])
 
-  const handleAnalyticsPress = React.useCallback(() => {
-    router.push("/(tabs)/analytics")
+  return (
+    <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
+      <Text color="$color" opacity={UI_OPACITY.subtle}>
+        {t("analytics.subtitle")}
+      </Text>
+      <XStack gap={UI_SPACE.control} items="center" px={UI_SPACE.micro}>
+        <IconActionButton
+          icon={<RefreshCw size={20} />}
+          onPress={handleSync}
+          tooltip={t("settings.autoSync.syncNow")}
+          disabled={isSyncing}
+          spinning={isSyncing}
+          accessibilityLabel={t("settings.autoSync.syncNow")}
+          tooltipAlign="right"
+        />
+        <IconActionButton
+          icon={<Download size={20} />}
+          onPress={handleImportPress}
+          tooltip={t("settings.smsImport.actions.review")}
+          disabled={isScanningSmsImports}
+          accessibilityLabel={t("settings.smsImport.actions.review")}
+          tooltipAlign="right"
+        />
+      </XStack>
+    </XStack>
+  )
+})
+
+/**
+ * Analytics Tab Screen
+ * Displays expense analytics with pie charts, line charts, and statistics
+ * Supports time window selection and category filtering
+ */
+export default function AnalyticsScreen() {
+  const { t } = useTranslation()
+
+  // Use shared filter store
+  const {
+    filters,
+    activeCount,
+    isHydrated: filtersHydrated,
+    setSelectedCategories,
+    setSelectedPaymentMethods,
+    setSelectedPaymentInstruments,
+    setSelectedCurrency,
+  } = useFilters()
+  // Initialize filter persistence (loads persisted filters from storage on mount)
+  const { save: saveFilters } = useFilterPersistence()
+
+  const router = useRouter()
+
+  const openFilters = useCallback(() => {
+    router.push("/filters" as Href)
   }, [router])
 
-  const handleHistoryPress = React.useCallback(() => {
-    router.push("/(tabs)/history")
-  }, [router])
+  // Destructure filter values for convenience
+  const {
+    timeWindow,
+    selectedCategories,
+    selectedPaymentMethods,
+    selectedPaymentInstruments,
+    searchQuery,
+    minAmount,
+    maxAmount,
+  } = filters
+
+  // Get analytics data from focused hooks
+  const {
+    filteredExpenses,
+    availableCurrencies,
+    effectiveCurrency,
+    dateRange,
+    isLoading,
+    paymentInstruments,
+    effectiveSelectedMonth,
+    timeWindowExpenses,
+  } = useAnalyticsBase(
+    timeWindow,
+    selectedCategories,
+    selectedPaymentMethods,
+    selectedPaymentInstruments,
+    searchQuery,
+    minAmount,
+    maxAmount
+  )
+
+  const {
+    pieChartData,
+    paymentMethodChartData,
+    paymentInstrumentChartData,
+    lineChartData,
+  } = useAnalyticsCharts(filteredExpenses, dateRange, paymentInstruments, t)
+
+  const { statistics } = useAnalyticsStatistics(
+    filteredExpenses,
+    effectiveSelectedMonth ? "all" : timeWindow,
+    dateRange,
+    timeWindowExpenses
+  )
+
+  // Handle category selection from pie chart segment tap - memoized
+  const handleCategorySelect = useCallback(
+    (category: string | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_CATEGORY_SELECT")
+      if (category) {
+        const newCategories = selectedCategories.includes(category)
+          ? selectedCategories.filter((c) => c !== category)
+          : [...selectedCategories, category]
+        startTransition(() => setSelectedCategories(newCategories))
+      }
+    },
+    [selectedCategories, setSelectedCategories]
+  )
+
+  const handlePaymentInstrumentSelect = useCallback(
+    (key: PaymentInstrumentSelectionKey | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_INSTRUMENT_SELECT")
+      if (!key) {
+        startTransition(() => setSelectedPaymentInstruments([]))
+        return
+      }
+
+      const newInstruments =
+        selectedPaymentInstruments.length === 1 && selectedPaymentInstruments[0] === key
+          ? []
+          : [key]
+      startTransition(() => setSelectedPaymentInstruments(newInstruments))
+    },
+    [selectedPaymentInstruments, setSelectedPaymentInstruments]
+  )
+
+  const currencyButtons = useMemo(() => {
+    return availableCurrencies.map((c) => ({
+      code: c,
+      isSelected: effectiveCurrency === c,
+      onPress: () => {
+        logAsync("INFO", "UI_ACTION", "ANALYTICS_CURRENCY_FILTER")
+        startTransition(() => setSelectedCurrency(c))
+        void saveFilters().catch((error) =>
+          console.warn("Failed to persist currency selection:", error)
+        )
+      },
+    }))
+  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency, saveFilters])
+
+  const selectedPaymentMethodForChart: PaymentMethodType | null =
+    selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
+      ? (selectedPaymentMethods[0] as PaymentMethodType)
+      : null
+
+  const prunePaymentInstrumentSelection = useCallback(
+    (
+      nextSelectedPaymentMethods: PaymentMethodSelectionKey[],
+      currentInstrumentSelection: PaymentInstrumentSelectionKey[]
+    ): PaymentInstrumentSelectionKey[] => {
+      if (currentInstrumentSelection.length === 0) return currentInstrumentSelection
+
+      const active = getActivePaymentInstruments(paymentInstruments)
+      const allowedMethods =
+        nextSelectedPaymentMethods.length === 0
+          ? new Set(PAYMENT_INSTRUMENT_METHODS)
+          : new Set(
+              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+              )
+            )
+
+      const allowedWithConfig = new Set<string>()
+      for (const method of allowedMethods) {
+        if (active.some((i) => i.method === method)) {
+          allowedWithConfig.add(method)
+        }
+      }
+
+      return currentInstrumentSelection.filter((key) => {
+        const method = key.split("::")[0]
+        return allowedWithConfig.has(method)
+      })
+    },
+    [paymentInstruments]
+  )
+
+  const handlePaymentMethodsChange = useCallback(
+    (next: PaymentMethodSelectionKey[]) => {
+      startTransition(() => {
+        setSelectedPaymentMethods(next)
+        // When payment methods are reset to "All", reset instruments to "All" too.
+        if (next.length === 0) {
+          setSelectedPaymentInstruments([])
+        } else {
+          const newInstruments = prunePaymentInstrumentSelection(
+            next,
+            selectedPaymentInstruments
+          )
+          setSelectedPaymentInstruments(newInstruments)
+        }
+      })
+    },
+    [
+      prunePaymentInstrumentSelection,
+      selectedPaymentInstruments,
+      setSelectedPaymentMethods,
+      setSelectedPaymentInstruments,
+    ]
+  )
+
+  const handlePaymentMethodSelect = useCallback(
+    (paymentMethodType: PaymentMethodType | null) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_PAYMENT_METHOD_SELECT")
+      handlePaymentMethodsChange(paymentMethodType ? [paymentMethodType] : [])
+    },
+    [handlePaymentMethodsChange]
+  )
+
+  const showPaymentInstrumentFilter = useMemo(() => {
+    const active = getActivePaymentInstruments(paymentInstruments)
+    const allowedMethods =
+      selectedPaymentMethods.length === 0
+        ? new Set(PAYMENT_INSTRUMENT_METHODS)
+        : new Set(
+            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
+              selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
+            )
+          )
+
+    for (const method of PAYMENT_INSTRUMENT_METHODS) {
+      if (!allowedMethods.has(method)) continue
+      if (active.some((i) => i.method === method)) return true
+    }
+    return false
+  }, [paymentInstruments, selectedPaymentMethods])
+
+  // Check if there's any data to display
+  const hasData = filteredExpenses.length > 0
+  const hasAnyExpenses = pieChartData.length > 0 || lineChartData.some((d) => d.value > 0)
+
+  // Helpers inside component to use translation hook
+  const formatSelectedPaymentInstrumentLabel = useCallback(
+    (key: PaymentInstrumentSelectionKey, instruments: PaymentInstrument[]): string => {
+      const [method, instrumentId] = key.split("::")
+      const shortMethod = methodShortLabel(method)
+
+      if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
+
+      const inst = findInstrumentById(instruments, instrumentId)
+      if (!inst || inst.deletedAt) {
+        return `${shortMethod} • ${t("analytics.chart.others")}`
+      }
+
+      return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
+    },
+    [t]
+  )
+
+  const formatSelectedPaymentInstrumentsSummary = useCallback(
+    (keys: PaymentInstrumentSelectionKey[]): string => {
+      if (keys.length === 0) return t("analytics.timeWindow.all")
+      if (keys.length === 1) return "1"
+
+      const countsByMethod = new Map<string, number>()
+      for (const key of keys) {
+        const [method] = key.split("::")
+        const short = methodShortLabel(method)
+        countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
+      }
+
+      const parts = Array.from(countsByMethod.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([method, count]) => `${method} ${count}`)
+
+      const MAX_GROUPS = 3
+      const visible = parts.slice(0, MAX_GROUPS)
+      const remaining = parts.length - visible.length
+      const breakdown =
+        remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+
+      return `${keys.length} (${breakdown})`
+    },
+    [t]
+  )
+
+  // Helper to format category labels (translate "Other" category)
+  const formatCategoryLabel = useCallback(
+    (category: string): string => {
+      return category === "Other" ? t("settings.categories.other") : category
+    },
+    [t]
+  )
+
+  const formatListBreakdown = useCallback(
+    (items: string[]): string => {
+      const MAX_ITEMS = 3
+
+      const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
+      const visible = unique.slice(0, MAX_ITEMS)
+      const remaining = unique.length - visible.length
+
+      if (unique.length === 0) return t("analytics.timeWindow.all")
+      if (unique.length === 1) return visible[0]
+
+      return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
+    },
+    [t]
+  )
+
+  const paymentMethodLabel = useCallback(
+    (key: PaymentMethodSelectionKey): string => {
+      if (key === "__none__") return t("analytics.chart.none")
+      // Use helper to get the i18n key instead of the hardcoded label
+      return t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
+    },
+    [t]
+  )
+
+  const appliedChips = useMemo(() => {
+    const chips: Array<{ key: string; label: string }> = []
+
+    if (effectiveSelectedMonth) {
+      chips.push({
+        key: "month",
+        label: t("analytics.filters.month", {
+          month: formatMonthLabel(effectiveSelectedMonth),
+        }),
+      })
+    } else {
+      chips.push({
+        key: "time",
+        label: t("analytics.filters.time", {
+          window: t(`analytics.timeWindow.${timeWindow}`),
+        }),
+      })
+    }
+
+    // Show the applied currency chip only when more than one currency exists,
+    // matching the History tab and the filter screen.
+    if (availableCurrencies.length > 1) {
+      chips.push({
+        key: "currency",
+        label: `${t("settings.localization.currency")}: ${effectiveCurrency} (${getCurrencySymbol(effectiveCurrency)})`,
+      })
+    }
+
+    if (selectedCategories.length === 0) {
+      chips.push({
+        key: "category",
+        label: t("analytics.filters.category", {
+          category: t("analytics.timeWindow.all"),
+        }),
+      })
+    } else if (selectedCategories.length === 1) {
+      chips.push({
+        key: "category",
+        label: t("analytics.filters.category", {
+          category: formatCategoryLabel(selectedCategories[0]),
+        }),
+      })
+    } else {
+      chips.push({
+        key: "category",
+        label: t("analytics.filters.category", {
+          category: `${selectedCategories.length} (${formatListBreakdown(selectedCategories.map(formatCategoryLabel))})`,
+        }),
+      })
+    }
+
+    if (selectedPaymentMethods.length === 0) {
+      chips.push({
+        key: "payment-method",
+        label: t("analytics.filters.payment", { method: t("analytics.timeWindow.all") }),
+      })
+    } else if (selectedPaymentMethods.length === 1) {
+      const only = selectedPaymentMethods[0]
+      chips.push({
+        key: "payment-method",
+        label: t("analytics.filters.payment", { method: paymentMethodLabel(only) }),
+      })
+    } else {
+      chips.push({
+        key: "payment-method",
+        label: t("analytics.filters.payment", {
+          method: `${selectedPaymentMethods.length} (${formatListBreakdown(selectedPaymentMethods.map(paymentMethodLabel))})`,
+        }),
+      })
+    }
+
+    if (showPaymentInstrumentFilter) {
+      if (selectedPaymentInstruments.length === 0) {
+        chips.push({
+          key: "payment-instrument",
+          label: t("analytics.filters.instrument", {
+            instrument: t("analytics.timeWindow.all"),
+          }),
+        })
+      } else if (selectedPaymentInstruments.length === 1) {
+        chips.push({
+          key: "payment-instrument",
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentLabel(
+              selectedPaymentInstruments[0],
+              paymentInstruments
+            ),
+          }),
+        })
+      } else {
+        chips.push({
+          key: "payment-instrument",
+          label: t("analytics.filters.instrument", {
+            instrument: formatSelectedPaymentInstrumentsSummary(
+              selectedPaymentInstruments
+            ),
+          }),
+        })
+      }
+    }
+
+    return chips
+  }, [
+    t,
+    timeWindow,
+    effectiveSelectedMonth,
+    selectedCategories,
+    selectedPaymentMethods,
+    showPaymentInstrumentFilter,
+    formatListBreakdown,
+    formatCategoryLabel,
+    paymentMethodLabel,
+    selectedPaymentInstruments,
+    formatSelectedPaymentInstrumentLabel,
+    paymentInstruments,
+    formatSelectedPaymentInstrumentsSummary,
+    availableCurrencies,
+    effectiveCurrency,
+  ])
 
   return (
     <ScreenContainer>
-      {/* Header */}
-      <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
-        <Text color="$color" opacity={UI_OPACITY.subtle}>
-          {t("dashboard.welcome")}
-        </Text>
-        <XStack gap={UI_SPACE.control} items="center" px={UI_SPACE.micro}>
-          <IconActionButton
-            icon={<RefreshCw size={20} />}
-            onPress={handleSync}
-            tooltip={t("settings.autoSync.syncNow")}
-            disabled={isSyncing}
-            spinning={isSyncing}
-            accessibilityLabel={t("settings.autoSync.syncNow")}
-            tooltipAlign="right"
-          />
-          <IconActionButton
-            icon={<Download size={20} />}
-            onPress={handleImportPress}
-            tooltip={t("settings.smsImport.actions.review")}
-            disabled={isScanningSmsImports}
-            accessibilityLabel={t("settings.smsImport.actions.review")}
-            tooltipAlign="right"
-          />
-        </XStack>
-      </XStack>
+      <Header />
 
-      {/* Currency Filter - Show only if multiple currencies exist */}
-      {availableCurrencies.length > 1 && (
+      <XStack
+        mb="$gutter"
+        gap="$control"
+        style={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          overflow: "visible",
+        }}
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: UI_SPACE.control, pb: UI_SPACE.gutter }}
+          contentContainerStyle={{ gap: UI_SPACE.control }}
+          flex={1}
         >
-          {availableCurrencies.map((c) => (
+          {appliedChips.map((chip) => (
             <Button
-              key={c}
+              key={chip.key}
               size="$chip"
               px="$control"
-              onPress={() => handleCurrencySelect(c)}
-              theme={effectiveCurrency === c ? "accent" : undefined}
+              borderWidth={UI_BORDER_WIDTH.thin}
               borderColor="$borderColor"
-              borderWidth={effectiveCurrency !== c ? UI_BORDER_WIDTH.thin : 0}
+              disabled={!filtersHydrated}
+              onPress={openFilters}
               rounded={UI_RADIUS.round}
             >
-              {c} ({getCurrencySymbol(c)})
+              <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
             </Button>
           ))}
         </ScrollView>
-      )}
 
-      {/* Summary Cards */}
-      <XStack gap={UI_SPACE.control} mb={UI_SPACE.section}>
-        <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$block"
-          bg={CARD_COLORS.blue.bg}
-          onPress={handleAnalyticsPress}
+        <Button
+          size="$chip"
+          px="$control"
+          disabled={!filtersHydrated}
+          onPress={openFilters}
+          icon={Filter}
+          theme={activeCount > 0 ? "accent" : undefined}
         >
-          <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$body"
-            color={CARD_COLORS.blue.text}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {t("dashboard.totalSpent")}
-          </Text>
-          <H4
-            mt={UI_SPACE.control}
-            height={UI_SPACE.empty}
-            justify="center"
-            color={CARD_COLORS.blue.accent}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {formatCurrency(totalExpenses, effectiveCurrency)}
-          </H4>
-        </Card>
-        <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$block"
-          bg={CARD_COLORS.green.bg}
-          onPress={handleHistoryPress}
-        >
-          <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$body"
-            color={CARD_COLORS.green.text}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {t("dashboard.entries")}
-          </Text>
-          <H4
-            mt={UI_SPACE.control}
-            height={UI_SPACE.empty}
-            justify="center"
-            color={CARD_COLORS.green.accent}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {currencyExpenses.length}
-          </H4>
-        </Card>
+          {!filtersHydrated
+            ? t("analytics.filters.button")
+            : activeCount > 0
+              ? `${t("analytics.filters.button")} (${activeCount})`
+              : t("analytics.filters.button")}
+        </Button>
       </XStack>
 
-      {/* Chart Section */}
-      <YStack gap="$gutter" mb={UI_SPACE.section}>
-        <XStack justify="space-between" items="center">
-          <YStack flex={1} mr="$control">
-            <SectionHeader>{t("dashboard.last7Days")}</SectionHeader>
-          </YStack>
-          <Button chromeless size="$chip" px="$control" onPress={handleAnalyticsPress}>
-            {t("dashboard.viewAnalytics")}
-          </Button>
-        </XStack>
-        {hasData ? (
-          <YStack items="center" justify="center" mb={UI_SPACE.section}>
-            {/* BarChart requires raw color values - keeping theme.xxx.val for third-party component */}
-            <BarChart
-              key={chartKey}
-              stackData={chartData}
-              barWidth={24}
-              noOfSections={3}
-              barBorderRadius={4}
-              yAxisThickness={0}
-              xAxisThickness={0}
-              height={200}
-              width={screenWidth - 60}
-              isAnimated
-              xAxisLabelTextStyle={{
-                color: chartTextColor,
-                fontSize: 10,
-              }}
-              yAxisTextStyle={{ color: chartTextColor }}
-              yAxisLabelWidth={50}
-              formatYLabel={formatYLabel}
-              spacing={20}
+      {isLoading ? (
+        <EmptyState title={t("analytics.empty.loading")} subtitle="" />
+      ) : (
+        <>
+          {!hasAnyExpenses ? (
+            <EmptyState
+              title={t("analytics.empty.noData")}
+              subtitle={t("analytics.empty.noDataSubtitle")}
             />
-          </YStack>
-        ) : (
-          <Card
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor="$borderColor"
-            p="$gutter"
-            items="center"
-            justify="center"
-            height={150}
-          >
-            <Text color="$color" opacity={UI_OPACITY.subtle}>
-              {t("dashboard.noData")}
-            </Text>
-          </Card>
-        )}
-      </YStack>
-
-      {/* Recent Transactions List (Mini) */}
-      <YStack>
-        <XStack justify="space-between" items="center">
-          <YStack flex={1} mr="$control">
-            <SectionHeader>{t("dashboard.recentTransactions")}</SectionHeader>
-          </YStack>
-          <Button chromeless size="$chip" px="$control" onPress={handleHistoryPress}>
-            {t("common.seeAll")}
-          </Button>
-        </XStack>
-
-        {recentExpenses.length === 0 && (
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
-            {t("dashboard.noRecent")}
-          </Text>
-        )}
-
-        {recentExpenses.map((expense) => (
-          <RecentExpenseItem
-            key={expense.id}
-            expense={expense}
-            categoryInfo={
-              categoryByLabel.get(expense.category) ??
-              getFallbackCategory(expense.category)
-            }
-          />
-        ))}
-      </YStack>
+          ) : !hasData && selectedCategories.length > 0 ? (
+            <EmptyState
+              title={t("analytics.empty.noMatch")}
+              subtitle={t("analytics.empty.noMatchSubtitle")}
+            />
+          ) : (
+            <>
+              <StatisticsCards
+                statistics={statistics}
+                currencyCode={effectiveCurrency}
+                fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
+                hasActiveFilters={activeCount > 0}
+              />
+              {/* Currency Filter - Show only if multiple currencies exist */}
+              {availableCurrencies.length > 1 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: UI_SPACE.control, pb: UI_SPACE.gutter }}
+                  style={{ marginBottom: UI_SPACE.micro }}
+                >
+                  {currencyButtons.map(({ code, isSelected, onPress }) => (
+                    <Button
+                      key={code}
+                      size="$chip"
+                      px="$control"
+                      onPress={onPress}
+                      theme={isSelected ? "accent" : undefined}
+                      borderColor="$borderColor"
+                      borderWidth={isSelected ? UI_BORDER_WIDTH.thin : 0}
+                      rounded={UI_RADIUS.round}
+                    >
+                      {code} ({getCurrencySymbol(code)})
+                    </Button>
+                  ))}
+                </ScrollView>
+              )}
+              <PieChartSection
+                data={pieChartData}
+                onCategorySelect={handleCategorySelect}
+              />
+              <PaymentMethodPieChart
+                data={paymentMethodChartData}
+                selectedPaymentMethod={selectedPaymentMethodForChart}
+                onPaymentMethodSelect={handlePaymentMethodSelect}
+              />
+              <PaymentInstrumentPieChart
+                data={paymentInstrumentChartData}
+                selectedKey={
+                  selectedPaymentInstruments.length === 1
+                    ? selectedPaymentInstruments[0]
+                    : null
+                }
+                onSelect={handlePaymentInstrumentSelect}
+              />
+              <LineChartSection data={lineChartData} currencyCode={effectiveCurrency} />
+            </>
+          )}
+        </>
+      )}
     </ScreenContainer>
   )
 }
