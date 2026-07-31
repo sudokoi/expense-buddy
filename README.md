@@ -186,15 +186,13 @@ For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 expense-buddy/
 ├── app/
 │   ├── (tabs)/
-│   │   ├── index.tsx           # dashboard
+│   │   ├── index.tsx           # analytics (default tab, charts and breakdowns)
 │   │   ├── add.tsx             # manual expense entry
-│   │   ├── analytics.tsx       # charts and breakdowns
 │   │   ├── history.tsx         # history and filters
 │   │   ├── settings.tsx        # sync, import, and app settings
 │   │   └── _layout.tsx
 │   ├── +html.tsx
 │   ├── +not-found.tsx
-│   ├── day/[date].tsx          # day detail screen
 │   ├── github/repo-picker.tsx  # GitHub repository selection flow
 │   ├── modal.tsx
 │   └── _layout.tsx

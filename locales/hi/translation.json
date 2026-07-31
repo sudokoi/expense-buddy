@@ -2,17 +2,6 @@
   "currency": {
     "symbol": "₹"
   },
-  "dashboard": {
-    "title": "डैशबोर्ड",
-    "welcome": "वापसी पर स्वागत है!",
-    "totalSpent": "कुल व्यय",
-    "entries": "प्रविष्टियाँ",
-    "last7Days": "पिछले 7 दिन",
-    "viewAnalytics": "विश्लेषण देखें",
-    "noData": "अभी तक कोई डेटा नहीं।",
-    "recentTransactions": "हाल ही के लेन-देन",
-    "noRecent": "कोई हालिया लेन-देन नहीं।"
-  },
   "paymentMethods": {
     "cash": "नकद",
     "amazonPay": "अमेज़न पे",
@@ -80,7 +69,6 @@
     "default": "डिफ़ॉल्ट"
   },
   "navigation": {
-    "dashboard": "डैशबोर्ड",
     "add": "व्यय जोड़ें",
     "analytics": "विश्लेषण",
     "history": "इतिहास",
@@ -200,7 +188,8 @@
       "totalSpent": "कुल व्यय",
       "dailyAvg": "दैनिक औसत",
       "topCategory": "शीर्ष श्रेणी",
-      "peakDay": "अधिकतम व्यय दिन"
+      "peakDay": "अधिकतम व्यय दिन",
+      "ofTotal": "{{total}} में से"
     },
     "charts": {
       "common": {
@@ -495,16 +484,6 @@
       "emptyTitle": "समीक्षा के लिए कोई एसएमएस आयात नहीं है।",
       "emptyDescription": "आयातों की समीक्षा शुरू करने के लिए Settings या Add Expense से हाल के संदेश स्कैन करें।"
     }
-  },
-  "dayView": {
-    "title": "{{date}} के लिए खर्च",
-    "today": "आज",
-    "yesterday": "कल",
-    "tomorrow": "कल (आने वाला)",
-    "totalSpent": "कुल व्यय",
-    "empty": "इस दिन के लिए कोई खर्च नहीं",
-    "previousDay": "पिछला दिन",
-    "nextDay": "अगला दिन"
   },
   "repoPicker": {
     "title": "रिपोजिटरी चुनें",

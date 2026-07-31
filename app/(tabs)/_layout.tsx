@@ -1,7 +1,7 @@
 import { Tabs, usePathname } from "expo-router"
 import { useEffect } from "react"
 import { useTheme } from "tamagui"
-import { Home, PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
+import { PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { getColorValue } from "../../tamagui.config"
@@ -42,9 +42,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t("navigation.dashboard"),
+          title: t("navigation.analytics"),
           tabBarIcon: ({ color }) => (
-            <Home color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+            <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />
           ),
         }}
       />
@@ -54,15 +54,6 @@ export default function TabLayout() {
           title: t("navigation.add"),
           tabBarIcon: ({ color }) => (
             <PlusCircle color={getColorValue(color)} size={UI_ICON_SIZE.large} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          title: t("navigation.analytics"),
-          tabBarIcon: ({ color }) => (
-            <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />
           ),
         }}
       />

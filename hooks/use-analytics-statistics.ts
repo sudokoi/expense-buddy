@@ -17,7 +17,8 @@ export interface AnalyticsStatisticsResult {
 export function useAnalyticsStatistics(
   filteredExpenses: Expense[],
   timeWindow: TimeWindow,
-  dateRange: DateRange
+  dateRange: DateRange,
+  timeWindowExpenses?: Expense[]
 ): AnalyticsStatisticsResult {
   const statistics = useMemo(() => {
     // For "all", calculate actual days from data range
@@ -26,8 +27,20 @@ export function useAnalyticsStatistics(
       const diffTime = Math.abs(dateRange.end.getTime() - dateRange.start.getTime())
       daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
-    return calculateStatistics(filteredExpenses, daysInPeriod)
-  }, [filteredExpenses, timeWindow, dateRange])
+
+    const stats = calculateStatistics(filteredExpenses, daysInPeriod)
+
+    // Compute the full-period total from time-window-only filtered expenses so
+    // the stats cards can show it as subtext when filters are active.
+    if (timeWindowExpenses) {
+      stats.fullPeriodTotalSpending = timeWindowExpenses.reduce(
+        (sum, expense) => sum + Math.abs(expense.amount),
+        0
+      )
+    }
+
+    return stats
+  }, [filteredExpenses, timeWindow, dateRange, timeWindowExpenses])
 
   return { statistics }
 }

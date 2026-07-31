@@ -2,17 +2,6 @@
   "currency": {
     "symbol": "$"
   },
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome back!",
-    "totalSpent": "Total Spent",
-    "entries": "Entries",
-    "last7Days": "Last 7 Days",
-    "viewAnalytics": "View Analytics",
-    "noData": "No data to display yet.",
-    "recentTransactions": "Recent Transactions",
-    "noRecent": "No recent transactions."
-  },
   "paymentMethods": {
     "cash": "Cash",
     "amazonPay": "Amazon Pay",
@@ -80,7 +69,6 @@
     "default": "Default"
   },
   "navigation": {
-    "dashboard": "Dashboard",
     "add": "Add Expense",
     "analytics": "Analytics",
     "history": "History",
@@ -200,7 +188,8 @@
       "totalSpent": "Total Spent",
       "dailyAvg": "Daily Avg",
       "topCategory": "Top Category",
-      "peakDay": "Peak Day"
+      "peakDay": "Peak Day",
+      "ofTotal": "of {{total}}"
     },
     "charts": {
       "common": {
@@ -495,16 +484,6 @@
       "emptyTitle": "No SMS imports to review.",
       "emptyDescription": "Scan recent messages from Settings or Add Expense to start reviewing imports."
     }
-  },
-  "dayView": {
-    "title": "Expenses for {{date}}",
-    "today": "Today",
-    "yesterday": "Yesterday",
-    "tomorrow": "Tomorrow",
-    "totalSpent": "Total Spent",
-    "empty": "No expenses for this day",
-    "previousDay": "Previous day",
-    "nextDay": "Next day"
   },
   "repoPicker": {
     "title": "Choose Repository",

@@ -12,6 +12,10 @@ import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-to
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
   currencyCode?: string
+  /** Full-period total (ignoring category/payment/etc filters) shown as subtext */
+  fullPeriodTotalSpending?: number
+  /** Hide subtext when no filters are active */
+  hasActiveFilters?: boolean
 }
 
 /**
@@ -21,11 +25,13 @@ interface StatisticsCardsProps {
 export const StatisticsCards = memo(function StatisticsCards({
   statistics,
   currencyCode = "INR",
+  fullPeriodTotalSpending,
+  hasActiveFilters = false,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
 
-  // ...
+  const showSubtext = hasActiveFilters && fullPeriodTotalSpending !== undefined
 
   const formatDateStr = (dateStr: string): string => {
     try {
@@ -67,6 +73,13 @@ export const StatisticsCards = memo(function StatisticsCards({
             {symbol}
             {statistics.totalSpending.toFixed(2)}
           </H4>
+          {showSubtext && (
+            <Text fontSize="$caption" color={CARD_COLORS.blue.text} numberOfLines={1}>
+              {t("analytics.stats.ofTotal", {
+                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+              })}
+            </Text>
+          )}
         </Card>
 
         <Card
@@ -97,6 +110,13 @@ export const StatisticsCards = memo(function StatisticsCards({
             {symbol}
             {statistics.averageDaily.toFixed(2)}
           </H4>
+          {showSubtext && (
+            <Text fontSize="$caption" color={CARD_COLORS.green.text} numberOfLines={1}>
+              {t("analytics.stats.ofTotal", {
+                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+              })}
+            </Text>
+          )}
         </Card>
       </XStack>
 
@@ -137,6 +157,13 @@ export const StatisticsCards = memo(function StatisticsCards({
               {statistics.highestCategory.amount.toFixed(2)}
             </Text>
           )}
+          {showSubtext && (
+            <Text fontSize="$caption" color={CARD_COLORS.orange.text} numberOfLines={1}>
+              {t("analytics.stats.ofTotal", {
+                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+              })}
+            </Text>
+          )}
         </Card>
 
         <Card
@@ -170,6 +197,13 @@ export const StatisticsCards = memo(function StatisticsCards({
             <Text fontSize="$caption" color={CARD_COLORS.purple.text}>
               {symbol}
               {statistics.highestDay.amount.toFixed(2)}
+            </Text>
+          )}
+          {showSubtext && (
+            <Text fontSize="$caption" color={CARD_COLORS.purple.text} numberOfLines={1}>
+              {t("analytics.stats.ofTotal", {
+                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+              })}
             </Text>
           )}
         </Card>
