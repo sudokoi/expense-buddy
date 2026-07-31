@@ -18,11 +18,18 @@ export interface AnalyticsStatistics {
 }
 
 /**
- * Calculate summary statistics for expenses
+ * Calculate summary statistics for expenses.
+ *
+ * @param expenses expenses after all filters (headline values)
+ * @param daysInPeriod number of days in the period
+ * @param fullPeriodExpenses optional expenses scoped only by currency + time
+ *   window (ignoring category/payment/instrument/search/amount filters). When
+ *   provided, `fullPeriodTotalSpending` is set from their total.
  */
 export function calculateStatistics(
   expenses: Expense[],
-  daysInPeriod: number
+  daysInPeriod: number,
+  fullPeriodExpenses?: Expense[]
 ): AnalyticsStatistics {
   // Calculate total spending
   const totalSpending = expenses.reduce(
@@ -72,5 +79,13 @@ export function calculateStatistics(
     highestCategory,
     highestDay,
     daysInPeriod,
+    ...(fullPeriodExpenses
+      ? {
+          fullPeriodTotalSpending: fullPeriodExpenses.reduce(
+            (sum, expense) => sum + Math.abs(expense.amount),
+            0
+          ),
+        }
+      : {}),
   }
 }

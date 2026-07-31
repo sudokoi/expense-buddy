@@ -28,18 +28,9 @@ export function useAnalyticsStatistics(
       daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
 
-    const stats = calculateStatistics(filteredExpenses, daysInPeriod)
-
-    // Compute the full-period total from time-window-only filtered expenses so
-    // the stats cards can show it as subtext when filters are active.
-    if (timeWindowExpenses) {
-      stats.fullPeriodTotalSpending = timeWindowExpenses.reduce(
-        (sum, expense) => sum + Math.abs(expense.amount),
-        0
-      )
-    }
-
-    return stats
+    // fullPeriodTotalSpending is derived from time-window-only filtered
+    // expenses so the stats cards can show it as subtext when filters are active.
+    return calculateStatistics(filteredExpenses, daysInPeriod, timeWindowExpenses)
   }, [filteredExpenses, timeWindow, dateRange, timeWindowExpenses])
 
   return { statistics }
