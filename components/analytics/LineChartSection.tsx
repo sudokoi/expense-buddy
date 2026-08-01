@@ -72,6 +72,15 @@ export const LineChartSection = memo(function LineChartSection({
     }
   }, [screenWidth, data.length])
 
+  // Default the scroll position to the right end so the latest spend trend is
+  // visible first, instead of the oldest days on the left. Using a callback ref
+  // fires once on mount, so users can still scroll back to the left afterwards.
+  const scrollToLatest = useCallback((node: ScrollView | null) => {
+    if (!node) return
+    // Content isn't laid out at ref-attach time; defer to the next frame.
+    requestAnimationFrame(() => node.scrollToEnd({ animated: false }))
+  }, [])
+
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
@@ -179,7 +188,7 @@ export const LineChartSection = memo(function LineChartSection({
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
       <YStack>
         {needsScroll ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator>
+          <ScrollView ref={scrollToLatest} horizontal showsHorizontalScrollIndicator>
             {chartContent}
           </ScrollView>
         ) : (
