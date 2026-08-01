@@ -162,7 +162,7 @@ export default function AnalyticsScreen() {
     isLoading,
     paymentInstruments,
     effectiveSelectedMonth,
-    timeWindowExpenses,
+    fullPeriodExpenses,
   } = useAnalyticsBase(
     timeWindow,
     selectedCategories,
@@ -184,7 +184,7 @@ export default function AnalyticsScreen() {
     filteredExpenses,
     effectiveSelectedMonth ? "all" : timeWindow,
     dateRange,
-    timeWindowExpenses
+    fullPeriodExpenses
   )
 
   // Handle category selection from pie chart segment tap - memoized
@@ -594,6 +594,7 @@ export default function AnalyticsScreen() {
                 statistics={statistics}
                 currencyCode={effectiveCurrency}
                 fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
+                hasActiveFilters={activeCount > 0}
               />
               {/* Currency Filter - Show only if multiple currencies exist */}
               {availableCurrencies.length > 1 && (

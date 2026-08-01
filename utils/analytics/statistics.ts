@@ -22,8 +22,8 @@ export interface AnalyticsStatistics {
  *
  * @param expenses expenses after all filters (headline values)
  * @param daysInPeriod number of days in the period
- * @param fullPeriodExpenses optional expenses scoped only by currency + time
- *   window (ignoring category/payment/instrument/search/amount filters). When
+ * @param fullPeriodExpenses optional expenses for the whole period (all
+ *   currency expenses, ignoring every filter including the time window). When
  *   provided, `fullPeriodTotalSpending` is set from their total.
  */
 export function calculateStatistics(
