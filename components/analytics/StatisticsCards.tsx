@@ -12,8 +12,10 @@ import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-to
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
   currencyCode?: string
-  /** Full-period total (ignoring category/payment/etc filters) shown as subtext */
+  /** Full-period (grand) total ignoring all filters, shown as subtext */
   fullPeriodTotalSpending?: number
+  /** Show the subtext whenever any filter is active (not the default/reset state) */
+  hasActiveFilters?: boolean
 }
 
 /**
@@ -24,16 +26,15 @@ export const StatisticsCards = memo(function StatisticsCards({
   statistics,
   currencyCode = "INR",
   fullPeriodTotalSpending,
+  hasActiveFilters = false,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
 
-  // Only show the subtext when a non-time filter is in effect. When only the
-  // time window/month is active, the full-period total equals the headline
-  // total, so the subtext would just repeat it.
-  const showSubtext =
-    fullPeriodTotalSpending !== undefined &&
-    fullPeriodTotalSpending !== statistics.totalSpending
+  // Show the subtext whenever any filter narrows the data below the full-period
+  // total. In the default/reset state (no active filters) the headline already
+  // equals the full-period total, so the subtext would just repeat it.
+  const showSubtext = hasActiveFilters && fullPeriodTotalSpending !== undefined
 
   const formatDateStr = (dateStr: string): string => {
     try {

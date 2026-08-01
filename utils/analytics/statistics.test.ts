@@ -80,5 +80,21 @@ describe("calculateStatistics", () => {
       const stats = calculateStatistics(filtered, 7, fullPeriod)
       expect(stats.fullPeriodTotalSpending).toBe(150)
     })
+
+    it("differs from the headline total when only a time window is active", () => {
+      // Time-only filter: headline is scoped to the period, but the full-period
+      // (grand) total comes from ALL currency expenses and must differ so the
+      // subtext stays visible instead of being hidden as redundant.
+      const timeWindow = [makeExpense({ amount: 100 }), makeExpense({ amount: 50 })]
+      const allCurrency = [
+        makeExpense({ amount: 100 }),
+        makeExpense({ amount: 50 }),
+        makeExpense({ amount: 400 }),
+      ]
+      const stats = calculateStatistics(timeWindow, 30, allCurrency)
+      expect(stats.totalSpending).toBe(150)
+      expect(stats.fullPeriodTotalSpending).toBe(550)
+      expect(stats.fullPeriodTotalSpending).not.toBe(stats.totalSpending)
+    })
   })
 })
