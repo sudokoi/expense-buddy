@@ -389,7 +389,7 @@ export function PaymentInstrumentInlineDropdown({
       {kind === "manual" && (
         <YStack gap="$micro">
           <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
-            {effectiveIdentifierLabel} (Optional)
+            {effectiveIdentifierLabel} {t("common.optional")}
           </Label>
           <Input
             size="$control"
