@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
@@ -234,7 +234,7 @@ export function SmsImportReviewScreen({
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
-  const scrollViewRef = useRef<any>(null)
+  const scrollViewRef = useRef<React.ElementRef<typeof KeyboardAwareScrollView>>(null)
   const resolvedSuggestions = useMemo(() => {
     const map = new Map<
       string,
