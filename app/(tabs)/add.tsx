@@ -285,15 +285,12 @@ export default function AddExpenseScreen() {
     }
   }
 
-  const onChangeDate = useCallback(
-    (_event: DateTimePickerEvent, selectedDate?: Date) => {
-      setShowDatePicker(false)
-      if (selectedDate) {
-        setDate(selectedDate)
-      }
-    },
-    [],
-  )
+  const onChangeDate = useCallback((_event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false)
+    if (selectedDate) {
+      setDate(selectedDate)
+    }
+  }, [])
 
   return (
     <YStack flex={1} bg="$background">

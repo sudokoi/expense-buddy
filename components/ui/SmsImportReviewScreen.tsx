@@ -279,7 +279,7 @@ export function SmsImportReviewScreen({
     }
 
     const focusedItem = pendingItems.find(
-      (item) => item.id === initialFocusItemId || item.fingerprint === initialFocusItemId,
+      (item) => item.id === initialFocusItemId || item.fingerprint === initialFocusItemId
     )
     if (!focusedItem) {
       return
