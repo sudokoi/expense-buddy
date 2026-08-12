@@ -746,8 +746,8 @@ export default function HistoryScreen() {
           contentContainerStyle={{ gap: UI_SPACE.control }}
           style={{ flex: 1 }}
         >
-          {filterChips.map((chip, index) => (
-            <FilterChip key={index} label={chip.label} onRemove={chip.onRemove} />
+          {filterChips.map((chip) => (
+            <FilterChip key={chip.label} label={chip.label} onRemove={chip.onRemove} />
           ))}
         </ScrollView>
 
