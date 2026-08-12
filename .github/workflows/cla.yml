@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "CLA Signature Bot"
-        uses: MetaMask/cla-signature-bot@v4.0.0
+        uses: sudokoi/cla-signature-bot@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
