@@ -6,13 +6,6 @@ import {
   resolveSmsImportPaymentSuggestion,
 } from "./suggestion-resolver"
 
-jest.mock("i18next", () => ({
-  t: (key: string) => {
-    if (key === "categories.other") return "Other"
-    return key
-  },
-}))
-
 function createCategory(label: string, order: number): Category {
   return {
     label,
