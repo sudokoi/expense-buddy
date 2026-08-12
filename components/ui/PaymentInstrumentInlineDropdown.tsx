@@ -399,7 +399,7 @@ export function PaymentInstrumentInlineDropdown({
             focusStyle={{
               borderColor: ACCENT_COLORS.primary,
             }}
-            placeholder={t("settings.instruments.form.identifierPlaceholder", {
+            placeholder={t("instruments.form.identifierPlaceholder", {
               count: effectiveMaxLength,
             })}
             keyboardType="numeric"
@@ -458,7 +458,7 @@ export function PaymentInstrumentInlineDropdown({
             <Input
               size="$control"
               bg="$background"
-              placeholder={t("settings.instruments.form.identifierPlaceholder", {
+              placeholder={t("instruments.form.identifierPlaceholder", {
                 count: getLastDigitsLength(method),
               })}
               keyboardType="numeric"
