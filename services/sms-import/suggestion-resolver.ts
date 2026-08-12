@@ -186,11 +186,11 @@ export function resolveSmsImportCategory(
     }
   }
 
-  if (labels.has(i18next.t("categories.other"))) {
-    return i18next.t("categories.other")
+  if (labels.has(i18next.t("settings.categories.other"))) {
+    return i18next.t("settings.categories.other")
   }
 
-  return availableCategories[0]?.label ?? i18next.t("categories.other")
+  return availableCategories[0]?.label ?? i18next.t("settings.categories.other")
 }
 
 export function resolveSmsImportPaymentSuggestion(

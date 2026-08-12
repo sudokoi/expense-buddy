@@ -28,7 +28,11 @@
       "nickname": "ニックネーム",
       "nicknamePlaceholder": "例: HDFC Visa",
       "lastDigits": "末尾の数字",
-      "identifierPlaceholder": "{{count}}桁を入力"
+      "identifierPlaceholder": "{{count}}桁を入力",
+      "nicknameRequired": "ニックネームは必須です",
+      "nicknameTooLong": "ニックネームは30文字以内で入力してください",
+      "digitsError": "正確に{{count}}桁を入力してください",
+      "nicknameTaken": "この支払い方法のニックネームは既に存在します"
     },
     "dropdown": {
       "none": "なし",
@@ -40,20 +44,17 @@
       "cancelAdd": "追加をキャンセル",
       "selected": "選択中",
       "saved": "保存された手段"
-    }
+    },
+    "remove": "削除"
   },
   "common": {
     "add": "+ 追加",
-    "import": "インポート",
-    "seeAll": "すべて見る",
     "edit": "編集",
     "cancel": "キャンセル",
     "delete": "削除",
     "save": "保存",
     "done": "完了",
     "close": "閉じる",
-    "madeBy": "作成者",
-    "giveStar": "スターを付ける ⭐️",
     "editLabel": "{{label}}を編集",
     "deleteLabel": "{{label}}を削除",
     "removeLabel": "{{label}}を削除",
@@ -64,9 +65,9 @@
     "clearFilters": "フィルターをクリア",
     "reset": "リセット",
     "apply": "適用",
-    "back": "戻る",
     "clearSearch": "検索をクリア",
-    "default": "デフォルト"
+    "default": "デフォルト",
+    "required": "必須"
   },
   "navigation": {
     "add": "支出を追加",
@@ -75,7 +76,6 @@
     "settings": "設定"
   },
   "history": {
-    "title": "支出履歴",
     "emptyTitle": "支出がまだありません。",
     "emptySubtitle": "「支出を追加」タブから追加してください。",
     "deleteDialog": {
@@ -84,7 +84,6 @@
     },
     "editDialog": {
       "title": "支出を編集",
-      "description": "支出の詳細を更新",
       "fields": {
         "date": "日付",
         "datePlaceholder": "日付を選択",
@@ -101,7 +100,8 @@
         "identifier": "識別子 (任意)",
         "identifierPlaceholder": "{{max}}桁を入力",
         "otherPlaceholder": "例: PayPay, Suica, 現金"
-      }
+      },
+      "notFound": "支出が見つかりません"
     },
     "loadMore": "さらに読み込む",
     "loading": "読み込み中...",
@@ -123,11 +123,9 @@
     }
   },
   "add": {
-    "title": "新しい支出を追加",
     "amount": "金額",
     "amountPlaceholder": "0 または 100+50",
     "amountPlaceholderNumeric": "0.00",
-    "amountError": "有効な金額を入力してください",
     "expressionError": "有効な式を入力してください",
     "preview": "= {{amount}}",
     "category": "カテゴリー",
@@ -143,7 +141,6 @@
     "successAddAnother": "支出を追加しました。続けて追加します。"
   },
   "analytics": {
-    "title": "分析",
     "subtitle": "支出パターンを追跡",
     "filters": {
       "button": "フィルター",
@@ -152,17 +149,6 @@
       "category": "カテゴリー: {{category}}",
       "payment": "支払: {{method}}",
       "instrument": "手段: {{instrument}}"
-    },
-    "filtersModal": {
-      "title": "フィルター",
-      "reset": "リセット",
-      "apply": "適用",
-      "loading": "保存されたフィルターを読み込み中...",
-      "time": "期間",
-      "month": "月",
-      "category": "カテゴリー",
-      "paymentMethod": "支払方法",
-      "paymentInstrument": "支払手段"
     },
     "timeWindow": {
       "7d": "7日間",
@@ -216,13 +202,10 @@
       "sync": "同期",
       "payment": "支払い",
       "defaultPayment": "デフォルトの支払方法",
-      "paymentInstruments": "支払手段",
       "categories": "カテゴリー",
-      "github": "GitHub 同期",
       "localization": "ローカリゼーション",
       "featureFlags": "機能フラグ",
       "general": "一般",
-      "appearance": "外観",
       "about": "アプリ情報"
     },
     "sync": {
@@ -278,8 +261,6 @@
       "description": "新しい支出を追加する際に、この支払方法を事前に選択します。"
     },
     "github": {
-      "descriptionWeb": "パーソナルアクセストークンを使用して、支出をGitHubリポジトリに同期します。",
-      "descriptionNative": "GitHubでサインインして、支出を個人のリポジトリ（組織のリポジトリはサポートされていません）に同期します。",
       "configTitle": "GitHub 設定",
       "connected": "接続済み",
       "tokenLabel": "GitHub パーソナルアクセストークン",
@@ -370,19 +351,12 @@
       "description": "最近のSMS取引を端末上で取り込み、支出として保存する前に確認できます。",
       "backgroundAlerts": "バックグラウンド取引アラート",
       "backgroundAlertsHelp": "受信した取引SMSをオフラインで検出し、通知から直接レビュー画面を開きます。",
-      "permissionStatus": "権限の状態",
       "helper": "現在のスキャンは最近のメッセージのみが対象で、生のSMSデータはこの端末内に保持されます。",
       "actions": {
         "scan": "最近のメッセージをスキャン",
         "scanning": "スキャン中...",
         "review": "インポートを確認",
         "reviewWithPending": "インポートを確認 ({{count}} 件保留)"
-      },
-      "statuses": {
-        "granted": "許可済み",
-        "denied": "拒否",
-        "undetermined": "未要求",
-        "unavailable": "利用不可"
       },
       "notifications": {
         "androidOnly": "SMSインポートはAndroidでのみ利用できます。",
@@ -408,7 +382,6 @@
       "viewGitHub": "GitHubで見る",
       "includeLogsTitle": "デバイスログを含めますか？",
       "includeLogsMessage": "問題のデバッグに役立てるため、最近の{{count}}件のデバイスログが添付されます。これらにはアプリの操作詳細のみ含まれ、SMSの内容、金融データ、個人情報は含まれません。",
-      "continueToGitHub": "GitHubに進む",
       "logsCopied": "ログをクリップボードにコピーしました。GitHubのIssueに貼り付けてください。",
       "issueCreated": "Issueを作成しました。ブラウザで詳細を追加してください。",
       "dontAttach": "添付しない",
@@ -489,11 +462,8 @@
     "title": "リポジトリを選択",
     "subtitle": "支出を同期するリポジトリを選択してください。",
     "searchPlaceholder": "リポジトリを検索...",
-    "loadMore": "さらに読み込む",
     "loading": "読み込み中...",
     "empty": "リポジトリが見つかりませんでした。",
-    "error": "リポジトリの読み込みに失敗しました",
-    "createPrivate": "新しいプライベートリポジトリを作成: {{name}}",
     "webAuthError": "リポジトリピッカーはWebでは利用できません。トークンを使用してowner/repoを入力してください。",
     "sessionExpired": "GitHubセッションの有効期限が切れました。もう一度サインインしてください。",
     "rateLimit": "GitHubのレート制限に達しました。しばらく待ってからもう一度お試しください。",
@@ -539,7 +509,6 @@
       "syncedExpenses": "{{count}}件の支出を同期しました: {{details}}",
       "downloadedExpenses": "{{files}}ファイルから{{count}}件の支出をダウンロードしました",
       "batchCommitFailed": "バッチコミットに失敗しました",
-      "fetchFailed": "リモート支出の取得に失敗しました",
       "conflictsCount": "同期に{{count}}件の競合があり、解決が必要です",
       "conflictsNoHandler": "競合が検出されましたが、競合ハンドラーが提供されていません",
       "syncCancelled": "ユーザーにより同期がキャンセルされました",

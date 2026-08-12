@@ -28,7 +28,11 @@
       "nickname": "Nickname",
       "nicknamePlaceholder": "e.g., HDFC Visa",
       "lastDigits": "Last digits",
-      "identifierPlaceholder": "Enter {{count}} digits"
+      "identifierPlaceholder": "Enter {{count}} digits",
+      "nicknameRequired": "Nickname is required",
+      "nicknameTooLong": "Nickname must be 30 characters or less",
+      "digitsError": "Enter exactly {{count}} digits",
+      "nicknameTaken": "Nickname already exists for this payment method"
     },
     "dropdown": {
       "none": "None",
@@ -40,20 +44,17 @@
       "cancelAdd": "Cancel Add",
       "selected": "Selected",
       "saved": "Saved instrument"
-    }
+    },
+    "remove": "Remove"
   },
   "common": {
     "add": "+ Add",
-    "import": "Import",
-    "seeAll": "See All",
     "edit": "Edit",
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
     "done": "Done",
     "close": "Close",
-    "madeBy": "Made by",
-    "giveStar": "give it a ⭐️",
     "editLabel": "Edit {{label}}",
     "deleteLabel": "Delete {{label}}",
     "removeLabel": "Remove {{label}}",
@@ -64,9 +65,9 @@
     "clearFilters": "Clear Filters",
     "reset": "Reset",
     "apply": "Apply",
-    "back": "Back",
     "clearSearch": "Clear search",
-    "default": "Default"
+    "default": "Default",
+    "required": "required"
   },
   "navigation": {
     "add": "Add Expense",
@@ -75,7 +76,6 @@
     "settings": "Settings"
   },
   "history": {
-    "title": "Expense History",
     "emptyTitle": "No expenses yet.",
     "emptySubtitle": "Add one from the Add Expense tab.",
     "deleteDialog": {
@@ -84,7 +84,6 @@
     },
     "editDialog": {
       "title": "Edit Expense",
-      "description": "Update the expense details",
       "fields": {
         "date": "Date",
         "datePlaceholder": "Select date",
@@ -101,7 +100,8 @@
         "identifier": "Identifier (Optional)",
         "identifierPlaceholder": "Enter {{max}} digits",
         "otherPlaceholder": "e.g., Venmo, PayPal, Gift Card"
-      }
+      },
+      "notFound": "Expense not found"
     },
     "loadMore": "Load More",
     "loading": "Loading...",
@@ -123,11 +123,9 @@
     }
   },
   "add": {
-    "title": "Add New Expense",
     "amount": "Amount",
     "amountPlaceholder": "0.00 or 100+50",
     "amountPlaceholderNumeric": "0.00",
-    "amountError": "Please enter a valid amount",
     "expressionError": "Please enter a valid expression",
     "preview": "= {{amount}}",
     "category": "Category",
@@ -143,7 +141,6 @@
     "successAddAnother": "Expense added. Add another."
   },
   "analytics": {
-    "title": "Analytics",
     "subtitle": "Track your spending patterns",
     "filters": {
       "button": "Filters",
@@ -152,17 +149,6 @@
       "category": "Category: {{category}}",
       "payment": "Payment: {{method}}",
       "instrument": "Instrument: {{instrument}}"
-    },
-    "filtersModal": {
-      "title": "Filters",
-      "reset": "Reset",
-      "apply": "Apply",
-      "loading": "Loading saved filters...",
-      "time": "Time",
-      "month": "Month",
-      "category": "Category",
-      "paymentMethod": "Payment Method",
-      "paymentInstrument": "Payment Instrument"
     },
     "timeWindow": {
       "7d": "7 Days",
@@ -216,13 +202,10 @@
       "sync": "SYNC",
       "payment": "PAYMENT",
       "defaultPayment": "DEFAULT PAYMENT METHOD",
-      "paymentInstruments": "PAYMENT INSTRUMENTS",
       "categories": "CATEGORIES",
-      "github": "GITHUB SYNC",
       "localization": "LOCALIZATION",
       "featureFlags": "FEATURE FLAGS",
       "general": "GENERAL",
-      "appearance": "APPEARANCE",
       "about": "APP INFORMATION"
     },
     "sync": {
@@ -278,8 +261,6 @@
       "description": "Pre-select this payment method when adding new expenses."
     },
     "github": {
-      "descriptionWeb": "Sync your expenses to a GitHub repository using a Personal Access Token.",
-      "descriptionNative": "Sign in with GitHub to sync your expenses to a personal repository you own (organization repos aren’t supported).",
       "configTitle": "GitHub Configuration",
       "connected": "Connected",
       "tokenLabel": "GitHub Personal Access Token",
@@ -370,19 +351,12 @@
       "description": "Import recent SMS transactions on-device and review them before saving expenses.",
       "backgroundAlerts": "Background transaction alerts",
       "backgroundAlertsHelp": "Detect incoming transaction SMS messages offline, then open the review flow directly from a notification.",
-      "permissionStatus": "Permission status",
       "helper": "The current scan is limited to recent messages and keeps raw SMS data local to this device.",
       "actions": {
         "scan": "Scan recent messages",
         "scanning": "Scanning...",
         "review": "Review imports",
         "reviewWithPending": "Review imports ({{count}} pending)"
-      },
-      "statuses": {
-        "granted": "Granted",
-        "denied": "Denied",
-        "undetermined": "Not requested",
-        "unavailable": "Unavailable"
       },
       "notifications": {
         "androidOnly": "SMS import is only available on Android.",
@@ -408,7 +382,6 @@
       "viewGitHub": "View on GitHub",
       "includeLogsTitle": "Include Device Logs?",
       "includeLogsMessage": "{{count}} recent device logs will be attached to help debug the issue. They contain app operation details only — no SMS content, financial data, or personal information.",
-      "continueToGitHub": "Continue to GitHub",
       "logsCopied": "Logs copied to clipboard. Paste them in the GitHub issue.",
       "issueCreated": "Issue created. Add details in the browser.",
       "dontAttach": "Don't Attach",
@@ -489,11 +462,8 @@
     "title": "Choose Repository",
     "subtitle": "Select a repository to sync your expenses.",
     "searchPlaceholder": "Search repositories...",
-    "loadMore": "Load more repositories",
     "loading": "Loading...",
     "empty": "No repositories found.",
-    "error": "Failed to load repositories",
-    "createPrivate": "Create a new private repository: {{name}}",
     "webAuthError": "Repo picker is not available on web. Use a token and enter owner/repo.",
     "sessionExpired": "Your GitHub session is no longer valid. Please sign in again.",
     "rateLimit": "GitHub rate limit reached. Please wait a bit and try again.",
@@ -539,7 +509,6 @@
       "syncedExpenses": "Synced {{count}} expenses: {{details}}",
       "downloadedExpenses": "Downloaded {{count}} expenses from {{files}} file(s)",
       "batchCommitFailed": "Batch commit failed",
-      "fetchFailed": "Failed to fetch remote expenses",
       "conflictsCount": "Sync has {{count}} conflict(s) that require resolution",
       "conflictsNoHandler": "Conflicts detected but no conflict handler provided",
       "syncCancelled": "Sync cancelled by user",

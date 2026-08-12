@@ -28,7 +28,11 @@
       "nickname": "उपनाम",
       "nicknamePlaceholder": "उदा. HDFC Visa",
       "lastDigits": "अंतिम अंक",
-      "identifierPlaceholder": "{{count}} अंक दर्ज करें"
+      "identifierPlaceholder": "{{count}} अंक दर्ज करें",
+      "nicknameRequired": "उपनाम आवश्यक है",
+      "nicknameTooLong": "उपनाम 30 अक्षर या उससे कम होना चाहिए",
+      "digitsError": "कृपया ठीक {{count}} अंक दर्ज करें",
+      "nicknameTaken": "इस भुगतान विधि के लिए उपनाम पहले से मौजूद है"
     },
     "dropdown": {
       "none": "कोई नहीं",
@@ -40,20 +44,17 @@
       "cancelAdd": "जोड़ना रद्द करें",
       "selected": "चयनित",
       "saved": "सहेजा गया साधन"
-    }
+    },
+    "remove": "हटाएं"
   },
   "common": {
     "add": "+ जोड़ें",
-    "import": "आयात करें",
-    "seeAll": "सभी देखें",
     "edit": "संपादित करें",
     "cancel": "रद्द करें",
     "delete": "हटाएं",
     "save": "सहेजें",
     "done": "हो गया",
     "close": "बंद करें",
-    "madeBy": "द्वारा निर्मित",
-    "giveStar": "एक ⭐️ दें",
     "editLabel": "{{label}} संपादित करें",
     "deleteLabel": "{{label}} हटाएं",
     "removeLabel": "{{label}} हटाएं",
@@ -64,9 +65,9 @@
     "clearFilters": "फिल्टर साफ़ करें",
     "reset": "रीसेट",
     "apply": "लागू करें",
-    "back": "वापस",
     "clearSearch": "खोज साफ़ करें",
-    "default": "डिफ़ॉल्ट"
+    "default": "डिफ़ॉल्ट",
+    "required": "आवश्यक"
   },
   "navigation": {
     "add": "व्यय जोड़ें",
@@ -75,7 +76,6 @@
     "settings": "सेटिंग्स"
   },
   "history": {
-    "title": "व्यय इतिहास",
     "emptyTitle": "अभी तक कोई खर्च नहीं।",
     "emptySubtitle": "खर्च जोड़ें टैब से एक जोड़ें।",
     "deleteDialog": {
@@ -84,7 +84,6 @@
     },
     "editDialog": {
       "title": "व्यय संपादित करें",
-      "description": "व्यय विवरण अपडेट करें",
       "fields": {
         "date": "दिनांक",
         "datePlaceholder": "दिनांक चुनें",
@@ -101,7 +100,8 @@
         "identifier": "पहचानकर्ता (वैकल्पिक)",
         "identifierPlaceholder": "{{max}} अंक दर्ज करें",
         "otherPlaceholder": "उदा., UPI, नकद, कार्ड"
-      }
+      },
+      "notFound": "खर्च नहीं मिला"
     },
     "loadMore": "और लोड करें",
     "loading": "लोड हो रहा है...",
@@ -123,11 +123,9 @@
     }
   },
   "add": {
-    "title": "नया व्यय जोड़ें",
     "amount": "राशि",
     "amountPlaceholder": "0.00 या 100+50",
     "amountPlaceholderNumeric": "0.00",
-    "amountError": "कृपया एक मान्य राशि दर्ज करें",
     "expressionError": "कृपया एक मान्य अभिव्यक्ति दर्ज करें",
     "preview": "= {{amount}}",
     "category": "श्रेणी",
@@ -143,7 +141,6 @@
     "successAddAnother": "व्यय जोड़ा गया। एक और जोड़ें।"
   },
   "analytics": {
-    "title": "विश्लेषण",
     "subtitle": "अपने खर्च के पैटर्न को ट्रैक करें",
     "filters": {
       "button": "फिल्टर",
@@ -152,17 +149,6 @@
       "category": "श्रेणी: {{category}}",
       "payment": "भुगतान: {{method}}",
       "instrument": "साधन: {{instrument}}"
-    },
-    "filtersModal": {
-      "title": "फिल्टर",
-      "reset": "रीसेट",
-      "apply": "लागू करें",
-      "loading": "सहेजे गए फिल्टर लोड हो रहे हैं...",
-      "time": "समय",
-      "month": "महीना",
-      "category": "श्रेणी",
-      "paymentMethod": "भुगतान विधि",
-      "paymentInstrument": "भुगतान साधन"
     },
     "timeWindow": {
       "7d": "7 दिन",
@@ -216,13 +202,10 @@
       "sync": "सिंक",
       "payment": "भुगतान",
       "defaultPayment": "डिफ़ॉल्ट भुगतान विधि",
-      "paymentInstruments": "भुगतान साधन",
       "categories": "श्रेणियाँ",
-      "github": "गिटहब सिंक",
       "localization": "स्थानीयकरण",
       "featureFlags": "फ़ीचर फ़्लैग",
       "general": "सामान्य",
-      "appearance": "दिखावट",
       "about": "ऐप जानकारी"
     },
     "sync": {
@@ -278,8 +261,6 @@
       "description": "नए खर्च जोड़ते समय इस भुगतान विधि को पहले से चुनें।"
     },
     "github": {
-      "descriptionWeb": "पर्सनल एक्सेस टोकन का उपयोग करके अपने खर्चों को गिटहब रिपोजिटरी में सिंक करें।",
-      "descriptionNative": "अपने खर्चों को अपनी निजी रिपोजिटरी में सिंक करने के लिए गिटहब के साथ साइन इन करें।",
       "configTitle": "गिटहब कॉन्फ़िगरेशन",
       "connected": "कनेक्टेड",
       "tokenLabel": "गिटहब पर्सनल एक्सेस टोकन",
@@ -370,19 +351,12 @@
       "description": "डिवाइस पर हाल के एसएमएस लेन-देन आयात करें और खर्च सहेजने से पहले उनकी समीक्षा करें।",
       "backgroundAlerts": "बैकग्राउंड ट्रांजैक्शन अलर्ट",
       "backgroundAlertsHelp": "आने वाले लेन-देन SMS को ऑफलाइन पहचानें और नोटिफिकेशन से सीधे रिव्यू फ्लो खोलें।",
-      "permissionStatus": "अनुमति की स्थिति",
       "helper": "वर्तमान स्कैन केवल हाल के संदेशों तक सीमित है और कच्चा एसएमएस डेटा इसी डिवाइस पर स्थानीय रूप से रखता है।",
       "actions": {
         "scan": "हाल के संदेश स्कैन करें",
         "scanning": "स्कैन हो रहा है...",
         "review": "आयातों की समीक्षा करें",
         "reviewWithPending": "आयातों की समीक्षा करें ({{count}} लंबित)"
-      },
-      "statuses": {
-        "granted": "अनुमति दी गई",
-        "denied": "अस्वीकृत",
-        "undetermined": "अभी अनुरोध नहीं किया गया",
-        "unavailable": "उपलब्ध नहीं"
       },
       "notifications": {
         "androidOnly": "एसएमएस आयात केवल Android पर उपलब्ध है।",
@@ -408,7 +382,6 @@
       "viewGitHub": "GitHub पर देखें",
       "includeLogsTitle": "डिवाइस लॉग शामिल करें?",
       "includeLogsMessage": "समस्या को डीबग करने में मदद के लिए {{count}} हालिया डिवाइस लॉग संलग्न किए जाएंगे। इनमें केवल ऐप संचालन विवरण हैं — कोई SMS सामग्री, वित्तीय डेटा या व्यक्तिगत जानकारी नहीं।",
-      "continueToGitHub": "GitHub पर जारी रखें",
       "logsCopied": "लॉग क्लिपबोर्ड पर कॉपी किए गए। कृपया उन्हें GitHub इश्यू में पेस्ट करें।",
       "issueCreated": "इश्यू बनाया गया। ब्राउज़र में विवरण जोड़ें।",
       "dontAttach": "अटैच न करें",
@@ -489,11 +462,8 @@
     "title": "रिपोजिटरी चुनें",
     "subtitle": "अपने खर्चों को सिंक करने के लिए एक रिपोजिटरी चुनें।",
     "searchPlaceholder": "रिपोजिटरी खोजें...",
-    "loadMore": "और रिपोजिटरीज लोड करें",
     "loading": "लोड हो रहा है...",
     "empty": "कोई रिपोजिटरी नहीं मिली।",
-    "error": "रिपोजिटरीज लोड करने में विफल",
-    "createPrivate": "एक नई निजी रिपोजिटरी बनाएं: {{name}}",
     "webAuthError": "रिपोजिटरी चयनकर्ता वेब पर उपलब्ध नहीं है। टोकन का उपयोग करें और owner/repo दर्ज करें।",
     "sessionExpired": "आपका GitHub सत्र अब मान्य नहीं है। कृपया फिर से साइन इन करें।",
     "rateLimit": "GitHub दर सीमा समाप्त हो गई। कृपया कुछ समय प्रतीक्षा करें और पुनः प्रयास करें।",
@@ -539,7 +509,6 @@
       "syncedExpenses": "सिंक किया गया: {{count}} व्यय: {{details}}",
       "downloadedExpenses": "डाउनलोड किया गया: {{files}} फ़ाइल(ों) से {{count}} व्यय",
       "batchCommitFailed": "बैच कमिट विफल",
-      "fetchFailed": "रिमोट खर्च लाने में विफल",
       "conflictsCount": "सिंक में {{count}} विरोध हैं जिन्हें हल करने की आवश्यकता है",
       "conflictsNoHandler": "विरोध पाए गए लेकिन कोई विरोध हैंडलर प्रदान नहीं किया गया",
       "syncCancelled": "उपयोगकर्ता द्वारा सिंक रद्द किया गया",
