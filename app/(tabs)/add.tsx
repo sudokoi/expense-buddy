@@ -1,7 +1,9 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
 import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
-import DateTimePicker from "@react-native-community/datetimepicker"
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker"
 import {
   useExpenses,
   useSettings,
@@ -283,11 +285,15 @@ export default function AddExpenseScreen() {
     }
   }
 
-  const onChangeDate = (_event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date
-    setShowDatePicker(false)
-    setDate(currentDate)
-  }
+  const onChangeDate = useCallback(
+    (_event: DateTimePickerEvent, selectedDate?: Date) => {
+      setShowDatePicker(false)
+      if (selectedDate) {
+        setDate(selectedDate)
+      }
+    },
+    [],
+  )
 
   return (
     <YStack flex={1} bg="$background">
