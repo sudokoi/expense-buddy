@@ -10,6 +10,7 @@ import {
 import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { makePaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import { methodShortLabel } from "../../utils/analytics/filter-summary"
 import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface PaymentInstrumentFilterProps {
@@ -27,19 +28,6 @@ const styles = {
     paddingHorizontal: UI_SPACE.micro,
   },
 } as const
-
-function methodShortLabel(method: string): string {
-  switch (method) {
-    case "Credit Card":
-      return "CC"
-    case "Debit Card":
-      return "DC"
-    case "UPI":
-      return "UPI"
-    default:
-      return method
-  }
-}
 
 /**
  * PaymentInstrumentFilter - Multi-select chips for filtering analytics by saved card/UPI instruments.
