@@ -21,24 +21,20 @@ import {
 import { logAsync } from "../../services/logger"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
-import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { getLocalDayKey, formatDate } from "../../utils/date"
-import type { Expense, PaymentMethodType } from "../../types/expense"
+import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import { syncDownMore } from "../../services/sync-manager"
-import {
-  findInstrumentById,
-  formatPaymentInstrumentLabel,
-  getActivePaymentInstruments,
-  PAYMENT_INSTRUMENT_METHODS,
-} from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { useTranslation } from "react-i18next"
-import type {
-  PaymentMethodSelectionKey,
-  PaymentInstrumentSelectionKey,
-} from "../../types/analytics"
+import {
+  formatListBreakdown,
+  paymentMethodLabel,
+  formatSelectedPaymentInstrumentLabel,
+  formatSelectedPaymentInstrumentsSummary,
+  showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
+} from "../../utils/analytics/filter-summary"
 import { applyAllFilters } from "../../utils/analytics/filters"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
@@ -122,21 +118,6 @@ const FilterChip = React.memo(function FilterChip({
     </Button>
   )
 })
-
-const INSTRUMENT_OTHERS_ID = "__others__"
-
-function methodShortLabel(method: string): string {
-  switch (method) {
-    case "Credit Card":
-      return "CC"
-    case "Debit Card":
-      return "DC"
-    case "UPI":
-      return "UPI"
-    default:
-      return method
-  }
-}
 
 export default function HistoryScreen() {
   const { t } = useTranslation()
@@ -282,94 +263,10 @@ export default function HistoryScreen() {
   }, [categories])
 
   // Helper functions for filter chips (matching analytics tab)
-  const formatListBreakdown = useCallback(
-    (items: string[]): string => {
-      const MAX_ITEMS = 3
-
-      const unique = Array.from(new Set(items)).sort((a, b) => a.localeCompare(b))
-      const visible = unique.slice(0, MAX_ITEMS)
-      const remaining = unique.length - visible.length
-
-      if (unique.length === 0) return t("analytics.timeWindow.all")
-      if (unique.length === 1) return unique[0]
-
-      return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
-    },
-    [t]
+  const showPaymentInstrumentFilter = useMemo(
+    () => computeShowPaymentInstrumentFilter(allInstruments, filters.selectedPaymentMethods),
+    [allInstruments, filters.selectedPaymentMethods]
   )
-
-  const paymentMethodLabel = useCallback(
-    (key: PaymentMethodSelectionKey): string => {
-      if (key === "__none__") return t("analytics.chart.none")
-      return t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
-    },
-    [t]
-  )
-
-  const formatSelectedPaymentInstrumentLabel = useCallback(
-    (key: PaymentInstrumentSelectionKey, instruments: PaymentInstrument[]): string => {
-      const [method, instrumentId] = key.split("::")
-      const shortMethod = methodShortLabel(method)
-
-      if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
-        return `${shortMethod} • ${t("analytics.chart.others")}`
-      }
-
-      const inst = findInstrumentById(instruments, instrumentId)
-      if (!inst || inst.deletedAt) {
-        return `${shortMethod} • ${t("analytics.chart.others")}`
-      }
-
-      return `${shortMethod} • ${formatPaymentInstrumentLabel(inst)}`
-    },
-    [t]
-  )
-
-  const formatSelectedPaymentInstrumentsSummary = useCallback(
-    (keys: PaymentInstrumentSelectionKey[]): string => {
-      if (keys.length === 0) return t("analytics.timeWindow.all")
-      if (keys.length === 1) return "1"
-
-      const countsByMethod = new Map<string, number>()
-      for (const key of keys) {
-        const [method] = key.split("::")
-        const short = methodShortLabel(method)
-        countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
-      }
-
-      const parts = Array.from(countsByMethod.entries())
-        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-        .map(([method, count]) => `${method} ${count}`)
-
-      const MAX_GROUPS = 3
-      const visible = parts.slice(0, MAX_GROUPS)
-      const remaining = parts.length - visible.length
-      const breakdown =
-        remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
-
-      return `${keys.length} (${breakdown})`
-    },
-    [t]
-  )
-
-  // Check if payment instrument filter should be shown
-  const showPaymentInstrumentFilter = useMemo(() => {
-    const active = getActivePaymentInstruments(allInstruments)
-    const allowedMethods =
-      filters.selectedPaymentMethods.length === 0
-        ? new Set(PAYMENT_INSTRUMENT_METHODS)
-        : new Set(
-            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-              filters.selectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
-            )
-          )
-
-    for (const method of PAYMENT_INSTRUMENT_METHODS) {
-      if (!allowedMethods.has(method)) continue
-      if (active.some((i) => i.method === method)) return true
-    }
-    return false
-  }, [allInstruments, filters.selectedPaymentMethods])
 
   // Generate filter chips (uses `filters` directly for instant chip label updates,
   // but uses effectiveSelectedMonth to avoid showing a stale month chip when the
@@ -427,7 +324,7 @@ export default function HistoryScreen() {
     } else {
       chips.push({
         label: t("analytics.filters.category", {
-          category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories)})`,
+          category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories, t("analytics.timeWindow.all"))})`,
         }),
         onRemove: () => startTransition(() => setSelectedCategories([])),
       })
@@ -445,14 +342,14 @@ export default function HistoryScreen() {
       const only = filters.selectedPaymentMethods[0]
       chips.push({
         label: t("analytics.filters.payment", {
-          method: paymentMethodLabel(only),
+          method: paymentMethodLabel(only, t),
         }),
         onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else {
       chips.push({
         label: t("analytics.filters.payment", {
-          method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map(paymentMethodLabel))})`,
+          method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)), t("analytics.timeWindow.all"))})`,
         }),
         onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
@@ -472,7 +369,8 @@ export default function HistoryScreen() {
           label: t("analytics.filters.instrument", {
             instrument: formatSelectedPaymentInstrumentLabel(
               filters.selectedPaymentInstruments[0],
-              allInstruments
+              allInstruments,
+              t
             ),
           }),
           onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
@@ -481,7 +379,8 @@ export default function HistoryScreen() {
         chips.push({
           label: t("analytics.filters.instrument", {
             instrument: formatSelectedPaymentInstrumentsSummary(
-              filters.selectedPaymentInstruments
+              filters.selectedPaymentInstruments,
+              t
             ),
           }),
           onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
@@ -503,10 +402,6 @@ export default function HistoryScreen() {
     saveFilters,
     availableCurrencies,
     effectiveCurrency,
-    formatListBreakdown,
-    paymentMethodLabel,
-    formatSelectedPaymentInstrumentLabel,
-    formatSelectedPaymentInstrumentsSummary,
     showPaymentInstrumentFilter,
     allInstruments,
   ])

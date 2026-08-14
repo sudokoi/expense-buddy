@@ -27,9 +27,9 @@ import { CurrencyFilter } from "../components/analytics/CurrencyFilter"
 import { useFilters, useFilterPersistence } from "../stores/filter-store"
 import { useSettings, useDerivedExpenseData } from "../stores/hooks"
 import {
-  getActivePaymentInstruments,
-  PAYMENT_INSTRUMENT_METHODS,
-} from "../services/payment-instruments"
+  prunePaymentInstrumentSelection,
+  showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
+} from "../utils/analytics/filter-summary"
 import { logAsync } from "../services/logger"
 import type {
   TimeWindow,
@@ -94,55 +94,9 @@ export default function FiltersScreen() {
   }, [])
 
   // Whether the payment instrument filter should be shown for the current draft.
-  const showPaymentInstrumentFilter = useMemo(() => {
-    const active = getActivePaymentInstruments(allInstruments)
-    const allowedMethods =
-      draftPaymentMethods.length === 0
-        ? new Set(PAYMENT_INSTRUMENT_METHODS)
-        : new Set(
-            PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-              draftPaymentMethods.includes(m as PaymentMethodSelectionKey)
-            )
-          )
-
-    for (const method of PAYMENT_INSTRUMENT_METHODS) {
-      if (!allowedMethods.has(method)) continue
-      if (active.some((i) => i.method === method)) return true
-    }
-    return false
-  }, [allInstruments, draftPaymentMethods])
-
-  // Drop instrument selections that are no longer valid for the chosen methods.
-  const prunePaymentInstrumentSelection = useCallback(
-    (
-      nextSelectedPaymentMethods: PaymentMethodSelectionKey[],
-      currentInstrumentSelection: PaymentInstrumentSelectionKey[]
-    ): PaymentInstrumentSelectionKey[] => {
-      if (currentInstrumentSelection.length === 0) return currentInstrumentSelection
-
-      const active = getActivePaymentInstruments(allInstruments)
-      const allowedMethods: Set<string> =
-        nextSelectedPaymentMethods.length === 0
-          ? new Set(PAYMENT_INSTRUMENT_METHODS)
-          : new Set(
-              PAYMENT_INSTRUMENT_METHODS.filter((m) =>
-                nextSelectedPaymentMethods.includes(m as PaymentMethodSelectionKey)
-              )
-            )
-
-      const allowedWithConfig = new Set<string>()
-      for (const method of allowedMethods) {
-        if (active.some((i) => i.method === method)) {
-          allowedWithConfig.add(method)
-        }
-      }
-
-      return currentInstrumentSelection.filter((key) => {
-        const method = key.split("::")[0]
-        return allowedWithConfig.has(method)
-      })
-    },
-    [allInstruments]
+  const showPaymentInstrumentFilter = useMemo(
+    () => computeShowPaymentInstrumentFilter(allInstruments, draftPaymentMethods),
+    [allInstruments, draftPaymentMethods]
   )
 
   const handlePaymentMethodsChange = useCallback(
@@ -150,10 +104,10 @@ export default function FiltersScreen() {
       setDraftPaymentMethods(next)
       setDraftPaymentInstruments((prev) => {
         if (next.length === 0) return []
-        return prunePaymentInstrumentSelection(next, prev)
+        return prunePaymentInstrumentSelection(next, prev, allInstruments)
       })
     },
-    [prunePaymentInstrumentSelection]
+    [allInstruments]
   )
 
   const handleAmountRangeChange = useCallback(
