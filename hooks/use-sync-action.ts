@@ -14,12 +14,11 @@ import { useTranslation } from "react-i18next"
 import { useExpenses, useNotifications, useSettings } from "../stores/hooks"
 import { useSyncMachine, TrueConflict, ConflictResolution } from "./use-sync-machine"
 import {
-  applyQueuedOpsToExpenses,
-  applyQueuedOpsToSettings,
   clearSyncOpsUpTo,
   getSyncOpsSince,
   getSyncQueueWatermark,
 } from "../services/sync-queue"
+import { reconcileAfterSync } from "../services/sync-reconcile"
 import { loadDirtyDays, saveDirtyDays } from "../services/expense-dirty-days"
 
 export interface UseSyncActionReturn {
@@ -174,23 +173,13 @@ export function useSyncAction(): UseSyncActionReturn {
           }
 
           const baseExpenses = result.mergeResult?.merged ?? state.expenses
-          const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
-          const pendingExpenseOps = opsAfter.some((op) => op.type.startsWith("expense."))
-          const pendingSettingsOps = opsAfter.some(
-            (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
-          )
-
-          let settingsBase = settings
-          if (result.syncResult?.mergedSettings) {
-            settingsBase = result.syncResult.mergedSettings
-          } else if (result.syncResult?.mergedCategories) {
-            settingsBase = {
-              ...settingsBase,
-              categories: result.syncResult.mergedCategories,
-            }
-          }
-
-          const reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
+          const reconciled = reconcileAfterSync({
+            baseExpenses,
+            settings,
+            mergedSettings: result.syncResult?.mergedSettings,
+            mergedCategories: result.syncResult?.mergedCategories,
+            opsAfter,
+          })
 
           if (watermark !== null) {
             const lastAppliedId =
@@ -198,19 +187,19 @@ export function useSyncAction(): UseSyncActionReturn {
             await clearSyncOpsUpTo(lastAppliedId)
           }
 
-          if (!pendingExpenseOps) {
+          if (!reconciled.hasPendingExpenseOps) {
             clearDirtyDaysAfterSync()
           }
-          if (settings.syncSettings && !pendingSettingsOps) {
+          if (settings.syncSettings && !reconciled.hasPendingSettingsOps) {
             clearSettingsChangeFlag()
           }
 
-          if (reconciledExpenses.length > 0) {
-            replaceAllExpenses(reconciledExpenses)
+          if (reconciled.expenses.length > 0) {
+            replaceAllExpenses(reconciled.expenses)
           }
 
           if (settings.syncSettings && result.syncResult?.mergedSettings) {
-            replaceSettings(reconciledSettings)
+            replaceSettings(reconciled.settings)
           }
         },
         onInSync: () => {
