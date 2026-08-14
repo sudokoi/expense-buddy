@@ -45,20 +45,19 @@ export interface AutoSyncCallbacks {
 }
 
 /**
- * Perform auto-sync if enabled and timing matches "on_change"
+ * Perform auto-sync if enabled and the timing matches, then fan out the result
+ * to the store via callbacks. Shared by the on_change and on_launch variants.
  *
- * This helper encapsulates the common auto-sync pattern used across expense store actions.
- * It checks if auto-sync should run, performs the sync, and invokes callbacks to update state.
- *
- * @param expenses - Current expenses to sync
- * @param callbacks - Callbacks for handling sync results
- * @returns AutoSyncResult with sync status and any updated data
+ * When `allowSettingsOnNoExpenses` is true (launch), downloaded settings are
+ * still applied even when no expenses were replaced by the sync.
  */
-export async function performAutoSyncOnChange(
+async function performAutoSync(
+  timing: "on_launch" | "on_change",
   expenses: Expense[],
-  callbacks: AutoSyncCallbacks
+  callbacks: AutoSyncCallbacks,
+  allowSettingsOnNoExpenses: boolean
 ): Promise<AutoSyncResult> {
-  const shouldSync = await shouldAutoSyncForTiming("on_change")
+  const shouldSync = await shouldAutoSyncForTiming(timing)
   if (!shouldSync) {
     return { synced: false }
   }
@@ -79,9 +78,29 @@ export async function performAutoSyncOnChange(
     if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
       callbacks.onSettingsDownloaded(result.downloadedSettings)
     }
+  } else if (allowSettingsOnNoExpenses && result.downloadedSettings && callbacks.onSettingsDownloaded) {
+    // Settings can be downloaded even if expenses weren't synced
+    callbacks.onSettingsDownloaded(result.downloadedSettings)
   }
 
   return result
+}
+
+/**
+ * Perform auto-sync if enabled and timing matches "on_change"
+ *
+ * This helper encapsulates the common auto-sync pattern used across expense store actions.
+ * It checks if auto-sync should run, performs the sync, and invokes callbacks to update state.
+ *
+ * @param expenses - Current expenses to sync
+ * @param callbacks - Callbacks for handling sync results
+ * @returns AutoSyncResult with sync status and any updated data
+ */
+export function performAutoSyncOnChange(
+  expenses: Expense[],
+  callbacks: AutoSyncCallbacks
+): Promise<AutoSyncResult> {
+  return performAutoSync("on_change", expenses, callbacks, false)
 }
 
 /**
@@ -93,37 +112,11 @@ export async function performAutoSyncOnChange(
  * @param callbacks - Callbacks for handling sync results
  * @returns AutoSyncResult with sync status and any updated data
  */
-export async function performAutoSyncOnLaunch(
+export function performAutoSyncOnLaunch(
   expenses: Expense[],
   callbacks: AutoSyncCallbacks
 ): Promise<AutoSyncResult> {
-  const shouldSync = await shouldAutoSyncForTiming("on_launch")
-  if (!shouldSync) {
-    return { synced: false }
-  }
-
-  const result = await performAutoSyncIfEnabled(expenses)
-
-  if (result.synced && result.expenses) {
-    callbacks.onExpensesReplaced(result.expenses)
-    if (!result.pendingExpenseOps) {
-      await clearDirtyDays()
-      callbacks.onDirtyDaysCleared()
-    }
-
-    if (result.notification) {
-      callbacks.onSyncNotification(result.notification)
-    }
-
-    if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
-      callbacks.onSettingsDownloaded(result.downloadedSettings)
-    }
-  } else if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
-    // Settings can be downloaded even if expenses weren't synced
-    callbacks.onSettingsDownloaded(result.downloadedSettings)
-  }
-
-  return result
+  return performAutoSync("on_launch", expenses, callbacks, true)
 }
 
 /**
