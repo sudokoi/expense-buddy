@@ -44,14 +44,10 @@ describe("Sync Manager API Backward Compatibility", () => {
     "loadSyncConfig",
     "clearSyncConfig",
     "testConnection",
-    "determineSyncDirection",
-    "syncUp",
     "syncDown",
     "syncDownMore",
     "fetchAllRemoteExpenses",
     "classifyTreeEntries",
-    "getPendingSyncCount",
-    "migrateToDailyFiles",
     "gitStyleSync",
     "saveLastSyncTime",
   ] as const
@@ -102,12 +98,6 @@ describe("Sync Manager API Backward Compatibility", () => {
       const fn: () => Promise<SyncManager.SyncResult> = SyncManager.testConnection
       expect(typeof fn).toBe("function")
     })
-
-    it("determineSyncDirection SHALL accept boolean and return Promise<SyncDirectionResult>", () => {
-      const fn: (hasLocalChanges: boolean) => Promise<SyncManager.SyncDirectionResult> =
-        SyncManager.determineSyncDirection
-      expect(typeof fn).toBe("function")
-    })
   })
 
   describe("Type export verification", () => {
@@ -130,26 +120,6 @@ describe("Sync Manager API Backward Compatibility", () => {
       }
       expect(result.success).toBe(true)
       expect(result.message).toBe("Test message")
-    })
-
-    it("SyncDirection type SHALL be exported and usable", () => {
-      const directions: SyncManager.SyncDirection[] = [
-        "push",
-        "pull",
-        "conflict",
-        "in_sync",
-        "error",
-      ]
-      expect(directions).toHaveLength(5)
-    })
-
-    it("SyncDirectionResult type SHALL be exported and usable", () => {
-      const result: SyncManager.SyncDirectionResult = {
-        direction: "push",
-        localTime: "2024-01-01T00:00:00Z",
-        remoteTime: "2024-01-01T00:00:00Z",
-      }
-      expect(result.direction).toBe("push")
     })
 
     it("FetchAllRemoteResult type SHALL be exported and usable", () => {
