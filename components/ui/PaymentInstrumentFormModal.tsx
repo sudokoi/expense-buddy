@@ -12,6 +12,7 @@ import type {
 import {
   generatePaymentInstrumentId,
   getLastDigitsLength,
+  PAYMENT_INSTRUMENT_METHODS,
   sanitizeLastDigits,
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
@@ -23,8 +24,6 @@ import {
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
-
-const INSTRUMENT_METHODS: PaymentInstrumentMethod[] = ["Credit Card", "Debit Card", "UPI"]
 
 function getInstrumentMethodConfig(method: PaymentInstrumentMethod) {
   return PAYMENT_METHODS.find((pm) => pm.value === method)
@@ -190,7 +189,7 @@ function PaymentInstrumentForm({
           {t("instruments.form.paymentMethod")}
         </Label>
         <XStack flexWrap="wrap" gap={UI_SPACE.control}>
-          {INSTRUMENT_METHODS.map((m) => {
+          {PAYMENT_INSTRUMENT_METHODS.map((m) => {
             const config =
               selectedMethodConfig && selectedMethodConfig.value === m
                 ? selectedMethodConfig
