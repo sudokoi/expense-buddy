@@ -3,10 +3,9 @@ import { Expense } from "../types/expense"
 import { loadSyncConfig, SyncNotification, type GitStyleSyncResult } from "./sync-manager"
 import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
+import { reconcileAfterSync } from "./sync-reconcile"
 import i18next from "i18next"
 import {
-  applyQueuedOpsToExpenses,
-  applyQueuedOpsToSettings,
   clearSyncOpsUpTo,
   getSyncOpsSince,
   getSyncQueueWatermark,
@@ -102,22 +101,23 @@ export async function performAutoSyncIfEnabled(localExpenses: Expense[]): Promis
           opsAfter = await getSyncOpsSince(watermark)
         }
       }
-      const hasSettingsOps = opsAfter.some(
-        (op) => op.type.startsWith("settings.") || op.type.startsWith("category.")
-      )
+
+      const reconciled = reconcileAfterSync({
+        baseExpenses,
+        settings: appSettings,
+        mergedSettings: syncResult?.mergedSettings,
+        mergedCategories: syncResult?.mergedCategories,
+        opsAfter,
+      })
+
+      const hasSettingsOps = reconciled.hasPendingSettingsOps
       const pendingOpsAny = opsAfter.length > 0
-      pendingExpenseOps = opsAfter.some((op) => op.type.startsWith("expense."))
-      const reconciledExpenses = applyQueuedOpsToExpenses(baseExpenses, opsAfter)
+      pendingExpenseOps = reconciled.hasPendingExpenseOps
+      const reconciledExpenses = reconciled.expenses
 
       let reconciledSettings: AppSettings | undefined
       if (syncResult?.mergedSettings || syncResult?.mergedCategories || hasSettingsOps) {
-        let settingsBase = appSettings
-        if (syncResult?.mergedSettings) {
-          settingsBase = syncResult.mergedSettings
-        } else if (syncResult?.mergedCategories) {
-          settingsBase = { ...settingsBase, categories: syncResult.mergedCategories }
-        }
-        reconciledSettings = applyQueuedOpsToSettings(settingsBase, opsAfter)
+        reconciledSettings = reconciled.settings
       }
 
       const lastAppliedId =
