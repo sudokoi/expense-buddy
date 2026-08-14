@@ -21,10 +21,6 @@ import {
 import { PaymentInstrument, PaymentInstrumentMethod } from "../types/payment-instrument"
 import { trackBulkEdit } from "./change-tracker"
 
-function shouldConsiderForInstrument(method: PaymentInstrumentMethod): boolean {
-  return method === "Credit Card" || method === "Debit Card" || method === "UPI"
-}
-
 function coerceLastDigits(
   method: PaymentInstrumentMethod,
   identifier: string
@@ -46,7 +42,6 @@ function attachInstrumentIds(
     if (!paymentMethod) return expense
 
     if (!isPaymentInstrumentMethod(paymentMethod.type)) return expense
-    if (!shouldConsiderForInstrument(paymentMethod.type)) return expense
 
     if (paymentMethod.instrumentId) return expense
     if (!paymentMethod.identifier) return expense
@@ -105,7 +100,6 @@ export async function migratePaymentInstrumentsOnStartup(): Promise<void> {
       const paymentMethod = expense.paymentMethod
       if (!paymentMethod) continue
       if (!isPaymentInstrumentMethod(paymentMethod.type)) continue
-      if (!shouldConsiderForInstrument(paymentMethod.type)) continue
       if (paymentMethod.instrumentId) continue
       if (!paymentMethod.identifier) continue
 

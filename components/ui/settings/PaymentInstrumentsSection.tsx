@@ -8,6 +8,7 @@ import type { PaymentInstrument } from "../../../types/payment-instrument"
 import {
   formatPaymentInstrumentLabel,
   getActivePaymentInstruments,
+  PAYMENT_INSTRUMENT_METHODS,
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
@@ -46,11 +47,9 @@ export function PaymentInstrumentsSection() {
   const [editing, setEditing] = useState<PaymentInstrument | undefined>(undefined)
 
   const grouped = useMemo(() => {
-    const byMethod: Record<string, PaymentInstrument[]> = {
-      "Credit Card": [],
-      "Debit Card": [],
-      UPI: [],
-    }
+    const byMethod: Record<string, PaymentInstrument[]> = Object.fromEntries(
+      PAYMENT_INSTRUMENT_METHODS.map((method) => [method, []])
+    )
     for (const inst of active) {
       byMethod[inst.method]?.push(inst)
     }
@@ -195,7 +194,7 @@ export function PaymentInstrumentsSection() {
                   p="$section"
                   rounded={UI_RADIUS.surface}
                 >
-                  {(["Credit Card", "Debit Card", "UPI"] as const).map((method) => {
+                  {PAYMENT_INSTRUMENT_METHODS.map((method) => {
                     const list = grouped[method] ?? []
                     if (list.length === 0) return null
                     return (

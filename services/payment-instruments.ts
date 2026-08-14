@@ -1,5 +1,6 @@
 import { PaymentMethodType } from "../types/expense"
 import { PaymentInstrument, PaymentInstrumentMethod } from "../types/payment-instrument"
+import { PAYMENT_METHODS } from "../constants/payment-methods"
 import i18next from "i18next"
 
 export const PAYMENT_INSTRUMENT_METHODS: PaymentInstrumentMethod[] = [
@@ -15,13 +16,7 @@ export function isPaymentInstrumentMethod(
 }
 
 export function getLastDigitsLength(method: PaymentInstrumentMethod): number {
-  switch (method) {
-    case "UPI":
-      return 3
-    case "Credit Card":
-    case "Debit Card":
-      return 4
-  }
+  return PAYMENT_METHODS.find((pm) => pm.value === method)?.maxLength ?? 0
 }
 
 export function normalizeNickname(input: string): string {
