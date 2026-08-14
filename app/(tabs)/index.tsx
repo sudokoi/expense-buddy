@@ -334,7 +334,10 @@ export default function AnalyticsScreen() {
       chips.push({
         key: "payment-method",
         label: t("analytics.filters.payment", {
-          method: `${selectedPaymentMethods.length} (${formatListBreakdown(selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)), t("analytics.timeWindow.all"))})`,
+          method: `${selectedPaymentMethods.length} (${formatListBreakdown(
+            selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)),
+            t("analytics.timeWindow.all")
+          )})`,
         }),
       })
     }

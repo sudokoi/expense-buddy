@@ -22,7 +22,11 @@ function createSettings(categories: Category[]): AppSettings {
   return { ...DEFAULT_SETTINGS, categories }
 }
 
-function op(type: SyncQueueOp["type"], id: number, data: Partial<SyncQueueOp> = {}): SyncQueueOp {
+function op(
+  type: SyncQueueOp["type"],
+  id: number,
+  data: Partial<SyncQueueOp> = {}
+): SyncQueueOp {
   return { id, timestamp: new Date().toISOString(), type, ...data } as SyncQueueOp
 }
 
@@ -77,7 +81,11 @@ describe("reconcileAfterSync", () => {
       isDefault: true,
       updatedAt: new Date().toISOString(),
     }
-    const mergedSettings = { ...DEFAULT_SETTINGS, theme: "dark" as const, categories: [food] }
+    const mergedSettings = {
+      ...DEFAULT_SETTINGS,
+      theme: "dark" as const,
+      categories: [food],
+    }
 
     const result = reconcileAfterSync({
       baseExpenses: [],

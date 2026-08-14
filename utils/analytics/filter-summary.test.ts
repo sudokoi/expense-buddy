@@ -12,9 +12,7 @@ import {
 
 const t = ((key: string) => key) as TFunction
 
-function makeInstrument(
-  overrides: Partial<PaymentInstrument> = {}
-): PaymentInstrument {
+function makeInstrument(overrides: Partial<PaymentInstrument> = {}): PaymentInstrument {
   return {
     id: overrides.id ?? "inst-1",
     method: overrides.method ?? "Credit Card",
@@ -68,9 +66,9 @@ describe("paymentMethodLabel", () => {
 
 describe("formatSelectedPaymentInstrumentLabel", () => {
   it("shows others for the others key", () => {
-    expect(
-      formatSelectedPaymentInstrumentLabel("Credit Card::__others__", [], t)
-    ).toBe("CC • analytics.chart.others")
+    expect(formatSelectedPaymentInstrumentLabel("Credit Card::__others__", [], t)).toBe(
+      "CC • analytics.chart.others"
+    )
   })
 
   it("falls back to others for a missing or deleted instrument", () => {
@@ -82,15 +80,17 @@ describe("formatSelectedPaymentInstrumentLabel", () => {
 
   it("renders a live instrument", () => {
     const inst = makeInstrument({ id: "inst-1", lastDigits: "1234" })
-    expect(
-      formatSelectedPaymentInstrumentLabel("Credit Card::inst-1", [inst], t)
-    ).toBe("CC • HDFC • ****1234")
+    expect(formatSelectedPaymentInstrumentLabel("Credit Card::inst-1", [inst], t)).toBe(
+      "CC • HDFC • ****1234"
+    )
   })
 })
 
 describe("formatSelectedPaymentInstrumentsSummary", () => {
   it("returns the all label for no selection", () => {
-    expect(formatSelectedPaymentInstrumentsSummary([], t)).toBe("analytics.timeWindow.all")
+    expect(formatSelectedPaymentInstrumentsSummary([], t)).toBe(
+      "analytics.timeWindow.all"
+    )
   })
 
   it("returns a count of one", () => {

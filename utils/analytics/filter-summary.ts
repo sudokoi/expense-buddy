@@ -1,10 +1,7 @@
 import type { TFunction } from "i18next"
 import type { PaymentMethodType } from "../../types/expense"
 import type { PaymentInstrument } from "../../types/payment-instrument"
-import type {
-  PaymentInstrumentSelectionKey,
-  PaymentMethodSelectionKey,
-} from "./filters"
+import type { PaymentInstrumentSelectionKey, PaymentMethodSelectionKey } from "./filters"
 import {
   PAYMENT_INSTRUMENT_METHODS,
   findInstrumentById,
@@ -52,10 +49,7 @@ export function formatListBreakdown(items: string[], allLabel: string): string {
   return remaining > 0 ? `${visible.join(", ")}, +${remaining}` : visible.join(", ")
 }
 
-export function paymentMethodLabel(
-  key: PaymentMethodSelectionKey,
-  t: TFunction
-): string {
+export function paymentMethodLabel(key: PaymentMethodSelectionKey, t: TFunction): string {
   if (key === "__none__") return t("analytics.chart.none")
   return t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
 }

@@ -195,7 +195,6 @@ Analytics is split into focused hooks so filtering, chart building, and statisti
 | `useAnalyticsBase`       | Select effective currency, compute date ranges, and apply filters |
 | `useAnalyticsCharts`     | Build chart-ready category, method, and trend datasets            |
 | `useAnalyticsStatistics` | Build totals, averages, and summary statistics                    |
-| `useAnalyticsData`       | Legacy composite wrapper; avoid for new work                      |
 
 Important architectural decisions in analytics:
 
