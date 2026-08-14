@@ -11,13 +11,6 @@ const DISMISSED_VERSION_KEY = "@expense-buddy/dismissed-update-version"
 // Session tracking - tracks if update check has been performed this session
 let hasCheckedThisSession = false
 
-/**
- * Reset session tracking (for testing purposes)
- */
-export function resetSessionTracking(): void {
-  hasCheckedThisSession = false
-}
-
 export interface UpdateInfo {
   hasUpdate: boolean
   currentVersion: string

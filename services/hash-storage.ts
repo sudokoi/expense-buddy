@@ -1,4 +1,4 @@
-import { getItem, setItem, removeItem } from "./storage"
+import { getItem, setItem } from "./storage"
 
 const FILE_HASHES_KEY = "file_content_hashes"
 
@@ -47,15 +47,4 @@ export async function loadFileHashes(): Promise<FileHashMap> {
     console.warn("Failed to load file hashes:", error)
   }
   return {}
-}
-
-/**
- * Clear all stored file hashes (for reset/debug functionality)
- */
-export async function clearFileHashes(): Promise<void> {
-  try {
-    await removeItem(FILE_HASHES_KEY)
-  } catch (error) {
-    console.warn("Failed to clear file hashes:", error)
-  }
 }

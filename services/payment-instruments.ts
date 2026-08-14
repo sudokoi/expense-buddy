@@ -41,10 +41,6 @@ export function formatPaymentInstrumentLabel(inst: PaymentInstrument): string {
   return `${inst.nickname} • ${formatMaskedLastDigits(inst.method, inst.lastDigits)}`
 }
 
-export function isInstrumentDeleted(inst: PaymentInstrument): boolean {
-  return !!inst.deletedAt
-}
-
 export function getActivePaymentInstruments(
   instruments: PaymentInstrument[]
 ): PaymentInstrument[] {

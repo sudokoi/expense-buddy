@@ -640,13 +640,6 @@ export const selectHasUnsyncedChanges = (context: SettingsContext): boolean => {
 }
 
 /**
- * Selector to get categories sorted by order
- */
-export const selectCategories = (context: SettingsContext): Category[] => {
-  return [...context.settings.categories].sort((a, b) => a.order - b.order)
-}
-
-/**
  * Selector to get a category by label (case-insensitive)
  */
 export const selectCategoryByLabel = (
