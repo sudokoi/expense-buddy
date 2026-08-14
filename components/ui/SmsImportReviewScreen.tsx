@@ -307,14 +307,13 @@ export function SmsImportReviewScreen({
         return false
       }
 
-      const [createdExpense] = addExpenses([expenseDraft])
-      markItemAccepted(item.fingerprint, createdExpense?.id)
+      addExpenses([expenseDraft])
+      markItemAccepted(item.fingerprint)
       addNotification(t("smsImport.sheet.notifications.importedOne"), "success")
       return true
     },
     [addExpenses, addNotification, markItemAccepted, settings.defaultCurrency, t]
   )
-
   const handleAcceptSuggested = useCallback(
     (item: SmsImportReviewItem) => {
       void acceptItem(item, createDraftFromItem(item, categories, paymentInstruments))
@@ -357,14 +356,9 @@ export function SmsImportReviewScreen({
       return
     }
 
-    const createdExpenses = addExpenses(acceptedPairs.map((pair) => pair.expense))
+    addExpenses(acceptedPairs.map((pair) => pair.expense))
 
-    markItemsAccepted(
-      acceptedPairs.map((pair, index) => ({
-        fingerprint: pair.item.fingerprint,
-        acceptedExpenseId: createdExpenses[index]?.id,
-      }))
-    )
+    markItemsAccepted(acceptedPairs.map((pair) => pair.item.fingerprint))
 
     if (acceptedPairs.length === pendingItems.length) {
       addNotification(

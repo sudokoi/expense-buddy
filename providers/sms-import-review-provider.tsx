@@ -26,10 +26,8 @@ interface SmsImportReviewContextValue {
   resolvedItems: SmsImportReviewItem[]
   isLoading: boolean
   refreshItems: () => Promise<void>
-  markItemAccepted: (fingerprint: string, acceptedExpenseId?: string) => Promise<void>
-  markItemsAccepted: (
-    acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>
-  ) => Promise<void>
+  markItemAccepted: (fingerprint: string) => Promise<void>
+  markItemsAccepted: (fingerprints: string[]) => Promise<void>
   markItemsRejected: (fingerprints: string[]) => Promise<void>
   markItemRejected: (fingerprint: string) => Promise<void>
   markItemsDismissed: (fingerprints: string[]) => Promise<void>
@@ -100,18 +98,19 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
     await fetchItems()
   }, [fetchItems])
 
+  // Accepting an item is a two-step write across the seam: the JS expense store
+  // owns the resulting expense, while the native queue owns the review status.
+  // Only the fingerprint crosses the seam here — the expense id stays on the JS
+  // side, so the queue never needs to know how the accepted expense was stored.
   const markItemAccepted = useCallback(async (fingerprint: string) => {
     await approveReviewItemAsync(fingerprint)
     void dismissNotificationAsync()
   }, [])
 
-  const markItemsAccepted = useCallback(
-    async (acceptedItems: Array<{ fingerprint: string; acceptedExpenseId?: string }>) => {
-      await approveReviewItemsAsync(acceptedItems.map((i) => i.fingerprint))
-      void dismissNotificationAsync()
-    },
-    []
-  )
+  const markItemsAccepted = useCallback(async (fingerprints: string[]) => {
+    await approveReviewItemsAsync(fingerprints)
+    void dismissNotificationAsync()
+  }, [])
 
   const markItemsRejected = useCallback(async (fingerprints: string[]) => {
     await rejectReviewItemsAsync(fingerprints)
