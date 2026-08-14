@@ -264,7 +264,8 @@ export default function HistoryScreen() {
 
   // Helper functions for filter chips (matching analytics tab)
   const showPaymentInstrumentFilter = useMemo(
-    () => computeShowPaymentInstrumentFilter(allInstruments, filters.selectedPaymentMethods),
+    () =>
+      computeShowPaymentInstrumentFilter(allInstruments, filters.selectedPaymentMethods),
     [allInstruments, filters.selectedPaymentMethods]
   )
 
@@ -349,7 +350,10 @@ export default function HistoryScreen() {
     } else {
       chips.push({
         label: t("analytics.filters.payment", {
-          method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(filters.selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)), t("analytics.timeWindow.all"))})`,
+          method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(
+            filters.selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)),
+            t("analytics.timeWindow.all")
+          )})`,
         }),
         onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })

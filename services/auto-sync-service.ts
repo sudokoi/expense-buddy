@@ -5,11 +5,7 @@ import { AppSettings, loadSettings } from "./settings-manager"
 import { syncMachine } from "./sync-machine"
 import { reconcileAfterSync } from "./sync-reconcile"
 import i18next from "i18next"
-import {
-  clearSyncOpsUpTo,
-  getSyncOpsSince,
-  getSyncQueueWatermark,
-} from "./sync-queue"
+import { clearSyncOpsUpTo, getSyncOpsSince, getSyncQueueWatermark } from "./sync-queue"
 
 /**
  * Main auto-sync orchestration function

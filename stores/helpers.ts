@@ -78,7 +78,11 @@ async function performAutoSync(
     if (result.downloadedSettings && callbacks.onSettingsDownloaded) {
       callbacks.onSettingsDownloaded(result.downloadedSettings)
     }
-  } else if (allowSettingsOnNoExpenses && result.downloadedSettings && callbacks.onSettingsDownloaded) {
+  } else if (
+    allowSettingsOnNoExpenses &&
+    result.downloadedSettings &&
+    callbacks.onSettingsDownloaded
+  ) {
     // Settings can be downloaded even if expenses weren't synced
     callbacks.onSettingsDownloaded(result.downloadedSettings)
   }
