@@ -1,4 +1,3 @@
-import { determineSyncDirection } from "./sync-manager"
 import { mergeExpenses } from "./merge-engine"
 import { Expense } from "../types/expense"
 
@@ -47,8 +46,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 }))
 jest.mock("react-native", () => ({ Platform: { OS: "ios" } }))
 
-import { getLatestCommitTimestamp as mockGetLatestCommitTimestamp } from "./github-sync"
-
 describe("Sync Logic Reproduction", () => {
   const commonDate = "2024-01-01T12:00:00.000Z"
   const sampleExpense: Expense = {
@@ -91,26 +88,5 @@ describe("Sync Logic Reproduction", () => {
     // Both should be 0 because the expenses are identical
     expect(result.addedFromRemote.length).toBe(0)
     expect(result.updatedFromRemote.length).toBe(0)
-  })
-
-  test("Reproduce Bug 2: Conflict reported when adding new expense locally", async () => {
-    // Setup: Last sync time Matches remote time EXACTLY.
-    const lastSyncTime = "2024-01-02T10:00:00Z"
-    mockStorage.set("last_sync_time", lastSyncTime)
-
-    // Remote commit time matches last sync time
-    ;(mockGetLatestCommitTimestamp as jest.Mock).mockResolvedValue({
-      timestamp: lastSyncTime,
-    })
-
-    // We have local changes (simulated by passing true to determineSyncDirection)
-    const hasLocalChanges = true
-
-    // Run determineSyncDirection
-    const result = await determineSyncDirection(hasLocalChanges)
-
-    // Expectation: Should be "push" because remote hasn't changed since last sync
-    // If it returns "conflict", that's the bug.
-    expect(result.direction).toBe("push")
   })
 })

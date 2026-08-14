@@ -65,25 +65,6 @@ export interface SyncNotification {
 }
 
 /**
- * Sync direction types for the unified sync button
- */
-export type SyncDirection = "push" | "pull" | "conflict" | "in_sync" | "error"
-
-/**
- * Result of determining sync direction
- */
-export interface SyncDirectionResult {
-  /** The determined sync direction */
-  direction: SyncDirection
-  /** Local last sync timestamp */
-  localTime: string | null
-  /** Remote last modified timestamp */
-  remoteTime: string | null
-  /** Error message if direction could not be determined */
-  error?: string
-}
-
-/**
  * Result of fetching all remote expenses
  */
 export interface FetchAllRemoteResult {
