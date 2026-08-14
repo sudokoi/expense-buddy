@@ -19,12 +19,6 @@ interface GitHubFileResponse {
   sha: string
 }
 
-interface GitHubCommitRequest {
-  message: string
-  content: string
-  sha?: string
-}
-
 // Batch commit types for atomic multi-file operations
 
 /** File to be uploaded in a batch commit */
@@ -161,7 +155,7 @@ export type RepositoryTreeResult =
  * @param branch Branch name
  * @returns The SHA of the current commit on the branch, or error
  */
-export async function getBranchRef(
+async function getBranchRef(
   token: string,
   repo: string,
   branch: string
@@ -212,7 +206,7 @@ export async function getBranchRef(
  * @param commitSha The SHA of the commit
  * @returns The SHA of the tree associated with the commit, or error
  */
-export async function getCommitTree(
+async function getCommitTree(
   token: string,
   repo: string,
   commitSha: string
@@ -410,7 +404,7 @@ export async function getRepositoryTree(
  * @param content The file content (will be base64 encoded)
  * @returns The SHA of the created blob, or error
  */
-export async function createBlob(
+async function createBlob(
   token: string,
   repo: string,
   content: string
@@ -471,7 +465,7 @@ export async function createBlob(
  * @param entries Array of tree entries (uploads with blob SHA, deletions with sha: null)
  * @returns The SHA of the created tree, or error
  */
-export async function createTree(
+async function createTree(
   token: string,
   repo: string,
   baseTreeSha: string,
@@ -539,7 +533,7 @@ export async function createTree(
  * @param parentSha The SHA of the parent commit
  * @returns The SHA of the created commit, or error
  */
-export async function createCommit(
+async function createCommit(
   token: string,
   repo: string,
   message: string,
@@ -600,7 +594,7 @@ export async function createCommit(
  * @param commitSha The SHA of the commit to point to
  * @returns Success or error
  */
-export async function updateRef(
+async function updateRef(
   token: string,
   repo: string,
   branch: string,
@@ -1049,73 +1043,6 @@ export async function validatePAT(
 }
 
 /**
- * Upload CSV content to GitHub repository
- */
-export async function uploadCSV(
-  token: string,
-  repo: string,
-  branch: string,
-  csvContent: string,
-  filePath: string = "expenses.csv"
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const [owner, repoName] = repo.split("/")
-    const encodedContent = btoa(unescape(encodeURIComponent(csvContent)))
-
-    // First, try to get existing file SHA
-    let existingSHA: string | undefined
-    try {
-      const fileData = await downloadCSV(token, repo, branch, filePath)
-      if (fileData) {
-        existingSHA = fileData.sha
-      }
-    } catch {
-      // File doesn't exist, that's okay
-    }
-
-    const requestBody: GitHubCommitRequest = {
-      message: `Update expenses - ${new Date().toISOString()}`,
-      content: encodedContent,
-    }
-
-    if (existingSHA) {
-      requestBody.sha = existingSHA
-    }
-
-    const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...requestBody,
-          branch,
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      return {
-        success: false,
-        error: errorData.message || response.statusText,
-      }
-    }
-
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: i18next.t("githubSync.errors.uploadFailed", { error }),
-    }
-  }
-}
-
-/**
  * Download CSV content from GitHub repository
  */
 export async function downloadCSV(
@@ -1217,137 +1144,11 @@ export async function listFiles(
   }
 }
 
-/**
- * Delete a file from GitHub repository
- */
-export async function deleteFile(
-  token: string,
-  repo: string,
-  branch: string,
-  filePath: string,
-  sha: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const [owner, repoName] = repo.split("/")
-
-    const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: `Delete ${filePath} - ${new Date().toISOString()}`,
-          sha,
-          branch,
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      return {
-        success: false,
-        error: errorData.message || response.statusText,
-      }
-    }
-
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: i18next.t("githubSync.errors.deleteFailed", { error }),
-    }
-  }
-}
-
 // ============================================================================
 // Settings Sync Functions
 // ============================================================================
 
 const SETTINGS_FILE_PATH = "settings.json"
-
-/**
- * Upload settings.json to GitHub repository
- * @param token GitHub Personal Access Token
- * @param repo Repository in format "owner/repo"
- * @param branch Branch name
- * @param settingsContent JSON string of settings
- * @returns Result with success status or error
- */
-export async function uploadSettingsFile(
-  token: string,
-  repo: string,
-  branch: string,
-  settingsContent: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const [owner, repoName] = repo.split("/")
-    if (!owner || !repoName) {
-      return { success: false, error: i18next.t("githubSync.errors.repoFormat") }
-    }
-
-    const encodedContent = btoa(unescape(encodeURIComponent(settingsContent)))
-
-    // First, try to get existing file SHA
-    let existingSHA: string | undefined
-    try {
-      const existingFile = await downloadSettingsFile(token, repo, branch)
-      if (existingFile) {
-        existingSHA = existingFile.sha
-      }
-    } catch {
-      // File doesn't exist, that's okay
-    }
-
-    const requestBody: {
-      message: string
-      content: string
-      branch: string
-      sha?: string
-    } = {
-      message: `Update settings - ${new Date().toISOString()}`,
-      content: encodedContent,
-      branch,
-    }
-
-    if (existingSHA) {
-      requestBody.sha = existingSHA
-    }
-
-    const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/contents/${SETTINGS_FILE_PATH}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      return {
-        success: false,
-        error: errorData.message || response.statusText,
-      }
-    }
-
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: i18next.t("githubSync.errors.uploadSettingsFailed", { error }),
-    }
-  }
-}
 
 /**
  * Download settings.json from GitHub repository
