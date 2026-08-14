@@ -1,6 +1,5 @@
 import { getItem, setItem, removeItem } from "./storage"
-import * as SecureStore from "expo-secure-store"
-import { Platform } from "react-native"
+import { secureStorage } from "./secure-storage"
 import { computeContentHash } from "./hash-storage"
 import { PaymentMethodType } from "../types/expense"
 import { Category } from "../types/category"
@@ -140,31 +139,14 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
   }
 }
 
-// Helper functions for secure storage with platform check (same as sync-manager.ts)
-async function secureGetItem(key: string): Promise<string | null> {
-  if (Platform.OS === "web") {
-    return await getItem(key)
-  } else {
-    return await SecureStore.getItemAsync(key)
-  }
-}
-
-async function secureDeleteItem(key: string): Promise<void> {
-  if (Platform.OS === "web") {
-    await removeItem(key)
-  } else {
-    await SecureStore.deleteItemAsync(key)
-  }
-}
-
 /**
  * Migrate settings from version 2 to version 3
  * Moves auto-sync settings from separate storage keys to AppSettings
  */
 async function migrateV2ToV3(settings: AppSettings): Promise<AppSettings> {
   // Load old auto-sync settings from secure storage
-  const oldEnabled = await secureGetItem(OLD_AUTO_SYNC_ENABLED_KEY)
-  const oldTiming = await secureGetItem(OLD_AUTO_SYNC_TIMING_KEY)
+  const oldEnabled = await secureStorage.getItem(OLD_AUTO_SYNC_ENABLED_KEY)
+  const oldTiming = await secureStorage.getItem(OLD_AUTO_SYNC_TIMING_KEY)
 
   // Migrate old "on_expense_entry" to "on_change" (same as sync-manager.ts)
   let timing: AutoSyncTiming = "on_launch"
@@ -183,8 +165,8 @@ async function migrateV2ToV3(settings: AppSettings): Promise<AppSettings> {
 
   // Clean up old keys after migration
   try {
-    await secureDeleteItem(OLD_AUTO_SYNC_ENABLED_KEY)
-    await secureDeleteItem(OLD_AUTO_SYNC_TIMING_KEY)
+    await secureStorage.deleteItem(OLD_AUTO_SYNC_ENABLED_KEY)
+    await secureStorage.deleteItem(OLD_AUTO_SYNC_TIMING_KEY)
   } catch (error) {
     console.warn("Failed to clean up old auto-sync keys:", error)
     // Continue even if cleanup fails - migration is still successful
