@@ -201,7 +201,7 @@ jobs:
             }
 
   submit:
-    name: 📲 Submit to Google Play (Alpha)
+    name: 📲 Submit to Google Play (Beta)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
@@ -221,7 +221,7 @@ jobs:
           name: expense-buddy-${{ needs.build.outputs.version_name }}-production
           path: ./
 
-      - name: 📲 Submit to Google Play Store (Alpha)
+      - name: 📲 Submit to Google Play Store (Beta)
         run: |
           eas submit --platform android --profile production --path expense-buddy-${{ needs.build.outputs.version_name }}-production.aab --non-interactive
 
