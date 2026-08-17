@@ -21,14 +21,14 @@ jobs:
 
     steps:
       - name: 🏗️ Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # Use PAT to allow commits to trigger workflows
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
       - name: 📦 Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".node-version"
 
@@ -37,7 +37,7 @@ jobs:
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
 
       - name: 💾 Cache yarn downloads
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
@@ -45,7 +45,7 @@ jobs:
             ${{ runner.os }}-yarn-cache-
 
       - name: 💾 Cache node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
@@ -57,7 +57,7 @@ jobs:
 
       - name: 🔄 Create Release PR or Publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: yarn changeset:version
           commit: "chore: version packages"

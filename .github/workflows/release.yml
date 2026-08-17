@@ -32,10 +32,10 @@ jobs:
       version_name: ${{ steps.version.outputs.version_name }}
     steps:
       - name: 🏗️ Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 📦 Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".node-version"
 
@@ -44,7 +44,7 @@ jobs:
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
 
       - name: 📦 Cache yarn downloads
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-yarn-cache-
 
       - name: 📦 Cache node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
@@ -102,20 +102,14 @@ jobs:
           ls -lh expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.$EXT
 
       - name: 📤 Upload build as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
           path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
-      - name: 🚀 Submit to Google Play Store (Alpha)
-        if: matrix.profile == 'production'
-        continue-on-error: true
-        run: |
-          eas submit --platform android --profile production --track alpha --path expense-buddy-${{ steps.version.outputs.version_name }}-production.aab --non-interactive
-
       - name: 💬 Comment on merged PRs
         if: matrix.profile == 'production'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GH_PAT }}
           script: |
@@ -191,3 +185,28 @@ jobs:
                 console.error(`❌ Failed to comment on PR #${prNumber}:`, error);
               }
             }
+
+  submit:
+    name: 📲 Submit to Google Play (Alpha)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    steps:
+      - name: 🏗️ Checkout
+        uses: actions/checkout@v7
+
+      - name: 🛠️ Setup EAS CLI
+        uses: expo/expo-github-action@v9
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Download production AAB
+        uses: actions/download-artifact@v8
+        with:
+          name: expense-buddy-${{ needs.build.outputs.version_name }}-production
+          path: ./
+
+      - name: 📲 Submit to Google Play Store (Alpha)
+        run: |
+          eas submit --platform android --profile production --track alpha --path expense-buddy-${{ needs.build.outputs.version_name }}-production.aab --non-interactive
