@@ -59,28 +59,23 @@ jobs:
         id: changesets
         uses: changesets/action@v2
         with:
-          version: yarn changeset:version
-          commit: "chore: version packages"
-          title: "chore: version packages"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          version-script: yarn changeset:version
+          commit-message: "chore: version packages"
+          pr-title: "chore: version packages"
+          github-token: ${{ secrets.GH_PAT }}
 
-      - name: 🔍 Check if version PR was merged
+      - name: 🏷️ Push tag on release
         id: check-release
         run: |
-          # Check if there are no changesets and no open version PR
-          # This means the version PR was just merged
-
-          CHANGESET_COUNT=$(ls .changeset/*.md 2>/dev/null | grep -v README.md | wc -l || echo "0")
+          CHANGESET_COUNT=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l)
           echo "Changeset count: $CHANGESET_COUNT"
 
-          if [ "$CHANGESET_COUNT" -eq "0" ] && [ "${{ steps.changesets.outputs.hasChangesets }}" != "true" ]; then
-            # Check if current version has a tag
+          if [ "$CHANGESET_COUNT" -eq "0" ] && [ "${{ steps.changesets.outputs.has-changesets }}" != "true" ]; then
             VERSION=$(node -p "require('./package.json').version")
             TAG="v$VERSION"
-            
+
             if git rev-parse "$TAG" >/dev/null 2>&1; then
-              echo "Tag $TAG already exists"
+              echo "Tag $TAG already exists, skipping"
               echo "should_release=false" >> $GITHUB_OUTPUT
             else
               echo "No tag for $TAG, should release"
@@ -93,15 +88,12 @@ jobs:
           fi
 
       - name: 🏷️ Push tag
-        id: push-tag
         if: steps.check-release.outputs.should_release == 'true'
         run: |
           TAG="${{ steps.check-release.outputs.tag }}"
 
           echo "Creating and pushing tag: $TAG"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-          # Get user info from PAT
           USER_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user)
           USER_NAME=$(echo "$USER_DATA" | jq -r '.name // .login')
           USER_ID=$(echo "$USER_DATA" | jq -r '.id')
