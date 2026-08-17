@@ -1,5 +1,9 @@
 # Migration Plan: Tamagui → NativeWind + Expo SDK 57
 
+> **Status: Completed (2026-08-17).** Every phase below is done — Tamagui has been fully
+> removed and the app now styles with NativeWind on React Native primitives. This document
+> is retained as a historical record of the migration.
+
 Branch: `feat/remove-tamagui-nativewind-sdk57`
 ADR: [ADR-008](decisions/adr-008-remove-tamagui-adopt-nativewind.md)
 

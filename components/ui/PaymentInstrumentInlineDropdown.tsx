@@ -21,7 +21,7 @@ import {
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
-// Only use style prop for layout properties that Tamagui View doesn't support directly
+// Only use the style prop for layout properties not yet covered by NativeWind utility classes
 const styles = {
   menuRow: {
     minHeight: 44,

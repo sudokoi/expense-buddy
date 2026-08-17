@@ -99,7 +99,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
 - Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
-- Dark mode, changelog gating, update notifications, and reusable Tamagui UI primitives
+- Dark mode, changelog gating, update notifications, and reusable NativeWind-styled UI primitives
 
 ## How the SMS Import Flow Works
 
@@ -166,7 +166,7 @@ yarn start
 
 ## Architecture
 
-Expense Buddy uses Expo Router for navigation, Tamagui for UI, XState stores for app state, and a service layer for sync, storage, analytics, and SMS import logic.
+Expense Buddy uses Expo Router for navigation, NativeWind for UI styling, XState stores for app state, and a service layer for sync, storage, analytics, and SMS import logic.
 
 Key implementation details:
 

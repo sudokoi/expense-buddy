@@ -7,7 +7,7 @@
 
 import fc from "fast-check"
 import { formatPaymentMethodDisplay } from "./payment-method-display"
-// Mock constants/payment-methods to avoid importing Tamagui icons which fail in Jest
+// Mock constants/payment-methods to avoid importing lucide-react-native icons in Jest
 jest.mock("../constants/payment-methods", () => ({
   getPaymentMethodI18nKey: (type: string) => {
     switch (type) {

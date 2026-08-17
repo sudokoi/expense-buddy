@@ -74,7 +74,7 @@ import {
   MapPin,
 } from "lucide-react-native"
 
-// Static map of icon name to component - uses typeof to get correct Tamagui icon type
+// Static map of icon name to component - uses typeof to get the correct lucide-react-native icon type
 const ICON_MAP = {
   // Food & Drink
   Utensils,
@@ -170,7 +170,7 @@ export const DynamicCategoryIcon = memo(function DynamicCategoryIcon({
   color,
 }: DynamicCategoryIconProps) {
   const IconComponent = ICON_MAP[name as keyof typeof ICON_MAP] || Circle
-  // Render with or without color to satisfy Tamagui's strict type system
+  // Render with or without color - lucide-react-native icons accept an optional color prop
   if (color) {
     return <IconComponent size={size} color={color} />
   }

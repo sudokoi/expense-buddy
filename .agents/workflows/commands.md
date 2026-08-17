@@ -78,19 +78,6 @@ yarn changeset:version
 yarn changeset:status
 ```
 
-## Tamagui
-
-```bash
-# Check Tamagui configuration
-yarn check:tamagui
-
-# Upgrade Tamagui to latest
-yarn upgrade:tamagui
-
-# Upgrade Tamagui to canary
-yarn upgrade:tamagui:canary
-```
-
 ## Important Notes
 
 - Always use `yarn test` instead of `npx jest` for consistency

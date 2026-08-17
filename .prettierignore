@@ -3,7 +3,6 @@ node_modules/
 .kiro/
 .agent/
 .agents/
-.tamagui/
 tools/sms-ml/
 dist/
 build/

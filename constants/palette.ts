@@ -133,7 +133,7 @@ export const FINANCIAL_COLORS = {
 } as const
 
 // Readable text variants for currency amounts (preserves the original
-// Tamagui $red10/$green10 amount colors, which were saturated for legibility).
+// saturated expense/income amount colors, chosen for legibility).
 export const AMOUNT_COLORS = {
   expense: "#E5484D",
   income: "#30A46C",
