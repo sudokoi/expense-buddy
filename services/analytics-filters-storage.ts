@@ -152,7 +152,3 @@ export async function saveAnalyticsFilters(
     throw error
   }
 }
-
-export function analyticsFiltersStorageKeyForTests(): string {
-  return ANALYTICS_FILTERS_KEY
-}

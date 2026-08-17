@@ -148,7 +148,3 @@ export async function consumeDirtyDays(): Promise<DirtyDaysLoadResult> {
     return result
   })
 }
-
-export function dirtyDaysStorageKeyForTests(): string {
-  return DIRTY_DAYS_KEY
-}

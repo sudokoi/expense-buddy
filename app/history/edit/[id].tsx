@@ -244,7 +244,11 @@ export default function EditExpenseScreen() {
                   }}
                 />
                 {showDatePicker && Platform.OS === "ios" && (
-                  <Button size="control" onPress={() => setShowDatePicker(false)} accessibilityLabel={t("common.done")}>
+                  <Button
+                    size="control"
+                    onPress={() => setShowDatePicker(false)}
+                    accessibilityLabel={t("common.done")}
+                  >
                     {t("common.done")}
                   </Button>
                 )}
@@ -382,10 +386,19 @@ export default function EditExpenseScreen() {
             className="flex-row gap-3 justify-end mt-4"
             style={{ paddingBottom: insets.bottom }}
           >
-            <Button size="control" onPress={() => router.back()} accessibilityLabel={t("common.cancel")}>
+            <Button
+              size="control"
+              onPress={() => router.back()}
+              accessibilityLabel={t("common.cancel")}
+            >
               {t("common.cancel")}
             </Button>
-            <Button size="control" variant="accent" onPress={handleSave} accessibilityLabel={t("common.save")}>
+            <Button
+              size="control"
+              variant="accent"
+              onPress={handleSave}
+              accessibilityLabel={t("common.save")}
+            >
               {t("common.save")}
             </Button>
           </View>

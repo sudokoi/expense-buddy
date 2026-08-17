@@ -2,10 +2,11 @@ import { getItem, setItem, clear } from "./storage"
 
 import {
   DEFAULT_ANALYTICS_FILTERS,
-  analyticsFiltersStorageKeyForTests,
   loadAnalyticsFilters,
   saveAnalyticsFilters,
 } from "./analytics-filters-storage"
+
+const ANALYTICS_FILTERS_KEY = "analytics_filters"
 
 describe("analytics-filters-storage", () => {
   beforeEach(async () => {
@@ -18,7 +19,7 @@ describe("analytics-filters-storage", () => {
 
   it("loadAnalyticsFilters SHALL return defaults when JSON is invalid", async () => {
     const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {})
-    await setItem(analyticsFiltersStorageKeyForTests(), "{not-json")
+    await setItem(ANALYTICS_FILTERS_KEY, "{not-json")
 
     await expect(loadAnalyticsFilters()).resolves.toEqual(DEFAULT_ANALYTICS_FILTERS)
     warnSpy.mockRestore()
@@ -37,7 +38,7 @@ describe("analytics-filters-storage", () => {
       maxAmount: 500,
     })
 
-    const key = analyticsFiltersStorageKeyForTests()
+    const key = ANALYTICS_FILTERS_KEY
     const stored = await getItem(key)
     expect(stored).not.toBeNull()
     expect(JSON.parse(stored!)).toEqual({
@@ -66,7 +67,7 @@ describe("analytics-filters-storage", () => {
       maxAmount: 200,
     }
 
-    await setItem(analyticsFiltersStorageKeyForTests(), JSON.stringify(stored))
+    await setItem(ANALYTICS_FILTERS_KEY, JSON.stringify(stored))
 
     await expect(loadAnalyticsFilters()).resolves.toEqual({
       ...stored,
@@ -87,7 +88,7 @@ describe("analytics-filters-storage", () => {
       maxAmount: null,
     }
 
-    await setItem(analyticsFiltersStorageKeyForTests(), JSON.stringify(stored))
+    await setItem(ANALYTICS_FILTERS_KEY, JSON.stringify(stored))
 
     await expect(loadAnalyticsFilters()).resolves.toEqual({
       ...DEFAULT_ANALYTICS_FILTERS,

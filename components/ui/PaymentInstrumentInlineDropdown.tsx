@@ -21,19 +21,6 @@ import {
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
-// Only use the style prop for layout properties not yet covered by NativeWind utility classes
-const styles = {
-  menuRow: {
-    minHeight: 44,
-  },
-  rowLabel: {
-    flex: 1,
-    flexShrink: 1,
-    paddingRight: UI_SPACE.section,
-    textAlign: "left",
-  },
-} as const
-
 export type InstrumentEntryKind = "none" | "manual" | "saved"
 
 interface PaymentInstrumentInlineDropdownProps {
@@ -240,7 +227,8 @@ export function PaymentInstrumentInlineDropdown({
             onPress={handleSelectNone}
             role="button"
             aria-selected={kind === "none"}
-            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            className="min-h-[44]"
           >
             <View
               className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
@@ -248,8 +236,7 @@ export function PaymentInstrumentInlineDropdown({
               }`}
             >
               <Text
-                className={kind === "none" ? "font-bold" : "font-medium"}
-                style={styles.rowLabel}
+                className={`flex-1 shrink pr-3 text-left ${kind === "none" ? "font-bold" : "font-medium"}`}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.none")}
@@ -271,7 +258,8 @@ export function PaymentInstrumentInlineDropdown({
             onPress={handleSelectManual}
             role="button"
             aria-selected={kind === "manual"}
-            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            className="min-h-[44]"
           >
             <View
               className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
@@ -279,8 +267,7 @@ export function PaymentInstrumentInlineDropdown({
               }`}
             >
               <Text
-                className={kind === "manual" ? "font-bold" : "font-medium"}
-                style={styles.rowLabel}
+                className={`flex-1 shrink pr-3 text-left ${kind === "manual" ? "font-bold" : "font-medium"}`}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.others")}
@@ -306,7 +293,8 @@ export function PaymentInstrumentInlineDropdown({
                 onPress={() => handleSelectInstrument(inst)}
                 role="button"
                 aria-selected={isSelected}
-                style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                className="min-h-[44]"
               >
                 <View
                   className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
@@ -314,8 +302,7 @@ export function PaymentInstrumentInlineDropdown({
                   }`}
                 >
                   <Text
-                    className={isSelected ? "font-bold" : "font-medium"}
-                    style={styles.rowLabel}
+                    className={`flex-1 shrink pr-3 text-left ${isSelected ? "font-bold" : "font-medium"}`}
                     numberOfLines={1}
                   >
                     {formatPaymentInstrumentLabel(inst)}

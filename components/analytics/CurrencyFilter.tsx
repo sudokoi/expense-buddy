@@ -3,7 +3,6 @@ import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -12,15 +11,6 @@ interface CurrencyFilterProps {
   defaultCurrency: string
   onChange: (currency: string | null) => void
 }
-
-const styles = {
-  scrollView: {
-    marginBottom: UI_SPACE.gutter,
-  },
-  contentContainer: {
-    paddingHorizontal: UI_SPACE.micro,
-  },
-} as const
 
 export const CurrencyFilter = memo(function CurrencyFilter({
   availableCurrencies,
@@ -39,8 +29,8 @@ export const CurrencyFilter = memo(function CurrencyFilter({
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
-      style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      className="mb-5"
+      contentContainerStyle={{ paddingHorizontal: 4 }}
     >
       <View className="flex-row gap-2">
         <Button

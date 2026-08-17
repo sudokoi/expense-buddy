@@ -254,7 +254,9 @@ async function getInstallerPackageName(): Promise<string | null> {
   }
 }
 
-async function fetchReleaseByTag(tag: string): Promise<any | null> {
+async function fetchReleaseByTag(
+  tag: string
+): Promise<{ html_url?: string; published_at?: string } | null> {
   const { owner, repo } = APP_CONFIG.github
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(
     tag

@@ -487,7 +487,11 @@ export default function SettingsScreen() {
             gap="$gutter"
           >
             <View className="flex-row flex-wrap gap-2">
-              <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports} accessibilityLabel={t("settings.smsImport.actions.scan")}>
+              <Button
+                onPress={handleScanSmsImports}
+                disabled={isScanningSmsImports}
+                accessibilityLabel={t("settings.smsImport.actions.scan")}
+              >
                 {isScanningSmsImports
                   ? t("settings.smsImport.actions.scanning")
                   : t("settings.smsImport.actions.scan")}
@@ -496,7 +500,12 @@ export default function SettingsScreen() {
 
             {pendingSmsImportItems.length > 0 ? (
               <View className="flex-row flex-wrap gap-2">
-                <Button onPress={openSmsImportReview} accessibilityLabel={t("settings.smsImport.actions.reviewWithPending", { count: pendingSmsImportItems.length })}>
+                <Button
+                  onPress={openSmsImportReview}
+                  accessibilityLabel={t("settings.smsImport.actions.reviewWithPending", {
+                    count: pendingSmsImportItems.length,
+                  })}
+                >
                   {t("settings.smsImport.actions.reviewWithPending", {
                     count: pendingSmsImportItems.length,
                   })}

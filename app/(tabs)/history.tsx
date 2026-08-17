@@ -619,7 +619,12 @@ export default function HistoryScreen() {
           >
             {t("history.noResultsSubtitle")}
           </Text>
-           <Button size="control" onPress={handleResetFilters} className="mt-4" accessibilityLabel={t("common.clearFilters")}>
+          <Button
+            size="control"
+            onPress={handleResetFilters}
+            className="mt-4"
+            accessibilityLabel={t("common.clearFilters")}
+          >
             {t("common.clearFilters")}
           </Button>
         </View>
@@ -686,10 +691,19 @@ export default function HistoryScreen() {
               {t("history.deleteDialog.description")}
             </Text>
             <View className="flex-row justify-end gap-3">
-              <Button size="control" onPress={() => setDeletingExpenseId(null)} accessibilityLabel={t("common.cancel")}>
+              <Button
+                size="control"
+                onPress={() => setDeletingExpenseId(null)}
+                accessibilityLabel={t("common.cancel")}
+              >
                 {t("common.cancel")}
               </Button>
-              <Button size="control" variant="destructive" onPress={confirmDelete} accessibilityLabel={t("common.delete")}>
+              <Button
+                size="control"
+                variant="destructive"
+                onPress={confirmDelete}
+                accessibilityLabel={t("common.delete")}
+              >
                 {t("common.delete")}
               </Button>
             </View>

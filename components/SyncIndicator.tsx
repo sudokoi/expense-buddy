@@ -1,6 +1,6 @@
 import React from "react"
 import { CheckCircle, XCircle } from "lucide-react-native"
-import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
+import { View, useColorScheme, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
@@ -8,7 +8,7 @@ import {
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
-import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_ICON_SIZE } from "../constants/ui-tokens"
+import { UI_ICON_SIZE } from "../constants/ui-tokens"
 
 /**
  * Global sync status indicator
@@ -20,20 +20,6 @@ import { UI_RADIUS, UI_SPACE, UI_Z_INDEX, UI_ICON_SIZE } from "../constants/ui-t
  * - error: show X
  * - idle/inSync: hidden
  */
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    right: UI_SPACE.block,
-    zIndex: UI_Z_INDEX.floating,
-    borderRadius: UI_RADIUS.surface,
-    padding: UI_SPACE.control,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-})
-
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
   const insets = useSafeAreaInsets()
@@ -61,14 +47,12 @@ export const SyncIndicator: React.FC = () => {
 
   return (
     <View
-      style={[
-        styles.container,
-        {
-          top: insets.top + UI_SPACE.gutter,
-          backgroundColor: overlayColors.background,
-          shadowColor: overlayColors.shadow,
-        },
-      ]}
+      className="absolute right-6 z-[10000] rounded-surface p-2 shadow-sm"
+      style={{
+        top: insets.top + 20,
+        backgroundColor: overlayColors.background,
+        shadowColor: overlayColors.shadow,
+      }}
     >
       {getIcon()}
     </View>

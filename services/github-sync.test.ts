@@ -10,7 +10,8 @@
 jest.mock("../i18n", () => ({
   __esModule: true,
   default: {
-    t: (key: string, params?: any) => `${key}${params ? JSON.stringify(params) : ""}`,
+    t: (key: string, params?: Record<string, unknown>) =>
+      `${key}${params ? JSON.stringify(params) : ""}`,
   },
 }))
 

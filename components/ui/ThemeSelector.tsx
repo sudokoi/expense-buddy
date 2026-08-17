@@ -16,13 +16,6 @@ interface ThemeSelectorProps {
   onChange: (theme: ThemePreference) => void
 }
 
-const styles = {
-  segment: {
-    flex: 1,
-    minHeight: 44, // Accessibility: minimum touch target
-  },
-} as const
-
 interface ThemeOption {
   key: ThemePreference
   label: string
@@ -52,7 +45,8 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`${label} theme`}
-            style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.6 : 1 }]}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            className="flex-1 min-h-[44]"
           >
             <View
               className="flex-1 flex-row items-center justify-center gap-2 rounded-control p-2"

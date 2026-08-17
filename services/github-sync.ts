@@ -377,14 +377,22 @@ export async function getRepositoryTree(
 
     // Filter to blob entries only
     const entries: RepositoryTreeEntry[] = (data.tree || [])
-      .filter((entry: any) => entry.type === "blob")
-      .map((entry: any) => ({
-        path: entry.path,
-        mode: entry.mode,
-        type: entry.type as "blob",
-        sha: entry.sha,
-        ...(entry.size !== undefined ? { size: entry.size } : {}),
-      }))
+      .filter((entry: { type: string }) => entry.type === "blob")
+      .map(
+        (entry: {
+          path: string
+          mode: string
+          type: string
+          sha: string
+          size?: number
+        }) => ({
+          path: entry.path,
+          mode: entry.mode,
+          type: entry.type as "blob",
+          sha: entry.sha,
+          ...(entry.size !== undefined ? { size: entry.size } : {}),
+        })
+      )
 
     return { success: true, entries, treeSha: commitResult.treeSha }
   } catch (error) {
@@ -954,16 +962,9 @@ export async function validatePAT(
       }
     }
 
-    console.log(
-      "Testing connection to:",
-      `https://api.github.com/repos/${owner}/${repoName}`
-    )
-
     const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}`, {
       headers: commonHeaders,
     })
-
-    console.log("GitHub API Response status:", response.status)
 
     if (response.status === 404) {
       return {
@@ -994,8 +995,6 @@ export async function validatePAT(
         push?: boolean
       }
     } | null
-
-    console.log("Repository found:", repoData?.full_name)
 
     // 2) Verify write/push access
     const hasPushViaRepo = Boolean(
@@ -1125,8 +1124,8 @@ export async function listFiles(
 
     if (Array.isArray(data)) {
       return data
-        .filter((item: any) => item.type === "file")
-        .map((item: any) => ({
+        .filter((item: { type: string }) => item.type === "file")
+        .map((item: { name: string; path: string; sha: string }) => ({
           name: item.name,
           path: item.path,
           sha: item.sha,

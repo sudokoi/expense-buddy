@@ -48,7 +48,15 @@ describe("Property 1: Tree Parsing Extracts All Blob Entries", () => {
   )
 
   /** Helper to set up mocks for a successful tree fetch */
-  function mockSuccessfulTreeFetch(treeEntries: any[]) {
+  function mockSuccessfulTreeFetch(
+    treeEntries: {
+      path: string
+      mode: string
+      type: string
+      sha: string
+      size?: number
+    }[]
+  ) {
     mockFetch
       // getBranchRef
       .mockResolvedValueOnce({

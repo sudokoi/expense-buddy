@@ -5,21 +5,11 @@ import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
   onChange: (categories: string[]) => void
 }
-
-const styles = {
-  scrollView: {
-    marginBottom: UI_SPACE.gutter,
-  },
-  contentContainer: {
-    paddingHorizontal: UI_SPACE.micro,
-  },
-} as const
 
 /**
  * CategoryFilter - Multi-select category chips for filtering analytics
@@ -70,8 +60,8 @@ export const CategoryFilter = memo(function CategoryFilter({
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
-      style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      className="mb-5"
+      contentContainerStyle={{ paddingHorizontal: 4 }}
     >
       <View className="flex-row gap-2">
         {/* All button */}

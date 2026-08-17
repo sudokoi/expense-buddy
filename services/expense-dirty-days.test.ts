@@ -3,11 +3,12 @@ import { getItem, clear } from "./storage"
 import {
   clearDirtyDays,
   consumeDirtyDays,
-  dirtyDaysStorageKeyForTests,
   loadDirtyDays,
   markDeletedDay,
   markDirtyDay,
 } from "./expense-dirty-days"
+
+const DIRTY_DAYS_KEY = "expense_dirty_days"
 
 describe("expense-dirty-days", () => {
   beforeEach(async () => {
@@ -55,7 +56,7 @@ describe("expense-dirty-days", () => {
 
     expect(consumed.state.dirtyDays).toEqual(["2025-01-04"])
 
-    const key = dirtyDaysStorageKeyForTests()
+    const key = DIRTY_DAYS_KEY
     const stored = await getItem(key)
     expect(stored).not.toBeNull()
     const parsed = JSON.parse(stored!)

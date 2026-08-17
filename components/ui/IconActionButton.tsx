@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, Text, View } from "react-native"
 import Animated, {
   Easing,
   cancelAnimation,
@@ -9,7 +9,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated"
-import { UI_SPACE, UI_RADIUS } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface IconActionButtonProps {
@@ -108,10 +107,14 @@ export function IconActionButton({
       </SpinningIcon>
       {showTooltip && tooltip && (
         <View
-          style={[styles.tooltipContainer, tooltipContainerStyle[tooltipAlign]]}
+          className="absolute z-[1000] pt-1"
+          style={[{ top: "100%" }, tooltipContainerStyle[tooltipAlign]]}
           pointerEvents="none"
         >
-          <View style={[styles.tooltip, { backgroundColor: theme.foreground }]}>
+          <View
+            className="px-2 py-1 rounded-control"
+            style={{ minWidth: 100, backgroundColor: theme.foreground }}
+          >
             <Text className="text-[13px] text-background">{tooltip}</Text>
           </View>
         </View>
@@ -129,18 +132,3 @@ const tooltipContainerStyle = {
   },
   right: { right: 0, left: "auto" as const, alignItems: "flex-end" as const },
 }
-
-const styles = StyleSheet.create({
-  tooltipContainer: {
-    position: "absolute",
-    top: "100%",
-    paddingTop: UI_SPACE.micro,
-    zIndex: 1000,
-  },
-  tooltip: {
-    paddingHorizontal: UI_SPACE.control,
-    paddingVertical: UI_SPACE.micro,
-    borderRadius: UI_RADIUS.control,
-    minWidth: 100,
-  },
-})

@@ -59,7 +59,7 @@ export function getGitHubOAuthClientIdStatus():
   const clientId = getGitHubOAuthClientId()
   if (!clientId) {
     // Expo Go note: EAS profile env vars are not injected here.
-    const isExpoGo = (Constants as any)?.appOwnership === "expo"
+    const isExpoGo = (Constants as { appOwnership?: string })?.appOwnership === "expo"
     if (isExpoGo) {
       return {
         ok: false,

@@ -1,4 +1,5 @@
 import { format, eachDayOfInterval } from "date-fns"
+import type { Locale } from "date-fns"
 import { Expense, PaymentMethodType } from "../../types/expense"
 import type { DateRange } from "../../types/analytics"
 import type {
@@ -252,7 +253,7 @@ export function aggregateByPaymentInstrument(
 export function aggregateByDay(
   expenses: Expense[],
   dateRange: DateRange,
-  locale?: any,
+  locale?: Locale,
   currencyCode: string = "INR"
 ): LineChartDataItem[] {
   // Get all days in the range

@@ -11,7 +11,8 @@
 jest.mock("../i18n", () => ({
   __esModule: true,
   default: {
-    t: (key: string, params?: any) => `${key}${params ? JSON.stringify(params) : ""}`,
+    t: (key: string, params?: Record<string, unknown>) =>
+      `${key}${params ? JSON.stringify(params) : ""}`,
   },
 }))
 
@@ -114,7 +115,7 @@ function mockDownloadCSV(content: string) {
 }
 
 function mockBatchCommitSuccess(fileCount: number) {
-  const responses: Array<{ ok: boolean; json: () => Promise<any> }> = []
+  const responses: Array<{ ok: boolean; json: () => Promise<unknown> }> = []
 
   // batchCommit internally calls getBranchRef + getCommitTree first
   responses.push(mockBranchRef())

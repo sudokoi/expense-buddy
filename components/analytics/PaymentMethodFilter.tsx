@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { UI_SPACE } from "../../constants/ui-tokens"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -14,15 +13,6 @@ interface PaymentMethodFilterProps {
   selected: PaymentMethodSelectionKey[]
   onChange: (selected: PaymentMethodSelectionKey[]) => void
 }
-
-const styles = {
-  scrollView: {
-    marginBottom: UI_SPACE.gutter,
-  },
-  contentContainer: {
-    paddingHorizontal: UI_SPACE.micro,
-  },
-} as const
 
 const NONE_KEY: PaymentMethodSelectionKey = "__none__"
 
@@ -95,8 +85,8 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
-      style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      className="mb-5"
+      contentContainerStyle={{ paddingHorizontal: 4 }}
     >
       <View className="flex-row gap-2">
         <Button

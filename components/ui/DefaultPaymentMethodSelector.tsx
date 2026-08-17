@@ -18,12 +18,6 @@ interface DefaultPaymentMethodSelectorProps {
   onChange: (type: PaymentMethodType | undefined) => void
 }
 
-const styles = {
-  option: {
-    minHeight: 44, // Accessibility: minimum touch target
-  },
-} as const
-
 /**
  * DefaultPaymentMethodSelector - A selector for choosing default payment method in settings
  */
@@ -52,7 +46,8 @@ export function DefaultPaymentMethodSelector({
         role="button"
         accessibilityLabel={`${displayLabel} payment method`}
         accessibilityState={{ selected: isSelected }}
-        style={({ pressed }) => [styles.option, { opacity: pressed ? 0.6 : 1 }]}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        className="min-h-[44]"
       >
         <View
           className="flex-row items-center justify-center gap-2 rounded-control p-2"

@@ -77,11 +77,6 @@ describe("Sync Logic Reproduction", () => {
 
     // Expectation: Should NOT report "1 expense synced" if content is identical
     // If bug exists, one of them > 0
-    console.log("Stats:", {
-      new: result.addedFromRemote.length,
-      updated: result.updatedFromRemote.length,
-    })
-
     // Both should be 0 because the expenses are identical
     expect(result.addedFromRemote.length).toBe(0)
     expect(result.updatedFromRemote.length).toBe(0)

@@ -232,7 +232,10 @@ export function CategoryFormModal({
             <Label className="opacity-80">
               {t("settings.categories.form.iconLabel")}
             </Label>
-            <Pressable onPress={handleOpenIconPicker} accessibilityLabel={t("settings.categories.form.chooseIcon")}>
+            <Pressable
+              onPress={handleOpenIconPicker}
+              accessibilityLabel={t("settings.categories.form.chooseIcon")}
+            >
               <View className="flex-row items-center gap-3 p-3 rounded-control border-2 bg-surface border-border">
                 <View
                   style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
@@ -258,7 +261,10 @@ export function CategoryFormModal({
             <Label className="opacity-80">
               {t("settings.categories.form.colorLabel")}
             </Label>
-            <Pressable onPress={handleOpenColorPicker} accessibilityLabel={t("settings.categories.form.chooseColor")}>
+            <Pressable
+              onPress={handleOpenColorPicker}
+              accessibilityLabel={t("settings.categories.form.chooseColor")}
+            >
               <View className="flex-row justify-end gap-3 mt-2">
                 <View
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
