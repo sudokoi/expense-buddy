@@ -1,6 +1,6 @@
 import React from "react"
 import { CheckCircle, XCircle } from "lucide-react-native"
-import { View, useColorScheme, ActivityIndicator } from "react-native"
+import { View, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
@@ -8,6 +8,7 @@ import {
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
+import { useThemeScheme } from "../hooks/use-theme-colors"
 import { UI_ICON_SIZE } from "../constants/ui-tokens"
 
 /**
@@ -23,7 +24,7 @@ import { UI_ICON_SIZE } from "../constants/ui-tokens"
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
+  const colorScheme = useThemeScheme()
   const overlayColors = getOverlayColors(colorScheme)
 
   // Derive visibility directly from machine state

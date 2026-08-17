@@ -1,11 +1,11 @@
 import { useMemo, useCallback, memo } from "react"
-import { Dimensions, Pressable, Text, View, useColorScheme } from "react-native"
+import { Dimensions, Pressable, Text, View } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentMethodChartDataItem } from "../../utils/analytics/aggregations"
 import { getChartColors } from "../../constants/theme-colors"
 import { PaymentMethodType } from "../../types/expense"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 
@@ -70,7 +70,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   const theme = useThemeColors()
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
-  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
+  const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
 
   const handleSegmentPress = useCallback(

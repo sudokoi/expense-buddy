@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback, memo } from "react"
-import { Pressable, Text, View, useColorScheme, useWindowDimensions } from "react-native"
+import { Pressable, Text, View, useWindowDimensions } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PieChartDataItem } from "../../utils/analytics/aggregations"
 import { getChartColors } from "../../constants/theme-colors"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 
@@ -68,7 +68,7 @@ export const PieChartSection = memo(function PieChartSection({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const { width: screenWidth } = useWindowDimensions()
   const chartSize = Math.min(screenWidth - 80, 200)
-  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
+  const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
 
   const handleSegmentPress = useCallback(

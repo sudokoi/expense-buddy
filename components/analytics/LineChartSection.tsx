@@ -1,5 +1,5 @@
 import { useMemo, memo, useCallback } from "react"
-import { Dimensions, ScrollView, Text, View, useColorScheme } from "react-native"
+import { Dimensions, ScrollView, Text, View } from "react-native"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { LineChartDataItem } from "../../utils/analytics/aggregations"
@@ -30,7 +30,7 @@ export const LineChartSection = memo(function LineChartSection({
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
   const theme = useThemeColors()
-  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
+  const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
   const overlayColors = getOverlayColors(colorScheme)
   const screenWidth = Dimensions.get("window").width
