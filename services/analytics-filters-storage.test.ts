@@ -6,7 +6,7 @@ import {
   saveAnalyticsFilters,
 } from "./analytics-filters-storage"
 
-const ANALYTICS_FILTERS_KEY = "analytics_filters"
+const ANALYTICS_FILTERS_KEY = "analytics_filters_v1"
 
 describe("analytics-filters-storage", () => {
   beforeEach(async () => {
