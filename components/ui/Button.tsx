@@ -3,27 +3,30 @@ import { Pressable, Text, type PressableProps } from "react-native"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../utils/cn"
 
-const buttonVariants = cva("flex-row items-center justify-center rounded-control", {
-  variants: {
-    variant: {
-      default: "bg-transparent",
-      outline: "border border-border bg-transparent",
-      accent: "bg-accent",
-      ghost: "bg-transparent",
-      destructive: "bg-error",
+const buttonVariants = cva(
+  "flex-row items-center justify-center rounded-control active:opacity-60",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        outline: "border border-border bg-transparent",
+        accent: "bg-accent",
+        ghost: "bg-transparent",
+        destructive: "bg-error",
+      },
+      size: {
+        icon: "h-5 px-1",
+        chip: "h-7 px-3",
+        compact: "h-9 px-3",
+        control: "h-11 px-4",
+      },
     },
-    size: {
-      icon: "h-5 px-1",
-      chip: "h-7 px-3",
-      compact: "h-9 px-3",
-      control: "h-11 px-4",
+    defaultVariants: {
+      variant: "default",
+      size: "control",
     },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "control",
-  },
-})
+  }
+)
 
 const buttonTextVariants = cva("text-foreground", {
   variants: {

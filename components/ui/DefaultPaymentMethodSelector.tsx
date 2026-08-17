@@ -52,7 +52,7 @@ export function DefaultPaymentMethodSelector({
         role="button"
         aria-selected={isSelected}
         aria-label={`${displayLabel} payment method`}
-        style={({ pressed }) => [styles.option, { opacity: pressed ? 0.8 : 1 }]}
+        style={({ pressed }) => [styles.option, { opacity: pressed ? 0.6 : 1 }]}
       >
         <View
           className="flex-row items-center justify-center gap-2 rounded-control p-2"

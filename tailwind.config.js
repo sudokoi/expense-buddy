@@ -9,6 +9,10 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Inter", "System", "sans-serif"],
+        bold: ["InterBold", "System", "sans-serif"],
+      },
       colors: {
         background: "var(--background)",
         surface: "var(--surface)",
@@ -33,9 +37,9 @@ module.exports = {
         "kawaii-mint": "var(--kawaii-mint)",
       },
       borderRadius: {
-        control: "8px",
-        chip: "12px",
-        card: "16px",
+        control: "12px",
+        chip: "14px",
+        card: "20px",
         round: "999px",
       },
     },

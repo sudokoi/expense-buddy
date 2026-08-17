@@ -532,7 +532,7 @@ export default function SettingsScreen() {
           <Pressable
             onPress={() => router.push("/settings/payment" as Href)}
             role="button"
-            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
           >
             <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">
               <View className="flex-1 gap-1" pointerEvents="none">

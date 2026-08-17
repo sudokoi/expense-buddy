@@ -675,7 +675,7 @@ export default function HistoryScreen() {
         onRequestClose={() => setDeletingExpenseId(null)}
       >
         <View className="flex-1 items-center justify-center bg-black/50 px-6">
-          <View className="w-full max-w-sm gap-4 rounded-card border border-border bg-surface p-6">
+          <View className="w-full max-w-sm gap-4 rounded-card bg-surface p-6 dark:border dark:border-border">
             <Text className="text-lg font-semibold text-foreground">
               {t("history.deleteDialog.title")}
             </Text>

@@ -1,6 +1,6 @@
 import "../global.css"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useColorScheme } from "react-native"
 import { StatusBar } from "expo-status-bar"
 import * as SystemUI from "expo-system-ui"
@@ -135,12 +135,19 @@ function RootLayoutNav() {
   const statusBarBackground =
     resolvedScheme === "dark" ? palette.dark.background : palette.light.background
 
+  const navigationTheme = useMemo(() => {
+    const base = resolvedScheme === "dark" ? DarkTheme : DefaultTheme
+    const bg =
+      resolvedScheme === "dark" ? palette.dark.background : palette.light.background
+    return { ...base, colors: { ...base.colors, background: bg, card: bg } }
+  }, [resolvedScheme])
+
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(statusBarBackground)
   }, [statusBarBackground])
 
   return (
-    <ThemeProvider value={resolvedScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme}>
       <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
       <Stack key={settings.language}>
         <Stack.Screen

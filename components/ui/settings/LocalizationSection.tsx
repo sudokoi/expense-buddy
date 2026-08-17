@@ -53,7 +53,7 @@ export function LocalizationSection({
         onPress={() => setExpanded((prev) => !prev)}
         role="button"
         aria-expanded={expanded}
-        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
       >
         <View className="flex-1 bg-surface flex-row items-center justify-between py-2.5 px-3 rounded-chip">
           <View className="flex-1 gap-1">

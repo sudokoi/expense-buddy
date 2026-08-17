@@ -57,7 +57,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             aria-label={`Select ${label}`}
             style={({ pressed }) => [
               { flexBasis: "50%", minHeight: 44 },
-              { opacity: pressed ? 0.8 : 1 },
+              { opacity: pressed ? 0.6 : 1 },
             ]}
           >
             <View

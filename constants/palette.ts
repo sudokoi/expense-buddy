@@ -35,56 +35,7 @@ export const palette = {
 
 export type ThemeScheme = keyof typeof palette
 
-/**
- * Kawaii theme colors - centralized semantic colors.
- * Kept for backward compatibility with existing import sites.
- */
-export const THEME_COLORS = {
-  kawaiiPink: "#FFB6C1",
-  kawaiiPinkLight: "#FFD1DC",
-  kawaiiPinkDark: "#FF91A4",
-  kawaiiLavender: "#E6E6FA",
-  kawaiiMint: "#98FB98",
-  kawaiiCream: "#FFF8F0",
-  kawaiiSoftWhite: "#FFFAF5",
-  kawaiiDarkPurple: "#1A1625",
-  kawaiiDarkCard: "#252033",
-  kawaiiSoftDark: "#4A4458",
-  kawaiiMutedPurple: "#6B5F7A",
-  kawaiiSoftLight: "#F0E6F6",
-  kawaiiMutedLavender: "#C7B9D6",
-  successText: "#1A5A3A",
-  errorText: "#8B2A2A",
-  warningText: "#6B4A1A",
-  infoText: "#1A4A6B",
-  mutedBlue: "#4A90B8",
-  strongBlue: "#2E7DAF",
-  mutedGreen: "#5BA87A",
-  strongGreen: "#4A9668",
-  mutedOrange: "#C88A5A",
-  strongOrange: "#B87A4A",
-  mutedPurple: "#9A7AB8",
-  strongPurple: "#8A6AA8",
-  // Light theme specific
-  lightBackgroundPress: "#FFE8E0",
-  lightColorHover: "#3A3448",
-  lightColorPress: "#2A2438",
-  lightBorderHover: "#DDA0DD",
-  lightBorderPress: "#DDA0DD",
-  lightPlaceholder: "#7A6A86",
-  // Dark theme specific
-  darkBackgroundPress: "#302840",
-  darkColorPress: "#E0D6E6",
-  darkBorderColor: "#3A3050",
-  darkBorderHover: "#9370DB",
-  darkBorderFocus: "#FF69B4",
-  darkBorderPress: "#9370DB",
-  // Expense/income light variants
-  expenseRedLight: "#FFD4D4",
-  incomeGreenLight: "#C8F7DC",
-} as const
-
-// Status/notification colors (kawaii versions)
+// Status/notification colors (kawaii pastel versions)
 export const SEMANTIC_COLORS = {
   success: "#7FDBAA",
   error: "#FF8A8A",
@@ -92,39 +43,47 @@ export const SEMANTIC_COLORS = {
   info: "#87CEEB",
 } as const
 
+// Notification text colors (dark-on-pastel for readability)
+const NOTIFICATION_TEXT = {
+  success: "#1A5A3A",
+  error: "#8B2A2A",
+  warning: "#6B4A1A",
+  info: "#1A4A6B",
+} as const
+
 // Shared style tokens for notification-like surfaces (toast/banner)
 export const NOTIFICATION_STYLE_TOKENS = {
   success: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: THEME_COLORS.successText,
+    textColor: NOTIFICATION_TEXT.success,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   error: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: THEME_COLORS.errorText,
+    textColor: NOTIFICATION_TEXT.error,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   warning: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: THEME_COLORS.warningText,
+    textColor: NOTIFICATION_TEXT.warning,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
   info: {
     iconBg: "rgba(255, 255, 255, 0.3)",
-    textColor: THEME_COLORS.infoText,
+    textColor: NOTIFICATION_TEXT.info,
     borderColor: "rgba(255, 255, 255, 0.4)",
     actionBg: "rgba(255, 255, 255, 0.35)",
     actionBorderColor: "rgba(255, 255, 255, 0.55)",
   },
 } as const
 
-// Expense/income colors
+// Expense/income colors (soft kawaii pastels)
 export const FINANCIAL_COLORS = {
   expense: "#FF8A8A",
   expenseLight: "#FFD4D4",
@@ -132,8 +91,7 @@ export const FINANCIAL_COLORS = {
   incomeLight: "#C8F7DC",
 } as const
 
-// Readable text variants for currency amounts (preserves the original
-// saturated expense/income amount colors, chosen for legibility).
+// Readable text variants for currency amounts (high-contrast for legibility)
 export const AMOUNT_COLORS = {
   expense: "#E5484D",
   income: "#30A46C",
@@ -143,9 +101,6 @@ export const AMOUNT_COLORS = {
 export const ACCENT_COLORS = {
   primary: "#C0406A",
   primaryLight: "#FFD1DC",
-  primaryDark: "#FF91A4",
-  secondary: "#E6E6FA",
-  tertiary: "#98FB98",
 } as const
 
 // Chart/graph colors for dark mode compatibility
@@ -167,12 +122,12 @@ export const CHART_COLORS = {
 // Tooltip/overlay colors
 export const OVERLAY_COLORS = {
   light: {
-    background: THEME_COLORS.kawaiiSoftWhite,
-    border: THEME_COLORS.kawaiiLavender,
+    background: "#FFFAF5",
+    border: "#E6E6FA",
     shadow: "rgba(74, 68, 88, 0.15)",
   },
   dark: {
-    background: THEME_COLORS.kawaiiDarkCard,
+    background: "#252033",
     border: "#3A3050",
     shadow: "rgba(0, 0, 0, 0.3)",
   },
@@ -182,23 +137,23 @@ export const OVERLAY_COLORS = {
 export const CARD_COLORS = {
   blue: {
     bg: "#E6F3FF",
-    text: THEME_COLORS.mutedBlue,
-    accent: THEME_COLORS.strongBlue,
+    text: "#4A90B8",
+    accent: "#2E7DAF",
   },
   green: {
     bg: "#E8F8EE",
-    text: THEME_COLORS.mutedGreen,
-    accent: THEME_COLORS.strongGreen,
+    text: "#5BA87A",
+    accent: "#4A9668",
   },
   orange: {
     bg: "#FFF3E6",
-    text: THEME_COLORS.mutedOrange,
-    accent: THEME_COLORS.strongOrange,
+    text: "#C88A5A",
+    accent: "#B87A4A",
   },
   purple: {
     bg: "#F3E8FF",
-    text: THEME_COLORS.mutedPurple,
-    accent: THEME_COLORS.strongPurple,
+    text: "#9A7AB8",
+    accent: "#8A6AA8",
   },
 } as const
 

@@ -9,15 +9,15 @@ export const UI_SPACE = {
   micro: 4,
   control: 8,
   section: 12,
-  gutter: 16,
-  block: 20,
+  gutter: 20,
+  block: 24,
   empty: 40,
 } as const
 
 export const UI_RADIUS = {
-  control: 8,
-  chip: 12,
-  surface: 16,
+  control: 12,
+  chip: 14,
+  surface: 20,
   round: 999,
 } as const
 

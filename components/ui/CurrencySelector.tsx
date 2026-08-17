@@ -53,7 +53,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             aria-label={`Select ${label}`}
             style={({ pressed }) => [
               { flexBasis: "25%", minHeight: 44 },
-              { opacity: pressed ? 0.8 : 1 },
+              { opacity: pressed ? 0.6 : 1 },
             ]}
           >
             <View

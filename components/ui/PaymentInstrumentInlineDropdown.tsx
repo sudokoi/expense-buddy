@@ -240,7 +240,7 @@ export function PaymentInstrumentInlineDropdown({
             onPress={handleSelectNone}
             role="button"
             aria-selected={kind === "none"}
-            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
           >
             <View
               className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
@@ -271,7 +271,7 @@ export function PaymentInstrumentInlineDropdown({
             onPress={handleSelectManual}
             role="button"
             aria-selected={kind === "manual"}
-            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
           >
             <View
               className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
@@ -306,7 +306,7 @@ export function PaymentInstrumentInlineDropdown({
                 onPress={() => handleSelectInstrument(inst)}
                 role="button"
                 aria-selected={isSelected}
-                style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
+                style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
               >
                 <View
                   className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${

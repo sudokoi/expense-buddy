@@ -52,7 +52,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={`${label} theme`}
-            style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.8 : 1 }]}
+            style={({ pressed }) => [styles.segment, { opacity: pressed ? 0.6 : 1 }]}
           >
             <View
               className="flex-1 flex-row items-center justify-center gap-2 rounded-control p-2"

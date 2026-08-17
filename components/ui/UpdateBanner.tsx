@@ -47,11 +47,6 @@ export function UpdateBanner({
     borderColor: infoStyles.borderColor,
     paddingVertical: UI_SPACE.section,
     paddingHorizontal: UI_SPACE.gutter,
-    shadowColor: SEMANTIC_COLORS.info,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   }
 
   const contentStyle: ViewStyle = {
@@ -70,7 +65,7 @@ export function UpdateBanner({
 
   const iconContainerStyle: ViewStyle = {
     backgroundColor: infoStyles.iconBg,
-    borderRadius: UI_RADIUS.surface + UI_SPACE.micro,
+    borderRadius: UI_RADIUS.chip,
     padding: UI_SPACE.control - 2,
   }
 

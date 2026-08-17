@@ -3,11 +3,11 @@ import { View, type ViewProps } from "react-native"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../utils/cn"
 
-const cardVariants = cva("rounded-card bg-surface border border-border", {
+const cardVariants = cva("rounded-card bg-surface dark:border dark:border-border", {
   variants: {
     variant: {
       default: "",
-      elevated: "shadow-sm",
+      elevated: "",
       ghost: "border-transparent bg-transparent",
     },
   },
