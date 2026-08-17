@@ -75,17 +75,17 @@ export const LineChartSection = memo(function LineChartSection({
     requestAnimationFrame(() => node.scrollToEnd({ animated: false }))
   }, [])
 
-  const scheme = useThemeScheme()
-
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
       line: theme.accent,
       area:
-        scheme === "dark" ? ACCENT_COLORS.primaryLightDark : ACCENT_COLORS.primaryLight,
+        colorScheme === "dark"
+          ? ACCENT_COLORS.primaryLightDark
+          : ACCENT_COLORS.primaryLight,
       text: theme.foreground,
     }),
-    [theme.accent, theme.foreground, scheme]
+    [theme.accent, theme.foreground, colorScheme]
   )
 
   // Memoize chart data transformation
