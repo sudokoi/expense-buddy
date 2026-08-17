@@ -1,4 +1,4 @@
-# ADR-001: XState Sync State Machine
+# ADR-002: XState Sync State Machine
 
 **Date:** 2026-01-06  
 **Status:** Accepted  

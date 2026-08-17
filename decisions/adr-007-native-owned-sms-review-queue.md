@@ -1,4 +1,4 @@
-# ADR-006: Native-Owned SMS Review Queue with Room-Based Persistence
+# ADR-007: Native-Owned SMS Review Queue with Room-Based Persistence
 
 **Date:** 2026-05-27 (last updated 2026-05-28 for Phase 3)
 **Status:** Accepted — Phases 1–3 complete, Phase 4 (reliability logging) complete

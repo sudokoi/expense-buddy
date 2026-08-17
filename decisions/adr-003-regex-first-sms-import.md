@@ -1,4 +1,4 @@
-# ADR-002: Regex-First SMS Import
+# ADR-003: Regex-First SMS Import
 
 **Date:** 2026-04-11  
 **Status:** Accepted  

@@ -1,4 +1,4 @@
-# ADR-008: Remove Tamagui, Adopt NativeWind, Upgrade to Expo SDK 57
+# ADR-009: Remove Tamagui, Adopt NativeWind, Upgrade to Expo SDK 57
 
 **Date:** 2026-08-17
 **Status:** Accepted

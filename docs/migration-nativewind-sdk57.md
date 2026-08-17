@@ -5,7 +5,7 @@
 > is retained as a historical record of the migration.
 
 Branch: `feat/remove-tamagui-nativewind-sdk57`
-ADR: [ADR-008](decisions/adr-008-remove-tamagui-adopt-nativewind.md)
+ADR: [ADR-009](decisions/adr-009-remove-tamagui-adopt-nativewind.md)
 
 Goal: remove Tamagui, adopt NativeWind/Tailwind, upgrade to Expo SDK 57, and fix the
 design audit's contrast failures — **with no functional change**.

@@ -1,4 +1,4 @@
-# ADR-007: On-Device Structured Logging with Room-Backed Ring Buffer
+# ADR-008: On-Device Structured Logging with Room-Backed Ring Buffer
 
 **Date:** 2026-05-27
 **Status:** Accepted

@@ -7,8 +7,12 @@ import java.time.Instant
 import java.util.Locale
 
 private val amountPattern = Regex("(?:INR|RS\\.?|₹)\\s*([0-9][0-9,]*(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
-private val debitKeywords = Regex("debited|spent|withdrawn|paid|purchase|txn|transaction|upi", RegexOption.IGNORE_CASE)
-private val settledDebitKeywords = Regex("debited|spent|withdrawn|paid|purchase", RegexOption.IGNORE_CASE)
+private val debitKeywords =
+    Regex(
+        "debited|spent|withdrawn|paid|purchase|txn|transaction|upi|charged|payment of|bill pay|auto-debit|debit of",
+        RegexOption.IGNORE_CASE,
+    )
+private val settledDebitKeywords = Regex("debited|spent|withdrawn|paid|purchase|charged", RegexOption.IGNORE_CASE)
 private val creditOnlyKeywords = Regex("credited|received", RegexOption.IGNORE_CASE)
 private val otpKeywords =
     Regex(
@@ -31,6 +35,7 @@ private val approvalPromptKeywords =
         RegexOption.IGNORE_CASE,
     )
 private val merchantPattern = Regex("\\b(?:at|to|merchant)\\s+(\\w+(?:[&\\-]\\w+)?(?:\\s+\\w+(?:[&\\-]\\w+)?)?)", RegexOption.IGNORE_CASE)
+private val upiMerchantPattern = Regex("UPI/[^/]+/[^/]+/([^\\s].*?)(?:\\s|$)", RegexOption.IGNORE_CASE)
 
 private val categoryInferenceRules =
     listOf(
@@ -109,8 +114,14 @@ object SmsMessageParser {
             return ParseResult(null, SkipReason.NEGATIVE_ALERT)
         }
 
-        if (!debitKeywords.containsMatchIn(normalizedBody) || creditOnlyKeywords.containsMatchIn(normalizedBody)) {
+        if (!debitKeywords.containsMatchIn(normalizedBody)) {
             Log.d("SMS_PARSER", "skip reason=NOT_DEBIT sender=$sender")
+            return ParseResult(null, SkipReason.NOT_DEBIT)
+        }
+
+        // Reject pure credit messages (credited/received without any debit signal)
+        if (creditOnlyKeywords.containsMatchIn(normalizedBody) && !settledDebitKeywords.containsMatchIn(normalizedBody)) {
+            Log.d("SMS_PARSER", "skip reason=NOT_DEBIT (credit-only) sender=$sender")
             return ParseResult(null, SkipReason.NOT_DEBIT)
         }
 
@@ -165,12 +176,31 @@ object SmsMessageParser {
     }
 
     private fun inferMerchant(body: String): String? {
-        val match = merchantPattern.find(body) ?: return null
-        return match.groupValues
-            .getOrNull(1)
-            ?.replace(Regex("\\s+"), " ")
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+        // Try standard "at/to merchant" pattern first
+        val match = merchantPattern.find(body)
+        if (match != null) {
+            val merchant =
+                match.groupValues
+                    .getOrNull(1)
+                    ?.replace(Regex("\\s+"), " ")
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+            if (merchant != null) return merchant
+        }
+
+        // Try UPI pattern: UPI/P2M/.../MerchantName
+        val upiMatch = upiMerchantPattern.find(body)
+        if (upiMatch != null) {
+            val merchant =
+                upiMatch.groupValues
+                    .getOrNull(1)
+                    ?.replace(Regex("\\s+"), " ")
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+            if (merchant != null) return merchant
+        }
+
+        return null
     }
 
     private fun inferCategory(
@@ -206,9 +236,17 @@ object SmsMessageParser {
         val hasSettledDebitSignal =
             settledDebitKeywords.containsMatchIn(body) && !creditOnlyKeywords.containsMatchIn(body)
 
-        return nonExpenseTransactionOutcomeKeywords.containsMatchIn(body) ||
-            (!hasDebitSignal && nonExpenseInfoKeywords.containsMatchIn(body)) ||
-            (approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal)
+        // Filter out declined/failed/reversed transactions
+        if (nonExpenseTransactionOutcomeKeywords.containsMatchIn(body)) return true
+
+        // Filter out info-only messages (balance updates, card limits, etc.) when no debit signal
+        if (!hasDebitSignal && nonExpenseInfoKeywords.containsMatchIn(body)) return true
+
+        // Filter out OTP/approval prompts ONLY when there's no settled debit signal
+        // Banks often append "if not you" disclaimers to legitimate debit SMS — those should pass
+        if (approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal) return true
+
+        return false
     }
 
     private fun getTimeWindow(receivedAt: String): Long {

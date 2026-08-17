@@ -1,4 +1,4 @@
-# ADR-004: Android-Only Scope and Play Permission Gate for SMS Import
+# ADR-005: Android-Only Scope and Play Permission Gate for SMS Import
 
 **Date:** 2026-04-11  
 **Status:** Accepted  
