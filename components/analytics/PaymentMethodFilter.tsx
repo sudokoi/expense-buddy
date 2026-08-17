@@ -125,7 +125,9 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               {Icon ? (
                 <Icon size={14} color={isSelected ? "white" : theme.foreground} />
               ) : null}
-              <Text className={isSelected ? "text-white" : "text-foreground"}>{label}</Text>
+              <Text className={isSelected ? "text-white" : "text-foreground"}>
+                {label}
+              </Text>
             </Button>
           )
         })}

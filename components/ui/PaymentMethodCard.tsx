@@ -37,10 +37,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       }}
     >
       <View className="flex-row items-center gap-2">
-        <Icon
-          size={UI_ICON_SIZE.small}
-          color={isSelected ? accent : theme.foreground}
-        />
+        <Icon size={UI_ICON_SIZE.small} color={isSelected ? accent : theme.foreground} />
         <Text
           className="text-xs text-foreground"
           style={{

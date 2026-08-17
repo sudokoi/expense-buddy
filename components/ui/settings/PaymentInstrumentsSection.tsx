@@ -13,11 +13,7 @@ import {
 } from "../../../services/payment-instruments"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
-import {
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_ICON_SIZE,
-} from "../../../constants/ui-tokens"
+import { UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../../constants/ui-tokens"
 import { useThemeColors } from "../../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -204,7 +200,12 @@ export function PaymentInstrumentsSection() {
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
                             <IconActionButton
-                              icon={<Edit3 size={UI_ICON_SIZE.small} color={theme.foreground} />}
+                              icon={
+                                <Edit3
+                                  size={UI_ICON_SIZE.small}
+                                  color={theme.foreground}
+                                />
+                              }
                               onPress={() => handleEdit(inst)}
                               tooltip={t("common.editLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
@@ -214,7 +215,12 @@ export function PaymentInstrumentsSection() {
                               })}
                             />
                             <IconActionButton
-                              icon={<Trash size={UI_ICON_SIZE.small} color={theme.foreground} />}
+                              icon={
+                                <Trash
+                                  size={UI_ICON_SIZE.small}
+                                  color={theme.foreground}
+                                />
+                              }
                               onPress={() => handleDelete(inst)}
                               tooltip={t("common.removeLabel", {
                                 label: formatPaymentInstrumentLabel(inst),

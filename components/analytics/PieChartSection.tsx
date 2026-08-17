@@ -36,9 +36,7 @@ const LegendItem = memo(function LegendItem({
             className="h-3 w-3 rounded-control"
             style={{ backgroundColor: item.color }}
           />
-          <Text
-            className={`${isSelected ? "font-bold" : "font-normal"} text-foreground`}
-          >
+          <Text className={`${isSelected ? "font-bold" : "font-normal"} text-foreground`}>
             {item.text}
           </Text>
         </View>

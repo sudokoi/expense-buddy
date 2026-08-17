@@ -47,10 +47,7 @@ export const StatisticsCards = memo(function StatisticsCards({
     <View className="mb-4 gap-3">
       {/* First row */}
       <View className="flex-row gap-3">
-        <Card
-          className="flex-1 p-3"
-          style={{ backgroundColor: CARD_COLORS.blue.bg }}
-        >
+        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.blue.bg }}>
           <Text
             className="text-xs font-bold uppercase"
             style={{ color: CARD_COLORS.blue.text }}
@@ -83,10 +80,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           )}
         </Card>
 
-        <Card
-          className="flex-1 p-3"
-          style={{ backgroundColor: CARD_COLORS.green.bg }}
-        >
+        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.green.bg }}>
           <Text
             className="text-xs font-bold uppercase"
             style={{ color: CARD_COLORS.green.text }}
@@ -122,10 +116,7 @@ export const StatisticsCards = memo(function StatisticsCards({
 
       {/* Second row */}
       <View className="flex-row gap-3">
-        <Card
-          className="flex-1 p-3"
-          style={{ backgroundColor: CARD_COLORS.orange.bg }}
-        >
+        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.orange.bg }}>
           <Text
             className="text-xs font-bold uppercase"
             style={{ color: CARD_COLORS.orange.text }}
@@ -165,10 +156,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           )}
         </Card>
 
-        <Card
-          className="flex-1 p-3"
-          style={{ backgroundColor: CARD_COLORS.purple.bg }}
-        >
+        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.purple.bg }}>
           <Text
             className="text-xs font-bold uppercase"
             style={{ color: CARD_COLORS.purple.text }}

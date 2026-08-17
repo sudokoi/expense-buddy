@@ -2,10 +2,7 @@ import { View, Text } from "react-native"
 import { Pressable } from "react-native"
 import { Ban, type LucideIcon } from "lucide-react-native"
 import { PaymentMethodType } from "../../types/expense"
-import {
-  PAYMENT_METHODS,
-  getPaymentMethodI18nKey,
-} from "../../constants/payment-methods"
+import { PAYMENT_METHODS, getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { Card } from "./Card"
 import { useTranslation } from "react-i18next"
 import {
@@ -90,7 +87,12 @@ export function DefaultPaymentMethodSelector({
         {renderOption("none", "None", Ban, value === undefined)}
 
         {PAYMENT_METHODS.map((method) =>
-          renderOption(method.value, method.label, method.icon as LucideIcon, value === method.value)
+          renderOption(
+            method.value,
+            method.label,
+            method.icon as LucideIcon,
+            value === method.value
+          )
         )}
       </View>
     </Card>

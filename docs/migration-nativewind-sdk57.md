@@ -13,9 +13,11 @@ design audit's contrast failures — **with no functional change**.
 ## Phases
 
 ### 0. Branch + docs
+
 - [x] New branch, ADR, this plan.
 
 ### 1. Scaffold + SDK upgrade
+
 - Update dependencies to Expo SDK 57 / RN 0.86 / React 19.2.3 (`expo install --fix`).
 - Add NativeWind/Tailwind deps and `lucide-react-native`.
 - Add `tailwind.config.js`, `global.css`, `nativewind-env.d.ts`; wire `babel.config.js`
@@ -23,27 +25,32 @@ design audit's contrast failures — **with no functional change**.
 - Remove Tamagui build plugins from babel/metro.
 
 ### 2. Theme port + contrast fixes
+
 - Replace `constants/theme-colors.ts` + `constants/ui-tokens.ts` with
   `constants/palette.ts` (single source of truth), `global.css` CSS variables, and
   Tailwind color/radius tokens.
-- Split *decorative pastel* fills from *interactive accent* foregrounds so interactive
+- Split _decorative pastel_ fills from _interactive accent_ foregrounds so interactive
   states meet WCAG AA (fix `#FFB6C1` = 1.57:1 accent and `#8B7B96` = 3.71:1 muted text).
 
 ### 3. Primitive layer (`components/ui`)
+
 - Build CVA-based primitives preserving existing props: `Button`, `Card`, `Input`,
   `Label`, `Text`, `Switch`, `RadioGroup`, `Spinner`, `View`, `ScrollView`.
 - Reimplement complex primitives behind existing abstractions: `AppSheetScaffold`
   (Sheet → RN `Modal`), `Dialog`, `Accordion`.
 
 ### 4. Screen-by-screen swap (60 files)
+
 - `YStack`/`XStack`/`Stack`/`View` → `View` + className; `Text`/`H4`/`H6` → `Text` +
   className; `useTheme()` → `useThemeColors()`; remove `getColorValue`/`.val` and
   `$token` props.
 
 ### 5. Icons
+
 - `@tamagui/lucide-icons-2` → `lucide-react-native` (same names, plain `color`/`size`).
 
 ### 6. Cleanup + verify
+
 - Delete `tamagui.config.ts`, `.tamagui/`, `tamagui-web.css`, jest mock, `@tamagui/*` deps.
 - Run `yarn typecheck`, `yarn lint`, `yarn test`, `npx expo-doctor`.
 

@@ -351,9 +351,7 @@ export default function AddExpenseScreen() {
                 }}
               />
             </View>
-            {errors.amount && (
-              <Text className="text-xs text-error">{errors.amount}</Text>
-            )}
+            {errors.amount && <Text className="text-xs text-error">{errors.amount}</Text>}
             {expressionPreview && !errors.amount && (
               <Text className="text-[13px] text-foreground opacity-70">
                 {t("add.preview", { amount: expressionPreview })}

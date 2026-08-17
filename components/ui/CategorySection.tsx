@@ -140,16 +140,15 @@ export const CategorySection = memo(function CategorySection({
           <View className="gap-2 px-2 pt-3">
             <View className="gap-2">
               {reorderableCategories.map((category, index) => (
-                <View
-                  key={category.label}
-                  className="flex-row items-center gap-1"
-                >
+                <View key={category.label} className="flex-row items-center gap-1">
                   <View className="w-6 items-center justify-center">
                     <Pressable
                       onPress={() => handleMoveUp(index)}
                       disabled={index === 0}
                       aria-label={`Move ${category.label} up`}
-                      style={{ opacity: index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium }}
+                      style={{
+                        opacity: index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium,
+                      }}
                     >
                       <ChevronUp size={UI_ICON_SIZE.small} color={theme.foreground} />
                     </Pressable>

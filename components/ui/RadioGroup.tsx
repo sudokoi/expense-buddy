@@ -50,9 +50,7 @@ function RadioGroupItem({ value, className, children, ...props }: RadioGroupItem
         className
       )}
     >
-      {selected ? (
-        <View className="h-2.5 w-2.5 rounded-full bg-accent" />
-      ) : null}
+      {selected ? <View className="h-2.5 w-2.5 rounded-full bg-accent" /> : null}
       {children}
     </Pressable>
   )

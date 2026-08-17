@@ -460,7 +460,11 @@ export default function AnalyticsScreen() {
                     <Button
                       key={code}
                       size="chip"
-                      className={isSelected ? "px-2 rounded-round border border-border" : "px-2 rounded-round"}
+                      className={
+                        isSelected
+                          ? "px-2 rounded-round border border-border"
+                          : "px-2 rounded-round"
+                      }
                       onPress={onPress}
                       variant={isSelected ? "accent" : undefined}
                     >

@@ -23,11 +23,7 @@ export interface CardProps extends ViewProps, VariantProps<typeof cardVariants> 
 export const Card = forwardRef<React.ElementRef<typeof View>, CardProps>(
   ({ className, variant, ...props }, ref) => {
     return (
-      <View
-        ref={ref}
-        className={cn(cardVariants({ variant }), className)}
-        {...props}
-      />
+      <View ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
     )
   }
 )

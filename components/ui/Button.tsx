@@ -39,9 +39,7 @@ const buttonTextVariants = cva("text-foreground", {
 
 type ButtonVariant = VariantProps<typeof buttonVariants>["variant"]
 
-export interface ButtonProps
-  extends PressableProps,
-    VariantProps<typeof buttonVariants> {
+export interface ButtonProps extends PressableProps, VariantProps<typeof buttonVariants> {
   className?: string
 }
 

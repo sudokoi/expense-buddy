@@ -209,9 +209,7 @@ function PaymentInstrumentForm({
           onChangeText={handleNicknameChange}
           maxLength={30}
         />
-        {errors.nickname && (
-          <Text className="text-xs text-error">{errors.nickname}</Text>
-        )}
+        {errors.nickname && <Text className="text-xs text-error">{errors.nickname}</Text>}
       </View>
 
       <View className="gap-2">
@@ -237,12 +235,7 @@ function PaymentInstrumentForm({
         <Button size="control" variant="ghost" onPress={onClose}>
           {t("common.cancel")}
         </Button>
-        <Button
-          size="control"
-          variant="accent"
-          className="gap-2"
-          onPress={handleSave}
-        >
+        <Button size="control" variant="accent" className="gap-2" onPress={handleSave}>
           <Check size={20} />
           <Text className="font-bold">
             {isEditMode ? t("common.save") : t("common.add")}

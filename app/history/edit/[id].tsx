@@ -210,9 +210,7 @@ export default function EditExpenseScreen() {
         <View className="gap-3">
           <View className="gap-2">
             <View className="flex-row items-center justify-between">
-              <Label className="opacity-80">
-                {t("history.editDialog.fields.date")}
-              </Label>
+              <Label className="opacity-80">{t("history.editDialog.fields.date")}</Label>
               <Button
                 size="control"
                 className="gap-2"
@@ -254,9 +252,7 @@ export default function EditExpenseScreen() {
           </View>
 
           <View className="gap-2">
-            <Label className="opacity-80">
-              {t("history.editDialog.fields.amount")}
-            </Label>
+            <Label className="opacity-80">{t("history.editDialog.fields.amount")}</Label>
             <View className="flex-row items-center gap-2">
               <Text className="text-sm font-bold text-foreground opacity-80">
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
@@ -305,9 +301,7 @@ export default function EditExpenseScreen() {
           </View>
 
           <View className="gap-2">
-            <Label className="opacity-80">
-              {t("history.editDialog.fields.note")}
-            </Label>
+            <Label className="opacity-80">{t("history.editDialog.fields.note")}</Label>
             <Input
               value={note}
               onChangeText={setNote}

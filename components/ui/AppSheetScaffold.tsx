@@ -58,12 +58,7 @@ export function AppSheetScaffold({
   const heightPercent = Math.max(...snapPoints, 50)
 
   return (
-    <Modal
-      transparent
-      animationType="slide"
-      visible={open}
-      onRequestClose={onClose}
-    >
+    <Modal transparent animationType="slide" visible={open} onRequestClose={onClose}>
       <View className="flex-1 justify-end">
         <Pressable
           className="absolute inset-0 bg-black/50"
@@ -108,10 +103,7 @@ export function AppSheetScaffold({
             </View>
 
             {scroll ? (
-              <ScrollView
-                className="flex-1"
-                showsVerticalScrollIndicator={false}
-              >
+              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 {children}
               </ScrollView>
             ) : (

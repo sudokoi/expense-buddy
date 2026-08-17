@@ -27,13 +27,7 @@ interface IconActionButtonProps {
 /**
  * Wraps content in a continuously rotating view while `active` is true.
  */
-function SpinningIcon({
-  active,
-  children,
-}: {
-  active: boolean
-  children: ReactNode
-}) {
+function SpinningIcon({ active, children }: { active: boolean; children: ReactNode }) {
   const rotation = useSharedValue(0)
 
   useEffect(() => {

@@ -39,10 +39,7 @@ import {
 import { applyAllFilters } from "../../utils/analytics/filters"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-} from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -620,11 +617,7 @@ export default function HistoryScreen() {
           >
             {t("history.noResultsSubtitle")}
           </Text>
-          <Button
-            size="control"
-            onPress={handleResetFilters}
-            className="mt-4"
-          >
+          <Button size="control" onPress={handleResetFilters} className="mt-4">
             {t("common.clearFilters")}
           </Button>
         </View>

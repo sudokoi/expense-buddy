@@ -218,9 +218,7 @@ export function CategoryFormModal({
               onChangeText={handleLabelChange}
               maxLength={30}
             />
-            {errors.label && (
-              <Text className="text-xs text-error">{errors.label}</Text>
-            )}
+            {errors.label && <Text className="text-xs text-error">{errors.label}</Text>}
             <Text className="text-xs text-foreground opacity-50">
               {t("settings.categories.form.characterCount", {
                 count: label.length,
@@ -236,7 +234,9 @@ export function CategoryFormModal({
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
               <View className="flex-row items-center gap-3 p-3 rounded-control border-2 bg-surface border-border">
-                <View style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}>
+                <View
+                  style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
+                >
                   <DynamicCategoryIcon
                     name={icon}
                     size={UI_ICON_SIZE.large}

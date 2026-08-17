@@ -217,15 +217,17 @@ export default function GitHubRepoPickerScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <View
-        className="px-4 pb-4 gap-4 bg-background"
-        style={{ paddingTop: insets.top }}
-      >
+      <View className="px-4 pb-4 gap-4 bg-background" style={{ paddingTop: insets.top }}>
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-foreground">
             {t("repoPicker.title")}
           </Text>
-          <Button size="chip" className="px-2" variant="ghost" onPress={() => router.back()}>
+          <Button
+            size="chip"
+            className="px-2"
+            variant="ghost"
+            onPress={() => router.back()}
+          >
             {t("common.cancel")}
           </Button>
         </View>
@@ -233,9 +235,7 @@ export default function GitHubRepoPickerScreen() {
         <Text className="text-foreground opacity-70">{t("repoPicker.subtitle")}</Text>
 
         {viewerLogin ? (
-          <Text className="text-foreground opacity-70">
-            Signed in as {viewerLogin}
-          </Text>
+          <Text className="text-foreground opacity-70">Signed in as {viewerLogin}</Text>
         ) : null}
 
         {isLoading ? (

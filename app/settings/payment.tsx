@@ -143,10 +143,7 @@ export default function PaymentSettingsScreen() {
                 <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.defaultPayment.label")}
                 </Text>
-                <Text
-                  className="text-base text-foreground font-bold"
-                  numberOfLines={2}
-                >
+                <Text className="text-base text-foreground font-bold" numberOfLines={2}>
                   {defaultPaymentMethodLabel}
                 </Text>
               </View>

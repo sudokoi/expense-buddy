@@ -5,6 +5,7 @@ A reference for the styling stack used in this project. NativeWind lets us write
 primitives, compiled to native `StyleSheet` objects at build time.
 
 > Project-specific conventions live in:
+>
 > - [Styling & Theming Guide](./nativewind-conversion-guide.md) — tokens, mappings, components.
 > - [`.agents/workflows/nativewind-styling.md`](./.agents/workflows/nativewind-styling.md) — agent styling rules.
 >
@@ -123,17 +124,17 @@ module.exports = {
 
 @layer base {
   :root {
-    --background: #FFF8F0;
-    --foreground: #4A4458;
-    --accent: #C0406A;
-    --accent-foreground: #FFFFFF;
+    --background: #fff8f0;
+    --foreground: #4a4458;
+    --accent: #c0406a;
+    --accent-foreground: #ffffff;
     /* …see global.css for the full token set */
   }
   .dark:root {
-    --background: #1A1625;
-    --foreground: #F0E6F6;
-    --accent: #FFB6C1;
-    --accent-foreground: #1A1625;
+    --background: #1a1625;
+    --foreground: #f0e6f6;
+    --accent: #ffb6c1;
+    --accent-foreground: #1a1625;
   }
 }
 ```
@@ -178,8 +179,8 @@ This project additionally resolves the palette in JS for `style`-based colors:
 ```tsx
 import { useThemeColors, useThemeScheme } from "@/hooks/use-theme-colors"
 
-const colors = useThemeColors()      // palette[ colorScheme === "dark" ? "dark" : "light" ]
-const scheme = useThemeScheme()       // "light" | "dark"
+const colors = useThemeColors() // palette[ colorScheme === "dark" ? "dark" : "light" ]
+const scheme = useThemeScheme() // "light" | "dark"
 ```
 
 ### Dynamic themes with CSS variables
@@ -249,9 +250,13 @@ to a core RN component:
 
 ```tsx
 // ❌ picks props — className never reaches a styled element
-function ThirdParty({ style }) { return <View style={style} /> }
+function ThirdParty({ style }) {
+  return <View style={style} />
+}
 // ✅
-function ThirdParty({ style, ...props }) { return <View style={style} {...props} /> }
+function ThirdParty({ style, ...props }) {
+  return <View style={style} {...props} />
+}
 ```
 
 If you cannot change the component, tag it with **`cssInterop`** so NativeWind resolves its
@@ -285,13 +290,13 @@ Mapping forms: `{ "new-prop": "existing-prop" }`, `{ prop: true }` (override), o
 
 ## States & pseudo-classes
 
-| Modifier | RN event | Notes |
-| --- | --- | --- |
-| `hover:` | `onHoverIn` / `onHoverOut` | needs `onHoverIn` (Pressable, TextInput; not View/Text) |
-| `active:` | `onPressIn` / `onPressOut` | |
-| `focus:` | `onFocus` / `onBlur` | |
-| `disabled:` | `disabled` prop | |
-| `empty:` | no children | |
+| Modifier    | RN event                   | Notes                                                   |
+| ----------- | -------------------------- | ------------------------------------------------------- |
+| `hover:`    | `onHoverIn` / `onHoverOut` | needs `onHoverIn` (Pressable, TextInput; not View/Text) |
+| `active:`   | `onPressIn` / `onPressOut` |                                                         |
+| `focus:`    | `onFocus` / `onBlur`       |                                                         |
+| `disabled:` | `disabled` prop            |                                                         |
+| `empty:`    | no children                |                                                         |
 
 ```tsx
 <Pressable className="bg-blue-500 active:bg-blue-700">
@@ -335,7 +340,16 @@ This project ships Inter (`.otf`) via the `expo-font` plugin in `app.json` and m
 weight to a Tailwind class in `tailwind.config.js`:
 
 ```json
-{ "expo": { "plugins": [["expo-font", { "fonts": ["./assets/fonts/Inter-Regular.otf", "./assets/fonts/Inter-Bold.otf"] }]] } }
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-font",
+        { "fonts": ["./assets/fonts/Inter-Regular.otf", "./assets/fonts/Inter-Bold.otf"] }
+      ]
+    ]
+  }
+}
 ```
 
 ```js
@@ -357,26 +371,32 @@ is not supported on native yet. Changing `animation-duration` mid-animation rest
 ## Key APIs
 
 ### `withNativeWind(metroConfig, options)`
+
 Metro wrapper. Options: `input` (required, path to CSS), `inlineRem` (number or `false`,
 default `14`; this project uses `16`), `projectRoot`, `outputDir`, `configFile`,
 `hotServerOptions`, and `experiments.inlineAnimations` (reanimated inline shared values).
 
 ### `useColorScheme()`
+
 ```ts
 const { colorScheme, setColorScheme, toggleColorScheme } = useColorScheme()
 ```
+
 `colorScheme` is the current scheme; `setColorScheme`/`toggleColorScheme` require
 `darkMode: "class"` in `tailwind.config.js`.
 
 ### `StyleSheet` (from `nativewind` / `react-native-css-interop`)
+
 Internal methods (`registerCompiled`, `getFlag`, `getGlobalStyle`) used by the build system.
 The v2/v3 `NativeWindStyleSheet` API (`setOutput`, `setDimensions`, `setAppearance`) is gone
 in v4 — use `useColorScheme()` for color scheme.
 
 ### `cssInterop(component, mapping)` / `remapProps(component, mapping)`
+
 See [Third-party components](#third-party-components).
 
 ### `vars()` / `useUnstableNativeVariable()`
+
 See [Theming & dark mode](#theming--dark-mode).
 
 ## Troubleshooting
@@ -387,7 +407,7 @@ See [Theming & dark mode](#theming--dark-mode).
   npx tailwindcss --input ./global.css --output output.css
   ```
   If a class is missing from `output.css`, the issue is Tailwind compilation, not NativeWind.
-- **`verifyInstallation()`** — call it *inside* a component (not global scope) to confirm setup.
+- **`verifyInstallation()`** — call it _inside_ a component (not global scope) to confirm setup.
 - **`DEBUG=nativewind npx expo start --clear`** — prints NativeWind debug info; useful when
   reporting issues (redirect to a file).
 - **Colors not working?** A `<View>` does not accept/forward `color`; move color classes to

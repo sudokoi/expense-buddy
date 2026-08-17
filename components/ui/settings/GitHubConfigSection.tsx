@@ -270,9 +270,7 @@ export function GitHubConfigSection({
           <Text className="font-medium">{t("settings.github.configTitle")}</Text>
           {isConfigured && (
             <View className="flex-col items-start gap-0.5 shrink min-w-0">
-              <View
-                style={{ minWidth: 0, alignItems: "center", gap: UI_SPACE.micro }}
-              >
+              <View style={{ minWidth: 0, alignItems: "center", gap: UI_SPACE.micro }}>
                 <Check size={14} color={successColor} />
                 <Text className="text-xs text-success">
                   {t("settings.github.connected")}
@@ -350,10 +348,11 @@ export function GitHubConfigSection({
                   <Text className="text-xs text-foreground opacity-80">
                     {t("settings.github.deviceCode")}
                   </Text>
-                  <View className="flex-row gap-2" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <Text className="text-lg font-bold">
-                      {auth.deviceCode.user_code}
-                    </Text>
+                  <View
+                    className="flex-row gap-2"
+                    style={{ alignItems: "center", flexWrap: "wrap" }}
+                  >
+                    <Text className="text-lg font-bold">{auth.deviceCode.user_code}</Text>
                     <Button size="compact" onPress={() => void handleCopyDeviceCode()}>
                       {t("settings.github.copyCode")}
                     </Button>
@@ -403,9 +402,7 @@ export function GitHubConfigSection({
                   readOnly
                 />
                 <Button size="compact" onPress={handleChooseRepo} disabled={!token}>
-                  {repo
-                    ? t("settings.github.editRepo")
-                    : t("settings.github.chooseRepo")}
+                  {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
                 </Button>
               </View>
             )}
@@ -430,7 +427,12 @@ export function GitHubConfigSection({
 
           {/* Action Buttons */}
           <View className="flex-row flex-wrap gap-3">
-            <Button className="flex-1" size="control" onPress={handleSaveConfig} variant="accent">
+            <Button
+              className="flex-1"
+              size="control"
+              onPress={handleSaveConfig}
+              variant="accent"
+            >
               {t("settings.github.saveConfig")}
             </Button>
             <Button

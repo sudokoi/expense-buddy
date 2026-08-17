@@ -64,10 +64,7 @@ export function AutoSyncSection({
             {t("settings.autoSync.enableHelp")}
           </Text>
         </View>
-        <Switch
-          checked={autoSyncEnabled}
-          onCheckedChange={onAutoSyncEnabledChange}
-        />
+        <Switch checked={autoSyncEnabled} onCheckedChange={onAutoSyncEnabledChange} />
       </View>
 
       {/* Also sync settings toggle */}

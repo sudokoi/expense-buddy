@@ -225,7 +225,9 @@ export function PaymentInstrumentInlineDropdown({
       <Button
         size="control"
         variant="ghost"
-        className={open ? "gap-2 border border-border bg-muted" : "gap-2 border border-border"}
+        className={
+          open ? "gap-2 border border-border bg-muted" : "gap-2 border border-border"
+        }
         onPress={() => setOpen((v) => !v)}
       >
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

@@ -5,10 +5,7 @@ import { Check } from "lucide-react-native"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import {
-  UI_ICON_SIZE,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface ColorPickerSheetProps {

@@ -536,9 +536,7 @@ export default function SettingsScreen() {
           >
             <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">
               <View className="flex-1 gap-1" pointerEvents="none">
-                <Label className="opacity-80">
-                  {t("settings.payment.manageTitle")}
-                </Label>
+                <Label className="opacity-80">{t("settings.payment.manageTitle")}</Label>
                 <Text className="text-[13px] text-foreground opacity-60">
                   {t("settings.payment.summary", {
                     defaultMethod: defaultPaymentMethodLabel,

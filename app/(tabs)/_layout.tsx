@@ -41,9 +41,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("navigation.analytics"),
-          tabBarIcon: ({ color }) => (
-            <PieChart color={color} size={UI_ICON_SIZE.large} />
-          ),
+          tabBarIcon: ({ color }) => <PieChart color={color} size={UI_ICON_SIZE.large} />,
         }}
       />
       <Tabs.Screen
@@ -66,9 +64,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: t("navigation.settings"),
-          tabBarIcon: ({ color }) => (
-            <Settings color={color} size={UI_ICON_SIZE.large} />
-          ),
+          tabBarIcon: ({ color }) => <Settings color={color} size={UI_ICON_SIZE.large} />,
         }}
       />
     </Tabs>

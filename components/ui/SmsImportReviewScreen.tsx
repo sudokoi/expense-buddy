@@ -44,11 +44,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-} from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 type EditableSmsImportDraft = {
@@ -737,10 +733,7 @@ export function SmsImportReviewScreen({
                 >
                   {t("smsImport.sheet.emptyTitle")}
                 </Text>
-                <Text
-                  className="text-foreground"
-                  style={{ opacity: UI_OPACITY.medium }}
-                >
+                <Text className="text-foreground" style={{ opacity: UI_OPACITY.medium }}>
                   {t("smsImport.sheet.emptyDescription")}
                 </Text>
               </View>
@@ -868,10 +861,7 @@ export function SmsImportReviewScreen({
                       layout={LinearTransition.duration(160)}
                       entering={FadeIn.duration(160)}
                     >
-                      <Card
-                        className="p-3"
-                        style={{ opacity: UI_OPACITY.strong }}
-                      >
+                      <Card className="p-3" style={{ opacity: UI_OPACITY.strong }}>
                         <View className="gap-2">
                           <Text
                             className="text-foreground"

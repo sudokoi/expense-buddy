@@ -23,20 +23,20 @@ Remove Tamagui entirely and replace it with NativeWind, while simultaneously upg
 
 ### Target stack
 
-| Concern | From | To |
-| --- | --- | --- |
-| Styling | Tamagui v2 | NativeWind 4.2.6 + Tailwind 3.4 + `tailwindcss-animate` + `react-native-css-interop` |
-| Variants | Tamagui `styled()` | `class-variance-authority` + `clsx` + `tailwind-merge` |
-| Icons | `@tamagui/lucide-icons-2` | `lucide-react-native` |
-| Theme source | `tamagui.config.ts` + `theme-colors.ts` + `ui-tokens.ts` + generated CSS | `constants/palette.ts` + `global.css` CSS variables + `tailwind.config.js` |
-| Platform | Expo SDK 54 / RN 0.81 / React 19.1 | Expo SDK 57 / RN 0.86 / React 19.2.3 |
+| Concern      | From                                                                     | To                                                                                   |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Styling      | Tamagui v2                                                               | NativeWind 4.2.6 + Tailwind 3.4 + `tailwindcss-animate` + `react-native-css-interop` |
+| Variants     | Tamagui `styled()`                                                       | `class-variance-authority` + `clsx` + `tailwind-merge`                               |
+| Icons        | `@tamagui/lucide-icons-2`                                                | `lucide-react-native`                                                                |
+| Theme source | `tamagui.config.ts` + `theme-colors.ts` + `ui-tokens.ts` + generated CSS | `constants/palette.ts` + `global.css` CSS variables + `tailwind.config.js`           |
+| Platform     | Expo SDK 54 / RN 0.81 / React 19.1                                       | Expo SDK 57 / RN 0.86 / React 19.2.3                                                 |
 
 The SDK 57 upgrade is bundled here because NativeWind's config (babel preset, metro plugin) and the new theme tokens are version-specific, and aligning with ritulaya avoids carrying two version targets. SDK 55+ requires the **New Architecture**; the app's custom Expo modules (`expense-buddy-*`) are JSI/TurboModule-based and New-Architecture-ready, but this is a risk to validate during migration (see Consequences).
 
 ### Migration approach
 
 1. **Scaffold**: add NativeWind/Tailwind config (`tailwind.config.js`, `global.css`, `nativewind-env.d.ts`), update `babel.config.js` and `metro.config.js`, and remove all Tamagui build plugins.
-2. **Theme port**: rewrite `theme-colors.ts`/`ui-tokens.ts` as `palette.ts` + CSS variables + Tailwind tokens, and fix the contrast failures in the same pass (split *decorative pastel* fills from *interactive accent* foregrounds).
+2. **Theme port**: rewrite `theme-colors.ts`/`ui-tokens.ts` as `palette.ts` + CSS variables + Tailwind tokens, and fix the contrast failures in the same pass (split _decorative pastel_ fills from _interactive accent_ foregrounds).
 3. **Primitive layer**: build small `components/ui` primitives (`Button`, `Card`, `Input`, `Label`, `Switch`, `RadioGroup`, `Spinner`, `Text`, `Sheet`/`Modal`, `Dialog`, `Accordion`) with CVA, preserving existing public APIs.
 4. **Screen-by-screen swap**: convert all 60 files (`YStack`/`XStack` → `View` with className, `useTheme()` → `useThemeColors()`, remove `getColorValue`/`.val` wrapping).
 5. **Icons**: swap `@tamagui/lucide-icons-2` → `lucide-react-native` (same names and props).
