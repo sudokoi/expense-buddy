@@ -5,8 +5,9 @@ import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
 import { getCurrencySymbol } from "../../utils/currency"
 import type { AnalyticsStatistics } from "../../utils/analytics/statistics"
-import { CARD_COLORS } from "../../constants/theme-colors"
+import { CARD_COLORS } from "../../constants/palette"
 import { useTranslation } from "react-i18next"
+import { useThemeScheme } from "../../hooks/use-theme-colors"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -29,6 +30,8 @@ export const StatisticsCards = memo(function StatisticsCards({
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
+  const scheme = useThemeScheme()
+  const colors = CARD_COLORS[scheme]
 
   // Show the subtext whenever any filter narrows the data below the full-period
   // total. In the default/reset state (no active filters) the headline already
@@ -47,10 +50,10 @@ export const StatisticsCards = memo(function StatisticsCards({
     <View className="mb-4 gap-3">
       {/* First row */}
       <View className="flex-row gap-3">
-        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.blue.bg }}>
+        <Card className="flex-1 p-3" style={{ backgroundColor: colors.blue.bg }}>
           <Text
             className="text-xs font-bold uppercase"
-            style={{ color: CARD_COLORS.blue.text }}
+            style={{ color: colors.blue.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -59,7 +62,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: CARD_COLORS.blue.accent }}
+            style={{ color: colors.blue.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -70,7 +73,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           {showSubtext && (
             <Text
               className="text-xs"
-              style={{ color: CARD_COLORS.blue.text }}
+              style={{ color: colors.blue.text }}
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
@@ -80,10 +83,10 @@ export const StatisticsCards = memo(function StatisticsCards({
           )}
         </Card>
 
-        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.green.bg }}>
+        <Card className="flex-1 p-3" style={{ backgroundColor: colors.green.bg }}>
           <Text
             className="text-xs font-bold uppercase"
-            style={{ color: CARD_COLORS.green.text }}
+            style={{ color: colors.green.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -92,7 +95,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: CARD_COLORS.green.accent }}
+            style={{ color: colors.green.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -103,7 +106,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           {showSubtext && (
             <Text
               className="text-xs"
-              style={{ color: CARD_COLORS.green.text }}
+              style={{ color: colors.green.text }}
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
@@ -116,10 +119,10 @@ export const StatisticsCards = memo(function StatisticsCards({
 
       {/* Second row */}
       <View className="flex-row gap-3">
-        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.orange.bg }}>
+        <Card className="flex-1 p-3" style={{ backgroundColor: colors.orange.bg }}>
           <Text
             className="text-xs font-bold uppercase"
-            style={{ color: CARD_COLORS.orange.text }}
+            style={{ color: colors.orange.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -128,7 +131,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: CARD_COLORS.orange.accent }}
+            style={{ color: colors.orange.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.7}
@@ -138,7 +141,7 @@ export const StatisticsCards = memo(function StatisticsCards({
               : (statistics.highestCategory?.category ?? "—")}
           </Text>
           {statistics.highestCategory && (
-            <Text className="text-xs" style={{ color: CARD_COLORS.orange.text }}>
+            <Text className="text-xs" style={{ color: colors.orange.text }}>
               {symbol}
               {statistics.highestCategory.amount.toFixed(2)}
             </Text>
@@ -146,7 +149,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           {showSubtext && (
             <Text
               className="text-xs"
-              style={{ color: CARD_COLORS.orange.text }}
+              style={{ color: colors.orange.text }}
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
@@ -156,10 +159,10 @@ export const StatisticsCards = memo(function StatisticsCards({
           )}
         </Card>
 
-        <Card className="flex-1 p-3" style={{ backgroundColor: CARD_COLORS.purple.bg }}>
+        <Card className="flex-1 p-3" style={{ backgroundColor: colors.purple.bg }}>
           <Text
             className="text-xs font-bold uppercase"
-            style={{ color: CARD_COLORS.purple.text }}
+            style={{ color: colors.purple.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -168,7 +171,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: CARD_COLORS.purple.accent }}
+            style={{ color: colors.purple.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
@@ -176,7 +179,7 @@ export const StatisticsCards = memo(function StatisticsCards({
             {statistics.highestDay ? formatDateStr(statistics.highestDay.date) : "—"}
           </Text>
           {statistics.highestDay && (
-            <Text className="text-xs" style={{ color: CARD_COLORS.purple.text }}>
+            <Text className="text-xs" style={{ color: colors.purple.text }}>
               {symbol}
               {statistics.highestDay.amount.toFixed(2)}
             </Text>
@@ -184,7 +187,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           {showSubtext && (
             <Text
               className="text-xs"
-              style={{ color: CARD_COLORS.purple.text }}
+              style={{ color: colors.purple.text }}
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {

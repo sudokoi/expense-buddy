@@ -17,7 +17,6 @@ import { validateExpenseForm } from "../../utils/expense-validation"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
-import { AMOUNT_COLORS } from "../../constants/theme-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
@@ -232,7 +231,7 @@ export function EditExpenseModal({
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
-                className="flex-1"
+                className={`flex-1 ${errors.amount ? "border-error" : ""}`}
                 placeholder={t("add.amountPlaceholder")}
                 keyboardType="numeric"
                 value={amount}
@@ -248,16 +247,12 @@ export function EditExpenseModal({
                 }}
                 style={{
                   borderWidth: UI_BORDER_WIDTH.normal,
-                  borderColor: errors.amount ? AMOUNT_COLORS.expense : theme.border,
+                  borderColor: errors.amount ? undefined : theme.border,
                 }}
                 placeholderTextColor={theme.foreground}
               />
             </View>
-            {errors.amount && (
-              <Text className="text-xs" style={{ color: AMOUNT_COLORS.expense }}>
-                {errors.amount}
-              </Text>
-            )}
+            {errors.amount && <Text className="text-xs text-error">{errors.amount}</Text>}
           </View>
 
           {/* Category Selection */}

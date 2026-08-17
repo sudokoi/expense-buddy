@@ -32,6 +32,7 @@ import { useSyncAction } from "../../hooks/use-sync-action"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { IconActionButton } from "../../components/ui/IconActionButton"
 import { Button } from "../../components/ui/Button"
+import { UI_OPACITY } from "../../constants/ui-tokens"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 // Memoized empty state component
@@ -43,9 +44,19 @@ const EmptyState = memo(function EmptyState({
   subtitle: string
 }) {
   return (
-    <View className="items-center justify-center p-10">
-      <Text className="text-center text-foreground opacity-60">{title}</Text>
-      <Text className="text-center text-foreground opacity-40 mt-2">{subtitle}</Text>
+    <View className="items-center justify-center p-6">
+      <Text
+        className="text-center text-lg text-foreground"
+        style={{ opacity: UI_OPACITY.subtle }}
+      >
+        {title}
+      </Text>
+      <Text
+        className="text-center text-sm text-foreground mt-2"
+        style={{ opacity: UI_OPACITY.ghost }}
+      >
+        {subtitle}
+      </Text>
     </View>
   )
 })

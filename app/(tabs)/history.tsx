@@ -60,10 +60,10 @@ function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "
 
 const layoutStyles = {
   emptyText: {
-    fontSize: 24,
+    fontSize: 18,
   },
   emptySubtext: {
-    fontSize: 16,
+    fontSize: 14,
     marginTop: UI_SPACE.control,
   },
   expenseDetails: {
@@ -557,15 +557,15 @@ export default function HistoryScreen() {
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-background p-4">
+      <View className="flex-1 items-center justify-center bg-background p-6">
         <Text
-          style={[layoutStyles.emptyText, { opacity: UI_OPACITY.strong }]}
+          style={[layoutStyles.emptyText, { opacity: UI_OPACITY.subtle }]}
           className="text-foreground"
         >
           {t("history.emptyTitle")}
         </Text>
         <Text
-          style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.subtle }]}
+          style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.ghost }]}
           className="text-foreground"
         >
           {t("history.emptySubtitle")}
@@ -604,15 +604,15 @@ export default function HistoryScreen() {
           </Button>
         </View>
 
-        <View className="flex-1 items-center justify-center p-4">
+        <View className="flex-1 items-center justify-center p-6">
           <Text
-            style={[layoutStyles.emptyText, { opacity: UI_OPACITY.strong }]}
+            style={[layoutStyles.emptyText, { opacity: UI_OPACITY.subtle }]}
             className="text-foreground"
           >
             {t("history.noResultsTitle")}
           </Text>
           <Text
-            style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.subtle }]}
+            style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.ghost }]}
             className="text-foreground"
           >
             {t("history.noResultsSubtitle")}

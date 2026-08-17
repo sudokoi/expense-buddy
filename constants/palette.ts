@@ -101,6 +101,7 @@ export const AMOUNT_COLORS = {
 export const ACCENT_COLORS = {
   primary: "#C0406A",
   primaryLight: "#FFD1DC",
+  primaryLightDark: "#4A2040",
 } as const
 
 // Chart/graph colors for dark mode compatibility
@@ -133,27 +134,19 @@ export const OVERLAY_COLORS = {
   },
 } as const
 
-// Statistics card colors (kawaii pastel variants)
+// Statistics card colors (kawaii pastel variants with dark-mode support)
 export const CARD_COLORS = {
-  blue: {
-    bg: "#E6F3FF",
-    text: "#4A90B8",
-    accent: "#2E7DAF",
+  light: {
+    blue: { bg: "#E6F3FF", text: "#4A90B8", accent: "#2E7DAF" },
+    green: { bg: "#E8F8EE", text: "#5BA87A", accent: "#4A9668" },
+    orange: { bg: "#FFF3E6", text: "#C88A5A", accent: "#B87A4A" },
+    purple: { bg: "#F3E8FF", text: "#9A7AB8", accent: "#8A6AA8" },
   },
-  green: {
-    bg: "#E8F8EE",
-    text: "#5BA87A",
-    accent: "#4A9668",
-  },
-  orange: {
-    bg: "#FFF3E6",
-    text: "#C88A5A",
-    accent: "#B87A4A",
-  },
-  purple: {
-    bg: "#F3E8FF",
-    text: "#9A7AB8",
-    accent: "#8A6AA8",
+  dark: {
+    blue: { bg: "#1E2A3A", text: "#7CB8D8", accent: "#5BA0D0" },
+    green: { bg: "#1E2E24", text: "#7EC89A", accent: "#5FB87A" },
+    orange: { bg: "#2E2418", text: "#D8A870", accent: "#C89050" },
+    purple: { bg: "#261E34", text: "#B898D0", accent: "#A080C0" },
   },
 } as const
 

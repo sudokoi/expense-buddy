@@ -3,12 +3,8 @@ import { Dimensions, ScrollView, Text, View, useColorScheme } from "react-native
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { LineChartDataItem } from "../../utils/analytics/aggregations"
-import {
-  ACCENT_COLORS,
-  getChartColors,
-  getOverlayColors,
-} from "../../constants/theme-colors"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import { ACCENT_COLORS, getChartColors, getOverlayColors } from "../../constants/palette"
+import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import {
@@ -79,14 +75,17 @@ export const LineChartSection = memo(function LineChartSection({
     requestAnimationFrame(() => node.scrollToEnd({ animated: false }))
   }, [])
 
+  const scheme = useThemeScheme()
+
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
       line: theme.accent,
-      area: ACCENT_COLORS.primaryLight,
+      area:
+        scheme === "dark" ? ACCENT_COLORS.primaryLightDark : ACCENT_COLORS.primaryLight,
       text: theme.foreground,
     }),
-    [theme.accent, theme.foreground]
+    [theme.accent, theme.foreground, scheme]
   )
 
   // Memoize chart data transformation
