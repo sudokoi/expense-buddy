@@ -109,10 +109,10 @@ export default function GitHubRepoPickerScreen() {
 
       const userResponse = await fetch("https://api.github.com/user", { headers })
       if (userResponse.status === 401 || userResponse.status === 403) {
-        const data = await userResponse.json().catch(() => ({}))
+        const data: { message?: string } = await userResponse.json().catch(() => ({}))
         await handleAuthFailure(
           userResponse.status as 401 | 403,
-          String((data as any).message || userResponse.statusText)
+          String(data.message || userResponse.statusText)
         )
         return
       }
@@ -135,10 +135,10 @@ export default function GitHubRepoPickerScreen() {
         const url = `https://api.github.com/user/repos?affiliation=owner&per_page=${perPage}&page=${page}&sort=updated`
         const resp = await fetch(url, { headers })
         if (resp.status === 401 || resp.status === 403) {
-          const data = await resp.json().catch(() => ({}))
+          const data: { message?: string } = await resp.json().catch(() => ({}))
           await handleAuthFailure(
             resp.status as 401 | 403,
-            String((data as any).message || resp.statusText)
+            String(data.message || resp.statusText)
           )
           break
         }

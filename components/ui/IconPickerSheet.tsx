@@ -129,7 +129,11 @@ const IconButton = memo(function IconButton({
   const selectedFg = getReadableTextColor(selectedBg)
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityLabel={`Select icon ${iconName}`}
+      accessibilityState={{ selected: isSelected }}
+    >
       <View
         className="items-center justify-center rounded-chip"
         style={{

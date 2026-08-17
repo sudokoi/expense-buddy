@@ -205,7 +205,7 @@ function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
     amount: dto.amount ?? undefined,
     currency: dto.currency ?? undefined,
     merchantName: dto.merchantName ?? undefined,
-    categorySuggestion: (dto.categorySuggestion ?? undefined) as any,
+    categorySuggestion: dto.categorySuggestion ?? undefined,
     paymentMethodSuggestion:
       dto.paymentMethodType ||
       dto.paymentMethodIdentifier ||

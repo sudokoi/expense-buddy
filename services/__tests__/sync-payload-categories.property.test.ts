@@ -167,6 +167,7 @@ describe("Sync Payload Properties", () => {
 
           // Hash should be different when categories change
           expect(modifiedHash).not.toBe(originalHash)
+          return true
         }),
         { numRuns: 100 }
       )
@@ -200,6 +201,7 @@ describe("Sync Payload Properties", () => {
 
             // Hash should be different when category properties change
             expect(modifiedHash).not.toBe(originalHash)
+            return true
           }
         ),
         { numRuns: 100 }

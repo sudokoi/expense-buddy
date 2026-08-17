@@ -93,10 +93,10 @@ async function fetchWithTree(
           fileError instanceof GitHubApiError &&
           (fileError.status === 401 || fileError.status === 403)
         ) {
-          return { error: fileError, fatal: true as const }
+          return { error: fileError, fatal: true as const, path: file.path }
         }
         console.warn(`Failed to download ${file.path}:`, fileError)
-        return { error: fileError, fatal: false as const }
+        return { error: fileError, fatal: false as const, path: file.path }
       }
     },
     5
@@ -118,7 +118,7 @@ async function fetchWithTree(
       allExpenses.push(...r.expenses)
       downloadedFiles++
     } else {
-      downloadErrors.push("path" in (r as any) ? (r as any).path : "unknown")
+      downloadErrors.push("path" in r ? r.path : "unknown")
     }
   }
 

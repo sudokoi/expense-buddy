@@ -28,7 +28,7 @@ const NONE_KEY: PaymentMethodSelectionKey = "__none__"
 
 function getColorForKey(key: PaymentMethodSelectionKey): string {
   if (key === NONE_KEY) return PAYMENT_METHOD_COLORS.Other
-  return PAYMENT_METHOD_COLORS[key] ?? PAYMENT_METHOD_COLORS.Other
+  return PAYMENT_METHOD_COLORS[key as PaymentMethodType] ?? PAYMENT_METHOD_COLORS.Other
 }
 
 /**

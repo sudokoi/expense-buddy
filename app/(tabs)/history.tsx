@@ -515,6 +515,7 @@ export default function HistoryScreen() {
             variant="accent"
             onPress={handleLoadMore}
             disabled={isLoadingMore}
+            accessibilityLabel={t("history.loadMore")}
           >
             {isLoadingMore ? t("history.loading") : t("history.loadMore")}
           </Button>
@@ -596,6 +597,7 @@ export default function HistoryScreen() {
             variant={activeCount > 0 ? "accent" : undefined}
             className="gap-2 px-2"
             onPress={handleOpenFilterSheet}
+            accessibilityLabel={t("common.filters")}
           >
             <Filter size={16} color={filterIconColor} />
             {activeCount > 0
@@ -617,7 +619,7 @@ export default function HistoryScreen() {
           >
             {t("history.noResultsSubtitle")}
           </Text>
-          <Button size="control" onPress={handleResetFilters} className="mt-4">
+           <Button size="control" onPress={handleResetFilters} className="mt-4" accessibilityLabel={t("common.clearFilters")}>
             {t("common.clearFilters")}
           </Button>
         </View>
@@ -645,6 +647,7 @@ export default function HistoryScreen() {
           variant={activeCount > 0 ? "accent" : undefined}
           className="gap-2 px-2"
           onPress={handleOpenFilterSheet}
+          accessibilityLabel={t("common.filters")}
         >
           <Filter size={16} color={filterIconColor} />
           {activeCount > 0
@@ -683,10 +686,10 @@ export default function HistoryScreen() {
               {t("history.deleteDialog.description")}
             </Text>
             <View className="flex-row justify-end gap-3">
-              <Button size="control" onPress={() => setDeletingExpenseId(null)}>
+              <Button size="control" onPress={() => setDeletingExpenseId(null)} accessibilityLabel={t("common.cancel")}>
                 {t("common.cancel")}
               </Button>
-              <Button size="control" variant="destructive" onPress={confirmDelete}>
+              <Button size="control" variant="destructive" onPress={confirmDelete} accessibilityLabel={t("common.delete")}>
                 {t("common.delete")}
               </Button>
             </View>

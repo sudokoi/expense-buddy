@@ -36,7 +36,7 @@ export function DefaultPaymentMethodSelector({
 
   const renderOption = (
     key: PaymentMethodType | "none",
-    label: string,
+    _label: string,
     Icon: LucideIcon,
     isSelected: boolean
   ) => {
@@ -50,8 +50,8 @@ export function DefaultPaymentMethodSelector({
         key={key}
         onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
         role="button"
-        aria-selected={isSelected}
-        aria-label={`${displayLabel} payment method`}
+        accessibilityLabel={`${displayLabel} payment method`}
+        accessibilityState={{ selected: isSelected }}
         style={({ pressed }) => [styles.option, { opacity: pressed ? 0.6 : 1 }]}
       >
         <View

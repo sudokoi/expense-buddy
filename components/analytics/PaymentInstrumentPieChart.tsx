@@ -27,7 +27,11 @@ const LegendItem = memo(function LegendItem({
   onPress: () => void
 }) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ₹${item.value.toFixed(2)}`}
+      accessibilityState={{ selected: isSelected }}
+    >
       <View
         className="flex-row items-center justify-between rounded-control p-2"
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}

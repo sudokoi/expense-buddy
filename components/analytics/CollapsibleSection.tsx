@@ -30,7 +30,11 @@ export const CollapsibleSection = memo(function CollapsibleSection({
 
   return (
     <Card>
-      <Pressable onPress={toggleExpanded}>
+      <Pressable
+        onPress={toggleExpanded}
+        accessibilityLabel={isExpanded ? `${title}, collapse` : `${title}, expand`}
+        accessibilityState={{ expanded: isExpanded }}
+      >
         <View
           className={`flex-row items-center justify-between rounded-t-card bg-surface p-2.5 ${
             isExpanded ? "rounded-b-none" : "rounded-b-card"

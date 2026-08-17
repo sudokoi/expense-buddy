@@ -68,9 +68,6 @@ describe("Sync Logic Reproduction", () => {
 
   test("Reproduce Bug 1: Should NOT report updates if remote is identical", async () => {
     // Setup: Local has 1 expense. Remote has same expense.
-    // Last sync time is set.
-    const _lastSyncTime = "2024-01-02T10:00:00Z"
-
     // Remote expense matches local exactly
     const remoteExpenses = [sampleExpense]
     const localExpenses = [sampleExpense]

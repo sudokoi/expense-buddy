@@ -9,6 +9,7 @@ interface PaymentMethodCardProps {
   config: PaymentMethodConfig
   isSelected: boolean
   onPress: () => void
+  accessibilityLabel?: string
 }
 
 /**
@@ -20,6 +21,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   config,
   isSelected,
   onPress,
+  accessibilityLabel,
 }: PaymentMethodCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
@@ -29,6 +31,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityLabel={accessibilityLabel ?? t(`paymentMethods.${config.i18nKey}`)}
       className="rounded-card bg-surface p-2 px-3"
       style={{
         backgroundColor: isSelected ? theme.muted : theme.surface,

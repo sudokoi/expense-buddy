@@ -463,6 +463,7 @@ export default function SettingsScreen() {
                 onPress={handleSync}
                 disabled={isSyncing}
                 variant="accent"
+                accessibilityLabel={syncButtonText}
               >
                 {syncButtonText}
               </Button>
@@ -486,7 +487,7 @@ export default function SettingsScreen() {
             gap="$gutter"
           >
             <View className="flex-row flex-wrap gap-2">
-              <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
+              <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports} accessibilityLabel={t("settings.smsImport.actions.scan")}>
                 {isScanningSmsImports
                   ? t("settings.smsImport.actions.scanning")
                   : t("settings.smsImport.actions.scan")}
@@ -495,7 +496,7 @@ export default function SettingsScreen() {
 
             {pendingSmsImportItems.length > 0 ? (
               <View className="flex-row flex-wrap gap-2">
-                <Button onPress={openSmsImportReview}>
+                <Button onPress={openSmsImportReview} accessibilityLabel={t("settings.smsImport.actions.reviewWithPending", { count: pendingSmsImportItems.length })}>
                   {t("settings.smsImport.actions.reviewWithPending", {
                     count: pendingSmsImportItems.length,
                   })}
@@ -532,6 +533,7 @@ export default function SettingsScreen() {
           <Pressable
             onPress={() => router.push("/settings/payment" as Href)}
             role="button"
+            accessibilityLabel={t("settings.payment.manageTitle")}
             style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
           >
             <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef } from "react"
+import { memo, useCallback, useRef } from "react"
 import { View, Text } from "react-native"
 
 import { Trash, Edit3 } from "lucide-react-native"

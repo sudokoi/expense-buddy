@@ -114,6 +114,8 @@ interface UnifiedSyncActorResult {
 // State Machine Definition
 // =============================================================================
 
+type SyncEvent = Extract<SyncMachineEvent, { type: "SYNC" }>
+
 export const syncMachine = setup({
   types: {
     context: {} as SyncMachineContext,
@@ -243,17 +245,20 @@ export const syncMachine = setup({
       on: {
         SYNC: {
           target: "syncing",
-          actions: assign({
-            localExpenses: ({ event }) => event.localExpenses,
-            settings: ({ event }) => event.settings,
-            syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            callbacks: ({ event }) => event.callbacks || {},
-            conflictResolver: ({ event }) => event.conflictResolver,
-            // Clear previous results
-            syncResult: undefined,
-            mergeResult: undefined,
-            pendingConflicts: undefined,
-            error: undefined,
+          actions: assign(({ event }: { event: SyncMachineEvent }) => {
+            const syncEvent = event as SyncEvent
+            return {
+              localExpenses: syncEvent.localExpenses,
+              settings: syncEvent.settings,
+              syncSettingsEnabled: syncEvent.syncSettingsEnabled,
+              callbacks: syncEvent.callbacks || {},
+              conflictResolver: syncEvent.conflictResolver,
+              // Clear previous results
+              syncResult: undefined,
+              mergeResult: undefined,
+              pendingConflicts: undefined,
+              error: undefined,
+            }
           }),
         },
       },
@@ -453,14 +458,17 @@ export const syncMachine = setup({
         RESET: "idle",
         SYNC: {
           target: "syncing",
-          actions: assign({
-            localExpenses: ({ event }) => event.localExpenses,
-            settings: ({ event }) => event.settings,
-            syncSettingsEnabled: ({ event }) => event.syncSettingsEnabled,
-            callbacks: ({ event }) => event.callbacks || {},
-            conflictResolver: ({ event }) => event.conflictResolver,
-            error: undefined,
-            pendingConflicts: undefined,
+          actions: assign(({ event }: { event: SyncMachineEvent }) => {
+            const syncEvent = event as SyncEvent
+            return {
+              localExpenses: syncEvent.localExpenses,
+              settings: syncEvent.settings,
+              syncSettingsEnabled: syncEvent.syncSettingsEnabled,
+              callbacks: syncEvent.callbacks || {},
+              conflictResolver: syncEvent.conflictResolver,
+              error: undefined,
+              pendingConflicts: undefined,
+            }
           }),
         },
       },

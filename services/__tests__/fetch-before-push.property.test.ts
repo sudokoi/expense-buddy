@@ -81,7 +81,7 @@ interface SyncOperation {
  * Simulates a sync operation that follows the fetch-before-push contract
  */
 function simulateSyncOperation(
-  localExpenses: Expense[],
+  _localExpenses: Expense[],
   remoteExpenses: Expense[],
   fetchShouldFail: boolean
 ): SyncOperation {

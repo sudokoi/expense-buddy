@@ -28,10 +28,10 @@ export class GitHubApiError extends Error {
 }
 
 async function readGitHubErrorMessage(response: Response): Promise<string> {
-  const data = await response.json().catch(() => null)
+  const data: { message?: string } = await response.json().catch(() => null)
   const message =
     data && typeof data === "object" && "message" in data
-      ? String((data as any).message || "")
+      ? String(data.message || "")
       : ""
   return message.trim()
 }

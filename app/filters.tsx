@@ -8,7 +8,7 @@
  * filter store only when "Apply" is pressed.
  */
 
-import React, { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Stack, useRouter } from "expo-router"
 import { Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -168,7 +168,7 @@ export default function FiltersScreen() {
         options={{
           title: t("history.filterSheet.title"),
           headerRight: () => (
-            <Button size="compact" variant="ghost" onPress={handleResetDraft}>
+            <Button size="compact" variant="ghost" onPress={handleResetDraft} accessibilityLabel={t("common.reset")}>
               {t("common.reset")}
             </Button>
           ),
@@ -278,10 +278,10 @@ export default function FiltersScreen() {
               paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
             }}
           >
-            <Button size="control" onPress={() => router.back()}>
+            <Button size="control" onPress={() => router.back()} accessibilityLabel={t("common.cancel")}>
               {t("common.cancel")}
             </Button>
-            <Button size="control" variant="accent" onPress={handleApply}>
+            <Button size="control" variant="accent" onPress={handleApply} accessibilityLabel={t("common.apply")}>
               {t("common.apply")}
             </Button>
           </View>

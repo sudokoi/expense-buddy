@@ -215,6 +215,7 @@ export default function EditExpenseScreen() {
                 size="control"
                 className="gap-2"
                 onPress={() => setShowDatePicker(true)}
+                accessibilityLabel={t("history.editDialog.fields.date")}
               >
                 <Calendar size={16} />
                 {date
@@ -243,7 +244,7 @@ export default function EditExpenseScreen() {
                   }}
                 />
                 {showDatePicker && Platform.OS === "ios" && (
-                  <Button size="control" onPress={() => setShowDatePicker(false)}>
+                  <Button size="control" onPress={() => setShowDatePicker(false)} accessibilityLabel={t("common.done")}>
                     {t("common.done")}
                   </Button>
                 )}
@@ -381,10 +382,10 @@ export default function EditExpenseScreen() {
             className="flex-row gap-3 justify-end mt-4"
             style={{ paddingBottom: insets.bottom }}
           >
-            <Button size="control" onPress={() => router.back()}>
+            <Button size="control" onPress={() => router.back()} accessibilityLabel={t("common.cancel")}>
               {t("common.cancel")}
             </Button>
-            <Button size="control" variant="accent" onPress={handleSave}>
+            <Button size="control" variant="accent" onPress={handleSave} accessibilityLabel={t("common.save")}>
               {t("common.save")}
             </Button>
           </View>

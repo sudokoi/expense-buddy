@@ -11,6 +11,7 @@ interface CategoryCardProps {
   label: string
   onPress: () => void
   compact?: boolean
+  accessibilityLabel?: string
 }
 
 /**
@@ -24,6 +25,7 @@ export const CategoryCard = memo(function CategoryCard({
   label,
   onPress,
   compact = false,
+  accessibilityLabel,
 }: CategoryCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
@@ -35,6 +37,7 @@ export const CategoryCard = memo(function CategoryCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityLabel={accessibilityLabel ?? displayLabel}
       className={
         compact
           ? "w-[22%] items-center justify-center rounded-control p-2"

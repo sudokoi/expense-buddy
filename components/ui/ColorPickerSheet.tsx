@@ -83,7 +83,11 @@ const ColorButton = memo(function ColorButton({
   }, [onSelect, color])
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityLabel={`Select color ${color}`}
+      accessibilityState={{ selected: isSelected }}
+    >
       <View
         className="items-center justify-center rounded-chip"
         style={{

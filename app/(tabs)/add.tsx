@@ -308,6 +308,7 @@ export default function AddExpenseScreen() {
                 void handleOpenSmsImport()
               }}
               disabled={isScanningSmsImports}
+              accessibilityLabel={t("add.importSms")}
             >
               <Download size={20} />
               <Text className="font-bold">
@@ -373,6 +374,7 @@ export default function AddExpenseScreen() {
                 size="control"
                 className="gap-2"
                 onPress={() => setShowDatePicker(true)}
+                accessibilityLabel={t("add.date")}
               >
                 <Calendar size={16} />
                 {date.toLocaleDateString()}
@@ -405,6 +407,7 @@ export default function AddExpenseScreen() {
               variant="ghost"
               onPress={togglePaymentMethodSection}
               style={{ paddingHorizontal: 0, paddingVertical: 0 }}
+              accessibilityLabel={t("add.paymentMethod")}
             >
               <View className="flex-1 flex-row items-center justify-between">
                 <Label className="opacity-80" pointerEvents="none">
@@ -505,6 +508,7 @@ export default function AddExpenseScreen() {
               size="control"
               variant="outline"
               onPress={() => handleSave({ stayOnAdd: true })}
+              accessibilityLabel={t("add.addAnother")}
             >
               <Plus size={20} />
               <Text className="font-bold">{t("add.addAnother")}</Text>
@@ -514,6 +518,7 @@ export default function AddExpenseScreen() {
               size="control"
               variant="accent"
               onPress={() => handleSave({ stayOnAdd: false })}
+              accessibilityLabel={t("add.save")}
             >
               <Check size={20} />
               <Text className="font-bold">{t("add.save")}</Text>
