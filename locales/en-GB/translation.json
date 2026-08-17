@@ -1,4 +1,9 @@
 {
+  "notFound": {
+    "title": "Oops!",
+    "message": "This screen doesn't exist.",
+    "goHome": "Go to home screen!"
+  },
   "currency": {
     "symbol": "$"
   },
@@ -489,10 +494,7 @@
       "blob": "Failed to create blob for {{path}}: {{error}}",
       "truncatedTree": "Repository tree is too large to fetch completely",
       "couldNotDetermineUsername": "Could not determine GitHub username",
-      "noWriteAccess": "No write access to this repository. Please choose a repo you can push to.",
-      "uploadFailed": "Upload failed: {{error}}",
-      "deleteFailed": "Delete failed: {{error}}",
-      "uploadSettingsFailed": "Upload settings failed: {{error}}"
+      "noWriteAccess": "No write access to this repository. Please choose a repo you can push to."
     },
     "manager": {
       "notConfigured": "Sync not configured",
@@ -505,10 +507,7 @@
       "noFilesFound": "No files found",
       "noExpenseFiles": "No expense files found in repository",
       "failedToListRemote": "Failed to list remote files",
-      "noChanges": "No changes to sync: {{skipped}} file(s) unchanged",
-      "syncedExpenses": "Synced {{count}} expenses: {{details}}",
       "downloadedExpenses": "Downloaded {{count}} expenses from {{files}} file(s)",
-      "batchCommitFailed": "Batch commit failed",
       "conflictsCount": "Sync has {{count}} conflict(s) that require resolution",
       "conflictsNoHandler": "Conflicts detected but no conflict handler provided",
       "syncCancelled": "Sync cancelled by user",
@@ -520,10 +519,6 @@
       "noMoreExpenses": "No more expenses to load",
       "loadedMoreExpenses": "Loaded {{count}} more expenses from {{files}} file(s)",
       "loadMoreFailed": "Load more failed",
-      "noOldFileToMigrate": "No old file to migrate",
-      "oldFileEmpty": "Old file is empty",
-      "migrated": "Migrated {{count}} expenses to daily files",
-      "migrationError": "Migration error: {{error}}",
       "downloadFailedWithCount": "Failed to download any expense files. {{count}} file(s) failed.",
       "failedToListRemoteWithError": "Failed to list remote files: {{error}}",
       "conflictManualSync": "Conflict detected - manual sync required"
@@ -542,6 +537,11 @@
     "unknown": "An unexpected error occurred. Please try again."
   },
   "updateChecker": {
+    "readyToInstall": "Update ready to install",
+    "versionAvailable": "Version {{version}} is available",
+    "updateAvailable": "An update is available",
+    "install": "Install",
+    "update": "Update",
     "errors": {
       "noReleases": "No releases found",
       "apiError": "GitHub API error: {{status}}"

@@ -1,4 +1,9 @@
 {
+  "notFound": {
+    "title": "おっと!",
+    "message": "この画面は存在しません。",
+    "goHome": "ホーム画面へ!"
+  },
   "currency": {
     "symbol": "¥"
   },
@@ -489,10 +494,7 @@
       "blob": "{{path}} のblob作成に失敗しました: {{error}}",
       "truncatedTree": "リポジトリツリーが大きすぎて完全に取得できません",
       "couldNotDetermineUsername": "GitHubユーザー名を特定できませんでした",
-      "noWriteAccess": "このリポジトリへの書き込み権限がありません。プッシュ可能なリポジトリを選択してください。",
-      "uploadFailed": "アップロードに失敗しました: {{error}}",
-      "deleteFailed": "削除に失敗しました: {{error}}",
-      "uploadSettingsFailed": "設定のアップロードに失敗しました: {{error}}"
+      "noWriteAccess": "このリポジトリへの書き込み権限がありません。プッシュ可能なリポジトリを選択してください。"
     },
     "manager": {
       "notConfigured": "同期が設定されていません",
@@ -505,10 +507,7 @@
       "noFilesFound": "ファイルが見つかりません",
       "noExpenseFiles": "リポジトリに支出ファイルが見つかりません",
       "failedToListRemote": "リモートファイルのリスト取得に失敗しました",
-      "noChanges": "同期する変更はありません: {{skipped}} ファイルが変更なし",
-      "syncedExpenses": "{{count}}件の支出を同期しました: {{details}}",
       "downloadedExpenses": "{{files}}ファイルから{{count}}件の支出をダウンロードしました",
-      "batchCommitFailed": "バッチコミットに失敗しました",
       "conflictsCount": "同期に{{count}}件の競合があり、解決が必要です",
       "conflictsNoHandler": "競合が検出されましたが、競合ハンドラーが提供されていません",
       "syncCancelled": "ユーザーにより同期がキャンセルされました",
@@ -520,10 +519,6 @@
       "noMoreExpenses": "これ以上ロードする支出はありません",
       "loadedMoreExpenses": "{{files}}ファイルからさらに{{count}}件の支出をロードしました",
       "loadMoreFailed": "さらなるロードに失敗しました",
-      "noOldFileToMigrate": "移行する古いファイルがありません",
-      "oldFileEmpty": "古いファイルは空です",
-      "migrated": "{{count}}件の支出を日次ファイルに移行しました",
-      "migrationError": "移行エラー: {{error}}",
       "downloadFailedWithCount": "支出ファイルのダウンロードに失敗しました。{{count}}ファイルが失敗しました。",
       "failedToListRemoteWithError": "リモートファイルのリスト取得に失敗しました: {{error}}",
       "conflictManualSync": "競合が検出されました - 手動同期が必要です"
@@ -542,6 +537,11 @@
     "unknown": "予期しないエラーが発生しました。もう一度お試しください。"
   },
   "updateChecker": {
+    "readyToInstall": "Update ready to install",
+    "versionAvailable": "Version {{version}} is available",
+    "updateAvailable": "An update is available",
+    "install": "Install",
+    "update": "Update",
     "errors": {
       "noReleases": "リリースが見つかりません",
       "apiError": "GitHub API エラー: {{status}}"

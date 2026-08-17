@@ -1,4 +1,9 @@
 {
+  "notFound": {
+    "title": "ओह!",
+    "message": "यह स्क्रीन मौजूद नहीं है।",
+    "goHome": "होम स्क्रीन पर जाएं!"
+  },
   "currency": {
     "symbol": "₹"
   },
@@ -489,10 +494,7 @@
       "blob": "{{path}} के लिए blob बनाने में विफल: {{error}}",
       "truncatedTree": "रिपॉजिटरी ट्री पूरी तरह से लाने के लिए बहुत बड़ी है",
       "couldNotDetermineUsername": "GitHub उपयोगकर्ता नाम निर्धारित नहीं कर सका",
-      "noWriteAccess": "इस रिपॉजिटरी में लिखने की पहुंच नहीं है। कृपया एक ऐसी रेपो चुनें जिसमें आप पुश कर सकें।",
-      "uploadFailed": "अपलोड विफल: {{error}}",
-      "deleteFailed": "हटाने में विफल: {{error}}",
-      "uploadSettingsFailed": "सेटिंग्स अपलोड करने में विफल: {{error}}"
+      "noWriteAccess": "इस रिपॉजिटरी में लिखने की पहुंच नहीं है। कृपया एक ऐसी रेपो चुनें जिसमें आप पुश कर सकें।"
     },
     "manager": {
       "notConfigured": "सिंक कॉन्फ़िगर नहीं है",
@@ -505,10 +507,7 @@
       "noFilesFound": "कोई फ़ाइल नहीं मिली",
       "noExpenseFiles": "रिपोजिटरी में कोई व्यय फ़ाइल नहीं मिली",
       "failedToListRemote": "रिमोट फ़ाइलों को सूचीबद्ध करने में विफल",
-      "noChanges": "सिंक करने के लिए कोई बदलाव नहीं: {{skipped}} फ़ाइल(ें) अपरिवर्तित",
-      "syncedExpenses": "सिंक किया गया: {{count}} व्यय: {{details}}",
       "downloadedExpenses": "डाउनलोड किया गया: {{files}} फ़ाइल(ों) से {{count}} व्यय",
-      "batchCommitFailed": "बैच कमिट विफल",
       "conflictsCount": "सिंक में {{count}} विरोध हैं जिन्हें हल करने की आवश्यकता है",
       "conflictsNoHandler": "विरोध पाए गए लेकिन कोई विरोध हैंडलर प्रदान नहीं किया गया",
       "syncCancelled": "उपयोगकर्ता द्वारा सिंक रद्द किया गया",
@@ -520,10 +519,6 @@
       "noMoreExpenses": "लोड करने के लिए और कोई खर्च नहीं",
       "loadedMoreExpenses": "{{count}} और खर्च {{files}} फ़ाइल(ों) से लोड किए गए",
       "loadMoreFailed": "और लोड करने में विफल",
-      "noOldFileToMigrate": "माइग्रेट करने के लिए कोई पुरानी फ़ाइल नहीं",
-      "oldFileEmpty": "पुरानी फ़ाइल खाली है",
-      "migrated": "{{count}} खर्च दैनिक फ़ाइलों में माइग्रेट किए गए",
-      "migrationError": "माइग्रेशन त्रुटि: {{error}}",
       "downloadFailedWithCount": "कोई भी खर्च फ़ाइल डाउनलोड करने में विफल। {{count}} फ़ाइल(ें) विफल रहीं।",
       "failedToListRemoteWithError": "रिमोट फ़ाइलें सूचीबद्ध करने में विफल: {{error}}",
       "conflictManualSync": "विरोध पाया गया - मैन्युअल सिंक आवश्यक है"
@@ -542,6 +537,11 @@
     "unknown": "एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।"
   },
   "updateChecker": {
+    "readyToInstall": "Update ready to install",
+    "versionAvailable": "Version {{version}} is available",
+    "updateAvailable": "An update is available",
+    "install": "Install",
+    "update": "Update",
     "errors": {
       "noReleases": "कोई रिलीज़ नहीं मिली",
       "apiError": "GitHub API त्रुटि: {{status}}"

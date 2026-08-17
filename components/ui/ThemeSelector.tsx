@@ -1,6 +1,7 @@
 import { View, Text } from "react-native"
 import { Sun, Moon, Smartphone } from "lucide-react-native"
 import { Pressable } from "react-native"
+import { useTranslation } from "react-i18next"
 import { ThemePreference } from "../../services/settings-manager"
 import { Card } from "./Card"
 import {
@@ -18,26 +19,28 @@ interface ThemeSelectorProps {
 
 interface ThemeOption {
   key: ThemePreference
-  label: string
+  labelKey: string
   Icon: typeof Sun
 }
 
 const themeOptions: ThemeOption[] = [
-  { key: "light", label: "Light", Icon: Sun },
-  { key: "dark", label: "Dark", Icon: Moon },
-  { key: "system", label: "System", Icon: Smartphone },
+  { key: "light", labelKey: "settings.appearance.options.light", Icon: Sun },
+  { key: "dark", labelKey: "settings.appearance.options.dark", Icon: Moon },
+  { key: "system", labelKey: "settings.appearance.options.system", Icon: Smartphone },
 ]
 
 /**
  * ThemeSelector - A segmented control for selecting theme preference
  */
 export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
+  const { t } = useTranslation()
   const theme = useThemeColors()
 
   return (
     <Card className="flex-row gap-1 p-1 rounded-control">
-      {themeOptions.map(({ key, label, Icon }) => {
+      {themeOptions.map(({ key, labelKey, Icon }) => {
         const isSelected = value === key
+        const label = t(labelKey)
         return (
           <Pressable
             key={key}

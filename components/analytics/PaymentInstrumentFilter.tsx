@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo } from "react"
 import { ScrollView, Text, View } from "react-native"
+import { useTranslation } from "react-i18next"
 import { Button } from "../ui/Button"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
@@ -29,6 +30,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
   selected,
   onChange,
 }: PaymentInstrumentFilterProps) {
+  const { t } = useTranslation()
   const isAllSelected = selected.length === 0
 
   const active = useMemo(() => getActivePaymentInstruments(instruments), [instruments])
@@ -103,7 +105,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
         >
-          <Text>All</Text>
+          <Text>{t("common.all")}</Text>
         </Button>
 
         {chipItems.map((item) => {

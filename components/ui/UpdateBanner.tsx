@@ -1,6 +1,7 @@
 import { View as RNView, ViewStyle, Pressable, Text } from "react-native"
 import { Download, X } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { Button } from "./Button"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
 import {
@@ -32,6 +33,7 @@ export function UpdateBanner({
   onUpdate,
   onDismiss,
 }: UpdateBannerProps) {
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const infoStyles = NOTIFICATION_STYLE_TOKENS.info
 
@@ -95,10 +97,10 @@ export function UpdateBanner({
             testID="update-banner-version"
           >
             {readyToInstall
-              ? "Update ready to install"
+              ? t("updateChecker.readyToInstall")
               : version
-                ? `Version ${version} is available`
-                : "An update is available"}
+                ? t("updateChecker.versionAvailable", { version })
+                : t("updateChecker.updateAvailable")}
           </Text>
         </RNView>
 
@@ -114,7 +116,7 @@ export function UpdateBanner({
               className="text-[11px]"
               style={{ fontWeight: UI_FONT_WEIGHT.semiBold, color: textColor }}
             >
-              {readyToInstall ? "Install" : "Update"}
+              {readyToInstall ? t("updateChecker.install") : t("updateChecker.update")}
             </Text>
           </Button>
 
