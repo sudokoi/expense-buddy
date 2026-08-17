@@ -20,6 +20,7 @@ import {
 } from "../services/sync-queue"
 import { reconcileAfterSync } from "../services/sync-reconcile"
 import { loadDirtyDays, saveDirtyDays } from "../services/expense-dirty-days"
+import { hapticSuccess } from "../utils/haptics"
 
 export interface UseSyncActionReturn {
   /** Run a full sync with conflict resolution and post-sync reconciliation. */
@@ -155,6 +156,7 @@ export function useSyncAction(): UseSyncActionReturn {
         onSuccess: async (result) => {
           const localFilesUpdated = result.syncResult?.localFilesUpdated ?? 0
           const remoteFilesUpdated = result.syncResult?.remoteFilesUpdated ?? 0
+          void hapticSuccess()
           addNotification(
             t("settings.notifications.syncComplete", {
               localCount: localFilesUpdated,

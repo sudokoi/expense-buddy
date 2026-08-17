@@ -5984,6 +5984,7 @@ __metadata:
     expo-clipboard: "npm:~57.0.1"
     expo-constants: "npm:~57.0.11"
     expo-font: "npm:~57.0.1"
+    expo-haptics: "npm:^57.0.1"
     expo-linear-gradient: "npm:~57.0.1"
     expo-linking: "npm:~57.0.6"
     expo-localization: "npm:~57.0.1"
@@ -6109,6 +6110,15 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/22b972c638c8262bd98c3cea79182d4fbc5a0d67fec1f293a687bdd34f96b9a1669da0f2e6f27b6ecf9d8b00d0dc6cd5f1dcc857e813fb589e79310f4ea0b178
+  languageName: node
+  linkType: hard
+
+"expo-haptics@npm:^57.0.1":
+  version: 57.0.1
+  resolution: "expo-haptics@npm:57.0.1"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/ab929015052baa286483a55ebaec43efdcf6c4427a4b4a3c3daa9a1ed69f7bff391aeb7a72eedfc2f98965e256bb1c8b6c5498a7ce254f0e717324ee789186e4
   languageName: node
   linkType: hard
 

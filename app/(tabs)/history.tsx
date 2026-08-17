@@ -41,6 +41,7 @@ import { getCurrencySymbol } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { hapticWarning } from "../../utils/haptics"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -420,6 +421,7 @@ export default function HistoryScreen() {
   const confirmDelete = useCallback(() => {
     if (deletingExpenseId) {
       deleteExpense(deletingExpenseId)
+      void hapticWarning()
       addNotification(t("history.deleted"), "success")
       logAsync("INFO", "UI_ACTION", `DELETE_EXPENSE id=${deletingExpenseId}`)
       setDeletingExpenseId(null)

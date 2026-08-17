@@ -32,6 +32,7 @@ import {
   showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
 } from "../utils/analytics/filter-summary"
 import { logAsync } from "../services/logger"
+import { hapticLight } from "../utils/haptics"
 import type {
   TimeWindow,
   PaymentInstrumentSelectionKey,
@@ -129,10 +130,12 @@ export default function FiltersScreen() {
     setDraftMinAmount(null)
     setDraftMaxAmount(null)
     setDraftCurrency(null) // Reset to auto
+    void hapticLight()
     logAsync("INFO", "UI_ACTION", "RESET_FILTER_DRAFT")
   }, [])
 
   const handleApply = useCallback(() => {
+    void hapticLight()
     applyFilters({
       timeWindow: draftTimeWindow,
       selectedMonth: draftSelectedMonth,

@@ -39,6 +39,7 @@ import { Input } from "../../components/ui/Input"
 import { Label } from "../../components/ui/Label"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
+import { hapticSelection, hapticSuccess, hapticError } from "../../utils/haptics"
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
@@ -128,6 +129,7 @@ export default function AddExpenseScreen() {
   const handleCategorySelect = useCallback((value: ExpenseCategory) => {
     hasUserSelectedCategoryRef.current = true
     setCategory(value)
+    void hapticSelection()
   }, [])
 
   // Compute preview when expression contains operators
@@ -235,6 +237,7 @@ export default function AddExpenseScreen() {
 
     if (!validation.success) {
       setErrors(validation.errors)
+      void hapticError()
       return // Don't submit, keep user's input for correction
     }
 
@@ -269,6 +272,7 @@ export default function AddExpenseScreen() {
       paymentMethod,
     })
 
+    void hapticSuccess()
     if (stayOnAdd) {
       addNotification(t("add.successAddAnother"), "success")
     } else {

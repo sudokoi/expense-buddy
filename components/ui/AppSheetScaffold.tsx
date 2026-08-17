@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useEffect } from "react"
 import type { ViewStyle } from "react-native"
 import { Modal, Pressable, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -6,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { Text } from "react-native"
 import { X } from "lucide-react-native"
 import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { hapticLight } from "../../utils/haptics"
 import { IconActionButton } from "./IconActionButton"
 
 type AppSheetScaffoldProps = {
@@ -48,6 +50,12 @@ export function AppSheetScaffold({
 }: AppSheetScaffoldProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+
+  useEffect(() => {
+    if (open) {
+      void hapticLight()
+    }
+  }, [open])
 
   if (!open && unmountWhenClosed) {
     return null
