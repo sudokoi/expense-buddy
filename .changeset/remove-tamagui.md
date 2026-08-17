@@ -2,38 +2,26 @@
 "expense-buddy": major
 ---
 
-Migrated from Tamagui to NativeWind with Expo SDK 57 upgrade, kawaii UI redesign, and comprehensive codebase hardening.
+Migrated UI framework from Tamagui to NativeWind with Expo SDK 57 upgrade.
 
 **Breaking changes:**
 
-- Removed Tamagui — all UI now uses NativeWind + native React Native primitives
+- Removed Tamagui — all UI now uses NativeWind + Tailwind CSS
 - Icons migrated from `@tamagui/lucide-icons-2` to `lucide-react-native`
-- `@react-navigation/native` removed — use `expo-router/react-navigation` instead
 - Minimum Expo SDK 57, React Native 0.86, React 19.2
 
-**UI redesign:**
+**New features:**
 
-- Borderless cards in light mode, subtle borders in dark mode
-- Softer border-radius scale (card 20px, control 12px, chip 14px)
-- Shadowless design across all surfaces
-- Increased screen-edge spacing (16px → 20px)
-- Standardized press feedback (active:opacity-60)
+- Haptic feedback on save, delete, sync, and UI interactions
 - Theme-aware statistics card colors and chart fills for dark mode
-- Consolidated palette tokens (removed redundant THEME_COLORS)
+- Accessibility labels on interactive elements
 
-**Quality improvements:**
+**Improvements:**
 
-- Accessibility labels on ~25 interactive elements
-- Stricter TypeScript (noImplicitAny, noImplicitReturns, noUnusedLocals, noUnusedParameters)
-- Stricter ESLint (no-explicit-any warn, no-console warn)
-- All `as any` casts replaced with proper types
-- StyleSheet/plain objects converted to NativeWind className
-- Test-only exports removed from production barrels
-- Config plugin for Gradle `failOnNoDiscoveredTests`
-
-**Infrastructure:**
-
-- Google Play submit track changed to alpha
-- Prerelease changeset mode active
-- Submit split into retriable job in CI workflows
-- GitHub Actions updated to latest versions
+- Softer, borderless card design in light mode
+- Larger border-radius for a more approachable feel
+- Shadowless surfaces for a cleaner look
+- Increased screen-edge spacing
+- Standardized press feedback across all interactive elements
+- Improved SMS import parsing for SBI, Axis, and AMEX transactions
+- i18n: all user-visible strings now translated
