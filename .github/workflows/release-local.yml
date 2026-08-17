@@ -124,7 +124,7 @@ jobs:
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
           path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
-      - name: 🚀 Submit to Google Play Store (Production)
+      - name: 🚀 Submit to Google Play Store (Alpha)
         if: matrix.profile == 'production'
         continue-on-error: true
         run: |

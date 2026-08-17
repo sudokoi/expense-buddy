@@ -1,0 +1,8 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "expense-buddy": "3.9.3"
+  },
+  "changesets": []
+}
