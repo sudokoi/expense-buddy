@@ -10,7 +10,7 @@
 
 import React, { useCallback, useMemo, useState } from "react"
 import { Stack, useRouter } from "expo-router"
-import { YStack, XStack, Button, Text } from "tamagui"
+import { Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
@@ -23,6 +23,7 @@ import { CategoryFilter } from "../components/analytics/CategoryFilter"
 import { PaymentMethodFilter } from "../components/analytics/PaymentMethodFilter"
 import { PaymentInstrumentFilter } from "../components/analytics/PaymentInstrumentFilter"
 import { CurrencyFilter } from "../components/analytics/CurrencyFilter"
+import { Button } from "../components/ui/Button"
 
 import { useFilters, useFilterPersistence } from "../stores/filter-store"
 import { useSettings, useDerivedExpenseData } from "../stores/hooks"
@@ -37,7 +38,7 @@ import type {
   PaymentMethodSelectionKey,
 } from "../types/analytics"
 import type { PaymentInstrument } from "../types/payment-instrument"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../constants/ui-tokens"
+import { UI_SPACE } from "../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -167,7 +168,7 @@ export default function FiltersScreen() {
         options={{
           title: t("history.filterSheet.title"),
           headerRight: () => (
-            <Button size="$compact" chromeless onPress={handleResetDraft}>
+            <Button size="compact" variant="ghost" onPress={handleResetDraft}>
               {t("common.reset")}
             </Button>
           ),
@@ -175,25 +176,25 @@ export default function FiltersScreen() {
       />
 
       <ScreenContainer contentContainerStyle={{ paddingBottom: 0 }}>
-        <YStack gap="$section">
+        <View className="gap-3">
           {!isHydrated && (
-            <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
+            <Text className="text-[13px] text-foreground opacity-60">
               {t("history.filterSheet.loading")}
             </Text>
           )}
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.time")}
             </Text>
             <TimeWindowSelector
               value={draftTimeWindow}
               onChange={handleTimeWindowChange}
             />
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.month")}
             </Text>
             <MonthSelector
@@ -201,11 +202,11 @@ export default function FiltersScreen() {
               availableMonths={availableMonths}
               onChange={handleMonthChange}
             />
-          </YStack>
+          </View>
 
           {availableCurrencies.length > 1 && (
-            <YStack gap="$control">
-              <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+            <View className="gap-2">
+              <Text className="font-semibold text-sm text-foreground">
                 {t("settings.localization.currency")}
               </Text>
               <CurrencyFilter
@@ -214,18 +215,18 @@ export default function FiltersScreen() {
                 defaultCurrency={defaultCurrency}
                 onChange={setDraftCurrency}
               />
-            </YStack>
+            </View>
           )}
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.search")}
             </Text>
             <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.amountRange")}
             </Text>
             <AmountRangeFilter
@@ -233,31 +234,31 @@ export default function FiltersScreen() {
               maxAmount={draftMaxAmount}
               onChange={handleAmountRangeChange}
             />
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.category")}
             </Text>
             <CategoryFilter
               selectedCategories={draftCategories}
               onChange={setDraftCategories}
             />
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.paymentMethod")}
             </Text>
             <PaymentMethodFilter
               selected={draftPaymentMethods}
               onChange={handlePaymentMethodsChange}
             />
-          </YStack>
+          </View>
 
           {showPaymentInstrumentFilter && (
-            <YStack gap="$control">
-              <Text fontWeight={UI_FONT_WEIGHT.semiBold} fontSize="$label" color="$color">
+            <View className="gap-2">
+              <Text className="font-semibold text-sm text-foreground">
                 {t("history.filterSheet.paymentInstrument")}
               </Text>
               <PaymentInstrumentFilter
@@ -266,25 +267,25 @@ export default function FiltersScreen() {
                 selected={draftPaymentInstruments}
                 onChange={setDraftPaymentInstruments}
               />
-            </YStack>
+            </View>
           )}
 
-          <XStack
-            gap="$control"
+          <View
+            className="flex-row gap-2"
             style={{
               justifyContent: "flex-end",
               paddingTop: UI_SPACE.control,
               paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
             }}
           >
-            <Button size="$control" onPress={() => router.back()}>
+            <Button size="control" onPress={() => router.back()}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" theme="accent" onPress={handleApply}>
+            <Button size="control" variant="accent" onPress={handleApply}>
               {t("common.apply")}
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       </ScreenContainer>
     </>
   )

@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { useTheme } from "tamagui"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { SmsImportReviewScreen } from "../../components/ui/SmsImportReviewScreen"
 
 function pickSearchParam(value: string | string[] | undefined): string | null {
@@ -13,7 +13,7 @@ function pickSearchParam(value: string | string[] | undefined): string | null {
 
 export default function SmsImportReviewRoute() {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const theme = useThemeColors()
   const params = useLocalSearchParams<{ itemId?: string | string[] }>()
   const initialFocusItemId = pickSearchParam(params.itemId)
 
@@ -23,11 +23,11 @@ export default function SmsImportReviewRoute() {
         options={{
           title: t("smsImport.sheet.title"),
           headerStyle: {
-            backgroundColor: theme.background.val,
+            backgroundColor: theme.background,
           },
-          headerTintColor: theme.color.val,
+          headerTintColor: theme.foreground,
           contentStyle: {
-            backgroundColor: theme.background.val,
+            backgroundColor: theme.background,
           },
         }}
       />

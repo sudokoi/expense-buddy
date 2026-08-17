@@ -1,7 +1,8 @@
-import { Card, Text } from "tamagui"
+import { Pressable, Text } from "react-native"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
@@ -25,32 +26,38 @@ export const CategoryCard = memo(function CategoryCard({
   compact = false,
 }: CategoryCardProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const { resolvedColor, iconColor: selectedTextColor } =
     useResolvedCategoryColor(categoryColor)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
   return (
-    <Card
-      bg={isSelected ? resolvedColor : "$background"}
-      borderColor={isSelected ? resolvedColor : "$borderColor"}
-      borderWidth={isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin}
-      p={compact ? "$control" : "$section"}
-      rounded={compact ? "$control" : "$chip"}
-      width={compact ? "22%" : "30%"}
-      items="center"
-      justify="center"
+    <Pressable
       onPress={onPress}
+      className={
+        compact
+          ? "w-[22%] items-center justify-center rounded-control p-2"
+          : "w-[30%] items-center justify-center rounded-chip p-3"
+      }
+      style={{
+        backgroundColor: isSelected ? resolvedColor : theme.background,
+        borderColor: isSelected ? resolvedColor : theme.border,
+        borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
+      }}
     >
       <Text
-        fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
-        color={isSelected ? selectedTextColor : "$color"}
-        fontSize={compact ? "$micro" : "$body"}
+        className="text-foreground"
+        style={{
+          fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
+          color: isSelected ? selectedTextColor : theme.foreground,
+          fontSize: compact ? 11 : 13,
+        }}
         numberOfLines={1}
       >
         {displayLabel}
       </Text>
-    </Card>
+    </Pressable>
   )
 })
 

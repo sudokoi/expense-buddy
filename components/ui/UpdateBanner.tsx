@@ -1,7 +1,7 @@
-import { View as RNView, ViewStyle, Pressable } from "react-native"
-import { Text, Button } from "tamagui"
-import { Download, X } from "@tamagui/lucide-icons-2"
+import { View as RNView, ViewStyle, Pressable, Text } from "react-native"
+import { Download, X } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { Button } from "./Button"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
 import {
   UI_RADIUS,
@@ -25,14 +25,6 @@ interface UpdateBannerProps {
 
 /**
  * UpdateBanner - A non-blocking notification banner for app updates
- *
- * Displays when a new app version is available, showing:
- * - The available version number
- * - An "Update" button to navigate to the store/releases
- * - A dismiss button to hide the banner
- *
- * Uses the app's theme colors for consistency and positions
- * at the top of the screen without blocking interaction.
  */
 export function UpdateBanner({
   version,
@@ -98,10 +90,12 @@ export function UpdateBanner({
             <Download size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
           </RNView>
           <Text
-            fontSize="$caption"
-            fontWeight={UI_FONT_WEIGHT.medium}
-            color={textColor}
-            flex={1}
+            className="text-xs"
+            style={{
+              fontWeight: UI_FONT_WEIGHT.medium,
+              color: textColor,
+              flex: 1,
+            }}
             numberOfLines={2}
             testID="update-banner-version"
           >
@@ -115,20 +109,15 @@ export function UpdateBanner({
 
         <RNView style={actionsStyle}>
           <Button
-            size="$chip"
-            px="$control"
-            bg={infoStyles.actionBg}
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor={infoStyles.actionBorderColor}
-            style={{ borderRadius: UI_RADIUS.round }}
-            pressStyle={{ opacity: 0.8 }}
+            size="chip"
+            className="rounded-round px-2"
+            style={{ backgroundColor: infoStyles.actionBg }}
             onPress={onUpdate}
             testID="update-banner-update-button"
           >
             <Text
-              fontSize="$micro"
-              fontWeight={UI_FONT_WEIGHT.semiBold}
-              color={textColor}
+              className="text-[11px]"
+              style={{ fontWeight: UI_FONT_WEIGHT.semiBold, color: textColor }}
             >
               {readyToInstall ? "Install" : "Update"}
             </Text>

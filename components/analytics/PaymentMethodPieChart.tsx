@@ -1,18 +1,13 @@
 import { useMemo, useCallback, memo } from "react"
-import { YStack, XStack, Text, View } from "tamagui"
+import { Dimensions, Pressable, Text, View, useColorScheme } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentMethodChartDataItem } from "../../utils/analytics/aggregations"
-import { Dimensions, Pressable, useColorScheme } from "react-native"
 import { getChartColors } from "../../constants/theme-colors"
 import { PaymentMethodType } from "../../types/expense"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-} from "../../constants/ui-tokens"
+import { UI_OPACITY } from "../../constants/ui-tokens"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
@@ -34,31 +29,28 @@ const LegendItem = memo(function LegendItem({
 }) {
   return (
     <Pressable onPress={onPress}>
-      <XStack
-        justify="space-between"
-        items="center"
-        p={UI_SPACE.control}
-        rounded={UI_RADIUS.control}
+      <View
+        className="flex-row items-center justify-between rounded-control p-2"
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <XStack items="center" gap={UI_SPACE.control}>
+        <View className="flex-row items-center gap-2">
           <View
-            width={12}
-            height={12}
-            rounded={UI_RADIUS.control}
+            className="h-3 w-3 rounded-control"
             style={{ backgroundColor: item.color }}
           />
-          <Text fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}>
+          <Text
+            className={`${isSelected ? "font-bold" : "font-normal"} text-foreground`}
+          >
             {item.text}
           </Text>
-        </XStack>
-        <XStack gap={UI_SPACE.control} items="center">
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
+        </View>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text fontWeight={UI_FONT_WEIGHT.bold}>₹{item.value.toFixed(2)}</Text>
-        </XStack>
-      </XStack>
+          <Text className="font-bold text-foreground">₹{item.value.toFixed(2)}</Text>
+        </View>
+      </View>
     </Pressable>
   )
 })
@@ -73,9 +65,10 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   onPaymentMethodSelect,
 }: PaymentMethodPieChartProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const screenWidth = Dimensions.get("window").width
   const chartSize = Math.min(screenWidth - 80, 200)
-  const colorScheme = useColorScheme() ?? "light"
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
   const chartColors = getChartColors(colorScheme)
 
   const handleSegmentPress = useCallback(
@@ -106,14 +99,12 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   // Memoize center label component
   const CenterLabel = useCallback(
     () => (
-      <YStack items="center">
-        <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+      <View className="items-center">
+        <Text className="text-xs text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
-          ₹{total.toFixed(0)}
-        </Text>
-      </YStack>
+        <Text className="text-sm font-bold text-foreground">₹{total.toFixed(0)}</Text>
+      </View>
     ),
     [total, t]
   )
@@ -121,25 +112,25 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.paymentMethod.title")}>
-        <YStack items="center" justify="center" height={150}>
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
+        <View className="h-[150px] items-center justify-center">
+          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {t("analytics.charts.common.noData")}
           </Text>
-        </YStack>
+        </View>
       </CollapsibleSection>
     )
   }
 
   return (
     <CollapsibleSection title={t("analytics.charts.paymentMethod.title")}>
-      <YStack items="center" gap={UI_SPACE.gutter}>
+      <View className="items-center gap-4">
         <View>
           <PieChart
             data={chartData}
             donut
             radius={chartSize / 2}
             innerRadius={chartSize / 3}
-            innerCircleColor="$background"
+            innerCircleColor={theme.background}
             centerLabelComponent={CenterLabel}
             focusOnPress
             showText
@@ -148,7 +139,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
           />
         </View>
 
-        <YStack width="100%" gap="$control">
+        <View className="w-full gap-2">
           {data.map((item) => (
             <LegendItem
               key={item.paymentMethodType}
@@ -160,8 +151,8 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
               }
             />
           ))}
-        </YStack>
-      </YStack>
+        </View>
+      </View>
     </CollapsibleSection>
   )
 })

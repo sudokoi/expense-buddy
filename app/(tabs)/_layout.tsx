@@ -1,16 +1,14 @@
 import { Tabs, usePathname } from "expo-router"
 import { useEffect } from "react"
-import { useTheme } from "tamagui"
-import { PlusCircle, PieChart, Clock, Settings } from "@tamagui/lucide-icons-2"
+import { PlusCircle, PieChart, Clock, Settings } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { getColorValue } from "../../tamagui.config"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { logAsync } from "../../services/logger"
 
 export default function TabLayout() {
-  const theme = useTheme()
+  const theme = useThemeColors()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const pathname = usePathname()
@@ -24,19 +22,19 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: ACCENT_COLORS.primary, // Kawaii pink
+        tabBarActiveTintColor: theme.accent,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: theme.background.val,
-          borderTopColor: theme.borderColor.val,
+          backgroundColor: theme.background,
+          borderTopColor: theme.border,
           height: 40 + insets.bottom,
           paddingBottom: insets.bottom,
         },
         headerStyle: {
-          backgroundColor: theme.background.val,
-          borderBottomColor: theme.borderColor.val,
+          backgroundColor: theme.background,
+          borderBottomColor: theme.border,
         },
-        headerTintColor: theme.color.val,
+        headerTintColor: theme.foreground,
       }}
     >
       <Tabs.Screen
@@ -44,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.analytics"),
           tabBarIcon: ({ color }) => (
-            <PieChart color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+            <PieChart color={color} size={UI_ICON_SIZE.large} />
           ),
         }}
       />
@@ -53,7 +51,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.add"),
           tabBarIcon: ({ color }) => (
-            <PlusCircle color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+            <PlusCircle color={color} size={UI_ICON_SIZE.large} />
           ),
         }}
       />
@@ -61,9 +59,7 @@ export default function TabLayout() {
         name="history"
         options={{
           title: t("navigation.history"),
-          tabBarIcon: ({ color }) => (
-            <Clock color={getColorValue(color)} size={UI_ICON_SIZE.large} />
-          ),
+          tabBarIcon: ({ color }) => <Clock color={color} size={UI_ICON_SIZE.large} />,
         }}
       />
       <Tabs.Screen
@@ -71,7 +67,7 @@ export default function TabLayout() {
         options={{
           title: t("navigation.settings"),
           tabBarIcon: ({ color }) => (
-            <Settings color={getColorValue(color)} size={UI_ICON_SIZE.large} />
+            <Settings color={color} size={UI_ICON_SIZE.large} />
           ),
         }}
       />

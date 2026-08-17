@@ -1,6 +1,7 @@
-import { Card, YStack, Text } from "tamagui"
+import { View, Text } from "react-native"
 import { ReactNode } from "react"
-import { UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { Card } from "./Card"
+import { UI_OPACITY } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
   | "$micro"
@@ -9,6 +10,15 @@ type SemanticSpaceToken =
   | "$gutter"
   | "$block"
   | "$empty"
+
+const gapClass: Record<SemanticSpaceToken, string> = {
+  $micro: "gap-1",
+  $control: "gap-2",
+  $section: "gap-3",
+  $gutter: "gap-4",
+  $block: "gap-5",
+  $empty: "gap-10",
+}
 
 interface SettingsSectionProps {
   /** Section title displayed as uppercase header */
@@ -23,18 +33,6 @@ interface SettingsSectionProps {
 
 /**
  * SettingsSection - A reusable card component for settings screen sections
- *
- * Provides consistent styling with:
- * - Bordered card with padding and border radius
- * - Uppercase section header with consistent typography
- * - Configurable gap between children
- *
- * @example
- * ```tsx
- * <SettingsSection title="APPEARANCE">
- *   <ThemeSelector value={theme} onChange={setTheme} />
- * </SettingsSection>
- * ```
  */
 export function SettingsSection({
   title,
@@ -43,32 +41,26 @@ export function SettingsSection({
   gap = "$section",
 }: SettingsSectionProps) {
   return (
-    <Card p="$gutter" rounded="$surface" bg="$color1" borderColor="$borderColor">
-      <YStack gap={gap}>
-        <YStack
-          gap="$micro"
-          pb="$control"
-          borderBottomWidth={UI_BORDER_WIDTH.thin}
-          borderBottomColor="$borderColor"
-        >
+    <Card className="p-4">
+      <View className={gapClass[gap]}>
+        <View className="gap-1 border-b border-border pb-2">
           <Text
-            fontSize="$caption"
-            fontWeight={UI_FONT_WEIGHT.bold}
-            color="$color"
-            opacity={UI_OPACITY.faint}
-            textTransform="uppercase"
-            letterSpacing={1}
+            className="text-xs font-bold uppercase tracking-wide text-foreground"
+            style={{ opacity: UI_OPACITY.faint }}
           >
             {title}
           </Text>
           {description ? (
-            <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
+            <Text
+              className="text-[13px] text-foreground"
+              style={{ opacity: UI_OPACITY.medium }}
+            >
               {description}
             </Text>
           ) : null}
-        </YStack>
+        </View>
         {children}
-      </YStack>
+      </View>
     </Card>
   )
 }

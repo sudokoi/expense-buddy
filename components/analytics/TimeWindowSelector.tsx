@@ -1,9 +1,9 @@
-import { XStack, Button } from "tamagui"
 import { memo, useCallback } from "react"
-import { ScrollView } from "react-native"
+import { ScrollView, Text, View } from "react-native"
+import { Button } from "../ui/Button"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -51,24 +51,22 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$control" mb="$gutter" justify="center">
+      <View className="mb-4 flex-row justify-center gap-2">
         {TIME_WINDOWS.map((window) => {
           const isSelected = value === window.value
           return (
             <Button
               key={window.value}
-              size="$compact"
-              px="$section"
-              theme={isSelected ? "accent" : undefined}
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              size="compact"
+              className="px-3"
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => handlePress(window.value)}
             >
-              {t(`analytics.timeWindow.${window.value}`)}
+              <Text>{t(`analytics.timeWindow.${window.value}`)}</Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })

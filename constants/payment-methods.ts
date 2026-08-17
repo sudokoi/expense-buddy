@@ -5,10 +5,10 @@ import {
   CreditCard,
   Building,
   Circle,
-} from "@tamagui/lucide-icons-2"
-import { ComponentProps, JSX } from "react"
+  type LucideIcon,
+} from "lucide-react-native"
 
-type IconComponent = (propsIn: ComponentProps<typeof Banknote>) => JSX.Element
+type IconComponent = LucideIcon
 
 export interface PaymentMethodConfig {
   label: string

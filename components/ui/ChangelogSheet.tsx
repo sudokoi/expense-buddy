@@ -1,8 +1,10 @@
 import { useMemo } from "react"
 import Markdown from "react-native-markdown-display"
-import { Button, useTheme, YStack } from "tamagui"
+import { View } from "react-native"
+import { Button } from "./Button"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface ChangelogSheetProps {
   open: boolean
@@ -20,7 +22,7 @@ export function ChangelogSheet({
   onViewFullReleaseNotes,
 }: ChangelogSheetProps) {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const theme = useThemeColors()
   const normalizedNotes = useMemo(
     () => releaseNotes.replace(/\r\n/g, "\n"),
     [releaseNotes]
@@ -37,22 +39,22 @@ export function ChangelogSheet({
       scroll
       footer={
         <>
-          <Button size="$control" onPress={onViewFullReleaseNotes} theme="accent">
+          <Button size="control" variant="accent" onPress={onViewFullReleaseNotes}>
             {t("changelog.viewFull")}
           </Button>
-          <Button size="$control" onPress={onClose}>
+          <Button size="control" onPress={onClose}>
             {t("common.close") || "Close"}
           </Button>
         </>
       }
     >
-      <YStack pb="$gutter">
+      <View className="pb-4">
         <Markdown
           style={{
             body: {
               fontSize: 14,
               lineHeight: 22,
-              color: theme.color.val,
+              color: theme.foreground,
             },
             heading1: { fontSize: 20, fontWeight: "700" as const, marginBottom: 8 },
             heading2: { fontSize: 17, fontWeight: "600" as const, marginBottom: 6 },
@@ -64,7 +66,7 @@ export function ChangelogSheet({
             ordered_list: { marginBottom: 8 },
             list_item: { marginBottom: 4 },
             fence: {
-              backgroundColor: theme.backgroundHover.val,
+              backgroundColor: theme.surface,
               padding: 8,
               borderRadius: 6,
               marginVertical: 6,
@@ -72,33 +74,33 @@ export function ChangelogSheet({
               fontSize: 12,
             },
             code_inline: {
-              backgroundColor: theme.backgroundHover.val,
+              backgroundColor: theme.surface,
               fontFamily: "monospace",
               fontSize: 12,
               paddingHorizontal: 4,
               borderRadius: 3,
             },
             link: {
-              color: theme.colorFocus.val,
+              color: theme.accent,
               textDecorationLine: "underline" as const,
             },
             blockquote: {
               borderLeftWidth: 3,
-              borderLeftColor: theme.borderColorFocus.val,
+              borderLeftColor: theme.accent,
               paddingLeft: 10,
               marginVertical: 6,
               opacity: 0.8,
             },
             hr: {
               marginVertical: 10,
-              backgroundColor: theme.borderColor.val,
+              backgroundColor: theme.border,
               height: 1,
             },
           }}
         >
           {normalizedNotes}
         </Markdown>
-      </YStack>
+      </View>
     </AppSheetScaffold>
   )
 }

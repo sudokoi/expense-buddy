@@ -67,7 +67,6 @@ export default [
     ignores: [
       "node_modules/",
       ".expo/",
-      ".tamagui/",
       ".yarn/",
       "dist/",
       "**/build/",

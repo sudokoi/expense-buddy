@@ -1,19 +1,19 @@
 import { memo, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { YStack, XStack, Text } from "tamagui"
+import { View, Text } from "react-native"
 import { Pressable, Alert } from "react-native"
-import { Pencil, Trash2 } from "@tamagui/lucide-icons-2"
+import { Pencil, Trash2 } from "lucide-react-native"
 import { IconActionButton } from "./IconActionButton"
 import { Category } from "../../types/category"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CategoryListItemProps {
   /** The category to display */
@@ -40,6 +40,7 @@ export const CategoryListItem = memo(function CategoryListItem({
   canDelete = true,
 }: CategoryListItemProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   // Resolve color for display
   const { resolvedColor, iconColor } = useResolvedCategoryColor(category.color)
 
@@ -73,48 +74,41 @@ export const CategoryListItem = memo(function CategoryListItem({
   // Calculate font size based on label length to fit text
   const labelFontSize = useMemo(() => {
     const len = category.label.length
-    if (len <= 8) return "$label"
-    if (len <= 12) return "$body"
-    return "$caption"
+    if (len <= 8) return 14
+    if (len <= 12) return 13
+    return 12
   }, [category.label.length])
 
   return (
     <Pressable onPress={handleEdit}>
-      <XStack
-        flexDirection="row"
-        items="center"
-        p={UI_SPACE.control}
-        rounded={UI_RADIUS.control}
-        gap={UI_SPACE.control}
-        minH={UI_ICON_SIZE.huge}
-        bg="$backgroundHover"
+      <View
+        className="flex-row items-center gap-2 rounded-control bg-surface p-2"
+        style={{ minHeight: UI_ICON_SIZE.huge }}
       >
         {/* Icon with color background */}
-        <YStack
-          width={UI_ICON_SIZE.xxlarge}
-          height={UI_ICON_SIZE.xxlarge}
-          rounded={UI_RADIUS.chip}
-          items="center"
-          justify="center"
-          shrink={0}
-          style={{ backgroundColor: resolvedColor }}
+        <View
+          className="items-center justify-center rounded-chip"
+          style={{
+            width: UI_ICON_SIZE.xxlarge,
+            height: UI_ICON_SIZE.xxlarge,
+            backgroundColor: resolvedColor,
+          }}
         >
           <DynamicCategoryIcon
             name={category.icon}
             size={UI_ICON_SIZE.medium}
             color={iconColor}
           />
-        </YStack>
+        </View>
 
         {/* Label and color indicator */}
-        <YStack flex={1} minW={0}>
-          <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
+        <View className="min-w-0 flex-1">
+          <View className="flex-row items-center gap-1">
             <Text
-              fontWeight={UI_FONT_WEIGHT.medium}
-              fontSize={labelFontSize}
+              className="text-foreground"
+              style={{ fontWeight: UI_FONT_WEIGHT.medium, fontSize: labelFontSize }}
               numberOfLines={1}
               ellipsizeMode="tail"
-              style={{ flexShrink: 1 }}
             >
               {category.label === "Other"
                 ? t("settings.categories.other")
@@ -122,52 +116,51 @@ export const CategoryListItem = memo(function CategoryListItem({
             </Text>
             {category.isDefault && (
               <Text
-                fontSize="$micro"
-                color="$color"
-                opacity={UI_OPACITY.faint}
-                style={{ flexShrink: 0 }}
+                className="text-[11px] text-foreground"
+                style={{ opacity: UI_OPACITY.faint }}
               >
                 (default)
               </Text>
             )}
-          </XStack>
-          <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
-            <YStack
-              width={6}
-              height={6}
-              rounded={UI_SPACE.micro - 1}
-              shrink={0}
-              style={{ backgroundColor: resolvedColor }}
+          </View>
+          <View className="flex-row items-center gap-1">
+            <View
+              className="rounded-full"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: UI_SPACE.micro - 1,
+                backgroundColor: resolvedColor,
+              }}
             />
             <Text
-              fontSize="$micro"
-              color="$color"
-              opacity={UI_OPACITY.subtle}
+              className="text-[11px] text-foreground"
+              style={{ opacity: UI_OPACITY.subtle }}
               numberOfLines={1}
             >
               {category.color}
             </Text>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
 
         {/* Action buttons */}
-        <XStack flexDirection="row" items="center" gap={UI_SPACE.micro / 2} shrink={0}>
+        <View className="flex-row items-center gap-1">
           <IconActionButton
-            icon={<Pencil size={UI_ICON_SIZE.small} />}
+            icon={<Pencil size={UI_ICON_SIZE.small} color={theme.foreground} />}
             onPress={handleEdit}
             tooltip={t("common.editLabel", { label: category.label })}
             accessibilityLabel={t("common.editLabel", { label: category.label })}
           />
           {canDelete && (
             <IconActionButton
-              icon={<Trash2 size={UI_ICON_SIZE.small} />}
+              icon={<Trash2 size={UI_ICON_SIZE.small} color={theme.foreground} />}
               onPress={handleDelete}
               tooltip={t("common.deleteLabel", { label: category.label })}
               accessibilityLabel={t("common.deleteLabel", { label: category.label })}
             />
           )}
-        </XStack>
-      </XStack>
+        </View>
+      </View>
     </Pressable>
   )
 })

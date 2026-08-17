@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react"
-import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
 import { useRouter, Href } from "expo-router"
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -22,8 +21,8 @@ import {
   ChevronUp,
   Plus,
   Download,
-} from "@tamagui/lucide-icons-2"
-import { Keyboard, Platform } from "react-native"
+} from "lucide-react-native"
+import { Keyboard, Platform, Text, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
@@ -35,7 +34,10 @@ import { validateIdentifier } from "../../utils/payment-method-validation"
 import { validateExpenseForm } from "../../utils/expense-validation"
 import { CategoryCard } from "../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../components/ui/PaymentMethodCard"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { Button } from "../../components/ui/Button"
+import { Input } from "../../components/ui/Input"
+import { Label } from "../../components/ui/Label"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import type { PaymentInstrument } from "../../types/payment-instrument"
@@ -46,13 +48,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -61,6 +57,7 @@ export default function AddExpenseScreen() {
   const { addExpense } = useExpenses()
   const { addNotification } = useNotifications()
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const {
     settings,
     updateSettings,
@@ -293,7 +290,7 @@ export default function AddExpenseScreen() {
   }, [])
 
   return (
-    <YStack flex={1} bg="$background">
+    <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
         contentContainerStyle={{
           padding: UI_SPACE.gutter,
@@ -301,49 +298,39 @@ export default function AddExpenseScreen() {
         }}
         bottomOffset={50}
       >
-        <YStack gap="$section" maxW={UI_SPACE.empty * 15} self="center" width="100%">
+        <View className="max-w-[600px] w-full self-center gap-3">
           {Platform.OS === "android" ? (
             <Button
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor="$borderColor"
+              size="control"
+              variant="outline"
+              className="gap-2"
               onPress={() => {
                 void handleOpenSmsImport()
               }}
               disabled={isScanningSmsImports}
-              fontWeight={UI_FONT_WEIGHT.bold}
             >
               <Download size={20} />
-              {isScanningSmsImports
-                ? t("settings.smsImport.actions.scanning")
-                : pendingSmsImportItems.length > 0
-                  ? t("add.importSmsWithPending", {
-                      count: pendingSmsImportItems.length,
-                    })
-                  : t("add.importSms")}
+              <Text className="font-bold">
+                {isScanningSmsImports
+                  ? t("settings.smsImport.actions.scanning")
+                  : pendingSmsImportItems.length > 0
+                    ? t("add.importSmsWithPending", {
+                        count: pendingSmsImportItems.length,
+                      })
+                    : t("add.importSms")}
+              </Text>
             </Button>
           ) : null}
 
           {/* Amount Input */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {t("add.amount")}
-            </Label>
-            <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text
-                fontSize="$label"
-                fontWeight={UI_FONT_WEIGHT.bold}
-                color="$color"
-                opacity={UI_OPACITY.strong}
-              >
+          <View className="gap-2">
+            <Label className="opacity-80">{t("add.amount")}</Label>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-sm font-bold text-foreground opacity-80">
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
-                flex={1}
-                size="$prominent"
-                px="$section"
-                bg="$background"
-                placeholderTextColor="$color"
+                className={errors.amount ? "flex-1 border-error" : "flex-1"}
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -362,49 +349,37 @@ export default function AddExpenseScreen() {
                     })
                   }
                 }}
-                borderWidth={UI_BORDER_WIDTH.normal}
-                borderColor={errors.amount ? "$red10" : "$borderColor"}
-                focusStyle={{
-                  borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
-                }}
               />
-            </XStack>
+            </View>
             {errors.amount && (
-              <Text fontSize="$caption" color="$red10">
-                {errors.amount}
-              </Text>
+              <Text className="text-xs text-error">{errors.amount}</Text>
             )}
             {expressionPreview && !errors.amount && (
-              <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
+              <Text className="text-[13px] text-foreground opacity-70">
                 {t("add.preview", { amount: expressionPreview })}
               </Text>
             )}
-          </YStack>
+          </View>
 
           {/* Category Selection */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {t("add.category")}
-            </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
-              {categoryCards}
-            </XStack>
-          </YStack>
+          <View className="gap-2">
+            <Label className="opacity-80">{t("add.category")}</Label>
+            <View className="flex-row flex-wrap gap-2">{categoryCards}</View>
+          </View>
 
           {/* Date Picker */}
-          <YStack gap="$control">
-            <XStack items="center" justify="space-between">
-              <Label color="$color" opacity={UI_OPACITY.strong}>
-                {t("add.date")}
-              </Label>
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Label className="opacity-80">{t("add.date")}</Label>
               <Button
-                size="$control"
+                size="control"
+                className="gap-2"
                 onPress={() => setShowDatePicker(true)}
-                icon={Calendar}
               >
+                <Calendar size={16} />
                 {date.toLocaleDateString()}
               </Button>
-            </XStack>
+            </View>
             {showDatePicker && (
               <DateTimePicker
                 testID="dateTimePicker"
@@ -414,58 +389,48 @@ export default function AddExpenseScreen() {
                 onChange={onChangeDate}
               />
             )}
-          </YStack>
+          </View>
 
           {/* Note Input */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {t("add.note")}
-            </Label>
+          <View className="gap-2">
+            <Label className="opacity-80">{t("add.note")}</Label>
             <Input
               placeholder={t("add.notePlaceholder")}
-              placeholderTextColor="$color"
               value={note}
               onChangeText={setNote}
-              bg="$background"
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor="$borderColor"
-              focusStyle={{
-                borderColor: ACCENT_COLORS.primary,
-              }}
             />
-          </YStack>
+          </View>
 
           {/* Payment Method Selection - Collapsible */}
-          <YStack gap="$control">
+          <View className="gap-2">
             <Button
-              chromeless
+              variant="ghost"
               onPress={togglePaymentMethodSection}
               style={{ paddingHorizontal: 0, paddingVertical: 0 }}
             >
-              <XStack flex={1} justify="space-between" items="center">
-                <Label color="$color" opacity={UI_OPACITY.strong} pointerEvents="none">
+              <View className="flex-1 flex-row items-center justify-between">
+                <Label className="opacity-80" pointerEvents="none">
                   {t("add.paymentMethod")}
                 </Label>
                 {paymentMethodSectionExpanded ? (
                   <ChevronUp
-                    size={UI_ICON_SIZE.medium}
-                    color="$color"
-                    opacity={UI_OPACITY.subtle}
+                    size={20}
+                    color={theme.foreground}
+                    style={{ opacity: UI_OPACITY.subtle }}
                   />
                 ) : (
                   <ChevronDown
-                    size={UI_ICON_SIZE.medium}
-                    color="$color"
-                    opacity={UI_OPACITY.subtle}
+                    size={20}
+                    color={theme.foreground}
+                    style={{ opacity: UI_OPACITY.subtle }}
                   />
                 )}
-              </XStack>
+              </View>
             </Button>
 
             {paymentMethodSectionExpanded && (
-              <YStack gap="$control">
-                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+              <View className="gap-2">
+                <View className="flex-row flex-wrap gap-2">
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard
                       key={pm.value}
@@ -474,12 +439,12 @@ export default function AddExpenseScreen() {
                       onPress={() => handlePaymentMethodSelect(pm.value)}
                     />
                   ))}
-                </XStack>
+                </View>
 
                 {/* Identifier input for cards/UPI/Other */}
                 {selectedPaymentConfig?.hasIdentifier && (
-                  <YStack gap="$micro" style={{ marginTop: UI_SPACE.control }}>
-                    <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+                  <View className="gap-1" style={{ marginTop: UI_SPACE.control }}>
+                    <Label className="text-xs opacity-60">
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
                       {t("common.optional")}
@@ -514,13 +479,6 @@ export default function AddExpenseScreen() {
                       />
                     ) : (
                       <Input
-                        size="$control"
-                        bg="$background"
-                        borderWidth={UI_BORDER_WIDTH.normal}
-                        borderColor="$borderColor"
-                        focusStyle={{
-                          borderColor: ACCENT_COLORS.primary,
-                        }}
                         placeholder={
                           effectivePaymentMethod === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
@@ -534,41 +492,37 @@ export default function AddExpenseScreen() {
                         value={paymentMethodId}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
-                        placeholderTextColor="$color"
                       />
                     )}
-                  </YStack>
+                  </View>
                 )}
-              </YStack>
+              </View>
             )}
-          </YStack>
+          </View>
 
           {/* Save Buttons */}
-          <XStack mt={UI_SPACE.gutter} gap="$control">
+          <View className="mt-4 flex-row gap-2">
             <Button
-              flex={1}
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor="$borderColor"
+              className="flex-1 gap-2"
+              size="control"
+              variant="outline"
               onPress={() => handleSave({ stayOnAdd: true })}
-              icon={<Plus size="$icon" />}
-              fontWeight={UI_FONT_WEIGHT.bold}
             >
-              {t("add.addAnother")}
+              <Plus size={20} />
+              <Text className="font-bold">{t("add.addAnother")}</Text>
             </Button>
             <Button
-              flex={1}
-              size="$control"
-              theme="accent"
+              className="flex-1 gap-2"
+              size="control"
+              variant="accent"
               onPress={() => handleSave({ stayOnAdd: false })}
-              icon={<Check size="$icon" />}
-              fontWeight={UI_FONT_WEIGHT.bold}
             >
-              {t("add.save")}
+              <Check size={20} />
+              <Text className="font-bold">{t("add.save")}</Text>
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       </KeyboardAwareScrollView>
-    </YStack>
+    </View>
   )
 }

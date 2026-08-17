@@ -652,7 +652,9 @@ export const selectCategoryByLabel = (
 
 // Listen for system color scheme changes
 Appearance.addChangeListener(({ colorScheme }) => {
-  settingsStore.trigger.setSystemColorScheme({ scheme: colorScheme ?? "light" })
+  settingsStore.trigger.setSystemColorScheme({
+    scheme: colorScheme === "dark" ? "dark" : "light",
+  })
 })
 
 // Exported initialization function - call from React component tree

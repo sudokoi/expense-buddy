@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
-import { XStack, Input } from "tamagui"
-import { X } from "@tamagui/lucide-icons-2"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
-import { UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { View } from "react-native"
+import { Input } from "../ui/Input"
+import { X } from "lucide-react-native"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { IconActionButton } from "../ui/IconActionButton"
 import { useTranslation } from "react-i18next"
 
@@ -33,20 +33,12 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
   }, [value])
 
   return (
-    <XStack gap="$control" style={{ alignItems: "center" }}>
+    <View className="flex-row items-center gap-2">
       <Input
-        flex={1}
-        bg="$background"
-        size="$control"
-        borderWidth={UI_BORDER_WIDTH.normal}
-        borderColor="$borderColor"
-        focusStyle={{
-          borderColor: ACCENT_COLORS.primary,
-        }}
+        className="flex-1 bg-background"
         value={inputValue}
         onChangeText={setInputValue}
         placeholder="Search notes, categories, payment methods..."
-        placeholderTextColor="$color"
       />
       {inputValue.length > 0 && (
         <IconActionButton
@@ -59,6 +51,6 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
           accessibilityLabel={t("common.clearSearch")}
         />
       )}
-    </XStack>
+    </View>
   )
 }

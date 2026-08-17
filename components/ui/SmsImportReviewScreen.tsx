@@ -4,7 +4,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
-import { Button, Card, H4, Input, Label, Text, XStack, YStack } from "tamagui"
+import { Text, View } from "react-native"
+import { Button } from "./Button"
+import { Card } from "./Card"
+import { Input } from "./Input"
+import { Label } from "./Label"
 import {
   type PaymentMethod,
   PaymentMethodType,
@@ -44,9 +48,8 @@ import {
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 type EditableSmsImportDraft = {
   amount: string
@@ -214,6 +217,7 @@ export function SmsImportReviewScreen({
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const { categories } = useCategories()
   const { settings, updateSettings } = useSettings()
   const paymentInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -480,28 +484,28 @@ export function SmsImportReviewScreen({
   )
 
   const footer = editingItem ? (
-    <XStack justify="flex-end" gap="$control">
+    <View className="flex-row justify-end gap-2">
       <Button onPress={closeEditor}>{t("common.cancel")}</Button>
-      <Button theme="accent" onPress={handleAcceptEdited}>
+      <Button variant="accent" onPress={handleAcceptEdited}>
         {t("smsImport.sheet.footer.saveAndImport")}
       </Button>
-    </XStack>
+    </View>
   ) : pendingItems.length > 1 ? (
-    <XStack justify="space-between" gap="$control" flexWrap="wrap">
+    <View className="flex-row flex-wrap justify-between gap-2">
       <Button onPress={() => setShowResolvedItems((current) => !current)}>
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
           : t("smsImport.sheet.footer.showResolved")}
       </Button>
-      <Button theme="red" onPress={handleRejectAllSuggested}>
+      <Button variant="destructive" onPress={handleRejectAllSuggested}>
         {t("smsImport.sheet.footer.rejectAllSuggested")}
       </Button>
-      <Button theme="accent" onPress={handleAcceptAllSuggested}>
+      <Button variant="accent" onPress={handleAcceptAllSuggested}>
         {t("smsImport.sheet.footer.acceptAllSuggested")}
       </Button>
-    </XStack>
+    </View>
   ) : resolvedItems.length > 0 ? (
-    <XStack justify="space-between" gap="$control">
+    <View className="flex-row justify-between gap-2">
       <Button onPress={() => setShowResolvedItems((current) => !current)}>
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
@@ -510,15 +514,15 @@ export function SmsImportReviewScreen({
       <Button onPress={clearResolvedItems}>
         {t("smsImport.sheet.footer.clearResolved")}
       </Button>
-    </XStack>
+    </View>
   ) : (
-    <XStack justify="flex-end">
+    <View className="flex-row justify-end">
       <Button onPress={() => router.back()}>{t("common.done")}</Button>
-    </XStack>
+    </View>
   )
 
   return (
-    <YStack flex={1} bg="$background">
+    <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
@@ -526,67 +530,59 @@ export function SmsImportReviewScreen({
         bottomOffset={96}
         contentContainerStyle={{ flexGrow: 1 }}
       >
-        <YStack
-          gap="$gutter"
-          px="$gutter"
-          pt="$gutter"
-          pb="$gutter"
-          self="center"
-          maxW={UI_SPACE.empty * 18}
-          width="100%"
+        <View
+          className="w-full gap-4 px-4 pt-4 pb-4"
+          style={{ maxWidth: UI_SPACE.empty * 18, alignSelf: "center" }}
         >
-          <Card
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor="$borderColor"
-            p="$section"
-            bg="$backgroundHover"
-          >
-            <YStack gap="$control">
-              <H4>
+          <Card className="p-3">
+            <View className="gap-2">
+              <Text className="text-lg font-semibold text-foreground">
                 {editingItem
                   ? t("smsImport.sheet.editTitle")
                   : t("smsImport.sheet.title")}
-              </H4>
-              <Text fontSize="$body" opacity={UI_OPACITY.medium}>
+              </Text>
+              <Text
+                className="text-[13px] text-foreground"
+                style={{ opacity: UI_OPACITY.medium }}
+              >
                 {subtitle}
               </Text>
-            </YStack>
+            </View>
           </Card>
 
           {editingItem && editingDraft ? (
-            <YStack gap="$gutter" pb="$control">
-              <Card
-                borderWidth={UI_BORDER_WIDTH.thin}
-                borderColor="$borderColor"
-                p="$section"
-                bg="$backgroundHover"
-              >
-                <YStack gap="$control">
-                  <Text fontWeight={UI_FONT_WEIGHT.bold}>
+            <View className="gap-4 pb-2">
+              <Card className="p-3">
+                <View className="gap-2">
+                  <Text
+                    className="text-foreground"
+                    style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                  >
                     {t("smsImport.sheet.sourceSms")}
                   </Text>
-                  <Text fontSize="$body" opacity={UI_OPACITY.medium}>
+                  <Text
+                    className="text-[13px] text-foreground"
+                    style={{ opacity: UI_OPACITY.medium }}
+                  >
                     {editingItem.sourceMessage.sender ||
                       t("smsImport.sheet.unknownSender")}
                   </Text>
-                  <Text fontSize="$caption" opacity={UI_OPACITY.subtle}>
+                  <Text
+                    className="text-xs text-foreground"
+                    style={{ opacity: UI_OPACITY.subtle }}
+                  >
                     {formatTimestamp(editingItem.sourceMessage.receivedAt)}
                   </Text>
-                  <Text>{editingItem.sourceMessage.body}</Text>
-                </YStack>
+                  <Text className="text-foreground">
+                    {editingItem.sourceMessage.body}
+                  </Text>
+                </View>
               </Card>
 
-              <YStack gap="$control">
+              <View className="gap-2">
                 <Label>{t("smsImport.sheet.fields.amount")}</Label>
                 <Input
                   keyboardType="numeric"
-                  bg="$background"
-                  size="$control"
-                  borderWidth={UI_BORDER_WIDTH.normal}
-                  borderColor="$borderColor"
-                  focusStyle={{
-                    borderColor: ACCENT_COLORS.primary,
-                  }}
                   value={editingDraft.amount}
                   onChangeText={(amount) => {
                     setEditingDraft((current) =>
@@ -598,13 +594,13 @@ export function SmsImportReviewScreen({
                         : current
                     )
                   }}
-                  placeholderTextColor="$color"
+                  placeholderTextColor={theme.foreground}
                 />
-              </YStack>
+              </View>
 
-              <YStack gap="$control">
+              <View className="gap-2">
                 <Label>{t("smsImport.sheet.fields.category")}</Label>
-                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+                <View className="flex-row flex-wrap gap-2">
                   {categories.map((category) => (
                     <CategoryCard
                       key={category.label}
@@ -624,12 +620,12 @@ export function SmsImportReviewScreen({
                       }}
                     />
                   ))}
-                </XStack>
-              </YStack>
+                </View>
+              </View>
 
-              <YStack gap="$control">
+              <View className="gap-2">
                 <Label>{t("smsImport.sheet.fields.paymentMethod")}</Label>
-                <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+                <View className="flex-row flex-wrap gap-2">
                   {PAYMENT_METHODS.map((config) => (
                     <PaymentMethodCard
                       key={config.value}
@@ -638,11 +634,11 @@ export function SmsImportReviewScreen({
                       onPress={() => handlePaymentMethodSelect(config.value)}
                     />
                   ))}
-                </XStack>
+                </View>
 
                 {selectedPaymentConfig?.hasIdentifier ? (
-                  <YStack gap="$micro" mt={UI_SPACE.control}>
-                    <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+                  <View className="mt-2 gap-1">
+                    <Label className="text-xs" style={{ opacity: UI_OPACITY.subtle }}>
                       {selectedPaymentConfig.identifierLabel ||
                         t("history.editDialog.fields.identifier")}{" "}
                       {t("common.optional")}
@@ -684,13 +680,6 @@ export function SmsImportReviewScreen({
                       />
                     ) : (
                       <Input
-                        size="$control"
-                        bg="$background"
-                        borderWidth={UI_BORDER_WIDTH.normal}
-                        borderColor="$borderColor"
-                        focusStyle={{
-                          borderColor: ACCENT_COLORS.primary,
-                        }}
                         placeholder={
                           editingDraft.paymentMethodType === "Other"
                             ? t("history.editDialog.fields.otherPlaceholder")
@@ -706,23 +695,16 @@ export function SmsImportReviewScreen({
                         value={editingDraft.paymentMethodIdentifier ?? ""}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
-                        placeholderTextColor="$color"
+                        placeholderTextColor={theme.foreground}
                       />
                     )}
-                  </YStack>
+                  </View>
                 ) : null}
-              </YStack>
+              </View>
 
-              <YStack gap="$control">
+              <View className="gap-2">
                 <Label>{t("smsImport.sheet.fields.note")}</Label>
                 <Input
-                  bg="$background"
-                  size="$control"
-                  borderWidth={UI_BORDER_WIDTH.normal}
-                  borderColor="$borderColor"
-                  focusStyle={{
-                    borderColor: ACCENT_COLORS.primary,
-                  }}
                   value={editingDraft.note}
                   onChangeText={(note) => {
                     setEditingDraft((current) =>
@@ -735,40 +717,42 @@ export function SmsImportReviewScreen({
                     )
                   }}
                   selectTextOnFocus
-                  placeholderTextColor="$color"
+                  placeholderTextColor={theme.foreground}
                 />
-              </YStack>
+              </View>
 
-              <YStack
-                borderTopWidth={UI_BORDER_WIDTH.thin}
-                borderColor="$borderColor"
-                pt="$section"
+              <View
+                className="border-t border-border pt-3"
                 style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
               >
                 {footer}
-              </YStack>
-            </YStack>
+              </View>
+            </View>
           ) : items.length === 0 ? (
-            <Card
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor="$borderColor"
-              p="$gutter"
-              bg="$backgroundHover"
-            >
-              <YStack gap="$control">
-                <Text fontWeight={UI_FONT_WEIGHT.bold}>
+            <Card className="p-4">
+              <View className="gap-2">
+                <Text
+                  className="text-foreground"
+                  style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                >
                   {t("smsImport.sheet.emptyTitle")}
                 </Text>
-                <Text opacity={UI_OPACITY.medium}>
+                <Text
+                  className="text-foreground"
+                  style={{ opacity: UI_OPACITY.medium }}
+                >
                   {t("smsImport.sheet.emptyDescription")}
                 </Text>
-              </YStack>
+              </View>
             </Card>
           ) : (
-            <YStack gap="$gutter" pb="$control">
+            <View className="gap-4 pb-2">
               {pendingItems.length > 0 ? (
-                <YStack gap="$section">
-                  <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                <View className="gap-3">
+                  <Text
+                    className="text-foreground"
+                    style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                  >
                     {t("smsImport.sheet.sectionTitles.pendingReview")}
                   </Text>
 
@@ -779,34 +763,39 @@ export function SmsImportReviewScreen({
                       entering={FadeIn.duration(160)}
                       exiting={FadeOutUp.duration(180)}
                     >
-                      <Card
-                        borderWidth={UI_BORDER_WIDTH.thin}
-                        borderColor="$borderColor"
-                        p="$section"
-                      >
-                        <YStack gap="$section">
-                          <YStack gap="$micro">
-                            <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                      <Card className="p-3">
+                        <View className="gap-3">
+                          <View className="gap-1">
+                            <Text
+                              className="text-foreground"
+                              style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                            >
                               {item.merchantName || item.sourceMessage.sender}
                             </Text>
-                            <Text fontSize="$caption" opacity={UI_OPACITY.subtle}>
+                            <Text
+                              className="text-xs text-foreground"
+                              style={{ opacity: UI_OPACITY.subtle }}
+                            >
                               {formatTimestamp(item.sourceMessage.receivedAt)}
                             </Text>
-                          </YStack>
+                          </View>
 
-                          <YStack gap="$micro">
+                          <View className="gap-1">
                             {formatSuggestionDebugText(item, t) ? (
-                              <Text fontSize="$micro" opacity={UI_OPACITY.faint}>
+                              <Text
+                                className="text-[11px] text-foreground"
+                                style={{ opacity: UI_OPACITY.faint }}
+                              >
                                 {formatSuggestionDebugText(item, t)}
                               </Text>
                             ) : null}
-                            <Text>
+                            <Text className="text-foreground">
                               {t("smsImport.sheet.labels.amount")}:{" "}
                               {typeof item.amount === "number"
                                 ? `${item.currency || settings.defaultCurrency || "INR"} ${item.amount}`
                                 : t("smsImport.sheet.values.needsReview")}
                             </Text>
-                            <Text>
+                            <Text className="text-foreground">
                               {t("smsImport.sheet.labels.category")}:{" "}
                               {getLocalizedCategoryLabel(
                                 resolvedSuggestions.get(item.id)?.category ??
@@ -815,7 +804,7 @@ export function SmsImportReviewScreen({
                                 t
                               )}
                             </Text>
-                            <Text>
+                            <Text className="text-foreground">
                               {t("smsImport.sheet.labels.payment")}:{" "}
                               {getLocalizedPaymentMethodLabel(
                                 resolvedSuggestions.get(item.id)?.paymentMethod,
@@ -823,14 +812,18 @@ export function SmsImportReviewScreen({
                                 t
                               )}
                             </Text>
-                            <Text numberOfLines={3} opacity={UI_OPACITY.medium}>
+                            <Text
+                              className="text-foreground"
+                              numberOfLines={3}
+                              style={{ opacity: UI_OPACITY.medium }}
+                            >
                               {item.sourceMessage.body}
                             </Text>
-                          </YStack>
+                          </View>
 
-                          <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+                          <View className="flex-row flex-wrap gap-2">
                             <Button
-                              theme="accent"
+                              variant="accent"
                               onPress={() => handleAcceptSuggested(item)}
                             >
                               {t("smsImport.sheet.actions.accept")}
@@ -839,7 +832,7 @@ export function SmsImportReviewScreen({
                               {t("common.edit")}
                             </Button>
                             <Button
-                              theme="red"
+                              variant="destructive"
                               onPress={() => markItemRejected(item.fingerprint)}
                             >
                               {t("smsImport.sheet.actions.reject")}
@@ -847,24 +840,27 @@ export function SmsImportReviewScreen({
                             <Button onPress={() => dismissItem(item.fingerprint)}>
                               {t("smsImport.sheet.actions.dismiss")}
                             </Button>
-                          </XStack>
-                        </YStack>
+                          </View>
+                        </View>
                       </Card>
                     </Animated.View>
                   ))}
-                </YStack>
+                </View>
               ) : null}
 
               {resolvedItems.length > 0 && showResolvedItems ? (
-                <YStack gap="$section">
-                  <XStack justify="space-between" items="center">
-                    <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                <View className="gap-3">
+                  <View className="flex-row items-center justify-between">
+                    <Text
+                      className="text-foreground"
+                      style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                    >
                       {t("smsImport.sheet.sectionTitles.resolved")}
                     </Text>
-                    <Button size="$compact" onPress={clearResolvedItems}>
+                    <Button size="compact" onPress={clearResolvedItems}>
                       {t("smsImport.sheet.footer.clearResolved")}
                     </Button>
-                  </XStack>
+                  </View>
 
                   {resolvedItems.map((item) => (
                     <Animated.View
@@ -873,65 +869,70 @@ export function SmsImportReviewScreen({
                       entering={FadeIn.duration(160)}
                     >
                       <Card
-                        borderWidth={UI_BORDER_WIDTH.thin}
-                        borderColor="$borderColor"
-                        p="$section"
-                        opacity={UI_OPACITY.strong}
+                        className="p-3"
+                        style={{ opacity: UI_OPACITY.strong }}
                       >
-                        <YStack gap="$control">
-                          <Text fontWeight={UI_FONT_WEIGHT.bold}>
+                        <View className="gap-2">
+                          <Text
+                            className="text-foreground"
+                            style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                          >
                             {item.merchantName || item.sourceMessage.sender}
                           </Text>
-                          <Text fontSize="$caption" opacity={UI_OPACITY.subtle}>
+                          <Text
+                            className="text-xs text-foreground"
+                            style={{ opacity: UI_OPACITY.subtle }}
+                          >
                             {formatTimestamp(item.sourceMessage.receivedAt)}
                           </Text>
-                          <Text>
+                          <Text className="text-foreground">
                             {t("smsImport.sheet.labels.status")}:{" "}
                             {getLocalizedReviewStatus(item.status, t)}
                           </Text>
-                          <Text numberOfLines={2} opacity={UI_OPACITY.medium}>
+                          <Text
+                            className="text-foreground"
+                            numberOfLines={2}
+                            style={{ opacity: UI_OPACITY.medium }}
+                          >
                             {item.sourceMessage.body}
                           </Text>
-                        </YStack>
+                        </View>
                       </Card>
                     </Animated.View>
                   ))}
-                </YStack>
+                </View>
               ) : null}
 
               {pendingItems.length === 0 &&
               resolvedItems.length > 0 &&
               !showResolvedItems ? (
-                <Card
-                  borderWidth={UI_BORDER_WIDTH.thin}
-                  borderColor="$borderColor"
-                  p="$section"
-                  bg="$backgroundHover"
-                >
-                  <Text opacity={UI_OPACITY.medium}>
+                <Card className="p-3">
+                  <Text
+                    className="text-foreground"
+                    style={{ opacity: UI_OPACITY.medium }}
+                  >
                     {t("smsImport.sheet.emptyResolved")}
                   </Text>
                 </Card>
               ) : null}
-            </YStack>
+            </View>
           )}
-        </YStack>
+        </View>
       </KeyboardAwareScrollView>
 
       {editingItem ? null : (
-        <YStack
-          bg="$background"
-          borderTopWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          px="$gutter"
-          pt="$section"
+        <View
+          className="border-t border-border bg-background px-4 pt-3"
           style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
         >
-          <YStack self="center" maxW={UI_SPACE.empty * 18} width="100%">
+          <View
+            className="w-full"
+            style={{ maxWidth: UI_SPACE.empty * 18, alignSelf: "center" }}
+          >
             {footer}
-          </YStack>
-        </YStack>
+          </View>
+        </View>
       )}
-    </YStack>
+    </View>
   )
 }

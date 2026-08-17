@@ -72,7 +72,7 @@ import {
   Calendar,
   Clock,
   MapPin,
-} from "@tamagui/lucide-icons-2"
+} from "lucide-react-native"
 
 // Static map of icon name to component - uses typeof to get correct Tamagui icon type
 const ICON_MAP = {

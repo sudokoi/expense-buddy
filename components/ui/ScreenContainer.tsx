@@ -1,4 +1,4 @@
-import { ScrollView } from "tamagui"
+import { ScrollView } from "react-native"
 import { ReactNode, memo } from "react"
 import { StyleProp, StyleSheet, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -28,16 +28,11 @@ export const ScreenContainer = memo(function ScreenContainer({
     },
     contentContainerStyle,
   ])
-  const tamaguiContentContainerStyle =
-    resolvedContentContainerStyle as React.ComponentProps<
-      typeof ScrollView
-    >["contentContainerStyle"]
 
   return (
     <ScrollView
-      flex={1}
-      bg="$background"
-      contentContainerStyle={tamaguiContentContainerStyle}
+      className="flex-1 bg-background"
+      contentContainerStyle={resolvedContentContainerStyle}
       style={style}
       keyboardShouldPersistTaps="handled"
     >

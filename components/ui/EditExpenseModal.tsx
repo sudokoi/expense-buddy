@@ -1,7 +1,10 @@
 import { useState, useMemo, useCallback } from "react"
-import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
+import { View, Text } from "react-native"
 import { Keyboard } from "react-native"
-import { Check } from "@tamagui/lucide-icons-2"
+import { Check } from "lucide-react-native"
+import { Label } from "./Label"
+import { Input } from "./Input"
+import { Button } from "./Button"
 import {
   Expense,
   ExpenseCategory,
@@ -14,17 +17,17 @@ import { validateExpenseForm } from "../../utils/expense-validation"
 import { validateIdentifier } from "../../utils/payment-method-validation"
 import { CategoryCard } from "./CategoryCard"
 import { PaymentMethodCard } from "./PaymentMethodCard"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { AMOUNT_COLORS } from "../../constants/theme-colors"
 import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
 import {
-  UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 import { PaymentInstrumentMethod } from "../../types/payment-instrument"
@@ -55,6 +58,7 @@ export function EditExpenseModal({
   // Get categories from store (sorted by order)
   const { categories } = useCategories()
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const { settings, updateSettings } = useSettings()
 
   const allInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -218,25 +222,21 @@ export function EditExpenseModal({
         snapPoints={[100]}
         scroll
       >
-        <YStack gap="$gutter" pb="$block">
+        <View className="gap-4 pb-5">
           {/* Amount Input */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label style={{ opacity: UI_OPACITY.strong }}>
               {t("history.editDialog.fields.amount")}
             </Label>
-            <XStack style={{ alignItems: "center" }} gap="$control">
+            <View className="flex-row items-center gap-2">
               <Text
-                fontSize="$label"
-                fontWeight={UI_FONT_WEIGHT.bold}
-                color="$color"
-                opacity={UI_OPACITY.strong}
+                className="text-sm text-foreground"
+                style={{ fontWeight: UI_FONT_WEIGHT.bold, opacity: UI_OPACITY.strong }}
               >
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
-                flex={1}
-                size="$control"
-                bg="$background"
+                className="flex-1"
                 placeholder={t("add.amountPlaceholder")}
                 keyboardType="numeric"
                 value={amount}
@@ -250,27 +250,26 @@ export function EditExpenseModal({
                     })
                   }
                 }}
-                borderWidth={UI_BORDER_WIDTH.normal}
-                borderColor={errors.amount ? "$red10" : "$borderColor"}
-                focusStyle={{
-                  borderColor: errors.amount ? "$red10" : ACCENT_COLORS.primary,
+                style={{
+                  borderWidth: UI_BORDER_WIDTH.normal,
+                  borderColor: errors.amount ? AMOUNT_COLORS.expense : theme.border,
                 }}
-                placeholderTextColor="$color"
+                placeholderTextColor={theme.foreground}
               />
-            </XStack>
+            </View>
             {errors.amount && (
-              <Text fontSize="$caption" color="$red10">
+              <Text className="text-xs" style={{ color: AMOUNT_COLORS.expense }}>
                 {errors.amount}
               </Text>
             )}
-          </YStack>
+          </View>
 
           {/* Category Selection */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label style={{ opacity: UI_OPACITY.strong }}>
               {t("history.editDialog.fields.category")}
             </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+            <View className="flex-row flex-wrap gap-2">
               {categories.map((cat) => {
                 const isSelected = category === cat.label
                 return (
@@ -284,35 +283,32 @@ export function EditExpenseModal({
                   />
                 )
               })}
-            </XStack>
-          </YStack>
+            </View>
+          </View>
 
           {/* Note Input */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label style={{ opacity: UI_OPACITY.strong }}>
               {t("history.editDialog.fields.note")}
             </Label>
             <Input
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               value={note}
               onChangeText={setNote}
-              bg="$background"
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor="$borderColor"
-              focusStyle={{
-                borderColor: ACCENT_COLORS.primary,
+              style={{
+                borderWidth: UI_BORDER_WIDTH.normal,
+                borderColor: theme.border,
               }}
-              placeholderTextColor="$color"
+              placeholderTextColor={theme.foreground}
             />
-          </YStack>
+          </View>
 
           {/* Payment Method Selection */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label style={{ opacity: UI_OPACITY.strong }}>
               {t("history.editDialog.fields.paymentMethod")}
             </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+            <View className="flex-row flex-wrap gap-2">
               {PAYMENT_METHODS.map((pm) => (
                 <PaymentMethodCard
                   key={pm.value}
@@ -321,12 +317,12 @@ export function EditExpenseModal({
                   onPress={() => handlePaymentMethodSelect(pm.value)}
                 />
               ))}
-            </XStack>
+            </View>
 
             {/* Identifier input for cards/UPI/Other */}
             {selectedPaymentConfig?.hasIdentifier && (
-              <YStack gap="$micro" mt={UI_SPACE.control}>
-                <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+              <View className="mt-2 gap-1">
+                <Label className="text-xs" style={{ opacity: UI_OPACITY.subtle }}>
                   {selectedPaymentConfig.identifierLabel} {t("common.optional")}
                 </Label>
 
@@ -358,12 +354,9 @@ export function EditExpenseModal({
                   />
                 ) : (
                   <Input
-                    size="$control"
-                    bg="$background"
-                    borderWidth={UI_BORDER_WIDTH.normal}
-                    borderColor="$borderColor"
-                    focusStyle={{
-                      borderColor: ACCENT_COLORS.primary,
+                    style={{
+                      borderWidth: UI_BORDER_WIDTH.normal,
+                      borderColor: theme.border,
                     }}
                     placeholder={
                       paymentMethodType === "Other"
@@ -376,29 +369,29 @@ export function EditExpenseModal({
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
-                    placeholderTextColor="$color"
+                    placeholderTextColor={theme.foreground}
                   />
                 )}
-              </YStack>
+              </View>
             )}
-          </YStack>
+          </View>
 
           {/* Action Buttons */}
-          <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
-            <Button size="$control" chromeless onPress={handleClose}>
+          <View className="mt-2 flex-row justify-end gap-3">
+            <Button size="control" variant="ghost" onPress={handleClose}>
               {t("common.cancel")}
             </Button>
             <Button
-              size="$control"
-              theme="accent"
+              size="control"
+              variant="accent"
+              className="gap-2"
               onPress={handleSave}
-              icon={<Check size="$icon" />}
-              fontWeight={UI_FONT_WEIGHT.bold}
             >
+              <Check size={16} color={theme.accentForeground} />
               {t("common.save")}
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       </AppSheetScaffold>
     </>
   )

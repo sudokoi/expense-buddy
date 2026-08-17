@@ -1,13 +1,9 @@
 import { useState, ReactNode, memo, useCallback } from "react"
-import { YStack, XStack, Text, Card } from "tamagui"
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
-import { Pressable } from "react-native"
-import {
-  UI_SPACE,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
+import { Pressable, Text, View } from "react-native"
+import { Card } from "../ui/Card"
+import { ChevronDown, ChevronUp } from "lucide-react-native"
+import { useThemeColors } from "../../hooks/use-theme-colors"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface CollapsibleSectionProps {
   title: string
@@ -26,40 +22,30 @@ export const CollapsibleSection = memo(function CollapsibleSection({
   children,
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const theme = useThemeColors()
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((prev) => !prev)
   }, [])
 
   return (
-    <Card borderWidth={UI_BORDER_WIDTH.thin} borderColor="$borderColor">
+    <Card>
       <Pressable onPress={toggleExpanded}>
-        <XStack
-          p={UI_SPACE.section - 2}
-          justify="space-between"
-          items="center"
-          bg="$backgroundHover"
-          borderTopLeftRadius="$surface"
-          borderTopRightRadius="$surface"
-          borderBottomLeftRadius={isExpanded ? 0 : "$surface"}
-          borderBottomRightRadius={isExpanded ? 0 : "$surface"}
+        <View
+          className={`flex-row items-center justify-between rounded-t-card bg-surface p-2.5 ${
+            isExpanded ? "rounded-b-none" : "rounded-b-card"
+          }`}
         >
-          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
-            {title}
-          </Text>
+          <Text className="text-sm font-bold">{title}</Text>
           {isExpanded ? (
-            <ChevronUp size={UI_ICON_SIZE.medium} color="$color" />
+            <ChevronUp size={UI_ICON_SIZE.medium} color={theme.foreground} />
           ) : (
-            <ChevronDown size={UI_ICON_SIZE.medium} color="$color" />
+            <ChevronDown size={UI_ICON_SIZE.medium} color={theme.foreground} />
           )}
-        </XStack>
+        </View>
       </Pressable>
 
-      {isExpanded && (
-        <YStack p={UI_SPACE.section - 2} pt={UI_SPACE.control - 2}>
-          {children}
-        </YStack>
-      )}
+      {isExpanded && <View className="p-2.5 pt-1.5">{children}</View>}
     </Card>
   )
 })

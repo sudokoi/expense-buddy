@@ -1,16 +1,12 @@
 import { useState, useMemo } from "react"
-import { YStack, XStack, Text, Label } from "tamagui"
-import { Pressable } from "react-native"
-import { ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
+import { Pressable, Text, View } from "react-native"
+import { ChevronDown, ChevronUp } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_ICON_SIZE,
-} from "../../../constants/ui-tokens"
+import { Label } from "../Label"
+import { useThemeColors } from "../../../hooks/use-theme-colors"
+import { UI_OPACITY, UI_ICON_SIZE } from "../../../constants/ui-tokens"
 
 interface LocalizationSectionProps {
   languagePreference: string
@@ -35,6 +31,7 @@ export function LocalizationSection({
   onCurrencyChange,
 }: LocalizationSectionProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const [expanded, setExpanded] = useState(false)
 
   const languageLabel = useMemo(() => {
@@ -51,74 +48,53 @@ export function LocalizationSection({
   const summary = `${languageLabel} • ${currencyLabel}`
 
   return (
-    <YStack gap="$control">
+    <View className="gap-2">
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
         role="button"
         aria-expanded={expanded}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
-        <XStack
-          flex={1}
-          bg="$backgroundHover"
-          justify="space-between"
-          items="center"
-          py={UI_SPACE.section - 2}
-          px={UI_SPACE.section}
-          rounded={UI_RADIUS.chip}
-        >
-          <YStack flex={1} gap="$micro">
-            <Text
-              fontSize="$caption"
-              color="$color"
-              opacity={UI_OPACITY.faint}
-              textTransform="uppercase"
-            >
+        <View className="flex-1 bg-surface flex-row items-center justify-between py-2.5 px-3 rounded-chip">
+          <View className="flex-1 gap-1">
+            <Text className="text-xs text-foreground opacity-50 uppercase">
               {t("settings.sections.localization")}
             </Text>
-            <Text color="$color" opacity={UI_OPACITY.medium} fontSize="$body">
-              {summary}
-            </Text>
-          </YStack>
+            <Text className="text-foreground opacity-70 text-[13px]">{summary}</Text>
+          </View>
           {expanded ? (
             <ChevronUp
               size={UI_ICON_SIZE.medium}
-              color="$color"
-              opacity={UI_OPACITY.subtle}
+              color={theme.foreground}
+              style={{ opacity: UI_OPACITY.subtle }}
             />
           ) : (
             <ChevronDown
               size={UI_ICON_SIZE.medium}
-              color="$color"
-              opacity={UI_OPACITY.subtle}
+              color={theme.foreground}
+              style={{ opacity: UI_OPACITY.subtle }}
             />
           )}
-        </XStack>
+        </View>
       </Pressable>
 
       {expanded && (
-        <YStack
-          gap="$section"
-          mt="$micro"
-          bg="$backgroundHover"
-          p="$section"
-          style={{ borderRadius: UI_RADIUS.surface }}
-        >
-          <YStack gap="$micro">
-            <Label color="$color" opacity={UI_OPACITY.strong} fontSize="$caption">
+        <View className="gap-3 mt-1 bg-surface p-3 rounded-card">
+          <View className="gap-1">
+            <Label className="text-xs opacity-80">
               {t("settings.localization.language")}
             </Label>
             <LanguageSelector value={languagePreference} onChange={onLanguageChange} />
-          </YStack>
+          </View>
 
-          <YStack gap="$micro">
-            <Label color="$color" opacity={UI_OPACITY.strong} fontSize="$caption">
+          <View className="gap-1">
+            <Label className="text-xs opacity-80">
               {t("settings.localization.currency")}
             </Label>
             <CurrencySelector value={defaultCurrency} onChange={onCurrencyChange} />
-          </YStack>
-        </YStack>
+          </View>
+        </View>
       )}
-    </YStack>
+    </View>
   )
 }

@@ -1,10 +1,10 @@
 import { memo } from "react"
-import { XStack, Button } from "tamagui"
-import { ScrollView } from "react-native"
+import { ScrollView, Text, View } from "react-native"
+import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface MonthSelectorProps {
   value: string | null
@@ -32,16 +32,14 @@ export const MonthSelector = memo(function MonthSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={layoutStyles.scrollContent}
     >
-      <XStack gap="$control" mb="$gutter" justify="center">
+      <View className="mb-4 flex-row justify-center gap-2">
         <Button
-          size="$compact"
-          px="$section"
-          theme={value === null ? "accent" : undefined}
-          borderColor="$borderColor"
-          borderWidth={value !== null ? UI_BORDER_WIDTH.thin : 0}
+          size="compact"
+          className="px-3"
+          variant={value === null ? "accent" : "outline"}
           onPress={() => onChange(null)}
         >
-          {t("common.all")}
+          <Text>{t("common.all")}</Text>
         </Button>
         {availableMonths.map((monthKey) => {
           const isSelected = value === monthKey
@@ -49,18 +47,16 @@ export const MonthSelector = memo(function MonthSelector({
           return (
             <Button
               key={monthKey}
-              size="$compact"
-              px="$section"
-              theme={isSelected ? "accent" : undefined}
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              size="compact"
+              className="px-3"
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => onChange(monthKey)}
             >
-              {label}
+              <Text>{label}</Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })

@@ -1,8 +1,11 @@
 import React, { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Button, Card, Input, Label, Text, View, XStack, YStack, useTheme } from "tamagui"
-import { ChevronDown, ChevronUp, Plus } from "@tamagui/lucide-icons-2"
-import { Pressable } from "react-native"
+import { Pressable, Text, View } from "react-native"
+import { ChevronDown, ChevronUp, Plus } from "lucide-react-native"
+import { Button } from "./Button"
+import { Card } from "./Card"
+import { Input } from "./Input"
+import { Label } from "./Label"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
@@ -16,15 +19,7 @@ import {
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
 import { validateIdentifier } from "../../utils/payment-method-validation"
-import { getColorValue } from "../../tamagui.config"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
+import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
 
 // Only use style prop for layout properties that Tamagui View doesn't support directly
 const styles = {
@@ -75,9 +70,6 @@ export function PaymentInstrumentInlineDropdown({
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
-
-  const theme = useTheme()
-  const focusBorderColor = getColorValue(theme.borderColorFocus)
 
   const effectiveMaxLength = maxLength ?? getLastDigitsLength(method)
   const effectiveIdentifierLabel = identifierLabel ?? `Last ${effectiveMaxLength} digits`
@@ -229,27 +221,19 @@ export function PaymentInstrumentInlineDropdown({
   ])
 
   return (
-    <YStack gap="$control">
+    <View className="gap-2">
       <Button
-        size="$control"
-        chromeless
-        borderWidth={UI_BORDER_WIDTH.thin}
-        borderColor="$borderColor"
-        background={open ? "$backgroundFocus" : "transparent"}
+        size="control"
+        variant="ghost"
+        className={open ? "gap-2 border border-border bg-muted" : "gap-2 border border-border"}
         onPress={() => setOpen((v) => !v)}
-        icon={open ? ChevronUp : ChevronDown}
       >
+        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         {headerLabel}
       </Button>
 
       {open && (
-        <Card
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$micro"
-          rounded="$control"
-          gap="$micro"
-        >
+        <Card className="gap-1 p-1 rounded-control">
           <Pressable
             onPress={handleSelectNone}
             role="button"
@@ -257,30 +241,24 @@ export function PaymentInstrumentInlineDropdown({
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor={kind === "none" ? focusBorderColor : "$borderColor"}
-              bg={kind === "none" ? "$backgroundFocus" : "$backgroundHover"}
-              flexDirection="row"
-              items="center"
-              justify="space-between"
-              py={UI_SPACE.section}
-              px={UI_SPACE.section}
-              rounded={UI_RADIUS.chip}
+              className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
+                kind === "none" ? "border-accent bg-muted" : "border-border bg-surface"
+              }`}
             >
               <Text
-                fontWeight={kind === "none" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
+                className={kind === "none" ? "font-bold" : "font-medium"}
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.none")}
               </Text>
               {kind === "none" && (
-                <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="font-bold text-accent">
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "none" && (
-                <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="font-bold opacity-0">
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -294,32 +272,24 @@ export function PaymentInstrumentInlineDropdown({
             style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
           >
             <View
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor={kind === "manual" ? focusBorderColor : "$borderColor"}
-              bg={kind === "manual" ? "$backgroundFocus" : "$backgroundHover"}
-              flexDirection="row"
-              items="center"
-              justify="space-between"
-              py={UI_SPACE.section}
-              px={UI_SPACE.section}
-              rounded={UI_RADIUS.chip}
+              className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
+                kind === "manual" ? "border-accent bg-muted" : "border-border bg-surface"
+              }`}
             >
               <Text
-                fontWeight={
-                  kind === "manual" ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium
-                }
+                className={kind === "manual" ? "font-bold" : "font-medium"}
                 style={styles.rowLabel}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.others")}
               </Text>
               {kind === "manual" && (
-                <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="font-bold text-accent">
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
               {kind !== "manual" && (
-                <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="font-bold opacity-0">
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -337,30 +307,24 @@ export function PaymentInstrumentInlineDropdown({
                 style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.8 : 1 }]}
               >
                 <View
-                  borderWidth={UI_BORDER_WIDTH.thin}
-                  borderColor={isSelected ? focusBorderColor : "$borderColor"}
-                  bg={isSelected ? "$backgroundFocus" : "$backgroundHover"}
-                  flexDirection="row"
-                  items="center"
-                  justify="space-between"
-                  py={UI_SPACE.section}
-                  px={UI_SPACE.section}
-                  rounded={UI_RADIUS.chip}
+                  className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
+                    isSelected ? "border-accent bg-muted" : "border-border bg-surface"
+                  }`}
                 >
                   <Text
-                    fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.medium}
+                    className={isSelected ? "font-bold" : "font-medium"}
                     style={styles.rowLabel}
                     numberOfLines={1}
                   >
                     {formatPaymentInstrumentLabel(inst)}
                   </Text>
                   {isSelected && (
-                    <Text color={focusBorderColor} fontWeight={UI_FONT_WEIGHT.bold}>
+                    <Text className="font-bold text-accent">
                       {t("instruments.dropdown.selected")}
                     </Text>
                   )}
                   {!isSelected && (
-                    <Text opacity={UI_OPACITY.hidden} fontWeight={UI_FONT_WEIGHT.bold}>
+                    <Text className="font-bold opacity-0">
                       {t("instruments.dropdown.selected")}
                     </Text>
                   )}
@@ -371,13 +335,12 @@ export function PaymentInstrumentInlineDropdown({
 
           {onCreateInstrument && (
             <Button
-              size="$control"
-              theme="accent"
-              icon={Plus}
+              size="control"
+              variant="accent"
+              className="gap-2 border border-border"
               onPress={handleStartAdd}
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor="$borderColor"
             >
+              <Plus size={16} />
               {showAdd
                 ? t("instruments.dropdown.cancelAdd")
                 : t("instruments.dropdown.addSaved")}
@@ -387,18 +350,11 @@ export function PaymentInstrumentInlineDropdown({
       )}
 
       {kind === "manual" && (
-        <YStack gap="$micro">
-          <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+        <View className="gap-1">
+          <Label className="text-xs opacity-60">
             {effectiveIdentifierLabel} {t("common.optional")}
           </Label>
           <Input
-            size="$control"
-            bg="$background"
-            borderWidth={UI_BORDER_WIDTH.normal}
-            borderColor="$borderColor"
-            focusStyle={{
-              borderColor: ACCENT_COLORS.primary,
-            }}
             placeholder={t("instruments.form.identifierPlaceholder", {
               count: effectiveMaxLength,
             })}
@@ -406,29 +362,23 @@ export function PaymentInstrumentInlineDropdown({
             value={manualDigits}
             onChangeText={handleManualDigitsChange}
             maxLength={effectiveMaxLength}
-            placeholderTextColor="$color"
           />
-        </YStack>
+        </View>
       )}
 
       {showAdd && onCreateInstrument && (
-        <YStack
-          gap="$control"
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
+        <View
+          className="gap-2 border border-border"
           style={{ padding: UI_SPACE.control, borderRadius: UI_RADIUS.chip }}
         >
-          <YStack gap="$micro">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {t("instruments.form.nickname")}
-            </Label>
+          <View className="gap-1">
+            <Label className="opacity-80">{t("instruments.form.nickname")}</Label>
             <Input
-              size="$control"
-              bg="$background"
+              className={addErrors.nickname ? "border-error" : undefined}
               placeholder={t("instruments.form.nicknamePlaceholder")}
               value={nickname}
-              onChangeText={(t) => {
-                setNickname(t)
+              onChangeText={(text) => {
+                setNickname(text)
                 if (addErrors.nickname) {
                   setAddErrors((prev) => {
                     const { nickname: _n, ...rest } = prev
@@ -437,35 +387,24 @@ export function PaymentInstrumentInlineDropdown({
                 }
               }}
               maxLength={30}
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor={addErrors.nickname ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: addErrors.nickname ? "$red10" : focusBorderColor,
-              }}
-              placeholderTextColor="$color"
             />
             {addErrors.nickname && (
-              <Text fontSize="$caption" color="$red10">
-                {addErrors.nickname}
-              </Text>
+              <Text className="text-xs text-error">{addErrors.nickname}</Text>
             )}
-          </YStack>
+          </View>
 
-          <YStack gap="$micro">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
-              {effectiveIdentifierLabel}
-            </Label>
+          <View className="gap-1">
+            <Label className="opacity-80">{effectiveIdentifierLabel}</Label>
             <Input
-              size="$control"
-              bg="$background"
+              className={addErrors.lastDigits ? "border-error" : undefined}
               placeholder={t("instruments.form.identifierPlaceholder", {
                 count: getLastDigitsLength(method),
               })}
               keyboardType="numeric"
               value={newLastDigits}
-              onChangeText={(t) => {
+              onChangeText={(text) => {
                 const expectedLen = getLastDigitsLength(method)
-                setNewLastDigits(sanitizeLastDigits(t, expectedLen))
+                setNewLastDigits(sanitizeLastDigits(text, expectedLen))
                 if (addErrors.lastDigits) {
                   setAddErrors((prev) => {
                     const { lastDigits: _d, ...rest } = prev
@@ -474,30 +413,22 @@ export function PaymentInstrumentInlineDropdown({
                 }
               }}
               maxLength={getLastDigitsLength(method)}
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor={addErrors.lastDigits ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: addErrors.lastDigits ? "$red10" : focusBorderColor,
-              }}
-              placeholderTextColor="$color"
             />
             {addErrors.lastDigits && (
-              <Text fontSize="$caption" color="$red10">
-                {addErrors.lastDigits}
-              </Text>
+              <Text className="text-xs text-error">{addErrors.lastDigits}</Text>
             )}
-          </YStack>
+          </View>
 
-          <XStack gap="$control" style={{ justifyContent: "flex-end" }}>
-            <Button size="$control" chromeless onPress={handleStartAdd}>
+          <View className="flex-row gap-2" style={{ justifyContent: "flex-end" }}>
+            <Button size="control" variant="ghost" onPress={handleStartAdd}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" theme="accent" onPress={handleSaveNew}>
+            <Button size="control" variant="accent" onPress={handleSaveNew}>
               {t("common.save")}
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       )}
-    </YStack>
+    </View>
   )
 }

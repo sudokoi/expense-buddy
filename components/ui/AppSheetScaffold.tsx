@@ -1,8 +1,10 @@
 import type { ReactNode } from "react"
 import type { ViewStyle } from "react-native"
+import { Modal, Pressable, ScrollView, View } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { H4, Sheet, Text, XStack, YStack, ScrollView } from "tamagui"
-import { X } from "@tamagui/lucide-icons-2"
+import { Text } from "react-native"
+import { X } from "lucide-react-native"
 import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { IconActionButton } from "./IconActionButton"
 
@@ -25,7 +27,7 @@ type AppSheetScaffoldProps = {
   /** Optional footer pinned under body content. */
   footer?: ReactNode
 
-  /** Additional styles applied to Sheet.Frame (after default padding). */
+  /** Additional styles applied to the sheet panel (after default padding). */
   frameStyle?: ViewStyle | ViewStyle[]
 
   children: ReactNode
@@ -45,56 +47,82 @@ export function AppSheetScaffold({
   children,
 }: AppSheetScaffoldProps) {
   const { t } = useTranslation()
+  const insets = useSafeAreaInsets()
 
   if (!open && unmountWhenClosed) {
     return null
   }
 
+  // Snap points are percentages of screen height; use the largest as the
+  // panel height and let smaller content grow only up to that bound.
+  const heightPercent = Math.max(...snapPoints, 50)
+
   return (
-    <Sheet
-      modal
-      open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (!isOpen) onClose()
-      }}
-      snapPoints={snapPoints}
-      dismissOnSnapToBottom={dismissOnSnapToBottom}
+    <Modal
+      transparent
+      animationType="slide"
+      visible={open}
+      onRequestClose={onClose}
     >
-      <Sheet.Overlay />
-      <Sheet.Frame style={[{ padding: UI_SPACE.gutter }, frameStyle]} bg="$background">
-        <Sheet.Handle />
+      <View className="flex-1 justify-end">
+        <Pressable
+          className="absolute inset-0 bg-black/50"
+          onPress={dismissOnSnapToBottom ? onClose : undefined}
+          accessibilityLabel={t("common.close")}
+        />
+        <View
+          style={[
+            {
+              height: `${heightPercent}%`,
+              padding: UI_SPACE.gutter,
+              paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+            },
+            frameStyle,
+          ]}
+          className="rounded-t-card bg-surface"
+        >
+          <View className="mb-2 items-center">
+            <View className="h-1 w-10 rounded-full bg-border" />
+          </View>
 
-        <YStack gap="$gutter" mt={UI_SPACE.control} flex={1}>
-          <XStack justify="space-between" items="center">
-            <YStack>
-              <H4>{title}</H4>
-              {subtitle ? (
-                <Text fontSize="$body" opacity={UI_OPACITY.medium} color="$color">
-                  {subtitle}
-                </Text>
-              ) : null}
-            </YStack>
+          <View className="flex-1 gap-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-lg font-semibold text-foreground">{title}</Text>
+                {subtitle ? (
+                  <Text
+                    className="text-[13px] text-muted-foreground"
+                    style={{ opacity: UI_OPACITY.medium }}
+                  >
+                    {subtitle}
+                  </Text>
+                ) : null}
+              </View>
 
-            <IconActionButton
-              icon={<X size={UI_ICON_SIZE.medium} />}
-              onPress={onClose}
-              tooltip={t("common.close")}
-              accessibilityLabel={t("common.close")}
-            />
-          </XStack>
+              <IconActionButton
+                icon={<X size={UI_ICON_SIZE.medium} />}
+                onPress={onClose}
+                tooltip={t("common.close")}
+                accessibilityLabel={t("common.close")}
+              />
+            </View>
 
-          {scroll ? (
-            <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-              {children}
-            </ScrollView>
-          ) : (
-            children
-          )}
+            {scroll ? (
+              <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+              >
+                {children}
+              </ScrollView>
+            ) : (
+              children
+            )}
 
-          {footer ? <YStack gap="$control">{footer}</YStack> : null}
-        </YStack>
-      </Sheet.Frame>
-    </Sheet>
+            {footer ? <View className="gap-2">{footer}</View> : null}
+          </View>
+        </View>
+      </View>
+    </Modal>
   )
 }
 

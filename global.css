@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme tokens — single source of truth lives in `constants/palette.ts`.
+ * Keep these values in sync with that file (update there first, mirror here).
+ */
+@layer base {
+  :root {
+    /* Light mode semantic tokens */
+    --background: #FFF8F0;
+    --surface: #FFFAF5;
+    --muted: #FFE8E0;
+    --foreground: #4A4458;
+    --muted-foreground: #6B5F7A;
+    --border: #E6E6FA;
+    --accent: #C0406A;
+    --accent-foreground: #FFFFFF;
+
+    /* Constant semantic colors (identical across light/dark) */
+    --expense: #FF8A8A;
+    --expense-light: #FFD4D4;
+    --income: #7FDBAA;
+    --income-light: #C8F7DC;
+    --success: #7FDBAA;
+    --error: #FF8A8A;
+    --warning: #FFD4A0;
+    --info: #87CEEB;
+
+    /* Kawaii decorative colors (fills/backgrounds, not text) */
+    --kawaii-pink: #FFB6C1;
+    --kawaii-pink-light: #FFD1DC;
+    --kawaii-pink-dark: #FF91A4;
+    --kawaii-lavender: #E6E6FA;
+    --kawaii-mint: #98FB98;
+  }
+
+  .dark:root {
+    --background: #1A1625;
+    --surface: #252033;
+    --muted: #302840;
+    --foreground: #F0E6F6;
+    --muted-foreground: #C7B9D6;
+    --border: #3A3050;
+    --accent: #FFB6C1;
+    --accent-foreground: #1A1625;
+  }
+}

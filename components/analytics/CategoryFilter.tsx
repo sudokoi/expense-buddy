@@ -1,10 +1,11 @@
 import { memo, useCallback, useMemo } from "react"
-import { XStack, Button } from "tamagui"
-import { ScrollView } from "react-native"
+import { ScrollView, Text, View } from "react-native"
+import { Button } from "../ui/Button"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -30,6 +31,7 @@ export const CategoryFilter = memo(function CategoryFilter({
 }: CategoryFilterProps) {
   const { categories } = useCategories()
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const isAllSelected = selectedCategories.length === 0
 
   // Memoize category items with icons and pre-built selected style
@@ -71,17 +73,15 @@ export const CategoryFilter = memo(function CategoryFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$control">
+      <View className="flex-row gap-2">
         {/* All button */}
         <Button
-          size="$chip"
-          px="$control"
-          theme={isAllSelected ? "accent" : undefined}
-          borderColor="$borderColor"
-          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
+          size="chip"
+          className="px-2"
+          variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
         >
-          {t("common.all")}
+          <Text>{t("common.all")}</Text>
         </Button>
 
         {/* Category chips */}
@@ -91,21 +91,19 @@ export const CategoryFilter = memo(function CategoryFilter({
           return (
             <Button
               key={cat.label}
-              size="$chip"
-              px="$control"
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              size="chip"
+              className={`gap-1 px-2${isSelected ? "" : " border border-border"}`}
               style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
-              icon={<Icon size={14} color={isSelected ? "white" : "$color"} />}
             >
-              <Button.Text color={isSelected ? "white" : "$color"}>
+              <Icon size={14} color={isSelected ? "white" : theme.foreground} />
+              <Text className={isSelected ? "text-white" : "text-foreground"}>
                 {cat.label === "Other" ? t("settings.categories.other") : cat.label}
-              </Button.Text>
+              </Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })

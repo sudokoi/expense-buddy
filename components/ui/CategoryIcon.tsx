@@ -1,4 +1,4 @@
-import { YStack } from "tamagui"
+import { View } from "react-native"
 import { ViewStyle, StyleProp } from "react-native"
 import { ReactNode } from "react"
 import { UI_RADIUS, UI_ICON_SIZE } from "../../constants/ui-tokens"
@@ -47,7 +47,7 @@ export function CategoryIcon({
   style,
 }: CategoryIconProps) {
   const sizeStyle = sizeStyles[size]
-  return <YStack style={[sizeStyle, { backgroundColor }, style]}>{children}</YStack>
+  return <View style={[sizeStyle, { backgroundColor }, style]}>{children}</View>
 }
 
 export type { CategoryIconProps }

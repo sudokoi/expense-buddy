@@ -1,21 +1,22 @@
-import { Text, Card, View, useTheme } from "tamagui"
+import { View, Text } from "react-native"
 import {
   DollarSign,
   IndianRupee,
   PoundSterling,
   Euro,
   JapaneseYen,
-} from "@tamagui/lucide-icons-2"
+  type LucideIcon,
+} from "lucide-react-native"
 import { Pressable } from "react-native"
-import { getColorValue } from "../../tamagui.config"
+import { Card } from "./Card"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CurrencySelectorProps {
   value: string
@@ -25,7 +26,7 @@ interface CurrencySelectorProps {
 interface CurrencyOption {
   key: string
   label: string
-  Icon: React.ComponentType<any>
+  Icon: LucideIcon
 }
 
 const currencyOptions: CurrencyOption[] = [
@@ -37,17 +38,10 @@ const currencyOptions: CurrencyOption[] = [
 ]
 
 export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
-  const theme = useTheme()
+  const theme = useThemeColors()
 
   return (
-    <Card
-      borderWidth={UI_BORDER_WIDTH.thin}
-      borderColor="$borderColor"
-      p="$micro"
-      rounded="$control"
-      flexDirection="row"
-      flexWrap="wrap"
-    >
+    <Card className="flex-row flex-wrap rounded-control p-1">
       {currencyOptions.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
@@ -63,30 +57,27 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             ]}
           >
             <View
-              flex={1}
-              borderWidth={UI_BORDER_WIDTH.normal}
-              bg={isSelected ? "$backgroundFocus" : "transparent"}
-              borderColor={
-                isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
-              }
-              flexDirection="column"
-              items="center"
-              justify="center"
-              gap={UI_SPACE.micro}
-              p={UI_SPACE.control}
-              rounded={UI_RADIUS.control}
-              m={UI_SPACE.micro / 2}
+              className="items-center justify-center gap-1 rounded-control p-2"
+              style={{
+                borderWidth: UI_BORDER_WIDTH.normal,
+                backgroundColor: isSelected ? theme.muted : "transparent",
+                borderColor: isSelected ? theme.accent : "transparent",
+                margin: UI_SPACE.micro / 2,
+              }}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}
-                color={getColorValue(theme.color)}
-                opacity={isSelected ? 1 : UI_OPACITY.medium}
+                color={theme.foreground}
+                style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
               />
               <Text
-                fontSize="$caption"
-                fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
-                color="$color"
-                opacity={isSelected ? 1 : UI_OPACITY.medium}
+                className="text-xs text-foreground"
+                style={{
+                  fontWeight: isSelected
+                    ? UI_FONT_WEIGHT.semiBold
+                    : UI_FONT_WEIGHT.normal,
+                  opacity: isSelected ? 1 : UI_OPACITY.medium,
+                }}
               >
                 {label}
               </Text>

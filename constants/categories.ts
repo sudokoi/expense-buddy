@@ -7,11 +7,11 @@ import {
   Circle,
   ShoppingCart,
   Building,
-} from "@tamagui/lucide-icons-2"
-import { ComponentProps, JSX } from "react"
+  type LucideIcon,
+} from "lucide-react-native"
 import { CATEGORY_COLORS } from "./category-colors"
 
-type IconComponent = (propsIn: ComponentProps<typeof Utensils>) => JSX.Element
+type IconComponent = LucideIcon
 
 // Ordered by usage frequency (most common first, Other last)
 export const CATEGORIES: {

@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useRef } from "react"
-import { XStack, YStack, Text } from "tamagui"
+import { View, Text } from "react-native"
 
-import { Trash, Edit3 } from "@tamagui/lucide-icons-2"
+import { Trash, Edit3 } from "lucide-react-native"
 
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
@@ -15,6 +15,7 @@ import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { IconActionButton } from "./IconActionButton"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 export type ExpenseRowSubtitleMode = "time" | "date"
 
@@ -40,6 +41,7 @@ export const ExpenseRow = memo(function ExpenseRow({
   onDelete,
 }: ExpenseRowProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
 
   const expenseRef = useRef(expense)
   expenseRef.current = expense
@@ -62,28 +64,37 @@ export const ExpenseRow = memo(function ExpenseRow({
 
   return (
     <ExpenseCard>
-      <XStack flex={1} gap="$section" items="center">
+      <View className="flex-1 flex-row items-center gap-3">
         <DynamicCategoryIcon
           name={categoryInfo.icon}
           size={subtitleMode === "time" ? 20 : 16}
           color={categoryInfo.color as `#${string}`}
         />
-        <YStack flex={1}>
-          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$label">
+        <View className="flex-1">
+          <Text
+            className="text-sm text-foreground"
+            style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+          >
             {expense.note || categoryLabel}
           </Text>
-          <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+          <Text
+            className="text-xs text-foreground"
+            style={{ opacity: UI_OPACITY.subtle }}
+          >
             {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
-            <Text color="$color" opacity={UI_OPACITY.faint} fontSize="$caption">
+            <Text
+              className="text-xs text-foreground"
+              style={{ opacity: UI_OPACITY.faint }}
+            >
               {paymentMethodDisplay}
             </Text>
           ) : null}
-        </YStack>
-      </XStack>
+        </View>
+      </View>
 
-      <XStack gap="$section" items="center">
+      <View className="flex-row items-center gap-3">
         <AmountText type="expense">
           -{formatCurrency(expense.amount, expense.currency)}
         </AmountText>
@@ -91,20 +102,20 @@ export const ExpenseRow = memo(function ExpenseRow({
         {showActions ? (
           <>
             <IconActionButton
-              icon={<Edit3 size={UI_ICON_SIZE.small} />}
+              icon={<Edit3 size={UI_ICON_SIZE.small} color={theme.foreground} />}
               onPress={handleEdit}
               tooltip={t("common.edit")}
               accessibilityLabel={t("common.edit")}
             />
             <IconActionButton
-              icon={<Trash size={UI_ICON_SIZE.small} />}
+              icon={<Trash size={UI_ICON_SIZE.small} color={theme.foreground} />}
               onPress={handleDelete}
               tooltip={t("common.delete")}
               accessibilityLabel={t("common.delete")}
             />
           </>
         ) : null}
-      </XStack>
+      </View>
     </ExpenseCard>
   )
 })

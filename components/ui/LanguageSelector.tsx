@@ -1,16 +1,16 @@
-import { Text, Card, View, useTheme } from "tamagui"
-import { Globe, Languages } from "@tamagui/lucide-icons-2"
+import { View, Text } from "react-native"
+import { Globe, Languages, type LucideIcon } from "lucide-react-native"
 import { Pressable } from "react-native"
-import { getColorValue } from "../../tamagui.config"
+import { Card } from "./Card"
 import { useTranslation } from "react-i18next"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface LanguageSelectorProps {
   value: string
@@ -20,7 +20,7 @@ interface LanguageSelectorProps {
 interface LanguageOption {
   key: string
   label: string
-  Icon: typeof Globe
+  Icon: LucideIcon
 }
 
 const languageOptions: LanguageOption[] = [
@@ -34,14 +34,9 @@ const languageOptions: LanguageOption[] = [
 
 /**
  * LanguageSelector - A selector for app language
- *
- * Displays options: US, UK, IN English, and Hindi
- *
- * @param value - Current language code
- * @param onChange - Callback when language selection changes
  */
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
-  const theme = useTheme()
+  const theme = useThemeColors()
   const { t } = useTranslation()
 
   const options = languageOptions.map((opt) => ({
@@ -50,14 +45,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   }))
 
   return (
-    <Card
-      borderWidth={UI_BORDER_WIDTH.thin}
-      borderColor="$borderColor"
-      p="$micro"
-      rounded="$control"
-      flexDirection="row"
-      flexWrap="wrap"
-    >
+    <Card className="flex-row flex-wrap rounded-control p-1">
       {options.map(({ key, label, Icon }) => {
         const isSelected = value === key
         return (
@@ -73,30 +61,27 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             ]}
           >
             <View
-              flex={1}
-              borderWidth={UI_BORDER_WIDTH.normal}
-              bg={isSelected ? "$backgroundFocus" : "transparent"}
-              borderColor={
-                isSelected ? getColorValue(theme.borderColorFocus) : "transparent"
-              }
-              flexDirection="row"
-              items="center"
-              justify="center"
-              gap={UI_SPACE.control}
-              p={UI_SPACE.control}
-              rounded={UI_RADIUS.control}
-              m={UI_SPACE.micro / 2}
+              className="flex-row items-center justify-center gap-2 rounded-control p-2"
+              style={{
+                borderWidth: UI_BORDER_WIDTH.normal,
+                backgroundColor: isSelected ? theme.muted : "transparent",
+                borderColor: isSelected ? theme.accent : "transparent",
+                margin: UI_SPACE.micro / 2,
+              }}
             >
               <Icon
                 size={UI_ICON_SIZE.regular}
-                color={getColorValue(theme.color)}
-                opacity={isSelected ? 1 : UI_OPACITY.medium}
+                color={theme.foreground}
+                style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
               />
               <Text
-                fontSize="$body"
-                fontWeight={isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal}
-                color="$color"
-                opacity={isSelected ? 1 : UI_OPACITY.medium}
+                className="text-[13px] text-foreground"
+                style={{
+                  fontWeight: isSelected
+                    ? UI_FONT_WEIGHT.semiBold
+                    : UI_FONT_WEIGHT.normal,
+                  opacity: isSelected ? 1 : UI_OPACITY.medium,
+                }}
               >
                 {label}
               </Text>

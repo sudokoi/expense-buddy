@@ -1,22 +1,20 @@
 import { useMemo, memo, useCallback } from "react"
-import { YStack, Text, useTheme, Card } from "tamagui"
+import { Dimensions, ScrollView, Text, View, useColorScheme } from "react-native"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { LineChartDataItem } from "../../utils/analytics/aggregations"
-import { Dimensions, ScrollView, useColorScheme } from "react-native"
 import {
   ACCENT_COLORS,
   getChartColors,
   getOverlayColors,
 } from "../../constants/theme-colors"
-import { getColorValue } from "../../tamagui.config"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import {
   UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
-  UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
 
@@ -35,8 +33,8 @@ export const LineChartSection = memo(function LineChartSection({
 }: LineChartSectionProps) {
   const { t } = useTranslation()
   const symbol = getCurrencySymbol(currencyCode)
-  const theme = useTheme()
-  const colorScheme = useColorScheme() ?? "light"
+  const theme = useThemeColors()
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
   const chartColors = getChartColors(colorScheme)
   const overlayColors = getOverlayColors(colorScheme)
   const screenWidth = Dimensions.get("window").width
@@ -84,11 +82,11 @@ export const LineChartSection = memo(function LineChartSection({
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
     () => ({
-      line: theme.pink9?.val ?? ACCENT_COLORS.primary,
-      area: theme.pink4?.val ?? ACCENT_COLORS.primaryLight,
-      text: theme.color?.val ?? getColorValue(theme.color),
+      line: theme.accent,
+      area: ACCENT_COLORS.primaryLight,
+      text: theme.foreground,
     }),
-    [theme.pink9?.val, theme.pink4?.val, theme.color]
+    [theme.accent, theme.foreground]
   )
 
   // Memoize chart data transformation
@@ -111,12 +109,12 @@ export const LineChartSection = memo(function LineChartSection({
       const item = items[0]
       if (!item) return null
       return (
-        <Card style={styles.tooltipContainer}>
-          <Text fontWeight={UI_FONT_WEIGHT.bold} fontSize="$body">
+        <View style={styles.tooltipContainer}>
+          <Text className="text-[13px] font-bold">
             {symbol}
             {item.value.toFixed(2)}
           </Text>
-        </Card>
+        </View>
       )
     },
     [styles.tooltipContainer, symbol]
@@ -142,11 +140,11 @@ export const LineChartSection = memo(function LineChartSection({
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.trend.title")}>
-        <YStack items="center" justify="center" height={150}>
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
+        <View className="h-[150px] items-center justify-center">
+          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {t("analytics.charts.common.noData")}
           </Text>
-        </YStack>
+        </View>
       </CollapsibleSection>
     )
   }
@@ -186,7 +184,7 @@ export const LineChartSection = memo(function LineChartSection({
 
   return (
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
-      <YStack>
+      <View>
         {needsScroll ? (
           <ScrollView ref={scrollToLatest} horizontal showsHorizontalScrollIndicator>
             {chartContent}
@@ -194,7 +192,7 @@ export const LineChartSection = memo(function LineChartSection({
         ) : (
           chartContent
         )}
-      </YStack>
+      </View>
     </CollapsibleSection>
   )
 })

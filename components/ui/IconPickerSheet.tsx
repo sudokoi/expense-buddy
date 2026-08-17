@@ -1,20 +1,19 @@
 import { useCallback, memo } from "react"
-import { YStack, XStack, Text } from "tamagui"
+import { View, Text } from "react-native"
 import { Pressable } from "react-native"
-import { Check } from "@tamagui/lucide-icons-2"
+import { Check } from "lucide-react-native"
 import { CATEGORY_ICON_GROUPS } from "../../constants/category-icons"
-import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
+import { getReadableTextColor } from "../../constants/theme-colors"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
-  UI_FONT_WEIGHT,
   UI_ICON_SIZE,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface IconPickerSheetProps {
   /** Whether the sheet is open */
@@ -29,7 +28,6 @@ interface IconPickerSheetProps {
 
 /**
  * IconPickerSheet - Full-screen sheet for selecting category icons
- * Displays icons grouped by CATEGORY_ICON_GROUPS with visual selection indicator
  */
 export function IconPickerSheet({
   open,
@@ -38,7 +36,6 @@ export function IconPickerSheet({
   onSelect,
 }: IconPickerSheetProps) {
   const { t } = useTranslation()
-  // Handle icon selection - select and close
   const handleIconSelect = useCallback(
     (iconName: string) => {
       onSelect(iconName)
@@ -56,7 +53,7 @@ export function IconPickerSheet({
       unmountWhenClosed
       scroll
     >
-      <YStack gap="$gutter" pb="$empty">
+      <View className="gap-4 pb-10">
         {CATEGORY_ICON_GROUPS.map((group) => (
           <IconGroup
             key={group.name}
@@ -66,7 +63,7 @@ export function IconPickerSheet({
             onSelect={handleIconSelect}
           />
         ))}
-      </YStack>
+      </View>
     </AppSheetScaffold>
   )
 }
@@ -80,7 +77,6 @@ interface IconGroupProps {
 
 /**
  * IconGroup - Renders a group of icons with a header
- * Memoized to prevent unnecessary re-renders
  */
 const IconGroup = memo(function IconGroup({
   name,
@@ -89,18 +85,14 @@ const IconGroup = memo(function IconGroup({
   onSelect,
 }: IconGroupProps) {
   return (
-    <YStack gap="$control" mb={UI_SPACE.gutter}>
+    <View className="mb-4 gap-2">
       <Text
-        fontSize="$body"
-        fontWeight={UI_FONT_WEIGHT.semiBold}
-        color="$color"
-        opacity={UI_OPACITY.medium}
-        textTransform="uppercase"
-        letterSpacing={0.5}
+        className="text-[13px] font-semibold uppercase text-foreground"
+        style={{ opacity: UI_OPACITY.medium }}
       >
         {name}
       </Text>
-      <XStack flexDirection="row" flexWrap="wrap" gap={UI_SPACE.control}>
+      <View className="flex-row flex-wrap gap-2">
         {icons.map((iconName) => (
           <IconButton
             key={iconName}
@@ -109,8 +101,8 @@ const IconGroup = memo(function IconGroup({
             onSelect={onSelect}
           />
         ))}
-      </XStack>
-    </YStack>
+      </View>
+    </View>
   )
 })
 
@@ -122,31 +114,31 @@ interface IconButtonProps {
 
 /**
  * IconButton - Individual icon button with selection state
- * Memoized to prevent unnecessary re-renders when other icons change
  */
 const IconButton = memo(function IconButton({
   iconName,
   isSelected,
   onSelect,
 }: IconButtonProps) {
+  const theme = useThemeColors()
   const handlePress = useCallback(() => {
     onSelect(iconName)
   }, [onSelect, iconName])
 
-  const selectedBg = ACCENT_COLORS.primary
+  const selectedBg = theme.accent
   const selectedFg = getReadableTextColor(selectedBg)
 
   return (
     <Pressable onPress={handlePress}>
-      <YStack
-        width={UI_ICON_SIZE.huge}
-        height={UI_ICON_SIZE.huge}
-        rounded={UI_RADIUS.chip}
-        items="center"
-        justify="center"
-        borderWidth={UI_BORDER_WIDTH.normal}
-        bg={isSelected ? selectedBg : "$backgroundHover"}
-        borderColor={isSelected ? selectedBg : "$borderColor"}
+      <View
+        className="items-center justify-center rounded-chip"
+        style={{
+          width: UI_ICON_SIZE.huge,
+          height: UI_ICON_SIZE.huge,
+          borderWidth: UI_BORDER_WIDTH.normal,
+          backgroundColor: isSelected ? selectedBg : theme.surface,
+          borderColor: isSelected ? selectedBg : theme.border,
+        }}
       >
         <DynamicCategoryIcon
           name={iconName}
@@ -154,11 +146,14 @@ const IconButton = memo(function IconButton({
           color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (
-          <YStack position="absolute" t={UI_SPACE.micro / 2} r={UI_SPACE.micro / 2}>
+          <View
+            className="absolute"
+            style={{ top: UI_SPACE.micro / 2, right: UI_SPACE.micro / 2 }}
+          >
             <Check size={UI_ICON_SIZE.micro} color={selectedFg} />
-          </YStack>
+          </View>
         )}
-      </YStack>
+      </View>
     </Pressable>
   )
 })

@@ -1,13 +1,12 @@
 import { memo } from "react"
-import { XStack, YStack, Card, Text, H4 } from "tamagui"
-
+import { Text, View } from "react-native"
+import { Card } from "../ui/Card"
 import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
 import { getCurrencySymbol } from "../../utils/currency"
 import type { AnalyticsStatistics } from "../../utils/analytics/statistics"
 import { CARD_COLORS } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
@@ -45,39 +44,38 @@ export const StatisticsCards = memo(function StatisticsCards({
   }
 
   return (
-    <YStack gap={UI_SPACE.section} mb={UI_SPACE.gutter}>
+    <View className="mb-4 gap-3">
       {/* First row */}
-      <XStack gap={UI_SPACE.section}>
+      <View className="flex-row gap-3">
         <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$section"
-          bg={CARD_COLORS.blue.bg}
+          className="flex-1 p-3"
+          style={{ backgroundColor: CARD_COLORS.blue.bg }}
         >
           <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$caption"
-            color={CARD_COLORS.blue.text}
+            className="text-xs font-bold uppercase"
+            style={{ color: CARD_COLORS.blue.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {t("analytics.stats.totalSpent")}
           </Text>
-          <H4
-            mt={UI_SPACE.control}
-            color={CARD_COLORS.blue.accent}
+          <Text
+            className="mt-2 text-lg font-semibold"
+            style={{ color: CARD_COLORS.blue.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {symbol}
             {statistics.totalSpending.toFixed(2)}
-          </H4>
+          </Text>
           {showSubtext && (
-            <Text fontSize="$caption" color={CARD_COLORS.blue.text} numberOfLines={1}>
+            <Text
+              className="text-xs"
+              style={{ color: CARD_COLORS.blue.text }}
+              numberOfLines={1}
+            >
               {t("analytics.stats.ofTotal", {
                 total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
               })}
@@ -86,66 +84,60 @@ export const StatisticsCards = memo(function StatisticsCards({
         </Card>
 
         <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$section"
-          bg={CARD_COLORS.green.bg}
+          className="flex-1 p-3"
+          style={{ backgroundColor: CARD_COLORS.green.bg }}
         >
           <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$caption"
-            color={CARD_COLORS.green.text}
+            className="text-xs font-bold uppercase"
+            style={{ color: CARD_COLORS.green.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {t("analytics.stats.dailyAvg")}
           </Text>
-          <H4
-            mt={UI_SPACE.control}
-            color={CARD_COLORS.green.accent}
+          <Text
+            className="mt-2 text-lg font-semibold"
+            style={{ color: CARD_COLORS.green.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {symbol}
             {statistics.averageDaily.toFixed(2)}
-          </H4>
+          </Text>
           {showSubtext && (
-            <Text fontSize="$caption" color={CARD_COLORS.green.text} numberOfLines={1}>
+            <Text
+              className="text-xs"
+              style={{ color: CARD_COLORS.green.text }}
+              numberOfLines={1}
+            >
               {t("analytics.stats.ofTotal", {
                 total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
               })}
             </Text>
           )}
         </Card>
-      </XStack>
+      </View>
 
       {/* Second row */}
-      <XStack gap={UI_SPACE.section}>
+      <View className="flex-row gap-3">
         <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$section"
-          bg={CARD_COLORS.orange.bg}
+          className="flex-1 p-3"
+          style={{ backgroundColor: CARD_COLORS.orange.bg }}
         >
           <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$caption"
-            color={CARD_COLORS.orange.text}
+            className="text-xs font-bold uppercase"
+            style={{ color: CARD_COLORS.orange.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {t("analytics.stats.topCategory")}
           </Text>
-          <H4
-            mt={UI_SPACE.control}
-            color={CARD_COLORS.orange.accent}
+          <Text
+            className="mt-2 text-lg font-semibold"
+            style={{ color: CARD_COLORS.orange.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.7}
@@ -153,15 +145,19 @@ export const StatisticsCards = memo(function StatisticsCards({
             {statistics.highestCategory?.category === "Other"
               ? t("settings.categories.other")
               : (statistics.highestCategory?.category ?? "—")}
-          </H4>
+          </Text>
           {statistics.highestCategory && (
-            <Text fontSize="$caption" color={CARD_COLORS.orange.text}>
+            <Text className="text-xs" style={{ color: CARD_COLORS.orange.text }}>
               {symbol}
               {statistics.highestCategory.amount.toFixed(2)}
             </Text>
           )}
           {showSubtext && (
-            <Text fontSize="$caption" color={CARD_COLORS.orange.text} numberOfLines={1}>
+            <Text
+              className="text-xs"
+              style={{ color: CARD_COLORS.orange.text }}
+              numberOfLines={1}
+            >
               {t("analytics.stats.ofTotal", {
                 total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
               })}
@@ -170,48 +166,47 @@ export const StatisticsCards = memo(function StatisticsCards({
         </Card>
 
         <Card
-          flex={1}
-          borderWidth={UI_BORDER_WIDTH.thin}
-          borderColor="$borderColor"
-          p="$section"
-          bg={CARD_COLORS.purple.bg}
+          className="flex-1 p-3"
+          style={{ backgroundColor: CARD_COLORS.purple.bg }}
         >
           <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            textTransform="uppercase"
-            fontSize="$caption"
-            color={CARD_COLORS.purple.text}
+            className="text-xs font-bold uppercase"
+            style={{ color: CARD_COLORS.purple.text }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {t("analytics.stats.peakDay")}
           </Text>
-          <H4
-            mt={UI_SPACE.control}
-            color={CARD_COLORS.purple.accent}
+          <Text
+            className="mt-2 text-lg font-semibold"
+            style={{ color: CARD_COLORS.purple.accent }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
             {statistics.highestDay ? formatDateStr(statistics.highestDay.date) : "—"}
-          </H4>
+          </Text>
           {statistics.highestDay && (
-            <Text fontSize="$caption" color={CARD_COLORS.purple.text}>
+            <Text className="text-xs" style={{ color: CARD_COLORS.purple.text }}>
               {symbol}
               {statistics.highestDay.amount.toFixed(2)}
             </Text>
           )}
           {showSubtext && (
-            <Text fontSize="$caption" color={CARD_COLORS.purple.text} numberOfLines={1}>
+            <Text
+              className="text-xs"
+              style={{ color: CARD_COLORS.purple.text }}
+              numberOfLines={1}
+            >
               {t("analytics.stats.ofTotal", {
                 total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
               })}
             </Text>
           )}
         </Card>
-      </XStack>
-    </YStack>
+      </View>
+    </View>
   )
 })
 

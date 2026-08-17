@@ -1,6 +1,6 @@
-import { Button, Text, View, useTheme } from "tamagui"
-import { useCallback, useEffect, useRef, useState, ComponentProps } from "react"
-import { StyleSheet } from "react-native"
+import type { ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
   Easing,
   cancelAnimation,
@@ -10,9 +10,10 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { UI_SPACE, UI_RADIUS } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface IconActionButtonProps {
-  icon: ComponentProps<typeof Button>["icon"]
+  icon: ReactNode
   onPress: () => void
   tooltip?: string
   disabled?: boolean
@@ -25,16 +26,13 @@ interface IconActionButtonProps {
 
 /**
  * Wraps content in a continuously rotating view while `active` is true.
- * Used to communicate an in-progress action (e.g. a running sync). Wrapping the
- * whole button (rather than just the icon element) preserves Tamagui's themed
- * icon color/size injection.
  */
 function SpinningIcon({
   active,
   children,
 }: {
   active: boolean
-  children: React.ReactNode
+  children: ReactNode
 }) {
   const rotation = useSharedValue(0)
 
@@ -71,7 +69,7 @@ export function IconActionButton({
   spinning = false,
   tooltipAlign = "right",
 }: IconActionButtonProps) {
-  const theme = useTheme()
+  const theme = useThemeColors()
   const [showTooltip, setShowTooltip] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -104,27 +102,23 @@ export function IconActionButton({
   return (
     <View>
       <SpinningIcon active={spinning}>
-        <Button
-          chromeless
-          size="$compact"
-          px={UI_SPACE.micro}
-          py={UI_SPACE.micro}
-          icon={icon}
+        <Pressable
           onPress={handlePress}
           onLongPress={handleLongPress}
           disabled={disabled}
           aria-label={accessibilityLabel ?? tooltip}
-        />
+          className="items-center justify-center p-1"
+        >
+          {icon}
+        </Pressable>
       </SpinningIcon>
       {showTooltip && tooltip && (
         <View
           style={[styles.tooltipContainer, tooltipContainerStyle[tooltipAlign]]}
           pointerEvents="none"
         >
-          <View style={[styles.tooltip, { backgroundColor: theme.color?.val }]}>
-            <Text fontSize="$body" color="$background">
-              {tooltip}
-            </Text>
+          <View style={[styles.tooltip, { backgroundColor: theme.foreground }]}>
+            <Text className="text-[13px] text-background">{tooltip}</Text>
           </View>
         </View>
       )}

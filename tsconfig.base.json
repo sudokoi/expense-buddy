@@ -1,17 +1,15 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "rootDir": ".",
     "importHelpers": true,
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true,
     "esModuleInterop": true,
     "preserveSymlinks": true,
     "incremental": true,
     "jsx": "react-jsx",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmitOnError": false,
     "noImplicitAny": false,
     "noImplicitReturns": false,

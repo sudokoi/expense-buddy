@@ -1,9 +1,8 @@
 import { useState, useCallback, useMemo } from "react"
-import { YStack, XStack, Text, Button, Label, Switch } from "tamagui"
-import { Alert, Linking, Platform, Pressable } from "react-native"
+import { Alert, Linking, Platform, Pressable, Text, View } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
 import * as Clipboard from "expo-clipboard"
-import { ChevronRight } from "@tamagui/lucide-icons-2"
+import { ChevronRight } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
@@ -24,10 +23,13 @@ import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSe
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
 import { AppInfoSection } from "../../components/ui/settings/AppInfoSection"
 import { LocalizationSection } from "../../components/ui/settings/LocalizationSection"
+import { Button } from "../../components/ui/Button"
+import { Label } from "../../components/ui/Label"
+import { Switch } from "../../components/ui/Switch"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
-import { SEMANTIC_COLORS } from "../../constants/theme-colors"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_RADIUS, UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { requestBackgroundSmsPermissions } from "../../services/background-sms/background-sms-permissions"
 
 /**
@@ -44,6 +46,7 @@ function countAttachedLogEntries(logs: string): number {
 export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
+  const theme = useThemeColors()
 
   const { state, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
@@ -437,7 +440,7 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer>
-      <YStack gap="$gutter" maxW={UI_SPACE.empty * 15} self="center" width="100%">
+      <View className="max-w-[600px] w-full self-center gap-4">
         <SettingsSection
           title={t("settings.sections.sync")}
           description={t("settings.sync.description")}
@@ -454,12 +457,12 @@ export default function SettingsScreen() {
           />
 
           {isConfigured && (
-            <YStack gap="$gutter" mt={UI_SPACE.control}>
+            <View className="gap-4 mt-2">
               <Button
-                size="$control"
+                size="control"
                 onPress={handleSync}
                 disabled={isSyncing}
-                theme="accent"
+                variant="accent"
               >
                 {syncButtonText}
               </Button>
@@ -472,7 +475,7 @@ export default function SettingsScreen() {
                 onAutoSyncTimingChange={setAutoSyncTiming}
                 onSyncSettingsChange={handleSyncSettingsToggle}
               />
-            </YStack>
+            </View>
           )}
         </SettingsSection>
 
@@ -482,54 +485,42 @@ export default function SettingsScreen() {
             description={t("settings.smsImport.description")}
             gap="$gutter"
           >
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+            <View className="flex-row flex-wrap gap-2">
               <Button onPress={handleScanSmsImports} disabled={isScanningSmsImports}>
                 {isScanningSmsImports
                   ? t("settings.smsImport.actions.scanning")
                   : t("settings.smsImport.actions.scan")}
               </Button>
-            </XStack>
+            </View>
 
             {pendingSmsImportItems.length > 0 ? (
-              <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+              <View className="flex-row flex-wrap gap-2">
                 <Button onPress={openSmsImportReview}>
                   {t("settings.smsImport.actions.reviewWithPending", {
                     count: pendingSmsImportItems.length,
                   })}
                 </Button>
-              </XStack>
+              </View>
             ) : null}
 
-            <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+            <Text className="text-xs text-foreground opacity-60">
               {t("settings.smsImport.helper")}
             </Text>
 
-            <XStack
-              bg="$backgroundHover"
-              px="$section"
-              py="$section"
-              items="center"
-              justify="space-between"
-              rounded={UI_RADIUS.surface}
-            >
-              <YStack flex={1} gap="$micro">
+            <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+              <View className="flex-1 gap-1">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
-                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+                <Text className="text-xs text-foreground opacity-60">
                   {t("settings.smsImport.backgroundAlertsHelp")}
                 </Text>
-              </YStack>
+              </View>
               <Switch
-                size="$control"
                 checked={settings.backgroundSmsImportEnabled}
                 onCheckedChange={(checked) => {
                   void handleBackgroundSmsToggle(checked)
                 }}
-                bg="$gray8"
-                activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-              >
-                <Switch.Thumb />
-              </Switch>
-            </XStack>
+              />
+            </View>
           </SettingsSection>
         ) : null}
 
@@ -543,34 +534,27 @@ export default function SettingsScreen() {
             role="button"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
-            <XStack
-              bg="$backgroundHover"
-              items="center"
-              justify="space-between"
-              px={UI_SPACE.section}
-              py={UI_SPACE.section}
-              rounded={UI_RADIUS.surface}
-            >
-              <YStack gap="$micro" flex={1} pointerEvents="none">
-                <Label color="$color" opacity={UI_OPACITY.strong}>
+            <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">
+              <View className="flex-1 gap-1" pointerEvents="none">
+                <Label className="opacity-80">
                   {t("settings.payment.manageTitle")}
                 </Label>
-                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
+                <Text className="text-[13px] text-foreground opacity-60">
                   {t("settings.payment.summary", {
                     defaultMethod: defaultPaymentMethodLabel,
                     instrumentCount: activePaymentInstrumentCount,
                   })}
                 </Text>
-                <Text color="$color" opacity={UI_OPACITY.faint} fontSize="$caption">
+                <Text className="text-xs text-foreground opacity-50">
                   {t("settings.payment.manageHelp")}
                 </Text>
-              </YStack>
+              </View>
               <ChevronRight
                 size={UI_ICON_SIZE.medium}
-                color="$color"
-                opacity={UI_OPACITY.subtle}
+                color={theme.foreground}
+                style={{ opacity: UI_OPACITY.subtle }}
               />
-            </XStack>
+            </View>
           </Pressable>
         </SettingsSection>
 
@@ -579,58 +563,34 @@ export default function SettingsScreen() {
           description={t("settings.featureFlags.description")}
           gap="$gutter"
         >
-          <XStack
-            bg="$backgroundHover"
-            px="$section"
-            py="$section"
-            items="center"
-            justify="space-between"
-            rounded={UI_RADIUS.surface}
-          >
-            <YStack flex={1} gap="$micro">
+          <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+            <View className="flex-1 gap-1">
               <Label>{t("settings.general.mathEntry")}</Label>
-              <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+              <Text className="text-xs text-foreground opacity-60">
                 {t("settings.general.mathEntryHelp")}
               </Text>
-            </YStack>
+            </View>
             <Switch
-              size="$control"
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
-              bg="$gray8"
-              activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-            >
-              <Switch.Thumb />
-            </Switch>
-          </XStack>
+            />
+          </View>
 
           {Platform.OS === "android" ? (
-            <XStack
-              bg="$backgroundHover"
-              px="$section"
-              py="$section"
-              items="center"
-              justify="space-between"
-              rounded={UI_RADIUS.surface}
-            >
-              <YStack flex={1} gap="$micro">
+            <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+              <View className="flex-1 gap-1">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
-                <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+                <Text className="text-xs text-foreground opacity-60">
                   {t("settings.featureFlags.mlOnlySmsImportsHelp")}
                 </Text>
-              </YStack>
+              </View>
               <Switch
-                size="$control"
                 checked={settings.useMlOnlyForSmsImports}
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
                 }
-                bg="$gray8"
-                activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-              >
-                <Switch.Thumb />
-              </Switch>
-            </XStack>
+              />
+            </View>
           ) : null}
         </SettingsSection>
 
@@ -639,16 +599,12 @@ export default function SettingsScreen() {
           description={t("settings.general.description")}
           gap="$gutter"
         >
-          <YStack gap="$control">
+          <View className="gap-2">
             <Label>{t("settings.appearance.theme")}</Label>
-            <YStack
-              bg="$backgroundHover"
-              p="$section"
-              style={{ borderRadius: UI_RADIUS.surface }}
-            >
+            <View className="bg-surface p-3 rounded-card">
               <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
-            </YStack>
-          </YStack>
+            </View>
+          </View>
         </SettingsSection>
 
         <SettingsSection
@@ -676,7 +632,7 @@ export default function SettingsScreen() {
             onReportIssue={handleReportIssue}
           />
         </SettingsSection>
-      </YStack>
+      </View>
     </ScreenContainer>
   )
 }

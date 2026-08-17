@@ -67,15 +67,18 @@ jest.mock("react-native", () => ({
   Text: "Text",
 }))
 
-// Mock @tamagui/lucide-icons-2
-jest.mock("@tamagui/lucide-icons-2", () => {
-  const React = require("react")
-  const MockIcon = (props: any) => React.createElement("View", props)
-  return {
-    Banknote: MockIcon,
-    Smartphone: MockIcon,
-    CreditCard: MockIcon,
-    Building: MockIcon,
-    Circle: MockIcon,
-  }
+// Mock lucide-react-native icons. Returning a no-op component (instead of
+// React.createElement) avoids the react-native-web css-interop babel plugin
+// injecting out-of-scope variables into the jest.mock factory.
+jest.mock("lucide-react-native", () => {
+  const MockIcon = () => null
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        if (prop === "__esModule") return true
+        return MockIcon
+      },
+    }
+  )
 })

@@ -1,10 +1,9 @@
 import { useState } from "react"
-import { XStack, Input, Text, YStack } from "tamagui"
+import { Text, View } from "react-native"
+import { Input } from "../ui/Input"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSettings } from "../../stores/hooks"
 import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
-import { UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface AmountRangeFilterProps {
   minAmount: number | null
@@ -45,49 +44,29 @@ export function AmountRangeFilter({
   }
 
   return (
-    <YStack gap="$control">
-      <XStack gap="$control" style={{ alignItems: "center" }}>
+    <View className="gap-2">
+      <View className="flex-row items-center gap-2">
         <Input
-          flex={1}
-          bg="$background"
-          size="$control"
-          borderWidth={UI_BORDER_WIDTH.normal}
-          borderColor="$borderColor"
-          focusStyle={{
-            borderColor: ACCENT_COLORS.primary,
-          }}
+          className="flex-1 bg-background"
           value={min}
           onChangeText={setMin}
           onBlur={handleBlur}
           placeholder={`${symbol} Min`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
-          placeholderTextColor="$color"
         />
-        <Text>to</Text>
+        <Text className="text-foreground">to</Text>
         <Input
-          flex={1}
-          bg="$background"
-          size="$control"
-          borderWidth={UI_BORDER_WIDTH.normal}
-          borderColor="$borderColor"
-          focusStyle={{
-            borderColor: ACCENT_COLORS.primary,
-          }}
+          className="flex-1 bg-background"
           value={max}
           onChangeText={setMax}
           onBlur={handleBlur}
           placeholder={`${symbol} Max`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
-          placeholderTextColor="$color"
         />
-      </XStack>
-      {error && (
-        <Text color="$red10" fontSize="$caption">
-          {error}
-        </Text>
-      )}
-    </YStack>
+      </View>
+      {error && <Text className="text-xs text-error">{error}</Text>}
+    </View>
   )
 }

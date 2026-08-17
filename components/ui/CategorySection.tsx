@@ -1,18 +1,19 @@
-import { useCallback, useMemo, memo } from "react"
-import { YStack, XStack, Text, Button, Accordion } from "tamagui"
+import { useCallback, useMemo, memo, useState } from "react"
+import { View, Text, Pressable } from "react-native"
 
-import { Plus, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
+import { Plus, ChevronDown, ChevronUp } from "lucide-react-native"
 import { Category } from "../../types/category"
 import { CategoryListItem } from "./CategoryListItem"
+import { Button } from "./Button"
 import { useTranslation } from "react-i18next"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CategorySectionProps {
   /** List of categories to display */
@@ -43,6 +44,8 @@ export const CategorySection = memo(function CategorySection({
   getExpenseCount,
 }: CategorySectionProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
+  const [expanded, setExpanded] = useState(false)
 
   // Separate "Other" category from reorderable categories
   // Categories are already sorted by order in useCategories hook
@@ -57,11 +60,9 @@ export const CategorySection = memo(function CategorySection({
     (index: number) => {
       if (index <= 0) return
       const labels = reorderableCategories.map((c) => c.label)
-      // Swap with previous
       const temp = labels[index]
       labels[index] = labels[index - 1]
       labels[index - 1] = temp
-      // Append "Other" at the end
       if (otherCategory) {
         labels.push("Other")
       }
@@ -75,11 +76,9 @@ export const CategorySection = memo(function CategorySection({
     (index: number) => {
       if (index >= reorderableCategories.length - 1) return
       const labels = reorderableCategories.map((c) => c.label)
-      // Swap with next
       const temp = labels[index]
       labels[index] = labels[index + 1]
       labels[index + 1] = temp
-      // Append "Other" at the end
       if (otherCategory) {
         labels.push("Other")
       }
@@ -89,173 +88,145 @@ export const CategorySection = memo(function CategorySection({
   )
 
   return (
-    <YStack gap="$section">
-      <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold} color="$color">
+    <View className="gap-3">
+      <Text
+        className="text-sm font-semibold text-foreground"
+        style={{ fontWeight: UI_FONT_WEIGHT.semiBold }}
+      >
         {t("settings.sections.categories")}
       </Text>
-      <Text color="$color" opacity={UI_OPACITY.medium} fontSize="$body">
+      <Text
+        className="text-[13px] text-foreground"
+        style={{ opacity: UI_OPACITY.medium }}
+      >
         {t("settings.categories.description")}
       </Text>
 
-      <Accordion type="single" collapsible defaultValue={undefined}>
-        <Accordion.Item value="category-list">
-          <Accordion.Trigger
-            bg="$backgroundHover"
-            flexDirection="row"
-            justify="space-between"
-            items="center"
-            p={UI_SPACE.section}
-            rounded={UI_RADIUS.control}
-          >
-            {({ open }: { open: boolean }) => (
-              <>
-                <XStack
-                  flexDirection="row"
-                  items="center"
-                  flex={1}
-                  gap={UI_SPACE.control}
+      <View>
+        <Pressable
+          onPress={() => setExpanded((v) => !v)}
+          className="flex-row items-center justify-between rounded-control bg-surface p-3"
+        >
+          <View className="flex-1 flex-row items-center gap-2">
+            <Text
+              className="text-foreground"
+              style={{ fontWeight: UI_FONT_WEIGHT.medium }}
+            >
+              {t("settings.categories.manage")}
+            </Text>
+            <Text
+              className="text-xs text-foreground"
+              style={{ opacity: UI_OPACITY.subtle }}
+            >
+              ({categories.length})
+            </Text>
+          </View>
+          {expanded ? (
+            <ChevronUp
+              size={UI_ICON_SIZE.medium}
+              color={theme.foreground}
+              style={{ opacity: UI_OPACITY.subtle }}
+            />
+          ) : (
+            <ChevronDown
+              size={UI_ICON_SIZE.medium}
+              color={theme.foreground}
+              style={{ opacity: UI_OPACITY.subtle }}
+            />
+          )}
+        </Pressable>
+
+        {expanded && (
+          <View className="gap-2 px-2 pt-3">
+            <View className="gap-2">
+              {reorderableCategories.map((category, index) => (
+                <View
+                  key={category.label}
+                  className="flex-row items-center gap-1"
                 >
-                  <Text fontWeight={UI_FONT_WEIGHT.medium}>
-                    {t("settings.categories.manage")}
-                  </Text>
-                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
-                    ({categories.length})
-                  </Text>
-                </XStack>
-                {open ? (
-                  <ChevronUp
-                    size={UI_ICON_SIZE.medium}
-                    color="$color"
-                    opacity={UI_OPACITY.subtle}
-                  />
-                ) : (
-                  <ChevronDown
-                    size={UI_ICON_SIZE.medium}
-                    color="$color"
-                    opacity={UI_OPACITY.subtle}
-                  />
-                )}
-              </>
-            )}
-          </Accordion.Trigger>
-          <Accordion.Content p={UI_SPACE.control} pt={UI_SPACE.section}>
-            <YStack gap="$control">
-              {/* Reorderable category list */}
-              <YStack gap="$control">
-                {reorderableCategories.map((category, index) => (
-                  <XStack
-                    key={category.label}
-                    flexDirection="row"
-                    items="center"
-                    gap={UI_SPACE.micro}
-                  >
-                    {/* Reorder buttons */}
-                    <YStack
-                      flexDirection="column"
-                      items="center"
-                      justify="center"
-                      gap={0}
-                      width={24}
+                  <View className="w-6 items-center justify-center">
+                    <Pressable
+                      onPress={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                      aria-label={`Move ${category.label} up`}
+                      style={{ opacity: index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium }}
                     >
-                      <Button
-                        size="$chip"
-                        chromeless
-                        icon={<ChevronUp size={UI_ICON_SIZE.small} />}
-                        onPress={() => handleMoveUp(index)}
-                        disabled={index === 0}
-                        opacity={index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium}
-                        aria-label={`Move ${category.label} up`}
-                      />
-                      <Button
-                        size="$chip"
-                        chromeless
-                        icon={<ChevronDown size={UI_ICON_SIZE.small} />}
-                        onPress={() => handleMoveDown(index)}
-                        disabled={index === reorderableCategories.length - 1}
-                        opacity={
+                      <ChevronUp size={UI_ICON_SIZE.small} color={theme.foreground} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleMoveDown(index)}
+                      disabled={index === reorderableCategories.length - 1}
+                      aria-label={`Move ${category.label} down`}
+                      style={{
+                        opacity:
                           index === reorderableCategories.length - 1
                             ? UI_OPACITY.minimal
-                            : UI_OPACITY.medium
-                        }
-                        aria-label={`Move ${category.label} down`}
-                      />
-                    </YStack>
-
-                    {/* Category item */}
-                    <YStack flex={1}>
-                      <CategoryListItem
-                        category={category}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        expenseCount={getExpenseCount?.(category.label) ?? 0}
-                        canDelete={true}
-                      />
-                    </YStack>
-                  </XStack>
-                ))}
-              </YStack>
-
-              {/* "Other" category - always at bottom, not reorderable */}
-              {otherCategory && (
-                <YStack
-                  mt={UI_SPACE.control}
-                  pt={UI_SPACE.control}
-                  borderTopWidth={UI_BORDER_WIDTH.thin}
-                  borderColor="$borderColor"
-                >
-                  <XStack flexDirection="row" items="center" gap={UI_SPACE.micro}>
-                    {/* Empty space where reorder buttons would be */}
-                    <YStack
-                      flexDirection="column"
-                      items="center"
-                      justify="center"
-                      gap={0}
-                      width={24}
-                      opacity={UI_OPACITY.minimal}
+                            : UI_OPACITY.medium,
+                      }}
                     >
-                      <ChevronUp size={UI_ICON_SIZE.small} />
-                      <ChevronDown size={UI_ICON_SIZE.small} />
-                    </YStack>
+                      <ChevronDown size={UI_ICON_SIZE.small} color={theme.foreground} />
+                    </Pressable>
+                  </View>
 
-                    {/* Category item */}
-                    <YStack flex={1}>
-                      <CategoryListItem
-                        category={otherCategory}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        expenseCount={getExpenseCount?.(otherCategory.label) ?? 0}
-                        canDelete={false}
-                      />
-                    </YStack>
-                  </XStack>
-                  <Text
-                    fontSize="$micro"
-                    color="$color"
-                    opacity={UI_OPACITY.ghost}
-                    style={{ paddingLeft: UI_SPACE.block + UI_SPACE.micro }}
+                  <View className="flex-1">
+                    <CategoryListItem
+                      category={category}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      expenseCount={getExpenseCount?.(category.label) ?? 0}
+                      canDelete={true}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {otherCategory && (
+              <View
+                className="mt-2 border-t border-border pt-2"
+                style={{ borderTopWidth: UI_BORDER_WIDTH.thin }}
+              >
+                <View className="flex-row items-center gap-1">
+                  <View
+                    className="w-6 items-center justify-center"
+                    style={{ opacity: UI_OPACITY.minimal }}
                   >
-                    {t("settings.categories.otherHelp")}
-                  </Text>
-                </YStack>
-              )}
+                    <ChevronUp size={UI_ICON_SIZE.small} color={theme.foreground} />
+                    <ChevronDown size={UI_ICON_SIZE.small} color={theme.foreground} />
+                  </View>
 
-              {/* Add Category button */}
-              <YStack mt={UI_SPACE.gutter}>
-                <Button
-                  size="$control"
-                  onPress={onAdd}
-                  icon={<Plus size={UI_ICON_SIZE.regular} />}
-                  theme="accent"
-                  pressStyle={{ opacity: UI_OPACITY.medium }}
+                  <View className="flex-1">
+                    <CategoryListItem
+                      category={otherCategory}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      expenseCount={getExpenseCount?.(otherCategory.label) ?? 0}
+                      canDelete={false}
+                    />
+                  </View>
+                </View>
+                <Text
+                  className="text-[11px] text-foreground"
+                  style={{
+                    opacity: UI_OPACITY.ghost,
+                    paddingLeft: UI_SPACE.block + UI_SPACE.micro,
+                  }}
                 >
-                  {t("settings.categories.add")}
-                </Button>
-              </YStack>
-            </YStack>
-          </Accordion.Content>
-        </Accordion.Item>
-      </Accordion>
-    </YStack>
+                  {t("settings.categories.otherHelp")}
+                </Text>
+              </View>
+            )}
+
+            <View className="mt-4">
+              <Button size="control" variant="accent" className="gap-2" onPress={onAdd}>
+                <Plus size={UI_ICON_SIZE.regular} color={theme.accentForeground} />
+                {t("settings.categories.add")}
+              </Button>
+            </View>
+          </View>
+        )}
+      </View>
+    </View>
   )
 })
 

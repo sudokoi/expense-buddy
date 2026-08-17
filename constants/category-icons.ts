@@ -1,5 +1,4 @@
-import type React from "react"
-import type { IconProps } from "@tamagui/helpers-icon"
+import type { LucideIcon } from "lucide-react-native"
 import {
   Utensils,
   Coffee,
@@ -65,7 +64,7 @@ import {
   Calendar,
   Clock,
   MapPin,
-} from "@tamagui/lucide-icons-2"
+} from "lucide-react-native"
 
 /**
  * Curated icon list for expense categories
@@ -76,7 +75,7 @@ import {
  * Static icon component map for tree-shaking.
  * Each icon is individually imported so bundlers can tree-shake unused icons.
  */
-export const CATEGORY_ICON_MAP: Record<string, (props: IconProps) => React.JSX.Element> =
+export const CATEGORY_ICON_MAP: Record<string, LucideIcon> =
   {
     Utensils,
     Coffee,

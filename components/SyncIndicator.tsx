@@ -1,5 +1,5 @@
 import React from "react"
-import { CheckCircle, XCircle } from "@tamagui/lucide-icons-2"
+import { CheckCircle, XCircle } from "lucide-react-native"
 import { View, StyleSheet, useColorScheme, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
   const insets = useSafeAreaInsets()
-  const colorScheme = useColorScheme() ?? "light"
+  const colorScheme = useColorScheme() === "dark" ? "dark" : "light"
   const overlayColors = getOverlayColors(colorScheme)
 
   // Derive visibility directly from machine state

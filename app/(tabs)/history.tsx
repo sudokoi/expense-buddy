@@ -5,9 +5,9 @@ import React, {
   useMemo,
   useState,
 } from "react"
-import { YStack, Text, XStack, Button, H6, Dialog, ScrollView } from "tamagui"
-import { Filter, X } from "@tamagui/lucide-icons-2"
-import { BackHandler, View } from "react-native"
+import { Text, View, ScrollView, Modal } from "react-native"
+import { Filter, X } from "lucide-react-native"
+import { BackHandler } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FlashList } from "@shopify/flash-list"
 import { useRouter, Href } from "expo-router"
@@ -27,6 +27,7 @@ import type { Category } from "../../types/category"
 import { syncDownMore } from "../../services/sync-manager"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
+import { Button } from "../../components/ui/Button"
 import { useTranslation } from "react-i18next"
 import {
   formatListBreakdown,
@@ -39,11 +40,10 @@ import { applyAllFilters } from "../../utils/analytics/filters"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 import {
-  UI_RADIUS,
   UI_SPACE,
   UI_OPACITY,
-  UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -99,22 +99,19 @@ const FilterChip = React.memo(function FilterChip({
   label: string
   onRemove: () => void
 }) {
+  const theme = useThemeColors()
   return (
     <Button
-      size="$chip"
-      px="$control"
-      borderWidth={UI_BORDER_WIDTH.thin}
-      borderColor="$borderColor"
+      size="chip"
+      variant="outline"
+      className="gap-1 rounded-round px-2"
       onPress={() => {
         logAsync("INFO", "UI_ACTION", "REMOVE_FILTER_CHIP")
         onRemove()
       }}
-      style={{
-        borderRadius: UI_RADIUS.round,
-      }}
-      iconAfter={X}
     >
-      <Button.Text numberOfLines={1}>{label}</Button.Text>
+      <Text numberOfLines={1}>{label}</Text>
+      <X size={14} color={theme.foreground} />
     </Button>
   )
 })
@@ -122,6 +119,7 @@ const FilterChip = React.memo(function FilterChip({
 export default function HistoryScreen() {
   const { t } = useTranslation()
   const router = useRouter()
+  const theme = useThemeColors()
   const { state, deleteExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const { syncConfig, settings } = useSettings()
@@ -463,11 +461,14 @@ export default function HistoryScreen() {
     }) => {
       if (item.type === "header") {
         return (
-          <YStack background="$background" py={UI_SPACE.control}>
-            <H6 color="$color" opacity={UI_OPACITY.strong}>
+          <View className="bg-background py-2">
+            <Text
+              className="text-base font-semibold text-foreground"
+              style={{ opacity: UI_OPACITY.strong }}
+            >
               {item.title}
-            </H6>
-          </YStack>
+            </Text>
+          </View>
         )
       }
 
@@ -511,16 +512,16 @@ export default function HistoryScreen() {
   const ListFooterComponent = useMemo(
     () =>
       shouldShowLoadMore ? (
-        <YStack p={UI_SPACE.gutter} items="center">
+        <View className="items-center p-4">
           <Button
-            size="$control"
-            theme="accent"
+            size="control"
+            variant="accent"
             onPress={handleLoadMore}
             disabled={isLoadingMore}
           >
             {isLoadingMore ? t("history.loading") : t("history.loadMore")}
           </Button>
-        </YStack>
+        </View>
       ) : null,
     [handleLoadMore, isLoadingMore, shouldShowLoadMore, t]
   )
@@ -554,40 +555,34 @@ export default function HistoryScreen() {
     logAsync("INFO", "UI_ACTION", "RESET_FILTERS")
   }, [applyFilters, saveFilters])
 
+  const filterIconColor = activeCount > 0 ? theme.accentForeground : theme.foreground
+
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
-      <YStack
-        flex={1}
-        bg="$background"
-        items="center"
-        justify="center"
-        p={UI_SPACE.gutter}
-      >
-        <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <Text
+          style={[layoutStyles.emptyText, { opacity: UI_OPACITY.strong }]}
+          className="text-foreground"
+        >
           {t("history.emptyTitle")}
         </Text>
         <Text
-          style={layoutStyles.emptySubtext}
-          color="$color"
-          opacity={UI_OPACITY.subtle}
+          style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.subtle }]}
+          className="text-foreground"
         >
           {t("history.emptySubtitle")}
         </Text>
-      </YStack>
+      </View>
     )
   }
 
   // Filtered empty state
   if (filteredExpenses.length === 0 && hasActive) {
     return (
-      <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
+      <View className="flex-1 bg-background px-4 pt-4">
         {/* Filter row: chips + filter button inline */}
-        <XStack
-          mb={UI_SPACE.section}
-          gap="$control"
-          style={{ alignItems: "center", overflow: "visible" }}
-        >
+        <View className="mb-3 flex-row items-center gap-2">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -600,45 +595,47 @@ export default function HistoryScreen() {
           </ScrollView>
 
           <Button
-            size="$chip"
-            px="$control"
-            icon={Filter}
+            size="chip"
+            variant={activeCount > 0 ? "accent" : undefined}
+            className="gap-2 px-2"
             onPress={handleOpenFilterSheet}
-            theme={activeCount > 0 ? "accent" : undefined}
           >
+            <Filter size={16} color={filterIconColor} />
             {activeCount > 0
               ? `${t("common.filters")} (${activeCount})`
               : t("common.filters")}
           </Button>
-        </XStack>
+        </View>
 
-        <YStack flex={1} items="center" justify="center" p={UI_SPACE.gutter}>
-          <Text style={layoutStyles.emptyText} color="$color" opacity={UI_OPACITY.strong}>
+        <View className="flex-1 items-center justify-center p-4">
+          <Text
+            style={[layoutStyles.emptyText, { opacity: UI_OPACITY.strong }]}
+            className="text-foreground"
+          >
             {t("history.noResultsTitle")}
           </Text>
           <Text
-            style={layoutStyles.emptySubtext}
-            color="$color"
-            opacity={UI_OPACITY.subtle}
+            style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.subtle }]}
+            className="text-foreground"
           >
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
-            size="$control"
+            size="control"
             onPress={handleResetFilters}
-            style={{ marginTop: UI_SPACE.gutter }}
+            className="mt-4"
           >
             {t("common.clearFilters")}
           </Button>
-        </YStack>
-      </YStack>
+        </View>
+      </View>
     )
   }
 
   return (
-    <YStack flex={1} bg="$background" px={UI_SPACE.gutter} pt={UI_SPACE.gutter}>
+    <View className="flex-1 bg-background px-4 pt-4">
       {/* Filter row: chips + filter button inline */}
-      <XStack mb={UI_SPACE.section} gap="$control" style={{ alignItems: "center" }}>
+      <View className="mb-3 flex-row items-center gap-2">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -651,17 +648,17 @@ export default function HistoryScreen() {
         </ScrollView>
 
         <Button
-          size="$chip"
-          px="$control"
-          icon={Filter}
+          size="chip"
+          variant={activeCount > 0 ? "accent" : undefined}
+          className="gap-2 px-2"
           onPress={handleOpenFilterSheet}
-          theme={activeCount > 0 ? "accent" : undefined}
         >
+          <Filter size={16} color={filterIconColor} />
           {activeCount > 0
             ? `${t("common.filters")} (${activeCount})`
             : t("common.filters")}
         </Button>
-      </XStack>
+      </View>
 
       {/* List - FlashList for optimal performance with large datasets */}
       <View style={{ flex: 1, opacity: isFilterStale ? 0.6 : 1 }}>
@@ -678,36 +675,31 @@ export default function HistoryScreen() {
       </View>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={!!deletingExpenseId}
-        onOpenChange={(open) => !open && setDeletingExpenseId(null)}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={!!deletingExpenseId}
+        onRequestClose={() => setDeletingExpenseId(null)}
       >
-        <Dialog.Portal>
-          <Dialog.Overlay key="overlay" opacity={UI_OPACITY.faint} />
-          <Dialog.Content
-            borderWidth={UI_BORDER_WIDTH.thin}
-            borderColor="$borderColor"
-            elevate
-            key="content"
-            gap="$gutter"
-          >
-            <Dialog.Title size="$sectionTitle">
+        <View className="flex-1 items-center justify-center bg-black/50 px-6">
+          <View className="w-full max-w-sm gap-4 rounded-card border border-border bg-surface p-6">
+            <Text className="text-lg font-semibold text-foreground">
               {t("history.deleteDialog.title")}
-            </Dialog.Title>
-            <Dialog.Description>
+            </Text>
+            <Text className="text-[13px] text-muted-foreground">
               {t("history.deleteDialog.description")}
-            </Dialog.Description>
-            <XStack gap="$section" justify="flex-end">
-              <Dialog.Close asChild>
-                <Button size="$control">{t("common.cancel")}</Button>
-              </Dialog.Close>
-              <Button size="$control" theme="red" onPress={confirmDelete}>
+            </Text>
+            <View className="flex-row justify-end gap-3">
+              <Button size="control" onPress={() => setDeletingExpenseId(null)}>
+                {t("common.cancel")}
+              </Button>
+              <Button size="control" variant="destructive" onPress={confirmDelete}>
                 {t("common.delete")}
               </Button>
-            </XStack>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
-    </YStack>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   )
 }

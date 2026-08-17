@@ -1,17 +1,15 @@
 import { useCallback, memo } from "react"
-import { YStack, XStack, useTheme } from "tamagui"
+import { View } from "react-native"
 import { Pressable } from "react-native"
-import { Check } from "@tamagui/lucide-icons-2"
+import { Check } from "lucide-react-native"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
-import { getColorValue } from "../../tamagui.config"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
 import {
-  UI_RADIUS,
-  UI_SPACE,
   UI_ICON_SIZE,
   UI_BORDER_WIDTH,
 } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface ColorPickerSheetProps {
   /** Whether the sheet is open */
@@ -35,7 +33,6 @@ export function ColorPickerSheet({
   onSelect,
 }: ColorPickerSheetProps) {
   const { t } = useTranslation()
-  // Handle color selection - select and close
   const handleColorSelect = useCallback(
     (color: string) => {
       onSelect(color)
@@ -52,7 +49,7 @@ export function ColorPickerSheet({
       snapPoints={[50]}
       unmountWhenClosed
     >
-      <XStack flexDirection="row" flexWrap="wrap" gap={UI_SPACE.section} justify="center">
+      <View className="flex-row flex-wrap justify-center gap-3">
         {CATEGORY_COLOR_PALETTE.map((color) => (
           <ColorButton
             key={color}
@@ -61,7 +58,7 @@ export function ColorPickerSheet({
             onSelect={handleColorSelect}
           />
         ))}
-      </XStack>
+      </View>
     </AppSheetScaffold>
   )
 }
@@ -80,9 +77,9 @@ const ColorButton = memo(function ColorButton({
   isSelected,
   onSelect,
 }: ColorButtonProps) {
-  const theme = useTheme()
-  const selectedBorderColor = getColorValue(theme.borderColorFocus)
-  const checkColor = getColorValue(theme.color)
+  const theme = useThemeColors()
+  const selectedBorderColor = theme.accent
+  const checkColor = theme.foreground
 
   const handlePress = useCallback(() => {
     onSelect(color)
@@ -90,22 +87,18 @@ const ColorButton = memo(function ColorButton({
 
   return (
     <Pressable onPress={handlePress}>
-      <YStack
-        width={UI_ICON_SIZE.huge}
-        height={UI_ICON_SIZE.huge}
-        rounded={UI_RADIUS.chip}
-        items="center"
-        justify="center"
-        borderWidth={UI_BORDER_WIDTH.thick}
+      <View
+        className="items-center justify-center rounded-chip"
         style={{
+          width: UI_ICON_SIZE.huge,
+          height: UI_ICON_SIZE.huge,
+          borderWidth: UI_BORDER_WIDTH.thick,
           backgroundColor: color,
           borderColor: isSelected ? selectedBorderColor : "transparent",
         }}
       >
-        {isSelected && (
-          <Check size={UI_ICON_SIZE.large} color={checkColor} position="absolute" />
-        )}
-      </YStack>
+        {isSelected && <Check size={UI_ICON_SIZE.large} color={checkColor} />}
+      </View>
     </Pressable>
   )
 })

@@ -1,49 +1,37 @@
-import { useColorScheme } from "react-native"
-import { TamaguiProvider, type TamaguiProviderProps } from "tamagui"
-import { config } from "../tamagui.config"
+import { useEffect } from "react"
+import { useColorScheme } from "nativewind"
 import { StoreProvider } from "../stores/store-provider"
 import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-data"
 import { useThemeSettings } from "../stores/hooks"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 
 /**
- * Inner provider component that uses effectiveTheme from settings store
- * This must be inside StoreProvider to access the settings
+ * Inner provider that drives NativeWind's color scheme from the user's theme
+ * preference. This must be inside StoreProvider to access the settings.
  */
-function ThemedProvider({
-  children,
-  ...rest
-}: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
+function ThemedProvider({ children }: { children: React.ReactNode }) {
+  const { setColorScheme } = useColorScheme()
   const { effectiveTheme, isLoading } = useThemeSettings()
-  const systemColorScheme = useColorScheme()
 
-  // Use effectiveTheme from settings store, fallback to system during loading
-  const theme = isLoading
-    ? systemColorScheme === "dark"
-      ? "dark"
-      : "light"
-    : effectiveTheme
+  useEffect(() => {
+    if (!isLoading) {
+      setColorScheme(effectiveTheme)
+    }
+  }, [effectiveTheme, isLoading, setColorScheme])
 
-  return (
-    <TamaguiProvider config={config} defaultTheme={theme} {...rest}>
-      {children}
-    </TamaguiProvider>
-  )
+  return <>{children}</>
 }
 
 /**
- * Main Provider component that wraps the app with all necessary providers
- * StoreProvider is the outermost to allow ThemedProvider to access settings
+ * Main Provider component that wraps the app with all necessary providers.
+ * StoreProvider is the outermost to allow ThemedProvider to access settings.
  */
-export function Provider({
-  children,
-  ...rest
-}: Omit<TamaguiProviderProps, "config" | "defaultTheme">) {
+export function Provider({ children }: { children: React.ReactNode }) {
   return (
     <StoreProvider>
       <DerivedExpenseDataProvider>
         <SmsImportReviewProvider>
-          <ThemedProvider {...rest}>{children}</ThemedProvider>
+          <ThemedProvider>{children}</ThemedProvider>
         </SmsImportReviewProvider>
       </DerivedExpenseDataProvider>
     </StoreProvider>

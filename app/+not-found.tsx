@@ -1,19 +1,15 @@
 import { Link, Stack } from "expo-router"
-import { StyleSheet } from "react-native"
-import { View, Text } from "tamagui"
-import { SEMANTIC_COLORS } from "../constants/theme-colors"
+import { StyleSheet, View, Text } from "react-native"
 import { UI_SPACE } from "../constants/ui-tokens"
 
 export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Oops!" }} />
-      <View m={UI_SPACE.control + 2}>
+      <View className="m-2.5">
         <Text>This screen doesn&apos;t exist.</Text>
         <Link href="/" style={styles.link}>
-          <Text fontSize="$body" color={SEMANTIC_COLORS.info}>
-            Go to home screen!
-          </Text>
+          <Text className="text-[13px] text-info">Go to home screen!</Text>
         </Link>
       </View>
     </>

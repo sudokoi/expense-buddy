@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { Keyboard } from "react-native"
-import { Check } from "@tamagui/lucide-icons-2"
+import { Keyboard, Text, View } from "react-native"
+import { Check } from "lucide-react-native"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PaymentMethodCard } from "./PaymentMethodCard"
@@ -16,14 +15,10 @@ import {
   sanitizeLastDigits,
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
+import { Button } from "./Button"
+import { Input } from "./Input"
+import { Label } from "./Label"
 
 function getInstrumentMethodConfig(method: PaymentInstrumentMethod) {
   return PAYMENT_METHODS.find((pm) => pm.value === method)
@@ -183,12 +178,10 @@ function PaymentInstrumentForm({
   }, [method, nickname, lastDigits, existingInstruments, instrument, onSave, onClose])
 
   return (
-    <YStack gap="$gutter">
-      <YStack gap="$control">
-        <Label color="$color" opacity={UI_OPACITY.strong}>
-          {t("instruments.form.paymentMethod")}
-        </Label>
-        <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+    <View className="gap-4">
+      <View className="gap-2">
+        <Label className="opacity-80">{t("instruments.form.paymentMethod")}</Label>
+        <View className="flex-row flex-wrap gap-2">
           {PAYMENT_INSTRUMENT_METHODS.map((m) => {
             const config =
               selectedMethodConfig && selectedMethodConfig.value === m
@@ -204,41 +197,29 @@ function PaymentInstrumentForm({
               />
             )
           })}
-        </XStack>
-      </YStack>
+        </View>
+      </View>
 
-      <YStack gap="$control">
-        <Label color="$color" opacity={UI_OPACITY.strong}>
-          {t("instruments.form.nickname")}
-        </Label>
+      <View className="gap-2">
+        <Label className="opacity-80">{t("instruments.form.nickname")}</Label>
         <Input
-          size="$control"
-          bg="$background"
+          className={errors.nickname ? "border-error" : undefined}
           placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
           onChangeText={handleNicknameChange}
           maxLength={30}
-          borderWidth={UI_BORDER_WIDTH.normal}
-          borderColor={errors.nickname ? "$red10" : "$borderColor"}
-          focusStyle={{
-            borderColor: errors.nickname ? "$red10" : ACCENT_COLORS.primary,
-          }}
-          placeholderTextColor="$color"
         />
         {errors.nickname && (
-          <Text fontSize="$caption" color="$red10">
-            {errors.nickname}
-          </Text>
+          <Text className="text-xs text-error">{errors.nickname}</Text>
         )}
-      </YStack>
+      </View>
 
-      <YStack gap="$control">
-        <Label color="$color" opacity={UI_OPACITY.strong}>
+      <View className="gap-2">
+        <Label className="opacity-80">
           {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
         </Label>
         <Input
-          size="$control"
-          bg="$background"
+          className={errors.lastDigits ? "border-error" : undefined}
           placeholder={t("instruments.form.identifierPlaceholder", {
             count: getLastDigitsLength(method),
           })}
@@ -246,35 +227,29 @@ function PaymentInstrumentForm({
           value={lastDigits}
           onChangeText={handleLastDigitsChange}
           maxLength={getLastDigitsLength(method)}
-          borderWidth={UI_BORDER_WIDTH.normal}
-          borderColor={errors.lastDigits ? "$red10" : "$borderColor"}
-          focusStyle={{
-            borderColor: errors.lastDigits ? "$red10" : ACCENT_COLORS.primary,
-          }}
-          placeholderTextColor="$color"
         />
         {errors.lastDigits && (
-          <Text fontSize="$caption" color="$red10">
-            {errors.lastDigits}
-          </Text>
+          <Text className="text-xs text-error">{errors.lastDigits}</Text>
         )}
-      </YStack>
+      </View>
 
-      <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
-        <Button size="$control" chromeless onPress={onClose}>
+      <View className="flex-row justify-end gap-3 mt-2">
+        <Button size="control" variant="ghost" onPress={onClose}>
           {t("common.cancel")}
         </Button>
         <Button
-          size="$control"
-          theme="accent"
+          size="control"
+          variant="accent"
+          className="gap-2"
           onPress={handleSave}
-          icon={<Check size="$icon" />}
-          fontWeight={UI_FONT_WEIGHT.bold}
         >
-          {isEditMode ? t("common.save") : t("common.add")}
+          <Check size={20} />
+          <Text className="font-bold">
+            {isEditMode ? t("common.save") : t("common.add")}
+          </Text>
         </Button>
-      </XStack>
-    </YStack>
+      </View>
+    </View>
   )
 }
 

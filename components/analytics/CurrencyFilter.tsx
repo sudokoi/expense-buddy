@@ -1,9 +1,9 @@
 import { memo } from "react"
-import { XStack, Button } from "tamagui"
-import { ScrollView } from "react-native"
+import { ScrollView, Text, View } from "react-native"
+import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -42,16 +42,16 @@ export const CurrencyFilter = memo(function CurrencyFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$control">
+      <View className="flex-row gap-2">
         <Button
-          size="$chip"
-          px="$control"
-          theme={isDefaultSelected ? "accent" : undefined}
+          size="chip"
+          className="px-2"
+          variant={isDefaultSelected ? "accent" : "outline"}
           onPress={() => onChange(null)}
-          borderColor="$borderColor"
-          borderWidth={!isDefaultSelected ? UI_BORDER_WIDTH.thin : 0}
         >
-          {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
+          <Text>
+            {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
+          </Text>
         </Button>
 
         {availableCurrencies.map((currency) => {
@@ -60,18 +60,18 @@ export const CurrencyFilter = memo(function CurrencyFilter({
           return (
             <Button
               key={currency}
-              size="$chip"
-              px="$control"
-              theme={isSelected ? "accent" : undefined}
+              size="chip"
+              className="px-2"
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => onChange(currency)}
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
             >
-              {currency} ({getCurrencySymbol(currency)})
+              <Text>
+                {currency} ({getCurrencySymbol(currency)})
+              </Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })

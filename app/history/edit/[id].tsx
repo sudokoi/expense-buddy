@@ -1,10 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { useLocalSearchParams, useRouter, Stack } from "expo-router"
-import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { Platform } from "react-native"
+import { Platform, Text, View } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { parseISO } from "date-fns"
-import { Calendar } from "@tamagui/lucide-icons-2"
+import { Calendar } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import {
   useExpenses,
@@ -15,8 +14,10 @@ import {
 import { ScreenContainer } from "../../../components/ui/ScreenContainer"
 import { CategoryCard } from "../../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../../components/ui/PaymentMethodCard"
+import { Button } from "../../../components/ui/Button"
+import { Input } from "../../../components/ui/Input"
+import { Label } from "../../../components/ui/Label"
 import { PAYMENT_METHODS } from "../../../constants/payment-methods"
-import { ACCENT_COLORS } from "../../../constants/theme-colors"
 import { getCurrencySymbol, getFallbackCurrency } from "../../../utils/currency"
 import { formatDate } from "../../../utils/date"
 import {
@@ -38,12 +39,6 @@ import {
   PaymentInstrumentInlineDropdown,
 } from "../../../components/ui/PaymentInstrumentInlineDropdown"
 import { logAsync } from "../../../services/logger"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-} from "../../../constants/ui-tokens"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -212,22 +207,23 @@ export default function EditExpenseScreen() {
       <Stack.Screen options={{ title: t("history.editDialog.title") }} />
 
       <ScreenContainer>
-        <YStack gap="$section">
-          <YStack gap="$control">
-            <XStack items="center" justify="space-between">
-              <Label color="$color" opacity={UI_OPACITY.strong}>
+        <View className="gap-3">
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Label className="opacity-80">
                 {t("history.editDialog.fields.date")}
               </Label>
               <Button
-                size="$control"
+                size="control"
+                className="gap-2"
                 onPress={() => setShowDatePicker(true)}
-                icon={Calendar}
               >
+                <Calendar size={16} />
                 {date
                   ? formatDate(date, "dd/MM/yyyy")
                   : t("history.editDialog.fields.datePlaceholder")}
               </Button>
-            </XStack>
+            </View>
             {showDatePicker && (
               <>
                 <DateTimePicker
@@ -249,36 +245,24 @@ export default function EditExpenseScreen() {
                   }}
                 />
                 {showDatePicker && Platform.OS === "ios" && (
-                  <Button size="$control" onPress={() => setShowDatePicker(false)}>
+                  <Button size="control" onPress={() => setShowDatePicker(false)}>
                     {t("common.done")}
                   </Button>
                 )}
               </>
             )}
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("history.editDialog.fields.amount")}
             </Label>
-            <XStack style={{ alignItems: "center" }} gap="$control">
-              <Text
-                fontSize="$label"
-                fontWeight={UI_FONT_WEIGHT.bold}
-                color="$color"
-                opacity={UI_OPACITY.strong}
-              >
+            <View className="flex-row items-center gap-2">
+              <Text className="text-sm font-bold text-foreground opacity-80">
                 {getCurrencySymbol(expense.currency || getFallbackCurrency())}
               </Text>
               <Input
-                flex={1}
-                size="$control"
-                bg="$background"
-                borderWidth={UI_BORDER_WIDTH.normal}
-                borderColor="$borderColor"
-                focusStyle={{
-                  borderColor: ACCENT_COLORS.primary,
-                }}
+                className="flex-1"
                 value={amount}
                 onChangeText={setAmount}
                 placeholder={
@@ -288,23 +272,22 @@ export default function EditExpenseScreen() {
                 }
                 keyboardType={amountInputProps.keyboardType}
                 inputMode={amountInputProps.inputMode}
-                placeholderTextColor="$color"
               />
-            </XStack>
+            </View>
             {expressionPreview && (
-              <Text fontSize="$body" color="$color" opacity={UI_OPACITY.medium}>
+              <Text className="text-[13px] text-foreground opacity-70">
                 {t("history.editDialog.fields.preview", {
                   amount: expressionPreview,
                 })}
               </Text>
             )}
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("history.editDialog.fields.category")}
             </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+            <View className="flex-row flex-wrap gap-2">
               {categories.map((cat) => {
                 const isSelected = category === cat.label
                 return (
@@ -318,34 +301,26 @@ export default function EditExpenseScreen() {
                   />
                 )
               })}
-            </XStack>
-          </YStack>
+            </View>
+          </View>
 
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("history.editDialog.fields.note")}
             </Label>
             <Input
-              bg="$background"
-              size="$control"
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor="$borderColor"
-              focusStyle={{
-                borderColor: ACCENT_COLORS.primary,
-              }}
               value={note}
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               selectTextOnFocus
-              placeholderTextColor="$color"
             />
-          </YStack>
+          </View>
 
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("history.editDialog.fields.paymentMethod")}
             </Label>
-            <XStack flexWrap="wrap" gap={UI_SPACE.control}>
+            <View className="flex-row flex-wrap gap-2">
               {PAYMENT_METHODS.map((pm) => (
                 <PaymentMethodCard
                   key={pm.value}
@@ -354,11 +329,11 @@ export default function EditExpenseScreen() {
                   onPress={() => handlePaymentMethodSelect(pm.value)}
                 />
               ))}
-            </XStack>
+            </View>
 
             {selectedPaymentConfig?.hasIdentifier && (
-              <YStack gap="$micro" mt={UI_SPACE.control}>
-                <Label color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+              <View className="gap-1 mt-2">
+                <Label className="text-xs opacity-60">
                   {selectedPaymentConfig.identifierLabel ||
                     t("history.editDialog.fields.identifier")}
                 </Label>
@@ -391,13 +366,6 @@ export default function EditExpenseScreen() {
                   />
                 ) : (
                   <Input
-                    size="$control"
-                    bg="$background"
-                    borderWidth={UI_BORDER_WIDTH.normal}
-                    borderColor="$borderColor"
-                    focusStyle={{
-                      borderColor: ACCENT_COLORS.primary,
-                    }}
                     placeholder={
                       paymentMethodType === "Other"
                         ? t("history.editDialog.fields.otherPlaceholder")
@@ -409,27 +377,24 @@ export default function EditExpenseScreen() {
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
-                    placeholderTextColor="$color"
                   />
                 )}
-              </YStack>
+              </View>
             )}
-          </YStack>
+          </View>
 
-          <XStack
-            gap="$section"
-            justify="flex-end"
-            mt={UI_SPACE.gutter}
-            pb={insets.bottom}
+          <View
+            className="flex-row gap-3 justify-end mt-4"
+            style={{ paddingBottom: insets.bottom }}
           >
-            <Button size="$control" onPress={() => router.back()}>
+            <Button size="control" onPress={() => router.back()}>
               {t("common.cancel")}
             </Button>
-            <Button size="$control" theme="accent" onPress={handleSave}>
+            <Button size="control" variant="accent" onPress={handleSave}>
               {t("common.save")}
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       </ScreenContainer>
     </>
   )

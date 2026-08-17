@@ -1,10 +1,9 @@
-import { YStack, XStack, Text, Button } from "tamagui"
+import { Text, View } from "react-native"
 
-import { Download, ExternalLink, Bug } from "@tamagui/lucide-icons-2"
+import { Download, ExternalLink, Bug } from "lucide-react-native"
 import { UpdateInfo } from "../../../services/update-checker"
-import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import { UI_OPACITY, UI_FONT_WEIGHT } from "../../../constants/ui-tokens"
+import { Button } from "../Button"
 
 /**
  * Props for the AppInfoSection component
@@ -34,9 +33,6 @@ export interface AppInfoSectionProps {
   onReportIssue: () => void
 }
 
-// Memoized theme colors
-const successColor = SEMANTIC_COLORS.success
-
 /**
  * AppInfoSection - App information UI
  *
@@ -61,38 +57,39 @@ export function AppInfoSection({
   const { t } = useTranslation()
 
   return (
-    <YStack gap="$section">
+    <View className="gap-3">
       {/* Current Version */}
-      <XStack items="center" justify="space-between">
-        <Text color="$color" opacity={UI_OPACITY.strong}>
+      <View className="flex-row items-center justify-between">
+        <Text className="text-foreground opacity-80">
           {t("settings.about.currentVersion")}
         </Text>
-        <Text fontWeight={UI_FONT_WEIGHT.bold}>v{currentVersion}</Text>
-      </XStack>
+        <Text className="font-bold">v{currentVersion}</Text>
+      </View>
 
       {/* Update Info */}
       {updateInfo?.latestVersion && !updateInfo.error && (
-        <XStack items="center" justify="space-between">
-          <Text color="$color" opacity={UI_OPACITY.strong}>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-foreground opacity-80">
             {t("settings.about.latestVersion")}
           </Text>
           <Text
-            fontWeight={UI_FONT_WEIGHT.bold}
-            color={updateInfo.hasUpdate ? successColor : "$color"}
-            opacity={updateInfo.hasUpdate ? 1 : UI_OPACITY.strong}
+            className={`font-bold ${
+              updateInfo.hasUpdate ? "text-success" : "text-foreground opacity-80"
+            }`}
           >
             v{updateInfo.latestVersion}
           </Text>
-        </XStack>
+        </View>
       )}
 
       {/* Check for Updates Button */}
       <Button
-        size="$control"
+        size="control"
+        className="gap-2"
         onPress={onCheckForUpdates}
         disabled={isCheckingUpdate}
-        icon={Download}
       >
+        <Download size={16} />
         {isCheckingUpdate
           ? t("settings.about.checking")
           : t("settings.about.checkForUpdates")}
@@ -101,11 +98,12 @@ export function AppInfoSection({
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
         <Button
-          size="$control"
-          theme="accent"
+          size="control"
+          variant="accent"
+          className="gap-2"
           onPress={onStartUpdate}
-          icon={ExternalLink}
         >
+          <ExternalLink size={16} />
           {isUpdateReadyToInstall
             ? t("settings.about.installUpdate")
             : updateInfo.latestVersion
@@ -115,15 +113,17 @@ export function AppInfoSection({
       )}
 
       {/* Report an Issue */}
-      <Button size="$compact" chromeless onPress={onReportIssue} icon={Bug}>
+      <Button size="compact" variant="ghost" className="gap-2" onPress={onReportIssue}>
+        <Bug size={16} />
         {t("settings.about.reportIssue")}
       </Button>
 
       {/* GitHub Link */}
-      <Button size="$compact" chromeless onPress={onOpenGitHub} icon={ExternalLink}>
+      <Button size="compact" variant="ghost" className="gap-2" onPress={onOpenGitHub}>
+        <ExternalLink size={16} />
         {t("settings.about.viewGitHub")}
       </Button>
-    </YStack>
+    </View>
   )
 }
 

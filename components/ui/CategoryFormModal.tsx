@@ -1,26 +1,20 @@
 import { useState, useCallback, useMemo, useRef } from "react"
-import { YStack, XStack, Text, Input, Button, Label } from "tamagui"
-import { Keyboard, Pressable } from "react-native"
+import { Keyboard, Pressable, Text, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Check } from "@tamagui/lucide-icons-2"
+import { Check } from "lucide-react-native"
 import { Category } from "../../types/category"
 import { validateCategoryForm } from "../../utils/category-validation"
 import { IconPickerSheet } from "./IconPickerSheet"
 import { ColorPickerSheet } from "./ColorPickerSheet"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
-import { ACCENT_COLORS, getReadableTextColor } from "../../constants/theme-colors"
-import { getColorValue } from "../../tamagui.config"
+import { getReadableTextColor } from "../../constants/theme-colors"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
+import { Button } from "./Button"
+import { Input } from "./Input"
+import { Label } from "./Label"
 import { useTranslation } from "react-i18next"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
+import { UI_RADIUS, UI_SPACE, UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 const layoutStyles = {
   iconPreview: {
@@ -166,7 +160,7 @@ export function CategoryFormModal({
   }, [onClose])
 
   // Resolved color for display
-  const resolvedColor = useMemo(() => getColorValue(color), [color])
+  const resolvedColor = color
   const iconColor = useMemo(() => getReadableTextColor(resolvedColor), [resolvedColor])
 
   // Handle opening icon picker
@@ -211,110 +205,92 @@ export function CategoryFormModal({
         snapPoints={[90]}
         frameStyle={frameStyle}
       >
-        <YStack gap="$gutter">
+        <View className="gap-4">
           {/* Label Input */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("settings.categories.form.nameLabel")}
             </Label>
             <Input
-              size="$control"
-              bg="$background"
+              className={errors.label ? "border-error" : undefined}
               placeholder={t("settings.categories.form.namePlaceholder")}
               value={label}
               onChangeText={handleLabelChange}
               maxLength={30}
-              borderWidth={UI_BORDER_WIDTH.normal}
-              borderColor={errors.label ? "$red10" : "$borderColor"}
-              focusStyle={{
-                borderColor: errors.label ? "$red10" : ACCENT_COLORS.primary,
-              }}
-              placeholderTextColor="$color"
             />
             {errors.label && (
-              <Text fontSize="$caption" color="$red10">
-                {errors.label}
-              </Text>
+              <Text className="text-xs text-error">{errors.label}</Text>
             )}
-            <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.faint}>
+            <Text className="text-xs text-foreground opacity-50">
               {t("settings.categories.form.characterCount", {
                 count: label.length,
                 max: 30,
               })}
             </Text>
-          </YStack>
+          </View>
 
           {/* Icon Picker Trigger */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("settings.categories.form.iconLabel")}
             </Label>
             <Pressable onPress={handleOpenIconPicker}>
-              <XStack
-                flexDirection="row"
-                items="center"
-                gap={UI_SPACE.section}
-                p={UI_SPACE.section}
-                rounded={UI_RADIUS.control}
-                borderWidth={UI_BORDER_WIDTH.normal}
-                bg="$backgroundHover"
-                borderColor="$borderColor"
-              >
-                <YStack
-                  style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
-                >
+              <View className="flex-row items-center gap-3 p-3 rounded-control border-2 bg-surface border-border">
+                <View style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}>
                   <DynamicCategoryIcon
                     name={icon}
                     size={UI_ICON_SIZE.large}
                     color={iconColor}
                   />
-                </YStack>
-                <YStack flex={1}>
-                  <Text fontWeight={UI_FONT_WEIGHT.medium}>{icon}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+                </View>
+                <View className="flex-1">
+                  <Text className="font-medium">{icon}</Text>
+                  <Text className="text-xs text-foreground opacity-60">
                     {t("settings.categories.form.iconHelp")}
                   </Text>
-                </YStack>
-              </XStack>
+                </View>
+              </View>
             </Pressable>
-          </YStack>
+          </View>
 
           {/* Color Picker Trigger */}
-          <YStack gap="$control">
-            <Label color="$color" opacity={UI_OPACITY.strong}>
+          <View className="gap-2">
+            <Label className="opacity-80">
               {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable onPress={handleOpenColorPicker}>
-              <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
-                <YStack
+              <View className="flex-row justify-end gap-3 mt-2">
+                <View
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
                 />
-                <YStack flex={1}>
-                  <Text fontWeight={UI_FONT_WEIGHT.medium}>{color}</Text>
-                  <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+                <View className="flex-1">
+                  <Text className="font-medium">{color}</Text>
+                  <Text className="text-xs text-foreground opacity-60">
                     {t("settings.categories.form.colorHelp")}
                   </Text>
-                </YStack>
-              </XStack>
+                </View>
+              </View>
             </Pressable>
-          </YStack>
+          </View>
 
           {/* Action Buttons */}
-          <XStack justify="flex-end" gap={UI_SPACE.section} mt={UI_SPACE.control}>
-            <Button size="$control" chromeless onPress={handleClose}>
+          <View className="flex-row justify-end gap-3 mt-2">
+            <Button size="control" variant="ghost" onPress={handleClose}>
               {t("common.cancel")}
             </Button>
             <Button
-              size="$control"
-              theme="accent"
+              size="control"
+              variant="accent"
+              className="gap-2"
               onPress={handleSave}
-              icon={<Check size="$icon" />}
-              fontWeight={UI_FONT_WEIGHT.bold}
             >
-              {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
+              <Check size={20} />
+              <Text className="font-bold">
+                {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
+              </Text>
             </Button>
-          </XStack>
-        </YStack>
+          </View>
+        </View>
       </AppSheetScaffold>
 
       {/* Icon Picker Sheet */}

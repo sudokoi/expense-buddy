@@ -1,4 +1,4 @@
-import { H4 } from "tamagui"
+import { Text } from "react-native"
 import { ReactNode } from "react"
 
 interface SectionHeaderProps {
@@ -6,28 +6,18 @@ interface SectionHeaderProps {
 }
 
 /**
- * SectionHeader - A styled H4 for consistent section titles
+ * SectionHeader - A styled heading for consistent section titles
  */
 export function SectionHeader({ children }: SectionHeaderProps) {
-  // Using type assertion to work around Tamagui's complex type inference
-  const H4Component = H4 as React.ComponentType<{
-    fontSize: string
-    mb: string
-    children?: ReactNode
-    numberOfLines?: number
-    adjustsFontSizeToFit?: boolean
-    minimumFontScale?: number
-  }>
   return (
-    <H4Component
-      fontSize="$title"
-      mb="$gutter"
+    <Text
+      className="mb-4 text-base font-semibold text-foreground"
       numberOfLines={1}
       adjustsFontSizeToFit
       minimumFontScale={0.4}
     >
       {children}
-    </H4Component>
+    </Text>
   )
 }
 

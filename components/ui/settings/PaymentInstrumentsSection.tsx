@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from "react"
-import { YStack, XStack, Text, Button, Accordion } from "tamagui"
+import { View, Text, Pressable } from "react-native"
 import { Alert } from "react-native"
-import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2"
+import { Plus, Edit3, Trash, ChevronDown, ChevronUp } from "lucide-react-native"
+import { Button } from "../Button"
 import { IconActionButton } from "../IconActionButton"
 import { useSettings, useUIState } from "../../../stores/hooks"
 import type { PaymentInstrument } from "../../../types/payment-instrument"
@@ -13,13 +14,11 @@ import {
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
 import {
-  UI_RADIUS,
-  UI_SPACE,
   UI_OPACITY,
   UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
   UI_ICON_SIZE,
 } from "../../../constants/ui-tokens"
+import { useThemeColors } from "../../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -36,6 +35,7 @@ function upsertInstrument(
 
 export function PaymentInstrumentsSection() {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const { settings, updateSettings } = useSettings()
   const { paymentInstrumentsSectionExpanded, setPaymentInstrumentsExpanded } =
     useUIState()
@@ -109,120 +109,102 @@ export function PaymentInstrumentsSection() {
 
   return (
     <>
-      <YStack gap="$section">
-        <XStack justify="space-between" items="center">
-          <YStack flex={1} gap="$micro">
-            <Text fontSize="$label" fontWeight={UI_FONT_WEIGHT.semiBold}>
+      <View className="gap-3">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 gap-1">
+            <Text
+              className="text-sm font-semibold text-foreground"
+              style={{ fontWeight: UI_FONT_WEIGHT.semiBold }}
+            >
               {t("instruments.title")}
             </Text>
-            <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$body">
+            <Text
+              className="text-[13px] text-foreground"
+              style={{ opacity: UI_OPACITY.subtle }}
+            >
               {active.length > 0
                 ? t("instruments.manage") + ` (${active.length})`
                 : t("instruments.description")}
             </Text>
-          </YStack>
-          <Button size="$chip" px="$control" icon={Plus} onPress={handleAdd}>
+          </View>
+          <Button size="chip" className="gap-1 px-2" onPress={handleAdd}>
+            <Plus size={16} color={theme.foreground} />
             {t("instruments.add")}
           </Button>
-        </XStack>
+        </View>
 
         {active.length === 0 ? (
-          <Text color="$color" opacity={UI_OPACITY.subtle}>
+          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {t("instruments.empty")}
           </Text>
         ) : (
-          <Accordion
-            type="single"
-            collapsible
-            value={paymentInstrumentsSectionExpanded ? "payment-instruments" : undefined}
-            onValueChange={(value) =>
-              setPaymentInstrumentsExpanded(value === "payment-instruments")
-            }
-          >
-            <Accordion.Item value="payment-instruments">
-              <Accordion.Trigger
-                bg="$backgroundHover"
-                borderWidth={UI_BORDER_WIDTH.thin}
-                borderColor="$borderColor"
-                flexDirection="row"
-                justify="space-between"
-                items="center"
-                px={UI_SPACE.section}
-                py={UI_SPACE.section - 2}
-                rounded={UI_RADIUS.chip}
-              >
-                {({ open }: { open: boolean }) => (
-                  <>
-                    <XStack
-                      flexDirection="row"
-                      items="center"
-                      flex={1}
-                      gap={UI_SPACE.control}
-                    >
-                      <Text fontWeight={UI_FONT_WEIGHT.medium}>
-                        {t("instruments.manage")}
-                      </Text>
-                      <Text
-                        fontSize="$caption"
-                        color="$color"
-                        opacity={UI_OPACITY.subtle}
-                      >
-                        ({active.length})
-                      </Text>
-                    </XStack>
-                    {open ? (
-                      <ChevronUp
-                        size={UI_ICON_SIZE.medium}
-                        color="$color"
-                        opacity={UI_OPACITY.subtle}
-                      />
-                    ) : (
-                      <ChevronDown
-                        size={UI_ICON_SIZE.medium}
-                        color="$color"
-                        opacity={UI_OPACITY.subtle}
-                      />
-                    )}
-                  </>
-                )}
-              </Accordion.Trigger>
-
-              <Accordion.Content p={UI_SPACE.control} pt={UI_SPACE.section}>
-                <YStack
-                  gap="$gutter"
-                  bg="$backgroundHover"
-                  p="$section"
-                  rounded={UI_RADIUS.surface}
+          <View>
+            <Pressable
+              onPress={() =>
+                setPaymentInstrumentsExpanded(!paymentInstrumentsSectionExpanded)
+              }
+              className="flex-row items-center justify-between rounded-chip border border-border bg-surface px-3 py-2.5"
+            >
+              <View className="flex-1 flex-row items-center gap-2">
+                <Text
+                  className="text-foreground"
+                  style={{ fontWeight: UI_FONT_WEIGHT.medium }}
                 >
+                  {t("instruments.manage")}
+                </Text>
+                <Text
+                  className="text-xs text-foreground"
+                  style={{ opacity: UI_OPACITY.subtle }}
+                >
+                  ({active.length})
+                </Text>
+              </View>
+              {paymentInstrumentsSectionExpanded ? (
+                <ChevronUp
+                  size={UI_ICON_SIZE.medium}
+                  color={theme.foreground}
+                  style={{ opacity: UI_OPACITY.subtle }}
+                />
+              ) : (
+                <ChevronDown
+                  size={UI_ICON_SIZE.medium}
+                  color={theme.foreground}
+                  style={{ opacity: UI_OPACITY.subtle }}
+                />
+              )}
+            </Pressable>
+
+            {paymentInstrumentsSectionExpanded && (
+              <View className="px-2 pt-3">
+                <View className="gap-4 rounded-card bg-surface p-3">
                   {PAYMENT_INSTRUMENT_METHODS.map((method) => {
                     const list = grouped[method] ?? []
                     if (list.length === 0) return null
                     return (
-                      <YStack key={method} gap="$section">
+                      <View key={method} className="gap-3">
                         <Text
-                          fontWeight={UI_FONT_WEIGHT.bold}
-                          color="$color"
-                          opacity={UI_OPACITY.faint}
-                          fontSize="$caption"
+                          className="text-xs text-foreground"
+                          style={{
+                            fontWeight: UI_FONT_WEIGHT.bold,
+                            opacity: UI_OPACITY.faint,
+                          }}
                         >
                           {method}
                         </Text>
                         {list.map((inst) => (
-                          <XStack
+                          <View
                             key={inst.id}
-                            gap="$control"
-                            bg="$background"
-                            px="$section"
-                            py="$section"
-                            justify="space-between"
-                            items="center"
-                            rounded={UI_RADIUS.surface}
+                            className="flex-row items-center justify-between gap-2 rounded-card bg-background px-3 py-3"
                           >
-                            <Text flex={1} numberOfLines={1} color="$color" opacity={0.9}>
+                            <Text
+                              className="flex-1 text-foreground"
+                              numberOfLines={1}
+                              style={{ opacity: 0.9 }}
+                            >
                               {formatPaymentInstrumentLabel(inst)}
                             </Text>
                             <IconActionButton
-                              icon={<Edit3 size={UI_ICON_SIZE.small} />}
+                              icon={<Edit3 size={UI_ICON_SIZE.small} color={theme.foreground} />}
                               onPress={() => handleEdit(inst)}
                               tooltip={t("common.editLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
@@ -232,7 +214,7 @@ export function PaymentInstrumentsSection() {
                               })}
                             />
                             <IconActionButton
-                              icon={<Trash size={UI_ICON_SIZE.small} />}
+                              icon={<Trash size={UI_ICON_SIZE.small} color={theme.foreground} />}
                               onPress={() => handleDelete(inst)}
                               tooltip={t("common.removeLabel", {
                                 label: formatPaymentInstrumentLabel(inst),
@@ -241,17 +223,17 @@ export function PaymentInstrumentsSection() {
                                 label: formatPaymentInstrumentLabel(inst),
                               })}
                             />
-                          </XStack>
+                          </View>
                         ))}
-                      </YStack>
+                      </View>
                     )
                   })}
-                </YStack>
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion>
+                </View>
+              </View>
+            )}
+          </View>
         )}
-      </YStack>
+      </View>
 
       <PaymentInstrumentFormModal
         open={formOpen}

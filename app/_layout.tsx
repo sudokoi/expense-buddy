@@ -1,13 +1,13 @@
-import "../tamagui-web.css"
+import "../global.css"
 
 import { useEffect } from "react"
 import { useColorScheme } from "react-native"
 import { StatusBar } from "expo-status-bar"
+import * as SystemUI from "expo-system-ui"
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
 import { useFonts } from "expo-font"
 import { SplashScreen, Stack } from "expo-router"
-import { Provider } from "components/Provider"
-import { useTheme } from "tamagui"
+import { Provider } from "../components/Provider"
 import { NotificationStack } from "../components/NotificationStack"
 import { SyncIndicator } from "../components/SyncIndicator"
 import { UpdateBanner } from "../components/ui/UpdateBanner"
@@ -18,7 +18,8 @@ import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useThemeSettings } from "../stores/hooks"
 import { useSettings } from "../stores/hooks"
-import { THEME_COLORS } from "../constants/theme-colors"
+import { useThemeColors } from "../hooks/use-theme-colors"
+import { palette } from "../constants/palette"
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -35,8 +36,8 @@ SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   const [interLoaded, interError] = useFonts({
-    Inter: require("@tamagui/font-inter/otf/Inter-Medium.otf"),
-    InterBold: require("@tamagui/font-inter/otf/Inter-Bold.otf"),
+    Inter: require("../assets/fonts/Inter-Medium.otf"),
+    InterBold: require("../assets/fonts/Inter-Bold.otf"),
   })
 
   useEffect(() => {
@@ -118,7 +119,7 @@ function UpdateAndChangelogOverlays() {
 
 function RootLayoutNav() {
   const systemScheme = useColorScheme()
-  const theme = useTheme()
+  const theme = useThemeColors()
   const { settings } = useSettings()
 
   // Follow the app's effective theme (settings) so StatusBar stays readable
@@ -132,22 +133,22 @@ function RootLayoutNav() {
     : effectiveTheme
 
   const statusBarBackground =
-    resolvedScheme === "dark" ? THEME_COLORS.kawaiiDarkPurple : THEME_COLORS.kawaiiCream
+    resolvedScheme === "dark" ? palette.dark.background : palette.light.background
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(statusBarBackground)
+  }, [statusBarBackground])
 
   return (
     <ThemeProvider value={resolvedScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <StatusBar
-        style={resolvedScheme === "dark" ? "light" : "dark"}
-        backgroundColor={statusBarBackground}
-        translucent={false}
-      />
+      <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
       <Stack key={settings.language}>
         <Stack.Screen
           name="(tabs)"
           options={{
             headerShown: false,
             contentStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
           }}
         />
@@ -157,11 +158,11 @@ function RootLayoutNav() {
           options={{
             title: "GitHub",
             headerStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
-            headerTintColor: theme.color.val,
+            headerTintColor: theme.foreground,
             contentStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
           }}
         />
@@ -170,11 +171,11 @@ function RootLayoutNav() {
           name="history/edit/[id]"
           options={{
             headerStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
-            headerTintColor: theme.color.val,
+            headerTintColor: theme.foreground,
             contentStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
           }}
         />
@@ -184,11 +185,11 @@ function RootLayoutNav() {
           options={{
             presentation: "modal",
             headerStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
-            headerTintColor: theme.color.val,
+            headerTintColor: theme.foreground,
             contentStyle: {
-              backgroundColor: theme.background.val,
+              backgroundColor: theme.background,
             },
           }}
         />

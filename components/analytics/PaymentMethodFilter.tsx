@@ -1,11 +1,12 @@
 import React, { memo, useCallback, useMemo } from "react"
-import { XStack, Button } from "tamagui"
-import { ScrollView, ViewStyle } from "react-native"
+import { ScrollView, Text, View, ViewStyle } from "react-native"
+import { Button } from "../ui/Button"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -39,6 +40,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
   onChange,
 }: PaymentMethodFilterProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const isAllSelected = selected.length === 0
 
   const chipItems = useMemo(() => {
@@ -96,16 +98,14 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$control">
+      <View className="flex-row gap-2">
         <Button
-          size="$chip"
-          px="$control"
-          theme={isAllSelected ? "accent" : undefined}
-          borderColor="$borderColor"
-          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
+          size="chip"
+          className="px-2"
+          variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
         >
-          {t("common.all")}
+          <Text>{t("common.all")}</Text>
         </Button>
 
         {chipItems.map((item) => {
@@ -117,23 +117,19 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           return (
             <Button
               key={item.key}
-              size="$chip"
-              px="$control"
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              size="chip"
+              className={`gap-1 px-2${isSelected ? "" : " border border-border"}`}
               style={isSelected ? item.selectedStyle : undefined}
               onPress={() => handleToggle(item.key)}
-              icon={
-                Icon ? (
-                  <Icon size={14} color={isSelected ? "white" : "$color"} />
-                ) : undefined
-              }
             >
-              <Button.Text color={isSelected ? "white" : "$color"}>{label}</Button.Text>
+              {Icon ? (
+                <Icon size={14} color={isSelected ? "white" : theme.foreground} />
+              ) : null}
+              <Text className={isSelected ? "text-white" : "text-foreground"}>{label}</Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })

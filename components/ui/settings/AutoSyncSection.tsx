@@ -1,14 +1,9 @@
-import { YStack, XStack, Text, Label, Switch, RadioGroup } from "tamagui"
+import { Text, View } from "react-native"
 import { AutoSyncTiming } from "../../../services/settings-manager"
-import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-} from "../../../constants/ui-tokens"
+import { Label } from "../Label"
+import { Switch } from "../Switch"
+import { RadioGroup } from "../RadioGroup"
 
 /**
  * Props for the AutoSyncSection component
@@ -56,120 +51,64 @@ export function AutoSyncSection({
   }
 
   return (
-    <YStack
-      gap="$section"
-      borderTopWidth={UI_BORDER_WIDTH.thin}
-      borderTopColor="$borderColor"
-      style={{ paddingTop: UI_SPACE.gutter }}
-    >
-      <Text
-        fontSize="$body"
-        fontWeight={UI_FONT_WEIGHT.bold}
-        color="$color"
-        opacity={UI_OPACITY.strong}
-      >
+    <View className="gap-3 border-t border-border pt-4">
+      <Text className="text-[13px] font-bold text-foreground opacity-80">
         {t("settings.autoSync.title")}
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
-      <XStack
-        bg="$backgroundHover"
-        items="center"
-        justify="space-between"
-        px={UI_SPACE.section}
-        py={UI_SPACE.section}
-        rounded={UI_RADIUS.chip}
-      >
-        <YStack flex={1}>
+      <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
+        <View className="flex-1">
           <Label>{t("settings.autoSync.enable")}</Label>
-          <Text
-            fontSize="$caption"
-            color="$color"
-            opacity={UI_OPACITY.subtle}
-            mt={UI_SPACE.micro}
-          >
+          <Text className="text-xs text-foreground opacity-60 mt-1">
             {t("settings.autoSync.enableHelp")}
           </Text>
-        </YStack>
+        </View>
         <Switch
-          size="$control"
           checked={autoSyncEnabled}
           onCheckedChange={onAutoSyncEnabledChange}
-          bg="$gray8"
-          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-        >
-          <Switch.Thumb />
-        </Switch>
-      </XStack>
+        />
+      </View>
 
       {/* Also sync settings toggle */}
-      <XStack
-        bg="$backgroundHover"
-        items="center"
-        justify="space-between"
-        px={UI_SPACE.section}
-        py={UI_SPACE.section}
-        rounded={UI_RADIUS.chip}
-      >
-        <YStack flex={1}>
+      <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
+        <View className="flex-1">
           <Label>{t("settings.autoSync.syncSettings")}</Label>
-          <Text
-            fontSize="$caption"
-            color="$color"
-            opacity={UI_OPACITY.subtle}
-            mt={UI_SPACE.micro}
-          >
+          <Text className="text-xs text-foreground opacity-60 mt-1">
             {t("settings.autoSync.syncSettingsHelp")}
           </Text>
-        </YStack>
-        <Switch
-          size="$control"
-          checked={syncSettings}
-          onCheckedChange={onSyncSettingsChange}
-          bg="$gray8"
-          activeStyle={{ backgroundColor: SEMANTIC_COLORS.success }}
-        >
-          <Switch.Thumb />
-        </Switch>
-      </XStack>
+        </View>
+        <Switch checked={syncSettings} onCheckedChange={onSyncSettingsChange} />
+      </View>
 
       {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
-        <YStack
-          gap="$control"
-          style={{ marginTop: UI_SPACE.micro, borderRadius: UI_RADIUS.surface }}
-          bg="$backgroundHover"
-          p="$section"
-        >
+        <View className="gap-2 mt-1 rounded-card bg-surface p-3">
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
-            <XStack gap="$control" items="center" my={UI_SPACE.control}>
-              <RadioGroup.Item value="on_launch" id="on_launch" size="$control">
-                <RadioGroup.Indicator />
-              </RadioGroup.Item>
-              <YStack flex={1}>
-                <Label htmlFor="on_launch">{t("settings.autoSync.onLaunch")}</Label>
-                <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+            <View className="flex-row items-center gap-2 my-2">
+              <RadioGroup.Item value="on_launch" />
+              <View className="flex-1">
+                <Label>{t("settings.autoSync.onLaunch")}</Label>
+                <Text className="text-xs text-foreground opacity-60">
                   {t("settings.autoSync.onLaunchHelp")}
                 </Text>
-              </YStack>
-            </XStack>
+              </View>
+            </View>
 
-            <XStack gap="$control" items="center" my={UI_SPACE.control}>
-              <RadioGroup.Item value="on_change" id="on_change" size="$control">
-                <RadioGroup.Indicator />
-              </RadioGroup.Item>
-              <YStack flex={1}>
-                <Label htmlFor="on_change">{t("settings.autoSync.onChange")}</Label>
-                <Text fontSize="$caption" color="$color" opacity={UI_OPACITY.subtle}>
+            <View className="flex-row items-center gap-2 my-2">
+              <RadioGroup.Item value="on_change" />
+              <View className="flex-1">
+                <Label>{t("settings.autoSync.onChange")}</Label>
+                <Text className="text-xs text-foreground opacity-60">
                   {t("settings.autoSync.onChangeHelp")}
                 </Text>
-              </YStack>
-            </XStack>
+              </View>
+            </View>
           </RadioGroup>
-        </YStack>
+        </View>
       )}
-    </YStack>
+    </View>
   )
 }
 

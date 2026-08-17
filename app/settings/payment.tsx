@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { Stack } from "expo-router"
-import { Alert } from "react-native"
-import { Label, Text, XStack, YStack } from "tamagui"
+import { Alert, Text, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SettingsSection } from "../../components/ui/SettingsSection"
@@ -9,6 +8,7 @@ import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPayment
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { CategorySection } from "../../components/ui/CategorySection"
 import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
+import { Label } from "../../components/ui/Label"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useCategories,
@@ -18,12 +18,7 @@ import {
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
 import type { PaymentMethodType } from "../../types/expense"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-} from "../../constants/ui-tokens"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 export default function PaymentSettingsScreen() {
   const { t } = useTranslation()
@@ -137,94 +132,52 @@ export default function PaymentSettingsScreen() {
       <Stack.Screen options={{ title: t("settings.payment.manageTitle") }} />
 
       <ScreenContainer contentContainerStyle={{ paddingTop: UI_SPACE.control }}>
-        <YStack gap="$gutter" maxW={UI_SPACE.empty * 15} self="center" width="100%">
+        <View className="max-w-[600px] w-full self-center gap-4">
           <SettingsSection
             title={t("settings.sections.payment")}
             description={t("settings.payment.manageHelp")}
             gap="$gutter"
           >
-            <XStack gap="$section" flexWrap="wrap">
-              <YStack
-                flex={1}
-                bg="$backgroundHover"
-                p="$section"
-                gap="$micro"
-                minW={120}
-                rounded={UI_RADIUS.chip}
-              >
-                <Text
-                  color="$color"
-                  opacity={UI_OPACITY.subtle}
-                  fontSize="$caption"
-                  fontWeight={UI_FONT_WEIGHT.bold}
-                >
+            <View className="flex-row flex-wrap gap-3">
+              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+                <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.defaultPayment.label")}
                 </Text>
                 <Text
-                  color="$color"
-                  fontSize="$title"
-                  fontWeight={UI_FONT_WEIGHT.bold}
+                  className="text-base text-foreground font-bold"
                   numberOfLines={2}
                 >
                   {defaultPaymentMethodLabel}
                 </Text>
-              </YStack>
+              </View>
 
-              <YStack
-                flex={1}
-                bg="$backgroundHover"
-                p="$section"
-                gap="$micro"
-                minW={120}
-                rounded={UI_RADIUS.chip}
-              >
-                <Text
-                  color="$color"
-                  opacity={UI_OPACITY.subtle}
-                  fontSize="$caption"
-                  fontWeight={UI_FONT_WEIGHT.bold}
-                >
+              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+                <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.payment.instrumentsTitle")}
                 </Text>
-                <Text color="$color" fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="text-base text-foreground font-bold">
                   {activePaymentInstrumentCount}
                 </Text>
-              </YStack>
+              </View>
 
-              <YStack
-                flex={1}
-                bg="$backgroundHover"
-                p="$section"
-                gap="$micro"
-                minW={120}
-                rounded={UI_RADIUS.chip}
-              >
-                <Text
-                  color="$color"
-                  opacity={UI_OPACITY.subtle}
-                  fontSize="$caption"
-                  fontWeight={UI_FONT_WEIGHT.bold}
-                >
+              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+                <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.payment.categoriesTitle")}
                 </Text>
-                <Text color="$color" fontSize="$title" fontWeight={UI_FONT_WEIGHT.bold}>
+                <Text className="text-base text-foreground font-bold">
                   {categories.length}
                 </Text>
-              </YStack>
-            </XStack>
+              </View>
+            </View>
           </SettingsSection>
 
           <SettingsSection
             title={t("settings.sections.defaultPayment")}
             description={t("settings.defaultPayment.description")}
           >
-            <YStack gap="$control">
+            <View className="gap-2">
               <Label>{t("settings.sections.defaultPayment")}</Label>
-              <YStack
-                bg="$backgroundHover"
-                p="$section"
-                style={{ borderRadius: UI_RADIUS.surface }}
-              >
+              <View className="bg-surface p-3 rounded-card">
                 <DefaultPaymentMethodSelector
                   value={settings.defaultPaymentMethod}
                   onChange={(paymentMethod) =>
@@ -233,11 +186,11 @@ export default function PaymentSettingsScreen() {
                     )
                   }
                 />
-              </YStack>
-              <Text color="$color" opacity={UI_OPACITY.subtle} fontSize="$caption">
+              </View>
+              <Text className="text-xs text-foreground opacity-60">
                 {t("settings.payment.defaultMethodHelp")}
               </Text>
-            </YStack>
+            </View>
           </SettingsSection>
 
           <SettingsSection
@@ -266,7 +219,7 @@ export default function PaymentSettingsScreen() {
               getExpenseCount={getExpenseCountForCategory}
             />
           </SettingsSection>
-        </YStack>
+        </View>
       </ScreenContainer>
 
       <CategoryFormModal

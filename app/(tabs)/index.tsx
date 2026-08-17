@@ -1,6 +1,6 @@
 import { startTransition, useCallback, memo, useMemo } from "react"
 import { useRouter, type Href } from "expo-router"
-import { YStack, XStack, Text, Button, ScrollView } from "tamagui"
+import { Text, View, ScrollView } from "react-native"
 
 import { useAnalyticsBase } from "../../hooks/use-analytics-base"
 import { useAnalyticsCharts } from "../../hooks/use-analytics-charts"
@@ -23,7 +23,7 @@ import {
   showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
   prunePaymentInstrumentSelection,
 } from "../../utils/analytics/filter-summary"
-import { Filter, RefreshCw, Download } from "@tamagui/lucide-icons-2"
+import { Filter, RefreshCw, Download } from "lucide-react-native"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
@@ -31,12 +31,8 @@ import { getCurrencySymbol } from "../../utils/currency"
 import { useSyncAction } from "../../hooks/use-sync-action"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { IconActionButton } from "../../components/ui/IconActionButton"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
+import { Button } from "../../components/ui/Button"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 // Memoized empty state component
 const EmptyState = memo(function EmptyState({
@@ -47,14 +43,10 @@ const EmptyState = memo(function EmptyState({
   subtitle: string
 }) {
   return (
-    <YStack items="center" justify="center" p={UI_SPACE.empty}>
-      <Text color="$color" opacity={UI_OPACITY.subtle} text="center">
-        {title}
-      </Text>
-      <Text color="$color" opacity={UI_OPACITY.ghost} text="center" mt={UI_SPACE.control}>
-        {subtitle}
-      </Text>
-    </YStack>
+    <View className="items-center justify-center p-10">
+      <Text className="text-center text-foreground opacity-60">{title}</Text>
+      <Text className="text-center text-foreground opacity-40 mt-2">{subtitle}</Text>
+    </View>
   )
 })
 
@@ -69,11 +61,9 @@ const Header = memo(function Header() {
   }, [startSmsImportFromAdd])
 
   return (
-    <XStack justify="space-between" items="center" mb={UI_SPACE.gutter}>
-      <Text color="$color" opacity={UI_OPACITY.subtle}>
-        {t("analytics.subtitle")}
-      </Text>
-      <XStack gap={UI_SPACE.control} items="center" px={UI_SPACE.micro}>
+    <View className="mb-4 flex-row items-center justify-between">
+      <Text className="text-foreground opacity-60">{t("analytics.subtitle")}</Text>
+      <View className="flex-row items-center gap-2 px-1">
         <IconActionButton
           icon={<RefreshCw size={20} />}
           onPress={handleSync}
@@ -91,8 +81,8 @@ const Header = memo(function Header() {
           accessibilityLabel={t("settings.smsImport.actions.review")}
           tooltipAlign="right"
         />
-      </XStack>
-    </XStack>
+      </View>
+    </View>
   )
 })
 
@@ -393,52 +383,45 @@ export default function AnalyticsScreen() {
     <ScreenContainer>
       <Header />
 
-      <XStack
-        mb="$gutter"
-        gap="$control"
-        style={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          overflow: "visible",
-        }}
+      <View
+        className="mb-4 flex-row items-center justify-between gap-2"
+        style={{ overflow: "visible" }}
       >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: UI_SPACE.control }}
-          flex={1}
+          className="flex-1"
         >
           {appliedChips.map((chip) => (
             <Button
               key={chip.key}
-              size="$chip"
-              px="$control"
-              borderWidth={UI_BORDER_WIDTH.thin}
-              borderColor="$borderColor"
+              size="chip"
+              variant="outline"
+              className="px-2 rounded-round"
               disabled={!filtersHydrated}
               onPress={openFilters}
-              rounded={UI_RADIUS.round}
             >
-              <Button.Text numberOfLines={1}>{chip.label}</Button.Text>
+              <Text numberOfLines={1}>{chip.label}</Text>
             </Button>
           ))}
         </ScrollView>
 
         <Button
-          size="$chip"
-          px="$control"
+          size="chip"
+          className="gap-2 px-2"
           disabled={!filtersHydrated}
           onPress={openFilters}
-          icon={Filter}
-          theme={activeCount > 0 ? "accent" : undefined}
+          variant={activeCount > 0 ? "accent" : undefined}
         >
+          <Filter size={16} />
           {!filtersHydrated
             ? t("analytics.filters.button")
             : activeCount > 0
               ? `${t("analytics.filters.button")} (${activeCount})`
               : t("analytics.filters.button")}
         </Button>
-      </XStack>
+      </View>
 
       {isLoading ? (
         <EmptyState title={t("analytics.empty.loading")} subtitle="" />
@@ -467,19 +450,19 @@ export default function AnalyticsScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: UI_SPACE.control, pb: UI_SPACE.gutter }}
+                  contentContainerStyle={{
+                    gap: UI_SPACE.control,
+                    paddingBottom: UI_SPACE.gutter,
+                  }}
                   style={{ marginBottom: UI_SPACE.micro }}
                 >
                   {currencyButtons.map(({ code, isSelected, onPress }) => (
                     <Button
                       key={code}
-                      size="$chip"
-                      px="$control"
+                      size="chip"
+                      className={isSelected ? "px-2 rounded-round border border-border" : "px-2 rounded-round"}
                       onPress={onPress}
-                      theme={isSelected ? "accent" : undefined}
-                      borderColor="$borderColor"
-                      borderWidth={isSelected ? UI_BORDER_WIDTH.thin : 0}
-                      rounded={UI_RADIUS.round}
+                      variant={isSelected ? "accent" : undefined}
                     >
                       {code} ({getCurrencySymbol(code)})
                     </Button>

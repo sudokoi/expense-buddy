@@ -1,9 +1,9 @@
-import { Card, XStack, Text } from "tamagui"
+import { Pressable, View, Text } from "react-native"
 import { memo } from "react"
 import { PaymentMethodConfig } from "../../constants/payment-methods"
-import { ACCENT_COLORS } from "../../constants/theme-colors"
 import { useTranslation } from "react-i18next"
 import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface PaymentMethodCardProps {
   config: PaymentMethodConfig
@@ -22,28 +22,34 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   onPress,
 }: PaymentMethodCardProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const Icon = config.icon
+  const accent = theme.accent
+
   return (
-    <Card
-      p="$control"
-      px="$section"
-      bg={isSelected ? "$color5" : "$background"}
-      borderColor={isSelected ? ACCENT_COLORS.primary : "$borderColor"}
-      borderWidth={isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin}
+    <Pressable
       onPress={onPress}
+      className="rounded-card bg-surface p-2 px-3"
+      style={{
+        backgroundColor: isSelected ? theme.muted : theme.surface,
+        borderColor: isSelected ? accent : theme.border,
+        borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
+      }}
     >
-      <XStack gap="$control" items="center">
+      <View className="flex-row items-center gap-2">
         <Icon
           size={UI_ICON_SIZE.small}
-          color={isSelected ? ACCENT_COLORS.primary : "$color"}
+          color={isSelected ? accent : theme.foreground}
         />
         <Text
-          fontSize="$caption"
-          fontWeight={isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal}
+          className="text-xs text-foreground"
+          style={{
+            fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
+          }}
         >
           {t(`paymentMethods.${config.i18nKey}`)}
         </Text>
-      </XStack>
-    </Card>
+      </View>
+    </Pressable>
   )
 })

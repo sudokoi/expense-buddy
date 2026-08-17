@@ -1,8 +1,7 @@
 import React from "react"
-import { View as RNView, ViewStyle } from "react-native"
+import { Text, View as RNView, ViewStyle, TextStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { Text, YStack, styled } from "tamagui"
-import { CheckCircle, XCircle, Info, AlertTriangle } from "@tamagui/lucide-icons-2"
+import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native"
 import { useNotifications } from "../stores/hooks"
 import { NotificationType } from "../stores/notification-store"
 import {
@@ -50,12 +49,11 @@ const NotificationIcon = React.memo(function NotificationIcon({
   return <RNView style={iconContainerStyle}>{icon}</RNView>
 })
 
-const NotificationText = styled(Text, {
-  name: "NotificationText",
-  fontSize: "$caption",
-  fontWeight: UI_FONT_WEIGHT.medium,
+const notificationTextStyle: TextStyle = {
+  fontSize: 12,
+  fontWeight: UI_FONT_WEIGHT.medium as TextStyle["fontWeight"],
   flex: 1,
-})
+}
 
 export const NotificationStack: React.FC = () => {
   const { notifications } = useNotifications()
@@ -74,7 +72,7 @@ export const NotificationStack: React.FC = () => {
   }
 
   return (
-    <YStack style={containerStyle} pointerEvents="box-none">
+    <RNView style={containerStyle} pointerEvents="box-none">
       {notifications.map((notification) => {
         const bgColor = getNotificationColor(notification.type)
         const styles = NOTIFICATION_STYLE_TOKENS[notification.type]
@@ -100,12 +98,15 @@ export const NotificationStack: React.FC = () => {
         return (
           <RNView key={notification.id} style={notificationStyle}>
             <NotificationIcon key={`icon-${notification.id}`} type={notification.type} />
-            <NotificationText key={`text-${notification.id}`} color={styles.textColor}>
+            <Text
+              key={`text-${notification.id}`}
+              style={[notificationTextStyle, { color: styles.textColor }]}
+            >
               {notification.message}
-            </NotificationText>
+            </Text>
           </RNView>
         )
       })}
-    </YStack>
+    </RNView>
   )
 }

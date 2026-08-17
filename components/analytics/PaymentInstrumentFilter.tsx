@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from "react"
-import { XStack, Button } from "tamagui"
-import { ScrollView } from "react-native"
+import { ScrollView, Text, View } from "react-native"
+import { Button } from "../ui/Button"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
   PAYMENT_INSTRUMENT_METHODS,
@@ -11,7 +11,7 @@ import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { makePaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { methodShortLabel } from "../../utils/analytics/filter-summary"
-import { UI_SPACE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface PaymentInstrumentFilterProps {
   instruments: PaymentInstrument[]
@@ -106,16 +106,14 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
     >
-      <XStack gap="$control">
+      <View className="flex-row gap-2">
         <Button
-          size="$chip"
-          px="$control"
-          theme={isAllSelected ? "accent" : undefined}
-          borderColor="$borderColor"
-          borderWidth={!isAllSelected ? UI_BORDER_WIDTH.thin : 0}
+          size="chip"
+          className="px-2"
+          variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
         >
-          All
+          <Text>All</Text>
         </Button>
 
         {chipItems.map((item) => {
@@ -123,18 +121,16 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
           return (
             <Button
               key={item.key}
-              size="$chip"
-              px="$control"
-              theme={isSelected ? "accent" : undefined}
-              borderColor="$borderColor"
-              borderWidth={!isSelected ? UI_BORDER_WIDTH.thin : 0}
+              size="chip"
+              className="px-2"
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => handleToggle(item.key)}
             >
-              {item.label}
+              <Text>{item.label}</Text>
             </Button>
           )
         })}
-      </XStack>
+      </View>
     </ScrollView>
   )
 })
