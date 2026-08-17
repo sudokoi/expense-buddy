@@ -2,6 +2,34 @@
 "expense-buddy": major
 ---
 
-Removed the Tamagui UI framework and migrated the entire app to native React Native primitives (View, Text, Pressable) styled with nativewind utility classes and the shared design-token modules. Icons now come from `lucide-react-native` instead of `@tamagui/lucide-icons-2`, and all Tamagui build tooling (babel/metro plugins, `tamagui.config.ts`, generated `.tamagui/`) has been dropped.
+Migrated from Tamagui to NativeWind with Expo SDK 57 upgrade, kawaii UI redesign, and comprehensive codebase hardening.
 
-This is a breaking architectural change — Tamagui is no longer a dependency — but preserves existing screens, behavior, and visual design.
+**Breaking changes:**
+- Removed Tamagui — all UI now uses NativeWind + native React Native primitives
+- Icons migrated from `@tamagui/lucide-icons-2` to `lucide-react-native`
+- `@react-navigation/native` removed — use `expo-router/react-navigation` instead
+- Minimum Expo SDK 57, React Native 0.86, React 19.2
+
+**UI redesign:**
+- Borderless cards in light mode, subtle borders in dark mode
+- Softer border-radius scale (card 20px, control 12px, chip 14px)
+- Shadowless design across all surfaces
+- Increased screen-edge spacing (16px → 20px)
+- Standardized press feedback (active:opacity-60)
+- Theme-aware statistics card colors and chart fills for dark mode
+- Consolidated palette tokens (removed redundant THEME_COLORS)
+
+**Quality improvements:**
+- Accessibility labels on ~25 interactive elements
+- Stricter TypeScript (noImplicitAny, noImplicitReturns, noUnusedLocals, noUnusedParameters)
+- Stricter ESLint (no-explicit-any warn, no-console warn)
+- All `as any` casts replaced with proper types
+- StyleSheet/plain objects converted to NativeWind className
+- Test-only exports removed from production barrels
+- Config plugin for Gradle `failOnNoDiscoveredTests`
+
+**Infrastructure:**
+- Google Play submit track changed to alpha
+- Prerelease changeset mode active
+- Submit split into retriable job in CI workflows
+- GitHub Actions updated to latest versions
