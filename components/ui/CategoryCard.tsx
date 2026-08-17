@@ -1,7 +1,7 @@
 import { Pressable, Text } from "react-native"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
-import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
+import { resolveCategoryColor } from "../../utils/resolve-category-color"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
@@ -30,7 +30,7 @@ export const CategoryCard = memo(function CategoryCard({
   const { t } = useTranslation()
   const theme = useThemeColors()
   const { resolvedColor, iconColor: selectedTextColor } =
-    useResolvedCategoryColor(categoryColor)
+    resolveCategoryColor(categoryColor)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 

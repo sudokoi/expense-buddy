@@ -6,7 +6,7 @@ import { Pencil, Trash2 } from "lucide-react-native"
 import { IconActionButton } from "./IconActionButton"
 import { Category } from "../../types/category"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
-import { useResolvedCategoryColor } from "../../hooks/use-resolved-category-color"
+import { resolveCategoryColor } from "../../utils/resolve-category-color"
 import {
   UI_SPACE,
   UI_OPACITY,
@@ -42,7 +42,7 @@ export const CategoryListItem = memo(function CategoryListItem({
   const { t } = useTranslation()
   const theme = useThemeColors()
   // Resolve color for display
-  const { resolvedColor, iconColor } = useResolvedCategoryColor(category.color)
+  const { resolvedColor, iconColor } = resolveCategoryColor(category.color)
 
   // Handle edit press
   const handleEdit = useCallback(() => {
