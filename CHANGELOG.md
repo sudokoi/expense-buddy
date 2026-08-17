@@ -1,5 +1,30 @@
 # expense-buddy
 
+## 4.0.0-beta.0
+
+### Major Changes
+
+- [#108](https://github.com/sudokoi/expense-buddy/pull/108) [`b64db9c`](https://github.com/sudokoi/expense-buddy/commit/b64db9cfe945752b2a357fdb7c2e0a8697ec7d6f) Thanks [@sudokoi](https://github.com/sudokoi)! - Migrated UI framework from Tamagui to NativeWind with Expo SDK 57 upgrade.
+
+  **Breaking changes:**
+  - Removed Tamagui — all UI now uses NativeWind + Tailwind CSS
+  - Icons migrated from `@tamagui/lucide-icons-2` to `lucide-react-native`
+  - Minimum Expo SDK 57, React Native 0.86, React 19.2
+
+  **New features:**
+  - Haptic feedback on save, delete, sync, and UI interactions
+  - Theme-aware statistics card colors and chart fills for dark mode
+  - Accessibility labels on interactive elements
+
+  **Improvements:**
+  - Softer, borderless card design in light mode
+  - Larger border-radius for a more approachable feel
+  - Shadowless surfaces for a cleaner look
+  - Increased screen-edge spacing
+  - Standardized press feedback across all interactive elements
+  - Improved SMS import parsing for SBI, Axis, and AMEX transactions
+  - i18n: all user-visible strings now translated
+
 ## 3.9.3
 
 ### Patch Changes
