@@ -2,10 +2,10 @@
 "expense-buddy": patch
 ---
 
-Fix dark-mode contrast and tab bar alignment regressions from the Tamagui migration
+Fix dark-mode contrast, tab alignment, and UI spacing inconsistencies
 
-- Buttons and their icons now color per variant in both themes, fixing black labels in dark mode
-- Chart and settings labels use theme-aware foreground colors
-- Tab bar icons are vertically centered
-- Rebalanced the kawaii palette with warm rose-tinted neutrals in both modes
-- Added theme-aware semantic colors and light-mode borders on cards and inputs
+- Fix black labels and unreadable chips in dark mode with theme-aware colors
+- Center tab bar icons horizontally
+- Consolidate filter chip styling into Button component, remove per-button overrides
+- Add consistent gap between analytics chart cards
+- Align history screen padding and SettingsSection gap tokens with UI_SPACE values
