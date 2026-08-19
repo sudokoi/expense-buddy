@@ -296,7 +296,9 @@
       "browserHelp": "ブラウザが開かない場合は、{{url}} にアクセスしてください",
       "successConfig": "同期設定を保存しました",
       "successSignIn": "GitHubサインインに成功しました",
-      "validationError": "検証エラーを修正してください"
+      "validationError": "検証エラーを修正してください",
+      "clearConfigDialogTitle": "GitHub同期設定をクリアしますか？",
+      "clearConfigDialogMessage": "保存済みのトークンとリポジトリが削除され、サインアウトされます。この端末の支出は保持されます。"
     },
     "autoSync": {
       "title": "自動同期とオプション",
@@ -467,7 +469,10 @@
       },
       "emptyResolved": "現在のSMS取り込みはすべて解決済みです。確認または削除するには、解決済みを表示を使ってください。",
       "emptyTitle": "確認するSMS取り込みはありません。",
-      "emptyDescription": "取り込みの確認を始めるには、設定または支出追加から最近のメッセージをスキャンしてください。"
+      "emptyDescription": "取り込みの確認を始めるには、設定または支出追加から最近のメッセージをスキャンしてください。",
+      "rejectAllDialogTitle": "すべての提案を拒否しますか？",
+      "rejectAllDialogMessage": "保留中の{{count}}件の支出提案すべてを拒否としてマークします。後で確認することもできます。",
+      "rejectAllConfirm": "すべて拒否"
     }
   },
   "repoPicker": {

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react"
-import { Keyboard, Platform, Linking, Pressable, Text, View } from "react-native"
+import { Alert, Keyboard, Platform, Linking, Pressable, Text, View } from "react-native"
 import { Check, X, ChevronDown, ChevronUp } from "lucide-react-native"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "../Button"
 import { Input } from "../Input"
 import { Label } from "../Label"
+import { Spinner } from "../Spinner"
 import { useThemeColors } from "../../../hooks/use-theme-colors"
 import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../../constants/ui-tokens"
 
@@ -200,16 +201,29 @@ export function GitHubConfigSection({
   }, [onTestConnection, onConnectionStatusChange])
 
   const handleClearConfig = useCallback(() => {
-    onClearConfig()
-    setWebToken("")
-    setRepo("")
-    setBranch("main")
-    onConnectionStatusChange("idle")
+    Alert.alert(
+      t("settings.github.clearConfigDialogTitle"),
+      t("settings.github.clearConfigDialogMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.github.clearConfig"),
+          style: "destructive",
+          onPress: () => {
+            onClearConfig()
+            setWebToken("")
+            setRepo("")
+            setBranch("main")
+            onConnectionStatusChange("idle")
 
-    if (!isWeb) {
-      auth.signOut()
-    }
-  }, [auth, isWeb, onClearConfig, onConnectionStatusChange])
+            if (!isWeb) {
+              auth.signOut()
+            }
+          },
+        },
+      ]
+    )
+  }, [auth, isWeb, onClearConfig, onConnectionStatusChange, t])
 
   const handleSignOut = useCallback(async () => {
     // If a full sync config is saved, signing out should fully disconnect.
@@ -463,6 +477,8 @@ export function GitHubConfigSection({
                 <Check size={16} color={successTextColor} />
               ) : connectionStatus === "error" ? (
                 <X size={16} color={errorTextColor} />
+              ) : isTesting ? (
+                <Spinner size="small" />
               ) : null}
               <Text
                 style={{

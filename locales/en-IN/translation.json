@@ -296,7 +296,9 @@
       "browserHelp": "If the browser didn’t open, visit {{url}}",
       "successConfig": "Sync configuration saved",
       "successSignIn": "GitHub sign-in successful",
-      "validationError": "Please fix the validation errors"
+      "validationError": "Please fix the validation errors",
+      "clearConfigDialogTitle": "Clear GitHub sync configuration?",
+      "clearConfigDialogMessage": "This will remove your saved token and repository and sign you out. Your expenses on this device are kept."
     },
     "autoSync": {
       "title": "Auto-Sync & Options",
@@ -467,7 +469,10 @@
       },
       "emptyResolved": "All current SMS imports are resolved. Use Show resolved to review or clear them.",
       "emptyTitle": "No SMS imports to review.",
-      "emptyDescription": "Scan recent messages from Settings or Add Expense to start reviewing imports."
+      "emptyDescription": "Scan recent messages from Settings or Add Expense to start reviewing imports.",
+      "rejectAllDialogTitle": "Reject all suggestions?",
+      "rejectAllDialogMessage": "This will mark all {{count}} pending expense suggestions as rejected. You can still review them later.",
+      "rejectAllConfirm": "Reject all"
     }
   },
   "repoPicker": {

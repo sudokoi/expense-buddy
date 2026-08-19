@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
-import { Text, View } from "react-native"
+import { Alert, Text, View } from "react-native"
 import { Button } from "./Button"
 import { Card } from "./Card"
 import { Input } from "./Input"
@@ -394,12 +394,25 @@ export function SmsImportReviewScreen({
       return
     }
 
-    markItemsRejected(pendingItems.map((item) => item.fingerprint))
-    addNotification(
-      t("smsImport.sheet.notifications.rejectedMany", {
-        count: pendingItems.length,
-      }),
-      "info"
+    Alert.alert(
+      t("smsImport.sheet.rejectAllDialogTitle"),
+      t("smsImport.sheet.rejectAllDialogMessage", { count: pendingItems.length }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("smsImport.sheet.rejectAllConfirm"),
+          style: "destructive",
+          onPress: () => {
+            markItemsRejected(pendingItems.map((item) => item.fingerprint))
+            addNotification(
+              t("smsImport.sheet.notifications.rejectedMany", {
+                count: pendingItems.length,
+              }),
+              "info"
+            )
+          },
+        },
+      ]
     )
   }, [addNotification, markItemsRejected, pendingItems, t])
 

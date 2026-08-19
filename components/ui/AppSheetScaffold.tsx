@@ -1,7 +1,14 @@
 import type { ReactNode } from "react"
 import { useEffect } from "react"
 import type { ViewStyle } from "react-native"
-import { Modal, Pressable, ScrollView, View } from "react-native"
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { Text } from "react-native"
@@ -73,54 +80,59 @@ export function AppSheetScaffold({
           onPress={dismissOnSnapToBottom ? onClose : undefined}
           accessible={false}
         />
-        <View
-          style={[
-            {
-              height: `${heightPercent}%`,
-              padding: UI_SPACE.gutter,
-              paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
-            },
-            frameStyle,
-          ]}
-          className="rounded-t-card bg-surface"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="max-h-full"
         >
-          <View className="mb-2 items-center">
-            <View className="h-1 w-10 rounded-full bg-border" />
-          </View>
-
-          <View className="flex-1 gap-4">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="text-lg font-semibold text-foreground">{title}</Text>
-                {subtitle ? (
-                  <Text
-                    className="text-[13px] text-muted-foreground"
-                    style={{ opacity: UI_OPACITY.medium }}
-                  >
-                    {subtitle}
-                  </Text>
-                ) : null}
-              </View>
-
-              <IconActionButton
-                icon={<X size={UI_ICON_SIZE.medium} />}
-                onPress={onClose}
-                tooltip={t("common.close")}
-                accessibilityLabel={t("common.close")}
-              />
+          <View
+            style={[
+              {
+                height: `${heightPercent}%`,
+                padding: UI_SPACE.gutter,
+                paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+              },
+              frameStyle,
+            ]}
+            className="rounded-t-card bg-surface"
+          >
+            <View className="mb-2 items-center">
+              <View className="h-1 w-10 rounded-full bg-border" />
             </View>
 
-            {scroll ? (
-              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                {children}
-              </ScrollView>
-            ) : (
-              children
-            )}
+            <View className="flex-1 gap-4">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Text className="text-lg font-semibold text-foreground">{title}</Text>
+                  {subtitle ? (
+                    <Text
+                      className="text-[13px] text-muted-foreground"
+                      style={{ opacity: UI_OPACITY.medium }}
+                    >
+                      {subtitle}
+                    </Text>
+                  ) : null}
+                </View>
 
-            {footer ? <View className="gap-2">{footer}</View> : null}
+                <IconActionButton
+                  icon={<X size={UI_ICON_SIZE.medium} />}
+                  onPress={onClose}
+                  tooltip={t("common.close")}
+                  accessibilityLabel={t("common.close")}
+                />
+              </View>
+
+              {scroll ? (
+                <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                  {children}
+                </ScrollView>
+              ) : (
+                children
+              )}
+
+              {footer ? <View className="gap-2">{footer}</View> : null}
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   )

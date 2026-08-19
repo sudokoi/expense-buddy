@@ -4,6 +4,7 @@ import { Download, ExternalLink, Bug } from "lucide-react-native"
 import { UpdateInfo } from "../../../services/update-checker"
 import { useTranslation } from "react-i18next"
 import { Button } from "../Button"
+import { Spinner } from "../Spinner"
 
 /**
  * Props for the AppInfoSection component
@@ -90,6 +91,7 @@ export function AppInfoSection({
         disabled={isCheckingUpdate}
       >
         <Download size={16} />
+        {isCheckingUpdate ? <Spinner size="small" /> : null}
         {isCheckingUpdate
           ? t("settings.about.checking")
           : t("settings.about.checkForUpdates")}
