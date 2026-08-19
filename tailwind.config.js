@@ -31,6 +31,7 @@ module.exports = {
         error: "var(--error)",
         warning: "var(--warning)",
         info: "var(--info)",
+        destructive: "var(--destructive)",
         "kawaii-pink": "var(--kawaii-pink)",
         "kawaii-pink-light": "var(--kawaii-pink-light)",
         "kawaii-pink-dark": "var(--kawaii-pink-dark)",

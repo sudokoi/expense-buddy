@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { getReadableTextColor } from "../../constants/palette"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -40,12 +41,14 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       i18nKey?: string
       Icon?: React.ComponentType<{ size?: number; color?: string }>
       selectedStyle: ViewStyle
+      selectedTextColor: string
     }> = []
 
     items.push({
       key: NONE_KEY,
       label: "None",
       selectedStyle: { backgroundColor: getColorForKey(NONE_KEY) },
+      selectedTextColor: getReadableTextColor(getColorForKey(NONE_KEY)),
     })
 
     for (const method of PAYMENT_METHODS) {
@@ -59,6 +62,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           color?: string
         }>,
         selectedStyle: { backgroundColor: color },
+        selectedTextColor: getReadableTextColor(color),
       })
     }
 
@@ -113,9 +117,15 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               onPress={() => handleToggle(item.key)}
             >
               {Icon ? (
-                <Icon size={14} color={isSelected ? "white" : theme.foreground} />
+                <Icon
+                  size={14}
+                  color={isSelected ? item.selectedTextColor : theme.foreground}
+                />
               ) : null}
-              <Text className={isSelected ? "text-white" : "text-foreground"}>
+              <Text
+                className={isSelected ? undefined : "text-foreground"}
+                style={isSelected ? { color: item.selectedTextColor } : undefined}
+              >
                 {label}
               </Text>
             </Button>

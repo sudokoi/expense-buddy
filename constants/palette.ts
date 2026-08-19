@@ -12,12 +12,15 @@
 
 export const palette = {
   light: {
+    // Warm cream neutrals — the foreground/muted-foreground/border are
+    // rose-tinted so they harmonize with the kawaii accent instead of clashing
+    // with the cool lavender they replaced.
     background: "#FFF8F0",
     surface: "#FFFAF5",
     muted: "#FFE0D2",
-    foreground: "#4A4458",
-    mutedForeground: "#6B5F7A",
-    border: "#E6E6FA",
+    foreground: "#473E4B",
+    mutedForeground: "#6C5A6C",
+    border: "#E5D9E0",
     accent: "#C0406A",
     accentForeground: "#FFFFFF",
   },
@@ -37,12 +40,31 @@ export const palette = {
 
 export type ThemeScheme = keyof typeof palette
 
-// Status/notification colors (kawaii pastel versions)
+// Status/notification colors (kawaii pastel versions) — used as soft FILLS
+// (e.g. toast/banner backgrounds) where dark text is placed on top.
 export const SEMANTIC_COLORS = {
   success: "#7FDBAA",
   error: "#FF8A8A",
   warning: "#FFD4A0",
   info: "#87CEEB",
+} as const
+
+// Theme-aware semantic FOREGROUND colors — deep in light mode so text/icons
+// stay readable on cream surfaces, pastel in dark mode where they glow on the
+// dark background. Mirrors the `--error/--success/--warning/--info` CSS vars.
+export const SEMANTIC_FOREGROUND_COLORS = {
+  light: {
+    success: "#1E7A4F",
+    error: "#C93A3F",
+    warning: "#A16207",
+    info: "#1E5FB3",
+  },
+  dark: {
+    success: "#7FDBAA",
+    error: "#FF8A8A",
+    warning: "#FFD4A0",
+    info: "#87CEEB",
+  },
 } as const
 
 // Notification text colors (dark-on-pastel for readability)
@@ -109,9 +131,9 @@ export const ACCENT_COLORS = {
 // Chart/graph colors for dark mode compatibility
 export const CHART_COLORS = {
   light: {
-    gridLine: "rgba(74, 68, 88, 0.1)",
-    axisLine: "rgba(74, 68, 88, 0.2)",
-    rules: "rgba(74, 68, 88, 0.05)",
+    gridLine: "rgba(71, 62, 75, 0.1)",
+    axisLine: "rgba(71, 62, 75, 0.2)",
+    rules: "rgba(71, 62, 75, 0.05)",
     selectedBg: "rgba(255, 182, 193, 0.15)",
   },
   dark: {
@@ -126,8 +148,8 @@ export const CHART_COLORS = {
 export const OVERLAY_COLORS = {
   light: {
     background: "#FFFAF5",
-    border: "#E6E6FA",
-    shadow: "rgba(74, 68, 88, 0.15)",
+    border: "#E5D9E0",
+    shadow: "rgba(71, 62, 75, 0.15)",
   },
   dark: {
     background: "#27202A",
@@ -139,10 +161,11 @@ export const OVERLAY_COLORS = {
 // Statistics card colors (kawaii pastel variants with dark-mode support)
 export const CARD_COLORS = {
   light: {
-    blue: { bg: "#E6F3FF", text: "#4A90B8", accent: "#2E7DAF" },
-    green: { bg: "#E8F8EE", text: "#5BA87A", accent: "#4A9668" },
-    orange: { bg: "#FFF3E6", text: "#C88A5A", accent: "#B87A4A" },
-    purple: { bg: "#F3E8FF", text: "#9A7AB8", accent: "#8A6AA8" },
+    // Text colors deepened to clear WCAG AA (>=4.5:1) on the pastel fills.
+    blue: { bg: "#E6F3FF", text: "#2D6E9C", accent: "#255F89" },
+    green: { bg: "#E8F8EE", text: "#31794E", accent: "#2D744A" },
+    orange: { bg: "#FFF3E6", text: "#A05B29", accent: "#9B5727" },
+    purple: { bg: "#F3E8FF", text: "#785698", accent: "#6A4B8E" },
   },
   dark: {
     blue: { bg: "#1E2A3A", text: "#7CB8D8", accent: "#5BA0D0" },

@@ -21,7 +21,7 @@ const buttonVariants = cva(
         outline: "border border-border bg-transparent",
         accent: "bg-accent",
         ghost: "bg-transparent",
-        destructive: "bg-error",
+        destructive: "bg-destructive",
       },
       size: {
         icon: "h-5 px-1",

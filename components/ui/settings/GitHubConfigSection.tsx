@@ -4,7 +4,7 @@ import { Check, X, ChevronDown, ChevronUp } from "lucide-react-native"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
-import { SEMANTIC_COLORS } from "../../../constants/theme-colors"
+import { SEMANTIC_COLORS, getReadableTextColor } from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
 import { useRouter, usePathname } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
@@ -50,6 +50,9 @@ export interface GitHubConfigSectionProps {
 
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
+const errorColor = SEMANTIC_COLORS.error
+const successTextColor = getReadableTextColor(successColor)
+const errorTextColor = getReadableTextColor(errorColor)
 
 /**
  * GitHubConfigSection - Collapsible GitHub configuration form
@@ -436,12 +439,13 @@ export function GitHubConfigSection({
               {t("settings.github.saveConfig")}
             </Button>
             <Button
-              className={
+              className="flex-1 gap-2"
+              style={
                 connectionStatus === "success"
-                  ? "flex-1 gap-2 bg-success text-white"
+                  ? { backgroundColor: successColor }
                   : connectionStatus === "error"
-                    ? "flex-1 gap-2 bg-error text-white"
-                    : "flex-1 gap-2"
+                    ? { backgroundColor: errorColor }
+                    : undefined
               }
               size="control"
               onPress={handleTestConnection}
@@ -449,11 +453,22 @@ export function GitHubConfigSection({
               variant="accent"
             >
               {connectionStatus === "success" ? (
-                <Check size={16} />
+                <Check size={16} color={successTextColor} />
               ) : connectionStatus === "error" ? (
-                <X size={16} />
+                <X size={16} color={errorTextColor} />
               ) : null}
-              {isTesting ? t("settings.github.testing") : t("settings.github.test")}
+              <Text
+                style={{
+                  color:
+                    connectionStatus === "success"
+                      ? successTextColor
+                      : connectionStatus === "error"
+                        ? errorTextColor
+                        : undefined,
+                }}
+              >
+                {isTesting ? t("settings.github.testing") : t("settings.github.test")}
+              </Text>
             </Button>
           </View>
 

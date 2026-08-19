@@ -4,7 +4,7 @@ import { View, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
-  SEMANTIC_COLORS,
+  SEMANTIC_FOREGROUND_COLORS,
   getOverlayColors,
   ACCENT_COLORS,
 } from "../constants/theme-colors"
@@ -26,6 +26,7 @@ export const SyncIndicator: React.FC = () => {
   const insets = useSafeAreaInsets()
   const colorScheme = useThemeScheme()
   const overlayColors = getOverlayColors(colorScheme)
+  const semanticColors = SEMANTIC_FOREGROUND_COLORS[colorScheme]
 
   // Derive visibility directly from machine state
   // Machine auto-resets from success after 2 seconds
@@ -38,10 +39,12 @@ export const SyncIndicator: React.FC = () => {
       return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
     }
     if (isSuccess) {
-      return <CheckCircle size={UI_ICON_SIZE.large} color={SEMANTIC_COLORS.success} />
+      return (
+        <CheckCircle size={UI_ICON_SIZE.large} color={semanticColors.success} />
+      )
     }
     if (isError) {
-      return <XCircle size={UI_ICON_SIZE.large} color={SEMANTIC_COLORS.error} />
+      return <XCircle size={UI_ICON_SIZE.large} color={semanticColors.error} />
     }
     return null
   }

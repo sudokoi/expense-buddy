@@ -12,21 +12,26 @@
     --background: #FFF8F0;
     --surface: #FFFAF5;
     --muted: #FFE0D2;
-    --foreground: #4A4458;
-    --muted-foreground: #6B5F7A;
-    --border: #E6E6FA;
+    --foreground: #473E4B;
+    --muted-foreground: #6C5A6C;
+    --border: #E5D9E0;
     --accent: #C0406A;
     --accent-foreground: #FFFFFF;
 
-    /* Constant semantic colors (identical across light/dark) */
+    /* Constant financial colors (identical across light/dark) */
     --expense: #FF8A8A;
     --expense-light: #FFD4D4;
     --income: #7FDBAA;
     --income-light: #C8F7DC;
-    --success: #7FDBAA;
-    --error: #FF8A8A;
-    --warning: #FFD4A0;
-    --info: #87CEEB;
+
+    /* Semantic colors — theme-aware: deep in light (readable as text),
+       pastel in dark (bright on dark fills). Notifications keep the pastel
+       fills via the JS SEMANTIC_COLORS constants. */
+    --error: #C93A3F;
+    --success: #1E7A4F;
+    --warning: #A16207;
+    --info: #1E5FB3;
+    --destructive: #C93A3F;
 
     /* Kawaii decorative colors (fills/backgrounds, not text) */
     --kawaii-pink: #FFB6C1;
@@ -45,5 +50,12 @@
     --border: #3B3342;
     --accent: #FFB6C1;
     --accent-foreground: #1D161B;
+
+    /* Semantic colors — pastel on dark for brightness */
+    --error: #FF8A8A;
+    --success: #7FDBAA;
+    --warning: #FFD4A0;
+    --info: #87CEEB;
+    --destructive: #C93A3F;
   }
 }
