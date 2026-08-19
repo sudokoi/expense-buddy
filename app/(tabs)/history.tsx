@@ -537,7 +537,7 @@ export default function HistoryScreen() {
                 variant="outline"
                 onPress={handleOpenFilterSheet}
               >
-                <Text className="text-foreground" numberOfLines={1}>
+                <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
                   {chip.label}
                 </Text>
               </Button>
@@ -598,7 +598,7 @@ export default function HistoryScreen() {
               variant="outline"
               onPress={handleOpenFilterSheet}
             >
-              <Text className="text-foreground" numberOfLines={1}>
+              <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
                 {chip.label}
               </Text>
             </Button>

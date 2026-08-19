@@ -36,17 +36,23 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       accessibilityState={{ selected: isSelected }}
       className="rounded-card bg-surface p-2 px-3"
       style={{
-        backgroundColor: isSelected ? theme.muted : theme.muted,
+        backgroundColor: isSelected ? theme.accent : theme.muted,
         borderColor: isSelected ? accent : theme.border,
         borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
       }}
     >
       <View className="flex-row items-center gap-2">
-        <Icon size={UI_ICON_SIZE.small} color={isSelected ? accent : theme.foreground} />
+        <Icon
+          size={UI_ICON_SIZE.small}
+          color={isSelected ? theme.accentForeground : theme.foreground}
+        />
         <Text
           className="text-xs text-foreground"
+          adjustsFontSizeToFit
+          numberOfLines={1}
           style={{
             fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
+            color: isSelected ? theme.accentForeground : theme.foreground,
           }}
         >
           {t(`paymentMethods.${config.i18nKey}`)}

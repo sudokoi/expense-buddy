@@ -412,7 +412,7 @@ export default function AnalyticsScreen() {
               disabled={!filtersHydrated}
               onPress={openFilters}
             >
-              <Text className="text-foreground" numberOfLines={1}>
+              <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
                 {chip.label}
               </Text>
             </Button>

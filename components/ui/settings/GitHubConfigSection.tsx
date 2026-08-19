@@ -4,9 +4,13 @@ import { Check, X, ChevronDown, ChevronUp } from "lucide-react-native"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
 import { validateGitHubConfig } from "../../../utils/github-config-validation"
-import { SEMANTIC_COLORS, getReadableTextColor } from "../../../constants/theme-colors"
+import {
+  SEMANTIC_COLORS,
+  SEMANTIC_FOREGROUND_COLORS,
+  getReadableTextColor,
+} from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
-import { useRouter, usePathname } from "expo-router"
+import { useRouter } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 import { useTranslation } from "react-i18next"
@@ -14,7 +18,7 @@ import { Button } from "../Button"
 import { Input } from "../Input"
 import { Label } from "../Label"
 import { Spinner } from "../Spinner"
-import { useThemeColors } from "../../../hooks/use-theme-colors"
+import { useThemeColors, useThemeScheme } from "../../../hooks/use-theme-colors"
 import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../../constants/ui-tokens"
 
 const REPO_KEY = "github_repo"
@@ -77,8 +81,8 @@ export function GitHubConfigSection({
 }: GitHubConfigSectionProps) {
   const { t } = useTranslation()
   const router = useRouter()
-  const pathname = usePathname()
   const theme = useThemeColors()
+  const themeScheme = useThemeScheme()
 
   const auth = useGitHubAuthMachine()
   const { token: nativeToken } = auth
@@ -126,7 +130,7 @@ export function GitHubConfigSection({
     return () => {
       cancelled = true
     }
-  }, [pathname])
+  }, [])
 
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
@@ -293,7 +297,10 @@ export function GitHubConfigSection({
           {isConfigured && (
             <View className="flex-col items-start gap-0.5 shrink min-w-0">
               <View style={{ minWidth: 0, alignItems: "center", gap: UI_SPACE.micro }}>
-                <Check size={14} color={successColor} />
+                <Check
+                  size={14}
+                  color={SEMANTIC_FOREGROUND_COLORS[themeScheme].success}
+                />
                 <Text className="text-xs text-success">
                   {t("settings.github.connected")}
                 </Text>

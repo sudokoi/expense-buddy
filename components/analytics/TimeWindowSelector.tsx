@@ -59,7 +59,12 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
               onPress={() => handlePress(window.value)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text className="text-foreground">
+              <Text
+                className="text-foreground"
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={isSelected ? { color: theme.accentForeground } : undefined}
+              >
                 {t(`analytics.timeWindow.${window.value}`)}
               </Text>
             </Button>

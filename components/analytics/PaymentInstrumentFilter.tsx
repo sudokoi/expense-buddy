@@ -108,7 +108,12 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
           onPress={handleAllPress}
           accessibilityState={{ selected: isAllSelected }}
         >
-          <Text className="text-foreground">{t("common.all")}</Text>
+          <Text
+            className="text-foreground"
+            style={isAllSelected ? { color: theme.accentForeground } : undefined}
+          >
+            {t("common.all")}
+          </Text>
         </Button>
 
         {chipItems.map((item) => {
@@ -122,7 +127,12 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text className="text-foreground" numberOfLines={1}>
+              <Text
+                className="text-foreground"
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={isSelected ? { color: theme.accentForeground } : undefined}
+              >
                 {item.label}
               </Text>
             </Button>

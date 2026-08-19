@@ -30,9 +30,7 @@ export const CategoryFilter = memo(function CategoryFilter({
       const IconComponent = CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle
       return {
         label: cat.label,
-        color: cat.color,
         Icon: IconComponent,
-        selectedStyle: { backgroundColor: cat.color },
       }
     })
   }, [categories])
@@ -84,12 +82,20 @@ export const CategoryFilter = memo(function CategoryFilter({
               size="chip"
               className="gap-1"
               variant="outline"
-              style={isSelected ? cat.selectedStyle : undefined}
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Icon size={14} color={theme.foreground} />
-              <Text className="text-foreground">
+              <Icon
+                size={14}
+                color={isSelected ? theme.accentForeground : theme.foreground}
+              />
+              <Text
+                className="text-foreground"
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={isSelected ? { color: theme.accentForeground } : undefined}
+              >
                 {cat.label === "Other" ? t("settings.categories.other") : cat.label}
               </Text>
             </Button>

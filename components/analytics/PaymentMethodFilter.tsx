@@ -1,9 +1,8 @@
 import React, { memo, useCallback, useMemo } from "react"
-import { ScrollView, Text, View, ViewStyle } from "react-native"
+import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
-import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import type { PaymentMethodType } from "../../types/expense"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
@@ -15,11 +14,6 @@ interface PaymentMethodFilterProps {
 }
 
 const NONE_KEY: PaymentMethodSelectionKey = "__none__"
-
-function getColorForKey(key: PaymentMethodSelectionKey): string {
-  if (key === NONE_KEY) return PAYMENT_METHOD_COLORS.Other
-  return PAYMENT_METHOD_COLORS[key as PaymentMethodType] ?? PAYMENT_METHOD_COLORS.Other
-}
 
 /**
  * PaymentMethodFilter - Multi-select chips for filtering analytics by payment method.
@@ -39,17 +33,14 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
       label: string
       i18nKey?: string
       Icon?: React.ComponentType<{ size?: number; color?: string }>
-      selectedStyle: ViewStyle
     }> = []
 
     items.push({
       key: NONE_KEY,
       label: "None",
-      selectedStyle: { backgroundColor: getColorForKey(NONE_KEY) },
     })
 
     for (const method of PAYMENT_METHODS) {
-      const color = getColorForKey(method.value)
       items.push({
         key: method.value,
         label: method.label,
@@ -58,7 +49,6 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           size?: number
           color?: string
         }>,
-        selectedStyle: { backgroundColor: color },
       })
     }
 
@@ -110,12 +100,24 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               size="chip"
               className="gap-1"
               variant="outline"
-              style={isSelected ? item.selectedStyle : undefined}
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}
             >
-              {Icon ? <Icon size={14} color={theme.foreground} /> : null}
-              <Text className="text-foreground">{label}</Text>
+              {Icon ? (
+                <Icon
+                  size={14}
+                  color={isSelected ? theme.accentForeground : theme.foreground}
+                />
+              ) : null}
+              <Text
+                className="text-foreground"
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={isSelected ? { color: theme.accentForeground } : undefined}
+              >
+                {label}
+              </Text>
             </Button>
           )
         })}
