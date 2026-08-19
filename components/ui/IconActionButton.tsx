@@ -9,6 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated"
+import { LucideProvider } from "lucide-react-native"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface IconActionButtonProps {
@@ -102,7 +103,7 @@ export function IconActionButton({
           aria-label={accessibilityLabel ?? tooltip}
           className="items-center justify-center p-1"
         >
-          {icon}
+          <LucideProvider color={theme.foreground}>{icon}</LucideProvider>
         </Pressable>
       </SpinningIcon>
       {showTooltip && tooltip && (

@@ -14,7 +14,7 @@ export const palette = {
   light: {
     background: "#FFF8F0",
     surface: "#FFFAF5",
-    muted: "#FFE8E0",
+    muted: "#FFE0D2",
     foreground: "#4A4458",
     mutedForeground: "#6B5F7A",
     border: "#E6E6FA",
@@ -22,14 +22,16 @@ export const palette = {
     accentForeground: "#FFFFFF",
   },
   dark: {
-    background: "#1A1625",
-    surface: "#252033",
-    muted: "#302840",
-    foreground: "#F0E6F6",
-    mutedForeground: "#C7B9D6",
-    border: "#3A3050",
+    // Warm plum family — harmonizes with the warm cream light theme instead
+    // of the previous cool violet. All text/UI contrast still clears WCAG AA.
+    background: "#1D161B",
+    surface: "#27202A",
+    muted: "#362D40",
+    foreground: "#F2E9EE",
+    mutedForeground: "#CCBFC9",
+    border: "#3B3342",
     accent: "#FFB6C1",
-    accentForeground: "#1A1625",
+    accentForeground: "#1D161B",
   },
 } as const
 
@@ -113,9 +115,9 @@ export const CHART_COLORS = {
     selectedBg: "rgba(255, 182, 193, 0.15)",
   },
   dark: {
-    gridLine: "rgba(240, 230, 246, 0.1)",
-    axisLine: "rgba(240, 230, 246, 0.2)",
-    rules: "rgba(240, 230, 246, 0.05)",
+    gridLine: "rgba(242, 233, 238, 0.1)",
+    axisLine: "rgba(242, 233, 238, 0.2)",
+    rules: "rgba(242, 233, 238, 0.05)",
     selectedBg: "rgba(255, 105, 180, 0.15)",
   },
 } as const
@@ -128,8 +130,8 @@ export const OVERLAY_COLORS = {
     shadow: "rgba(74, 68, 88, 0.15)",
   },
   dark: {
-    background: "#252033",
-    border: "#3A3050",
+    background: "#27202A",
+    border: "#3B3342",
     shadow: "rgba(0, 0, 0, 0.3)",
   },
 } as const

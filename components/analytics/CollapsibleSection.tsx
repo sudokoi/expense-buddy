@@ -40,7 +40,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
             isExpanded ? "rounded-b-none" : "rounded-b-card"
           }`}
         >
-          <Text className="text-sm font-bold">{title}</Text>
+          <Text className="text-sm font-bold text-foreground">{title}</Text>
           {isExpanded ? (
             <ChevronUp size={UI_ICON_SIZE.medium} color={theme.foreground} />
           ) : (

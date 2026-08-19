@@ -63,7 +63,7 @@ export function AppInfoSection({
         <Text className="text-foreground opacity-80">
           {t("settings.about.currentVersion")}
         </Text>
-        <Text className="font-bold">v{currentVersion}</Text>
+        <Text className="font-bold text-foreground">v{currentVersion}</Text>
       </View>
 
       {/* Update Info */}

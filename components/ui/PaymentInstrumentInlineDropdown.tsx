@@ -236,7 +236,7 @@ export function PaymentInstrumentInlineDropdown({
               }`}
             >
               <Text
-                className={`flex-1 shrink pr-3 text-left ${kind === "none" ? "font-bold" : "font-medium"}`}
+                className={`flex-1 shrink pr-3 text-left text-foreground ${kind === "none" ? "font-bold" : "font-medium"}`}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.none")}
@@ -267,7 +267,7 @@ export function PaymentInstrumentInlineDropdown({
               }`}
             >
               <Text
-                className={`flex-1 shrink pr-3 text-left ${kind === "manual" ? "font-bold" : "font-medium"}`}
+                className={`flex-1 shrink pr-3 text-left text-foreground ${kind === "manual" ? "font-bold" : "font-medium"}`}
                 numberOfLines={1}
               >
                 {t("instruments.dropdown.others")}
@@ -302,7 +302,7 @@ export function PaymentInstrumentInlineDropdown({
                   }`}
                 >
                   <Text
-                    className={`flex-1 shrink pr-3 text-left ${isSelected ? "font-bold" : "font-medium"}`}
+                    className={`flex-1 shrink pr-3 text-left text-foreground ${isSelected ? "font-bold" : "font-medium"}`}
                     numberOfLines={1}
                   >
                     {formatPaymentInstrumentLabel(inst)}

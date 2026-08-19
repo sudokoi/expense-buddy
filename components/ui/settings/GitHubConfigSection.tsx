@@ -267,7 +267,7 @@ export function GitHubConfigSection({
         className="bg-surface flex-row items-center justify-between p-3 rounded-control"
       >
         <View className="flex-row items-center flex-1 gap-2 min-w-0 max-w-[85%]">
-          <Text className="font-medium">{t("settings.github.configTitle")}</Text>
+          <Text className="font-medium text-foreground">{t("settings.github.configTitle")}</Text>
           {isConfigured && (
             <View className="flex-col items-start gap-0.5 shrink min-w-0">
               <View style={{ minWidth: 0, alignItems: "center", gap: UI_SPACE.micro }}>
@@ -352,7 +352,7 @@ export function GitHubConfigSection({
                     className="flex-row gap-2"
                     style={{ alignItems: "center", flexWrap: "wrap" }}
                   >
-                    <Text className="text-lg font-bold">{auth.deviceCode.user_code}</Text>
+                    <Text className="text-lg font-bold text-foreground">{auth.deviceCode.user_code}</Text>
                     <Button size="compact" onPress={() => void handleCopyDeviceCode()}>
                       {t("settings.github.copyCode")}
                     </Button>

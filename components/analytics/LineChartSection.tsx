@@ -109,7 +109,7 @@ export const LineChartSection = memo(function LineChartSection({
       if (!item) return null
       return (
         <View style={styles.tooltipContainer}>
-          <Text className="text-[13px] font-bold">
+          <Text className="text-[13px] font-bold text-foreground">
             {symbol}
             {item.value.toFixed(2)}
           </Text>

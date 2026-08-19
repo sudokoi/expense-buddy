@@ -247,7 +247,7 @@ export function CategoryFormModal({
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-medium">{icon}</Text>
+                  <Text className="font-medium text-foreground">{icon}</Text>
                   <Text className="text-xs text-foreground opacity-60">
                     {t("settings.categories.form.iconHelp")}
                   </Text>
@@ -270,7 +270,7 @@ export function CategoryFormModal({
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
                 />
                 <View className="flex-1">
-                  <Text className="font-medium">{color}</Text>
+                  <Text className="font-medium text-foreground">{color}</Text>
                   <Text className="text-xs text-foreground opacity-60">
                     {t("settings.categories.form.colorHelp")}
                   </Text>

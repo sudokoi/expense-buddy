@@ -56,6 +56,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.accent,
         tabBarShowLabel: false,
         tabBarButton: TabBarButton,
+        tabBarItemStyle: {
+          // Force the button to be vertically centered in each tab item; the
+          // default uikit layout top-aligns content when labels are hidden.
+          justifyContent: "center",
+        },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
