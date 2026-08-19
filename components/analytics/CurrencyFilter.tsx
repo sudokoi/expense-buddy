@@ -42,7 +42,7 @@ export const CurrencyFilter = memo(function CurrencyFilter({
           onPress={() => onChange(null)}
           accessibilityState={{ selected: isDefaultSelected }}
         >
-          <Text>
+          <Text className="text-foreground">
             {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
           </Text>
         </Button>
@@ -59,7 +59,7 @@ export const CurrencyFilter = memo(function CurrencyFilter({
               onPress={() => onChange(currency)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text>
+              <Text className="text-foreground">
                 {currency} ({getCurrencySymbol(currency)})
               </Text>
             </Button>

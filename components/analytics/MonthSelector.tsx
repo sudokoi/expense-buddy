@@ -36,7 +36,7 @@ export const MonthSelector = memo(function MonthSelector({
           onPress={() => onChange(null)}
           accessibilityState={{ selected: value === null }}
         >
-          <Text>{t("common.all")}</Text>
+          <Text className="text-foreground">{t("common.all")}</Text>
         </Button>
         {availableMonths.map((monthKey) => {
           const isSelected = value === monthKey
@@ -50,7 +50,7 @@ export const MonthSelector = memo(function MonthSelector({
               onPress={() => onChange(monthKey)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text>{label}</Text>
+              <Text className="text-foreground">{label}</Text>
             </Button>
           )
         })}

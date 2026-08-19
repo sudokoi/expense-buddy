@@ -12,6 +12,7 @@ import type { PaymentMethodSelectionKey } from "./PaymentMethodFilter"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { makePaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import { methodShortLabel } from "../../utils/analytics/filter-summary"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface PaymentInstrumentFilterProps {
   instruments: PaymentInstrument[]
@@ -31,6 +32,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
   onChange,
 }: PaymentInstrumentFilterProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const isAllSelected = selected.length === 0
 
   const active = useMemo(() => getActivePaymentInstruments(instruments), [instruments])
@@ -101,11 +103,12 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          variant={isAllSelected ? "accent" : "outline"}
+          variant="outline"
+          style={isAllSelected ? { backgroundColor: theme.accent } : undefined}
           onPress={handleAllPress}
           accessibilityState={{ selected: isAllSelected }}
         >
-          <Text>{t("common.all")}</Text>
+          <Text className="text-foreground">{t("common.all")}</Text>
         </Button>
 
         {chipItems.map((item) => {
@@ -114,11 +117,14 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
             <Button
               key={item.key}
               size="chip"
-              variant={isSelected ? "accent" : "outline"}
+              variant="outline"
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text numberOfLines={1}>{item.label}</Text>
+              <Text className="text-foreground" numberOfLines={1}>
+                {item.label}
+              </Text>
             </Button>
           )
         })}
