@@ -20,7 +20,7 @@ export const palette = {
     muted: "#FFE0D2",
     foreground: "#473E4B",
     mutedForeground: "#6C5A6C",
-    border: "#E5D9E0",
+    border: "#D6C9C2",
     accent: "#C0406A",
     accentForeground: "#FFFFFF",
   },
@@ -148,7 +148,7 @@ export const CHART_COLORS = {
 export const OVERLAY_COLORS = {
   light: {
     background: "#FFFAF5",
-    border: "#E5D9E0",
+    border: "#D6C9C2",
     shadow: "rgba(71, 62, 75, 0.15)",
   },
   dark: {

@@ -39,9 +39,7 @@ export const SyncIndicator: React.FC = () => {
       return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
     }
     if (isSuccess) {
-      return (
-        <CheckCircle size={UI_ICON_SIZE.large} color={semanticColors.success} />
-      )
+      return <CheckCircle size={UI_ICON_SIZE.large} color={semanticColors.success} />
     }
     if (isError) {
       return <XCircle size={UI_ICON_SIZE.large} color={semanticColors.error} />

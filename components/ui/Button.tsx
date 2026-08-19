@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  Children,
-  cloneElement,
-  isValidElement,
-  type ReactNode,
-} from "react"
+import { forwardRef, Children, cloneElement, isValidElement, type ReactNode } from "react"
 import { Pressable, Text, type PressableProps } from "react-native"
 import { cva, type VariantProps } from "class-variance-authority"
 import { LucideProvider } from "lucide-react-native"
@@ -92,8 +86,7 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
     const theme = useThemeColors()
     const resolvedVariant = variant ?? "default"
     const colorKey = VARIANT_TEXT_COLOR_KEY[resolvedVariant]
-    const iconColor =
-      colorKey === "white" ? NEUTRAL_COLORS.white : theme[colorKey]
+    const iconColor = colorKey === "white" ? NEUTRAL_COLORS.white : theme[colorKey]
     return (
       <Pressable
         ref={ref}
