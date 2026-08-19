@@ -5,7 +5,6 @@ import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { getReadableTextColor } from "../../constants/palette"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -34,7 +33,6 @@ export const CategoryFilter = memo(function CategoryFilter({
         color: cat.color,
         Icon: IconComponent,
         selectedStyle: { backgroundColor: cat.color },
-        selectedTextColor: getReadableTextColor(cat.color),
       }
     })
   }, [categories])
@@ -90,14 +88,8 @@ export const CategoryFilter = memo(function CategoryFilter({
               onPress={() => handleCategoryPress(cat.label)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Icon
-                size={14}
-                color={isSelected ? cat.selectedTextColor : theme.foreground}
-              />
-              <Text
-                className={isSelected ? undefined : "text-foreground"}
-                style={isSelected ? { color: cat.selectedTextColor } : undefined}
-              >
+              <Icon size={14} color={theme.foreground} />
+              <Text className="text-foreground">
                 {cat.label === "Other" ? t("settings.categories.other") : cat.label}
               </Text>
             </Button>

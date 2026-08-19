@@ -12,3 +12,4 @@ Fix dark-mode contrast, tab alignment, and UI spacing inconsistencies
 - Use theme.muted for unselected CategoryCard, PaymentMethodCard, and payment instrument items
 - History filter chips now open filter screen (matching analytics behavior)
 - Brighten dark-mode muted color from #362D40 to #4A3D52
+- Remove per-item text color overrides from CategoryFilter and PaymentMethodFilter
