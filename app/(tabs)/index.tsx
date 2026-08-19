@@ -412,7 +412,9 @@ export default function AnalyticsScreen() {
               disabled={!filtersHydrated}
               onPress={openFilters}
             >
-              <Text numberOfLines={1}>{chip.label}</Text>
+              <Text className="text-foreground" numberOfLines={1}>
+                {chip.label}
+              </Text>
             </Button>
           ))}
         </ScrollView>

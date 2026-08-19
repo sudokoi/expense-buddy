@@ -537,7 +537,9 @@ export default function HistoryScreen() {
                 variant="outline"
                 onPress={handleOpenFilterSheet}
               >
-                <Text numberOfLines={1}>{chip.label}</Text>
+                <Text className="text-foreground" numberOfLines={1}>
+                  {chip.label}
+                </Text>
               </Button>
             ))}
           </ScrollView>
@@ -596,7 +598,9 @@ export default function HistoryScreen() {
               variant="outline"
               onPress={handleOpenFilterSheet}
             >
-              <Text numberOfLines={1}>{chip.label}</Text>
+              <Text className="text-foreground" numberOfLines={1}>
+                {chip.label}
+              </Text>
             </Button>
           ))}
         </ScrollView>

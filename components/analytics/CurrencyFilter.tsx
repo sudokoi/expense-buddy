@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -19,6 +20,7 @@ export const CurrencyFilter = memo(function CurrencyFilter({
   onChange,
 }: CurrencyFilterProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
 
   if (availableCurrencies.length <= 1) return null
 
@@ -35,7 +37,8 @@ export const CurrencyFilter = memo(function CurrencyFilter({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          variant={isDefaultSelected ? "accent" : "outline"}
+          variant="outline"
+          style={isDefaultSelected ? { backgroundColor: theme.accent } : undefined}
           onPress={() => onChange(null)}
           accessibilityState={{ selected: isDefaultSelected }}
         >
@@ -51,7 +54,8 @@ export const CurrencyFilter = memo(function CurrencyFilter({
             <Button
               key={currency}
               size="chip"
-              variant={isSelected ? "accent" : "outline"}
+              variant="outline"
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => onChange(currency)}
               accessibilityState={{ selected: isSelected }}
             >

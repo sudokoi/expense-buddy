@@ -4,6 +4,7 @@ import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface MonthSelectorProps {
   value: string | null
@@ -17,6 +18,7 @@ export const MonthSelector = memo(function MonthSelector({
   availableMonths,
 }: MonthSelectorProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
 
   return (
     <ScrollView
@@ -29,7 +31,8 @@ export const MonthSelector = memo(function MonthSelector({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          variant={value === null ? "accent" : "outline"}
+          variant="outline"
+          style={value === null ? { backgroundColor: theme.accent } : undefined}
           onPress={() => onChange(null)}
           accessibilityState={{ selected: value === null }}
         >
@@ -42,7 +45,8 @@ export const MonthSelector = memo(function MonthSelector({
             <Button
               key={monthKey}
               size="chip"
-              variant={isSelected ? "accent" : "outline"}
+              variant="outline"
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => onChange(monthKey)}
               accessibilityState={{ selected: isSelected }}
             >

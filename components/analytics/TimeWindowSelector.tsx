@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -29,6 +30,7 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
   onChange,
 }: TimeWindowSelectorProps) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
 
   const handlePress = useCallback(
     (windowValue: TimeWindow) => {
@@ -52,7 +54,8 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
             <Button
               key={window.value}
               size="chip"
-              variant={isSelected ? "accent" : "outline"}
+              variant="outline"
+              style={isSelected ? { backgroundColor: theme.accent } : undefined}
               onPress={() => handlePress(window.value)}
               accessibilityState={{ selected: isSelected }}
             >
