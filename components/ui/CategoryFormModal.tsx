@@ -217,6 +217,7 @@ export function CategoryFormModal({
               value={label}
               onChangeText={handleLabelChange}
               maxLength={30}
+              accessibilityLabel={t("settings.categories.form.nameLabel")}
             />
             {errors.label && <Text className="text-xs text-error">{errors.label}</Text>}
             <Text className="text-xs text-foreground opacity-50">

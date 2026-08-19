@@ -153,7 +153,10 @@
       "month": "Month: {{month}}",
       "category": "Category: {{category}}",
       "payment": "Payment: {{method}}",
-      "instrument": "Instrument: {{instrument}}"
+      "instrument": "Instrument: {{instrument}}",
+      "minAmount": "Minimum amount",
+      "maxAmount": "Maximum amount",
+      "search": "Search notes, categories, payment methods"
     },
     "timeWindow": {
       "7d": "7 Days",
@@ -331,7 +334,9 @@
         "colorHelp": "Tap to change colour",
         "chooseIcon": "Choose Icon",
         "chooseColor": "Choose Colour"
-      }
+      },
+      "moveUp": "Move {{category}} up",
+      "moveDown": "Move {{category}} down"
     },
     "appearance": {
       "theme": "Theme",
@@ -522,6 +527,11 @@
       "downloadFailedWithCount": "Failed to download any expense files. {{count}} file(s) failed.",
       "failedToListRemoteWithError": "Failed to list remote files: {{error}}",
       "conflictManualSync": "Conflict detected - manual sync required"
+    },
+    "status": {
+      "syncing": "Syncing",
+      "success": "Sync complete",
+      "error": "Sync failed"
     }
   },
   "changelog": {

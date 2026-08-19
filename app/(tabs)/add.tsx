@@ -354,6 +354,7 @@ export default function AddExpenseScreen() {
                     })
                   }
                 }}
+                accessibilityLabel={t("add.amount")}
               />
             </View>
             {errors.amount && <Text className="text-xs text-error">{errors.amount}</Text>}
@@ -402,6 +403,7 @@ export default function AddExpenseScreen() {
               placeholder={t("add.notePlaceholder")}
               value={note}
               onChangeText={setNote}
+              accessibilityLabel={t("add.note")}
             />
           </View>
 
@@ -497,6 +499,7 @@ export default function AddExpenseScreen() {
                         value={paymentMethodId}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
+                        accessibilityLabel={t("history.editDialog.fields.identifier")}
                       />
                     )}
                   </View>

@@ -247,7 +247,10 @@ export function PaymentInstrumentInlineDropdown({
                 </Text>
               )}
               {kind !== "none" && (
-                <Text className="font-bold opacity-0">
+                <Text
+                  className="font-bold opacity-0"
+                  importantForAccessibility="no-hide-descendants"
+                >
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -278,7 +281,10 @@ export function PaymentInstrumentInlineDropdown({
                 </Text>
               )}
               {kind !== "manual" && (
-                <Text className="font-bold opacity-0">
+                <Text
+                  className="font-bold opacity-0"
+                  importantForAccessibility="no-hide-descendants"
+                >
                   {t("instruments.dropdown.selected")}
                 </Text>
               )}
@@ -313,7 +319,10 @@ export function PaymentInstrumentInlineDropdown({
                     </Text>
                   )}
                   {!isSelected && (
-                    <Text className="font-bold opacity-0">
+                    <Text
+                      className="font-bold opacity-0"
+                      importantForAccessibility="no-hide-descendants"
+                    >
                       {t("instruments.dropdown.selected")}
                     </Text>
                   )}

@@ -529,6 +529,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) => {
                   void handleBackgroundSmsToggle(checked)
                 }}
+                accessibilityLabel={t("settings.smsImport.backgroundAlerts")}
               />
             </View>
           </SettingsSection>
@@ -582,6 +583,7 @@ export default function SettingsScreen() {
             <Switch
               checked={settings.enableMathExpressions}
               onCheckedChange={setEnableMathExpressions}
+              accessibilityLabel={t("settings.general.mathEntry")}
             />
           </View>
 
@@ -598,6 +600,7 @@ export default function SettingsScreen() {
                 onCheckedChange={(checked) =>
                   updateSettings({ useMlOnlyForSmsImports: checked })
                 }
+                accessibilityLabel={t("settings.featureFlags.mlOnlySmsImports")}
               />
             </View>
           ) : null}

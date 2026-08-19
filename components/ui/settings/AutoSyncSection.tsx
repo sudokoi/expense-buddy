@@ -64,7 +64,11 @@ export function AutoSyncSection({
             {t("settings.autoSync.enableHelp")}
           </Text>
         </View>
-        <Switch checked={autoSyncEnabled} onCheckedChange={onAutoSyncEnabledChange} />
+        <Switch
+          checked={autoSyncEnabled}
+          onCheckedChange={onAutoSyncEnabledChange}
+          accessibilityLabel={t("settings.autoSync.enable")}
+        />
       </View>
 
       {/* Also sync settings toggle */}
@@ -75,7 +79,11 @@ export function AutoSyncSection({
             {t("settings.autoSync.syncSettingsHelp")}
           </Text>
         </View>
-        <Switch checked={syncSettings} onCheckedChange={onSyncSettingsChange} />
+        <Switch
+          checked={syncSettings}
+          onCheckedChange={onSyncSettingsChange}
+          accessibilityLabel={t("settings.autoSync.syncSettings")}
+        />
       </View>
 
       {/* When to Sync - only shown when auto-sync is enabled */}
@@ -84,7 +92,10 @@ export function AutoSyncSection({
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
             <View className="flex-row items-center gap-2 my-2">
-              <RadioGroup.Item value="on_launch" />
+              <RadioGroup.Item
+                value="on_launch"
+                accessibilityLabel={t("settings.autoSync.onLaunch")}
+              />
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onLaunch")}</Label>
                 <Text className="text-xs text-foreground opacity-60">
@@ -94,7 +105,10 @@ export function AutoSyncSection({
             </View>
 
             <View className="flex-row items-center gap-2 my-2">
-              <RadioGroup.Item value="on_change" />
+              <RadioGroup.Item
+                value="on_change"
+                accessibilityLabel={t("settings.autoSync.onChange")}
+              />
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onChange")}</Label>
                 <Text className="text-xs text-foreground opacity-60">

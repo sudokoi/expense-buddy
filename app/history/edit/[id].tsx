@@ -273,6 +273,7 @@ export default function EditExpenseScreen() {
                 }
                 keyboardType={amountInputProps.keyboardType}
                 inputMode={amountInputProps.inputMode}
+                accessibilityLabel={t("history.editDialog.fields.amount")}
               />
             </View>
             {expressionPreview && (
@@ -312,6 +313,7 @@ export default function EditExpenseScreen() {
               onChangeText={setNote}
               placeholder={t("history.editDialog.fields.notePlaceholder")}
               selectTextOnFocus
+              accessibilityLabel={t("history.editDialog.fields.note")}
             />
           </View>
 
@@ -376,6 +378,7 @@ export default function EditExpenseScreen() {
                     value={paymentMethodId}
                     onChangeText={handleIdentifierChange}
                     maxLength={selectedPaymentConfig.maxLength}
+                    accessibilityLabel={t("history.editDialog.fields.identifier")}
                   />
                 )}
               </View>

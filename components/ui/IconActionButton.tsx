@@ -101,6 +101,8 @@ export function IconActionButton({
           onLongPress={handleLongPress}
           disabled={disabled}
           aria-label={accessibilityLabel ?? tooltip}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !!disabled }}
           className="items-center justify-center p-1"
         >
           <LucideProvider color={theme.foreground}>{icon}</LucideProvider>

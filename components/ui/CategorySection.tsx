@@ -145,7 +145,11 @@ export const CategorySection = memo(function CategorySection({
                     <Pressable
                       onPress={() => handleMoveUp(index)}
                       disabled={index === 0}
-                      aria-label={`Move ${category.label} up`}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("settings.categories.moveUp", {
+                        category: category.label,
+                      })}
+                      accessibilityState={{ disabled: index === 0 }}
                       style={{
                         opacity: index === 0 ? UI_OPACITY.minimal : UI_OPACITY.medium,
                       }}
@@ -155,7 +159,13 @@ export const CategorySection = memo(function CategorySection({
                     <Pressable
                       onPress={() => handleMoveDown(index)}
                       disabled={index === reorderableCategories.length - 1}
-                      aria-label={`Move ${category.label} down`}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("settings.categories.moveDown", {
+                        category: category.label,
+                      })}
+                      accessibilityState={{
+                        disabled: index === reorderableCategories.length - 1,
+                      }}
                       style={{
                         opacity:
                           index === reorderableCategories.length - 1

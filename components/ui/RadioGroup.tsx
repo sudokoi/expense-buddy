@@ -29,9 +29,16 @@ export function RadioGroup({
 
 export interface RadioGroupItemProps extends ViewProps {
   value: string
+  accessibilityLabel?: string
 }
 
-function RadioGroupItem({ value, className, children, ...props }: RadioGroupItemProps) {
+function RadioGroupItem({
+  value,
+  className,
+  accessibilityLabel,
+  children,
+  ...props
+}: RadioGroupItemProps) {
   const ctx = useContext(RadioGroupContext)
   if (!ctx) {
     throw new Error("RadioGroup.Item must be used within a RadioGroup")
@@ -43,6 +50,7 @@ function RadioGroupItem({ value, className, children, ...props }: RadioGroupItem
       {...props}
       onPress={() => ctx.onValueChange(value)}
       accessibilityRole="radio"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected }}
       className={cn(
         "h-5 w-5 items-center justify-center rounded-full border-2",

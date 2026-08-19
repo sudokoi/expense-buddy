@@ -98,6 +98,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
           className="px-2"
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
+          accessibilityState={{ selected: isAllSelected }}
         >
           <Text>{t("common.all")}</Text>
         </Button>
@@ -115,6 +116,7 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               className={`gap-1 px-2${isSelected ? "" : " border border-border"}`}
               style={isSelected ? item.selectedStyle : undefined}
               onPress={() => handleToggle(item.key)}
+              accessibilityState={{ selected: isSelected }}
             >
               {Icon ? (
                 <Icon

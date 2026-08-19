@@ -71,7 +71,7 @@ export function AppSheetScaffold({
         <Pressable
           className="absolute inset-0 bg-black/50"
           onPress={dismissOnSnapToBottom ? onClose : undefined}
-          accessibilityLabel={t("common.close")}
+          accessible={false}
         />
         <View
           style={[

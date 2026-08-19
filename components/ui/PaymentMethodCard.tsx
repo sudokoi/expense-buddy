@@ -31,7 +31,9 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? t(`paymentMethods.${config.i18nKey}`)}
+      accessibilityState={{ selected: isSelected }}
       className="rounded-card bg-surface p-2 px-3"
       style={{
         backgroundColor: isSelected ? theme.muted : theme.surface,

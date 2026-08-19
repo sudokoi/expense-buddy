@@ -72,6 +72,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           className="px-2"
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
+          accessibilityState={{ selected: isAllSelected }}
         >
           <Text>{t("common.all")}</Text>
         </Button>
@@ -87,6 +88,7 @@ export const CategoryFilter = memo(function CategoryFilter({
               className={`gap-1 px-2${isSelected ? "" : " border border-border"}`}
               style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
+              accessibilityState={{ selected: isSelected }}
             >
               <Icon
                 size={14}

@@ -267,6 +267,9 @@ export function GitHubConfigSection({
     <View>
       <Pressable
         onPress={() => setExpanded((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={t("settings.github.configTitle")}
         className="bg-surface flex-row items-center justify-between p-3 rounded-control"
       >
         <View className="flex-row items-center flex-1 gap-2 min-w-0 max-w-[85%]">

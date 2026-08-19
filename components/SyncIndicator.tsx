@@ -2,6 +2,7 @@ import React from "react"
 import { CheckCircle, XCircle } from "lucide-react-native"
 import { View, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { useTranslation } from "react-i18next"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import {
   SEMANTIC_FOREGROUND_COLORS,
@@ -23,6 +24,7 @@ import { UI_ICON_SIZE } from "../constants/ui-tokens"
  */
 export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const colorScheme = useThemeScheme()
   const overlayColors = getOverlayColors(colorScheme)
@@ -33,6 +35,13 @@ export const SyncIndicator: React.FC = () => {
   const visible = isSyncing || isSuccess || isError
 
   if (!visible) return null
+
+  const getStatusLabel = () => {
+    if (isSyncing) return t("sync.status.syncing")
+    if (isSuccess) return t("sync.status.success")
+    if (isError) return t("sync.status.error")
+    return ""
+  }
 
   const getIcon = () => {
     if (isSyncing) {
@@ -55,8 +64,12 @@ export const SyncIndicator: React.FC = () => {
         backgroundColor: overlayColors.background,
         shadowColor: overlayColors.shadow,
       }}
+      accessibilityLiveRegion="polite"
+      accessible={false}
     >
-      {getIcon()}
+      <View accessible accessibilityLabel={getStatusLabel()}>
+        {getIcon()}
+      </View>
     </View>
   )
 }

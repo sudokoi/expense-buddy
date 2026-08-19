@@ -5,9 +5,15 @@ import { hapticLight } from "../../utils/haptics"
 export interface SwitchProps extends Omit<RNSwitchProps, "value" | "onValueChange"> {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  accessibilityLabel: string
 }
 
-export function Switch({ checked, onCheckedChange, ...props }: SwitchProps) {
+export function Switch({
+  checked,
+  onCheckedChange,
+  accessibilityLabel,
+  ...props
+}: SwitchProps) {
   return (
     <RNSwitch
       value={checked}
@@ -15,6 +21,9 @@ export function Switch({ checked, onCheckedChange, ...props }: SwitchProps) {
         void hapticLight()
         onCheckedChange(next)
       }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="switch"
+      accessibilityState={{ checked }}
       trackColor={{ true: SEMANTIC_COLORS.success, false: undefined }}
       {...props}
     />

@@ -4,6 +4,7 @@ import { Input } from "../ui/Input"
 import { getCurrencySymbol } from "../../utils/currency"
 import { useSettings } from "../../stores/hooks"
 import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
+import { useTranslation } from "react-i18next"
 
 interface AmountRangeFilterProps {
   minAmount: number | null
@@ -19,6 +20,7 @@ export function AmountRangeFilter({
   error,
 }: AmountRangeFilterProps) {
   const { settings } = useSettings()
+  const { t } = useTranslation()
   const symbol = getCurrencySymbol(settings.defaultCurrency)
   const amountInputProps = getAmountInputProps(settings.enableMathExpressions)
 
@@ -54,6 +56,7 @@ export function AmountRangeFilter({
           placeholder={`${symbol} Min`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
+          accessibilityLabel={t("analytics.filters.minAmount")}
         />
         <Text className="text-foreground">to</Text>
         <Input
@@ -64,6 +67,7 @@ export function AmountRangeFilter({
           placeholder={`${symbol} Max`}
           keyboardType={amountInputProps.keyboardType}
           inputMode={amountInputProps.inputMode}
+          accessibilityLabel={t("analytics.filters.maxAmount")}
         />
       </View>
       {error && <Text className="text-xs text-error">{error}</Text>}

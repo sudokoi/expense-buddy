@@ -38,7 +38,8 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
         className="flex-1 bg-background"
         value={inputValue}
         onChangeText={setInputValue}
-        placeholder="Search notes, categories, payment methods..."
+        placeholder={t("analytics.filters.search")}
+        accessibilityLabel={t("analytics.filters.search")}
       />
       {inputValue.length > 0 && (
         <IconActionButton

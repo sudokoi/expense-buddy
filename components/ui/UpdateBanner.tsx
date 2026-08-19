@@ -124,6 +124,8 @@ export function UpdateBanner({
             onPress={onDismiss}
             hitSlop={UI_SPACE.control}
             testID="update-banner-dismiss-button"
+            accessibilityLabel={t("common.close")}
+            accessibilityRole="button"
             style={({ pressed }) => ({
               opacity: pressed ? 0.6 : 1,
               padding: UI_SPACE.micro,

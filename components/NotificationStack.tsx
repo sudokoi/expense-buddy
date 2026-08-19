@@ -96,7 +96,11 @@ export const NotificationStack: React.FC = () => {
         }
 
         return (
-          <RNView key={notification.id} style={notificationStyle}>
+          <RNView
+            key={notification.id}
+            style={notificationStyle}
+            accessibilityRole="alert"
+          >
             <NotificationIcon key={`icon-${notification.id}`} type={notification.type} />
             <Text
               key={`text-${notification.id}`}

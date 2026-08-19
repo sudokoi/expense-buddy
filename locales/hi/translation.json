@@ -153,7 +153,10 @@
       "month": "महीना: {{month}}",
       "category": "श्रेणी: {{category}}",
       "payment": "भुगतान: {{method}}",
-      "instrument": "साधन: {{instrument}}"
+      "instrument": "साधन: {{instrument}}",
+      "minAmount": "न्यूनतम राशि",
+      "maxAmount": "अधिकतम राशि",
+      "search": "नोट्स, श्रेणियाँ, भुगतान विधियाँ खोजें"
     },
     "timeWindow": {
       "7d": "7 दिन",
@@ -331,7 +334,9 @@
         "colorHelp": "रंग बदलने के लिए टैप करें",
         "chooseIcon": "आइकन चुनें",
         "chooseColor": "रंग चुनें"
-      }
+      },
+      "moveUp": "{{category}} को ऊपर ले जाएँ",
+      "moveDown": "{{category}} को नीचे ले जाएँ"
     },
     "appearance": {
       "theme": "थीम",
@@ -522,6 +527,11 @@
       "downloadFailedWithCount": "कोई भी खर्च फ़ाइल डाउनलोड करने में विफल। {{count}} फ़ाइल(ें) विफल रहीं।",
       "failedToListRemoteWithError": "रिमोट फ़ाइलें सूचीबद्ध करने में विफल: {{error}}",
       "conflictManualSync": "विरोध पाया गया - मैन्युअल सिंक आवश्यक है"
+    },
+    "status": {
+      "syncing": "सिंक हो रहा है",
+      "success": "सिंक पूर्ण",
+      "error": "सिंक विफल"
     }
   },
   "changelog": {

@@ -104,6 +104,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
           className="px-2"
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
+          accessibilityState={{ selected: isAllSelected }}
         >
           <Text>{t("common.all")}</Text>
         </Button>
@@ -117,6 +118,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
               className="px-2"
               variant={isSelected ? "accent" : "outline"}
               onPress={() => handleToggle(item.key)}
+              accessibilityState={{ selected: isSelected }}
             >
               <Text>{item.label}</Text>
             </Button>

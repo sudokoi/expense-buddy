@@ -32,6 +32,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
     <Card>
       <Pressable
         onPress={toggleExpanded}
+        accessibilityRole="button"
         accessibilityLabel={isExpanded ? `${title}, collapse` : `${title}, expand`}
         accessibilityState={{ expanded: isExpanded }}
       >

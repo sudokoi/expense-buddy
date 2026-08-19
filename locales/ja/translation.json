@@ -153,7 +153,10 @@
       "month": "月: {{month}}",
       "category": "カテゴリー: {{category}}",
       "payment": "支払: {{method}}",
-      "instrument": "手段: {{instrument}}"
+      "instrument": "手段: {{instrument}}",
+      "minAmount": "最小金額",
+      "maxAmount": "最大金額",
+      "search": "メモ、カテゴリー、支払い方法を検索"
     },
     "timeWindow": {
       "7d": "7日間",
@@ -331,7 +334,9 @@
         "colorHelp": "タップして色を変更",
         "chooseIcon": "アイコンを選択",
         "chooseColor": "色を選択"
-      }
+      },
+      "moveUp": "{{category}}を上に移動",
+      "moveDown": "{{category}}を下に移動"
     },
     "appearance": {
       "theme": "テーマ",
@@ -522,6 +527,11 @@
       "downloadFailedWithCount": "支出ファイルのダウンロードに失敗しました。{{count}}ファイルが失敗しました。",
       "failedToListRemoteWithError": "リモートファイルのリスト取得に失敗しました: {{error}}",
       "conflictManualSync": "競合が検出されました - 手動同期が必要です"
+    },
+    "status": {
+      "syncing": "同期中",
+      "success": "同期完了",
+      "error": "同期に失敗"
     }
   },
   "changelog": {

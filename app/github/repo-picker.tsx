@@ -259,6 +259,7 @@ export default function GitHubRepoPickerScreen() {
           value={query}
           onChangeText={setQuery}
           editable={!isLoading && !error}
+          accessibilityLabel={t("repoPicker.searchPlaceholder")}
         />
       </View>
 

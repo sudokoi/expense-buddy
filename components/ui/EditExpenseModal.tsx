@@ -250,6 +250,7 @@ export function EditExpenseModal({
                   borderColor: errors.amount ? undefined : theme.border,
                 }}
                 placeholderTextColor={theme.foreground}
+                accessibilityLabel={t("history.editDialog.fields.amount")}
               />
             </View>
             {errors.amount && <Text className="text-xs text-error">{errors.amount}</Text>}
@@ -291,6 +292,7 @@ export function EditExpenseModal({
                 borderColor: theme.border,
               }}
               placeholderTextColor={theme.foreground}
+              accessibilityLabel={t("history.editDialog.fields.note")}
             />
           </View>
 

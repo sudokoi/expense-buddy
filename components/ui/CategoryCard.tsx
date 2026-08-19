@@ -37,7 +37,9 @@ export const CategoryCard = memo(function CategoryCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? displayLabel}
+      accessibilityState={{ selected: isSelected }}
       className={
         compact
           ? "w-[22%] items-center justify-center rounded-control p-2"

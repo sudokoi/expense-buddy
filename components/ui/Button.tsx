@@ -96,6 +96,7 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
           className
         )}
         disabled={disabled}
+        accessibilityRole="button"
         {...props}
       >
         <LucideProvider color={iconColor}>
