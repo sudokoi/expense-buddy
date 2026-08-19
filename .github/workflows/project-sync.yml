@@ -72,6 +72,9 @@ jobs:
             const ACTIVE_MILESTONE = process.env.ACTIVE_MILESTONE
 
             const repoParams = { owner: OWNER, repo: REPO }
+            // Send the current REST API version header to avoid the deprecation
+            // warning for unversioned requests (removal scheduled for 2028-03-10).
+            const VERSION_HEADER = { headers: { "X-GitHub-Api-Version": "2022-11-28" } }
 
             async function getItemId(number, isPR) {
               const query = `
@@ -164,37 +167,39 @@ jobs:
 
             async function ensureMilestone(number) {
               if (!ACTIVE_MILESTONE) return
-              const { data: current } = await github.rest.issues.get({
-                ...repoParams,
-                issue_number: number,
-              })
+              const { data: current } = await github.request(
+                "GET /repos/{owner}/{repo}/issues/{issue_number}",
+                { ...repoParams, issue_number: number, ...VERSION_HEADER }
+              )
               if (current.milestone) return // respect manual overrides
-              const { data: milestones } = await github.rest.issues.listMilestones({
-                ...repoParams,
-                state: "open",
-                per_page: 100,
-              })
+              const { data: milestones } = await github.request(
+                "GET /repos/{owner}/{repo}/milestones",
+                { ...repoParams, state: "open", per_page: 100, ...VERSION_HEADER }
+              )
               const target = milestones.find((m) => m.title === ACTIVE_MILESTONE)
               if (target) {
-                await github.rest.issues.update({
-                  ...repoParams,
-                  issue_number: number,
-                  milestone: target.number,
-                })
+                await github.request(
+                  "PATCH /repos/{owner}/{repo}/issues/{issue_number}",
+                  {
+                    ...repoParams,
+                    issue_number: number,
+                    milestone: target.number,
+                    ...VERSION_HEADER,
+                  }
+                )
               }
             }
 
             async function closeIssueIfOpen(number) {
-              const { data: issue } = await github.rest.issues.get({
-                ...repoParams,
-                issue_number: number,
-              })
+              const { data: issue } = await github.request(
+                "GET /repos/{owner}/{repo}/issues/{issue_number}",
+                { ...repoParams, issue_number: number, ...VERSION_HEADER }
+              )
               if (issue.state === "open") {
-                await github.rest.issues.update({
-                  ...repoParams,
-                  issue_number: number,
-                  state: "closed",
-                })
+                await github.request(
+                  "PATCH /repos/{owner}/{repo}/issues/{issue_number}",
+                  { ...repoParams, issue_number: number, state: "closed", ...VERSION_HEADER }
+                )
               }
             }
 
@@ -203,10 +208,10 @@ jobs:
             // ---------------------------------------------------------------
             if (context.eventName === "workflow_dispatch") {
               core.info("Backfill: adding open issues and PRs to the board")
-              const issues = await github.paginate(github.rest.issues.listForRepo, {
-                ...repoParams,
-                state: "open",
-              })
+              const issues = await github.paginate(
+                "GET /repos/{owner}/{repo}/issues",
+                { ...repoParams, state: "open", ...VERSION_HEADER }
+              )
               for (const issue of issues) {
                 if (issue.pull_request) continue
                 const existing = await getItemId(issue.number, false)
@@ -216,10 +221,10 @@ jobs:
                   await ensureMilestone(issue.number)
                 }
               }
-              const pulls = await github.paginate(github.rest.pulls.list, {
-                ...repoParams,
-                state: "open",
-              })
+              const pulls = await github.paginate(
+                "GET /repos/{owner}/{repo}/pulls",
+                { ...repoParams, state: "open", ...VERSION_HEADER }
+              )
               for (const pr of pulls) {
                 const existing = await getItemId(pr.number, true)
                 const itemId = existing || (await addItem(pr.node_id))
