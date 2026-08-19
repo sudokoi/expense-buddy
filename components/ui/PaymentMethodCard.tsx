@@ -36,7 +36,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       accessibilityState={{ selected: isSelected }}
       className="rounded-card bg-surface p-2 px-3"
       style={{
-        backgroundColor: isSelected ? theme.muted : theme.surface,
+        backgroundColor: isSelected ? theme.muted : theme.muted,
         borderColor: isSelected ? accent : theme.border,
         borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
       }}

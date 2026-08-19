@@ -9,3 +9,4 @@ Fix dark-mode contrast, tab alignment, and UI spacing inconsistencies
 - Consolidate filter chip styling into Button component, remove per-button overrides
 - Add consistent gap between analytics chart cards
 - Align history screen padding and SettingsSection gap tokens with UI_SPACE values
+- Use theme.muted for unselected CategoryCard, PaymentMethodCard, and payment instrument items

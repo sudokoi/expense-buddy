@@ -46,7 +46,7 @@ export const CategoryCard = memo(function CategoryCard({
           : "w-[30%] items-center justify-center rounded-chip p-3"
       }
       style={{
-        backgroundColor: isSelected ? resolvedColor : theme.surface,
+        backgroundColor: isSelected ? resolvedColor : theme.muted,
         borderColor: isSelected ? resolvedColor : theme.border,
         borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
       }}

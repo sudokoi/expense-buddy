@@ -190,7 +190,7 @@ export function PaymentInstrumentsSection() {
                         {list.map((inst) => (
                           <View
                             key={inst.id}
-                            className="flex-row items-center justify-between gap-2 rounded-card bg-background px-3 py-3"
+                            className="flex-row items-center justify-between gap-2 rounded-card bg-muted px-3 py-3"
                           >
                             <Text
                               className="flex-1 text-foreground"
