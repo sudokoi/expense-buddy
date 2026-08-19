@@ -222,12 +222,7 @@ export default function GitHubRepoPickerScreen() {
           <Text className="text-xl font-bold text-foreground">
             {t("repoPicker.title")}
           </Text>
-          <Button
-            size="chip"
-            className="px-2"
-            variant="ghost"
-            onPress={() => router.back()}
-          >
+          <Button size="chip" variant="ghost" onPress={() => router.back()}>
             {t("common.cancel")}
           </Button>
         </View>
@@ -250,7 +245,7 @@ export default function GitHubRepoPickerScreen() {
         {error ? (
           <View className="gap-2">
             <Text className="text-error">{error}</Text>
-            <Button size="chip" className="px-2" onPress={load}>
+            <Button size="chip" onPress={load}>
               {t("repoPicker.retry")}
             </Button>
           </View>

@@ -102,7 +102,7 @@ const FilterChip = React.memo(function FilterChip({
     <Button
       size="chip"
       variant="outline"
-      className="gap-1 rounded-round px-2"
+      className="gap-1"
       onPress={() => {
         logAsync("INFO", "UI_ACTION", "REMOVE_FILTER_CHIP")
         onRemove()
@@ -577,7 +577,7 @@ export default function HistoryScreen() {
   // Filtered empty state
   if (filteredExpenses.length === 0 && hasActive) {
     return (
-      <View className="flex-1 bg-background px-4 pt-4">
+      <View className="flex-1 bg-background px-5 pt-5">
         {/* Filter row: chips + filter button inline */}
         <View className="mb-3 flex-row items-center gap-2">
           <ScrollView
@@ -594,7 +594,7 @@ export default function HistoryScreen() {
           <Button
             size="chip"
             variant={activeCount > 0 ? "accent" : undefined}
-            className="gap-2 px-2"
+            className="gap-2"
             onPress={handleOpenFilterSheet}
             accessibilityLabel={t("common.filters")}
           >
@@ -629,7 +629,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background px-4 pt-4">
+    <View className="flex-1 bg-background px-5 pt-4">
       {/* Filter row: chips + filter button inline */}
       <View className="mb-3 flex-row items-center gap-2">
         <ScrollView
@@ -646,7 +646,7 @@ export default function HistoryScreen() {
         <Button
           size="chip"
           variant={activeCount > 0 ? "accent" : undefined}
-          className="gap-2 px-2"
+          className="gap-2"
           onPress={handleOpenFilterSheet}
           accessibilityLabel={t("common.filters")}
         >

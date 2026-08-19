@@ -15,8 +15,8 @@ const gapClass: Record<SemanticSpaceToken, string> = {
   $micro: "gap-1",
   $control: "gap-2",
   $section: "gap-3",
-  $gutter: "gap-4",
-  $block: "gap-5",
+  $gutter: "gap-5",
+  $block: "gap-6",
   $empty: "gap-10",
 }
 

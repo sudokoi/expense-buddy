@@ -12,14 +12,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        outline: "border border-border bg-transparent",
+        outline: "border border-border bg-muted",
         accent: "bg-accent",
         ghost: "bg-transparent",
         destructive: "bg-destructive",
       },
       size: {
         icon: "h-5 px-1",
-        chip: "h-7 px-3",
+        chip: "h-7 px-2",
         compact: "h-9 px-3",
         control: "h-11 px-4",
       },

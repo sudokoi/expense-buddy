@@ -3,7 +3,6 @@ import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
-import { UI_SPACE } from "../../constants/ui-tokens"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -19,12 +18,6 @@ const TIME_WINDOWS: { label: string; value: TimeWindow }[] = [
   { label: "1 Year", value: "1y" },
   { label: "All", value: "all" },
 ]
-
-const layoutStyles = {
-  scrollContent: {
-    paddingHorizontal: UI_SPACE.micro / 2,
-  },
-}
 
 /**
  * TimeWindowSelector - Toggle buttons for selecting analytics time window
@@ -49,16 +42,16 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={layoutStyles.scrollContent}
+      className="mb-5"
+      contentContainerStyle={{ paddingHorizontal: 4 }}
     >
-      <View className="mb-4 flex-row justify-center gap-2">
+      <View className="flex-row gap-2">
         {TIME_WINDOWS.map((window) => {
           const isSelected = value === window.value
           return (
             <Button
               key={window.value}
-              size="compact"
-              className="px-3"
+              size="chip"
               variant={isSelected ? "accent" : "outline"}
               onPress={() => handlePress(window.value)}
               accessibilityState={{ selected: isSelected }}

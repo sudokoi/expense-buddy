@@ -107,7 +107,7 @@ export function UpdateBanner({
         <RNView style={actionsStyle}>
           <Button
             size="chip"
-            className="rounded-round px-2"
+            className="rounded-round"
             style={{ backgroundColor: infoStyles.actionBg }}
             onPress={onUpdate}
             testID="update-banner-update-button"

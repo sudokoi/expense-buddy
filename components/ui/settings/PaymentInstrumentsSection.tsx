@@ -123,7 +123,7 @@ export function PaymentInstrumentsSection() {
                 : t("instruments.description")}
             </Text>
           </View>
-          <Button size="chip" className="gap-1 px-2" onPress={handleAdd}>
+          <Button size="chip" className="gap-1" onPress={handleAdd}>
             <Plus size={16} color={theme.foreground} />
             {t("instruments.add")}
           </Button>

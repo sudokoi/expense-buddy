@@ -409,7 +409,6 @@ export default function AnalyticsScreen() {
               key={chip.key}
               size="chip"
               variant="outline"
-              className="px-2 rounded-round"
               disabled={!filtersHydrated}
               onPress={openFilters}
             >
@@ -420,7 +419,7 @@ export default function AnalyticsScreen() {
 
         <Button
           size="chip"
-          className="gap-2 px-2"
+          className="gap-2"
           disabled={!filtersHydrated}
           onPress={openFilters}
           variant={activeCount > 0 ? "accent" : undefined}
@@ -465,47 +464,44 @@ export default function AnalyticsScreen() {
                     gap: UI_SPACE.control,
                     paddingBottom: UI_SPACE.gutter,
                   }}
-                  style={{ marginBottom: UI_SPACE.micro }}
+                  style={{ marginBottom: UI_SPACE.control }}
                 >
                   {currencyButtons.map(({ code, isSelected, onPress }) => (
                     <Button
                       key={code}
                       size="chip"
-                      className={
-                        isSelected
-                          ? "px-2 rounded-round border border-border"
-                          : "px-2 rounded-round"
-                      }
+                      variant={isSelected ? "accent" : "outline"}
                       onPress={onPress}
-                      variant={isSelected ? "accent" : undefined}
                     >
                       {code} ({getCurrencySymbol(code)})
                     </Button>
                   ))}
                 </ScrollView>
               )}
-              <PieChartSection
-                data={pieChartData}
-                currencyCode={effectiveCurrency}
-                onCategorySelect={handleCategorySelect}
-              />
-              <PaymentMethodPieChart
-                data={paymentMethodChartData}
-                currencyCode={effectiveCurrency}
-                selectedPaymentMethod={selectedPaymentMethodForChart}
-                onPaymentMethodSelect={handlePaymentMethodSelect}
-              />
-              <PaymentInstrumentPieChart
-                data={paymentInstrumentChartData}
-                currencyCode={effectiveCurrency}
-                selectedKey={
-                  selectedPaymentInstruments.length === 1
-                    ? selectedPaymentInstruments[0]
-                    : null
-                }
-                onSelect={handlePaymentInstrumentSelect}
-              />
-              <LineChartSection data={lineChartData} currencyCode={effectiveCurrency} />
+              <View className="gap-4">
+                <PieChartSection
+                  data={pieChartData}
+                  currencyCode={effectiveCurrency}
+                  onCategorySelect={handleCategorySelect}
+                />
+                <PaymentMethodPieChart
+                  data={paymentMethodChartData}
+                  currencyCode={effectiveCurrency}
+                  selectedPaymentMethod={selectedPaymentMethodForChart}
+                  onPaymentMethodSelect={handlePaymentMethodSelect}
+                />
+                <PaymentInstrumentPieChart
+                  data={paymentInstrumentChartData}
+                  currencyCode={effectiveCurrency}
+                  selectedKey={
+                    selectedPaymentInstruments.length === 1
+                      ? selectedPaymentInstruments[0]
+                      : null
+                  }
+                  onSelect={handlePaymentInstrumentSelect}
+                />
+                <LineChartSection data={lineChartData} currencyCode={effectiveCurrency} />
+              </View>
             </>
           )}
         </>

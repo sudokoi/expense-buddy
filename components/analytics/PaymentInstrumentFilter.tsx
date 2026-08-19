@@ -101,7 +101,6 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          className="px-2"
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
           accessibilityState={{ selected: isAllSelected }}
@@ -115,7 +114,6 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
             <Button
               key={item.key}
               size="chip"
-              className="px-2"
               variant={isSelected ? "accent" : "outline"}
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}

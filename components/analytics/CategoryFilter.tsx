@@ -69,7 +69,6 @@ export const CategoryFilter = memo(function CategoryFilter({
         {/* All button */}
         <Button
           size="chip"
-          className="px-2"
           variant={isAllSelected ? "accent" : "outline"}
           onPress={handleAllPress}
           accessibilityState={{ selected: isAllSelected }}
@@ -85,7 +84,8 @@ export const CategoryFilter = memo(function CategoryFilter({
             <Button
               key={cat.label}
               size="chip"
-              className={`gap-1 px-2${isSelected ? "" : " border border-border"}`}
+              className="gap-1"
+              variant="outline"
               style={isSelected ? cat.selectedStyle : undefined}
               onPress={() => handleCategoryPress(cat.label)}
               accessibilityState={{ selected: isSelected }}

@@ -35,7 +35,6 @@ export const CurrencyFilter = memo(function CurrencyFilter({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          className="px-2"
           variant={isDefaultSelected ? "accent" : "outline"}
           onPress={() => onChange(null)}
           accessibilityState={{ selected: isDefaultSelected }}
@@ -52,7 +51,6 @@ export const CurrencyFilter = memo(function CurrencyFilter({
             <Button
               key={currency}
               size="chip"
-              className="px-2"
               variant={isSelected ? "accent" : "outline"}
               onPress={() => onChange(currency)}
               accessibilityState={{ selected: isSelected }}
