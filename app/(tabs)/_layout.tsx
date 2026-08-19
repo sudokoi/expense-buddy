@@ -57,8 +57,9 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarButton: TabBarButton,
         tabBarItemStyle: {
-          // Force the button to be vertically centered in each tab item; the
-          // default uikit layout top-aligns content when labels are hidden.
+          // Force the button to be centered in each tab item; the default
+          // uikit layout top-aligns content when labels are hidden.
+          alignItems: "center",
           justifyContent: "center",
         },
         tabBarStyle: {
