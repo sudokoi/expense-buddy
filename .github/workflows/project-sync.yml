@@ -1,0 +1,292 @@
+# Project Board Sync
+#
+# Keeps the GitHub Projects board (sudokoi/projects/1) in sync with the repo:
+#   - Every issue and PR is auto-added to the board.
+#   - Status is driven by events:
+#       issue opened/reopened   -> Backlog
+#       issue closed            -> Done
+#       PR opened/ready/review  -> linked issue(s) + PR -> In review
+#       PR merged               -> linked issue(s) + PR -> Done (issue auto-closed)
+#       PR closed unmerged      -> PR -> Backlog, linked issues untouched
+#   - The repo milestone is set to the ACTIVE_MILESTONE below when an item has
+#     none yet (manual milestone overrides are respected).
+#
+# Requirements:
+#   - A PAT with the `project` scope stored as the `PROJECTS_PAT` repository
+#     secret (the default GITHUB_TOKEN cannot write to Projects V2).
+#   - Change ACTIVE_MILESTONE to the current milestone; set it to "" to disable
+#     milestone auto-setting.
+#
+# You can also run this workflow manually (Workflow dispatch) to backfill all
+# currently open issues and PRs onto the board.
+
+name: Project Board Sync
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, reopened, ready_for_review, review_requested, closed]
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: "Add all open issues and PRs to the project board"
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: project-sync-${{ github.event.issue.number || github.event.pull_request.number || 'backfill' }}
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+  pull-requests: write
+
+env:
+  ACTIVE_MILESTONE: "v4 release"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 🔁 Sync project board
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.PROJECTS_PAT }}
+          script: |
+            const { graphql } = github
+
+            const OWNER = "sudokoi"
+            const REPO = "expense-buddy"
+            const PROJECT_ID = "PVT_kwHOAVzgx84BgxfX"
+            const STATUS_FIELD_ID = "PVTSSF_lAHOAVzgx84BgxfXzhfvxiw"
+            const STATUS = {
+              Backlog: "f75ad846",
+              Ready: "61e4505c",
+              "In progress": "47fc9ee4",
+              "In review": "df73e18b",
+              Done: "98236657",
+            }
+            const ACTIVE_MILESTONE = process.env.ACTIVE_MILESTONE
+
+            const repoParams = { owner: OWNER, repo: REPO }
+
+            async function getItemId(number, isPR) {
+              const query = `
+                query($project: ID!) {
+                  node(id: $project) {
+                    ... on ProjectV2 {
+                      items(first: 100) {
+                        nodes {
+                          id
+                          content {
+                            __typename
+                            ... on Issue { number }
+                            ... on PullRequest { number }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }`
+              const res = await graphql(query, { project: PROJECT_ID })
+              const type = isPR ? "PullRequest" : "Issue"
+              const found = res.node.items.nodes.find(
+                (n) => n.content && n.content.__typename === type && n.content.number === number
+              )
+              return found ? found.id : null
+            }
+
+            async function addItem(contentId) {
+              const query = `
+                mutation($project: ID!, $content: ID!) {
+                  addProjectV2ItemById(input: { projectId: $project, contentId: $content }) {
+                    item { id }
+                  }
+                }`
+              const res = await graphql(query, { project: PROJECT_ID, content: contentId })
+              return res.addProjectV2ItemById.item.id
+            }
+
+            async function setStatus(itemId, optionId) {
+              const query = `
+                mutation($project: ID!, $item: ID!, $field: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $project
+                    itemId: $item
+                    fieldId: $field
+                    value: { singleSelectOptionId: $optionId }
+                  }) { projectV2Item { id } }
+                }`
+              await graphql(query, {
+                project: PROJECT_ID,
+                item: itemId,
+                field: STATUS_FIELD_ID,
+                optionId,
+              })
+            }
+
+            async function ensureOnBoard(number, isPR, contentId) {
+              const existing = await getItemId(number, isPR)
+              return existing || (await addItem(contentId))
+            }
+
+            async function linkedIssueNumbers(prNumber) {
+              const query = `
+                query($owner: String!, $name: String!, $number: Int!) {
+                  repository(owner: $owner, name: $name) {
+                    pullRequest(number: $number) {
+                      closingIssuesReferences(first: 20) { nodes { number } }
+                    }
+                  }
+                }`
+              const res = await graphql(query, {
+                owner: OWNER,
+                name: REPO,
+                number: prNumber,
+              })
+              const numbers =
+                res.repository.pullRequest?.closingIssuesReferences?.nodes?.map(
+                  (n) => n.number
+                ) ?? []
+              // Fallback: parse closing keywords from the PR body.
+              const body = context.payload.pull_request?.body ?? ""
+              for (const m of body.matchAll(
+                /(?:fix(?:e|es|ed)?|clos(?:e|es|ed)?|resolv(?:e|es|ed)?)\s*#(\d+)/gi
+              )) {
+                const n = Number(m[1])
+                if (!numbers.includes(n)) numbers.push(n)
+              }
+              return numbers
+            }
+
+            async function ensureMilestone(number) {
+              if (!ACTIVE_MILESTONE) return
+              const { data: current } = await github.rest.issues.get({
+                ...repoParams,
+                issue_number: number,
+              })
+              if (current.milestone) return // respect manual overrides
+              const { data: milestones } = await github.rest.issues.listMilestones({
+                ...repoParams,
+                state: "open",
+                per_page: 100,
+              })
+              const target = milestones.find((m) => m.title === ACTIVE_MILESTONE)
+              if (target) {
+                await github.rest.issues.update({
+                  ...repoParams,
+                  issue_number: number,
+                  milestone: target.number,
+                })
+              }
+            }
+
+            async function closeIssueIfOpen(number) {
+              const { data: issue } = await github.rest.issues.get({
+                ...repoParams,
+                issue_number: number,
+              })
+              if (issue.state === "open") {
+                await github.rest.issues.update({
+                  ...repoParams,
+                  issue_number: number,
+                  state: "closed",
+                })
+              }
+            }
+
+            // ---------------------------------------------------------------
+            // Manual run: backfill all open issues and PRs onto the board.
+            // ---------------------------------------------------------------
+            if (context.eventName === "workflow_dispatch") {
+              core.info("Backfill: adding open issues and PRs to the board")
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                ...repoParams,
+                state: "open",
+              })
+              for (const issue of issues) {
+                if (issue.pull_request) continue
+                const existing = await getItemId(issue.number, false)
+                const itemId = existing || (await addItem(issue.node_id))
+                if (!existing) {
+                  await setStatus(itemId, STATUS.Backlog)
+                  await ensureMilestone(issue.number)
+                }
+              }
+              const pulls = await github.paginate(github.rest.pulls.list, {
+                ...repoParams,
+                state: "open",
+              })
+              for (const pr of pulls) {
+                const existing = await getItemId(pr.number, true)
+                const itemId = existing || (await addItem(pr.node_id))
+                if (!existing) {
+                  await setStatus(itemId, STATUS["In review"])
+                  await ensureMilestone(pr.number)
+                }
+              }
+              core.info("Backfill complete")
+              return
+            }
+
+            // ---------------------------------------------------------------
+            // Event-driven sync.
+            // ---------------------------------------------------------------
+            const payload = context.payload
+            const isPR = !!payload.pull_request
+            const number = isPR ? payload.pull_request.number : payload.issue.number
+            const action = payload.action
+            const contentId = isPR ? payload.pull_request.node_id : payload.issue.node_id
+
+            if (isPR) {
+              const prItemId = await ensureOnBoard(number, true, contentId)
+              const linked = await linkedIssueNumbers(number)
+
+              if (action === "closed") {
+                const merged = payload.pull_request.merged
+                if (merged) {
+                  for (const ln of linked) {
+                    const itemId = await getItemId(ln, false)
+                    if (itemId) {
+                      await setStatus(itemId, STATUS.Done)
+                      await closeIssueIfOpen(ln)
+                    }
+                  }
+                }
+                await setStatus(prItemId, merged ? STATUS.Done : STATUS.Backlog)
+              } else {
+                // opened / reopened / ready_for_review / review_requested
+                for (const ln of linked) {
+                  const existing = await getItemId(ln, false)
+                  if (existing) {
+                    await setStatus(existing, STATUS["In review"])
+                  } else {
+                    const query = `
+                      query($owner: String!, $name: String!, $number: Int!) {
+                        repository(owner: $owner, name: $name) {
+                          issue(number: $number) { id }
+                        }
+                      }`
+                    const res = await graphql(query, {
+                      owner: OWNER,
+                      name: REPO,
+                      number: ln,
+                    })
+                    const itemId = await addItem(res.repository.issue.id)
+                    await setStatus(itemId, STATUS["In review"])
+                  }
+                }
+                await setStatus(prItemId, STATUS["In review"])
+                await ensureMilestone(number)
+              }
+            } else {
+              const itemId = await ensureOnBoard(number, false, contentId)
+              const closed = action === "closed" || payload.issue.state === "closed"
+              await setStatus(itemId, closed ? STATUS.Done : STATUS.Backlog)
+              if (!closed) await ensureMilestone(number)
+            }
+
+            core.info(`Synced ${isPR ? "PR" : "issue"} #${number} (${action})`)
