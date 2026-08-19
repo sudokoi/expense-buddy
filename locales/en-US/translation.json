@@ -109,7 +109,7 @@
       "notFound": "Expense not found"
     },
     "loadMore": "Load More",
-    "loading": "Loading...",
+    "loading": "Loading…",
     "updated": "Expense updated",
     "deleted": "Expense deleted",
     "loadError": "Failed to load more expenses",
@@ -117,7 +117,7 @@
     "noResultsSubtitle": "Try adjusting your filters",
     "filterSheet": {
       "title": "Filters",
-      "loading": "Loading...",
+      "loading": "Loading…",
       "time": "Time Period",
       "month": "Month",
       "search": "Search",
@@ -168,7 +168,7 @@
       "all": "All"
     },
     "empty": {
-      "loading": "Loading analytics...",
+      "loading": "Loading analytics…",
       "noData": "No expenses recorded in this period.",
       "noDataSubtitle": "Try selecting a different time window or add some expenses.",
       "noMatch": "No expenses in selected categories.",
@@ -310,7 +310,7 @@
       "onChange": "On Every Change",
       "onChangeHelp": "Sync immediately after making changes",
       "syncNow": "Sync Now",
-      "syncing": "Syncing..."
+      "syncing": "Syncing…"
     },
     "categories": {
       "other": "Other",
@@ -337,7 +337,8 @@
         "chooseColor": "Choose Color"
       },
       "moveUp": "Move {{category}} up",
-      "moveDown": "Move {{category}} down"
+      "moveDown": "Move {{category}} down",
+      "default": "default"
     },
     "appearance": {
       "theme": "Theme",
@@ -365,7 +366,7 @@
       "helper": "The current scan is limited to recent messages and keeps raw SMS data local to this device.",
       "actions": {
         "scan": "Scan recent messages",
-        "scanning": "Scanning...",
+        "scanning": "Scanning…",
         "review": "Review imports",
         "reviewWithPending": "Review imports ({{count}} pending)"
       },
@@ -385,7 +386,7 @@
       "currentVersion": "Current Version",
       "latestVersion": "Latest Version",
       "checkForUpdates": "Check for Updates",
-      "checking": "Checking...",
+      "checking": "Checking…",
       "download": "Download v{{version}}",
       "installUpdate": "Install Update",
       "updateNow": "Update Now",
@@ -473,12 +474,16 @@
     "title": "Choose Repository",
     "subtitle": "Select a repository to sync your expenses.",
     "searchPlaceholder": "Search repositories...",
-    "loading": "Loading...",
+    "loading": "Loading…",
     "empty": "No repositories found.",
     "webAuthError": "Repo picker is not available on web. Use a token and enter owner/repo.",
     "sessionExpired": "Your GitHub session is no longer valid. Please sign in again.",
     "rateLimit": "GitHub rate limit reached. Please wait a bit and try again.",
-    "accessDenied": "GitHub denied access (403)."
+    "accessDenied": "GitHub denied access (403).",
+    "private": "Private",
+    "public": "Public",
+    "signedInAs": "Signed in as {{login}}",
+    "retry": "Retry"
   },
   "githubSync": {
     "errors": {

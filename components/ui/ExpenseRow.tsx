@@ -70,10 +70,12 @@ export const ExpenseRow = memo(function ExpenseRow({
           size={subtitleMode === "time" ? 20 : 16}
           color={categoryInfo.color as `#${string}`}
         />
-        <View className="flex-1">
+        <View className="min-w-0 flex-1">
           <Text
             className="text-sm text-foreground"
             style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {expense.note || categoryLabel}
           </Text>

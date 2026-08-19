@@ -208,11 +208,11 @@ export default function GitHubRepoPickerScreen() {
       >
         <Text numberOfLines={1}>{item.full_name}</Text>
         <Text className="text-xs text-foreground opacity-60">
-          {item.private ? "Private" : "Public"}
+          {item.private ? t("repoPicker.private") : t("repoPicker.public")}
         </Text>
       </Button>
     ),
-    [handleSelect]
+    [handleSelect, t]
   )
 
   return (
@@ -235,7 +235,9 @@ export default function GitHubRepoPickerScreen() {
         <Text className="text-foreground opacity-70">{t("repoPicker.subtitle")}</Text>
 
         {viewerLogin ? (
-          <Text className="text-foreground opacity-70">Signed in as {viewerLogin}</Text>
+          <Text className="text-foreground opacity-70">
+            {t("repoPicker.signedInAs", { login: viewerLogin })}
+          </Text>
         ) : null}
 
         {isLoading ? (
@@ -249,7 +251,7 @@ export default function GitHubRepoPickerScreen() {
           <View className="gap-2">
             <Text className="text-error">{error}</Text>
             <Button size="chip" className="px-2" onPress={load}>
-              {t("common.save")}
+              {t("repoPicker.retry")}
             </Button>
           </View>
         ) : null}

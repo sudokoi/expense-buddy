@@ -120,7 +120,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text>{item.label}</Text>
+              <Text numberOfLines={1}>{item.label}</Text>
             </Button>
           )
         })}

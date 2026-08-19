@@ -567,10 +567,7 @@ export default function HistoryScreen() {
         >
           {t("history.emptyTitle")}
         </Text>
-        <Text
-          style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.ghost }]}
-          className="text-foreground"
-        >
+        <Text style={[layoutStyles.emptySubtext]} className="text-muted-foreground">
           {t("history.emptySubtitle")}
         </Text>
       </View>
@@ -615,10 +612,7 @@ export default function HistoryScreen() {
           >
             {t("history.noResultsTitle")}
           </Text>
-          <Text
-            style={[layoutStyles.emptySubtext, { opacity: UI_OPACITY.ghost }]}
-            className="text-foreground"
-          >
+          <Text style={[layoutStyles.emptySubtext]} className="text-muted-foreground">
             {t("history.noResultsSubtitle")}
           </Text>
           <Button

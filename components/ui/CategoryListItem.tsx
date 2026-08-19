@@ -119,7 +119,7 @@ export const CategoryListItem = memo(function CategoryListItem({
                 className="text-[11px] text-foreground"
                 style={{ opacity: UI_OPACITY.faint }}
               >
-                (default)
+                ({t("settings.categories.default")})
               </Text>
             )}
           </View>

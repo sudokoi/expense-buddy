@@ -109,7 +109,7 @@
       "notFound": "支出が見つかりません"
     },
     "loadMore": "さらに読み込む",
-    "loading": "読み込み中...",
+    "loading": "読み込み中…",
     "updated": "支出を更新しました",
     "deleted": "支出を削除しました",
     "loadError": "支出の読み込みに失敗しました",
@@ -117,7 +117,7 @@
     "noResultsSubtitle": "フィルターを調整してみてください",
     "filterSheet": {
       "title": "フィルター",
-      "loading": "読み込み中...",
+      "loading": "読み込み中…",
       "time": "期間",
       "month": "月",
       "search": "検索",
@@ -168,7 +168,7 @@
       "all": "全期間"
     },
     "empty": {
-      "loading": "分析を読み込み中...",
+      "loading": "分析を読み込み中…",
       "noData": "この期間の支出記録はありません。",
       "noDataSubtitle": "別の期間を選択するか、支出を追加してください。",
       "noMatch": "選択したカテゴリーの支出はありません。",
@@ -310,7 +310,7 @@
       "onChange": "変更ごと",
       "onChangeHelp": "変更を加えた直後に同期",
       "syncNow": "今すぐ同期",
-      "syncing": "同期中..."
+      "syncing": "同期中…"
     },
     "categories": {
       "other": "その他",
@@ -337,7 +337,8 @@
         "chooseColor": "色を選択"
       },
       "moveUp": "{{category}}を上に移動",
-      "moveDown": "{{category}}を下に移動"
+      "moveDown": "{{category}}を下に移動",
+      "default": "デフォルト"
     },
     "appearance": {
       "theme": "テーマ",
@@ -365,7 +366,7 @@
       "helper": "現在のスキャンは最近のメッセージのみが対象で、生のSMSデータはこの端末内に保持されます。",
       "actions": {
         "scan": "最近のメッセージをスキャン",
-        "scanning": "スキャン中...",
+        "scanning": "スキャン中…",
         "review": "インポートを確認",
         "reviewWithPending": "インポートを確認 ({{count}} 件保留)"
       },
@@ -385,7 +386,7 @@
       "currentVersion": "現在のバージョン",
       "latestVersion": "最新バージョン",
       "checkForUpdates": "アップデートを確認",
-      "checking": "確認中...",
+      "checking": "確認中…",
       "download": "v{{version}} をダウンロード",
       "installUpdate": "アップデートをインストール",
       "updateNow": "今すぐアップデート",
@@ -473,12 +474,16 @@
     "title": "リポジトリを選択",
     "subtitle": "支出を同期するリポジトリを選択してください。",
     "searchPlaceholder": "リポジトリを検索...",
-    "loading": "読み込み中...",
+    "loading": "読み込み中…",
     "empty": "リポジトリが見つかりませんでした。",
     "webAuthError": "リポジトリピッカーはWebでは利用できません。トークンを使用してowner/repoを入力してください。",
     "sessionExpired": "GitHubセッションの有効期限が切れました。もう一度サインインしてください。",
     "rateLimit": "GitHubのレート制限に達しました。しばらく待ってからもう一度お試しください。",
-    "accessDenied": "GitHubへのアクセスが拒否されました (403)。"
+    "accessDenied": "GitHubへのアクセスが拒否されました (403)。",
+    "private": "非公開",
+    "public": "公開",
+    "signedInAs": "{{login}}としてサインイン中",
+    "retry": "再試行"
   },
   "githubSync": {
     "errors": {

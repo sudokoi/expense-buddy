@@ -762,6 +762,8 @@ export function SmsImportReviewScreen({
                             <Text
                               className="text-foreground"
                               style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
                             >
                               {item.merchantName || item.sourceMessage.sender}
                             </Text>
