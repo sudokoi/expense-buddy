@@ -6,7 +6,7 @@ import type { LineChartDataItem } from "../../utils/analytics/aggregations"
 import { ACCENT_COLORS, getChartColors, getOverlayColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
-import { getCurrencySymbol } from "../../utils/currency"
+import { formatCurrency } from "../../utils/currency"
 import {
   UI_RADIUS,
   UI_SPACE,
@@ -28,7 +28,6 @@ export const LineChartSection = memo(function LineChartSection({
   currencyCode = "INR",
 }: LineChartSectionProps) {
   const { t } = useTranslation()
-  const symbol = getCurrencySymbol(currencyCode)
   const theme = useThemeColors()
   const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
@@ -110,13 +109,12 @@ export const LineChartSection = memo(function LineChartSection({
       return (
         <View style={styles.tooltipContainer}>
           <Text className="text-[13px] font-bold text-foreground">
-            {symbol}
-            {item.value.toFixed(2)}
+            {formatCurrency(item.value, currencyCode)}
           </Text>
         </View>
       )
     },
-    [styles.tooltipContainer, symbol]
+    [styles.tooltipContainer, currencyCode]
   )
 
   // Memoize pointer config
@@ -149,36 +147,46 @@ export const LineChartSection = memo(function LineChartSection({
   }
 
   const chartContent = (
-    <LineChart
-      data={chartData}
-      width={needsScroll ? chartWidth : screenWidth - 100}
-      height={200}
-      spacing={pointSpacing}
-      initialSpacing={20}
-      endSpacing={20}
-      color={colors.line}
-      thickness={2}
-      startFillColor={colors.area}
-      endFillColor={colors.area}
-      startOpacity={0.4}
-      endOpacity={0.1}
-      areaChart
-      curved
-      hideDataPoints={false}
-      dataPointsColor={colors.line}
-      dataPointsRadius={4}
-      showVerticalLines
-      verticalLinesColor={chartColors.gridLine}
-      xAxisColor={chartColors.axisLine}
-      yAxisColor={chartColors.axisLine}
-      yAxisTextStyle={{ color: colors.text, fontSize: 10 }}
-      xAxisLabelTextStyle={{ color: colors.text, fontSize: 10 }}
-      noOfSections={4}
-      maxValue={maxValue}
-      rulesType="solid"
-      rulesColor={chartColors.rules}
-      pointerConfig={pointerConfig}
-    />
+    <View
+      accessible
+      accessibilityLabel={t("analytics.charts.trend.accessibilityLabel", {
+        total: formatCurrency(
+          data.reduce((sum, d) => sum + d.value, 0),
+          currencyCode
+        ),
+      })}
+    >
+      <LineChart
+        data={chartData}
+        width={needsScroll ? chartWidth : screenWidth - 100}
+        height={200}
+        spacing={pointSpacing}
+        initialSpacing={20}
+        endSpacing={20}
+        color={colors.line}
+        thickness={2}
+        startFillColor={colors.area}
+        endFillColor={colors.area}
+        startOpacity={0.4}
+        endOpacity={0.1}
+        areaChart
+        curved
+        hideDataPoints={false}
+        dataPointsColor={colors.line}
+        dataPointsRadius={4}
+        showVerticalLines
+        verticalLinesColor={chartColors.gridLine}
+        xAxisColor={chartColors.axisLine}
+        yAxisColor={chartColors.axisLine}
+        yAxisTextStyle={{ color: colors.text, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: colors.text, fontSize: 10 }}
+        noOfSections={4}
+        maxValue={maxValue}
+        rulesType="solid"
+        rulesColor={chartColors.rules}
+        pointerConfig={pointerConfig}
+      />
+    </View>
   )
 
   return (

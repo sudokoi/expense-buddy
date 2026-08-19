@@ -201,7 +201,8 @@
         "noData": "No card/UPI expenses for this period"
       },
       "trend": {
-        "title": "Spending Trend"
+        "title": "Spending Trend",
+        "accessibilityLabel": "Spending trend. Total {{total}}"
       }
     }
   },

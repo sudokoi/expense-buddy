@@ -6,21 +6,25 @@ import type { PieChartDataItem } from "../../utils/analytics/aggregations"
 import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
+import { formatCurrency } from "../../utils/currency"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 
 interface PieChartSectionProps {
   data: PieChartDataItem[]
+  currencyCode?: string
   onCategorySelect?: (category: string | null) => void
 }
 
 // Memoized legend item component
 const LegendItem = memo(function LegendItem({
   item,
+  currencyCode,
   isSelected,
   selectedBgColor,
   onPress,
 }: {
   item: PieChartDataItem
+  currencyCode: string
   isSelected: boolean
   selectedBgColor: string
   onPress: () => void
@@ -28,7 +32,7 @@ const LegendItem = memo(function LegendItem({
   return (
     <Pressable
       onPress={onPress}
-      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ₹${item.value.toFixed(2)}`}
+      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ${formatCurrency(item.value, currencyCode)}`}
       accessibilityState={{ selected: isSelected }}
     >
       <View
@@ -48,7 +52,9 @@ const LegendItem = memo(function LegendItem({
           <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text className="font-bold text-foreground">₹{item.value.toFixed(2)}</Text>
+          <Text className="font-bold text-foreground">
+            {formatCurrency(item.value, currencyCode)}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -61,6 +67,7 @@ const LegendItem = memo(function LegendItem({
  */
 export const PieChartSection = memo(function PieChartSection({
   data,
+  currencyCode = "INR",
   onCategorySelect,
 }: PieChartSectionProps) {
   const { t } = useTranslation()
@@ -103,10 +110,12 @@ export const PieChartSection = memo(function PieChartSection({
         <Text className="text-xs text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text className="text-sm font-bold text-foreground">₹{total.toFixed(0)}</Text>
+        <Text className="text-sm font-bold text-foreground">
+          {formatCurrency(total, currencyCode)}
+        </Text>
       </View>
     ),
-    [total, t]
+    [total, t, currencyCode]
   )
 
   if (data.length === 0) {
@@ -144,6 +153,7 @@ export const PieChartSection = memo(function PieChartSection({
             <LegendItem
               key={item.category}
               item={item}
+              currencyCode={currencyCode}
               isSelected={selectedCategory === item.category}
               selectedBgColor={chartColors.selectedBg}
               onPress={() => handleSegmentPress(item.category)}

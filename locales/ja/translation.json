@@ -201,7 +201,8 @@
         "noData": "カード/UPIの支出はありません"
       },
       "trend": {
-        "title": "支出傾向"
+        "title": "支出傾向",
+        "accessibilityLabel": "支出トレンド。合計 {{total}}"
       }
     }
   },

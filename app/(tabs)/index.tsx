@@ -486,15 +486,18 @@ export default function AnalyticsScreen() {
               )}
               <PieChartSection
                 data={pieChartData}
+                currencyCode={effectiveCurrency}
                 onCategorySelect={handleCategorySelect}
               />
               <PaymentMethodPieChart
                 data={paymentMethodChartData}
+                currencyCode={effectiveCurrency}
                 selectedPaymentMethod={selectedPaymentMethodForChart}
                 onPaymentMethodSelect={handlePaymentMethodSelect}
               />
               <PaymentInstrumentPieChart
                 data={paymentInstrumentChartData}
+                currencyCode={effectiveCurrency}
                 selectedKey={
                   selectedPaymentInstruments.length === 1
                     ? selectedPaymentInstruments[0]

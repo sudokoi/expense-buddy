@@ -3,7 +3,7 @@ import { Text, View } from "react-native"
 import { Card } from "../ui/Card"
 import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
-import { getCurrencySymbol } from "../../utils/currency"
+import { formatCurrency } from "../../utils/currency"
 import type { AnalyticsStatistics } from "../../utils/analytics/statistics"
 import { CARD_COLORS } from "../../constants/palette"
 import { useTranslation } from "react-i18next"
@@ -29,9 +29,12 @@ export const StatisticsCards = memo(function StatisticsCards({
   hasActiveFilters = false,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
-  const symbol = getCurrencySymbol(currencyCode)
   const scheme = useThemeScheme()
   const colors = CARD_COLORS[scheme]
+
+  // Tabular numerals keep digit widths fixed so card values don't jitter as
+  // they update, and prevent layout shifts while typing in the amount field.
+  const amountTextStyle = { fontVariant: ["tabular-nums" as const] }
 
   // Show the subtext whenever any filter narrows the data below the full-period
   // total. In the default/reset state (no active filters) the headline already
@@ -62,13 +65,12 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: colors.blue.accent }}
+            style={{ color: colors.blue.accent, ...amountTextStyle }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            {symbol}
-            {statistics.totalSpending.toFixed(2)}
+            {formatCurrency(statistics.totalSpending, currencyCode)}
           </Text>
           {showSubtext && (
             <Text
@@ -77,7 +79,7 @@ export const StatisticsCards = memo(function StatisticsCards({
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
-                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
               })}
             </Text>
           )}
@@ -95,13 +97,12 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           <Text
             className="mt-2 text-lg font-semibold"
-            style={{ color: colors.green.accent }}
+            style={{ color: colors.green.accent, ...amountTextStyle }}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
           >
-            {symbol}
-            {statistics.averageDaily.toFixed(2)}
+            {formatCurrency(statistics.averageDaily, currencyCode)}
           </Text>
           {showSubtext && (
             <Text
@@ -110,7 +111,7 @@ export const StatisticsCards = memo(function StatisticsCards({
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
-                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
               })}
             </Text>
           )}
@@ -142,8 +143,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           {statistics.highestCategory && (
             <Text className="text-xs" style={{ color: colors.orange.text }}>
-              {symbol}
-              {statistics.highestCategory.amount.toFixed(2)}
+              {formatCurrency(statistics.highestCategory.amount, currencyCode)}
             </Text>
           )}
           {showSubtext && (
@@ -153,7 +153,7 @@ export const StatisticsCards = memo(function StatisticsCards({
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
-                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
               })}
             </Text>
           )}
@@ -180,8 +180,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
           {statistics.highestDay && (
             <Text className="text-xs" style={{ color: colors.purple.text }}>
-              {symbol}
-              {statistics.highestDay.amount.toFixed(2)}
+              {formatCurrency(statistics.highestDay.amount, currencyCode)}
             </Text>
           )}
           {showSubtext && (
@@ -191,7 +190,7 @@ export const StatisticsCards = memo(function StatisticsCards({
               numberOfLines={1}
             >
               {t("analytics.stats.ofTotal", {
-                total: `${symbol}${fullPeriodTotalSpending!.toFixed(2)}`,
+                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
               })}
             </Text>
           )}

@@ -7,10 +7,12 @@ import { getChartColors } from "../../constants/palette"
 import { PaymentMethodType } from "../../types/expense"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
+import { formatCurrency } from "../../utils/currency"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 
 interface PaymentMethodPieChartProps {
   data: PaymentMethodChartDataItem[]
+  currencyCode?: string
   selectedPaymentMethod: PaymentMethodType | null
   onPaymentMethodSelect: (paymentMethodType: PaymentMethodType | null) => void
 }
@@ -18,11 +20,13 @@ interface PaymentMethodPieChartProps {
 // Memoized legend item component
 const LegendItem = memo(function LegendItem({
   item,
+  currencyCode,
   isSelected,
   selectedBgColor,
   onPress,
 }: {
   item: PaymentMethodChartDataItem
+  currencyCode: string
   isSelected: boolean
   selectedBgColor: string
   onPress: () => void
@@ -30,7 +34,7 @@ const LegendItem = memo(function LegendItem({
   return (
     <Pressable
       onPress={onPress}
-      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ₹${item.value.toFixed(2)}`}
+      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ${formatCurrency(item.value, currencyCode)}`}
       accessibilityState={{ selected: isSelected }}
     >
       <View
@@ -50,7 +54,9 @@ const LegendItem = memo(function LegendItem({
           <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text className="font-bold text-foreground">₹{item.value.toFixed(2)}</Text>
+          <Text className="font-bold text-foreground">
+            {formatCurrency(item.value, currencyCode)}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -63,6 +69,7 @@ const LegendItem = memo(function LegendItem({
  */
 export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
   data,
+  currencyCode = "INR",
   selectedPaymentMethod,
   onPaymentMethodSelect,
 }: PaymentMethodPieChartProps) {
@@ -105,10 +112,12 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
         <Text className="text-xs text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
           {t("analytics.charts.common.total")}
         </Text>
-        <Text className="text-sm font-bold text-foreground">₹{total.toFixed(0)}</Text>
+        <Text className="text-sm font-bold text-foreground">
+          {formatCurrency(total, currencyCode)}
+        </Text>
       </View>
     ),
-    [total, t]
+    [total, t, currencyCode]
   )
 
   if (data.length === 0) {
@@ -146,6 +155,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
             <LegendItem
               key={item.paymentMethodType}
               item={item}
+              currencyCode={currencyCode}
               isSelected={selectedPaymentMethod === item.paymentMethodType}
               selectedBgColor={chartColors.selectedBg}
               onPress={() =>
