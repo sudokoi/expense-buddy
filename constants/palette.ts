@@ -29,7 +29,7 @@ export const palette = {
     // of the previous cool violet. All text/UI contrast still clears WCAG AA.
     background: "#1D161B",
     surface: "#27202A",
-    muted: "#362D40",
+    muted: "#4A3D52",
     foreground: "#F2E9EE",
     mutedForeground: "#CCBFC9",
     border: "#3B3342",

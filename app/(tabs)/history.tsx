@@ -1,12 +1,6 @@
-import React, {
-  startTransition,
-  useCallback,
-  useDeferredValue,
-  useMemo,
-  useState,
-} from "react"
+import React, { useCallback, useDeferredValue, useMemo, useState } from "react"
 import { Text, View, ScrollView, Modal } from "react-native"
-import { Filter, X } from "lucide-react-native"
+import { Filter } from "lucide-react-native"
 import { BackHandler } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FlashList } from "@shopify/flash-list"
@@ -89,31 +83,6 @@ const layoutStyles = {
   },
 } as const
 
-// Filter chip component
-const FilterChip = React.memo(function FilterChip({
-  label,
-  onRemove,
-}: {
-  label: string
-  onRemove: () => void
-}) {
-  const theme = useThemeColors()
-  return (
-    <Button
-      size="chip"
-      variant="outline"
-      className="gap-1"
-      onPress={() => {
-        logAsync("INFO", "UI_ACTION", "REMOVE_FILTER_CHIP")
-        onRemove()
-      }}
-    >
-      <Text numberOfLines={1}>{label}</Text>
-      <X size={14} color={theme.foreground} />
-    </Button>
-  )
-})
-
 export default function HistoryScreen() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -125,18 +94,7 @@ export default function HistoryScreen() {
   const insets = useSafeAreaInsets()
 
   // Filter state from shared store (single source of truth for all tabs)
-  const {
-    filters,
-    activeCount,
-    hasActive,
-    setTimeWindow,
-    setSelectedMonth,
-    setSelectedCategories,
-    setSelectedPaymentMethods,
-    setSelectedPaymentInstruments,
-    setSelectedCurrency,
-    applyFilters,
-  } = useFilters()
+  const { filters, activeCount, hasActive, applyFilters } = useFilters()
 
   // Initialize filter persistence (loads persisted filters from storage on mount)
   const { save: saveFilters } = useFilterPersistence()
@@ -269,89 +227,82 @@ export default function HistoryScreen() {
   // but uses effectiveSelectedMonth to avoid showing a stale month chip when the
   // stored month doesn't exist for the current currency)
   const filterChips = useMemo(() => {
-    const chips: Array<{ label: string; onRemove: () => void }> = []
+    const chips: Array<{ key: string; label: string }> = []
 
     // Time chip - always show
     if (effectiveSelectedMonth) {
       chips.push({
+        key: "month",
         label: t("analytics.filters.month", {
           month: formatMonthLabel(effectiveSelectedMonth),
         }),
-        onRemove: () => startTransition(() => setSelectedMonth(null)),
       })
     } else {
       chips.push({
+        key: "time",
         label: t("analytics.filters.time", {
           window: t(`analytics.timeWindow.${filters.timeWindow}`),
         }),
-        onRemove: () => startTransition(() => setTimeWindow("all")),
       })
     }
 
     // Currency chip - only relevant when more than one currency exists.
-    // Clearing reverts to the default currency everywhere (shared store) and
-    // persists so the reset sticks across the app.
     if (availableCurrencies.length > 1) {
       chips.push({
+        key: "currency",
         label: `${t("settings.localization.currency")}: ${effectiveCurrency} (${getCurrencySymbol(effectiveCurrency)})`,
-        onRemove: () => {
-          startTransition(() => setSelectedCurrency(null))
-          void saveFilters().catch((error) =>
-            console.warn("Failed to persist currency selection:", error)
-          )
-        },
       })
     }
 
     // Category chip - always show
     if (filters.selectedCategories.length === 0) {
       chips.push({
+        key: "category",
         label: t("analytics.filters.category", {
           category: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else if (filters.selectedCategories.length === 1) {
       chips.push({
+        key: "category",
         label: t("analytics.filters.category", {
           category: filters.selectedCategories[0],
         }),
-        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     } else {
       chips.push({
+        key: "category",
         label: t("analytics.filters.category", {
           category: `${filters.selectedCategories.length} (${formatListBreakdown(filters.selectedCategories, t("analytics.timeWindow.all"))})`,
         }),
-        onRemove: () => startTransition(() => setSelectedCategories([])),
       })
     }
 
     // Payment method chip - always show
     if (filters.selectedPaymentMethods.length === 0) {
       chips.push({
+        key: "payment",
         label: t("analytics.filters.payment", {
           method: t("analytics.timeWindow.all"),
         }),
-        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else if (filters.selectedPaymentMethods.length === 1) {
       const only = filters.selectedPaymentMethods[0]
       chips.push({
+        key: "payment",
         label: t("analytics.filters.payment", {
           method: paymentMethodLabel(only, t),
         }),
-        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     } else {
       chips.push({
+        key: "payment",
         label: t("analytics.filters.payment", {
           method: `${filters.selectedPaymentMethods.length} (${formatListBreakdown(
             filters.selectedPaymentMethods.map((m) => paymentMethodLabel(m, t)),
             t("analytics.timeWindow.all")
           )})`,
         }),
-        onRemove: () => startTransition(() => setSelectedPaymentMethods([])),
       })
     }
 
@@ -359,13 +310,14 @@ export default function HistoryScreen() {
     if (showPaymentInstrumentFilter) {
       if (filters.selectedPaymentInstruments.length === 0) {
         chips.push({
+          key: "instrument",
           label: t("analytics.filters.instrument", {
             instrument: t("analytics.timeWindow.all"),
           }),
-          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else if (filters.selectedPaymentInstruments.length === 1) {
         chips.push({
+          key: "instrument",
           label: t("analytics.filters.instrument", {
             instrument: formatSelectedPaymentInstrumentLabel(
               filters.selectedPaymentInstruments[0],
@@ -373,17 +325,16 @@ export default function HistoryScreen() {
               t
             ),
           }),
-          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       } else {
         chips.push({
+          key: "instrument",
           label: t("analytics.filters.instrument", {
             instrument: formatSelectedPaymentInstrumentsSummary(
               filters.selectedPaymentInstruments,
               t
             ),
           }),
-          onRemove: () => startTransition(() => setSelectedPaymentInstruments([])),
         })
       }
     }
@@ -393,17 +344,10 @@ export default function HistoryScreen() {
     filters,
     effectiveSelectedMonth,
     t,
-    setTimeWindow,
-    setSelectedMonth,
-    setSelectedCategories,
-    setSelectedPaymentMethods,
-    setSelectedPaymentInstruments,
-    setSelectedCurrency,
-    saveFilters,
     availableCurrencies,
     effectiveCurrency,
-    showPaymentInstrumentFilter,
     allInstruments,
+    showPaymentInstrumentFilter,
   ])
 
   // Memoized handlers for list item actions
@@ -587,7 +531,14 @@ export default function HistoryScreen() {
             style={{ flex: 1 }}
           >
             {filterChips.map((chip) => (
-              <FilterChip key={chip.label} label={chip.label} onRemove={chip.onRemove} />
+              <Button
+                key={chip.key}
+                size="chip"
+                variant="outline"
+                onPress={handleOpenFilterSheet}
+              >
+                <Text numberOfLines={1}>{chip.label}</Text>
+              </Button>
             ))}
           </ScrollView>
 
@@ -639,7 +590,14 @@ export default function HistoryScreen() {
           style={{ flex: 1 }}
         >
           {filterChips.map((chip) => (
-            <FilterChip key={chip.label} label={chip.label} onRemove={chip.onRemove} />
+            <Button
+              key={chip.key}
+              size="chip"
+              variant="outline"
+              onPress={handleOpenFilterSheet}
+            >
+              <Text numberOfLines={1}>{chip.label}</Text>
+            </Button>
           ))}
         </ScrollView>
 
