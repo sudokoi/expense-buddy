@@ -4,7 +4,6 @@ import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
-import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface MonthSelectorProps {
   value: string | null
@@ -18,7 +17,6 @@ export const MonthSelector = memo(function MonthSelector({
   availableMonths,
 }: MonthSelectorProps) {
   const { t } = useTranslation()
-  const theme = useThemeColors()
 
   return (
     <ScrollView
@@ -31,17 +29,11 @@ export const MonthSelector = memo(function MonthSelector({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          variant="outline"
-          style={value === null ? { backgroundColor: theme.accent } : undefined}
+          variant={value === null ? "accent" : "outline"}
           onPress={() => onChange(null)}
           accessibilityState={{ selected: value === null }}
         >
-          <Text
-            className="text-foreground"
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            style={value === null ? { color: theme.accentForeground } : undefined}
-          >
+          <Text adjustsFontSizeToFit numberOfLines={1}>
             {t("common.all")}
           </Text>
         </Button>
@@ -52,17 +44,11 @@ export const MonthSelector = memo(function MonthSelector({
             <Button
               key={monthKey}
               size="chip"
-              variant="outline"
-              style={isSelected ? { backgroundColor: theme.accent } : undefined}
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => onChange(monthKey)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text
-                className="text-foreground"
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={isSelected ? { color: theme.accentForeground } : undefined}
-              >
+              <Text adjustsFontSizeToFit numberOfLines={1}>
                 {label}
               </Text>
             </Button>

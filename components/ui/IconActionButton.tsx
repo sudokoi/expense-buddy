@@ -96,14 +96,15 @@ export function IconActionButton({
   return (
     <View>
       <SpinningIcon active={spinning}>
-        <Pressable
+          <Pressable
           onPress={handlePress}
           onLongPress={handleLongPress}
           disabled={disabled}
+          hitSlop={8}
           aria-label={accessibilityLabel ?? tooltip}
           accessibilityRole="button"
           accessibilityState={{ disabled: !!disabled }}
-          className="items-center justify-center p-1"
+          className="items-center justify-center p-2"
         >
           <LucideProvider color={theme.foreground}>{icon}</LucideProvider>
         </Pressable>

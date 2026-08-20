@@ -8,9 +8,9 @@ import {
   useSettings,
   useCategories,
   useNotifications,
-  useSmsImportReview,
   useUIState,
 } from "../../stores/hooks"
+import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { logAsync } from "../../services/logger"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
