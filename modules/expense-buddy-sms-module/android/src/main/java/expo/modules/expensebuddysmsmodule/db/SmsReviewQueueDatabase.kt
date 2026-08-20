@@ -162,6 +162,9 @@ abstract class SmsReviewQueueDatabase : RoomDatabase() {
                         SmsReviewQueueDatabase::class.java,
                         DATABASE_NAME,
                     ).addMigrations(MIGRATION_1_2)
+                    // Destructive fallback is intentional for dev/preview downgrades;
+                    // exportSchema=true but schemas/ is not committed — safe to clear
+                    // stale DB rather than crash on unknown version. See ADR-007.
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

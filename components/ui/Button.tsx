@@ -87,6 +87,8 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
     const resolvedVariant = variant ?? "default"
     const colorKey = VARIANT_TEXT_COLOR_KEY[resolvedVariant]
     const iconColor = colorKey === "white" ? NEUTRAL_COLORS.white : theme[colorKey]
+    // Chip (h-7 = 28dp) needs hitSlop to reach 44dp; other sizes already meet target
+    const hitSlop = size === "chip" ? 8 : props.hitSlop
     return (
       <Pressable
         ref={ref}
@@ -97,6 +99,7 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
         )}
         disabled={disabled}
         accessibilityRole="button"
+        hitSlop={hitSlop}
         {...props}
       >
         <LucideProvider color={iconColor}>
