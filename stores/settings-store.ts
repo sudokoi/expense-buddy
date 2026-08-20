@@ -5,6 +5,7 @@ import {
   ThemePreference,
   DEFAULT_SETTINGS,
   loadSettings,
+  loadSettingsSync,
   saveSettings,
   markSettingsChanged,
   clearSettingsChanged,
@@ -78,10 +79,20 @@ async function syncBackgroundSmsEnabledBestEffort(enabled: boolean): Promise<voi
   }
 }
 
+function getInitialSettings(): { settings: AppSettings; isLoading: boolean } {
+  const syncSettings = loadSettingsSync()
+  if (syncSettings) {
+    return { settings: syncSettings, isLoading: false }
+  }
+  return { settings: DEFAULT_SETTINGS, isLoading: true }
+}
+
+const initial = getInitialSettings()
+
 export const settingsStore = createStore({
   context: {
-    settings: DEFAULT_SETTINGS,
-    isLoading: true,
+    settings: initial.settings,
+    isLoading: initial.isLoading,
     settingsSyncState: "synced" as SettingsSyncState,
     syncedSettingsHash: null as string | null,
     systemColorScheme: (Appearance.getColorScheme() ?? "light") as "light" | "dark",

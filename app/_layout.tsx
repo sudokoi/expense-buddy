@@ -2,6 +2,7 @@ import "../global.css"
 
 import { useEffect, useMemo } from "react"
 import { useColorScheme } from "react-native"
+import { useColorScheme as useNativeWindColorScheme } from "nativewind"
 import { StatusBar } from "expo-status-bar"
 import * as SystemUI from "expo-system-ui"
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation"
@@ -40,22 +41,41 @@ export default function RootLayout() {
     InterBold: require("../assets/fonts/Inter-Bold.otf"),
   })
 
-  useEffect(() => {
-    if (interLoaded || interError) {
-      // Hide the splash screen after the fonts have loaded (or an error was returned) and the UI is ready.
-      SplashScreen.hideAsync()
-    }
-  }, [interLoaded, interError])
+  const fontsReady = Boolean(interLoaded || interError)
 
-  if (!interLoaded && !interError) {
+  if (!fontsReady) {
     return null
   }
 
   return (
     <Providers>
+      <AppSplashGate fontsReady={fontsReady} />
       <RootLayoutNav />
     </Providers>
   )
+}
+
+/**
+ * Keeps the native splash visible until both fonts and the persisted theme
+ * are ready and NativeWind's colorScheme matches the effective theme.
+ * With the MMKV sync fast-path the splash hides immediately on the next
+ * tick; without it (first launch or pre-migration) it waits for the async
+ * load so the first paint is already the correct theme.
+ */
+function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
+  const { effectiveTheme, isLoading } = useThemeSettings()
+  const { colorScheme } = useNativeWindColorScheme()
+
+  useEffect(() => {
+    if (!fontsReady) return
+    if (isLoading) return
+    // Wait for ThemedProvider (useLayoutEffect) to have synced NativeWind.
+    // Prevents hiding the splash one frame before the theme class flips.
+    if (colorScheme !== effectiveTheme) return
+    void SplashScreen.hideAsync()
+  }, [fontsReady, isLoading, colorScheme, effectiveTheme])
+
+  return null
 }
 
 const Providers = ({ children }: { children: React.ReactNode }) => {

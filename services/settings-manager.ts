@@ -1,4 +1,4 @@
-import { getItem, setItem, removeItem } from "./storage"
+import { getItem, getItemSync, setItem, removeItem } from "./storage"
 import { secureStorage } from "./secure-storage"
 import { computeContentHash } from "./hash-storage"
 import { PaymentMethodType } from "../types/expense"
@@ -256,6 +256,31 @@ function migrateV8ToV9(settings: AppSettings): AppSettings {
     ...settings,
     backgroundSmsImportEnabled: settings.backgroundSmsImportEnabled ?? false,
     version: 9,
+  }
+}
+
+/**
+ * Synchronous fast-path load for the initial app theme.
+ * Uses MMKV's sync API so the persisted theme is available before the first
+ * React paint, eliminating the system-theme flash when the user has forced
+ * light/dark opposite to the OS.
+ * Falls back to null if nothing is stored or parsing fails (caller should use
+ * DEFAULT_SETTINGS and await the async load).
+ * Only pure hydration (hydrateSettingsFromJson) is applied — async migrations
+ * (v2->v3, v5->v6 language import) are still handled by loadSettings().
+ */
+export function loadSettingsSync(): AppSettings | null {
+  try {
+    const stored = getItemSync(SETTINGS_KEY)
+    if (!stored) return null
+    const parsed = JSON.parse(stored) as AppSettings
+    // Don't run async migrations here; hydrate covers the common case.
+    // If the stored version is very old (e.g. <3) the async load will
+    // correct it on the next tick, but the splash gate will keep the splash
+    // visible so no flash is shown.
+    return hydrateSettingsFromJson(parsed)
+  } catch {
+    return null
   }
 }
 

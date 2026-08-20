@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useLayoutEffect } from "react"
 import { useColorScheme } from "nativewind"
 import { StoreProvider } from "../stores/store-provider"
 import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-data"
@@ -8,12 +8,15 @@ import { SmsImportReviewProvider } from "../providers/sms-import-review-provider
 /**
  * Inner provider that drives NativeWind's color scheme from the user's theme
  * preference. This must be inside StoreProvider to access the settings.
+ * Uses useLayoutEffect so the nativewind class is applied before the first
+ * paint; combined with the splash gate in RootLayout this eliminates the
+ * system-theme flash when the app preference differs from the OS.
  */
 function ThemedProvider({ children }: { children: React.ReactNode }) {
   const { setColorScheme } = useColorScheme()
   const { effectiveTheme, isLoading } = useThemeSettings()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isLoading) {
       setColorScheme(effectiveTheme)
     }
