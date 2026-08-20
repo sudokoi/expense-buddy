@@ -14,6 +14,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -36,7 +37,7 @@ class SmsPermissionMissingException :
     )
 
 class ExpenseBuddySmsModule : Module() {
-    private val moduleScope = CoroutineScope(Dispatchers.IO)
+    private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var observerStarted = false
     private val isSyncing = AtomicBoolean(false)
 

@@ -80,6 +80,7 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
     "./providers/**/*.{js,jsx,ts,tsx}",
+    "./hooks/**/*.{js,jsx,ts,tsx}",
   ],
   darkMode: "class",
   presets: [require("nativewind/preset")],
@@ -95,17 +96,24 @@ module.exports = {
         accent: "var(--accent)",
         "accent-foreground": "var(--accent-foreground)",
         expense: "var(--expense)",
+        "expense-light": "var(--expense-light)",
         income: "var(--income)",
+        "income-light": "var(--income-light)",
         success: "var(--success)",
         error: "var(--error)",
         warning: "var(--warning)",
         info: "var(--info)",
-        // …kawaii decorative colors
+        destructive: "var(--destructive)",
+        "kawaii-pink": "var(--kawaii-pink)",
+        "kawaii-pink-light": "var(--kawaii-pink-light)",
+        "kawaii-pink-dark": "var(--kawaii-pink-dark)",
+        "kawaii-lavender": "var(--kawaii-lavender)",
+        "kawaii-mint": "var(--kawaii-mint)",
       },
       borderRadius: {
-        control: "8px",
-        chip: "12px",
-        card: "16px",
+        control: "12px",
+        chip: "14px",
+        card: "20px",
         round: "999px",
       },
     },
@@ -124,17 +132,25 @@ module.exports = {
 
 @layer base {
   :root {
-    --background: #fff8f0;
-    --foreground: #4a4458;
-    --accent: #c0406a;
-    --accent-foreground: #ffffff;
+    --background: #FFF8F0;
+    --surface: #FFFAF5;
+    --muted: #FFE0D2;
+    --foreground: #473E4B;
+    --muted-foreground: #6C5A6C;
+    --border: #D6C9C2;
+    --accent: #C0406A;
+    --accent-foreground: #FFFFFF;
     /* …see global.css for the full token set */
   }
   .dark:root {
-    --background: #1a1625;
-    --foreground: #f0e6f6;
-    --accent: #ffb6c1;
-    --accent-foreground: #1a1625;
+    --background: #1D161B;
+    --surface: #27202A;
+    --muted: #4A3D52;
+    --foreground: #F2E9EE;
+    --muted-foreground: #CCBFC9;
+    --border: #3B3342;
+    --accent: #FFB6C1;
+    --accent-foreground: #1D161B;
   }
 }
 ```

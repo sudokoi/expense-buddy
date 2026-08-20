@@ -249,12 +249,12 @@ object SmsMessageParser {
         return false
     }
 
-    private fun getTimeWindow(receivedAt: String): Long {
+    private fun getTimeWindow(receivedAt: String): Long? {
         val timestamp =
             try {
                 Instant.parse(receivedAt).toEpochMilli()
             } catch (_: Exception) {
-                return 0L
+                return null
             }
 
         val windowMs = 3 * 60 * 1000L
@@ -281,7 +281,7 @@ object SmsMessageParser {
                 .trim()
                 .lowercase(Locale.ROOT)
         val normalizedAmount = normalizeAmount(amount)
-        val timeWindow = getTimeWindow(receivedAt)
+        val timeWindow = getTimeWindow(receivedAt)?.toString() ?: "no-window"
         val key = "$normalizedSender|$normalizedAmount|$timeWindow|$normalizedBody"
         return "sms_${sha256(key)}"
     }
