@@ -4,6 +4,8 @@
  * `global.css` (--background, --foreground, --accent, …) and `tailwind.config.js`
  * (colors mapping to those CSS variables) must stay in sync with this file —
  * update values here first and mirror them in those two places.
+ * This file also owns DESTRUCTIVE_COLOR and KAWAII_COLORS which were previously
+ * CSS-only orphans (global.css vars without a JS source).
  *
  * Contrast fixes (ADR-008): the interactive accent is now a deep rose and the
  * muted foregrounds are darkened/lightened so text and selected states meet
@@ -178,6 +180,18 @@ export const CARD_COLORS = {
 export const NEUTRAL_COLORS = {
   white: "#FFFFFF",
   black: "#000000",
+} as const
+
+// Destructive (WCAG-safe on white text, identical across themes per c4fe782)
+export const DESTRUCTIVE_COLOR = "#C93A3F" as const
+
+// Kawaii decorative palette — mirrors global.css vars that have no light/dark variant
+export const KAWAII_COLORS = {
+  pink: "#FFB6C1",
+  pinkLight: "#FFD1DC",
+  pinkDark: "#FF91A4",
+  lavender: "#E6E6FA",
+  mint: "#98FB98",
 } as const
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

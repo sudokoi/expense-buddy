@@ -3,7 +3,6 @@ import { ScrollView, Text, View } from "react-native"
 import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
-import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -20,7 +19,6 @@ export const CurrencyFilter = memo(function CurrencyFilter({
   onChange,
 }: CurrencyFilterProps) {
   const { t } = useTranslation()
-  const theme = useThemeColors()
 
   if (availableCurrencies.length <= 1) return null
 
@@ -37,17 +35,11 @@ export const CurrencyFilter = memo(function CurrencyFilter({
       <View className="flex-row gap-2">
         <Button
           size="chip"
-          variant="outline"
-          style={isDefaultSelected ? { backgroundColor: theme.accent } : undefined}
+          variant={isDefaultSelected ? "accent" : "outline"}
           onPress={() => onChange(null)}
           accessibilityState={{ selected: isDefaultSelected }}
         >
-          <Text
-            className="text-foreground"
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            style={isDefaultSelected ? { color: theme.accentForeground } : undefined}
-          >
+          <Text adjustsFontSizeToFit numberOfLines={1}>
             {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
           </Text>
         </Button>
@@ -59,17 +51,11 @@ export const CurrencyFilter = memo(function CurrencyFilter({
             <Button
               key={currency}
               size="chip"
-              variant="outline"
-              style={isSelected ? { backgroundColor: theme.accent } : undefined}
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => onChange(currency)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Text
-                className="text-foreground"
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={isSelected ? { color: theme.accentForeground } : undefined}
-              >
+              <Text adjustsFontSizeToFit numberOfLines={1}>
                 {currency} ({getCurrencySymbol(currency)})
               </Text>
             </Button>

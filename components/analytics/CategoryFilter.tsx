@@ -4,7 +4,6 @@ import { Button } from "../ui/Button"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
-import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -21,7 +20,6 @@ export const CategoryFilter = memo(function CategoryFilter({
 }: CategoryFilterProps) {
   const { categories } = useCategories()
   const { t } = useTranslation()
-  const theme = useThemeColors()
   const isAllSelected = selectedCategories.length === 0
 
   // Memoize category items with icons and pre-built selected style
@@ -81,21 +79,12 @@ export const CategoryFilter = memo(function CategoryFilter({
               key={cat.label}
               size="chip"
               className="gap-1"
-              variant="outline"
-              style={isSelected ? { backgroundColor: theme.accent } : undefined}
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => handleCategoryPress(cat.label)}
               accessibilityState={{ selected: isSelected }}
             >
-              <Icon
-                size={14}
-                color={isSelected ? theme.accentForeground : theme.foreground}
-              />
-              <Text
-                className="text-foreground"
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={isSelected ? { color: theme.accentForeground } : undefined}
-              >
+              <Icon size={14} />
+              <Text adjustsFontSizeToFit numberOfLines={1}>
                 {cat.label === "Other" ? t("settings.categories.other") : cat.label}
               </Text>
             </Button>

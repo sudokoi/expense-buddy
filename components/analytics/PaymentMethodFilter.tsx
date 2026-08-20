@@ -4,7 +4,6 @@ import { Button } from "../ui/Button"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import type { PaymentMethodType } from "../../types/expense"
-import { useThemeColors } from "../../hooks/use-theme-colors"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -24,7 +23,6 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
   onChange,
 }: PaymentMethodFilterProps) {
   const { t } = useTranslation()
-  const theme = useThemeColors()
   const isAllSelected = selected.length === 0
 
   const chipItems = useMemo(() => {
@@ -99,23 +97,12 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
               key={item.key}
               size="chip"
               className="gap-1"
-              variant="outline"
-              style={isSelected ? { backgroundColor: theme.accent } : undefined}
+              variant={isSelected ? "accent" : "outline"}
               onPress={() => handleToggle(item.key)}
               accessibilityState={{ selected: isSelected }}
             >
-              {Icon ? (
-                <Icon
-                  size={14}
-                  color={isSelected ? theme.accentForeground : theme.foreground}
-                />
-              ) : null}
-              <Text
-                className="text-foreground"
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={isSelected ? { color: theme.accentForeground } : undefined}
-              >
+              {Icon ? <Icon size={14} /> : null}
+              <Text adjustsFontSizeToFit numberOfLines={1}>
                 {label}
               </Text>
             </Button>

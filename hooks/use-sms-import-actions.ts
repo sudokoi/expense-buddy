@@ -2,7 +2,8 @@ import { useCallback, useState } from "react"
 import { Platform } from "react-native"
 import { Href, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { useNotifications, useSettings, useSmsImportReview } from "../stores/hooks"
+import { useNotifications, useSettings } from "../stores/hooks"
+import { useSmsImportReview } from "../providers/sms-import-review-provider"
 import {
   syncInboxAsync,
   getBackgroundSmsPermissionStatus,

@@ -18,13 +18,8 @@ import {
 import type { Category } from "../../types/category"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey, PAYMENT_METHODS } from "../../constants/payment-methods"
-import {
-  useCategories,
-  useExpenses,
-  useNotifications,
-  useSettings,
-  useSmsImportReview,
-} from "../../stores/hooks"
+import { useCategories, useExpenses, useNotifications, useSettings } from "../../stores/hooks"
+import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import {
   findInstrumentById,
   formatPaymentInstrumentLabel,

@@ -123,9 +123,12 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
         console.warn("Payment instrument migration failed:", error)
       }
 
-      await initializeSettingsStore(settingsStore)
-      await initializeExpenseStore(expenseStore)
-      await initializeUIStateStore(uiStateStore)
+      // Settings and expenses are independent after migration — load in parallel
+      await Promise.all([
+        initializeSettingsStore(settingsStore),
+        initializeExpenseStore(expenseStore),
+        initializeUIStateStore(uiStateStore),
+      ])
       initializeUpdateStore(updateStore)
       await runLaunchUpdateCheck(updateStore)
     })()

@@ -5,12 +5,8 @@ import * as Clipboard from "expo-clipboard"
 import { ChevronRight } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
-import {
-  useExpenses,
-  useNotifications,
-  useSettings,
-  useSmsImportReview,
-} from "../../stores/hooks"
+import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
+import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useSyncAction } from "../../hooks/use-sync-action"
 import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
