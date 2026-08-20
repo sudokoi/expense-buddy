@@ -2,7 +2,7 @@ import { Pressable, Text } from "react-native"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { UI_FONT_SIZE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
   isSelected: boolean
@@ -55,7 +55,7 @@ export const CategoryCard = memo(function CategoryCard({
         style={{
           fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
           color: isSelected ? theme.accentForeground : theme.foreground,
-          fontSize: compact ? 11 : 13,
+          fontSize: compact ? UI_FONT_SIZE.micro : UI_FONT_SIZE.body,
         }}
       >
         {displayLabel}

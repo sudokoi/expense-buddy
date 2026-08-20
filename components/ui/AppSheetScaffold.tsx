@@ -77,6 +77,7 @@ export function AppSheetScaffold({
       <View className="flex-1 justify-end">
         <Pressable
           className="absolute inset-0 bg-black/50"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           onPress={dismissOnSnapToBottom ? onClose : undefined}
           accessible={false}
         />
