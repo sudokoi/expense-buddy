@@ -34,7 +34,6 @@ function SpinningIcon({ active, children }: { active: boolean; children: ReactNo
     if (active) {
       // Respect reduced motion — keep icon static if user prefers less animation
       // (react-native-reanimated still animates; we gate at JS seam)
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       try {
         const { AccessibilityInfo } = require("react-native")
         void AccessibilityInfo.isReduceMotionEnabled?.().then((enabled: boolean) => {
@@ -119,7 +118,7 @@ export function IconActionButton({
   return (
     <View>
       <SpinningIcon active={spinning}>
-          <Pressable
+        <Pressable
           onPress={handlePress}
           onLongPress={handleLongPress}
           disabled={disabled}

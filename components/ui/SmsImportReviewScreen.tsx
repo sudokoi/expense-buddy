@@ -18,7 +18,12 @@ import {
 import type { Category } from "../../types/category"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getPaymentMethodI18nKey, PAYMENT_METHODS } from "../../constants/payment-methods"
-import { useCategories, useExpenses, useNotifications, useSettings } from "../../stores/hooks"
+import {
+  useCategories,
+  useExpenses,
+  useNotifications,
+  useSettings,
+} from "../../stores/hooks"
 import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import {
   findInstrumentById,
@@ -39,7 +44,12 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_DURATION } from "../../constants/ui-tokens"
+import {
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_DURATION,
+} from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 type EditableSmsImportDraft = {
