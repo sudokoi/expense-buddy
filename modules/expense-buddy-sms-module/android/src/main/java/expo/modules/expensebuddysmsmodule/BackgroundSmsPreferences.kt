@@ -32,9 +32,10 @@ object BackgroundSmsPreferences {
             .edit()
             .putBoolean(ENABLED_KEY, enabled)
             .apply()
-        // Verify consistency after both writes; prefs is the secondary source.
-        check(getState(context).enabled == enabled) {
-            "Failed to sync the background SMS receiver component state."
+        // Soft-check consistency after both writes; OEM ROMs may lag/revert
+        // PackageManager state — log instead of crashing (see PR 115 review).
+        if (getState(context).enabled != enabled) {
+            LoggerApi.e("SMS_STORAGE", "setEnabled: state mismatch after write, enabled=$enabled")
         }
     }
 

@@ -76,7 +76,7 @@ export function AppSheetScaffold({
     <Modal transparent animationType="slide" visible={open} onRequestClose={onClose}>
       <View className="flex-1 justify-end">
         <Pressable
-          className="absolute inset-0 bg-black/50"
+          className="absolute inset-0"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           onPress={dismissOnSnapToBottom ? onClose : undefined}
           accessible={false}
