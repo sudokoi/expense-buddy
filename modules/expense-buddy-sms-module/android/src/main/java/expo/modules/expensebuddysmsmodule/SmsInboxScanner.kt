@@ -154,8 +154,8 @@ class SmsInboxScanner(
         }
 
         if (limit <= 0) {
-            LoggerApi.w("SMS_MODULE", "resolveLimit: invalid limit=$limit, ignoring limit (returning null)")
-            return null
+            LoggerApi.w("SMS_MODULE", "resolveLimit: invalid limit=$limit, clamping to default 500")
+            return 500
         }
 
         return limit
