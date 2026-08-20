@@ -21,7 +21,25 @@ export const UI_RADIUS = {
   control: 12,
   chip: 14,
   surface: 20,
+  /** Alias for tailwind `rounded-card` — prefer `card` in new code. */
+  card: 20,
   round: 999,
+} as const
+
+export const UI_FONT_SIZE = {
+  micro: 11,
+  caption: 12,
+  body: 13,
+  label: 14,
+  title: 16,
+  section: 18,
+  screen: 20,
+} as const
+
+export const UI_DURATION = {
+  instant: 160,
+  subtle: 180,
+  emphasis: 1000,
 } as const
 
 export const UI_Z_INDEX = {

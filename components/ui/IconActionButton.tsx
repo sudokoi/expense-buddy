@@ -32,12 +32,35 @@ function SpinningIcon({ active, children }: { active: boolean; children: ReactNo
 
   useEffect(() => {
     if (active) {
-      rotation.value = 0
-      rotation.value = withRepeat(
-        withTiming(360, { duration: 1000, easing: Easing.linear }),
-        -1,
-        false
-      )
+      // Respect reduced motion — keep icon static if user prefers less animation
+      // (react-native-reanimated still animates; we gate at JS seam)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      try {
+        const { AccessibilityInfo } = require("react-native")
+        void AccessibilityInfo.isReduceMotionEnabled?.().then((enabled: boolean) => {
+          if (enabled) return
+          rotation.value = 0
+          rotation.value = withRepeat(
+            withTiming(360, { duration: 1000, easing: Easing.linear }),
+            -1,
+            false
+          )
+        })
+        // Fallback: start animation immediately (async check may be slower)
+        rotation.value = 0
+        rotation.value = withRepeat(
+          withTiming(360, { duration: 1000, easing: Easing.linear }),
+          -1,
+          false
+        )
+      } catch {
+        rotation.value = 0
+        rotation.value = withRepeat(
+          withTiming(360, { duration: 1000, easing: Easing.linear }),
+          -1,
+          false
+        )
+      }
     } else {
       cancelAnimation(rotation)
       rotation.value = 0

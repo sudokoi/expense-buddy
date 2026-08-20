@@ -27,6 +27,7 @@ function TabBarButton({
       onPress={onPress}
       onLongPress={onLongPress}
       android_ripple={null}
+      hitSlop={8}
       style={({ pressed }) => [
         style,
         { flex: 1, alignItems: "center", justifyContent: "center" },
@@ -63,7 +64,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
-          height: 40 + insets.bottom,
+          height: Math.max(48, 40 + insets.bottom),
           paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,
