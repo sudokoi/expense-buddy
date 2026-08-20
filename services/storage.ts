@@ -61,6 +61,15 @@ async function ensureMigrated(): Promise<void> {
   return migrationPromise
 }
 
+export function getItemSync(key: string): string | null {
+  if (!mmkv) return null
+  try {
+    return mmkv.getString(key) ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getItem(key: string): Promise<string | null> {
   await ensureMigrated()
   if (!mmkv) return AsyncStorage.getItem(key)
