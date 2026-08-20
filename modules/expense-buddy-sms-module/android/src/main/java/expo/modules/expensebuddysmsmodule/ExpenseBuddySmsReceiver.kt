@@ -12,10 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 class ExpenseBuddySmsReceiver : BroadcastReceiver() {
-    companion object {
-        private val receiverScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    }
-
     override fun onReceive(
         context: Context,
         intent: Intent,
@@ -43,7 +39,8 @@ class ExpenseBuddySmsReceiver : BroadcastReceiver() {
         LoggerApi.d("SMS_RECEIVER", "SMS matched: sender=${reviewItem.sourceMessage.sender} fingerprint=${reviewItem.fingerprint}")
 
         val pendingResult = goAsync()
-        receiverScope.launch {
+        // Per-invocation scope avoids the previous static companion leak; BroadcastReceiver is ephemeral.
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 withTimeout(8000L) {
                     val repo = SmsReviewQueueRepository(context)

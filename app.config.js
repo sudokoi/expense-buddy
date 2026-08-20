@@ -140,7 +140,7 @@ export default {
     splash: {
       image: "./assets/images/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#000000",
+      backgroundColor: "#FFF8F0",
     },
     assetBundlePatterns: ["**/*"],
     ios: {
@@ -150,7 +150,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#000000",
+        backgroundColor: "#FFF8F0",
       },
       permissions: ["android.permission.READ_SMS"],
       package: "com.sudokoi.expensebuddy",

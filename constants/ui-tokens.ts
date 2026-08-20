@@ -3,6 +3,9 @@
  *
  * These values must stay in sync with `tailwind.config.js` (borderRadius scale)
  * and the spacing scale assumed by NativeWind (1 unit = 4px, inlineRem = 16).
+ * Note: gutter (20) maps to `p-5` in Tailwind, not `p-4` (16). Most screens use
+ * `UI_SPACE.gutter` directly in `style`/`contentContainerStyle`, while Tailwind
+ * gaps use `gap-3` (12) / `gap-2` (8) etc. Keep both scales intentional.
  */
 
 export const UI_SPACE = {

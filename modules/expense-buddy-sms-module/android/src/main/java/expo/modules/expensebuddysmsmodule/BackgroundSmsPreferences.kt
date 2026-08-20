@@ -24,12 +24,18 @@ object BackgroundSmsPreferences {
         enabled: Boolean,
     ) {
         LoggerApi.d("SMS_STORAGE", "setEnabled: enabled=$enabled")
+        // Apply PackageManager state first — if it fails, prefs stay unchanged,
+        // avoiding a desync where prefs says enabled but the receiver is disabled.
         BackgroundSmsReceiverComponent.setEnabled(context, enabled)
         context
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putBoolean(ENABLED_KEY, enabled)
             .apply()
+        // Verify consistency after both writes; prefs is the secondary source.
+        check(getState(context).enabled == enabled) {
+            "Failed to sync the background SMS receiver component state."
+        }
     }
 
     fun getLastScanCursor(context: Context): String? {
