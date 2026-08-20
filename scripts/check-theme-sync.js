@@ -23,7 +23,9 @@ function ok(msg) {
 // 1. palette.ts values
 const paletteRaw = read("constants/palette.ts")
 function extractHexes(block) {
-  const m = paletteRaw.match(new RegExp(`${block}:[\\\\s\\\\S]*?background: "(#[0-9A-Fa-f]{6})"`))
+  const m = paletteRaw.match(
+    new RegExp(`${block}:[\\\\s\\\\S]*?background: "(#[0-9A-Fa-f]{6})"`)
+  )
   return m ? m[1] : null
 }
 
@@ -54,13 +56,23 @@ const tailwind = read("tailwind.config.js")
 
 // Check CSS vars
 for (const [key, val] of Object.entries(lightTokens)) {
-  const cssVar = key === "mutedForeground" ? "muted-foreground" : key === "accentForeground" ? "accent-foreground" : key
+  const cssVar =
+    key === "mutedForeground"
+      ? "muted-foreground"
+      : key === "accentForeground"
+        ? "accent-foreground"
+        : key
   const pattern = new RegExp(`--${cssVar}:\\s*${val}`, "i")
   if (!pattern.test(css)) fail(`global.css missing light --${cssVar}: ${val}`)
   else ok(`global.css light --${cssVar}`)
 }
 for (const [key, val] of Object.entries(darkTokens)) {
-  const cssVar = key === "mutedForeground" ? "muted-foreground" : key === "accentForeground" ? "accent-foreground" : key
+  const cssVar =
+    key === "mutedForeground"
+      ? "muted-foreground"
+      : key === "accentForeground"
+        ? "accent-foreground"
+        : key
   // check inside .dark:root block
   const darkBlock = css.match(/\.dark:root\s*\{([\s\S]*?)\}/)
   const block = darkBlock ? darkBlock[1] : ""
@@ -83,31 +95,47 @@ const extraVars = {
   "--kawaii-mint": "#98FB98",
 }
 for (const [v, hex] of Object.entries(extraVars)) {
-  if (!new RegExp(`${v}:\\s*${hex}`, "i").test(css)) fail(`global.css missing ${v}: ${hex}`)
+  if (!new RegExp(`${v}:\\s*${hex}`, "i").test(css))
+    fail(`global.css missing ${v}: ${hex}`)
   else ok(`global.css ${v}`)
 }
 
 // Tailwind colors must map to vars (not hardcoded hex)
 for (const v of Object.keys(extraVars).concat(
-  Object.keys(lightTokens).map((k) => ` --${k === "mutedForeground" ? "muted-foreground" : k === "accentForeground" ? "accent-foreground" : k}`)
+  Object.keys(lightTokens).map(
+    (k) =>
+      ` --${k === "mutedForeground" ? "muted-foreground" : k === "accentForeground" ? "accent-foreground" : k}`
+  )
 )) {
   // Already checked css; now tailwind mapping
 }
-if (!tailwind.includes('background: "var(--background)"')) fail("tailwind missing background var")
+if (!tailwind.includes('background: "var(--background)"'))
+  fail("tailwind missing background var")
 else ok("tailwind colors use vars")
-if (!tailwind.includes('control: "12px"') || !tailwind.includes('chip: "14px"') || !tailwind.includes('card: "20px"'))
+if (
+  !tailwind.includes('control: "12px"') ||
+  !tailwind.includes('chip: "14px"') ||
+  !tailwind.includes('card: "20px"')
+)
   fail("tailwind borderRadius 12/14/20 mismatch with UI_RADIUS")
 else ok("tailwind borderRadius 12/14/20")
 
 // UI_RADIUS sync
 const uiTokens = read("constants/ui-tokens.ts")
-if (!/control: 12/.test(uiTokens) || !/chip: 14/.test(uiTokens) || !/surface: 20/.test(uiTokens))
+if (
+  !/control: 12/.test(uiTokens) ||
+  !/chip: 14/.test(uiTokens) ||
+  !/surface: 20/.test(uiTokens)
+)
   fail("ui-tokens UI_RADIUS mismatch")
 else ok("ui-tokens UI_RADIUS 12/14/20")
 
 // app.config.js splash should match palette light background (not black)
 const appConfig = read("app.config.js")
-if (/backgroundColor:\s*"#000000"/.test(appConfig)) fail("app.config.js still uses #000000 splash/adaptiveIcon (expected palette light #FFF8F0)")
+if (/backgroundColor:\s*"#000000"/.test(appConfig))
+  fail(
+    "app.config.js still uses #000000 splash/adaptiveIcon (expected palette light #FFF8F0)"
+  )
 else ok("app.config.js splash not hardcoded black")
 if (!appConfig.includes("#FFF8F0")) fail("app.config.js missing palette-informed #FFF8F0")
 else ok("app.config.js references #FFF8F0")
@@ -117,7 +145,9 @@ if (!tailwind.includes("./hooks/**/*")) fail("tailwind content missing ./hooks/*
 else ok("tailwind content includes hooks")
 
 if (failures > 0) {
-  console.error(`\n${failures} theme sync check(s) failed. Fix palette.ts first, then mirror to global.css/tailwind/app.config.`)
+  console.error(
+    `\n${failures} theme sync check(s) failed. Fix palette.ts first, then mirror to global.css/tailwind/app.config.`
+  )
   process.exit(1)
 }
 console.log("\nAll theme sync checks passed.")

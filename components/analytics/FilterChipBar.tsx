@@ -17,7 +17,9 @@ interface FilterChipBarProps {
   children: ReactNode
 }
 
-export const FilterChipBar = memo(function FilterChipBar({ children }: FilterChipBarProps) {
+export const FilterChipBar = memo(function FilterChipBar({
+  children,
+}: FilterChipBarProps) {
   return (
     <ScrollView
       horizontal

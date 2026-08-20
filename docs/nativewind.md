@@ -132,25 +132,25 @@ module.exports = {
 
 @layer base {
   :root {
-    --background: #FFF8F0;
-    --surface: #FFFAF5;
-    --muted: #FFE0D2;
-    --foreground: #473E4B;
-    --muted-foreground: #6C5A6C;
-    --border: #D6C9C2;
-    --accent: #C0406A;
-    --accent-foreground: #FFFFFF;
+    --background: #fff8f0;
+    --surface: #fffaf5;
+    --muted: #ffe0d2;
+    --foreground: #473e4b;
+    --muted-foreground: #6c5a6c;
+    --border: #d6c9c2;
+    --accent: #c0406a;
+    --accent-foreground: #ffffff;
     /* …see global.css for the full token set */
   }
   .dark:root {
-    --background: #1D161B;
-    --surface: #27202A;
-    --muted: #4A3D52;
-    --foreground: #F2E9EE;
-    --muted-foreground: #CCBFC9;
-    --border: #3B3342;
-    --accent: #FFB6C1;
-    --accent-foreground: #1D161B;
+    --background: #1d161b;
+    --surface: #27202a;
+    --muted: #4a3d52;
+    --foreground: #f2e9ee;
+    --muted-foreground: #ccbfc9;
+    --border: #3b3342;
+    --accent: #ffb6c1;
+    --accent-foreground: #1d161b;
   }
 }
 ```
