@@ -171,14 +171,17 @@ Expense Buddy uses Expo Router for navigation, NativeWind for UI styling, XState
 Key implementation details:
 
 - file-based routing under `app/`
-- XState stores for expenses, settings, filters, notifications, and UI state
-- React Context provider for SMS review queue (native-owned Room persistence, not an XState store)
+- XState stores for expenses, settings, filters, notifications, and UI state (`stores/store-provider.tsx` parallelizes settings/expenses/uiState init after migration)
+- React Context provider for SMS review queue (native-owned Room persistence, not an XState store) — `providers/sms-import-review-provider.tsx`
 - service-layer sync engine for GitHub fetch, merge, conflict handling, and uploads
 - single native Android SMS module (`expense-buddy-sms-module`) handling permissions, inbox scanning, ML classification, and queue persistence — `expense-buddy-sms-parser` is a pure Kotlin library with no JS bridge
+- analytics filter chips share a deep `FilterChipBar` / `FilterChip` module (`components/analytics/FilterChipBar.tsx`) — `Button variant="accent"` for selection, no inline `style` theming
+- single-source theme tokens in `constants/palette.ts` → `global.css` vars → `tailwind.config.js`, validated by `scripts/check-theme-sync.js` (`yarn check:theme`, CI-gated)
+- domain glossary in `CONTEXT.md` (`Expense`, `Fingerprint`, `Review Queue`, `EffectiveTheme`, etc.)
 - property-based and unit tests across storage, sync, parsing, and store behavior
 - tracked Expo native modules for background SMS alerts and Play Core integrations
 
-For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+For the deeper architecture write-up, see [ARCHITECTURE.md](./ARCHITECTURE.md) and [CONTEXT.md](./CONTEXT.md).
 
 ## Project Structure
 
@@ -246,7 +249,11 @@ expense-buddy/
 ## Testing
 
 ```bash
-yarn test
+yarn typecheck   # tsc --noEmit
+yarn lint        # eslint + ktlint (max-warnings 0, stores→providers guard)
+yarn check:theme # palette ↔ global.css ↔ tailwind ↔ app.config ↔ ui-tokens
+yarn check:translations
+yarn test        # jest + Kotlin (gradle)
 yarn test:watch
 ```
 
