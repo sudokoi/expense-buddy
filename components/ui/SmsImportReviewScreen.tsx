@@ -39,7 +39,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_OPACITY, UI_FONT_WEIGHT, UI_DURATION } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 type EditableSmsImportDraft = {
@@ -760,9 +760,9 @@ export function SmsImportReviewScreen({
                   {pendingItems.map((item) => (
                     <Animated.View
                       key={item.id}
-                      layout={LinearTransition.duration(160)}
-                      entering={FadeIn.duration(160)}
-                      exiting={FadeOutUp.duration(180)}
+                      layout={LinearTransition.duration(UI_DURATION.instant)}
+                      entering={FadeIn.duration(UI_DURATION.instant)}
+                      exiting={FadeOutUp.duration(UI_DURATION.subtle)}
                     >
                       <Card className="p-3">
                         <View className="gap-3">
@@ -868,8 +868,8 @@ export function SmsImportReviewScreen({
                   {resolvedItems.map((item) => (
                     <Animated.View
                       key={item.id}
-                      layout={LinearTransition.duration(160)}
-                      entering={FadeIn.duration(160)}
+                      layout={LinearTransition.duration(UI_DURATION.instant)}
+                      entering={FadeIn.duration(UI_DURATION.instant)}
                     >
                       <Card className="p-3" style={{ opacity: UI_OPACITY.strong }}>
                         <View className="gap-2">
