@@ -64,6 +64,32 @@ export default [
   },
   prettier,
   {
+    files: ["stores/**/*.{js,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "../providers/sms-import-review-provider",
+              message: "stores/ must not import from providers/ (layer inversion — see ARCHITECTURE.md:27). Import useSmsImportReview directly in routes/components/hooks.",
+            },
+            {
+              name: "../../providers/sms-import-review-provider",
+              message: "stores/ must not import from providers/ (layer inversion).",
+            },
+          ],
+          patterns: [
+            {
+              group: ["**/providers/**"],
+              message: "stores/ layer must not depend on providers/ layer.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: [
       "node_modules/",
       ".expo/",

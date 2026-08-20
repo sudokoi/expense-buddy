@@ -1,9 +1,10 @@
 import React, { memo, useCallback, useMemo } from "react"
-import { ScrollView, Text, View } from "react-native"
+import { Text } from "react-native"
 import { Button } from "../ui/Button"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import type { PaymentMethodType } from "../../types/expense"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
 
@@ -69,47 +70,32 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
   )
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        <Button
-          size="chip"
-          variant={isAllSelected ? "accent" : "outline"}
-          onPress={handleAllPress}
-          accessibilityState={{ selected: isAllSelected }}
-        >
-          <Text>{t("common.all")}</Text>
-        </Button>
+    <FilterChipBar>
+      <Button
+        size="chip"
+        variant={isAllSelected ? "accent" : "outline"}
+        onPress={handleAllPress}
+        accessibilityState={{ selected: isAllSelected }}
+      >
+        <Text>{t("common.all")}</Text>
+      </Button>
 
-        {chipItems.map((item) => {
-          const isSelected = selected.includes(item.key)
-          const Icon = item.Icon
-          const label =
-            item.key === NONE_KEY ? t("common.none") : t(`paymentMethods.${item.i18nKey}`)
+      {chipItems.map((item) => {
+        const isSelected = selected.includes(item.key)
+        const label =
+          item.key === NONE_KEY ? t("common.none") : t(`paymentMethods.${item.i18nKey}`)
 
-          return (
-            <Button
-              key={item.key}
-              size="chip"
-              className="gap-1"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => handleToggle(item.key)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              {Icon ? <Icon size={14} /> : null}
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {label}
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+        return (
+          <FilterChip
+            key={item.key}
+            label={label}
+            selected={isSelected}
+            onPress={() => handleToggle(item.key)}
+            Icon={item.Icon}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 
