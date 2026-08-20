@@ -1,8 +1,7 @@
 import { memo, useCallback } from "react"
-import { ScrollView, Text, View } from "react-native"
-import { Button } from "../ui/Button"
 import type { TimeWindow } from "../../utils/analytics/time"
 import { useTranslation } from "react-i18next"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
 
 interface TimeWindowSelectorProps {
   value: TimeWindow
@@ -38,32 +37,19 @@ export const TimeWindowSelector = memo(function TimeWindowSelector({
   )
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        {TIME_WINDOWS.map((window) => {
-          const isSelected = value === window.value
-          return (
-            <Button
-              key={window.value}
-              size="chip"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => handlePress(window.value)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {t(`analytics.timeWindow.${window.value}`)}
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+    <FilterChipBar>
+      {TIME_WINDOWS.map((window) => {
+        const isSelected = value === window.value
+        return (
+          <FilterChip
+            key={window.value}
+            label={t(`analytics.timeWindow.${window.value}`)}
+            selected={isSelected}
+            onPress={() => handlePress(window.value)}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 

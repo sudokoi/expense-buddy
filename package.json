@@ -26,6 +26,7 @@
     "lint:kotlin": "bash scripts/lint-kotlin.sh",
     "format:kotlin": "bash scripts/lint-kotlin.sh --format",
     "test:kotlin": "bash scripts/test-kotlin.sh",
+    "check:theme": "node scripts/check-theme-sync.js",
     "check:translations": "node scripts/check-translations.js",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\" && yarn format:kotlin",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",

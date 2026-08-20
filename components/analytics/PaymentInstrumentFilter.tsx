@@ -1,7 +1,8 @@
 import { memo, useCallback, useMemo } from "react"
-import { ScrollView, Text, View } from "react-native"
+import { Text } from "react-native"
 import { useTranslation } from "react-i18next"
 import { Button } from "../ui/Button"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
   PAYMENT_INSTRUMENT_METHODS,
@@ -91,41 +92,28 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
   )
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        <Button
-          size="chip"
-          variant={isAllSelected ? "accent" : "outline"}
-          onPress={handleAllPress}
-          accessibilityState={{ selected: isAllSelected }}
-        >
-          <Text>{t("common.all")}</Text>
-        </Button>
+    <FilterChipBar>
+      <Button
+        size="chip"
+        variant={isAllSelected ? "accent" : "outline"}
+        onPress={handleAllPress}
+        accessibilityState={{ selected: isAllSelected }}
+      >
+        <Text>{t("common.all")}</Text>
+      </Button>
 
-        {chipItems.map((item) => {
-          const isSelected = selected.includes(item.key)
-          return (
-            <Button
-              key={item.key}
-              size="chip"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => handleToggle(item.key)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {item.label}
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+      {chipItems.map((item) => {
+        const isSelected = selected.includes(item.key)
+        return (
+          <FilterChip
+            key={item.key}
+            label={item.label}
+            selected={isSelected}
+            onPress={() => handleToggle(item.key)}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 

@@ -1,8 +1,7 @@
 import { memo } from "react"
-import { ScrollView, Text, View } from "react-native"
-import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
 
 interface CurrencyFilterProps {
   availableCurrencies: string[]
@@ -25,44 +24,26 @@ export const CurrencyFilter = memo(function CurrencyFilter({
   const isDefaultSelected = !selectedCurrency
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        <Button
-          size="chip"
-          variant={isDefaultSelected ? "accent" : "outline"}
-          onPress={() => onChange(null)}
-          accessibilityState={{ selected: isDefaultSelected }}
-        >
-          <Text adjustsFontSizeToFit numberOfLines={1}>
-            {t("common.default")} ({getCurrencySymbol(defaultCurrency)})
-          </Text>
-        </Button>
+    <FilterChipBar>
+      <FilterChip
+        label={`${t("common.default")} (${getCurrencySymbol(defaultCurrency)})`}
+        selected={isDefaultSelected}
+        onPress={() => onChange(null)}
+      />
 
-        {availableCurrencies.map((currency) => {
-          const isSelected = selectedCurrency === currency
+      {availableCurrencies.map((currency) => {
+        const isSelected = selectedCurrency === currency
 
-          return (
-            <Button
-              key={currency}
-              size="chip"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => onChange(currency)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {currency} ({getCurrencySymbol(currency)})
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+        return (
+          <FilterChip
+            key={currency}
+            label={`${currency} (${getCurrencySymbol(currency)})`}
+            selected={isSelected}
+            onPress={() => onChange(currency)}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 

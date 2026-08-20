@@ -1,9 +1,8 @@
 import { memo } from "react"
-import { ScrollView, Text, View } from "react-native"
-import { Button } from "../ui/Button"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "../../utils/date"
 import { getMonthStartDate } from "../../utils/analytics/time"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
 
 interface MonthSelectorProps {
   value: string | null
@@ -19,43 +18,25 @@ export const MonthSelector = memo(function MonthSelector({
   const { t } = useTranslation()
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        <Button
-          size="chip"
-          variant={value === null ? "accent" : "outline"}
-          onPress={() => onChange(null)}
-          accessibilityState={{ selected: value === null }}
-        >
-          <Text adjustsFontSizeToFit numberOfLines={1}>
-            {t("common.all")}
-          </Text>
-        </Button>
-        {availableMonths.map((monthKey) => {
-          const isSelected = value === monthKey
-          const label = formatDate(getMonthStartDate(monthKey), "MMM yyyy")
-          return (
-            <Button
-              key={monthKey}
-              size="chip"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => onChange(monthKey)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {label}
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+    <FilterChipBar>
+      <FilterChip
+        label={t("common.all")}
+        selected={value === null}
+        onPress={() => onChange(null)}
+      />
+      {availableMonths.map((monthKey) => {
+        const isSelected = value === monthKey
+        const label = formatDate(getMonthStartDate(monthKey), "MMM yyyy")
+        return (
+          <FilterChip
+            key={monthKey}
+            label={label}
+            selected={isSelected}
+            onPress={() => onChange(monthKey)}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 

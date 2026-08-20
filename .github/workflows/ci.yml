@@ -58,5 +58,8 @@ jobs:
       - name: 🧪 Test
         run: yarn test
 
+      - name: 🎨 Check theme sync (palette ↔ global.css ↔ tailwind ↔ app.config)
+        run: yarn check:theme
+
       - name: 🌐 Check Translations
         run: yarn check:translations

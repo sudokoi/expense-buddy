@@ -1,9 +1,10 @@
 import { memo, useCallback, useMemo } from "react"
-import { ScrollView, Text, View } from "react-native"
-import { Button } from "../ui/Button"
+import { Text } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
+import { FilterChip, FilterChipBar } from "./FilterChipBar"
+import { Button } from "../ui/Button"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -52,46 +53,29 @@ export const CategoryFilter = memo(function CategoryFilter({
   )
 
   return (
-    <ScrollView
-      horizontal
-      nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
-    >
-      <View className="flex-row gap-2">
-        {/* All button */}
-        <Button
-          size="chip"
-          variant={isAllSelected ? "accent" : "outline"}
-          onPress={handleAllPress}
-          accessibilityState={{ selected: isAllSelected }}
-        >
-          <Text>{t("common.all")}</Text>
-        </Button>
+    <FilterChipBar>
+      <Button
+        size="chip"
+        variant={isAllSelected ? "accent" : "outline"}
+        onPress={handleAllPress}
+        accessibilityState={{ selected: isAllSelected }}
+      >
+        <Text>{t("common.all")}</Text>
+      </Button>
 
-        {/* Category chips */}
-        {categoryItems.map((cat) => {
-          const isSelected = selectedCategories.includes(cat.label)
-          const Icon = cat.Icon
-          return (
-            <Button
-              key={cat.label}
-              size="chip"
-              className="gap-1"
-              variant={isSelected ? "accent" : "outline"}
-              onPress={() => handleCategoryPress(cat.label)}
-              accessibilityState={{ selected: isSelected }}
-            >
-              <Icon size={14} />
-              <Text adjustsFontSizeToFit numberOfLines={1}>
-                {cat.label === "Other" ? t("settings.categories.other") : cat.label}
-              </Text>
-            </Button>
-          )
-        })}
-      </View>
-    </ScrollView>
+      {categoryItems.map((cat) => {
+        const isSelected = selectedCategories.includes(cat.label)
+        return (
+          <FilterChip
+            key={cat.label}
+            label={cat.label === "Other" ? t("settings.categories.other") : cat.label}
+            selected={isSelected}
+            onPress={() => handleCategoryPress(cat.label)}
+            Icon={cat.Icon}
+          />
+        )
+      })}
+    </FilterChipBar>
   )
 })
 
