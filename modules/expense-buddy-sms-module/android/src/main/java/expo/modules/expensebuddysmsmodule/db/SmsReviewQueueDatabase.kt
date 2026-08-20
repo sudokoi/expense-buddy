@@ -154,20 +154,23 @@ abstract class SmsReviewQueueDatabase : RoomDatabase() {
         @Volatile
         private var instance: SmsReviewQueueDatabase? = null
 
+        @Suppress("DEPRECATION")
         fun getInstance(context: Context): SmsReviewQueueDatabase =
             instance ?: synchronized(this) {
-                instance ?: Room
-                    .databaseBuilder(
-                        context.applicationContext,
-                        SmsReviewQueueDatabase::class.java,
-                        DATABASE_NAME,
-                    ).addMigrations(MIGRATION_1_2)
-                    // Destructive fallback is intentional for dev/preview downgrades;
-                    // exportSchema=true but schemas/ is not committed — safe to clear
-                    // stale DB rather than crash on unknown version. See ADR-007.
-                    .fallbackToDestructiveMigration()
-                    .build()
-                    .also { instance = it }
+                val builder =
+                    Room
+                        .databaseBuilder(
+                            context.applicationContext,
+                            SmsReviewQueueDatabase::class.java,
+                            DATABASE_NAME,
+                        ).addMigrations(MIGRATION_1_2)
+                        // Destructive fallback is intentional for dev/preview downgrades;
+                        // exportSchema=true but schemas/ is not committed — safe to clear
+                        // stale DB rather than crash on unknown version. See ADR-007.
+                        // Using deprecated fallbackToDestructiveMigration() for compat
+                        // with current Room version; suppress deprecation.
+                        .fallbackToDestructiveMigration()
+                instance ?: builder.build().also { instance = it }
             }
     }
 }
