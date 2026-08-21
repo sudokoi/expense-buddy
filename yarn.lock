@@ -5832,6 +5832,7 @@ __metadata:
     expo-build-properties: "npm:~57.0.13"
     expo-clipboard: "npm:~57.0.1"
     expo-constants: "npm:~57.0.13"
+    expo-doctor: "npm:^1.20.2"
     expo-font: "npm:~57.0.1"
     expo-haptics: "npm:^57.0.1"
     expo-linear-gradient: "npm:~57.0.1"
@@ -5925,6 +5926,15 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10/0b54cb3b0a032db6add6efc97e96d699fb3f448745a6da3e96d238f241a02fcb024100c39a09ec3680177b072821ca157f9224e1ec414d6b0471c80ad7aa98fb
+  languageName: node
+  linkType: hard
+
+"expo-doctor@npm:^1.20.2":
+  version: 1.20.2
+  resolution: "expo-doctor@npm:1.20.2"
+  bin:
+    expo-doctor: bin/expo-doctor.js
+  checksum: 10/d742f9ebca18e6962f82ffe5dfbbb0b902f0a6fc00eb517d866035bb5d6b907c211c54831661e08a4d5c3c6a6dc29a2a87ae1a75f91c17e5ed8bca89157a1fa3
   languageName: node
   linkType: hard
 
