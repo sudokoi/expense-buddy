@@ -14,9 +14,7 @@
       "android": {
         "buildType": "apk"
       },
-      "env": {
-        "EAS_BUILD_ANDROID_ABIS": "arm64-v8a"
-      }
+      "env": {}
     },
     "production": {
       "distribution": "store",

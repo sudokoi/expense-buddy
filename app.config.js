@@ -151,7 +151,21 @@ export default {
       package: "com.sudokoi.expensebuddy",
       versionCode,
     },
-    plugins: ["expo-router", "expo-font", "./plugins/withDisableNoDiscoveredTests"],
+    plugins: [
+      "expo-router",
+      "expo-font",
+      "./plugins/withDisableNoDiscoveredTests",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            buildArchs: ["arm64-v8a"],
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+          },
+        },
+      ],
+    ],
     experiments: {
       typedRoutes: true,
     },
