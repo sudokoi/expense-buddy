@@ -142,11 +142,6 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#FFF8F0",
     },
-    assetBundlePatterns: ["**/*"],
-    ios: {
-      supportsTablet: true,
-      buildNumber: String(versionCode),
-    },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
@@ -156,17 +151,7 @@ export default {
       package: "com.sudokoi.expensebuddy",
       versionCode,
     },
-    web: {
-      bundler: "metro",
-      output: "static",
-      favicon: "./assets/images/favicon.png",
-    },
-    plugins: [
-      "expo-router",
-      "expo-font",
-      "expo-web-browser",
-      "./plugins/withDisableNoDiscoveredTests",
-    ],
+    plugins: ["expo-router", "expo-font", "./plugins/withDisableNoDiscoveredTests"],
     experiments: {
       typedRoutes: true,
     },

@@ -57,12 +57,6 @@ yarn start
 
 # Start for Android
 yarn android
-
-# Start for iOS
-yarn ios
-
-# Start for web
-yarn web
 ```
 
 ## Changesets (for versioning)

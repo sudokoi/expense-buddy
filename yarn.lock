@@ -1956,7 +1956,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-runtime@npm:^57.0.12, @expo/metro-runtime@npm:~57.0.12":
+"@expo/metro-runtime@npm:^57.0.12":
   version: 57.0.12
   resolution: "@expo/metro-runtime@npm:57.0.12"
   dependencies:
@@ -5806,7 +5806,6 @@ __metadata:
     "@changesets/changelog-github": "npm:1"
     "@changesets/cli": "npm:3"
     "@eslint/js": "npm:^9.39.2"
-    "@expo/metro-runtime": "npm:~57.0.12"
     "@react-native-async-storage/async-storage": "npm:^2.2.0"
     "@react-native-community/datetimepicker": "npm:9.1.0"
     "@shopify/flash-list": "npm:2.0.2"
@@ -5843,7 +5842,6 @@ __metadata:
     expo-splash-screen: "npm:~57.0.7"
     expo-status-bar: "npm:~57.0.1"
     expo-system-ui: "npm:~57.0.2"
-    expo-web-browser: "npm:~57.0.2"
     fast-check: "npm:^4.5.3"
     i18next: "npm:^25.8.0"
     intl-pluralrules: "npm:^2.0.1"
@@ -5854,7 +5852,6 @@ __metadata:
     papaparse: "npm:^5.5.3"
     prettier: "npm:^3.8.1"
     react: "npm:19.2.3"
-    react-dom: "npm:19.2.3"
     react-i18next: "npm:^16.5.3"
     react-native: "npm:0.86.2"
     react-native-css-interop: "npm:0.2.6"
@@ -6201,16 +6198,6 @@ __metadata:
     react-native-web:
       optional: true
   checksum: 10/4da9775c0d657231d9c986d4435f5fd254d2fd4a4b24d92d9471669b8fe7009df1db6f097530f6274ab646c98dc82f3a287baaf15531213b2ae5f424ef6fa1d8
-  languageName: node
-  linkType: hard
-
-"expo-web-browser@npm:~57.0.2":
-  version: 57.0.2
-  resolution: "expo-web-browser@npm:57.0.2"
-  peerDependencies:
-    expo: "*"
-    react-native: "*"
-  checksum: 10/1e6b9c1070c8bf9ecdd2c8c4c2b369c3672028577a7c596dc18d3ebd03c60255974c251fccd0ebd0b32344b5e5c78f466ec3a5a62176c688f8fd9bb3ea63be87
   languageName: node
   linkType: hard
 
@@ -10023,17 +10010,6 @@ __metadata:
     shell-quote: "npm:^1.6.1"
     ws: "npm:^7"
   checksum: 10/0323f1d006979374b79ac83fced5bb10c04f2817d7bd4338074ead815ff441b943290d563d7796233767dd973787116a4b3c62040de4d770e0ae5b207fc8d480
-  languageName: node
-  linkType: hard
-
-"react-dom@npm:19.2.3":
-  version: 19.2.3
-  resolution: "react-dom@npm:19.2.3"
-  dependencies:
-    scheduler: "npm:^0.27.0"
-  peerDependencies:
-    react: ^19.2.3
-  checksum: 10/5780f6d4c8e8ece09f82c5500ba2d55e01c30b5273f9281734d7d3b65013cd1fa52ec4e4436e5248c0a9e5bc340836044051168bbad8d7eac4d33ee6c2a867a1
   languageName: node
   linkType: hard
 

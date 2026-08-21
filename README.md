@@ -94,7 +94,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### User Experience
 
-- Works on Android, iOS, and Web for core expense tracking
+- Android app for core expense tracking
 - SMS import is Android-only and requires a native build
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
@@ -122,8 +122,7 @@ This review-first model is deliberate. The app aims to reduce manual entry witho
 - Node.js 24.x or higher
 - Yarn 4.5.0
 - Expo CLI
-- For iOS: Xcode and CocoaPods
-- For Android: Android Studio and SDK
+- Android Studio and SDK
 - For SMS import development: an Android development build or release build, because Expo Go cannot load the custom native SMS module
 
 ### Installation
@@ -137,9 +136,7 @@ yarn start
 
 ### Run the app
 
-- iOS: `yarn ios`
 - Android: `yarn android`
-- Web: `yarn web`
 
 ## GitHub Sync Setup
 
@@ -283,9 +280,6 @@ yarn start
 ### Production
 
 ```bash
-# iOS
-eas build --platform ios --profile production
-
 # Android
 eas build --platform android --profile production
 
