@@ -1,5 +1,23 @@
 # expense-buddy
 
+## 4.0.0-beta.3
+
+### Patch Changes
+
+- [`2b6f3b9`](https://github.com/sudokoi/expense-buddy/commit/2b6f3b90c33fc5af6974541ad646a5579ea2cfd3) Thanks [@sudokoi](https://github.com/sudokoi)! - Align Expo SDK dependencies and clear expo doctor warnings
+  - Bump seven Expo packages to their SDK 57 pinned patch versions (`expo install --fix`)
+  - Remove the `changeset` package.json script that shadowed the `changeset` binary in `node_modules/.bin`; `yarn changeset` still works via Yarn's binary fallback
+
+- [`b3e3154`](https://github.com/sudokoi/expense-buddy/commit/b3e315420bbbd8e2d5762d9cff83f939dec83661) Thanks [@sudokoi](https://github.com/sudokoi)! - Remove unused web target and dead dependencies
+  - Drop the vestigial web target (`react-dom`, web config, `yarn web`, `@expo/metro-runtime`) and remove iOS platform config (`ios` section, `yarn ios` script) — this is an Android-only app
+  - Remove unused `expo-web-browser` dependency and its no-op plugin entry
+  - Move `@types/papaparse` to devDependencies; drop legacy `assetBundlePatterns`
+
+- [#118](https://github.com/sudokoi/expense-buddy/pull/118) [`9927ed2`](https://github.com/sudokoi/expense-buddy/commit/9927ed27c46a4e296854184dce647ed48efbac65) Thanks [@sudokoi](https://github.com/sudokoi)! - Cut Android APK size (~136MB → ~70MB)
+  - Restrict native builds to `arm64-v8a` via `expo-build-properties` `buildArchs`; the previous `EAS_BUILD_ANDROID_ABIS` env var was not a supported setting, so every APK bundled x86, x86_64, and armeabi-v7a libs (~57MB) unnecessarily
+  - Enable R8 minification and resource shrinking for release builds (`enableMinifyInReleaseBuilds`, `enableShrinkResourcesInReleaseBuilds`), shrinking the ~43MB of unminified dex
+  - Remove the ineffective `EAS_BUILD_ANDROID_ABIS` entry from the `internal` EAS profile
+
 ## 4.0.0-beta.2
 
 ### Patch Changes
