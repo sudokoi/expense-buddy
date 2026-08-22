@@ -1,6 +1,6 @@
 import "../global.css"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useColorScheme as useNativeWindColorScheme } from "nativewind"
 import { StatusBar } from "expo-status-bar"
 import * as SystemUI from "expo-system-ui"
@@ -17,7 +17,7 @@ import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useSettings } from "../stores/hooks"
-import { useThemeColors } from "../hooks/use-theme-colors"
+import { useThemeColors, useThemeSettled } from "../hooks/use-theme-colors"
 import { palette } from "../constants/palette"
 
 export {
@@ -55,20 +55,35 @@ export default function RootLayout() {
 
 /**
  * Keeps the native splash visible until fonts are ready and the persisted
- * theme has been applied. With the MMKV sync fast-path settings resolve on
- * the first tick; without it (first launch or pre-migration) it waits for
- * the async load. ThemedProvider applies the theme in a layout effect before
- * the paint that follows, so once isLoading clears the first visible frame
- * already uses the correct theme.
+ * theme preference has become visible in NativeWind's resolved scheme
+ * (`useThemeSettled`). ThemedProvider forwards the raw preference, but
+ * NativeWind applies the native override asynchronously, so holding here
+ * prevents a one-frame flash of the OS theme when it differs from a forced
+ * light/dark preference. "System" settles immediately — its resolution
+ * belongs to NativeWind and the OS.
+ *
+ * The wait is bounded: if NativeWind never converges (upstream regression),
+ * the splash hides anyway after THEME_SETTLE_TIMEOUT_MS and the app degrades
+ * to the pre-fix flash instead of trapping the user on the splash.
  */
+const THEME_SETTLE_TIMEOUT_MS = 500
+
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
   const { isLoading } = useSettings()
+  const settled = useThemeSettled(isLoading)
+  const [giveUpWaiting, setGiveUpWaiting] = useState(false)
+
+  useEffect(() => {
+    if (settled) return
+    const timer = setTimeout(() => setGiveUpWaiting(true), THEME_SETTLE_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [settled])
 
   useEffect(() => {
     if (!fontsReady) return
-    if (isLoading) return
+    if (!settled && !giveUpWaiting) return
     void SplashScreen.hideAsync()
-  }, [fontsReady, isLoading])
+  }, [fontsReady, settled, giveUpWaiting])
 
   return null
 }
