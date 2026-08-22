@@ -61,5 +61,8 @@ jobs:
       - name: 🎨 Check theme sync (palette ↔ global.css ↔ tailwind ↔ app.config)
         run: yarn check:theme
 
+      - name: 🌗 Check theme flow (raw preference forwarded, no JS system resolution)
+        run: yarn check:theme-flow
+
       - name: 🌐 Check Translations
         run: yarn check:translations
