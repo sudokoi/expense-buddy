@@ -69,8 +69,7 @@ export default function RootLayout() {
 const THEME_SETTLE_TIMEOUT_MS = 500
 
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
-  const { isLoading } = useSettings()
-  const settled = useThemeSettled(isLoading)
+  const settled = useThemeSettled()
   const [giveUpWaiting, setGiveUpWaiting] = useState(false)
 
   useEffect(() => {
