@@ -17,7 +17,7 @@ import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useSettings } from "../stores/hooks"
-import { useThemeColors, useThemeSettled } from "../hooks/use-theme-colors"
+import { useThemeColors, useThemeSplashGate } from "../hooks/use-theme-colors"
 import { palette } from "../constants/palette"
 
 export {
@@ -56,27 +56,32 @@ export default function RootLayout() {
 /**
  * Keeps the native splash visible until fonts are ready and the persisted
  * theme preference has become visible in NativeWind's resolved scheme
- * (`useThemeSettled`). ThemedProvider forwards the raw preference, but
+ * (`useThemeSplashGate`). ThemedProvider forwards the raw preference, but
  * NativeWind applies the native override asynchronously, so holding here
  * prevents a one-frame flash of the OS theme when it differs from a forced
  * light/dark preference. "System" settles immediately — its resolution
  * belongs to NativeWind and the OS.
  *
- * The wait is bounded: if NativeWind never converges (upstream regression),
- * the splash hides anyway after THEME_SETTLE_TIMEOUT_MS and the app degrades
- * to the pre-fix flash instead of trapping the user on the splash.
+ * The fail-open timer is armed only once settings have loaded (i.e. after
+ * ThemedProvider has forwarded the preference). Arming earlier would race the
+ * async settings read and burn the whole budget before NativeWind is even
+ * asked to flip — reintroducing the cold-start flash it exists to prevent.
+ *
+ * If NativeWind never converges (upstream regression), the splash hides anyway
+ * after THEME_SETTLE_TIMEOUT_MS and the app degrades to the pre-fix flash
+ * instead of trapping the user on the splash.
  */
 const THEME_SETTLE_TIMEOUT_MS = 500
 
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
-  const settled = useThemeSettled()
+  const { settled, settingsLoaded } = useThemeSplashGate()
   const [giveUpWaiting, setGiveUpWaiting] = useState(false)
 
   useEffect(() => {
-    if (settled) return
+    if (!settingsLoaded || settled) return
     const timer = setTimeout(() => setGiveUpWaiting(true), THEME_SETTLE_TIMEOUT_MS)
     return () => clearTimeout(timer)
-  }, [settled])
+  }, [settled, settingsLoaded])
 
   useEffect(() => {
     if (!fontsReady) return

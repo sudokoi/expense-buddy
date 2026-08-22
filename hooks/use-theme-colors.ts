@@ -26,14 +26,22 @@ export function useThemeScheme(): ThemeScheme {
 }
 
 /**
- * Reactive form of {@link isThemeSettled}. False while settings are loading —
- * the persisted preference isn't known yet, so nothing can be settled.
+ * Signals for the splash gate in a single subscription set: `settled` mirrors
+ * {@link isThemeSettled} reactively (false while settings are loading), and
+ * `settingsLoaded` tells the gate when the preference has actually been
+ * forwarded to NativeWind — the fail-open timeout must only be armed from that
+ * moment, otherwise it races the async settings load and expires too early.
  */
-export function useThemeSettled(): boolean {
+export function useThemeSplashGate(): {
+  settled: boolean
+  settingsLoaded: boolean
+} {
   const { colorScheme } = useColorScheme()
   const { settings, isLoading } = useSettings()
-  return (
-    !isLoading &&
-    isThemeSettled(settings.theme, colorScheme === "dark" ? "dark" : "light")
-  )
+  return {
+    settled:
+      !isLoading &&
+      isThemeSettled(settings.theme, colorScheme === "dark" ? "dark" : "light"),
+    settingsLoaded: !isLoading,
+  }
 }
