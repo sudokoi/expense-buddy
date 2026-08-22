@@ -1,17 +1,10 @@
-# Google Play Store Listing — en-IN (Indian English)
+# Google Play Store Listing — English (AU) — en-AU
 
 Last updated: 2026-08-22
 
-Use this file as the source of truth for Google Play Store presence updates (Indian English). Other locales mirror this source — keep claims aligned with the guardrails.
+Mirrors `PLAY_STORE_LISTING.md` (en-IN) — keep claims aligned with the guardrails. Spelling follows Australian English.
 
-Localized variants:
-
-- [English (US) — en-US](./PLAY_STORE_LISTING.en-US.md)
-- [English (UK) — en-GB](./PLAY_STORE_LISTING.en-GB.md)
-- [English (AU) — en-AU](./PLAY_STORE_LISTING.en-AU.md)
-- [English (CA) — en-CA](./PLAY_STORE_LISTING.en-CA.md)
-- [हिन्दी — hi](./PLAY_STORE_LISTING.hi.md)
-- [日本語 — ja](./PLAY_STORE_LISTING.ja.md)
+Source: [PLAY_STORE_LISTING.md](./PLAY_STORE_LISTING.md) · Privacy Policy: https://github.com/sudokoi/expense-buddy/blob/main/PRIVACY.md
 
 ## App name
 
@@ -57,9 +50,9 @@ Smarter suggestions, still under your control:
 Track expenses your way:
 
 - Quick add, edit, and delete flows
-- Optional math expression entry for faster manual input
+- Optional maths expression entry for faster manual input
 - Notes, dates, and searchable history
-- Day-wise records for clean organization
+- Day-wise records for clean organisation
 - Multi-currency analytics support
 
 See where your money goes:
@@ -85,17 +78,3 @@ Private by design:
 Expense Buddy is free and open source. You can report issues from the app's Settings screen or through the GitHub repository.
 
 Privacy Policy: https://github.com/sudokoi/expense-buddy/blob/main/PRIVACY.md
-
-## Store copy guardrails
-
-Keep these claims accurate in Play Store updates:
-
-- Describe SMS import as Android-only.
-- Describe SMS import as review-first.
-- Describe recent-message scanning as manual and user-triggered.
-- Describe background SMS alerts as optional, Android-only, local notifications behind an explicit Settings toggle.
-- Describe Play-installed updates as native Google Play in-app updates.
-- If future direction is mentioned, clearly label it as planned and not current behavior.
-- Do not imply silent automatic expense creation.
-- Keep GitHub sync clearly optional.
-- Keep privacy claims aligned with [PRIVACY.md](./../PRIVACY.md).
