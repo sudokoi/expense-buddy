@@ -145,6 +145,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
+        monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
         backgroundColor: "#FFF8F0",
       },
       permissions: ["android.permission.READ_SMS"],
@@ -155,6 +156,7 @@ export default {
       "expo-router",
       "expo-font",
       "./plugins/withDisableNoDiscoveredTests",
+      "./plugins/withThemedIconBackground",
       [
         "expo-build-properties",
         {
