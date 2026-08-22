@@ -66,7 +66,7 @@ function walk(dir) {
   }
 }
 dirs.forEach(walk)
-ok("no direct Appearance subscriptions in app code")
+if (failures === 0) ok("no direct Appearance subscriptions in app code")
 
 if (failures > 0) {
   console.error(
