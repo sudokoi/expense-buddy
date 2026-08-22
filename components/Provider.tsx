@@ -2,7 +2,7 @@ import { useLayoutEffect } from "react"
 import { useColorScheme } from "nativewind"
 import { StoreProvider } from "../stores/store-provider"
 import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-data"
-import { useThemeSettings } from "../stores/hooks"
+import { useSettings } from "../stores/hooks"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 
 /**
@@ -11,16 +11,22 @@ import { SmsImportReviewProvider } from "../providers/sms-import-review-provider
  * Uses useLayoutEffect so the nativewind class is applied before the first
  * paint; combined with the splash gate in RootLayout this eliminates the
  * system-theme flash when the app preference differs from the OS.
+ *
+ * The raw preference is forwarded unmodified: NativeWind maps "light"/"dark"
+ * to a native night-mode override and "system" to follow-system mode, so the
+ * OS owns system-theme detection and live tracking. Never resolve "system"
+ * to a concrete value here — that would pin the override and stop the OS
+ * from emitting appearance-change events.
  */
 function ThemedProvider({ children }: { children: React.ReactNode }) {
   const { setColorScheme } = useColorScheme()
-  const { effectiveTheme, isLoading } = useThemeSettings()
+  const { settings, isLoading } = useSettings()
 
   useLayoutEffect(() => {
     if (!isLoading) {
-      setColorScheme(effectiveTheme)
+      setColorScheme(settings.theme)
     }
-  }, [effectiveTheme, isLoading, setColorScheme])
+  }, [settings.theme, isLoading, setColorScheme])
 
   return <>{children}</>
 }

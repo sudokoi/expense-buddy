@@ -1,5 +1,4 @@
 import { createStore } from "@xstate/store"
-import { Appearance } from "react-native"
 import {
   AppSettings,
   ThemePreference,
@@ -41,7 +40,6 @@ function createSettingUpdater<K extends keyof AppSettings>(key: K) {
       isLoading: boolean
       settingsSyncState: SettingsSyncState
       syncedSettingsHash: string | null
-      systemColorScheme: "light" | "dark"
       syncConfig: SyncConfig | null
     },
     event: { [P in K]: AppSettings[K] },
@@ -95,7 +93,6 @@ export const settingsStore = createStore({
     isLoading: initial.isLoading,
     settingsSyncState: "synced" as SettingsSyncState,
     syncedSettingsHash: null as string | null,
-    systemColorScheme: (Appearance.getColorScheme() ?? "light") as "light" | "dark",
     syncConfig: null as SyncConfig | null,
   },
 
@@ -126,11 +123,6 @@ export const settingsStore = createStore({
         syncConfig: event.syncConfig ?? context.syncConfig,
       }
     },
-
-    setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
-      ...context,
-      systemColorScheme: event.scheme,
-    }),
 
     setTheme: (context, event: { theme: ThemePreference }, enqueue) => {
       const newSettings = { ...context.settings, theme: event.theme }
@@ -628,19 +620,12 @@ export const settingsStore = createStore({
   },
 })
 
-// Computed selector for effective theme
+// Computed selector context type
 type SettingsContext = typeof settingsStore extends {
   getSnapshot: () => { context: infer C }
 }
   ? C
   : never
-
-export const selectEffectiveTheme = (context: SettingsContext): "light" | "dark" => {
-  if (context.settings.theme === "system") {
-    return context.systemColorScheme
-  }
-  return context.settings.theme
-}
 
 /**
  * Selector to derive hasUnsyncedChanges boolean from sync state
@@ -660,13 +645,6 @@ export const selectCategoryByLabel = (
   const lowerLabel = label.toLowerCase()
   return context.settings.categories.find((cat) => cat.label.toLowerCase() === lowerLabel)
 }
-
-// Listen for system color scheme changes
-Appearance.addChangeListener(({ colorScheme }) => {
-  settingsStore.trigger.setSystemColorScheme({
-    scheme: colorScheme === "dark" ? "dark" : "light",
-  })
-})
 
 // Exported initialization function - call from React component tree
 export async function initializeSettingsStore(

@@ -1,7 +1,7 @@
 /**
  * Property-based tests for Settings Manager Service
  *
- * Tests the theme resolution and change tracking functionality.
+ * Tests the change tracking functionality.
  * These tests validate the pure functions and service layer used by the settings store.
  */
 
@@ -9,21 +9,6 @@ import fc from "fast-check"
 import { ThemePreference, AppSettings } from "./settings-manager"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import { clear } from "./storage"
-
-/**
- * Resolves the effective theme based on preference and system color scheme
- * This is a pure function extracted for testing purposes.
- * The same logic is used in settings-store.ts (selectEffectiveTheme)
- */
-function resolveEffectiveTheme(
-  preference: ThemePreference,
-  systemColorScheme: "light" | "dark" | null | undefined
-): "light" | "dark" {
-  if (preference === "system") {
-    return systemColorScheme === "dark" ? "dark" : "light"
-  }
-  return preference
-}
 
 // Import settings manager functions
 import {
@@ -42,12 +27,6 @@ beforeEach(async () => {
 
 // Arbitrary generators for settings types
 const themePreferenceArb = fc.constantFrom<ThemePreference>("light", "dark", "system")
-const systemColorSchemeArb = fc.constantFrom<"light" | "dark" | null | undefined>(
-  "light",
-  "dark",
-  null,
-  undefined
-)
 
 const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_change")
 
@@ -80,79 +59,6 @@ const operationArb: fc.Arbitrary<Operation> = fc.oneof(
 )
 
 describe("Settings Manager Properties", () => {
-  /**
-   * Property: Effective theme resolution
-   * For any theme preference and system color scheme state, the effectiveTheme
-   * SHALL be "light" or "dark" (never "system"), and when theme preference is
-   * "system", effectiveTheme SHALL match the system color scheme.
-   */
-  describe("Effective theme resolution", () => {
-    it("should always resolve to light or dark, never system", () => {
-      fc.assert(
-        fc.property(
-          themePreferenceArb,
-          systemColorSchemeArb,
-          (preference, systemScheme) => {
-            const effectiveTheme = resolveEffectiveTheme(preference, systemScheme)
-
-            // Effective theme must be "light" or "dark", never "system"
-            return effectiveTheme === "light" || effectiveTheme === "dark"
-          }
-        ),
-        { numRuns: 100 }
-      )
-    })
-
-    it("should return the preference directly when not system", () => {
-      fc.assert(
-        fc.property(
-          fc.constantFrom<ThemePreference>("light", "dark"),
-          systemColorSchemeArb,
-          (preference, systemScheme) => {
-            const effectiveTheme = resolveEffectiveTheme(preference, systemScheme)
-
-            // When preference is light or dark, it should be returned directly
-            return effectiveTheme === preference
-          }
-        ),
-        { numRuns: 100 }
-      )
-    })
-
-    it("should follow system color scheme when preference is system", () => {
-      fc.assert(
-        fc.property(systemColorSchemeArb, (systemScheme) => {
-          const effectiveTheme = resolveEffectiveTheme("system", systemScheme)
-
-          // When preference is system:
-          // - If system is "dark", effective should be "dark"
-          // - Otherwise (light, null, undefined), effective should be "light"
-          if (systemScheme === "dark") {
-            return effectiveTheme === "dark"
-          } else {
-            return effectiveTheme === "light"
-          }
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("should default to light when system scheme is unavailable", () => {
-      fc.assert(
-        fc.property(
-          fc.constantFrom<null | undefined>(null, undefined),
-          (systemScheme) => {
-            const effectiveTheme = resolveEffectiveTheme("system", systemScheme)
-
-            // When system scheme is null or undefined, should default to light
-            return effectiveTheme === "light"
-          }
-        ),
-        { numRuns: 100 }
-      )
-    })
-  })
-
   /**
    * Property: Change tracking accuracy
    * For any settings state, hasUnsyncedChanges SHALL be true if and only if

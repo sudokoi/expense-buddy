@@ -1,7 +1,6 @@
 import "../global.css"
 
 import { useEffect, useMemo } from "react"
-import { useColorScheme } from "react-native"
 import { useColorScheme as useNativeWindColorScheme } from "nativewind"
 import { StatusBar } from "expo-status-bar"
 import * as SystemUI from "expo-system-ui"
@@ -17,7 +16,6 @@ import { useUpdateCheck } from "../hooks/use-update-check"
 import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
-import { useThemeSettings } from "../stores/hooks"
 import { useSettings } from "../stores/hooks"
 import { useThemeColors } from "../hooks/use-theme-colors"
 import { palette } from "../constants/palette"
@@ -56,24 +54,21 @@ export default function RootLayout() {
 }
 
 /**
- * Keeps the native splash visible until both fonts and the persisted theme
- * are ready and NativeWind's colorScheme matches the effective theme.
- * With the MMKV sync fast-path the splash hides immediately on the next
- * tick; without it (first launch or pre-migration) it waits for the async
- * load so the first paint is already the correct theme.
+ * Keeps the native splash visible until fonts are ready and the persisted
+ * theme has been applied. With the MMKV sync fast-path settings resolve on
+ * the first tick; without it (first launch or pre-migration) it waits for
+ * the async load. ThemedProvider applies the theme in a layout effect before
+ * the paint that follows, so once isLoading clears the first visible frame
+ * already uses the correct theme.
  */
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
-  const { effectiveTheme, isLoading } = useThemeSettings()
-  const { colorScheme } = useNativeWindColorScheme()
+  const { isLoading } = useSettings()
 
   useEffect(() => {
     if (!fontsReady) return
     if (isLoading) return
-    // Wait for ThemedProvider (useLayoutEffect) to have synced NativeWind.
-    // Prevents hiding the splash one frame before the theme class flips.
-    if (colorScheme !== effectiveTheme) return
     void SplashScreen.hideAsync()
-  }, [fontsReady, isLoading, colorScheme, effectiveTheme])
+  }, [fontsReady, isLoading])
 
   return null
 }
@@ -138,29 +133,24 @@ function UpdateAndChangelogOverlays() {
 }
 
 function RootLayoutNav() {
-  const systemScheme = useColorScheme()
   const theme = useThemeColors()
   const { settings } = useSettings()
 
-  // Follow the app's effective theme (settings) so StatusBar stays readable
-  // even when the user forces light/dark opposite to the OS scheme.
-  const { effectiveTheme, isLoading } = useThemeSettings()
-
-  const resolvedScheme = isLoading
-    ? systemScheme === "dark"
-      ? "dark"
-      : "light"
-    : effectiveTheme
+  // NativeWind's colorScheme is the single resolved source of truth — it
+  // reflects the applied preference (light/dark) or the live OS scheme when
+  // the preference is "system". Follow it so StatusBar and navigation stay
+  // readable even when the app is forced opposite to the OS.
+  const { colorScheme: resolvedScheme } = useNativeWindColorScheme()
+  const scheme = resolvedScheme === "dark" ? "dark" : "light"
 
   const statusBarBackground =
-    resolvedScheme === "dark" ? palette.dark.background : palette.light.background
+    scheme === "dark" ? palette.dark.background : palette.light.background
 
   const navigationTheme = useMemo(() => {
-    const base = resolvedScheme === "dark" ? DarkTheme : DefaultTheme
-    const bg =
-      resolvedScheme === "dark" ? palette.dark.background : palette.light.background
+    const base = scheme === "dark" ? DarkTheme : DefaultTheme
+    const bg = scheme === "dark" ? palette.dark.background : palette.light.background
     return { ...base, colors: { ...base.colors, background: bg, card: bg } }
-  }, [resolvedScheme])
+  }, [scheme])
 
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(statusBarBackground)
@@ -168,7 +158,7 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack key={settings.language}>
         <Stack.Screen
           name="(tabs)"

@@ -32,7 +32,6 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
       settings: initialSettings,
       isLoading: false,
       hasUnsyncedChanges: false,
-      systemColorScheme: "light" as "light" | "dark",
     },
 
     on: {
@@ -44,11 +43,6 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
         settings: event.settings,
         hasUnsyncedChanges: event.hasUnsyncedChanges,
         isLoading: false,
-      }),
-
-      setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
-        ...context,
-        systemColorScheme: event.scheme,
       }),
 
       setTheme: (context, event: { theme: ThemePreference }) => {
@@ -105,19 +99,6 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
       }),
     },
   })
-}
-
-// Computed selector for effective theme
-type SettingsContext = {
-  settings: AppSettings
-  systemColorScheme: "light" | "dark"
-}
-
-const selectEffectiveTheme = (context: SettingsContext): "light" | "dark" => {
-  if (context.settings.theme === "system") {
-    return context.systemColorScheme
-  }
-  return context.settings.theme
 }
 
 describe("Settings Store", () => {
@@ -278,46 +259,6 @@ describe("Settings Store", () => {
       store.trigger.clearSettingsChangeFlag()
 
       expect(store.getSnapshot().context.hasUnsyncedChanges).toBe(false)
-    })
-  })
-
-  describe("setSystemColorScheme action", () => {
-    it("should update system color scheme", () => {
-      const store = createTestSettingsStore()
-
-      store.trigger.setSystemColorScheme({ scheme: "dark" })
-
-      expect(store.getSnapshot().context.systemColorScheme).toBe("dark")
-    })
-  })
-
-  describe("selectEffectiveTheme selector", () => {
-    it("should return light when theme is light", () => {
-      const store = createTestSettingsStore()
-      store.trigger.setTheme({ theme: "light" })
-
-      const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-      expect(effectiveTheme).toBe("light")
-    })
-
-    it("should return dark when theme is dark", () => {
-      const store = createTestSettingsStore()
-      store.trigger.setTheme({ theme: "dark" })
-
-      const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-      expect(effectiveTheme).toBe("dark")
-    })
-
-    it("should return system color scheme when theme is system", () => {
-      const store = createTestSettingsStore()
-      store.trigger.setTheme({ theme: "system" })
-
-      // Default system color scheme is light
-      expect(selectEffectiveTheme(store.getSnapshot().context)).toBe("light")
-
-      // Change system color scheme to dark
-      store.trigger.setSystemColorScheme({ scheme: "dark" })
-      expect(selectEffectiveTheme(store.getSnapshot().context)).toBe("dark")
     })
   })
 })
