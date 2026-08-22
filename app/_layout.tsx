@@ -1,9 +1,13 @@
 import "../global.css"
 
-import { useEffect, useMemo, useState } from "react"
-import { useColorScheme as useNativeWindColorScheme } from "nativewind"
+import { useEffect, useLayoutEffect, useMemo, useState } from "react"
+import {
+  useColorScheme as useNativeWindColorScheme,
+  colorScheme as nativeWindColorScheme,
+} from "nativewind"
 import { StatusBar } from "expo-status-bar"
 import * as SystemUI from "expo-system-ui"
+import { loadSettingsSync } from "../services/settings-manager"
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation"
 import { useFonts } from "expo-font"
 import { SplashScreen, Stack } from "expo-router"
@@ -33,6 +37,31 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
 
+// Synchronously apply the persisted theme preference before the first React
+// commit, so the first JS paint behind the native splash already matches the
+// user's chosen preference (dark/light). NativeWind's `colorScheme.set` drives
+// `Appearance.setColorScheme` via react-native-css-interop
+// (appearance-observables.js) and flips the `.dark` class that backs
+// `global.css` + `palette`. This runs at module load, ~200ms earlier than
+// `ThemedProvider`'s `useLayoutEffect`, which was previously gated on
+// `fontsReady` and `isLoading`.
+function applyPersistedThemeSynchronously(): void {
+  try {
+    const stored = loadSettingsSync()
+    if (stored?.theme) {
+      // Forward raw preference - NativeWind maps light/dark to native
+      // night-mode override, "system" to follow-system. Never resolve
+      // "system" here.
+      nativeWindColorScheme.set(stored.theme)
+    }
+  } catch {
+    // Sync read can fail when MMKV is unavailable (e.g. Expo Go / tests) -
+    // fall back to ThemedProvider's async path which handles isLoading.
+  }
+}
+
+applyPersistedThemeSynchronously()
+
 export default function RootLayout() {
   const [interLoaded, interError] = useFonts({
     Inter: require("../assets/fonts/Inter-Medium.otf"),
@@ -41,10 +70,10 @@ export default function RootLayout() {
 
   const fontsReady = Boolean(interLoaded || interError)
 
-  if (!fontsReady) {
-    return null
-  }
-
+  // Always mount Providers behind the native splash - the early return
+  // previously delayed `ThemedProvider`'s `setColorScheme` until fonts
+  // loaded (~100-300ms), burning AppSplashGate's 500ms budget before
+  // NativeWind even started flipping.
   return (
     <Providers>
       <AppSplashGate fontsReady={fontsReady} />
@@ -70,8 +99,14 @@ export default function RootLayout() {
  * If NativeWind never converges (upstream regression), the splash hides anyway
  * after THEME_SETTLE_TIMEOUT_MS and the app degrades to the pre-fix flash
  * instead of trapping the user on the splash.
+ *
+ * The early synchronous `colorScheme.set` in module scope now starts the
+ * native flip during font loading, so the budget is effectively fonts +
+ * timeout. Increased from 500ms -> 2000ms to cover slow devices where the
+ * Appearance bridge + re-render takes >500ms (previously caused the fail-open
+ * to fire while still `light` and show a light->dark flash).
  */
-const THEME_SETTLE_TIMEOUT_MS = 500
+const THEME_SETTLE_TIMEOUT_MS = 2000
 
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
   const { settled, settingsLoaded } = useThemeSplashGate()
@@ -83,7 +118,10 @@ function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
     return () => clearTimeout(timer)
   }, [settled, settingsLoaded])
 
-  useEffect(() => {
+  // useLayoutEffect so hide is scheduled before the next paint that would
+  // otherwise show the JS `light` surface behind the splash after it lifts.
+  // `useEffect` would run post-paint and could let one `light` frame leak.
+  useLayoutEffect(() => {
     if (!fontsReady) return
     if (!settled && !giveUpWaiting) return
     void SplashScreen.hideAsync()
