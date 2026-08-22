@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from "react"
-import { Alert, Keyboard, Platform, Linking, Pressable, Text, View } from "react-native"
+import { useState, useCallback } from "react"
+import { Alert, Keyboard, Linking, Pressable, Text, View } from "react-native"
 import { Check, X, ChevronDown, ChevronUp } from "lucide-react-native"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
@@ -10,7 +10,7 @@ import {
   getReadableTextColor,
 } from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
-import { useRouter } from "expo-router"
+import { useRouter, useFocusEffect } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
 import { useGitHubAuthMachine } from "../../../hooks/use-github-auth-machine"
 import { useTranslation } from "react-i18next"
@@ -85,52 +85,48 @@ export function GitHubConfigSection({
   const themeScheme = useThemeScheme()
 
   const auth = useGitHubAuthMachine()
-  const { token: nativeToken } = auth
+  const { token } = auth
 
   // Form state initialized from syncConfig
-  // Web keeps manual token entry; native token comes from the auth machine.
-  const [webToken, setWebToken] = useState(syncConfig?.token ?? "")
   const [repo, setRepo] = useState(syncConfig?.repo ?? "")
   const [branch, setBranch] = useState(syncConfig?.branch ?? "main")
   const [expanded, setExpanded] = useState(false)
 
-  const isWeb = Platform.OS === "web"
   const githubOAuthStatus = getGitHubOAuthClientIdStatus()
 
-  const token = isWeb ? webToken : nativeToken
-  const isSignedIn = !isWeb && token.trim().length > 0
+  const isSignedIn = token.trim().length > 0
 
-  useEffect(() => {
-    if (Platform.OS === "web") return
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false
 
-    let cancelled = false
+      const refreshDraftFromStorage = async () => {
+        try {
+          const [storedRepo, storedBranch] = await Promise.all([
+            secureStorage.getItem(REPO_KEY),
+            secureStorage.getItem(BRANCH_KEY),
+          ])
 
-    const refreshDraftFromStorage = async () => {
-      try {
-        const [storedRepo, storedBranch] = await Promise.all([
-          secureStorage.getItem(REPO_KEY),
-          secureStorage.getItem(BRANCH_KEY),
-        ])
+          if (cancelled) return
 
-        if (cancelled) return
-
-        if (storedRepo) {
-          setRepo((current) => (current === storedRepo ? current : storedRepo))
+          if (storedRepo) {
+            setRepo((current) => (current === storedRepo ? current : storedRepo))
+          }
+          if (storedBranch) {
+            setBranch((current) => (current === storedBranch ? current : storedBranch))
+          }
+        } catch {
+          // Non-fatal: repo picker might not have written anything.
         }
-        if (storedBranch) {
-          setBranch((current) => (current === storedBranch ? current : storedBranch))
-        }
-      } catch {
-        // Non-fatal: repo picker might not have written anything.
       }
-    }
 
-    void refreshDraftFromStorage()
+      void refreshDraftFromStorage()
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
+      return () => {
+        cancelled = true
+      }
+    }, [])
+  )
 
   // Validation errors
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({})
@@ -215,19 +211,16 @@ export function GitHubConfigSection({
           style: "destructive",
           onPress: () => {
             onClearConfig()
-            setWebToken("")
             setRepo("")
             setBranch("main")
             onConnectionStatusChange("idle")
 
-            if (!isWeb) {
-              auth.signOut()
-            }
+            auth.signOut()
           },
         },
       ]
     )
-  }, [auth, isWeb, onClearConfig, onConnectionStatusChange, t])
+  }, [auth, onClearConfig, onConnectionStatusChange, t])
 
   const handleSignOut = useCallback(async () => {
     // If a full sync config is saved, signing out should fully disconnect.
@@ -244,30 +237,6 @@ export function GitHubConfigSection({
       onNotification(String(error), "error")
     }
   }, [auth, handleClearConfig, onConnectionStatusChange, onNotification, syncConfig, t])
-
-  const handleTokenChange = useCallback((text: string) => {
-    setWebToken(text)
-    // Clear error when user starts typing
-    setConfigErrors((prev) => {
-      if (prev.token) {
-        const { token: _, ...rest } = prev
-        return rest
-      }
-      return prev
-    })
-  }, [])
-
-  const handleRepoChange = useCallback((text: string) => {
-    setRepo(text)
-    // Clear error when user starts typing
-    setConfigErrors((prev) => {
-      if (prev.repo) {
-        const { repo: _, ...rest } = prev
-        return rest
-      }
-      return prev
-    })
-  }, [])
 
   const handleBranchChange = useCallback((text: string) => {
     setBranch(text)
@@ -335,108 +304,79 @@ export function GitHubConfigSection({
 
       {expanded && (
         <View className="gap-3 p-2 pt-3">
-          {/* Auth */}
-          {isWeb ? (
-            <View className="gap-2">
-              <Label>{t("settings.github.tokenLabel")}</Label>
-              <Input
-                className={configErrors.token ? "border-error" : undefined}
-                secureTextEntry
-                placeholder={t("settings.github.tokenPlaceholder")}
-                value={token}
-                onChangeText={handleTokenChange}
-              />
-              {configErrors.token ? (
-                <Text className="text-xs text-error">{configErrors.token}</Text>
-              ) : (
-                <Text className="text-xs text-foreground opacity-60">
-                  {t("settings.github.tokenHelp")}
+          {/* Auth — Android only (device-flow) */}
+          <View className="gap-2">
+            <Label>{t("settings.github.loginLabel")}</Label>
+            <Button
+              size="control"
+              onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
+              disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
+              variant={isSignedIn ? "destructive" : "accent"}
+            >
+              {auth.isSigningIn
+                ? t("settings.github.signingIn")
+                : isSignedIn
+                  ? t("settings.github.signOut")
+                  : t("settings.github.signIn")}
+            </Button>
+            {!githubOAuthStatus.ok && (
+              <Text className="text-xs text-error">{githubOAuthStatus.error}</Text>
+            )}
+            {auth.deviceCode && (
+              <View className="gap-2" style={{ paddingTop: UI_SPACE.micro }}>
+                <Text className="text-xs text-foreground opacity-80">
+                  {t("settings.github.deviceCode")}
                 </Text>
-              )}
-            </View>
-          ) : (
-            <View className="gap-2">
-              <Label>{t("settings.github.loginLabel")}</Label>
-              <Button
-                size="control"
-                onPress={isSignedIn ? handleSignOut : handleStartGitHubLogin}
-                disabled={auth.isSigningIn || (!isSignedIn && !githubOAuthStatus.ok)}
-                variant={isSignedIn ? "destructive" : "accent"}
-              >
-                {auth.isSigningIn
-                  ? t("settings.github.signingIn")
-                  : isSignedIn
-                    ? t("settings.github.signOut")
-                    : t("settings.github.signIn")}
-              </Button>
-              {!githubOAuthStatus.ok && (
-                <Text className="text-xs text-error">{githubOAuthStatus.error}</Text>
-              )}
-              {auth.deviceCode && (
-                <View className="gap-2" style={{ paddingTop: UI_SPACE.micro }}>
-                  <Text className="text-xs text-foreground opacity-80">
-                    {t("settings.github.deviceCode")}
+                <View
+                  className="flex-row gap-2"
+                  style={{ alignItems: "center", flexWrap: "wrap" }}
+                >
+                  <Text className="text-lg font-bold text-foreground">
+                    {auth.deviceCode.user_code}
                   </Text>
-                  <View
-                    className="flex-row gap-2"
-                    style={{ alignItems: "center", flexWrap: "wrap" }}
-                  >
-                    <Text className="text-lg font-bold text-foreground">
-                      {auth.deviceCode.user_code}
-                    </Text>
-                    <Button size="compact" onPress={() => void handleCopyDeviceCode()}>
-                      {t("settings.github.copyCode")}
-                    </Button>
-                  </View>
-                  <Button
-                    size="compact"
-                    onPress={() => {
-                      const url =
-                        auth.deviceCode?.verification_uri_complete ||
-                        auth.deviceCode?.verification_uri
-                      if (url) {
-                        void Linking.openURL(url)
-                      }
-                    }}
-                  >
-                    {t("settings.github.openBrowser")}
+                  <Button size="compact" onPress={() => void handleCopyDeviceCode()}>
+                    {t("settings.github.copyCode")}
                   </Button>
-                  <Text className="text-xs text-foreground opacity-80">
-                    {t("settings.github.browserHelp", {
-                      url: auth.deviceCode.verification_uri,
-                    })}
-                  </Text>
                 </View>
-              )}
-              <Text className="text-xs text-foreground opacity-60">
-                {t("settings.github.loginHelp")}
-              </Text>
-            </View>
-          )}
+                <Button
+                  size="compact"
+                  onPress={() => {
+                    const url =
+                      auth.deviceCode?.verification_uri_complete ||
+                      auth.deviceCode?.verification_uri
+                    if (url) {
+                      void Linking.openURL(url)
+                    }
+                  }}
+                >
+                  {t("settings.github.openBrowser")}
+                </Button>
+                <Text className="text-xs text-foreground opacity-80">
+                  {t("settings.github.browserHelp", {
+                    url: auth.deviceCode.verification_uri,
+                  })}
+                </Text>
+              </View>
+            )}
+            <Text className="text-xs text-foreground opacity-60">
+              {t("settings.github.loginHelp")}
+            </Text>
+          </View>
 
           {/* Repository */}
           <View className="gap-2">
             <Label>{t("settings.github.repoLabel")}</Label>
-            {isWeb ? (
+            <View className="gap-2">
               <Input
                 className={configErrors.repo ? "border-error" : undefined}
-                placeholder={t("settings.github.repoPlaceholderWeb")}
+                placeholder={t("settings.github.repoPlaceholderNative")}
                 value={repo}
-                onChangeText={handleRepoChange}
+                readOnly
               />
-            ) : (
-              <View className="gap-2">
-                <Input
-                  className={configErrors.repo ? "border-error" : undefined}
-                  placeholder={t("settings.github.repoPlaceholderNative")}
-                  value={repo}
-                  readOnly
-                />
-                <Button size="compact" onPress={handleChooseRepo} disabled={!token}>
-                  {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
-                </Button>
-              </View>
-            )}
+              <Button size="compact" onPress={handleChooseRepo} disabled={!token}>
+                {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
+              </Button>
+            </View>
             {configErrors.repo && (
               <Text className="text-xs text-error">{configErrors.repo}</Text>
             )}
