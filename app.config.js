@@ -162,8 +162,6 @@ export default {
         {
           android: {
             buildArchs: ["arm64-v8a"],
-            enableMinifyInReleaseBuilds: true,
-            enableShrinkResourcesInReleaseBuilds: true,
           },
         },
       ],
