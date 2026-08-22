@@ -477,7 +477,6 @@
     "searchPlaceholder": "リポジトリを検索...",
     "loading": "読み込み中…",
     "empty": "リポジトリが見つかりませんでした。",
-    "webAuthError": "リポジトリピッカーはWebでは利用できません。トークンを使用してowner/repoを入力してください。",
     "sessionExpired": "GitHubセッションの有効期限が切れました。もう一度サインインしてください。",
     "rateLimit": "GitHubのレート制限に達しました。しばらく待ってからもう一度お試しください。",
     "accessDenied": "GitHubへのアクセスが拒否されました (403)。",
