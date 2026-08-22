@@ -477,7 +477,6 @@
     "searchPlaceholder": "Search repositories...",
     "loading": "Loading…",
     "empty": "No repositories found.",
-    "webAuthError": "Repo picker is not available on web. Use a token and enter owner/repo.",
     "sessionExpired": "Your GitHub session is no longer valid. Please sign in again.",
     "rateLimit": "GitHub rate limit reached. Please wait a bit and try again.",
     "accessDenied": "GitHub denied access (403).",
