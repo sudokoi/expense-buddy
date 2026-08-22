@@ -49,7 +49,7 @@ for (const banned of ["Appearance", "systemColorScheme", "selectEffectiveTheme"]
 }
 
 // 3. No app code subscribes to Appearance directly
-const dirs = ["app", "components", "hooks", "services", "stores"]
+const dirs = ["app", "components", "hooks", "providers", "services", "stores", "utils"]
 function walk(dir) {
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     const rel = path.posix.join(dir, entry.name)

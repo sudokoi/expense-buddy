@@ -29,9 +29,9 @@ export function useThemeScheme(): ThemeScheme {
  * Reactive form of {@link isThemeSettled}. False while settings are loading —
  * the persisted preference isn't known yet, so nothing can be settled.
  */
-export function useThemeSettled(isLoading: boolean): boolean {
+export function useThemeSettled(): boolean {
   const { colorScheme } = useColorScheme()
-  const { settings } = useSettings()
+  const { settings, isLoading } = useSettings()
   return (
     !isLoading &&
     isThemeSettled(settings.theme, colorScheme === "dark" ? "dark" : "light")
