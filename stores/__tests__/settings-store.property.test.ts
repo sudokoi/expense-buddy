@@ -8,12 +8,6 @@
  * Property 5: Settings Replacement Clears Change Flag
  * For any valid AppSettings object, replacing settings SHALL result in the settings store
  * containing those exact settings and hasUnsyncedChanges being false.
- *
- * Property 6: Effective Theme Computation
- * For any combination of theme preference and system color scheme:
- * - If theme is 'light', effectiveTheme SHALL be 'light'
- * - If theme is 'dark', effectiveTheme SHALL be 'dark'
- * - If theme is 'system', effectiveTheme SHALL equal the system color scheme
  */
 
 import fc from "fast-check"
@@ -52,7 +46,6 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
       settings: initialSettings,
       isLoading: false,
       hasUnsyncedChanges: false,
-      systemColorScheme: "light" as "light" | "dark",
     },
 
     on: {
@@ -64,11 +57,6 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
         settings: event.settings,
         hasUnsyncedChanges: event.hasUnsyncedChanges,
         isLoading: false,
-      }),
-
-      setSystemColorScheme: (context, event: { scheme: "light" | "dark" }) => ({
-        ...context,
-        systemColorScheme: event.scheme,
       }),
 
       setTheme: (context, event: { theme: ThemePreference }) => {
@@ -149,22 +137,8 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
   })
 }
 
-// Computed selector for effective theme
-type SettingsContext = {
-  settings: AppSettings
-  systemColorScheme: "light" | "dark"
-}
-
-const selectEffectiveTheme = (context: SettingsContext): "light" | "dark" => {
-  if (context.settings.theme === "system") {
-    return context.systemColorScheme
-  }
-  return context.settings.theme
-}
-
 // Arbitrary generators
 const themePreferenceArb = fc.constantFrom<ThemePreference>("light", "dark", "system")
-const systemColorSchemeArb = fc.constantFrom<"light" | "dark">("light", "dark")
 const paymentMethodArb = fc.constantFrom<PaymentMethodType>(
   "Cash",
   "UPI",
@@ -350,67 +324,6 @@ describe("Settings Store Properties", () => {
             settings.syncSettings === settingsBefore.syncSettings &&
             hasUnsyncedChanges === false
           )
-        }),
-        { numRuns: 100 }
-      )
-    })
-  })
-
-  /**
-   * Property 6: Effective Theme Computation
-   */
-  describe("Property 6: Effective Theme Computation", () => {
-    it("effectiveTheme SHALL be light when theme preference is light", () => {
-      fc.assert(
-        fc.property(systemColorSchemeArb, (systemScheme) => {
-          const store = createTestSettingsStore()
-          store.trigger.setTheme({ theme: "light" })
-          store.trigger.setSystemColorScheme({ scheme: systemScheme })
-
-          const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-          return effectiveTheme === "light"
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("effectiveTheme SHALL be dark when theme preference is dark", () => {
-      fc.assert(
-        fc.property(systemColorSchemeArb, (systemScheme) => {
-          const store = createTestSettingsStore()
-          store.trigger.setTheme({ theme: "dark" })
-          store.trigger.setSystemColorScheme({ scheme: systemScheme })
-
-          const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-          return effectiveTheme === "dark"
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("effectiveTheme SHALL equal system color scheme when theme preference is system", () => {
-      fc.assert(
-        fc.property(systemColorSchemeArb, (systemScheme) => {
-          const store = createTestSettingsStore()
-          store.trigger.setTheme({ theme: "system" })
-          store.trigger.setSystemColorScheme({ scheme: systemScheme })
-
-          const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-          return effectiveTheme === systemScheme
-        }),
-        { numRuns: 100 }
-      )
-    })
-
-    it("effectiveTheme SHALL always be light or dark, never system", () => {
-      fc.assert(
-        fc.property(themePreferenceArb, systemColorSchemeArb, (theme, systemScheme) => {
-          const store = createTestSettingsStore()
-          store.trigger.setTheme({ theme })
-          store.trigger.setSystemColorScheme({ scheme: systemScheme })
-
-          const effectiveTheme = selectEffectiveTheme(store.getSnapshot().context)
-          return effectiveTheme === "light" || effectiveTheme === "dark"
         }),
         { numRuns: 100 }
       )

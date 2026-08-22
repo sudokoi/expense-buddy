@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react"
 import { useSelector } from "@xstate/store-react"
 import { useStoreContext } from "../store-provider"
 import {
-  selectEffectiveTheme,
   selectHasUnsyncedChanges,
   setBackgroundSmsImportEnabled as persistBackgroundSmsImportEnabled,
 } from "../settings-store"
@@ -22,9 +21,6 @@ export const useSettings = () => {
   const isLoading = useSelector(settingsStore, (state) => state.context.isLoading)
   const hasUnsyncedChanges = useSelector(settingsStore, (state) =>
     selectHasUnsyncedChanges(state.context)
-  )
-  const effectiveTheme = useSelector(settingsStore, (state) =>
-    selectEffectiveTheme(state.context)
   )
   const syncConfig = useSelector(settingsStore, (state) => state.context.syncConfig)
 
@@ -118,7 +114,6 @@ export const useSettings = () => {
     () => ({
       settings,
       isLoading,
-      effectiveTheme,
       hasUnsyncedChanges,
       defaultPaymentMethod: settings.defaultPaymentMethod,
       enableMathExpressions: settings.enableMathExpressions,
@@ -143,7 +138,6 @@ export const useSettings = () => {
     [
       settings,
       isLoading,
-      effectiveTheme,
       hasUnsyncedChanges,
       syncConfig,
       setTheme,
@@ -162,15 +156,4 @@ export const useSettings = () => {
       setLanguage,
     ]
   )
-}
-
-export const useThemeSettings = () => {
-  const { settingsStore } = useStoreContext()
-
-  const isLoading = useSelector(settingsStore, (state) => state.context.isLoading)
-  const effectiveTheme = useSelector(settingsStore, (state) =>
-    selectEffectiveTheme(state.context)
-  )
-
-  return { isLoading, effectiveTheme }
 }
