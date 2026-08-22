@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Platform, Text, View } from "react-native"
+import { Text, View } from "react-native"
 import { FlashList } from "@shopify/flash-list"
 import { useRouter } from "expo-router"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -56,15 +56,6 @@ export default function GitHubRepoPickerScreen() {
     try {
       setIsLoading(true)
       setError(null)
-
-      if (Platform.OS === "web") {
-        setError(
-          t("repoPicker.webAuthError") ||
-            "Repo picker is not available on web. Use a token and enter owner/repo."
-        )
-        setRepos([])
-        return
-      }
 
       const token = await secureStorage.getItem(TOKEN_KEY)
       if (!token) {
