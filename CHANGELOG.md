@@ -1,5 +1,80 @@
 # expense-buddy
 
+## 4.0.1
+
+### Major Changes
+
+- [#108](https://github.com/sudokoi/expense-buddy/pull/108) [`b64db9c`](https://github.com/sudokoi/expense-buddy/commit/b64db9cfe945752b2a357fdb7c2e0a8697ec7d6f) Thanks [@sudokoi](https://github.com/sudokoi)! - Migrated UI framework from Tamagui to NativeWind with Expo SDK 57 upgrade.
+
+  **Breaking changes:**
+  - Removed Tamagui — all UI now uses NativeWind + Tailwind CSS
+  - Icons migrated from `@tamagui/lucide-icons-2` to `lucide-react-native`
+  - Minimum Expo SDK 57, React Native 0.86, React 19.2
+
+  **New features:**
+  - Haptic feedback on save, delete, sync, and UI interactions
+  - Theme-aware statistics card colors and chart fills for dark mode
+  - Accessibility labels on interactive elements
+
+  **Improvements:**
+  - Softer, borderless card design in light mode
+  - Larger border-radius for a more approachable feel
+  - Shadowless surfaces for a cleaner look
+  - Increased screen-edge spacing
+  - Standardized press feedback across all interactive elements
+  - Improved SMS import parsing for SBI, Axis, and AMEX transactions
+  - i18n: all user-visible strings now translated
+
+### Patch Changes
+
+- [#124](https://github.com/sudokoi/expense-buddy/pull/124) [`fe3f3b7`](https://github.com/sudokoi/expense-buddy/commit/fe3f3b72c3ae78873a91727405e3eccbed0bb12c) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix GitHub repo picker selection not reaching settings
+  - Re-read the repo/branch draft from secure storage on screen focus (`useFocusEffect`), so a repository chosen in the picker updates the field after returning instead of staying stale
+  - Drop dead web-only token-entry paths and Platform guards now that the app is Android-only
+  - Disable R8 minification and resource shrinking in release builds again, reverting the size optimization while keeping the `arm64-v8a`-only arch config
+
+- [`3a1ec5c`](https://github.com/sudokoi/expense-buddy/commit/3a1ec5c158ae5d99c59c89f27b22d8bd733f1476) Thanks [@sudokoi](https://github.com/sudokoi)! - Bump release to v4.0.1
+  - Version-only bump: v4.0.0 was already submitted to the Play Store internal track, so its versionCode (40000999) cannot be reused; 4.0.1 skips past it
+
+- [#122](https://github.com/sudokoi/expense-buddy/pull/122) [`d4b9535`](https://github.com/sudokoi/expense-buddy/commit/d4b95352302847320125a36fe08d56f8b2801329) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix "System" theme not applying until app relaunch
+  - Forward the raw theme preference to NativeWind instead of resolving "system" in JS, so the OS owns system-theme tracking and the app follows live dark/light toggles
+  - Remove the store's duplicate `systemColorScheme` state, its Appearance listener, and the `selectEffectiveTheme` selector — resolved scheme now comes from NativeWind's `useColorScheme()`
+  - Hold the splash until a forced light/dark preference is visible in NativeWind's resolved scheme (the native override lands asynchronously), preventing an OS-theme flash on launch
+
+- [`623e0fc`](https://github.com/sudokoi/expense-buddy/commit/623e0fc5a1638638180df072583cb9a88a91adac) Thanks [@sudokoi](https://github.com/sudokoi)! - Audit fixes: theme, filters, a11y and Kotlin hygiene
+  - Deepen theme into single source (`palette.ts` owns `DESTRUCTIVE`/`KAWAII`, `check:theme` validates `palette` ↔ `global.css` ↔ `tailwind` ↔ `app.config`)
+  - Unify filter chips via `FilterChipBar`/`FilterChip` and `Button variant="accent"` (no inline `style`)
+  - Harden layers: remove `stores→providers` re-export, parallelize store init, enforce `44dp` targets and `ci` theme check
+
+- [#112](https://github.com/sudokoi/expense-buddy/pull/112) [`7ce947a`](https://github.com/sudokoi/expense-buddy/commit/7ce947ac27f89b835c75376981bb0b77d478181f) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix dark-mode contrast, tab alignment, and UI spacing inconsistencies
+  - Fix black labels and unreadable chips in dark mode with theme-aware colors
+  - Center tab bar icons horizontally
+  - Consolidate filter chip styling into Button component, remove per-button overrides
+  - Add consistent gap between analytics chart cards
+  - Align history screen padding and SettingsSection gap tokens with UI_SPACE values
+  - Use theme.muted for unselected CategoryCard, PaymentMethodCard, and payment instrument items
+  - History filter chips now open filter screen (matching analytics behavior)
+  - Brighten dark-mode muted color from #362D40 to #4A3D52
+  - Remove per-item text color overrides from CategoryFilter and PaymentMethodFilter
+
+- [`2b6f3b9`](https://github.com/sudokoi/expense-buddy/commit/2b6f3b90c33fc5af6974541ad646a5579ea2cfd3) Thanks [@sudokoi](https://github.com/sudokoi)! - Align Expo SDK dependencies and clear expo doctor warnings
+  - Bump seven Expo packages to their SDK 57 pinned patch versions (`expo install --fix`)
+  - Remove the `changeset` package.json script that shadowed the `changeset` binary in `node_modules/.bin`; `yarn changeset` still works via Yarn's binary fallback
+
+- [`b3e3154`](https://github.com/sudokoi/expense-buddy/commit/b3e315420bbbd8e2d5762d9cff83f939dec83661) Thanks [@sudokoi](https://github.com/sudokoi)! - Remove unused web target and dead dependencies
+  - Drop the vestigial web target (`react-dom`, web config, `yarn web`, `@expo/metro-runtime`) and remove iOS platform config (`ios` section, `yarn ios` script) — this is an Android-only app
+  - Remove unused `expo-web-browser` dependency and its no-op plugin entry
+  - Move `@types/papaparse` to devDependencies; drop legacy `assetBundlePatterns`
+
+- [#118](https://github.com/sudokoi/expense-buddy/pull/118) [`9927ed2`](https://github.com/sudokoi/expense-buddy/commit/9927ed27c46a4e296854184dce647ed48efbac65) Thanks [@sudokoi](https://github.com/sudokoi)! - Cut Android APK size (~136MB → ~70MB)
+  - Restrict native builds to `arm64-v8a` via `expo-build-properties` `buildArchs`; the previous `EAS_BUILD_ANDROID_ABIS` env var was not a supported setting, so every APK bundled x86, x86_64, and armeabi-v7a libs (~57MB) unnecessarily
+  - Enable R8 minification and resource shrinking for release builds (`enableMinifyInReleaseBuilds`, `enableShrinkResourcesInReleaseBuilds`), shrinking the ~43MB of unminified dex
+  - Remove the ineffective `EAS_BUILD_ANDROID_ABIS` entry from the `internal` EAS profile
+
+- [#114](https://github.com/sudokoi/expense-buddy/pull/114) [`c306180`](https://github.com/sudokoi/expense-buddy/commit/c30618060138ee4bd54d1fd9575d1a3e9de285ef) Thanks [@sudokoi](https://github.com/sudokoi)! - Eliminate system-theme flash on launch when app theme differs from OS theme
+  - Keep splash visible until fonts and persisted theme are resolved and NativeWind is synced (`AppSplashGate` in `app/_layout.tsx`)
+  - Seed `settingsStore` synchronously from MMKV via `loadSettingsSync` / `getItemSync` so first paint already uses the user's light/dark preference
+  - Apply `setColorScheme` in `useLayoutEffect` in `ThemedProvider` to avoid one-frame flash
+
 ## 4.0.0-beta.3
 
 ### Patch Changes
