@@ -20,7 +20,27 @@ data class ParseResult(
 )
 
 object SmsMessageParser {
-    private val combiningMarksPattern = Regex("[\\u0300-\\u036f\\ufe20-\\ufe2f]")
+    private val latinAccentMarksPattern = Regex("([a-zA-Z])[\\u0300-\\u036f\\ufe20-\\ufe2f]+")
+
+    /**
+     * Normalizes message text for pattern matching.
+     *
+     * NFKD folds fullwidth/halfwidth variants; combining marks are then
+     * stripped only after Latin letters so accented Latin folds (café ->
+     * cafe) while scripts that use combining marks semantically survive -
+     * NFKD splits Japanese voiced kana (が -> か + U+3099), and NFC
+     * re-composes them afterwards. Without the Latin guard, every dakuten
+     * in CJK text would be destroyed and regional patterns could never
+     * match (ADR-010).
+     */
+    private fun normalizeUnicode(text: String): String =
+        try {
+            val nfkd = Normalizer.normalize(text, Normalizer.Form.NFKD)
+            val latinFolded = nfkd.replace(latinAccentMarksPattern, "$1")
+            Normalizer.normalize(latinFolded, Normalizer.Form.NFC)
+        } catch (_: Exception) {
+            text
+        }
 
     /**
      * Resolves the rule pack for a region code (ISO 3166-1 alpha-2).
@@ -31,15 +51,10 @@ object SmsMessageParser {
         when (regionCode?.uppercase(Locale.ROOT)) {
             CanadaSmsRulePack.regionCode -> CanadaSmsRulePack
             AustraliaSmsRulePack.regionCode -> AustraliaSmsRulePack
+            UsSmsRulePack.regionCode -> UsSmsRulePack
+            UkSmsRulePack.regionCode -> UkSmsRulePack
+            JpSmsRulePack.regionCode -> JpSmsRulePack
             else -> IndiaSmsRulePack
-        }
-
-    private fun normalizeUnicode(text: String): String =
-        try {
-            val nfkd = Normalizer.normalize(text, Normalizer.Form.NFKD)
-            nfkd.replace(combiningMarksPattern, "")
-        } catch (_: Exception) {
-            text
         }
 
     fun parseRawMessage(
@@ -130,8 +145,11 @@ object SmsMessageParser {
         body: String,
     ): Double? {
         val match = rulePack.amountPattern.find(body) ?: return null
+        // Contract: the numeric amount may land in any capture group
+        // (prefix-symbol packs use group 1; suffix-form packs like JPY need two).
         return match.groupValues
-            .getOrNull(1)
+            .drop(1)
+            .firstOrNull { it.isNotBlank() && it.any(Char::isDigit) }
             ?.replace(",", "")
             ?.toDoubleOrNull()
     }

@@ -20,19 +20,41 @@ interface SmsRulePack {
     /** Prefix for matchedPatternKey values (e.g. "india" -> "india.generic.transaction"). */
     val patternKeyPrefix: String
 
+    /**
+     * Matches the transaction amount. Contract: the numeric value may land in
+     * any capture group — the parser uses the first non-blank group
+     * (prefix-symbol packs like `$42.10` use a single group; suffix-form
+     * packs like `480円` need two).
+     */
     val amountPattern: Regex
+
     val debitKeywords: Regex
+
     val settledDebitKeywords: Regex
+
     val creditOnlyKeywords: Regex
+
     val otpKeywords: Regex
+
     val nonExpenseInfoKeywords: Regex
+
     val nonExpenseTransactionOutcomeKeywords: Regex
+
     val approvalPromptKeywords: Regex
 
     /** Merchant patterns tried in order; first match wins. */
     val merchantPatterns: List<Regex>
 
-    /** Category inference rules; first match wins, falling back to "Other". */
+    /**
+     * Category inference rules; first match wins, falling back to "Other".
+     *
+     * Ordering contract: rules MUST be ordered most-specific-brand-first —
+     * Food, Groceries, Transport, Rent, Utilities, Entertainment, Health.
+     * Brand names routinely contain generic mode nouns (Tesco Metro,
+     * Montreal's Metro grocer vs transit), and brand categories must win
+     * those collisions; a genuine transit charge still matches via its own
+     * specific tokens (TfL, STM, Opal, Suica...).
+     */
     val categoryInferenceRules: List<Pair<String, Regex>>
 
     /** Payment-method hints evaluated in order; first match wins. */

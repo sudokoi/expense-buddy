@@ -64,7 +64,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Local notifications route back into the review queue instead of silently creating expenses
 - Native LiteRT category suggestion with regex fallback for low-confidence predictions
 - Conservative category suggestion resolver built around shipped default categories
-- Region rule packs (ADR-010): India, Canada, and Australia parsing patterns selected by an explicit SMS region setting
+- Region rule packs (ADR-010): India, US, UK, Canada, Australia, and Japan parsing patterns selected by an explicit SMS region setting
 - Conservative first-pass patterns for Canadian banks (Interac e-Transfer, TD/RBC/Scotia alerts) and Australian banks (CBA/NAB/Westpac alerts, PayID/Osko/BPAY)
 - Local-only processing with no backend parsing
 

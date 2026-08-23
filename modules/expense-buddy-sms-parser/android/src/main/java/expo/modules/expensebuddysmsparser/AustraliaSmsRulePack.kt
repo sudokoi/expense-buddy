@@ -59,14 +59,14 @@ object AustraliaSmsRulePack : SmsRulePack {
                     "mcdonald|restaurant|cafe|coffee|pizza|burger|dining|eatery|bakery|food|uber eats|menulog|doordash|hungry jack|dominos|pizza hut|sushi",
                     RegexOption.IGNORE_CASE,
                 ),
-            "Transport" to
-                Regex(
-                    "uber|ola|diditaxi|13cabs|taxi|cab|opal|myki|transit|metro|bus|train|tram|ferry|fuel|petrol|caltex|bp |shell|parking|toll|linkt|eastlink|travel|qantas|jetstar|virgin australia",
-                    RegexOption.IGNORE_CASE,
-                ),
             "Groceries" to
                 Regex(
                     "grocery|groceries|supermarket|woolworths|coles|aldi|iga|foodland|drakes|harris farm|costco|markets",
+                    RegexOption.IGNORE_CASE,
+                ),
+            "Transport" to
+                Regex(
+                    "uber|ola|diditaxi|13cabs|taxi|cab|opal|myki|transit|metro|bus|train|tram|ferry|fuel|petrol|caltex|bp |shell|parking|toll|linkt|eastlink|travel|qantas|jetstar|virgin australia",
                     RegexOption.IGNORE_CASE,
                 ),
             "Rent" to Regex("\\brent\\b|landlord|lease|tenancy|apartment rent|house rent", RegexOption.IGNORE_CASE),
