@@ -35,6 +35,8 @@ const currencyOptions: CurrencyOption[] = [
   { key: "GBP", label: "GBP", Icon: PoundSterling },
   { key: "EUR", label: "EUR", Icon: Euro },
   { key: "JPY", label: "JPY", Icon: JapaneseYen },
+  { key: "CAD", label: "CAD", Icon: DollarSign },
+  { key: "AUD", label: "AUD", Icon: DollarSign },
 ]
 
 export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {

@@ -70,7 +70,7 @@ const appSettingsArb = fc.record({
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArb,
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
+  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),

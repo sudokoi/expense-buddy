@@ -7,7 +7,7 @@ import "intl-pluralrules"
 import enIN from "./locales/en-IN/translation.json"
 
 // Supported locales for dynamic loading
-const SUPPORTED_LOCALES = ["en-US", "en-GB", "en-IN", "hi", "ja"] as const
+const SUPPORTED_LOCALES = ["en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"] as const
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 /**
@@ -20,6 +20,9 @@ const loadLocaleTranslations = async (lang: SupportedLocale) => {
     case "en-US":
       return (await import("./locales/en-US/translation.json")).default
     case "en-GB":
+    case "en-CA":
+    case "en-AU":
+      // Regional variants share the en-GB bundle (see ADR-010)
       return (await import("./locales/en-GB/translation.json")).default
     case "en-IN":
       return enIN // Already loaded statically

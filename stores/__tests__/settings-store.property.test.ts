@@ -169,7 +169,7 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   version: fc.integer({ min: 7, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
+  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
 })
 
 describe("Settings Store Properties", () => {
@@ -248,7 +248,7 @@ describe("Settings Store Properties", () => {
     })
 
     it("setLanguage SHALL update language and set hasUnsyncedChanges to true", () => {
-      const languageArb = fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja")
+      const languageArb = fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja")
       fc.assert(
         fc.property(languageArb, (language) => {
           const store = createTestSettingsStore()
@@ -267,7 +267,7 @@ describe("Settings Store Properties", () => {
     })
 
     it("setDefaultCurrency SHALL update currency and set hasUnsyncedChanges to true", () => {
-      const currencyArb = fc.constantFrom("INR", "USD", "EUR", "GBP", "JPY")
+      const currencyArb = fc.constantFrom("INR", "USD", "EUR", "GBP", "JPY", "CAD", "AUD")
       fc.assert(
         fc.property(currencyArb, (currency) => {
           const store = createTestSettingsStore()

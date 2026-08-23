@@ -100,7 +100,7 @@ const appSettingsArb = fc.record({
   updatedAt: isoDateArb,
   version: fc.constant(9),
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-IN", "en-GB", "hi", "ja"),
+  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
 })
 
 // =============================================================================

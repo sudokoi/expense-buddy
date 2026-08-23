@@ -155,7 +155,7 @@ describe("getSupportedSystemCurrency", () => {
   it("falls back to INR when unsupported", () => {
     const { getLocales } = require("expo-localization")
     ;(getLocales as jest.Mock).mockReturnValue([
-      { languageTag: "en-AU", textDirection: "ltr", currencyCode: "AUD" },
+      { languageTag: "de-CH", textDirection: "ltr", currencyCode: "CHF" },
     ])
     expect(getSupportedSystemCurrency()).toBe("INR")
   })
@@ -165,6 +165,8 @@ describe("getDefaultCurrencyForLanguage", () => {
   it("maps languages to default currencies", () => {
     expect(getDefaultCurrencyForLanguage("en-US")).toBe("USD")
     expect(getDefaultCurrencyForLanguage("en-GB")).toBe("GBP")
+    expect(getDefaultCurrencyForLanguage("en-CA")).toBe("CAD")
+    expect(getDefaultCurrencyForLanguage("en-AU")).toBe("AUD")
     expect(getDefaultCurrencyForLanguage("en-IN")).toBe("INR")
     expect(getDefaultCurrencyForLanguage("hi")).toBe("INR")
     expect(getDefaultCurrencyForLanguage("ja")).toBe("JPY")

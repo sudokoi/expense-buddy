@@ -19,6 +19,8 @@ interface LocalizationSectionProps {
 const languageLabels: Record<string, string> = {
   "en-US": "English (US)",
   "en-GB": "English (UK)",
+  "en-CA": "English (CA)",
+  "en-AU": "English (AU)",
   "en-IN": "English (IN)",
   hi: "Hindi (हिंदी)",
   ja: "Japanese (日本語)",
