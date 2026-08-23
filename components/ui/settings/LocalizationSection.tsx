@@ -127,7 +127,9 @@ export function LocalizationSection({
                       onPress={() => onRegionChange?.(region)}
                       role="button"
                       aria-selected={isSelected}
-                      aria-label={`Select ${label}`}
+                      aria-label={t("settings.localization.selectOption", {
+                        option: label,
+                      })}
                       style={({ pressed }) => [
                         { flexBasis: "33%", minHeight: UI_MIN_TOUCH_TARGET },
                         { opacity: pressed ? UI_OPACITY.subtle : 1 },

@@ -17,6 +17,7 @@ import {
   UI_ICON_SIZE,
   UI_MIN_TOUCH_TARGET,
 } from "../../constants/ui-tokens"
+import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface CurrencySelectorProps {
@@ -42,6 +43,7 @@ const currencyOptions: CurrencyOption[] = [
 
 export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
   const theme = useThemeColors()
+  const { t } = useTranslation()
 
   return (
     <Card className="flex-row flex-wrap rounded-control p-1">
@@ -53,7 +55,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             onPress={() => onChange(key)}
             role="button"
             aria-selected={isSelected}
-            aria-label={`Select ${label}`}
+            aria-label={t("settings.localization.selectOption", { option: label })}
             style={({ pressed }) => [
               { flexBasis: "25%", minHeight: UI_MIN_TOUCH_TARGET },
               { opacity: pressed ? UI_OPACITY.subtle : 1 },
