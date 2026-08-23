@@ -23,8 +23,12 @@ import { getRandomCategoryColor } from "../constants/category-colors"
 import { computeSettingsSyncState, SettingsSyncState } from "./helpers"
 import { changeLanguage } from "../i18n"
 import { getDefaultCurrencyForLanguage } from "../utils/currency"
+import { getDefaultRegionForLanguage, normalizeSmsRegion } from "../utils/region"
 import { enqueueSyncOp } from "../services/sync-queue"
-import { setBackgroundSmsEnabled } from "../services/background-sms/android-background-sms-module"
+import {
+  setBackgroundSmsEnabled,
+  setSmsRegion as pushSmsRegionToNative,
+} from "../services/background-sms/android-background-sms-module"
 
 // Re-export SettingsSyncState for backward compatibility
 export type { SettingsSyncState }
@@ -74,6 +78,14 @@ async function syncBackgroundSmsEnabledBestEffort(enabled: boolean): Promise<voi
     await setBackgroundSmsEnabled(enabled)
   } catch (error) {
     console.warn("Failed to sync background SMS receiver state:", error)
+  }
+}
+
+async function syncSmsRegionBestEffort(region: string): Promise<void> {
+  try {
+    await pushSmsRegionToNative(normalizeSmsRegion(region))
+  } catch (error) {
+    console.warn("Failed to sync SMS region to native:", error)
   }
 }
 
@@ -194,10 +206,13 @@ export const settingsStore = createStore({
     },
 
     setLanguage: (context, event: { language: string }, enqueue) => {
+      // Language change cascades: currency and SMS region are reset per map
+      // (stomping manual overrides — surfaced via a confirmation prompt, ADR-010)
       const newSettings = {
         ...context.settings,
         language: event.language,
         defaultCurrency: getDefaultCurrencyForLanguage(event.language),
+        smsRegion: getDefaultRegionForLanguage(event.language),
       }
       const newSyncState = computeSettingsSyncState(
         newSettings,
@@ -207,12 +222,45 @@ export const settingsStore = createStore({
       enqueue.effect(async () => {
         await saveSettings(newSettings)
         await changeLanguage(event.language)
+        await syncSmsRegionBestEffort(newSettings.smsRegion)
         await enqueueSyncOp({
           type: "settings.patch",
           updates: {
             language: event.language,
             defaultCurrency: newSettings.defaultCurrency,
+            smsRegion: newSettings.smsRegion,
           },
+        })
+        if (newSyncState === "modified") {
+          await markSettingsChanged()
+        } else {
+          await clearSettingsChanged()
+        }
+      })
+
+      return {
+        ...context,
+        settings: newSettings,
+        settingsSyncState: newSyncState,
+      }
+    },
+
+    setSmsRegion: (context, event: { smsRegion: string }, enqueue) => {
+      const newSettings = {
+        ...context.settings,
+        smsRegion: normalizeSmsRegion(event.smsRegion),
+      }
+      const newSyncState = computeSettingsSyncState(
+        newSettings,
+        context.syncedSettingsHash
+      )
+
+      enqueue.effect(async () => {
+        await saveSettings(newSettings)
+        await syncSmsRegionBestEffort(newSettings.smsRegion)
+        await enqueueSyncOp({
+          type: "settings.patch",
+          updates: { smsRegion: newSettings.smsRegion },
         })
         if (newSyncState === "modified") {
           await markSettingsChanged()
@@ -245,6 +293,9 @@ export const settingsStore = createStore({
           await syncBackgroundSmsEnabledBestEffort(
             Boolean(newSettings.backgroundSmsImportEnabled)
           )
+        }
+        if (Object.hasOwn(event.updates, "smsRegion")) {
+          await syncSmsRegionBestEffort(newSettings.smsRegion)
         }
         await enqueueSyncOp({
           type: "settings.patch",
@@ -286,6 +337,7 @@ export const settingsStore = createStore({
         await syncBackgroundSmsEnabledBestEffort(
           Boolean(event.settings.backgroundSmsImportEnabled)
         )
+        await syncSmsRegionBestEffort(event.settings.smsRegion)
         await saveSettingsHash(newHash)
         await clearSettingsChanged()
       })
@@ -661,6 +713,7 @@ export async function initializeSettingsStore(
     // Compute initial sync state by comparing current settings against synced hash
     const settingsSyncState = computeSettingsSyncState(settings, syncedSettingsHash)
     await syncBackgroundSmsEnabledBestEffort(Boolean(settings.backgroundSmsImportEnabled))
+    await syncSmsRegionBestEffort(settings.smsRegion)
 
     store.trigger.loadSettings({
       settings,

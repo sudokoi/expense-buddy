@@ -85,6 +85,12 @@ class ExpenseBuddySmsModule : Module() {
                 BackgroundSmsPreferences.setEnabled(reactContext, enabled)
             }
 
+            AsyncFunction("setSmsRegionAsync") { region: String ->
+                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
+                LoggerApi.d("SMS_MODULE", "setSmsRegionAsync: region=$region")
+                BackgroundSmsPreferences.setSmsRegion(reactContext, region)
+            }
+
             AsyncFunction("syncInboxAsync") { useMlOnly: Boolean ->
                 startQueueObserver()
                 if (!isSyncing.compareAndSet(false, true)) {
@@ -126,6 +132,7 @@ class ExpenseBuddySmsModule : Module() {
 
                     // 2. Scan the inbox natively without crossing the JS bridge
                     val scanner = SmsInboxScanner(reactContext)
+                    val smsRegion = BackgroundSmsPreferences.getSmsRegion(reactContext)
 
                     val classifier =
                         try {
@@ -141,6 +148,7 @@ class ExpenseBuddySmsModule : Module() {
                             limit = 500,
                             classifier = classifier,
                             useMlOnly = useMlOnly,
+                            regionCode = smsRegion,
                         )
 
                     LoggerApi.d("SMS_MODULE", "syncInboxAsync: scanned ${parsedResults.size} messages since $cursor")

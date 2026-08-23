@@ -70,10 +70,20 @@ const appSettingsArb = fc.record({
   syncSettings: fc.boolean(),
   defaultPaymentMethod: optionalPaymentMethodTypeArb,
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
+  language: fc.constantFrom(
+    "system",
+    "en-US",
+    "en-GB",
+    "en-CA",
+    "en-AU",
+    "en-IN",
+    "hi",
+    "ja"
+  ),
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),
+  smsRegion: fc.constantFrom("IN", "CA", "AU"),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: autoSyncTimingArb,
   categories: fc.constant(DEFAULT_CATEGORIES),
@@ -83,7 +93,7 @@ const appSettingsArb = fc.record({
   updatedAt: fc
     .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31 in ms
     .map((ms) => new Date(ms).toISOString()),
-  version: fc.constant(9), // Always use latest version to avoid migration in tests
+  version: fc.constant(10), // Always use latest version to avoid migration in tests
 })
 
 describe("Settings Manager Properties", () => {
@@ -169,6 +179,7 @@ describe("Settings Manager Properties", () => {
             loaded.enableMathExpressions === settings.enableMathExpressions &&
             loaded.useMlOnlyForSmsImports === settings.useMlOnlyForSmsImports &&
             loaded.backgroundSmsImportEnabled === settings.backgroundSmsImportEnabled &&
+            loaded.smsRegion === settings.smsRegion &&
             loaded.autoSyncEnabled === settings.autoSyncEnabled &&
             loaded.autoSyncTiming === settings.autoSyncTiming &&
             loaded.paymentInstrumentsMigrationVersion ===
@@ -367,12 +378,13 @@ describe("Settings Manager Properties", () => {
       expect(loaded.enableMathExpressions).toBe(true)
       expect(loaded.useMlOnlyForSmsImports).toBe(false)
       expect(loaded.backgroundSmsImportEnabled).toBe(false)
+      expect(loaded.smsRegion).toBe("IN")
       expect(loaded.autoSyncEnabled).toBe(false)
       expect(loaded.autoSyncTiming).toBe("on_launch")
       expect(loaded.paymentInstruments).toEqual([])
       expect(loaded.paymentInstrumentsMigrationVersion).toBe(0)
       expect(loaded.language).toBe("system")
-      expect(loaded.version).toBe(9)
+      expect(loaded.version).toBe(10)
     })
   })
 
@@ -563,8 +575,10 @@ describe("Settings Manager Properties", () => {
             loaded.enableMathExpressions === true &&
             loaded.useMlOnlyForSmsImports === false &&
             loaded.backgroundSmsImportEnabled === false &&
-            // Version should be upgraded to 9 (v2 -> v3 -> v4 -> v5 -> v6 -> v7 -> v8 -> v9)
-            loaded.version === 9
+            // SMS region should default to "IN" (seeded via device-locale fallback)
+            loaded.smsRegion === "IN" &&
+            // Version should be upgraded to 10 (v2 -> ... -> v10)
+            loaded.version === 10
           )
         }),
         { numRuns: 100 }

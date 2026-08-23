@@ -50,9 +50,15 @@ object IndiaSmsRulePack : SmsRulePack {
     override val categoryInferenceRules =
         listOf(
             "Food" to
-                Regex("swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food", RegexOption.IGNORE_CASE),
+                Regex(
+                    "swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food",
+                    RegexOption.IGNORE_CASE,
+                ),
             "Transport" to
-                Regex("uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel", RegexOption.IGNORE_CASE),
+                Regex(
+                    "uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel",
+                    RegexOption.IGNORE_CASE,
+                ),
             "Groceries" to
                 Regex(
                     "grocery|groceries|supermarket|hypermarket|bigbasket|blinkit|zepto|instamart|fresh|dmart|reliance fresh",
@@ -65,7 +71,10 @@ object IndiaSmsRulePack : SmsRulePack {
                     RegexOption.IGNORE_CASE,
                 ),
             "Entertainment" to
-                Regex("netflix|spotify|prime video|hotstar|bookmyshow|movie|cinema|theatre|gaming|playstation|xbox", RegexOption.IGNORE_CASE),
+                Regex(
+                    "netflix|spotify|prime video|hotstar|bookmyshow|movie|cinema|theatre|gaming|playstation|xbox",
+                    RegexOption.IGNORE_CASE,
+                ),
             "Health" to
                 Regex("hospital|clinic|pharmacy|medical|medicine|diagnostic|lab|apollo|practo|medplus|health", RegexOption.IGNORE_CASE),
         )

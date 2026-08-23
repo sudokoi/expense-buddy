@@ -110,6 +110,11 @@ export const useSettings = () => {
     [settingsStore]
   )
 
+  const setSmsRegion = useCallback(
+    (smsRegion: string) => settingsStore.trigger.setSmsRegion({ smsRegion }),
+    [settingsStore]
+  )
+
   return useMemo(
     () => ({
       settings,
@@ -134,6 +139,7 @@ export const useSettings = () => {
       clearSyncConfig,
       setDefaultCurrency,
       setLanguage,
+      setSmsRegion,
     }),
     [
       settings,
@@ -154,6 +160,7 @@ export const useSettings = () => {
       clearSyncConfig,
       setDefaultCurrency,
       setLanguage,
+      setSmsRegion,
     ]
   )
 }

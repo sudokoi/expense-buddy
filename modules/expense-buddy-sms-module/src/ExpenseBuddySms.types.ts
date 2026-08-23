@@ -44,6 +44,7 @@ export interface ExpenseBuddySmsNativeModule extends NativeModule {
   addListener(eventName: "onReviewQueueUpdated", listener: () => void): { remove(): void }
   getBackgroundSmsStateAsync(): Promise<BackgroundSmsState>
   setBackgroundSmsEnabledAsync(enabled: boolean): Promise<void>
+  setSmsRegionAsync(region: string): Promise<void>
   syncInboxAsync(useMlOnly: boolean): Promise<number>
   getPermissionStatusAsync(): Promise<BackgroundSmsPermissionResponse>
   requestPermissionAsync(): Promise<BackgroundSmsPermissionResponse>

@@ -7,7 +7,15 @@ import "intl-pluralrules"
 import enIN from "./locales/en-IN/translation.json"
 
 // Supported locales for dynamic loading
-const SUPPORTED_LOCALES = ["en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"] as const
+const SUPPORTED_LOCALES = [
+  "en-US",
+  "en-GB",
+  "en-CA",
+  "en-AU",
+  "en-IN",
+  "hi",
+  "ja",
+] as const
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 /**

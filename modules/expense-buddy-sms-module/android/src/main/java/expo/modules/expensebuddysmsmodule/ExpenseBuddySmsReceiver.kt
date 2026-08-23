@@ -30,7 +30,11 @@ class ExpenseBuddySmsReceiver : BroadcastReceiver() {
             return
         }
 
-        val reviewItem = BackgroundSmsParser.parseIncomingMessage(messages)
+        val reviewItem =
+            BackgroundSmsParser.parseIncomingMessage(
+                messages,
+                regionCode = BackgroundSmsPreferences.getSmsRegion(context),
+            )
         if (reviewItem == null) {
             LoggerApi.d("SMS_RECEIVER", "SMS received but did not match any transaction pattern")
             return

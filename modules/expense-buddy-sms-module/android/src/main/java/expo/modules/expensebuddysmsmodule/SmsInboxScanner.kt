@@ -18,9 +18,11 @@ class SmsInboxScanner(
         limit: Int? = null,
         classifier: CategoryClassifier? = null,
         useMlOnly: Boolean = false,
+        regionCode: String = "IN",
     ): List<Map<String, Any?>> {
+        val rulePack = SmsMessageParser.resolveRulePack(regionCode)
         val rawMessages = queryRecentMessages(sinceTimestampMillis, limit)
-        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: scanned=${rawMessages.size}")
+        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: scanned=${rawMessages.size} region=${rulePack.regionCode}")
 
         val parsedList = mutableListOf<Pair<Map<String, String>, SmsParsedMessage>>()
         for (msg in rawMessages) {
@@ -29,7 +31,7 @@ class SmsInboxScanner(
             val receivedAt = msg["receivedAt"] ?: continue
             val messageId = msg["messageId"] ?: continue
 
-            val parseResult = SmsMessageParser.parseRawMessageWithReason(sender, body, receivedAt)
+            val parseResult = SmsMessageParser.parseRawMessageWithReason(sender, body, receivedAt, rulePack)
             val parsed = parseResult.parsed
 
             if (parsed == null) {

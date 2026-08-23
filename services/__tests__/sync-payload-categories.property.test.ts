@@ -89,6 +89,7 @@ const appSettingsArb = fc.record({
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),
+  smsRegion: fc.constantFrom("IN", "CA", "AU"),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: fc.constantFrom("on_launch", "on_change") as fc.Arbitrary<
     "on_launch" | "on_change"
@@ -100,7 +101,16 @@ const appSettingsArb = fc.record({
   updatedAt: isoDateArb,
   version: fc.constant(9),
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
+  language: fc.constantFrom(
+    "system",
+    "en-US",
+    "en-GB",
+    "en-CA",
+    "en-AU",
+    "en-IN",
+    "hi",
+    "ja"
+  ),
 })
 
 // =============================================================================
