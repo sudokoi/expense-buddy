@@ -21,7 +21,8 @@ class RegionRulePacksTest {
         assertThat(SmsMessageParser.resolveRulePack("AU")).isSameInstanceAs(AustraliaSmsRulePack)
         assertThat(SmsMessageParser.resolveRulePack("au")).isSameInstanceAs(AustraliaSmsRulePack)
         assertThat(SmsMessageParser.resolveRulePack("IN")).isSameInstanceAs(IndiaSmsRulePack)
-        assertThat(SmsMessageParser.resolveRulePack("US")).isSameInstanceAs(IndiaSmsRulePack)
+        // Unmapped regions fall back to India — historical behavior contract
+        assertThat(SmsMessageParser.resolveRulePack("FR")).isSameInstanceAs(IndiaSmsRulePack)
         assertThat(SmsMessageParser.resolveRulePack(null)).isSameInstanceAs(IndiaSmsRulePack)
         assertThat(SmsMessageParser.resolveRulePack("")).isSameInstanceAs(IndiaSmsRulePack)
     }

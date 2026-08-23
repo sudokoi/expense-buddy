@@ -1,6 +1,6 @@
 import { getLocales } from "expo-localization"
 
-export const SMS_REGIONS = ["IN", "CA", "AU"] as const
+export const SMS_REGIONS = ["IN", "US", "GB", "CA", "AU", "JP"] as const
 
 export type SmsRegion = (typeof SMS_REGIONS)[number]
 
@@ -8,8 +8,11 @@ const DEFAULT_SMS_REGION: SmsRegion = "IN"
 
 const REGION_LABELS: Record<SmsRegion, string> = {
   IN: "India",
+  US: "United States",
+  GB: "United Kingdom",
   CA: "Canada",
   AU: "Australia",
+  JP: "Japan",
 }
 
 /**
@@ -19,8 +22,11 @@ const REGION_LABELS: Record<SmsRegion, string> = {
 const LANGUAGE_REGION_MAP: Record<string, SmsRegion> = {
   "en-IN": "IN",
   hi: "IN",
+  "en-US": "US",
+  "en-GB": "GB",
   "en-CA": "CA",
   "en-AU": "AU",
+  ja: "JP",
 }
 
 function regionFromLanguageTag(languageTag: string): SmsRegion {

@@ -378,7 +378,8 @@ describe("Settings Manager Properties", () => {
       expect(loaded.enableMathExpressions).toBe(true)
       expect(loaded.useMlOnlyForSmsImports).toBe(false)
       expect(loaded.backgroundSmsImportEnabled).toBe(false)
-      expect(loaded.smsRegion).toBe("IN")
+      // Jest mocks an en-US device locale; seeding maps it to US
+      expect(loaded.smsRegion).toBe("US")
       expect(loaded.autoSyncEnabled).toBe(false)
       expect(loaded.autoSyncTiming).toBe("on_launch")
       expect(loaded.paymentInstruments).toEqual([])
@@ -575,8 +576,9 @@ describe("Settings Manager Properties", () => {
             loaded.enableMathExpressions === true &&
             loaded.useMlOnlyForSmsImports === false &&
             loaded.backgroundSmsImportEnabled === false &&
-            // SMS region should default to "IN" (seeded via device-locale fallback)
-            loaded.smsRegion === "IN" &&
+            // SMS region should be seeded from the device locale
+            // (jest mocks en-US -> US)
+            loaded.smsRegion === "US" &&
             // Version should be upgraded to 10 (v2 -> ... -> v10)
             loaded.version === 10
           )

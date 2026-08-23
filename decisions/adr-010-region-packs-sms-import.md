@@ -27,9 +27,9 @@ Region auto-detection via SIM country was considered and rejected: dual-SIM devi
 
 ### 1. Region is a first-class user setting, derived from language by default
 
-A new optional `smsRegion` field joins `AppSettings` (`"IN"` | `"CA"` | `"AU"`), surfaced as a **Region** control in the Localization settings group, below Language and Currency.
+A new optional `smsRegion` field joins `AppSettings` (`"IN"`, `"CA"`, `"AU"`, `"US"`, `"GB"`, `"JP"`), surfaced as a **Region** control in the Localization settings group, below Language and Currency.
 
-- **Cascade:** changing language auto-updates region via `LANGUAGE_REGION_MAP` (`en-IN`/`hi` → `IN`, `en-CA` → `CA`, `en-AU` → `AU`, all others → `IN`; a stored `language` of `"system"` resolves through the device locale tag before mapping), exactly mirroring the existing language→currency cascade in `setLanguage` (`stores/settings-store.ts`). **The cascade stomps unconditionally:** any manually-set currency _and_ region are reset on every language change — no provenance tracking. This makes an explicit confirmation prompt mandatory: it must state that language, currency, and region will all change, and offer cancel. Asymmetry is preserved: manually changing region or currency does not touch language.
+- **Cascade:** changing language auto-updates region via `LANGUAGE_REGION_MAP` (`en-IN`/`hi` → `IN`, `en-US` → `US`, `en-GB` → `GB`, `en-CA` → `CA`, `en-AU` → `AU`, `ja` → `JP`, all others → `IN`; a stored `language` of `"system"` resolves through the device locale tag before mapping), exactly mirroring the existing language→currency cascade in `setLanguage` (`stores/settings-store.ts`). **The cascade stomps unconditionally:** any manually-set currency _and_ region are reset on every language change — no provenance tracking. This makes an explicit confirmation prompt mandatory: it must state that language, currency, and region will all change, and offer cancel. Asymmetry is preserved: manually changing region or currency does not touch language.
 - **Seeding:** during hydration/migration, an absent `smsRegion` is seeded **once** from the device locale (`getLocales()[0].languageTag` mapped through `LANGUAGE_REGION_MAP`, fallback `IN`) — the same mechanism that seeds `defaultCurrency` from `getSystemCurrency()`. After first materialization it is user-owned. A fresh Canadian install therefore gets `en-CA` UI and `CA` region out of the box.
 - **Override:** the user may change region independently afterwards; the cascade only fires on language change (and stomps, per above).
 - **Fallback:** any unmapped or unknown value resolves to `"IN"`. This preserves current behavior for every existing user, including those on `en-US`/`en-GB`/`ja` who today receive India-pack parsing regardless of language.
@@ -83,6 +83,16 @@ All changes ship in a single PR, ordered internally as atomic commits so each is
 - One control (language) now drives translations, formatting, currency, _and_ region — consistent with the existing currency cascade but a wider blast radius per tap.
 - CA/AU regexes start as hypotheses from documented templates; recall will require iterative tuning against real samples.
 - Historical review-queue items keep their stored locale when region changes; mixed-region histories are possible for users who relocate (accepted; raw SMS remains inspectable per ADR-004).
+
+## Amendment: US/GB/JP packs and script-safe normalization (2026-08-23)
+
+The region set grew from three to six (`+US`, `+GB`, `+JP`). Two architectural consequences:
+
+**Seeding nuance:** extending `LANGUAGE_REGION_MAP` does not move existing users off their materialized `smsRegion`. Users who migrated at v10 keep `IN` until they change language again or set region manually; only fresh installs on newly-mapped locales seed directly. This is the seed-once contract working as designed, but it means early adopters on en-US/en-GB devices need one manual tap.
+
+**Normalization fix (`normalizeUnicode`):** adding the JP pack exposed that NFKD + unconditional combining-mark stripping destroys Japanese — every voiced kana (が・で・ご) decomposes into base + U+3099 and could never match a pattern literal. The pipeline is now NFKD → strip combining marks only after Latin letters (preserving café→cafe folding) → NFC re-composition (restoring dakuten). Fingerprint impact: outputs are byte-identical for ASCII/₹ content, so India-era dedupe is unaffected; only bodies containing non-Latin combining sequences normalize differently, which is precisely the point.
+
+**Category-ordering contract:** pack collisions like Tesco Metro / Metro Inc (grocer names containing transit nouns) are resolved by a documented rule order — brand-heavy categories (Food, Groceries) precede mode-noun categories (Transport). Canada's Transport list drops bare `metro` in favor of specific tokens (STM/TTC/Presto).
 
 ## Rejected alternatives
 

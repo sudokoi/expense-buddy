@@ -54,14 +54,14 @@ object IndiaSmsRulePack : SmsRulePack {
                     "swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food",
                     RegexOption.IGNORE_CASE,
                 ),
-            "Transport" to
-                Regex(
-                    "uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel",
-                    RegexOption.IGNORE_CASE,
-                ),
             "Groceries" to
                 Regex(
                     "grocery|groceries|supermarket|hypermarket|bigbasket|blinkit|zepto|instamart|fresh|dmart|reliance fresh",
+                    RegexOption.IGNORE_CASE,
+                ),
+            "Transport" to
+                Regex(
+                    "uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel",
                     RegexOption.IGNORE_CASE,
                 ),
             "Rent" to Regex("\\brent\\b|landlord|lease|tenancy|apartment rent|house rent", RegexOption.IGNORE_CASE),
