@@ -15,6 +15,7 @@ import {
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
+  UI_MIN_TOUCH_TARGET,
 } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
@@ -54,8 +55,8 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
             style={({ pressed }) => [
-              { flexBasis: "25%", minHeight: 44 },
-              { opacity: pressed ? 0.6 : 1 },
+              { flexBasis: "25%", minHeight: UI_MIN_TOUCH_TARGET },
+              { opacity: pressed ? UI_OPACITY.subtle : 1 },
             ]}
           >
             <View

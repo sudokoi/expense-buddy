@@ -9,6 +9,7 @@ import {
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
+  UI_MIN_TOUCH_TARGET,
 } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
@@ -58,8 +59,8 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
             aria-selected={isSelected}
             aria-label={`Select ${label}`}
             style={({ pressed }) => [
-              { flexBasis: "50%", minHeight: 44 },
-              { opacity: pressed ? 0.6 : 1 },
+              { flexBasis: "50%", minHeight: UI_MIN_TOUCH_TARGET },
+              { opacity: pressed ? UI_OPACITY.subtle : 1 },
             ]}
           >
             <View

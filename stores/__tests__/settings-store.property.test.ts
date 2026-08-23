@@ -157,7 +157,7 @@ const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_chang
 const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
-  smsRegion: fc.constantFrom("IN", "CA", "AU"),
+  smsRegion: fc.constantFrom("IN", "US", "GB", "CA", "AU", "JP"),
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),

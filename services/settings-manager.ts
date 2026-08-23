@@ -6,7 +6,7 @@ import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { getSystemCurrency } from "../utils/currency"
-import { normalizeSmsRegion, seedSmsRegionFromDevice } from "../utils/region"
+import { SmsRegion, normalizeSmsRegion, seedSmsRegionFromDevice } from "../utils/region"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -39,7 +39,7 @@ export interface AppSettings {
   enableMathExpressions: boolean // Whether amount inputs accept arithmetic expressions
   useMlOnlyForSmsImports: boolean // Whether SMS import category suggestions should prefer ML-only inference
   backgroundSmsImportEnabled: boolean // Whether background SMS transaction alerts are enabled on Android
-  smsRegion: string // Region whose banks' transaction SMS are parsed ("IN" | "CA" | "AU")
+  smsRegion: SmsRegion // Region whose banks' transaction SMS are parsed
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories

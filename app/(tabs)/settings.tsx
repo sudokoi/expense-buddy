@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react"
 import { Alert, Linking, Platform, Pressable, Text, View } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
 import * as Clipboard from "expo-clipboard"
-import { ChevronRight } from "lucide-react-native"
+import { ChevronRight, FileDown } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
@@ -464,6 +464,8 @@ export default function SettingsScreen() {
         addNotification(t("settings.general.exportError"), "error")
       } else if (result.shared) {
         addNotification(t("settings.general.exportSuccess"), "success")
+      } else {
+        addNotification(t("settings.general.exportSaved"), "info")
       }
     } finally {
       setIsExporting(false)
@@ -673,6 +675,7 @@ export default function SettingsScreen() {
               variant="accent"
               accessibilityLabel={t("settings.general.exportButton")}
             >
+              <FileDown size={UI_ICON_SIZE.small} />
               {isExporting
                 ? t("settings.general.exporting")
                 : t("settings.general.exportButton")}
