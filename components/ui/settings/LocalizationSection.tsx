@@ -1,12 +1,20 @@
 import { useState, useMemo } from "react"
 import { Platform, Pressable, Text, View } from "react-native"
-import { ChevronDown, ChevronUp } from "lucide-react-native"
+import { ChevronDown, ChevronUp, MapPin } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { LanguageSelector } from "../LanguageSelector"
 import { CurrencySelector } from "../CurrencySelector"
+import { Card } from "../Card"
 import { Label } from "../Label"
 import { useThemeColors } from "../../../hooks/use-theme-colors"
-import { UI_OPACITY, UI_ICON_SIZE } from "../../../constants/ui-tokens"
+import {
+  UI_OPACITY,
+  UI_ICON_SIZE,
+  UI_SPACE,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_MIN_TOUCH_TARGET,
+} from "../../../constants/ui-tokens"
 import { SMS_REGIONS, getSmsRegionLabel } from "../../../utils/region"
 
 interface LocalizationSectionProps {
@@ -63,7 +71,7 @@ export function LocalizationSection({
         onPress={() => setExpanded((prev) => !prev)}
         role="button"
         aria-expanded={expanded}
-        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+        style={({ pressed }) => [{ opacity: pressed ? UI_OPACITY.subtle : 1 }]}
       >
         <View className="flex-1 bg-surface flex-row items-center justify-between py-2.5 px-3 rounded-chip">
           <View className="flex-1 gap-1">
@@ -109,7 +117,7 @@ export function LocalizationSection({
               <Label className="text-xs opacity-80">
                 {t("settings.localization.region")}
               </Label>
-              <View className="flex-row flex-wrap bg-surface rounded-control p-1">
+              <Card className="flex-row flex-wrap rounded-control p-1">
                 {SMS_REGIONS.map((region) => {
                   const isSelected = smsRegion === region
                   const label = getSmsRegionLabel(region)
@@ -121,23 +129,30 @@ export function LocalizationSection({
                       aria-selected={isSelected}
                       aria-label={`Select ${label}`}
                       style={({ pressed }) => [
-                        { flexBasis: "33%", minHeight: 44 },
-                        { opacity: pressed ? 0.6 : 1 },
+                        { flexBasis: "33%", minHeight: UI_MIN_TOUCH_TARGET },
+                        { opacity: pressed ? UI_OPACITY.subtle : 1 },
                       ]}
                     >
                       <View
-                        className="items-center justify-center gap-1 rounded-control p-2"
+                        className="flex-row items-center justify-center gap-2 rounded-control p-2"
                         style={{
-                          borderWidth: 1,
-                          borderColor: isSelected ? theme.accent : "transparent",
+                          borderWidth: UI_BORDER_WIDTH.normal,
                           backgroundColor: isSelected ? theme.muted : "transparent",
-                          margin: 2,
+                          borderColor: isSelected ? theme.accent : "transparent",
+                          margin: UI_SPACE.micro / 2,
                         }}
                       >
+                        <MapPin
+                          size={UI_ICON_SIZE.regular}
+                          color={theme.foreground}
+                          style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
+                        />
                         <Text
-                          className="text-xs text-foreground"
+                          className="text-[13px] text-foreground"
                           style={{
-                            fontWeight: isSelected ? "600" : "400",
+                            fontWeight: isSelected
+                              ? UI_FONT_WEIGHT.semiBold
+                              : UI_FONT_WEIGHT.normal,
                             opacity: isSelected ? 1 : UI_OPACITY.medium,
                           }}
                         >
@@ -147,7 +162,7 @@ export function LocalizationSection({
                     </Pressable>
                   )
                 })}
-              </View>
+              </Card>
               <Text className="text-xs text-foreground opacity-50 px-1">
                 {t("settings.localization.regionHelp")}
               </Text>

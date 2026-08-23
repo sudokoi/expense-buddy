@@ -89,7 +89,7 @@ const appSettingsArb = fc.record({
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),
-  smsRegion: fc.constantFrom("IN", "CA", "AU"),
+  smsRegion: fc.constantFrom("IN", "US", "GB", "CA", "AU", "JP"),
   autoSyncEnabled: fc.boolean(),
   autoSyncTiming: fc.constantFrom("on_launch", "on_change") as fc.Arbitrary<
     "on_launch" | "on_change"
