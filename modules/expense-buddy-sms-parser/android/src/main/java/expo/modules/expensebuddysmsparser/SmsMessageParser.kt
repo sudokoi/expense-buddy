@@ -6,63 +6,6 @@ import java.text.Normalizer
 import java.time.Instant
 import java.util.Locale
 
-private val amountPattern = Regex("(?:INR|RS\\.?|₹)\\s*([0-9][0-9,]*(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
-private val debitKeywords =
-    Regex(
-        "debited|spent|withdrawn|paid|purchase|txn|transaction|upi|charged|payment of|bill pay|auto-debit|debit of",
-        RegexOption.IGNORE_CASE,
-    )
-private val settledDebitKeywords = Regex("debited|spent|withdrawn|paid|purchase|charged", RegexOption.IGNORE_CASE)
-private val creditOnlyKeywords = Regex("credited|received", RegexOption.IGNORE_CASE)
-private val otpKeywords =
-    Regex(
-        "\\botp\\b|one[ -]?time password|verification code|security code|auth(?:entication)? code|passcode|do not share|never share|valid for \\d+ (?:minute|min|minutes|mins)",
-        RegexOption.IGNORE_CASE,
-    )
-private val nonExpenseInfoKeywords =
-    Regex(
-        "available balance|avl(?:\\.|\\s)?bal|a/c balance|account balance|balance is|ledger balance|min(?:imum)? due|total due|payment due|due date|bill(?:ing)? statement|statement generated|statement ready|e-?statement|autopay|auto-debit mandate|standing instruction|card ending|card blocked|card hotlisted|card limit|credit limit|cash limit|cvv|pin|mpin|tpin|token(?:isation|ization)?|token generated|registered for e-?com|e-?commerce|online usage enabled|international usage enabled|contactless usage enabled",
-        RegexOption.IGNORE_CASE,
-    )
-private val nonExpenseTransactionOutcomeKeywords =
-    Regex(
-        "declined due to|was declined|failed due to|unsuccessful|reversed|reversal|refund initiated|chargeback|no amount debited",
-        RegexOption.IGNORE_CASE,
-    )
-private val approvalPromptKeywords =
-    Regex(
-        "if not you|if this wasn'?t you|approve|approval|authenticate|authorize|authorise|confirm this transaction|complete this transaction|to complete your transaction|to proceed",
-        RegexOption.IGNORE_CASE,
-    )
-private val merchantPattern = Regex("\\b(?:at|to|merchant)\\s+(\\w+(?:[&\\-]\\w+)?(?:\\s+\\w+(?:[&\\-]\\w+)?)?)", RegexOption.IGNORE_CASE)
-private val upiMerchantPattern = Regex("UPI/[^/]+/[^/]+/([^\\s].*?)(?:\\s|$)", RegexOption.IGNORE_CASE)
-
-private val categoryInferenceRules =
-    listOf(
-        "Food" to
-            Regex("swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food", RegexOption.IGNORE_CASE),
-        "Transport" to
-            Regex("uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel", RegexOption.IGNORE_CASE),
-        "Groceries" to
-            Regex(
-                "grocery|groceries|supermarket|hypermarket|bigbasket|blinkit|zepto|instamart|fresh|dmart|reliance fresh",
-                RegexOption.IGNORE_CASE,
-            ),
-        "Rent" to Regex("\\brent\\b|landlord|lease|tenancy|apartment rent|house rent", RegexOption.IGNORE_CASE),
-        "Utilities" to
-            Regex(
-                "electricity|water bill|utility bill|gas bill|broadband|wifi|internet bill|mobile bill|recharge|airtel|jio|vi\\b|bsnl",
-                RegexOption.IGNORE_CASE,
-            ),
-        "Entertainment" to
-            Regex("netflix|spotify|prime video|hotstar|bookmyshow|movie|cinema|theatre|gaming|playstation|xbox", RegexOption.IGNORE_CASE),
-        "Health" to Regex("hospital|clinic|pharmacy|medical|medicine|diagnostic|lab|apollo|practo|medplus|health", RegexOption.IGNORE_CASE),
-    )
-
-private val upiHintPattern = Regex("\\bupi\\b", RegexOption.IGNORE_CASE)
-private val creditCardHintPattern = Regex("credit card|credit a/c|credit acct|\\bamex\\b|american express", RegexOption.IGNORE_CASE)
-private val debitCardHintPattern = Regex("debit card|debit a/c|debited from a/c|debited from acct", RegexOption.IGNORE_CASE)
-
 enum class SkipReason {
     EMPTY_BODY,
     OTP_MATCH,
@@ -78,6 +21,17 @@ data class ParseResult(
 
 object SmsMessageParser {
     private val combiningMarksPattern = Regex("[\\u0300-\\u036f\\ufe20-\\ufe2f]")
+
+    /**
+     * Resolves the rule pack for a region code (ISO 3166-1 alpha-2).
+     * Unknown or null regions fall back to India — the historical behavior —
+     * so absence of a region argument can never change parsing outcomes.
+     */
+    fun resolveRulePack(regionCode: String?): SmsRulePack =
+        when (regionCode?.uppercase(Locale.ROOT)) {
+            IndiaSmsRulePack.regionCode -> IndiaSmsRulePack
+            else -> IndiaSmsRulePack
+        }
 
     private fun normalizeUnicode(text: String): String =
         try {
@@ -97,6 +51,7 @@ object SmsMessageParser {
         sender: String,
         body: String,
         receivedAt: String,
+        rulePack: SmsRulePack = resolveRulePack(null),
     ): ParseResult {
         val normalizedBody = normalizeUnicode(body).trim()
         if (normalizedBody.isEmpty()) {
@@ -104,33 +59,35 @@ object SmsMessageParser {
             return ParseResult(null, SkipReason.EMPTY_BODY)
         }
 
-        if (otpKeywords.containsMatchIn(normalizedBody)) {
+        if (rulePack.otpKeywords.containsMatchIn(normalizedBody)) {
             Log.d("SMS_PARSER", "skip reason=OTP_MATCH sender=$sender")
             return ParseResult(null, SkipReason.OTP_MATCH)
         }
 
-        if (isNegativeBankAlert(normalizedBody)) {
+        if (isNegativeBankAlert(rulePack, normalizedBody)) {
             Log.d("SMS_PARSER", "skip reason=NEGATIVE_ALERT sender=$sender")
             return ParseResult(null, SkipReason.NEGATIVE_ALERT)
         }
 
-        if (!debitKeywords.containsMatchIn(normalizedBody)) {
+        if (!rulePack.debitKeywords.containsMatchIn(normalizedBody)) {
             Log.d("SMS_PARSER", "skip reason=NOT_DEBIT sender=$sender")
             return ParseResult(null, SkipReason.NOT_DEBIT)
         }
 
         // Reject pure credit messages (credited/received without any debit signal)
-        if (creditOnlyKeywords.containsMatchIn(normalizedBody) && !settledDebitKeywords.containsMatchIn(normalizedBody)) {
+        if (rulePack.creditOnlyKeywords.containsMatchIn(normalizedBody) &&
+            !rulePack.settledDebitKeywords.containsMatchIn(normalizedBody)
+        ) {
             Log.d("SMS_PARSER", "skip reason=NOT_DEBIT (credit-only) sender=$sender")
             return ParseResult(null, SkipReason.NOT_DEBIT)
         }
 
-        val amount = parseAmount(normalizedBody)
+        val amount = parseAmount(rulePack, normalizedBody)
         if (amount == null) {
             Log.d("SMS_PARSER", "skip reason=AMOUNT_MISSING sender=$sender")
             return ParseResult(null, SkipReason.AMOUNT_MISSING)
         }
-        val merchantName = inferMerchant(normalizedBody)
+        val merchantName = inferMerchant(rulePack, normalizedBody)
 
         val messageId = "scan_${sha256("$sender|$body|$receivedAt")}"
         val rawMessage =
@@ -141,8 +98,8 @@ object SmsMessageParser {
                 receivedAt = receivedAt,
             )
         val fingerprint = createFingerprint(sender, body, receivedAt, amount)
-        val category = inferCategory(normalizedBody, merchantName)
-        val paymentMethod = inferPaymentMethod(normalizedBody)
+        val category = inferCategory(rulePack, normalizedBody, merchantName)
+        val paymentMethod = inferPaymentMethod(rulePack, normalizedBody)
 
         Log.d(
             "SMS_PARSER",
@@ -154,56 +111,52 @@ object SmsMessageParser {
                 fingerprint = fingerprint,
                 sourceMessage = rawMessage,
                 amount = amount,
-                currency = "INR",
+                currency = rulePack.currencyCode,
                 merchantName = merchantName,
                 categorySuggestion = category,
                 paymentMethodSuggestion = paymentMethod,
                 noteSuggestion = merchantName?.let { "SMS import: $it" },
                 transactionDate = receivedAt,
-                matchedLocale = "en-IN",
-                matchedPatternKey = "india.generic.transaction",
+                matchedLocale = rulePack.localeTag,
+                matchedPatternKey = "${rulePack.patternKeyPrefix}.generic.transaction",
             ),
             null,
         )
     }
 
-    private fun parseAmount(body: String): Double? {
-        val match = amountPattern.find(body) ?: return null
+    private fun parseAmount(
+        rulePack: SmsRulePack,
+        body: String,
+    ): Double? {
+        val match = rulePack.amountPattern.find(body) ?: return null
         return match.groupValues
             .getOrNull(1)
             ?.replace(",", "")
             ?.toDoubleOrNull()
     }
 
-    private fun inferMerchant(body: String): String? {
-        // Try standard "at/to merchant" pattern first
-        val match = merchantPattern.find(body)
-        if (match != null) {
-            val merchant =
-                match.groupValues
-                    .getOrNull(1)
-                    ?.replace(Regex("\\s+"), " ")
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
-            if (merchant != null) return merchant
-        }
-
-        // Try UPI pattern: UPI/P2M/.../MerchantName
-        val upiMatch = upiMerchantPattern.find(body)
-        if (upiMatch != null) {
-            val merchant =
-                upiMatch.groupValues
-                    .getOrNull(1)
-                    ?.replace(Regex("\\s+"), " ")
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
-            if (merchant != null) return merchant
+    private fun inferMerchant(
+        rulePack: SmsRulePack,
+        body: String,
+    ): String? {
+        for (pattern in rulePack.merchantPatterns) {
+            val match = pattern.find(body)
+            if (match != null) {
+                val merchant =
+                    match.groupValues
+                        .getOrNull(1)
+                        ?.replace(Regex("\\s+"), " ")
+                        ?.trim()
+                        ?.takeIf { it.isNotEmpty() }
+                if (merchant != null) return merchant
+            }
         }
 
         return null
     }
 
     private fun inferCategory(
+        rulePack: SmsRulePack,
         body: String,
         merchantName: String?,
     ): String {
@@ -217,34 +170,38 @@ object SmsMessageParser {
             return "Other"
         }
 
-        return categoryInferenceRules
+        return rulePack.categoryInferenceRules
             .firstOrNull { (_, pattern) ->
                 pattern.containsMatchIn(normalizedContent)
             }?.first ?: "Other"
     }
 
-    private fun inferPaymentMethod(body: String): SmsPaymentMethod? =
-        when {
-            upiHintPattern.containsMatchIn(body) -> SmsPaymentMethod(type = "UPI")
-            creditCardHintPattern.containsMatchIn(body) -> SmsPaymentMethod(type = "Credit Card")
-            debitCardHintPattern.containsMatchIn(body) -> SmsPaymentMethod(type = "Debit Card")
-            else -> null
-        }
+    private fun inferPaymentMethod(
+        rulePack: SmsRulePack,
+        body: String,
+    ): SmsPaymentMethod? =
+        rulePack.paymentMethodHints
+            .firstOrNull { (_, pattern) -> pattern.containsMatchIn(body) }
+            ?.let { (type, _) -> SmsPaymentMethod(type = type) }
 
-    private fun isNegativeBankAlert(body: String): Boolean {
-        val hasDebitSignal = debitKeywords.containsMatchIn(body) && !creditOnlyKeywords.containsMatchIn(body)
+    private fun isNegativeBankAlert(
+        rulePack: SmsRulePack,
+        body: String,
+    ): Boolean {
+        val hasDebitSignal =
+            rulePack.debitKeywords.containsMatchIn(body) && !rulePack.creditOnlyKeywords.containsMatchIn(body)
         val hasSettledDebitSignal =
-            settledDebitKeywords.containsMatchIn(body) && !creditOnlyKeywords.containsMatchIn(body)
+            rulePack.settledDebitKeywords.containsMatchIn(body) && !rulePack.creditOnlyKeywords.containsMatchIn(body)
 
         // Filter out declined/failed/reversed transactions
-        if (nonExpenseTransactionOutcomeKeywords.containsMatchIn(body)) return true
+        if (rulePack.nonExpenseTransactionOutcomeKeywords.containsMatchIn(body)) return true
 
         // Filter out info-only messages (balance updates, card limits, etc.) when no debit signal
-        if (!hasDebitSignal && nonExpenseInfoKeywords.containsMatchIn(body)) return true
+        if (!hasDebitSignal && rulePack.nonExpenseInfoKeywords.containsMatchIn(body)) return true
 
         // Filter out OTP/approval prompts ONLY when there's no settled debit signal
         // Banks often append "if not you" disclaimers to legitimate debit SMS — those should pass
-        if (approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal) return true
+        if (rulePack.approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal) return true
 
         return false
     }
