@@ -29,7 +29,8 @@ object SmsMessageParser {
      */
     fun resolveRulePack(regionCode: String?): SmsRulePack =
         when (regionCode?.uppercase(Locale.ROOT)) {
-            IndiaSmsRulePack.regionCode -> IndiaSmsRulePack
+            CanadaSmsRulePack.regionCode -> CanadaSmsRulePack
+            AustraliaSmsRulePack.regionCode -> AustraliaSmsRulePack
             else -> IndiaSmsRulePack
         }
 
