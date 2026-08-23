@@ -234,6 +234,7 @@
       "language": "Language",
       "currency": "Currency",
       "region": "SMS Region",
+      "selectOption": "Select {{option}}",
       "regionHelp": "Only transaction alerts from banks in this region are detected. Follows your app language until changed.",
       "languageChangeTitle": "Change Language?",
       "languageChangeMessage": "Changing the language also resets your default currency and SMS region to match it.",

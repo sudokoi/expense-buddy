@@ -234,6 +234,7 @@
       "language": "言語",
       "currency": "通貨",
       "region": "SMSリージョン",
+      "selectOption": "{{option}}を選択",
       "regionHelp": "このリージョンの銀行からの取引アラートのみ検出されます。変更するまでアプリの言語に従います。",
       "languageChangeTitle": "言語を変更しますか？",
       "languageChangeMessage": "言語を変更すると、デフォルト通貨とSMSリージョンもそれに合わせてリセットされます。",
