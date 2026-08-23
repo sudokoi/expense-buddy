@@ -9,3 +9,4 @@ Add Canada and Australia support with region-aware SMS import
 - Changing the app language now also resets default currency and SMS region to match, with a confirmation prompt before applying
 - Split the native parser into per-region rule packs with conservative first-pass patterns for Canadian banks (Interac e-Transfer, TD/RBC/Scotia alerts) and Australian banks (CBA/NAB/Westpac alerts, PayID/Osko/BPAY)
 - Settings schema migrates to v10 automatically; existing users keep India-region behavior unchanged
+- Add local CSV export: a whole-ledger snapshot (including deleted entries) written to cache and delivered through the share sheet, reusing the sync CSV format for lossless round-tripping (ADR-011)

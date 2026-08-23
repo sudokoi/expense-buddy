@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
+import { exportExpensesToCsv } from "../../services/csv-export"
 import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useSyncAction } from "../../hooks/use-sync-action"
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
 
   // GitHub config state
   const [isTesting, setIsTesting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
@@ -454,6 +456,20 @@ export default function SettingsScreen() {
     [setSmsRegion]
   )
 
+  const handleExportCsv = useCallback(async () => {
+    setIsExporting(true)
+    try {
+      const result = await exportExpensesToCsv(state.expenses)
+      if (!result.file) {
+        addNotification(t("settings.general.exportError"), "error")
+      } else if (result.shared) {
+        addNotification(t("settings.general.exportSuccess"), "success")
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }, [state.expenses, addNotification, t])
+
   const handleSyncSettingsToggle = useCallback(
     (enabled: boolean) => {
       setSyncSettings(enabled)
@@ -646,6 +662,24 @@ export default function SettingsScreen() {
             <View className="bg-surface p-3 rounded-card">
               <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
             </View>
+          </View>
+
+          <View className="gap-2">
+            <Label>{t("settings.general.exportLabel")}</Label>
+            <Button
+              size="control"
+              onPress={handleExportCsv}
+              disabled={isExporting}
+              variant="accent"
+              accessibilityLabel={t("settings.general.exportButton")}
+            >
+              {isExporting
+                ? t("settings.general.exporting")
+                : t("settings.general.exportButton")}
+            </Button>
+            <Text className="text-xs text-foreground opacity-50 px-1">
+              {t("settings.general.exportHelp")}
+            </Text>
           </View>
         </SettingsSection>
 
