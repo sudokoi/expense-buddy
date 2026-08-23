@@ -3,7 +3,7 @@ import { getLocales } from "expo-localization"
 
 const DEFAULT_CURRENCY = "INR"
 
-const SUPPORTED_CURRENCIES = new Set(["INR", "USD", "GBP", "EUR", "JPY"])
+const SUPPORTED_CURRENCIES = new Set(["INR", "USD", "GBP", "EUR", "JPY", "CAD", "AUD"])
 
 const CURRENCY_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>()
 
@@ -34,6 +34,8 @@ function getCachedSymbolFormatter(currency: string): Intl.NumberFormat {
 const LANGUAGE_CURRENCY_MAP: Record<string, string> = {
   "en-US": "USD",
   "en-GB": "GBP",
+  "en-CA": "CAD",
+  "en-AU": "AUD",
   "en-IN": "INR",
   hi: "INR",
   ja: "JPY",

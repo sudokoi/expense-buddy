@@ -1,11 +1,13 @@
 import { format, parseISO } from "date-fns"
 import type { Locale } from "date-fns"
-import { enUS, enGB, enIN, hi, ja } from "date-fns/locale"
+import { enUS, enGB, enCA, enAU, enIN, hi, ja } from "date-fns/locale"
 import i18next from "i18next"
 
 const locales: Record<string, Locale> = {
   "en-US": enUS,
   "en-GB": enGB,
+  "en-CA": enCA,
+  "en-AU": enAU,
   "en-IN": enIN,
   hi: hi,
   ja: ja,
