@@ -6,15 +6,6 @@ export type SmsRegion = (typeof SMS_REGIONS)[number]
 
 const DEFAULT_SMS_REGION: SmsRegion = "IN"
 
-const REGION_LABELS: Record<SmsRegion, string> = {
-  IN: "India",
-  US: "United States",
-  GB: "United Kingdom",
-  CA: "Canada",
-  AU: "Australia",
-  JP: "Japan",
-}
-
 /**
  * Maps app language tags to SMS import regions.
  * Unknown languages resolve to IN, preserving historical behavior (ADR-010).
@@ -40,11 +31,6 @@ export function isValidSmsRegion(region: string): region is SmsRegion {
 /** Normalizes unknown/stale stored values to the default region. */
 export function normalizeSmsRegion(region: string | undefined | null): SmsRegion {
   return region && isValidSmsRegion(region) ? region : DEFAULT_SMS_REGION
-}
-
-export function getSmsRegionLabel(region: string): string {
-  const normalized = normalizeSmsRegion(region)
-  return REGION_LABELS[normalized]
 }
 
 /**
