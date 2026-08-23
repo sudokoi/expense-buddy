@@ -110,7 +110,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 2. Expense Buddy reads recent Android transaction SMS messages on-device or parses newly received SMS messages locally in the background.
 3. A single `syncInboxAsync` native bridge call reads, parses, classifies, deduplicates, and inserts items into a native Room queue — no JS orchestration.
 4. The parser extracts likely transaction details, generates a deterministic SHA-256 fingerprint for dedup, and produces a regex fallback category suggestion.
-5. Parsing patterns come from the region rule pack selected in Settings (India, Canada, or Australia). The setting seeds from your device locale on upgrade; changing your app language resets it unless you override it afterwards. Unknown regions fall back to India.
+5. Parsing patterns come from the region rule pack selected in Settings (India, US, UK, Canada, Australia, or Japan). The setting seeds from your device locale on upgrade; changing your app language resets it unless you override it afterwards. Unknown regions fall back to India.
 6. The native module scores the same messages with a bundled LiteRT category model, replacing the regex suggestion only when confidence is high enough.
 7. If a new background match arrives while the app is not foregrounded, a local notification opens the review flow.
 8. The review UI (backed by a React Context provider subscribing to native `onReviewQueueUpdated` events) shows pending candidates.
