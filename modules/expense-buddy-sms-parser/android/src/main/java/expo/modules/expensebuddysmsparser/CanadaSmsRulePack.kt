@@ -89,7 +89,7 @@ object CanadaSmsRulePack : SmsRulePack {
 
     override val paymentMethodHints =
         listOf(
-            "Interac e-Transfer" to Regex("interac|e-?transfer", RegexOption.IGNORE_CASE),
+            "Net Banking" to Regex("interac|e-?transfer", RegexOption.IGNORE_CASE),
             "Credit Card" to
                 Regex(
                     "credit card|credit a/c|credit acct|\\bamex\\b|american express|\\bvisa\\b|master\\s?card|\\bmastercard\\b",

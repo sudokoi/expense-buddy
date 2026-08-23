@@ -1,8 +1,11 @@
 package expo.modules.expensebuddysmsparser
 
 /**
- * India rule pack. Rules are extracted verbatim from the original monolithic
- * parser (see ADR-010); any change here must preserve fingerprint parity.
+ * India rule pack. Rules were extracted verbatim from the original monolithic
+ * parser; category-rule ordering has since been normalized under the pack-wide
+ * ordering contract (see [SmsRulePack.categoryInferenceRules] and the ADR-010
+ * amendment), which intentionally re-orders dual-match suggestions but never
+ * affects fingerprints (category is not hashed into them).
  */
 object IndiaSmsRulePack : SmsRulePack {
     override val regionCode = "IN"

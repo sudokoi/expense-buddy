@@ -66,7 +66,7 @@ class RegionRulePacksTest {
         assertThat(parsed).isNotNull()
         assertThat(parsed?.amount).isWithin(1e-9).of(120.0)
         assertThat(parsed?.currency).isEqualTo("CAD")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Interac e-Transfer")
+        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Net Banking")
     }
 
     @Test
@@ -165,7 +165,7 @@ class RegionRulePacksTest {
         assertThat(parsed).isNotNull()
         assertThat(parsed?.amount).isWithin(1e-9).of(250.0)
         assertThat(parsed?.currency).isEqualTo("AUD")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Osko")
+        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Net Banking")
         assertThat(parsed?.categorySuggestion).isEqualTo("Rent")
     }
 

@@ -110,6 +110,22 @@ class SmsMessageParserTest {
     }
 
     @Test
+    fun `dual-match bodies resolve by category-ordering contract not legacy order`() {
+        // Body matches both Groceries (dmart) and Transport (travel). The
+        // pre-pack monolith evaluated Transport first; the pack-wide ordering
+        // contract (ADR-010 amendment) puts brand-heavy categories first, so
+        // this intentionally now suggests Groceries. Fingerprints unaffected.
+        val result =
+            SmsMessageParser.parseRawMessage(
+                sender = "VK-HDFCBK",
+                body = "INR 500 spent at DMART for travel essentials",
+                receivedAt = "2026-04-11T10:15:30.000Z",
+            )
+
+        assertThat(result?.categorySuggestion).isEqualTo("Groceries")
+    }
+
+    @Test
     fun `falls back to Other when no default category pattern matches`() {
         val result =
             SmsMessageParser.parseRawMessage(
