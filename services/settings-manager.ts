@@ -269,8 +269,9 @@ function migrateV8ToV9(settings: AppSettings): AppSettings {
 
 /**
  * Migrate settings from version 9 to version 10
- * Adds the SMS import region. Seeded once from the device locale; invalid or
- * missing values re-seed (ADR-010). Afterwards the value is user-owned.
+ * Adds the SMS import region. Seeded once from the device locale; missing
+ * values seed and present-but-invalid values normalize to `IN` (ADR-010).
+ * Afterwards the value is user-owned.
  */
 function migrateV9ToV10(settings: AppSettings): AppSettings {
   const seeded =

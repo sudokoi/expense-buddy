@@ -45,12 +45,12 @@ A new optional `smsRegion` field joins `AppSettings` (`"IN"`, `"CA"`, `"AU"`, `"
 
 **Region plumbing (foreground vs background):**
 
-- _Foreground (manual inbox scan):_ region is passed as a live call parameter on every parse invocation (`syncInboxAsync(region, useMlOnly)`).
+- _Foreground (manual inbox scan):_ the bridge signature remains single-arg (`syncInboxAsync(useMlOnly)`); region is resolved natively from the pushed pref inside `ExpenseBuddySmsModule.syncInboxAsync`, identically to the background path. Both paths therefore rely exclusively on pushed prefs — there is no live per-call region parameter anywhere.
 - _Background (headless receiver):_ region cannot be passed per-call because parsing does not flow through JS. Instead, JS **pushes** the region to native-persisted state on every change — mirroring the existing `setBackgroundSmsEnabledAsync` mechanism (`stores/settings-store.ts`, `initializeSettingsStore`). The native module holds pushed configuration only; it never queries AsyncStorage or device state at parse time. Unrecognized values resolve to the India pack natively, independent of JS correctness.
 
 ### 4. Non-breaking invariants
 
-1. Settings schema change is additive-only, delivered as a versioned migration: `migrateV9ToV10` stamps `smsRegion` (one-time device-locale seed, fallback `IN`; present-but-invalid values re-seed), `hydrateSettingsFromJson` gains the `< v10` branch and per-key default so older remote `settings.json` downloads hydrate correctly, the `loadSettings` async chain gains the matching step, and `DEFAULT_SETTINGS.version` bumps to 10. `settings.patch` ops carry partial updates; older app versions ignore the unknown key.
+1. Settings schema change is additive-only, delivered as a versioned migration: `migrateV9ToV10` stamps `smsRegion` (one-time device-locale seed, fallback `IN`; present-but-invalid values normalize to `IN`), `hydrateSettingsFromJson` gains the `< v10` branch and per-key default so older remote `settings.json` downloads hydrate correctly, the `loadSettings` async chain gains the matching step, and `DEFAULT_SETTINGS.version` bumps to 10. `settings.patch` ops carry partial updates; older app versions ignore the unknown key.
 2. The pack refactor lands within the single delivery PR but as its own commit, proven by golden tests asserting identical `amount`, `fingerprint`, `matchedPatternKey`, `currency`, and `skipReason` outputs against existing fixtures — parity verifies per-commit and regressions bisect cleanly despite cleanup being permitted everywhere.
 3. Absence of the region argument means today's behavior (India pack); natively, unrecognized pushed values also resolve to India.
 4. CSV columns, sync payloads, expense schema, fingerprint format, and the Room review-queue entity are untouched. Currency remains an opaque ISO string end-to-end.
