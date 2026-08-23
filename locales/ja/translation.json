@@ -238,7 +238,15 @@
       "regionHelp": "このリージョンの銀行からの取引アラートのみ検出されます。変更するまでアプリの言語に従います。",
       "languageChangeTitle": "言語を変更しますか？",
       "languageChangeMessage": "言語を変更すると、デフォルト通貨とSMSリージョンもそれに合わせてリセットされます。",
-      "languageChangeConfirm": "変更"
+      "languageChangeConfirm": "変更",
+      "regionNames": {
+        "IN": "インド",
+        "US": "アメリカ合衆国",
+        "GB": "イギリス",
+        "CA": "カナダ",
+        "AU": "オーストラリア",
+        "JP": "日本"
+      }
     },
     "conflicts": {
       "title": "{{count}}件の競合が見つかりました",

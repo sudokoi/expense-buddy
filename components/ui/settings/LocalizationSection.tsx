@@ -15,7 +15,7 @@ import {
   UI_BORDER_WIDTH,
   UI_MIN_TOUCH_TARGET,
 } from "../../../constants/ui-tokens"
-import { SMS_REGIONS, getSmsRegionLabel } from "../../../utils/region"
+import { SMS_REGIONS } from "../../../utils/region"
 
 interface LocalizationSectionProps {
   languagePreference: string
@@ -120,7 +120,7 @@ export function LocalizationSection({
               <Card className="flex-row flex-wrap rounded-control p-1">
                 {SMS_REGIONS.map((region) => {
                   const isSelected = smsRegion === region
-                  const label = getSmsRegionLabel(region)
+                  const label = t(`settings.localization.regionNames.${region}`)
                   return (
                     <Pressable
                       key={region}
