@@ -89,9 +89,7 @@ object AustraliaSmsRulePack : SmsRulePack {
 
     override val paymentMethodHints =
         listOf(
-            "PayID" to Regex("\\bpayid\\b", RegexOption.IGNORE_CASE),
-            "Osko" to Regex("\\bosko\\b", RegexOption.IGNORE_CASE),
-            "BPAY" to Regex("\\bbpay\\b", RegexOption.IGNORE_CASE),
+            "Net Banking" to Regex("\\bpayid\\b|\\bosko\\b|\\bbpay\\b", RegexOption.IGNORE_CASE),
             "Credit Card" to
                 Regex(
                     "credit card|credit a/c|credit acct|\\bamex\\b|american express|\\bvisa\\b|master\\s?card|\\bmastercard\\b",

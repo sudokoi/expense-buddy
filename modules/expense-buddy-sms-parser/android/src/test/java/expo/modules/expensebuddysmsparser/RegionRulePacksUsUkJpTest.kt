@@ -61,7 +61,7 @@ class RegionRulePacksUsUkJpTest {
         assertThat(parsed).isNotNull()
         assertThat(parsed?.amount).isWithin(1e-9).of(650.0)
         assertThat(parsed?.currency).isEqualTo("USD")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Zelle")
+        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Net Banking")
         assertThat(parsed?.categorySuggestion).isEqualTo("Rent")
     }
 
@@ -133,7 +133,7 @@ class RegionRulePacksUsUkJpTest {
         assertThat(parsed).isNotNull()
         assertThat(parsed?.amount).isWithin(1e-9).of(850.0)
         assertThat(parsed?.currency).isEqualTo("GBP")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Faster Payments")
+        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Net Banking")
         assertThat(parsed?.categorySuggestion).isEqualTo("Rent")
     }
 

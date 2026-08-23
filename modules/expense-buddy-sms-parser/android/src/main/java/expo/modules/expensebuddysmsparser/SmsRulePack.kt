@@ -57,6 +57,14 @@ interface SmsRulePack {
      */
     val categoryInferenceRules: List<Pair<String, Regex>>
 
-    /** Payment-method hints evaluated in order; first match wins. */
+    /**
+     * Payment-method hints evaluated in order; first match wins.
+     *
+     * Contract: type strings MUST be members of the app's closed
+     * `PaymentMethodType` vocabulary (Cash, Amazon Pay, UPI, Credit Card,
+     * Debit Card, Net Banking, Other) — they are persisted verbatim into
+     * expenses. Map region-specific rails onto the closest member
+     * (Interac/Zelle/PayID/Osko/Faster Payments -> Net Banking).
+     */
     val paymentMethodHints: List<Pair<String, Regex>>
 }

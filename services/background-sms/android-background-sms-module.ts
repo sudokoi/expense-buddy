@@ -9,6 +9,16 @@ export type { BackgroundSmsPermissionStatus } from "../../modules/expense-buddy-
 import ExpenseBuddySmsModule from "../../modules/expense-buddy-sms-module"
 import { SmsImportReviewItem } from "../../types/sms-import"
 import { PaymentMethodType } from "../../types/expense"
+
+const PAYMENT_METHOD_TYPES = new Set<PaymentMethodType>([
+  "Cash",
+  "Amazon Pay",
+  "UPI",
+  "Credit Card",
+  "Debit Card",
+  "Net Banking",
+  "Other",
+])
 import { logAsync } from "../logger"
 
 let moduleOverride: ExpenseBuddySmsNativeModule | null = null
@@ -195,6 +205,28 @@ export async function dismissNotificationAsync(): Promise<void> {
   }
 }
 
+// Boundary validation: native packs must emit closed-vocabulary types;
+// drop unknown values instead of persisting them into expenses.
+function toPaymentMethodSuggestion(
+  dto: ReviewQueueItemDto
+): SmsImportReviewItem["paymentMethodSuggestion"] {
+  const rawType = dto.paymentMethodType
+  const validType =
+    rawType && PAYMENT_METHOD_TYPES.has(rawType as PaymentMethodType)
+      ? (rawType as PaymentMethodType)
+      : undefined
+
+  if (!validType) {
+    return undefined
+  }
+
+  return {
+    type: validType,
+    identifier: dto.paymentMethodIdentifier ?? undefined,
+    instrumentId: dto.paymentMethodInstrumentId ?? undefined,
+  }
+}
+
 function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
   const statusMap: Record<string, SmsImportReviewItem["status"]> = {
     PENDING: "pending",
@@ -215,16 +247,7 @@ function dtoToReviewItem(dto: ReviewQueueItemDto): SmsImportReviewItem {
     currency: dto.currency ?? undefined,
     merchantName: dto.merchantName ?? undefined,
     categorySuggestion: dto.categorySuggestion ?? undefined,
-    paymentMethodSuggestion:
-      dto.paymentMethodType ||
-      dto.paymentMethodIdentifier ||
-      dto.paymentMethodInstrumentId
-        ? {
-            type: (dto.paymentMethodType ?? "") as PaymentMethodType,
-            identifier: dto.paymentMethodIdentifier ?? undefined,
-            instrumentId: dto.paymentMethodInstrumentId ?? undefined,
-          }
-        : undefined,
+    paymentMethodSuggestion: toPaymentMethodSuggestion(dto),
     noteSuggestion: dto.noteSuggestion ?? undefined,
     transactionDate: dto.transactionDate ?? undefined,
     matchedLocale: dto.matchedLocale ?? undefined,

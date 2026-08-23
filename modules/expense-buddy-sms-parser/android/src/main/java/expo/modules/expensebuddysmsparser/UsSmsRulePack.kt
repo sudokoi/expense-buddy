@@ -90,7 +90,7 @@ object UsSmsRulePack : SmsRulePack {
 
     override val paymentMethodHints =
         listOf(
-            "Zelle" to Regex("\\bzelle\\b", RegexOption.IGNORE_CASE),
+            "Net Banking" to Regex("\\bzelle\\b", RegexOption.IGNORE_CASE),
             "Credit Card" to
                 Regex(
                     "credit card|credit a/c|credit acct|\\bamex\\b|american express|\\bvisa\\b|master\\s?card|\\bmastercard\\b|discover",

@@ -90,7 +90,7 @@ object UkSmsRulePack : SmsRulePack {
 
     override val paymentMethodHints =
         listOf(
-            "Faster Payments" to Regex("faster payment|fps\\b", RegexOption.IGNORE_CASE),
+            "Net Banking" to Regex("faster payment|fps\\b", RegexOption.IGNORE_CASE),
             "Credit Card" to
                 Regex(
                     "credit card|credit a/c|credit acct|\\bamex\\b|american express|\\bvisa\\b|master\\s?card|\\bmastercard\\b",
