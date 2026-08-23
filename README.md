@@ -64,6 +64,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Local notifications route back into the review queue instead of silently creating expenses
 - Native LiteRT category suggestion with regex fallback for low-confidence predictions
 - Conservative category suggestion resolver built around shipped default categories
+- Region rule packs (ADR-010): India, Canada, and Australia parsing patterns selected by an explicit SMS region setting
+- Conservative first-pass patterns for Canadian banks (Interac e-Transfer, TD/RBC/Scotia alerts) and Australian banks (CBA/NAB/Westpac alerts, PayID/Osko/BPAY)
 - Local-only processing with no backend parsing
 
 ### Expense Tracking
@@ -98,7 +100,8 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - SMS import is Android-only and requires a native build
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
-- Dynamic locale loading for English (US, UK, IN), Hindi, and Japanese
+- Dynamic locale loading for English (US, UK, CA, AU, IN), Hindi, and Japanese — CA/AU share the en-GB translation bundle
+- CAD and AUD currency support with an SMS import region setting that follows your app language until changed
 - Dark mode, changelog gating, update notifications, and reusable NativeWind-styled UI primitives
 
 ## How the SMS Import Flow Works
@@ -107,11 +110,12 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 2. Expense Buddy reads recent Android transaction SMS messages on-device or parses newly received SMS messages locally in the background.
 3. A single `syncInboxAsync` native bridge call reads, parses, classifies, deduplicates, and inserts items into a native Room queue — no JS orchestration.
 4. The parser extracts likely transaction details, generates a deterministic SHA-256 fingerprint for dedup, and produces a regex fallback category suggestion.
-5. The native module scores the same messages with a bundled LiteRT category model, replacing the regex suggestion only when confidence is high enough.
-6. If a new background match arrives while the app is not foregrounded, a local notification opens the review flow.
-7. The review UI (backed by a React Context provider subscribing to native `onReviewQueueUpdated` events) shows pending candidates.
-8. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
-9. Only accepted items become normal expense records and participate in optional GitHub sync.
+5. Parsing patterns come from the region rule pack selected in Settings (India, Canada, or Australia). The setting seeds from your device locale on upgrade; changing your app language resets it unless you override it afterwards. Unknown regions fall back to India.
+6. The native module scores the same messages with a bundled LiteRT category model, replacing the regex suggestion only when confidence is high enough.
+7. If a new background match arrives while the app is not foregrounded, a local notification opens the review flow.
+8. The review UI (backed by a React Context provider subscribing to native `onReviewQueueUpdated` events) shows pending candidates.
+9. You review each candidate and decide whether to accept, edit, reject, or dismiss it.
+10. Only accepted items become normal expense records and participate in optional GitHub sync.
 
 This review-first model is deliberate. The app aims to reduce manual entry without hiding how an import decision was made.
 

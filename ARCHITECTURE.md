@@ -229,7 +229,9 @@ Related decision: [ADR-008](./decisions/adr-008-device-logging.md)
 
 - i18next is the translation source of truth.
 - Locale bundles load dynamically so only the active language is needed at startup.
+- Regional English variants (`en-CA`, `en-AU`) alias the `en-GB` bundle instead of duplicating it.
 - Locale-aware formatting is derived from the active language and device preferences.
+- SMS import uses region rule packs (India, Canada, Australia) selected by an explicit `smsRegion` setting that seeds from the device locale, cascades on language change, and falls back to India for unknown values (see [ADR-010](./decisions/adr-010-region-packs-sms-import.md)).
 - The app shell is composed through Expo Router layouts and shared providers in `components/Provider.tsx`.
 
 This keeps startup lean while ensuring notifications, labels, and formatting remain consistent across screens.
