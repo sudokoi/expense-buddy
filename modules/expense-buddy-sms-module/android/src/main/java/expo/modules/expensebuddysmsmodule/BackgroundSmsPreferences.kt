@@ -8,6 +8,10 @@ import expo.modules.expensebuddylogger.LoggerApi
 private const val PREFS_NAME = "expense_buddy_background_sms"
 private const val ENABLED_KEY = "enabled"
 private const val LAST_SCAN_CURSOR_KEY = "lastScanCursor"
+private const val SMS_REGION_KEY = "smsRegion"
+
+/** Default when no region was ever pushed from JS (historical behavior). */
+const val DEFAULT_SMS_REGION = "IN"
 
 object BackgroundSmsPreferences {
     fun getState(context: Context): BackgroundSmsState {
@@ -52,6 +56,25 @@ object BackgroundSmsPreferences {
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(LAST_SCAN_CURSOR_KEY, cursor)
+            .apply()
+    }
+
+    fun getSmsRegion(context: Context): String =
+        context
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(SMS_REGION_KEY, null)
+            ?.takeIf { it.isNotBlank() }
+            ?: DEFAULT_SMS_REGION
+
+    fun setSmsRegion(
+        context: Context,
+        region: String,
+    ) {
+        LoggerApi.d("SMS_STORAGE", "setSmsRegion: region=$region")
+        context
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(SMS_REGION_KEY, region.uppercase())
             .apply()
     }
 }

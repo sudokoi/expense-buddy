@@ -29,7 +29,7 @@ Region auto-detection via SIM country was considered and rejected: dual-SIM devi
 
 A new optional `smsRegion` field joins `AppSettings` (`"IN"` | `"CA"` | `"AU"`), surfaced as a **Region** control in the Localization settings group, below Language and Currency.
 
-- **Cascade:** changing language auto-updates region via `LANGUAGE_REGION_MAP` (`en-IN`/`hi` → `IN`, `en-CA` → `CA`, `en-AU` → `AU`, all others → `IN`; a stored `language` of `"system"` resolves through the device locale tag before mapping), exactly mirroring the existing language→currency cascade in `setLanguage` (`stores/settings-store.ts`). **The cascade stomps unconditionally:** any manually-set currency *and* region are reset on every language change — no provenance tracking. This makes an explicit confirmation prompt mandatory: it must state that language, currency, and region will all change, and offer cancel. Asymmetry is preserved: manually changing region or currency does not touch language.
+- **Cascade:** changing language auto-updates region via `LANGUAGE_REGION_MAP` (`en-IN`/`hi` → `IN`, `en-CA` → `CA`, `en-AU` → `AU`, all others → `IN`; a stored `language` of `"system"` resolves through the device locale tag before mapping), exactly mirroring the existing language→currency cascade in `setLanguage` (`stores/settings-store.ts`). **The cascade stomps unconditionally:** any manually-set currency _and_ region are reset on every language change — no provenance tracking. This makes an explicit confirmation prompt mandatory: it must state that language, currency, and region will all change, and offer cancel. Asymmetry is preserved: manually changing region or currency does not touch language.
 - **Seeding:** during hydration/migration, an absent `smsRegion` is seeded **once** from the device locale (`getLocales()[0].languageTag` mapped through `LANGUAGE_REGION_MAP`, fallback `IN`) — the same mechanism that seeds `defaultCurrency` from `getSystemCurrency()`. After first materialization it is user-owned. A fresh Canadian install therefore gets `en-CA` UI and `CA` region out of the box.
 - **Override:** the user may change region independently afterwards; the cascade only fires on language change (and stomps, per above).
 - **Fallback:** any unmapped or unknown value resolves to `"IN"`. This preserves current behavior for every existing user, including those on `en-US`/`en-GB`/`ja` who today receive India-pack parsing regardless of language.
@@ -45,8 +45,8 @@ A new optional `smsRegion` field joins `AppSettings` (`"IN"` | `"CA"` | `"AU"`),
 
 **Region plumbing (foreground vs background):**
 
-- *Foreground (manual inbox scan):* region is passed as a live call parameter on every parse invocation (`syncInboxAsync(region, useMlOnly)`).
-- *Background (headless receiver):* region cannot be passed per-call because parsing does not flow through JS. Instead, JS **pushes** the region to native-persisted state on every change — mirroring the existing `setBackgroundSmsEnabledAsync` mechanism (`stores/settings-store.ts`, `initializeSettingsStore`). The native module holds pushed configuration only; it never queries AsyncStorage or device state at parse time. Unrecognized values resolve to the India pack natively, independent of JS correctness.
+- _Foreground (manual inbox scan):_ region is passed as a live call parameter on every parse invocation (`syncInboxAsync(region, useMlOnly)`).
+- _Background (headless receiver):_ region cannot be passed per-call because parsing does not flow through JS. Instead, JS **pushes** the region to native-persisted state on every change — mirroring the existing `setBackgroundSmsEnabledAsync` mechanism (`stores/settings-store.ts`, `initializeSettingsStore`). The native module holds pushed configuration only; it never queries AsyncStorage or device state at parse time. Unrecognized values resolve to the India pack natively, independent of JS correctness.
 
 ### 4. Non-breaking invariants
 
@@ -80,7 +80,7 @@ All changes ship in a single PR, ordered internally as atomic commits so each is
 ### Negative
 
 - Wrong region fails silently (empty review queue); mitigated by help text on the Region control and the language-change confirmation prompt.
-- One control (language) now drives translations, formatting, currency, *and* region — consistent with the existing currency cascade but a wider blast radius per tap.
+- One control (language) now drives translations, formatting, currency, _and_ region — consistent with the existing currency cascade but a wider blast radius per tap.
 - CA/AU regexes start as hypotheses from documented templates; recall will require iterative tuning against real samples.
 - Historical review-queue items keep their stored locale when region changes; mixed-region histories are possible for users who relocate (accepted; raw SMS remains inspectable per ADR-004).
 

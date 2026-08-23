@@ -20,6 +20,7 @@ import {
 import { PaymentMethodType } from "../../types/expense"
 import { DEFAULT_CATEGORIES } from "../../constants/default-categories"
 import { getDefaultCurrencyForLanguage } from "../../utils/currency"
+import { getDefaultRegionForLanguage } from "../../utils/region"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "system" as ThemePreference,
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   enableMathExpressions: true,
   useMlOnlyForSmsImports: false,
   backgroundSmsImportEnabled: false,
+  smsRegion: "IN",
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -112,6 +114,7 @@ function createTestSettingsStore(initialSettings: AppSettings = DEFAULT_SETTINGS
           ...context.settings,
           language: event.language,
           defaultCurrency: getDefaultCurrencyForLanguage(event.language),
+          smsRegion: getDefaultRegionForLanguage(event.language),
         }
         return {
           ...context,
@@ -154,6 +157,7 @@ const autoSyncTimingArb = fc.constantFrom<AutoSyncTiming>("on_launch", "on_chang
 const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   theme: themePreferenceArb,
   syncSettings: fc.boolean(),
+  smsRegion: fc.constantFrom("IN", "CA", "AU"),
   enableMathExpressions: fc.boolean(),
   useMlOnlyForSmsImports: fc.boolean(),
   backgroundSmsImportEnabled: fc.boolean(),
@@ -169,7 +173,16 @@ const appSettingsArb: fc.Arbitrary<AppSettings> = fc.record({
   version: fc.integer({ min: 7, max: 10 }),
   defaultPaymentMethod: optionalPaymentMethodArb,
   defaultCurrency: fc.constant("INR"),
-  language: fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"),
+  language: fc.constantFrom(
+    "system",
+    "en-US",
+    "en-GB",
+    "en-CA",
+    "en-AU",
+    "en-IN",
+    "hi",
+    "ja"
+  ),
 })
 
 describe("Settings Store Properties", () => {
@@ -248,7 +261,16 @@ describe("Settings Store Properties", () => {
     })
 
     it("setLanguage SHALL update language and set hasUnsyncedChanges to true", () => {
-      const languageArb = fc.constantFrom("system", "en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja")
+      const languageArb = fc.constantFrom(
+        "system",
+        "en-US",
+        "en-GB",
+        "en-CA",
+        "en-AU",
+        "en-IN",
+        "hi",
+        "ja"
+      )
       fc.assert(
         fc.property(languageArb, (language) => {
           const store = createTestSettingsStore()
@@ -259,6 +281,7 @@ describe("Settings Store Properties", () => {
           return (
             settings.language === language &&
             settings.defaultCurrency === getDefaultCurrencyForLanguage(language) &&
+            settings.smsRegion === getDefaultRegionForLanguage(language) &&
             hasUnsyncedChanges === true
           )
         }),

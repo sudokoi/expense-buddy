@@ -68,6 +68,7 @@ export default function SettingsScreen() {
     setSyncSettings,
     setDefaultCurrency,
     setLanguage,
+    setSmsRegion,
     setEnableMathExpressions,
     setBackgroundSmsImportEnabled,
     updateSettings,
@@ -408,9 +409,35 @@ export default function SettingsScreen() {
 
   const handleLanguageChange = useCallback(
     (lang: string) => {
-      setLanguage(lang)
+      if (lang === settings.language) {
+        return
+      }
+
+      // Language change resets currency and SMS region per the language maps
+      // (ADR-010). Warn before applying since overrides are stomped.
+      Alert.alert(
+        t("settings.localization.languageChangeTitle", {
+          defaultValue: "Change Language?",
+        }),
+        t("settings.localization.languageChangeMessage", {
+          defaultValue:
+            "Changing the language also resets your default currency and SMS region to match it.",
+        }),
+        [
+          {
+            text: t("common.cancel", { defaultValue: "Cancel" }),
+            style: "cancel",
+          },
+          {
+            text: t("settings.localization.languageChangeConfirm", {
+              defaultValue: "Change",
+            }),
+            onPress: () => setLanguage(lang),
+          },
+        ]
+      )
     },
-    [setLanguage]
+    [setLanguage, settings.language, t]
   )
 
   const handleCurrencyChange = useCallback(
@@ -418,6 +445,13 @@ export default function SettingsScreen() {
       setDefaultCurrency(currency)
     },
     [setDefaultCurrency]
+  )
+
+  const handleRegionChange = useCallback(
+    (region: string) => {
+      setSmsRegion(region)
+    },
+    [setSmsRegion]
   )
 
   const handleSyncSettingsToggle = useCallback(
@@ -624,6 +658,8 @@ export default function SettingsScreen() {
             onLanguageChange={handleLanguageChange}
             defaultCurrency={settings.defaultCurrency}
             onCurrencyChange={handleCurrencyChange}
+            smsRegion={settings.smsRegion}
+            onRegionChange={handleRegionChange}
           />
         </SettingsSection>
 

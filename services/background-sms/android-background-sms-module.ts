@@ -59,6 +59,15 @@ export async function setBackgroundSmsEnabled(enabled: boolean): Promise<void> {
   await module.setBackgroundSmsEnabledAsync(enabled)
 }
 
+export async function setSmsRegion(region: string): Promise<void> {
+  const module = getBackgroundSmsModule()
+  if (!module) {
+    return
+  }
+
+  await module.setSmsRegionAsync(region)
+}
+
 export async function syncInboxAsync(useMlOnly: boolean): Promise<number> {
   const module = getBackgroundSmsModule()
   if (!module) return 0

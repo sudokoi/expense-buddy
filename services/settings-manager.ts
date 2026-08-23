@@ -6,6 +6,7 @@ import { Category } from "../types/category"
 import { DEFAULT_CATEGORIES } from "../constants/default-categories"
 import { PaymentInstrument } from "../types/payment-instrument"
 import { getSystemCurrency } from "../utils/currency"
+import { normalizeSmsRegion, seedSmsRegionFromDevice } from "../utils/region"
 
 // Storage keys
 const SETTINGS_KEY = "app_settings"
@@ -38,6 +39,7 @@ export interface AppSettings {
   enableMathExpressions: boolean // Whether amount inputs accept arithmetic expressions
   useMlOnlyForSmsImports: boolean // Whether SMS import category suggestions should prefer ML-only inference
   backgroundSmsImportEnabled: boolean // Whether background SMS transaction alerts are enabled on Android
+  smsRegion: string // Region whose banks' transaction SMS are parsed ("IN" | "CA" | "AU")
   autoSyncEnabled: boolean // Whether auto-sync is enabled
   autoSyncTiming: AutoSyncTiming // When to trigger auto-sync
   categories: Category[] // User-defined expense categories
@@ -60,6 +62,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableMathExpressions: true,
   useMlOnlyForSmsImports: false,
   backgroundSmsImportEnabled: false,
+  smsRegion: seedSmsRegionFromDevice(),
   autoSyncEnabled: false,
   autoSyncTiming: "on_launch",
   categories: DEFAULT_CATEGORIES,
@@ -67,7 +70,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paymentInstruments: [],
   paymentInstrumentsMigrationVersion: 0,
   updatedAt: new Date().toISOString(),
-  version: 9,
+  version: 10,
 }
 
 /**
@@ -110,6 +113,10 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
     migrated = migrateV8ToV9(migrated as AppSettings)
   }
 
+  if ((typeof migrated.version === "number" ? migrated.version : version) < 10) {
+    migrated = migrateV9ToV10(migrated as AppSettings)
+  }
+
   return {
     theme: migrated.theme ?? DEFAULT_SETTINGS.theme,
     syncSettings: migrated.syncSettings ?? DEFAULT_SETTINGS.syncSettings,
@@ -123,6 +130,7 @@ export function hydrateSettingsFromJson(raw: unknown): AppSettings {
       migrated.useMlOnlyForSmsImports ?? DEFAULT_SETTINGS.useMlOnlyForSmsImports,
     backgroundSmsImportEnabled:
       migrated.backgroundSmsImportEnabled ?? DEFAULT_SETTINGS.backgroundSmsImportEnabled,
+    smsRegion: normalizeSmsRegion((migrated as AppSettings).smsRegion),
     autoSyncEnabled: migrated.autoSyncEnabled ?? DEFAULT_SETTINGS.autoSyncEnabled,
     autoSyncTiming: migrated.autoSyncTiming ?? DEFAULT_SETTINGS.autoSyncTiming,
     categories: migrated.categories ?? DEFAULT_CATEGORIES,
@@ -260,6 +268,24 @@ function migrateV8ToV9(settings: AppSettings): AppSettings {
 }
 
 /**
+ * Migrate settings from version 9 to version 10
+ * Adds the SMS import region. Seeded once from the device locale; invalid or
+ * missing values re-seed (ADR-010). Afterwards the value is user-owned.
+ */
+function migrateV9ToV10(settings: AppSettings): AppSettings {
+  const seeded =
+    settings.smsRegion !== undefined
+      ? normalizeSmsRegion(settings.smsRegion)
+      : seedSmsRegionFromDevice()
+
+  return {
+    ...settings,
+    smsRegion: seeded,
+    version: 10,
+  }
+}
+
+/**
  * Synchronous fast-path load for the initial app theme.
  * Uses MMKV's sync API so the persisted theme is available before the first
  * React paint, eliminating the system-theme flash when the user has forced
@@ -334,6 +360,12 @@ export async function loadSettings(): Promise<AppSettings> {
       // Migrate from v8 to v9 (add background SMS import toggle)
       if (parsed.version < 9) {
         parsed = migrateV8ToV9(parsed)
+        await saveSettings(parsed)
+      }
+
+      // Migrate from v9 to v10 (add SMS import region)
+      if (parsed.version < 10) {
+        parsed = migrateV9ToV10(parsed)
         await saveSettings(parsed)
       }
 
@@ -460,6 +492,7 @@ export function computeSettingsHash(settings: AppSettings): string {
     backgroundSmsImportEnabled: settings.backgroundSmsImportEnabled,
     language: settings.language,
     paymentInstruments: sortedInstruments,
+    smsRegion: settings.smsRegion,
     syncSettings: settings.syncSettings,
     theme: settings.theme,
     useMlOnlyForSmsImports: settings.useMlOnlyForSmsImports,

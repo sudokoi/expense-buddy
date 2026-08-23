@@ -35,14 +35,20 @@ object BackgroundSmsParser {
         )
     }
 
-    fun parseIncomingMessage(messages: Array<SmsMessage>): BackgroundSmsReviewItem? {
+    fun parseIncomingMessage(
+        messages: Array<SmsMessage>,
+        regionCode: String = DEFAULT_SMS_REGION,
+    ): BackgroundSmsReviewItem? {
         val rawMessage = toRawMessage(messages) ?: return null
+        val rulePack = SmsMessageParser.resolveRulePack(regionCode)
         val parsed =
-            SmsMessageParser.parseRawMessage(
-                sender = rawMessage.sender,
-                body = rawMessage.body,
-                receivedAt = rawMessage.receivedAt,
-            )
+            SmsMessageParser
+                .parseRawMessageWithReason(
+                    sender = rawMessage.sender,
+                    body = rawMessage.body,
+                    receivedAt = rawMessage.receivedAt,
+                    rulePack = rulePack,
+                ).parsed
         if (parsed == null) {
             LoggerApi.d("SMS_PARSER", "Skipped message from ${rawMessage.sender}: did not match transaction pattern")
             return null

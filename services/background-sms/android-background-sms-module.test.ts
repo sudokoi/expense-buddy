@@ -41,6 +41,7 @@ function createModuleOverride(
     addListener: jest.fn() as unknown as ExpenseBuddySmsNativeModule["addListener"],
     getBackgroundSmsStateAsync: async () => ({ enabled: false }),
     setBackgroundSmsEnabledAsync: async () => undefined,
+    setSmsRegionAsync: async () => undefined,
     syncInboxAsync: async () => 5,
     getPermissionStatusAsync: async () => defaultPermissionResponse,
     requestPermissionAsync: async () => defaultPermissionResponse,
