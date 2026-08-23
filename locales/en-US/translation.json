@@ -353,6 +353,12 @@
     },
     "general": {
       "description": "Adjust display preferences.",
+      "exportLabel": "Export data",
+      "exportButton": "Export CSV",
+      "exporting": "Preparing export…",
+      "exportHelp": "Creates a CSV of your full ledger (including deleted entries) and opens the share sheet so you can save or send it.",
+      "exportSuccess": "Export ready — choose where to save it.",
+      "exportError": "Couldn't create the export file. Please try again.",
       "mathEntry": "Allow mathematical amount entry",
       "mathEntryHelp": "Use expressions like 120+45 in amount fields when enabled."
     },

@@ -33,7 +33,7 @@ Export produces one file containing **all expenses including soft-deleted rows**
 Zip was evaluated and rejected for v1:
 
 - A single CSV at realistic sizes gains almost nothing from compression while losing previewability everywhere (email clients, Drive previews, quick-look).
-- Zipping only pays off if we exported the *daily-file tree* mirroring the GitHub sync layout — but that mirror already exists in the user's repo whenever sync is enabled; duplicating it locally adds a second format to keep compatible.
+- Zipping only pays off if we exported the _daily-file tree_ mirroring the GitHub sync layout — but that mirror already exists in the user's repo whenever sync is enabled; duplicating it locally adds a second format to keep compatible.
 - Every zip option costs real dependencies: `expo-zip` is another native module in an Android-only build; `jszip` needs Buffer polyfills under React Native. Neither buys user value today.
 
 If a full-repo offline backup is ever wanted, it should be a separate "backup bundle" feature, not a bolt-on to CSV export.
