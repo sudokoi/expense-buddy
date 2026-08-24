@@ -91,17 +91,25 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
     [selectedKey, onSelect]
   )
 
-  const chartData = useMemo(
-    () =>
-      data.map((item) => ({
+  // Center text radially in the ring (between innerRadius and radius).
+  const chartData = useMemo(() => {
+    const totalValue = data.reduce((sum, d) => sum + d.value, 0)
+    const delta = chartSize / 24 // R/12
+    return data.map((item, index) => {
+      const prevTotal = data.slice(0, index).reduce((sum, d) => sum + d.value, 0)
+      const midFraction = (prevTotal + item.value / 2) / totalValue
+      const angle = 2 * Math.PI * midFraction
+      return {
         value: item.value,
         color: item.color,
         text: `${item.percentage.toFixed(0)}%`,
         focused: selectedKey === item.key,
+        shiftTextX: delta * Math.sin(angle),
+        shiftTextY: -delta * Math.cos(angle),
         onPress: () => handleSegmentPress(item.key),
-      })),
-    [data, selectedKey, handleSegmentPress]
-  )
+      }
+    })
+  }, [data, selectedKey, handleSegmentPress, chartSize])
 
   const total = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 

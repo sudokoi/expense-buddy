@@ -87,18 +87,28 @@ export const PieChartSection = memo(function PieChartSection({
     [selectedCategory, onCategorySelect]
   )
 
-  // Memoize chart data transformation
-  const chartData = useMemo(
-    () =>
-      data.map((item) => ({
+  // Center text radially in the ring (between innerRadius and radius).
+  // `outward` default is at 0.75R, but the ring centre is (R+innerR)/2 ≈ 0.83R,
+  // so labels sit ~R/12 too close to the hole and the `%` gets covered by the
+  // library's inner-circle View on the left side (see screenshot).
+  const chartData = useMemo(() => {
+    const totalValue = data.reduce((sum, d) => sum + d.value, 0)
+    const delta = chartSize / 24 // R/12: distance from `outward` (0.75R) to ring centre (0.83R)
+    return data.map((item, index) => {
+      const prevTotal = data.slice(0, index).reduce((sum, d) => sum + d.value, 0)
+      const midFraction = (prevTotal + item.value / 2) / totalValue
+      const angle = 2 * Math.PI * midFraction
+      return {
         value: item.value,
         color: item.color,
         text: `${item.percentage.toFixed(0)}%`,
         focused: selectedCategory === item.category,
+        shiftTextX: delta * Math.sin(angle),
+        shiftTextY: -delta * Math.cos(angle),
         onPress: () => handleSegmentPress(item.category),
-      })),
-    [data, selectedCategory, handleSegmentPress]
-  )
+      }
+    })
+  }, [data, selectedCategory, handleSegmentPress, chartSize])
 
   // Memoize total calculation
   const total = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])

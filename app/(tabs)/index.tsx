@@ -481,6 +481,11 @@ export default function AnalyticsScreen() {
                 </ScrollView>
               )}
               <View className="gap-4">
+                <LineChartSection
+                  data={lineChartData}
+                  currencyCode={effectiveCurrency}
+                  autoScrollToEnd={!effectiveSelectedMonth}
+                />
                 <PieChartSection
                   data={pieChartData}
                   currencyCode={effectiveCurrency}
@@ -502,7 +507,6 @@ export default function AnalyticsScreen() {
                   }
                   onSelect={handlePaymentInstrumentSelect}
                 />
-                <LineChartSection data={lineChartData} currencyCode={effectiveCurrency} />
               </View>
             </>
           )}

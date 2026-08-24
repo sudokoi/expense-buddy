@@ -89,18 +89,27 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
     [selectedPaymentMethod, onPaymentMethodSelect]
   )
 
-  // Memoize chart data transformation
-  const chartData = useMemo(
-    () =>
-      data.map((item) => ({
+  // Center text radially in the ring (between innerRadius and radius).
+  // `outward` default is at 0.75R, but the ring centre is (R+innerR)/2 ≈ 0.83R,
+  // so labels sit ~R/12 too close to the hole and the `%` gets covered.
+  const chartData = useMemo(() => {
+    const totalValue = data.reduce((sum, d) => sum + d.value, 0)
+    const delta = chartSize / 24 // R/12
+    return data.map((item, index) => {
+      const prevTotal = data.slice(0, index).reduce((sum, d) => sum + d.value, 0)
+      const midFraction = (prevTotal + item.value / 2) / totalValue
+      const angle = 2 * Math.PI * midFraction
+      return {
         value: item.value,
         color: item.color,
         text: `${item.percentage.toFixed(0)}%`,
         focused: selectedPaymentMethod === item.paymentMethodType,
+        shiftTextX: delta * Math.sin(angle),
+        shiftTextY: -delta * Math.cos(angle),
         onPress: () => handleSegmentPress(item.paymentMethodType as PaymentMethodType),
-      })),
-    [data, selectedPaymentMethod, handleSegmentPress]
-  )
+      }
+    })
+  }, [data, selectedPaymentMethod, handleSegmentPress, chartSize])
 
   // Memoize total calculation
   const total = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
