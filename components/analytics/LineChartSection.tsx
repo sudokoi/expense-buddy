@@ -1,4 +1,4 @@
-import { useMemo, memo, useCallback } from "react"
+import { useMemo, memo, useCallback, useEffect, useRef } from "react"
 import { Dimensions, ScrollView, Text, View } from "react-native"
 import { LineChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
@@ -17,6 +17,8 @@ import {
 interface LineChartSectionProps {
   data: LineChartDataItem[]
   currencyCode?: string
+  /** When false, don't auto-scroll to the end (e.g. month selector). */
+  autoScrollToEnd?: boolean
 }
 
 /**
@@ -26,6 +28,7 @@ interface LineChartSectionProps {
 export const LineChartSection = memo(function LineChartSection({
   data,
   currencyCode = "INR",
+  autoScrollToEnd = true,
 }: LineChartSectionProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
@@ -66,13 +69,19 @@ export const LineChartSection = memo(function LineChartSection({
   }, [screenWidth, data.length])
 
   // Default the scroll position to the right end so the latest spend trend is
-  // visible first, instead of the oldest days on the left. Using a callback ref
-  // fires once on mount, so users can still scroll back to the left afterwards.
-  const scrollToLatest = useCallback((node: ScrollView | null) => {
-    if (!node) return
-    // Content isn't laid out at ref-attach time; defer to the next frame.
-    requestAnimationFrame(() => node.scrollToEnd({ animated: false }))
-  }, [])
+  // visible first when a window-based time filter is active. For month
+  // selectors we leave the scroll at the start. Uses a ref + effect so
+  // filter switches (month ↔ window) re-trigger correctly, unlike a
+  // callback ref which only fires on mount.
+  const scrollViewRef = useRef<ScrollView>(null)
+
+  useEffect(() => {
+    if (!autoScrollToEnd || !needsScroll) return
+    const id = requestAnimationFrame(() =>
+      scrollViewRef.current?.scrollToEnd({ animated: false })
+    )
+    return () => cancelAnimationFrame(id)
+  }, [autoScrollToEnd, needsScroll, data.length])
 
   // Memoize theme colors - use kawaii pink accent
   const colors = useMemo(
@@ -193,7 +202,7 @@ export const LineChartSection = memo(function LineChartSection({
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
       <View>
         {needsScroll ? (
-          <ScrollView ref={scrollToLatest} horizontal showsHorizontalScrollIndicator>
+          <ScrollView ref={scrollViewRef} horizontal showsHorizontalScrollIndicator>
             {chartContent}
           </ScrollView>
         ) : (
