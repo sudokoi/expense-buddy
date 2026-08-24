@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 4.1.1
+
+### Patch Changes
+
+- [#127](https://github.com/sudokoi/expense-buddy/pull/127) [`b04e37f`](https://github.com/sudokoi/expense-buddy/commit/b04e37fa0d09dcf94a3b759425d33a3557405eee) Thanks [@sudokoi](https://github.com/sudokoi)! - Center pie chart labels, conditionally auto-scroll trend, reorder analytics and aggregate instrument chart by method
+  - Center pie chart inline labels radially between inner and outer radius to prevent clipping by the donut hole on the left side
+  - Only auto-scroll spending trend to the latest data when a window-based time filter is selected, not for month selectors
+  - Reorder analytics charts to show spending trend first, followed by category, payment method, and payment instrument
+  - Aggregate spend-by-payment-instrument pie slices by payment method (CC/DC/UPI) for distinct colors while keeping per-card breakdown in the legend below; tapping a method slice now selects all cards of that method
+  - Use CC/DC short labels for credit/debit cards to prevent labels extending outside cards
+
 ## 4.1.0
 
 ### Minor Changes
