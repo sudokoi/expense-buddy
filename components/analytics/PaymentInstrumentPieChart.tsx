@@ -91,22 +91,51 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
     [selectedKey, onSelect]
   )
 
-  // Center text radially in the ring (between innerRadius and radius).
+  // Chart slices are aggregated by payment method (CC/DC/UPI) for distinct
+  // colors — individual cards share the same method color and would otherwise
+  // be indistinguishable as separate slices. Legend below still shows per-card
+  // breakdown (with CC/DC short labels).
   const chartData = useMemo(() => {
+    if (data.length === 0) return []
     const totalValue = data.reduce((sum, d) => sum + d.value, 0)
-    const delta = chartSize / 24 // R/12
-    return data.map((item, index) => {
-      const prevTotal = data.slice(0, index).reduce((sum, d) => sum + d.value, 0)
-      const midFraction = (prevTotal + item.value / 2) / totalValue
+    if (totalValue === 0) return []
+
+    // Group instrument totals by method for the pie
+    const grouped = new Map<string, { value: number; color: string }>()
+    for (const item of data) {
+      const existing = grouped.get(item.method)
+      if (existing) {
+        existing.value += item.value
+      } else {
+        grouped.set(item.method, { value: item.value, color: item.color })
+      }
+    }
+
+    const methodEntries = Array.from(grouped.entries()).map(([method, entry]) => ({
+      method,
+      value: entry.value,
+      color: entry.color,
+      percentage: (entry.value / totalValue) * 100,
+    }))
+
+    const delta = chartSize / 24 // R/12: centre between outward (0.75R) and ring centre (0.83R)
+    return methodEntries.map((entry, index) => {
+      const prevTotal = methodEntries.slice(0, index).reduce((sum, e) => sum + e.value, 0)
+      const midFraction = (prevTotal + entry.value / 2) / totalValue
       const angle = 2 * Math.PI * midFraction
+      const isFocused = selectedKey?.startsWith(`${entry.method}::`) ?? false
+      // Tap on a method slice selects its Others bucket if present, else the first card of that method.
+      const keyForMethod =
+        data.find((d) => d.method === entry.method && d.isOther)?.key ??
+        data.find((d) => d.method === entry.method)?.key
       return {
-        value: item.value,
-        color: item.color,
-        text: `${item.percentage.toFixed(0)}%`,
-        focused: selectedKey === item.key,
+        value: entry.value,
+        color: entry.color,
+        text: `${entry.percentage.toFixed(0)}%`,
+        focused: isFocused,
         shiftTextX: delta * Math.sin(angle),
         shiftTextY: -delta * Math.cos(angle),
-        onPress: () => handleSegmentPress(item.key),
+        onPress: keyForMethod ? () => handleSegmentPress(keyForMethod) : undefined,
       }
     })
   }, [data, selectedKey, handleSegmentPress, chartSize])

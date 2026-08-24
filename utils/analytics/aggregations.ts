@@ -17,6 +17,7 @@ import {
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { getCurrencySymbol } from "../currency"
 import { PaymentInstrumentSelectionKey, resolveInstrumentKeyForExpense } from "./filters"
+import { methodShortLabel } from "./filter-summary"
 
 // Category color map type for dynamic categories
 export type CategoryColorMap = Record<string, string>
@@ -214,11 +215,11 @@ export function aggregateByPaymentInstrument(
   for (const [key, entry] of totals) {
     if (entry.value <= 0) continue
 
-    let text = `${t(`paymentMethods.${getPaymentMethodI18nKey(entry.method)}`)} • ${t("instruments.dropdown.others").split(" / ")[0]}`
+    let text = `${methodShortLabel(entry.method)} • ${t("instruments.dropdown.others").split(" / ")[0]}`
     if (!entry.isOther && entry.instrumentId) {
       const inst = findInstrumentById(instruments, entry.instrumentId)
       if (inst && !inst.deletedAt) {
-        text = `${t(`paymentMethods.${getPaymentMethodI18nKey(entry.method)}`)} • ${formatPaymentInstrumentLabel(inst)}`
+        text = `${methodShortLabel(entry.method)} • ${formatPaymentInstrumentLabel(inst)}`
       }
     }
 

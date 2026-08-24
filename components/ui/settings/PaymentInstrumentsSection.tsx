@@ -11,6 +11,7 @@ import {
   getActivePaymentInstruments,
   PAYMENT_INSTRUMENT_METHODS,
 } from "../../../services/payment-instruments"
+import { methodShortLabel } from "../../../utils/analytics/filter-summary"
 import { PaymentInstrumentFormModal } from "../PaymentInstrumentFormModal"
 import { useTranslation } from "react-i18next"
 import { UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../../constants/ui-tokens"
@@ -185,7 +186,7 @@ export function PaymentInstrumentsSection() {
                             opacity: UI_OPACITY.faint,
                           }}
                         >
-                          {method}
+                          {methodShortLabel(method)}
                         </Text>
                         {list.map((inst) => (
                           <View
