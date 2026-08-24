@@ -4,6 +4,7 @@ import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentInstrumentChartDataItem } from "../../utils/analytics/aggregations"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
+import type { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
@@ -14,7 +15,9 @@ interface PaymentInstrumentPieChartProps {
   data: PaymentInstrumentChartDataItem[]
   currencyCode?: string
   selectedKey?: PaymentInstrumentSelectionKey | null
+  selectedKeys?: PaymentInstrumentSelectionKey[]
   onSelect?: (key: PaymentInstrumentSelectionKey | null) => void
+  onMethodSelect?: (method: PaymentInstrumentMethod) => void
 }
 
 const LegendItem = memo(function LegendItem({
@@ -74,7 +77,9 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   data,
   currencyCode = "INR",
   selectedKey = null,
+  selectedKeys,
   onSelect,
+  onMethodSelect,
 }: PaymentInstrumentPieChartProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
@@ -83,12 +88,25 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
 
+  // Effective selected keys for highlight (supports both single and multi)
+  const effectiveSelectedKeys = useMemo(
+    () => selectedKeys ?? (selectedKey ? [selectedKey] : []),
+    [selectedKeys, selectedKey]
+  )
+
   const handleSegmentPress = useCallback(
     (key: PaymentInstrumentSelectionKey) => {
       const next = selectedKey === key ? null : key
       onSelect?.(next)
     },
     [selectedKey, onSelect]
+  )
+
+  const handleMethodPress = useCallback(
+    (method: PaymentInstrumentMethod) => {
+      onMethodSelect?.(method)
+    },
+    [onMethodSelect]
   )
 
   // Chart slices are aggregated by payment method (CC/DC/UPI) for distinct
@@ -123,11 +141,9 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
       const prevTotal = methodEntries.slice(0, index).reduce((sum, e) => sum + e.value, 0)
       const midFraction = (prevTotal + entry.value / 2) / totalValue
       const angle = 2 * Math.PI * midFraction
-      const isFocused = selectedKey?.startsWith(`${entry.method}::`) ?? false
-      // Tap on a method slice selects its Others bucket if present, else the first card of that method.
-      const keyForMethod =
-        data.find((d) => d.method === entry.method && d.isOther)?.key ??
-        data.find((d) => d.method === entry.method)?.key
+      const isFocused = effectiveSelectedKeys.some((k) =>
+        k.startsWith(`${entry.method}::`)
+      )
       return {
         value: entry.value,
         color: entry.color,
@@ -135,10 +151,10 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
         focused: isFocused,
         shiftTextX: delta * Math.sin(angle),
         shiftTextY: -delta * Math.cos(angle),
-        onPress: keyForMethod ? () => handleSegmentPress(keyForMethod) : undefined,
+        onPress: () => handleMethodPress(entry.method as PaymentInstrumentMethod),
       }
     })
-  }, [data, selectedKey, handleSegmentPress, chartSize])
+  }, [data, effectiveSelectedKeys, handleMethodPress, chartSize])
 
   const total = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data])
 
@@ -192,7 +208,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
               key={item.key}
               item={item}
               currencyCode={currencyCode}
-              isSelected={selectedKey === item.key}
+              isSelected={effectiveSelectedKeys.includes(item.key)}
               selectedBgColor={chartColors.selectedBg}
               onPress={() => handleSegmentPress(item.key)}
             />

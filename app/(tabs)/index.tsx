@@ -14,6 +14,7 @@ import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
 import type { PaymentMethodType } from "../../types/expense"
+import type { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { formatMonthLabel } from "../../utils/analytics/time"
 import {
   formatListBreakdown,
@@ -198,6 +199,29 @@ export default function AnalyticsScreen() {
       startTransition(() => setSelectedPaymentInstruments(newInstruments))
     },
     [selectedPaymentInstruments, setSelectedPaymentInstruments]
+  )
+
+  const handlePaymentInstrumentMethodSelect = useCallback(
+    (method: PaymentInstrumentMethod) => {
+      logAsync("INFO", "UI_ACTION", "ANALYTICS_INSTRUMENT_METHOD_SELECT")
+      const methodKeys = paymentInstrumentChartData
+        .filter((d) => d.method === method)
+        .map((d) => d.key)
+      if (methodKeys.length === 0) return
+      const allSelected = methodKeys.every((k) => selectedPaymentInstruments.includes(k))
+      startTransition(() => {
+        if (allSelected) {
+          setSelectedPaymentInstruments([])
+        } else {
+          setSelectedPaymentInstruments(methodKeys)
+        }
+      })
+    },
+    [
+      paymentInstrumentChartData,
+      selectedPaymentInstruments,
+      setSelectedPaymentInstruments,
+    ]
   )
 
   const currencyButtons = useMemo(() => {
@@ -505,7 +529,9 @@ export default function AnalyticsScreen() {
                       ? selectedPaymentInstruments[0]
                       : null
                   }
+                  selectedKeys={selectedPaymentInstruments}
                   onSelect={handlePaymentInstrumentSelect}
+                  onMethodSelect={handlePaymentInstrumentMethodSelect}
                 />
               </View>
             </>
