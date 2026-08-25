@@ -6,10 +6,10 @@ import { ChevronRight, FileDown } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
-import { saveExpenseExportToFile } from "../../services/csv-export"
 import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useSyncAction } from "../../hooks/use-sync-action"
+import { useExportAction } from "../../hooks/use-export-action"
 import { testConnection, SyncConfig, syncDown } from "../../services/sync-manager"
 import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
@@ -84,7 +84,7 @@ export default function SettingsScreen() {
 
   // GitHub config state
   const [isTesting, setIsTesting] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
+  const { handleExport: handleExportCsv, isExporting } = useExportAction()
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "success" | "error">(
     "idle"
   )
@@ -455,24 +455,6 @@ export default function SettingsScreen() {
     },
     [setSmsRegion]
   )
-
-  const handleExportCsv = useCallback(async () => {
-    setIsExporting(true)
-    try {
-      const result = await saveExpenseExportToFile(state.expenses)
-      if (result.success && result.uri) {
-        // Direct save to Downloads (Android SAF) or Documents (iOS)
-        addNotification(t("settings.general.exportSuccess"), "success")
-      } else if (result.cancelled) {
-        // User dismissed folder picker — no notification needed
-        return
-      } else {
-        addNotification(t("settings.general.exportError"), "error")
-      }
-    } finally {
-      setIsExporting(false)
-    }
-  }, [state.expenses, addNotification, t])
 
   const handleSyncSettingsToggle = useCallback(
     (enabled: boolean) => {

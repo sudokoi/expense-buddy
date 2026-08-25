@@ -1,8 +1,8 @@
-# ADR-011: Local CSV Export via Share Sheet
+# ADR-011: Local CSV Export — Direct Download (amended)
 
-**Date:** 2026-08-23
-**Status:** Proposed
-**Related:** ADR-010 (Region Packs), `services/csv-handler.ts`
+**Date:** 2026-08-23 (amended 2026-08-26)
+**Status:** Accepted (amended)
+**Related:** ADR-010 (Region Packs), `services/csv-handler.ts`, `services/csv-export.ts`, `hooks/use-export-action.ts`
 
 ---
 
@@ -38,13 +38,21 @@ Zip was evaluated and rejected for v1:
 
 If a full-repo offline backup is ever wanted, it should be a separate "backup bundle" feature, not a bolt-on to CSV export.
 
-### 3. Delivery: cache directory + system share sheet
+### 3. Delivery: direct download (amended) + share fallback
 
-Write the CSV to the app cache directory (`expo-file-system`), then hand off via `expo-sharing`'s share sheet. The user chooses the destination (Files, Drive, email, etc.).
+**Original (2026-08-23):** cache directory + system share sheet.
 
-- Avoids Android scoped-storage permissions entirely — no `WRITE_EXTERNAL_STORAGE`, no MediaStore dance.
-- The share sheet makes destination selection explicit, which matters because the file is plaintext financial data.
-- Filename convention: `expense-buddy-export-YYYY-MM-DD.csv`.
+**Amended (2026-08-26):** direct download as primary, share as fallback.
+
+- Direct save via Storage Access Framework: picker is pre-filled with the Downloads folder (`getUriForDirectoryInRoot("Download")` → `requestDirectoryPermissionsAsync` → `createFileAsync`), so the file lands directly in the user’s Downloads folder. Scoped grant — no `WRITE_EXTERNAL_STORAGE` / MediaStore permission.
+- On platforms without SAF, saves to the app’s document directory under an `ExpenseBuddy` subfolder (`Paths.document/ExpenseBuddy`), overwriting idempotently for same-day exports.
+- **Fallback:** if SAF is unavailable or user cancels, `downloadExpensesToCsv` falls back to the original `cache + expo-sharing` flow; cancelled picker surfaces `exportCancelled` info toast without error.
+- Filename convention unchanged: `expense-buddy-export-YYYY-MM-DD.csv`.
+
+Rationale for amendment: users expected a single “Save to file” tap, not a chooser with mail/drive apps; SAF still keeps destination explicit (folder picker) for plaintext financial data.
+
+- Avoids scoped-storage permissions entirely — no `WRITE_EXTERNAL_STORAGE`, no MediaStore dance.
+- Destination selection remains explicit (system folder picker, or app-visible document folder).
 
 ### 4. Entry point: Settings
 
@@ -76,12 +84,13 @@ Because export already emits the full schema including tombstones, no export-sid
 - Very large histories produce large single files; acceptable until real users report it.
 - Export includes soft-deleted rows, which may surprise users reading the file in a spreadsheet; a header note is impractical in CSV — accepted, documented here.
 
-## Rejected alternatives
+## Rejected alternatives (updated)
 
 1. **Zipped daily-tree export mirroring the sync layout.**
    - Rejected: duplicates what GitHub sync already provides, adds native/JS zip dependencies, worse UX (not previewable). Revisit only as a distinct backup feature.
-2. **Direct Downloads/MediaStore write without share sheet.**
-   - Rejected: requires storage permissions or MediaStore APIs on modern Android for zero benefit over the share sheet.
+2. **Direct Downloads/MediaStore write without share sheet (original).**
+   - **Originally rejected** (2026-08-23): requires storage permissions or MediaStore APIs for zero benefit over share sheet.
+   - **Reconsidered and accepted** (2026-08-26) via SAF `createFileAsync` — scoped permission via system picker, no `WRITE_EXTERNAL_STORAGE`, single-tap “Save to file” matches user expectation; share remains as fallback.
 3. **Filtered/scoped exports (date range, category).**
    - Deferred: complicates the round-trip contract (partial imports need careful merge semantics). Ship whole-ledger export first.
 4. **JSON export.**
