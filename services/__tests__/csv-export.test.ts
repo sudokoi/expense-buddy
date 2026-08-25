@@ -1,4 +1,9 @@
-import { exportExpensesToCsv, buildExpenseExportFilename } from "../csv-export"
+import {
+  exportExpensesToCsv,
+  buildExpenseExportFilename,
+  saveExpenseExportToFile,
+  downloadExpensesToCsv,
+} from "../csv-export"
 import { Expense } from "../../types/expense"
 
 const mockShareAsync = jest.fn()
@@ -13,6 +18,7 @@ interface MockInstance {
   name: string
   uri: string
   writtenContent: string | null
+  exists: boolean
 }
 
 jest.mock("expo-file-system", () => {
@@ -22,6 +28,7 @@ jest.mock("expo-file-system", () => {
     uri: string
     name: string
     writtenContent: string | null
+    exists = false
 
     constructor(_dir: unknown, name: string) {
       this.name = name
@@ -35,12 +42,52 @@ jest.mock("expo-file-system", () => {
         throw new Error("disk full")
       }
       this.writtenContent = content
+      this.exists = true
+    }
+
+    delete(): void {
+      this.exists = false
+    }
+  }
+
+  class MockDirectory {
+    static pickShouldCancel = false
+    static lastPicked: MockDirectory | null = null
+    uri: string
+
+    constructor(uri: unknown, _name?: string) {
+      // Handle new Directory(Paths.document) or Directory.pickDirectoryAsync result
+      if (typeof uri === "string" && uri.startsWith("file://")) {
+        this.uri = uri
+      } else if (uri && typeof (uri as { uri?: string }).uri === "string") {
+        this.uri = (uri as { uri: string }).uri
+      } else {
+        this.uri = "file://document/"
+      }
+      MockDirectory.lastPicked = this
+    }
+
+    static async pickDirectoryAsync(): Promise<MockDirectory | null> {
+      if (MockDirectory.pickShouldCancel) return null
+      return new MockDirectory("file://picked/")
+    }
+
+    createFile(name: string, _mimeType: string): MockFile {
+      const f = new MockFile(this.uri, name)
+      // Override uri to reflect picked directory
+      f.uri = `${this.uri}${name}`
+      return f as unknown as MockFile
+    }
+
+    get exists(): boolean {
+      return true
     }
   }
 
   return {
     File: MockFile,
-    Paths: { cache: "file://cache/" },
+    Directory: MockDirectory,
+    Paths: { cache: "file://cache/", document: "file://document/" },
   }
 })
 
@@ -133,6 +180,76 @@ describe("csv-export", () => {
 
       expect(result.file).toBeNull()
       expect(result.shared).toBe(false)
+    })
+  })
+
+  describe("saveExpenseExportToFile", () => {
+    it("writes via fallback path when picker unavailable (non-Android)", async () => {
+      const result = await saveExpenseExportToFile([makeExpense({ id: "fallback" })])
+
+      expect(result.success).toBe(true)
+      expect(result.uri).toMatch(/file:\/\//)
+      expect(MockFile.instances[0]?.writtenContent).toContain("fallback")
+    })
+
+    it("overwrites existing file idempotently", async () => {
+      await saveExpenseExportToFile([makeExpense({ id: "first" })], "same-day.csv")
+      const firstInstance = MockFile.instances[0]
+      expect(firstInstance.exists).toBe(true)
+
+      const result = await saveExpenseExportToFile(
+        [makeExpense({ id: "second" })],
+        "same-day.csv"
+      )
+
+      expect(result.success).toBe(true)
+      expect(MockFile.instances.length).toBe(2)
+      expect(MockFile.instances[1].writtenContent).toContain("second")
+    })
+
+    it("returns error on write failure", async () => {
+      MockFile.failNextWrite = true
+      const result = await saveExpenseExportToFile([makeExpense()])
+      expect(result.success).toBe(false)
+      expect(result.uri).toBeNull()
+      expect(result.error).toMatch(/disk full/)
+    })
+  })
+
+  describe("downloadExpensesToCsv", () => {
+    it("returns direct save result when save succeeds", async () => {
+      const result = await downloadExpensesToCsv([makeExpense({ id: "direct" })])
+
+      expect(result.success).toBe(true)
+      expect(result.uri).toMatch(/file:\/\//)
+      expect(mockShareAsync).not.toHaveBeenCalled()
+    })
+
+    it("falls back to share sheet when direct save fails but share succeeds", async () => {
+      // Force first write (save fallback) to fail, second write (share fallback) to succeed
+      let callCount = 0
+      const originalWrite = MockFile.prototype.write
+      MockFile.prototype.write = async function (this: MockInstance, content: string) {
+        callCount++
+        if (callCount === 1) throw new Error("disk full")
+        return originalWrite.call(this, content)
+      }
+
+      const result = await downloadExpensesToCsv([makeExpense()])
+
+      expect(result.success).toBe(true)
+      expect(result.fallbackShared).toBe(true)
+      expect(mockShareAsync).toHaveBeenCalled()
+
+      MockFile.prototype.write = originalWrite
+    })
+
+    it("does not fall back to share when direct save succeeds", async () => {
+      // Ensure share is not called when save succeeds (happy path already verifies, but explicit)
+      MockFile.failNextWrite = false
+      const result = await downloadExpensesToCsv([makeExpense({ id: "no-fallback" })])
+      expect(result.success).toBe(true)
+      expect(mockShareAsync).not.toHaveBeenCalled()
     })
   })
 })
