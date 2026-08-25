@@ -29,6 +29,7 @@ export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilter
 
   // Sync external value changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs controlled prop to internal debounced state
     setInputValue(value)
   }, [value])
 

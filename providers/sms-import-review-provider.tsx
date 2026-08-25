@@ -61,6 +61,7 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchItems syncs native Room queue into React state on mount
     fetchItems()
   }, [fetchItems])
 

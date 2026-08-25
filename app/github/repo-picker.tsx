@@ -169,6 +169,7 @@ export default function GitHubRepoPickerScreen() {
   }, [t])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load() syncs external GitHub repos into local state on mount
     void load()
   }, [load])
 
