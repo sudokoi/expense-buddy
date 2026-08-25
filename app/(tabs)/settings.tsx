@@ -520,6 +520,7 @@ export default function SettingsScreen() {
           >
             <View className="flex-row flex-wrap gap-2">
               <Button
+                variant="outline"
                 onPress={handleScanSmsImports}
                 disabled={isScanningSmsImports}
                 accessibilityLabel={t("settings.smsImport.actions.scan")}
@@ -533,6 +534,7 @@ export default function SettingsScreen() {
             {pendingSmsImportItems.length > 0 ? (
               <View className="flex-row flex-wrap gap-2">
                 <Button
+                  variant="outline"
                   onPress={openSmsImportReview}
                   accessibilityLabel={t("settings.smsImport.actions.reviewWithPending", {
                     count: pendingSmsImportItems.length,
