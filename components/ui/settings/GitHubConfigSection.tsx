@@ -7,7 +7,6 @@ import { validateGitHubConfig } from "../../../utils/github-config-validation"
 import {
   SEMANTIC_COLORS,
   SEMANTIC_FOREGROUND_COLORS,
-  getReadableTextColor,
 } from "../../../constants/theme-colors"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
 import { useRouter, useFocusEffect } from "expo-router"
@@ -56,8 +55,6 @@ export interface GitHubConfigSectionProps {
 // Memoized theme colors
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
-const successTextColor = getReadableTextColor(successColor)
-const errorTextColor = getReadableTextColor(errorColor)
 
 /**
  * GitHubConfigSection - Collapsible GitHub configuration form
@@ -407,7 +404,7 @@ export function GitHubConfigSection({
               {t("settings.github.saveConfig")}
             </Button>
             <Button
-              className="flex-1 gap-2"
+              className="flex-1"
               style={
                 connectionStatus === "success"
                   ? { backgroundColor: successColor }
@@ -419,26 +416,17 @@ export function GitHubConfigSection({
               onPress={handleTestConnection}
               disabled={isTesting || !token || !repo}
               variant="accent"
+              icon={
+                connectionStatus === "success" ? (
+                  <Check size={16} />
+                ) : connectionStatus === "error" ? (
+                  <X size={16} />
+                ) : isTesting ? (
+                  <Spinner size="small" />
+                ) : null
+              }
             >
-              {connectionStatus === "success" ? (
-                <Check size={16} color={successTextColor} />
-              ) : connectionStatus === "error" ? (
-                <X size={16} color={errorTextColor} />
-              ) : isTesting ? (
-                <Spinner size="small" />
-              ) : null}
-              <Text
-                style={{
-                  color:
-                    connectionStatus === "success"
-                      ? successTextColor
-                      : connectionStatus === "error"
-                        ? errorTextColor
-                        : undefined,
-                }}
-              >
-                {isTesting ? t("settings.github.testing") : t("settings.github.test")}
-              </Text>
+              {isTesting ? t("settings.github.testing") : t("settings.github.test")}
             </Button>
           </View>
 
@@ -447,10 +435,10 @@ export function GitHubConfigSection({
             <Button
               size="compact"
               variant="destructive"
-              className="gap-2 mt-3"
+              className="mt-3"
+              icon={<X size={16} />}
               onPress={handleClearConfig}
             >
-              <X size={16} />
               {t("settings.github.clearConfig")}
             </Button>
           )}

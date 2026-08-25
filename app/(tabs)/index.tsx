@@ -445,12 +445,11 @@ export default function AnalyticsScreen() {
 
         <Button
           size="chip"
-          className="gap-2"
+          icon={<Filter size={16} />}
           disabled={!filtersHydrated}
           onPress={openFilters}
           variant={activeCount > 0 ? "accent" : undefined}
         >
-          <Filter size={16} />
           {!filtersHydrated
             ? t("analytics.filters.button")
             : activeCount > 0

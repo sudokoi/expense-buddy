@@ -212,12 +212,10 @@ export function PaymentInstrumentInlineDropdown({
       <Button
         size="control"
         variant="ghost"
-        className={
-          open ? "gap-2 border border-border bg-muted" : "gap-2 border border-border"
-        }
+        className={open ? "border border-border bg-muted" : "border border-border"}
+        icon={open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         onPress={() => setOpen((v) => !v)}
       >
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         {headerLabel}
       </Button>
 
@@ -335,10 +333,10 @@ export function PaymentInstrumentInlineDropdown({
             <Button
               size="control"
               variant="accent"
-              className="gap-2 border border-border"
+              className="border border-border"
+              icon={<Plus size={16} />}
               onPress={handleStartAdd}
             >
-              <Plus size={16} />
               {showAdd
                 ? t("instruments.dropdown.cancelAdd")
                 : t("instruments.dropdown.addSaved")}

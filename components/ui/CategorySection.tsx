@@ -227,8 +227,12 @@ export const CategorySection = memo(function CategorySection({
             )}
 
             <View className="mt-4">
-              <Button size="control" variant="accent" className="gap-2" onPress={onAdd}>
-                <Plus size={UI_ICON_SIZE.regular} color={theme.accentForeground} />
+              <Button
+                size="control"
+                variant="accent"
+                icon={<Plus size={UI_ICON_SIZE.regular} />}
+                onPress={onAdd}
+              >
                 {t("settings.categories.add")}
               </Button>
             </View>

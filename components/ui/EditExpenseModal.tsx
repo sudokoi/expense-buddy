@@ -377,10 +377,9 @@ export function EditExpenseModal({
             <Button
               size="control"
               variant="accent"
-              className="gap-2"
+              icon={<Check size={16} />}
               onPress={handleSave}
             >
-              <Check size={16} color={theme.accentForeground} />
               {t("common.save")}
             </Button>
           </View>

@@ -288,13 +288,10 @@ export function CategoryFormModal({
             <Button
               size="control"
               variant="accent"
-              className="gap-2"
+              icon={<Check size={20} />}
               onPress={handleSave}
             >
-              <Check size={20} />
-              <Text className="font-bold">
-                {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
-              </Text>
+              {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}
             </Button>
           </View>
         </View>
