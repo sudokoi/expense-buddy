@@ -2,6 +2,7 @@ import { Pressable, Text } from "react-native"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { resolveCategoryColor } from "../../utils/resolve-category-color"
 import { UI_FONT_SIZE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
@@ -20,7 +21,7 @@ interface CategoryCardProps {
  */
 export const CategoryCard = memo(function CategoryCard({
   isSelected,
-  categoryColor: _categoryColor,
+  categoryColor,
   label,
   onPress,
   compact = false,
@@ -28,6 +29,8 @@ export const CategoryCard = memo(function CategoryCard({
 }: CategoryCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const { resolvedColor, iconColor: selectedTextColor } =
+    resolveCategoryColor(categoryColor)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
@@ -43,8 +46,8 @@ export const CategoryCard = memo(function CategoryCard({
           : "w-[30%] items-center justify-center rounded-chip p-3"
       }
       style={{
-        backgroundColor: isSelected ? theme.accent : theme.muted,
-        borderColor: isSelected ? theme.accent : theme.border,
+        backgroundColor: isSelected ? resolvedColor : theme.muted,
+        borderColor: isSelected ? resolvedColor : theme.border,
         borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
       }}
     >
@@ -54,7 +57,7 @@ export const CategoryCard = memo(function CategoryCard({
         numberOfLines={1}
         style={{
           fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
-          color: isSelected ? theme.accentForeground : theme.foreground,
+          color: isSelected ? selectedTextColor : theme.foreground,
           fontSize: compact ? UI_FONT_SIZE.micro : UI_FONT_SIZE.body,
         }}
       >

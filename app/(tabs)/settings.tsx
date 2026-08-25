@@ -6,7 +6,7 @@ import { ChevronRight, FileDown } from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
-import { exportExpensesToCsv } from "../../services/csv-export"
+import { saveExpenseExportToFile } from "../../services/csv-export"
 import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { useUpdateCheck } from "../../hooks/use-update-check"
 import { useSyncAction } from "../../hooks/use-sync-action"
@@ -459,13 +459,15 @@ export default function SettingsScreen() {
   const handleExportCsv = useCallback(async () => {
     setIsExporting(true)
     try {
-      const result = await exportExpensesToCsv(state.expenses)
-      if (!result.file) {
-        addNotification(t("settings.general.exportError"), "error")
-      } else if (result.shared) {
+      const result = await saveExpenseExportToFile(state.expenses)
+      if (result.success && result.uri) {
+        // Direct save to Downloads (Android SAF) or Documents (iOS)
         addNotification(t("settings.general.exportSuccess"), "success")
+      } else if (result.cancelled) {
+        // User dismissed folder picker — no notification needed
+        return
       } else {
-        addNotification(t("settings.general.exportSaved"), "info")
+        addNotification(t("settings.general.exportError"), "error")
       }
     } finally {
       setIsExporting(false)
