@@ -1,4 +1,4 @@
-import { File, Paths } from "expo-file-system"
+import { Directory, File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
 import { Platform } from "react-native"
 import * as LegacyFS from "expo-file-system/legacy"
@@ -66,14 +66,13 @@ export interface SaveExportResult {
 /**
  * Direct download to device storage (ADR-011 updated).
  *
- * Android: uses Storage Access Framework to save into the user's chosen
+ * Uses Storage Access Framework where available to save into the user's chosen
  * directory (defaults to Downloads). No WRITE_EXTERNAL_STORAGE permission
  * needed — SAF grants scoped write via the system picker. Result URI is a
- * `content://` SAF URI.
+ * `content://` SAF URI on Android.
  *
- * iOS: saves to the app's document directory (`Paths.document`) which is
- * visible in the Files app when `UIFileSharingEnabled` is set (app.config.js).
- * No picker — file is immediately available.
+ * On other platforms, saves to the app's document directory under an
+ * `ExpenseBuddy` subfolder, overwriting idempotently for same-day exports.
  */
 export async function saveExpenseExportToFile(
   expenses: Expense[],
@@ -101,8 +100,27 @@ export async function saveExpenseExportToFile(
       return { uri: fileUri, success: true }
     }
 
-    // iOS / other: save to document directory (Files app)
-    const file = new File(Paths.document, filename)
+    // iOS / other: save to document/ExpenseBuddy subfolder (scoped Files visibility)
+    const exportDir = new Directory(Paths.document, "ExpenseBuddy")
+    try {
+      if (!exportDir.exists) {
+        // LegacyFS handles intermediates reliably across SDKs
+        await LegacyFS.makeDirectoryAsync(exportDir.uri, {
+          intermediates: true,
+        })
+      }
+    } catch {
+      // Directory creation may fail if already exists — ignore
+    }
+    const file = new File(exportDir, filename)
+    // Overwrite idempotently if file already exists for this day
+    if (file.exists) {
+      try {
+        file.delete()
+      } catch {
+        // ignore delete failure, write will overwrite
+      }
+    }
     await file.write(csv)
     return { uri: file.uri, success: true }
   } catch (error) {
