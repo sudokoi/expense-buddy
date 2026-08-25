@@ -1,6 +1,6 @@
 import type { ReactNode, ComponentType } from "react"
 import { memo } from "react"
-import { ScrollView, Text, View } from "react-native"
+import { ScrollView, View } from "react-native"
 import { Button } from "../ui/Button"
 
 /**
@@ -51,15 +51,12 @@ export const FilterChip = memo(function FilterChip({
   return (
     <Button
       size="chip"
-      className={Icon ? "gap-1" : undefined}
       variant={selected ? "accent" : "outline"}
+      icon={Icon ? <Icon size={iconSize} /> : undefined}
       onPress={onPress}
       accessibilityState={{ selected }}
     >
-      {Icon ? <Icon size={iconSize} /> : null}
-      <Text adjustsFontSizeToFit numberOfLines={1}>
-        {label}
-      </Text>
+      {label}
     </Button>
   )
 })
