@@ -656,12 +656,12 @@ export default function SettingsScreen() {
             <Label>{t("settings.general.exportLabel")}</Label>
             <Button
               size="control"
+              variant="accent"
+              icon={<FileDown size={UI_ICON_SIZE.small} />}
               onPress={handleExportCsv}
               disabled={isExporting}
-              variant="accent"
               accessibilityLabel={t("settings.general.exportButton")}
             >
-              <FileDown size={UI_ICON_SIZE.small} />
               {isExporting
                 ? t("settings.general.exporting")
                 : t("settings.general.exportButton")}

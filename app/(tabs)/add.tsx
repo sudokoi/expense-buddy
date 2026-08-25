@@ -307,23 +307,20 @@ export default function AddExpenseScreen() {
             <Button
               size="control"
               variant="accent"
-              className="gap-2"
+              icon={<Download size={20} />}
               onPress={() => {
                 void handleOpenSmsImport()
               }}
               disabled={isScanningSmsImports}
               accessibilityLabel={t("add.importSms")}
             >
-              <Download size={20} />
-              <Text className="font-bold">
-                {isScanningSmsImports
-                  ? t("settings.smsImport.actions.scanning")
-                  : pendingSmsImportItems.length > 0
-                    ? t("add.importSmsWithPending", {
-                        count: pendingSmsImportItems.length,
-                      })
-                    : t("add.importSms")}
-              </Text>
+              {isScanningSmsImports
+                ? t("settings.smsImport.actions.scanning")
+                : pendingSmsImportItems.length > 0
+                  ? t("add.importSmsWithPending", {
+                      count: pendingSmsImportItems.length,
+                    })
+                  : t("add.importSms")}
             </Button>
           ) : null}
 
@@ -377,11 +374,10 @@ export default function AddExpenseScreen() {
               <Label className="opacity-80">{t("add.date")}</Label>
               <Button
                 size="control"
-                className="gap-2"
+                icon={<Calendar size={16} />}
                 onPress={() => setShowDatePicker(true)}
                 accessibilityLabel={t("add.date")}
               >
-                <Calendar size={16} />
                 {date.toLocaleDateString()}
               </Button>
             </View>
@@ -511,24 +507,24 @@ export default function AddExpenseScreen() {
           {/* Save Buttons */}
           <View className="mt-4 flex-row gap-2">
             <Button
-              className="flex-1 gap-2"
+              className="flex-1"
               size="control"
               variant="outline"
+              icon={<Plus size={20} />}
               onPress={() => handleSave({ stayOnAdd: true })}
               accessibilityLabel={t("add.addAnother")}
             >
-              <Plus size={20} />
-              <Text className="font-bold">{t("add.addAnother")}</Text>
+              {t("add.addAnother")}
             </Button>
             <Button
-              className="flex-1 gap-2"
+              className="flex-1"
               size="control"
               variant="accent"
+              icon={<Check size={20} />}
               onPress={() => handleSave({ stayOnAdd: false })}
               accessibilityLabel={t("add.save")}
             >
-              <Check size={20} />
-              <Text className="font-bold">{t("add.save")}</Text>
+              {t("add.save")}
             </Button>
           </View>
         </View>
