@@ -31,7 +31,7 @@ const buttonVariants = cva(
   }
 )
 
-const buttonTextVariants = cva("text-foreground", {
+const buttonTextVariants = cva("", {
   variants: {
     variant: {
       default: "text-foreground",
@@ -40,6 +40,9 @@ const buttonTextVariants = cva("text-foreground", {
       ghost: "text-foreground",
       destructive: "text-white",
     },
+  },
+  defaultVariants: {
+    variant: "default",
   },
 })
 
@@ -69,7 +72,7 @@ function wrapTextChildren(children: ReactNode, variant: ButtonVariant): ReactNod
   const colorClass = buttonTextVariants({ variant })
   return Children.map(children, (child) => {
     if (typeof child === "string" || typeof child === "number") {
-      return <Text className={colorClass}>{child}</Text>
+      return <Text className={cn(colorClass)}>{child}</Text>
     }
     if (isValidElement<{ className?: string }>(child) && child.type === Text) {
       const existing = child.props.className ?? ""

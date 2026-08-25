@@ -142,6 +142,12 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#FFF8F0",
     },
+    ios: {
+      infoPlist: {
+        UIFileSharingEnabled: true,
+        LSSupportsOpeningDocumentsInPlace: true,
+      },
+    },
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",

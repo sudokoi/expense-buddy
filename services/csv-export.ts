@@ -1,5 +1,7 @@
 import { File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
+import { Platform } from "react-native"
+import * as LegacyFS from "expo-file-system/legacy"
 
 import { exportToCSV } from "./csv-handler"
 import { Expense } from "../types/expense"
@@ -54,9 +56,65 @@ export interface ExpenseExportResult {
   file: File | null
 }
 
+export interface SaveExportResult {
+  uri: string | null
+  success: boolean
+  cancelled?: boolean
+  error?: string
+}
+
+/**
+ * Direct download to device storage (ADR-011 updated).
+ *
+ * Android: uses Storage Access Framework to save into the user's chosen
+ * directory (defaults to Downloads). No WRITE_EXTERNAL_STORAGE permission
+ * needed — SAF grants scoped write via the system picker. Result URI is a
+ * `content://` SAF URI.
+ *
+ * iOS: saves to the app's document directory (`Paths.document`) which is
+ * visible in the Files app when `UIFileSharingEnabled` is set (app.config.js).
+ * No picker — file is immediately available.
+ */
+export async function saveExpenseExportToFile(
+  expenses: Expense[],
+  filename: string = buildExpenseExportFilename()
+): Promise<SaveExportResult> {
+  const csv = exportToCSV(expenses)
+
+  try {
+    if (Platform.OS === "android") {
+      const SAF = LegacyFS.StorageAccessFramework
+      // Pre-fill picker with Downloads folder if available
+      const initialUri = SAF.getUriForDirectoryInRoot?.("Download") ?? null
+      const permission = await SAF.requestDirectoryPermissionsAsync(initialUri)
+      if (!permission.granted) {
+        return { uri: null, success: false, cancelled: true }
+      }
+      const fileUri = await SAF.createFileAsync(
+        permission.directoryUri,
+        filename,
+        EXPORT_MIME_TYPE
+      )
+      await LegacyFS.writeAsStringAsync(fileUri, csv, {
+        encoding: LegacyFS.EncodingType.UTF8,
+      })
+      return { uri: fileUri, success: true }
+    }
+
+    // iOS / other: save to document directory (Files app)
+    const file = new File(Paths.document, filename)
+    await file.write(csv)
+    return { uri: file.uri, success: true }
+  } catch (error) {
+    console.warn("Save export failed:", error)
+    return { uri: null, success: false, error: String(error) }
+  }
+}
+
 /**
  * Full local export flow: serialize the ledger, write to cache,
  * hand off to the share sheet (ADR-011).
+ * Kept for share-specific call sites; prefer saveExpenseExportToFile for direct download.
  */
 export async function exportExpensesToCsv(
   expenses: Expense[],
@@ -70,4 +128,27 @@ export async function exportExpensesToCsv(
     console.warn("CSV export failed:", error)
     return { shared: false, file: null }
   }
+}
+
+/**
+ * Preferred export entry: direct save to Downloads/Documents.
+ * Falls back to share sheet if SAF is unavailable or user cancels.
+ */
+export async function downloadExpensesToCsv(
+  expenses: Expense[],
+  filename?: string
+): Promise<SaveExportResult & { fallbackShared?: boolean }> {
+  const result = await saveExpenseExportToFile(expenses, filename)
+  if (result.success) return result
+  // If user cancelled picker, don't fallback — surface cancellation
+  if (result.cancelled) return result
+  // Fallback: try share flow for environments where SAF fails
+  try {
+    const file = await writeExpenseExportFile(expenses, filename)
+    const shared = await shareExpenseExport(file)
+    if (shared) return { uri: file.uri, success: true, fallbackShared: true }
+  } catch {
+    // ignore fallback error
+  }
+  return result
 }
