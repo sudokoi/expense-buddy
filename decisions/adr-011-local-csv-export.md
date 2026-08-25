@@ -44,8 +44,8 @@ If a full-repo offline backup is ever wanted, it should be a separate "backup bu
 
 **Amended (2026-08-26):** direct download as primary, share as fallback.
 
-- Direct save via Storage Access Framework: picker is pre-filled with the Downloads folder (`getUriForDirectoryInRoot("Download")` → `requestDirectoryPermissionsAsync` → `createFileAsync`), so the file lands directly in the user’s Downloads folder. Scoped grant — no `WRITE_EXTERNAL_STORAGE` / MediaStore permission.
-- On platforms without SAF, saves to the app’s document directory under an `ExpenseBuddy` subfolder (`Paths.document/ExpenseBuddy`), overwriting idempotently for same-day exports.
+- Direct save via the modern `expo-file-system` `Directory`/`File` API: `Directory.pickDirectoryAsync()` (system folder picker, user picks Downloads) → `Directory.createFile(filename, "text/csv")` → `File.write(csv)`. Scoped grant — no `WRITE_EXTERNAL_STORAGE` / MediaStore permission.
+- Fallback for non-interactive environments (tests, etc.): saves to app-private storage (`Paths.cache`/`Paths.document` fallback).
 - **Fallback:** if SAF is unavailable or user cancels, `downloadExpensesToCsv` falls back to the original `cache + expo-sharing` flow; cancelled picker surfaces `exportCancelled` info toast without error.
 - Filename convention unchanged: `expense-buddy-export-YYYY-MM-DD.csv`.
 
@@ -90,7 +90,7 @@ Because export already emits the full schema including tombstones, no export-sid
    - Rejected: duplicates what GitHub sync already provides, adds native/JS zip dependencies, worse UX (not previewable). Revisit only as a distinct backup feature.
 2. **Direct Downloads/MediaStore write without share sheet (original).**
    - **Originally rejected** (2026-08-23): requires storage permissions or MediaStore APIs for zero benefit over share sheet.
-   - **Reconsidered and accepted** (2026-08-26) via SAF `createFileAsync` — scoped permission via system picker, no `WRITE_EXTERNAL_STORAGE`, single-tap “Save to file” matches user expectation; share remains as fallback.
+   - **Reconsidered and accepted** (2026-08-26) via `Directory.pickDirectoryAsync` + `createFile` — scoped permission via system picker, no `WRITE_EXTERNAL_STORAGE`, single-tap “Save to file” matches user expectation; share remains as fallback.
 3. **Filtered/scoped exports (date range, category).**
    - Deferred: complicates the round-trip contract (partial imports need careful merge semantics). Ship whole-ledger export first.
 4. **JSON export.**
