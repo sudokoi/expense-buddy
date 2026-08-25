@@ -4,12 +4,7 @@ import { Card } from "./Card"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
-  | "$micro"
-  | "$control"
-  | "$section"
-  | "$gutter"
-  | "$block"
-  | "$empty"
+  "$micro" | "$control" | "$section" | "$gutter" | "$block" | "$empty"
 
 const gapClass: Record<SemanticSpaceToken, string> = {
   $micro: "gap-1",

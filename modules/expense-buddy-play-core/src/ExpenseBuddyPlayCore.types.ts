@@ -1,10 +1,7 @@
 import { NativeModule } from "expo"
 
 export type PlayStoreUpdateAvailability =
-  | "available"
-  | "in_progress"
-  | "not_available"
-  | "unknown"
+  "available" | "in_progress" | "not_available" | "unknown"
 
 export type PlayStoreInstallStatus =
   | "accepted"

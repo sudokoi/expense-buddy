@@ -12,11 +12,7 @@ import i18next from "i18next"
  * Error categories for classification
  */
 export type ErrorCategory =
-  | "network"
-  | "authentication"
-  | "validation"
-  | "storage"
-  | "unknown"
+  "network" | "authentication" | "validation" | "storage" | "unknown"
 
 /**
  * Classify an error into a category for appropriate handling

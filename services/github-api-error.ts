@@ -1,12 +1,7 @@
 import i18next from "../i18n"
 
 export type GitHubErrorCode =
-  | "AUTH"
-  | "PERMISSION"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "RATE_LIMIT"
-  | "UNKNOWN"
+  "AUTH" | "PERMISSION" | "NOT_FOUND" | "CONFLICT" | "RATE_LIMIT" | "UNKNOWN"
 
 export class GitHubApiError extends Error {
   public readonly status: number

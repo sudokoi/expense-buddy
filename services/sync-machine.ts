@@ -478,13 +478,7 @@ export const syncMachine = setup({
 
 // Type exports for external use
 export type SyncMachineState =
-  | "idle"
-  | "syncing"
-  | "conflict"
-  | "pushing"
-  | "inSync"
-  | "success"
-  | "error"
+  "idle" | "syncing" | "conflict" | "pushing" | "inSync" | "success" | "error"
 
 // Re-export types for convenience
 export type { TrueConflict, MergeResult, ConflictResolution, GitStyleSyncResult }

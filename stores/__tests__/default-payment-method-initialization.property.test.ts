@@ -10,12 +10,7 @@ import fc from "fast-check"
 
 // Define PaymentMethodType locally to avoid import issues in test environment
 type PaymentMethodType =
-  | "Cash"
-  | "UPI"
-  | "Credit Card"
-  | "Debit Card"
-  | "Net Banking"
-  | "Other"
+  "Cash" | "UPI" | "Credit Card" | "Debit Card" | "Net Banking" | "Other"
 
 const PAYMENT_METHOD_TYPES: PaymentMethodType[] = [
   "Cash",

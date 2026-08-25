@@ -5,10 +5,7 @@ export interface BackgroundSmsState {
 }
 
 export type BackgroundSmsPermissionStatus =
-  | "granted"
-  | "denied"
-  | "undetermined"
-  | "unavailable"
+  "granted" | "denied" | "undetermined" | "unavailable"
 
 export interface BackgroundSmsPermissionResponse {
   status: BackgroundSmsPermissionStatus
