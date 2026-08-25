@@ -306,7 +306,7 @@ export default function AddExpenseScreen() {
           {Platform.OS === "android" ? (
             <Button
               size="control"
-              variant="outline"
+              variant="accent"
               className="gap-2"
               onPress={() => {
                 void handleOpenSmsImport()
