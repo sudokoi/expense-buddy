@@ -1,4 +1,4 @@
-import { forwardRef, Children, cloneElement, isValidElement, type ReactNode } from "react"
+import React, { createContext, useContext, forwardRef } from "react"
 import { Pressable, Text, type PressableProps } from "react-native"
 import { cva, type VariantProps } from "class-variance-authority"
 import { LucideProvider } from "lucide-react-native"
@@ -48,8 +48,10 @@ const buttonTextVariants = cva("", {
 
 type ButtonVariant = VariantProps<typeof buttonVariants>["variant"]
 
-export interface ButtonProps extends PressableProps, VariantProps<typeof buttonVariants> {
+export interface ButtonProps
+  extends Omit<PressableProps, "children">, VariantProps<typeof buttonVariants> {
   className?: string
+  children?: React.ReactNode
 }
 
 /** Maps a button variant to its text/icon color token (accent variants invert). */
@@ -64,45 +66,95 @@ const VARIANT_TEXT_COLOR_KEY: Record<
   destructive: "white",
 }
 
-// Matches any existing text color utility so callers can override the button color.
-const TEXT_COLOR_CLASS_RE =
-  /\btext-(?:foreground|muted-foreground|accent|accent-foreground|error|success|warning|info|expense|income|background|white|black|kawaii-[a-z-]+)\b/
-
-function wrapChildren(
-  children: ReactNode,
-  variant: ButtonVariant,
+type ButtonContextValue = {
+  variant: NonNullable<ButtonVariant>
   iconColor: string
-): ReactNode {
-  const colorClass = buttonTextVariants({ variant })
-  return Children.map(children, (child) => {
+  textClass: string
+}
+
+const ButtonContext = createContext<ButtonContextValue | null>(null)
+
+function useButtonContext(): ButtonContextValue | null {
+  return useContext(ButtonContext)
+}
+
+// Composition primitives — use inside <Button> instead of raw <Text>/<Icon> + cloneElement
+
+export const ButtonText = forwardRef<
+  React.ElementRef<typeof Text>,
+  React.ComponentPropsWithoutRef<typeof Text>
+>(({ className, children, ...props }, ref) => {
+  const ctx = useButtonContext()
+  const colorClass = ctx ? ctx.textClass : buttonTextVariants({ variant: "default" })
+  return (
+    <Text ref={ref} className={cn(colorClass, className)} {...props}>
+      {children}
+    </Text>
+  )
+})
+ButtonText.displayName = "ButtonText"
+
+type IconComponent = React.ComponentType<{ size?: number; color?: string }>
+
+type ButtonIconProps = {
+  as: IconComponent
+  size?: number
+  color?: string
+} & Record<string, unknown>
+
+export function ButtonIcon({ as: Icon, color, size, ...rest }: ButtonIconProps) {
+  const ctx = useButtonContext()
+  const resolvedColor = color ?? ctx?.iconColor
+  return <Icon size={size} color={resolvedColor} {...rest} />
+}
+
+function wrapChildrenWithComposition(children: React.ReactNode): React.ReactNode {
+  return React.Children.map(children, (child) => {
     if (typeof child === "string" || typeof child === "number") {
-      return <Text className={cn(colorClass)}>{child}</Text>
+      return <ButtonText>{child}</ButtonText>
     }
-    if (isValidElement<{ className?: string }>(child) && child.type === Text) {
-      const existing = child.props.className ?? ""
-      if (TEXT_COLOR_CLASS_RE.test(existing)) return child
-      return cloneElement(child, { className: cn(colorClass, existing) })
-    }
-    // Lucide icons (and any element with size prop) — inject matching icon color if not explicitly set
     if (
-      isValidElement<{ color?: string; size?: number }>(child) &&
+      React.isValidElement<{ className?: string; children?: React.ReactNode }>(child) &&
+      child.type === Text
+    ) {
+      const existing = child.props.className ?? ""
+      if (
+        /\btext-(?:foreground|muted-foreground|accent|accent-foreground|error|success|warning|info|expense|income|background|white|black|kawaii-[a-z-]+)\b/.test(
+          existing
+        )
+      ) {
+        return child
+      }
+      return (
+        <ButtonText className={existing}>
+          {child.props.children as React.ReactNode}
+        </ButtonText>
+      )
+    }
+    if (
+      React.isValidElement<{ size?: number; color?: string }>(child) &&
       child.props.size !== undefined &&
       child.props.color === undefined
     ) {
-      return cloneElement(child, { color: iconColor } as never)
+      const Icon = child.type as IconComponent
+      const size = child.props.size
+      return <ButtonIcon as={Icon} size={size} />
     }
     return child
   })
 }
 
-export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
+const ButtonBase = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
   ({ className, variant, size, children, disabled, ...props }, ref) => {
     const theme = useThemeColors()
-    const resolvedVariant = variant ?? "default"
+    const resolvedVariant: NonNullable<ButtonVariant> = variant ?? "default"
     const colorKey = VARIANT_TEXT_COLOR_KEY[resolvedVariant]
     const iconColor = colorKey === "white" ? NEUTRAL_COLORS.white : theme[colorKey]
-    // Chip (h-7 = 28dp) needs hitSlop to reach 44dp; other sizes already meet target
+    const textClass = buttonTextVariants({ variant: resolvedVariant })
     const hitSlop = size === "chip" ? 8 : props.hitSlop
+
+    const content = wrapChildrenWithComposition(children)
+
     return (
       <Pressable
         ref={ref}
@@ -116,14 +168,22 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
         hitSlop={hitSlop}
         {...props}
       >
-        <LucideProvider color={iconColor}>
-          {wrapChildren(children as ReactNode, resolvedVariant, iconColor)}
-        </LucideProvider>
+        <ButtonContext.Provider
+          value={{ variant: resolvedVariant, iconColor, textClass }}
+        >
+          <LucideProvider color={iconColor}>{content}</LucideProvider>
+        </ButtonContext.Provider>
       </Pressable>
     )
   }
 )
 
-Button.displayName = "Button"
+ButtonBase.displayName = "Button"
+
+export const Button = Object.assign(ButtonBase, {
+  Text: ButtonText,
+  Icon: ButtonIcon,
+})
 
 export { buttonVariants }
+export { ButtonContext }
