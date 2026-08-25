@@ -93,12 +93,12 @@ export async function saveExpenseExportToFile(
       }
     }
 
-    // Fallback: save to app-private storage (or cache if document unavailable in test)
-    const baseDir = (Paths as unknown as { document?: string }).document ?? Paths.cache
+    // Fallback: save to app-private storage
+    const baseDir = Paths.document ?? Paths.cache
     const file = new File(baseDir, filename)
-    if ((file as unknown as { exists?: boolean }).exists) {
+    if (file.exists) {
       try {
-        ;(file as unknown as { delete: () => void }).delete()
+        file.delete()
       } catch {
         // ignore
       }
