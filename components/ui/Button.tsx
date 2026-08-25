@@ -68,7 +68,11 @@ const VARIANT_TEXT_COLOR_KEY: Record<
 const TEXT_COLOR_CLASS_RE =
   /\btext-(?:foreground|muted-foreground|accent|accent-foreground|error|success|warning|info|expense|income|background|white|black|kawaii-[a-z-]+)\b/
 
-function wrapTextChildren(children: ReactNode, variant: ButtonVariant): ReactNode {
+function wrapChildren(
+  children: ReactNode,
+  variant: ButtonVariant,
+  iconColor: string
+): ReactNode {
   const colorClass = buttonTextVariants({ variant })
   return Children.map(children, (child) => {
     if (typeof child === "string" || typeof child === "number") {
@@ -76,9 +80,16 @@ function wrapTextChildren(children: ReactNode, variant: ButtonVariant): ReactNod
     }
     if (isValidElement<{ className?: string }>(child) && child.type === Text) {
       const existing = child.props.className ?? ""
-      // Respect an explicit text color already set by the caller.
       if (TEXT_COLOR_CLASS_RE.test(existing)) return child
       return cloneElement(child, { className: cn(colorClass, existing) })
+    }
+    // Lucide icons (and any element with size prop) — inject matching icon color if not explicitly set
+    if (
+      isValidElement<{ color?: string; size?: number }>(child) &&
+      child.props.size !== undefined &&
+      child.props.color === undefined
+    ) {
+      return cloneElement(child, { color: iconColor } as never)
     }
     return child
   })
@@ -106,7 +117,7 @@ export const Button = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps
         {...props}
       >
         <LucideProvider color={iconColor}>
-          {wrapTextChildren(children as ReactNode, resolvedVariant)}
+          {wrapChildren(children as ReactNode, resolvedVariant, iconColor)}
         </LucideProvider>
       </Pressable>
     )
