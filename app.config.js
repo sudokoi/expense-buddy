@@ -161,6 +161,8 @@ export default {
     plugins: [
       "expo-router",
       "expo-font",
+      "expo-sharing",
+      "expo-splash-screen",
       "./plugins/withDisableNoDiscoveredTests",
       "./plugins/withThemedIconBackground",
       [

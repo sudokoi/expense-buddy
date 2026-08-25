@@ -17,11 +17,7 @@ export type GitHubDeviceTokenSuccess = {
 
 export type GitHubDeviceTokenError = {
   error:
-    | "authorization_pending"
-    | "slow_down"
-    | "expired_token"
-    | "access_denied"
-    | string
+    "authorization_pending" | "slow_down" | "expired_token" | "access_denied" | string
   error_description?: string
   error_uri?: string
 }

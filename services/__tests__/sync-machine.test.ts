@@ -389,8 +389,7 @@ describe("Sync Machine Integration Tests (Git-Style Flow)", () => {
       mockGitStyleSync.mockResolvedValue(syncResult)
 
       let receivedResult:
-        | { syncResult?: GitStyleSyncResult; mergeResult?: MergeResult }
-        | undefined
+        { syncResult?: GitStyleSyncResult; mergeResult?: MergeResult } | undefined
 
       const onSuccess: SyncCallbacks["onSuccess"] = (result) => {
         receivedResult = result

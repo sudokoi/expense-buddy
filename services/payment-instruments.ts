@@ -70,8 +70,7 @@ export function generatePaymentInstrumentId(): string {
 }
 
 export type PaymentInstrumentValidationResult =
-  | { success: true }
-  | { success: false; errors: Record<string, string> }
+  { success: true } | { success: false; errors: Record<string, string> }
 
 // ...
 

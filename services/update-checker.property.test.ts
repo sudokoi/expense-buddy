@@ -153,14 +153,12 @@ describe("Update Checker Properties", () => {
       .map(([major, minor, patch]) => `${major}.${minor}.${patch}`)
 
     // Arbitrary for generating UpdateInfo with an available update
-    const updateInfoWithUpdateArb = versionArb.map(
-      (version): UpdateInfo => ({
-        hasUpdate: true,
-        currentVersion: "1.0.0",
-        latestVersion: version,
-        releaseUrl: "https://github.com/test/repo/releases",
-      })
-    )
+    const updateInfoWithUpdateArb = versionArb.map((version): UpdateInfo => ({
+      hasUpdate: true,
+      currentVersion: "1.0.0",
+      latestVersion: version,
+      releaseUrl: "https://github.com/test/repo/releases",
+    }))
 
     // Arbitrary for generating UpdateInfo without an update
     const updateInfoNoUpdateArb = fc.constant<UpdateInfo>({

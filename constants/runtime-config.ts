@@ -54,8 +54,7 @@ export function getGitHubOAuthClientId(): string | null {
 }
 
 export function getGitHubOAuthClientIdStatus():
-  | { ok: true; clientId: string }
-  | { ok: false; error: string } {
+  { ok: true; clientId: string } | { ok: false; error: string } {
   const clientId = getGitHubOAuthClientId()
   if (!clientId) {
     // Expo Go note: EAS profile env vars are not injected here.
