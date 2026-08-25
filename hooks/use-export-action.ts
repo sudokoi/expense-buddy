@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useExpenses, useNotifications } from "../stores/hooks"
 import { downloadExpensesToCsv } from "../services/csv-export"
@@ -20,9 +20,11 @@ export function useExportAction(): UseExportActionReturn {
   const { state } = useExpenses()
   const { addNotification } = useNotifications()
   const [isExporting, setIsExporting] = useState(false)
+  const isExportingRef = useRef(false)
 
   const handleExport = useCallback(async () => {
-    if (isExporting) return
+    if (isExportingRef.current) return
+    isExportingRef.current = true
     setIsExporting(true)
     try {
       // Direct save to Downloads (SAF) / Documents (iOS); downloadExpensesToCsv
@@ -41,9 +43,10 @@ export function useExportAction(): UseExportActionReturn {
 
       addNotification(t("settings.general.exportError"), "error")
     } finally {
+      isExportingRef.current = false
       setIsExporting(false)
     }
-  }, [state.expenses, addNotification, t, isExporting])
+  }, [state.expenses, addNotification, t])
 
   return { handleExport, isExporting }
 }

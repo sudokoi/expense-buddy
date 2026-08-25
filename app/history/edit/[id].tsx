@@ -213,11 +213,10 @@ export default function EditExpenseScreen() {
               <Label className="opacity-80">{t("history.editDialog.fields.date")}</Label>
               <Button
                 size="control"
-                className="gap-2"
+                icon={<Calendar size={16} />}
                 onPress={() => setShowDatePicker(true)}
                 accessibilityLabel={t("history.editDialog.fields.date")}
               >
-                <Calendar size={16} />
                 {date
                   ? formatDate(date, "dd/MM/yyyy")
                   : t("history.editDialog.fields.datePlaceholder")}

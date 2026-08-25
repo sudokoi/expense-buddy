@@ -86,12 +86,10 @@ export function AppInfoSection({
       {/* Check for Updates Button */}
       <Button
         size="control"
-        className="gap-2"
+        icon={isCheckingUpdate ? <Spinner size="small" /> : <Download size={16} />}
         onPress={onCheckForUpdates}
         disabled={isCheckingUpdate}
       >
-        <Download size={16} />
-        {isCheckingUpdate ? <Spinner size="small" /> : null}
         {isCheckingUpdate
           ? t("settings.about.checking")
           : t("settings.about.checkForUpdates")}
@@ -99,8 +97,12 @@ export function AppInfoSection({
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
-        <Button size="control" variant="accent" className="gap-2" onPress={onStartUpdate}>
-          <ExternalLink size={16} />
+        <Button
+          size="control"
+          variant="accent"
+          icon={<ExternalLink size={16} />}
+          onPress={onStartUpdate}
+        >
           {isUpdateReadyToInstall
             ? t("settings.about.installUpdate")
             : updateInfo.latestVersion
@@ -110,14 +112,22 @@ export function AppInfoSection({
       )}
 
       {/* Report an Issue */}
-      <Button size="compact" variant="ghost" className="gap-2" onPress={onReportIssue}>
-        <Bug size={16} />
+      <Button
+        size="compact"
+        variant="ghost"
+        icon={<Bug size={16} />}
+        onPress={onReportIssue}
+      >
         {t("settings.about.reportIssue")}
       </Button>
 
       {/* GitHub Link */}
-      <Button size="compact" variant="ghost" className="gap-2" onPress={onOpenGitHub}>
-        <ExternalLink size={16} />
+      <Button
+        size="compact"
+        variant="ghost"
+        icon={<ExternalLink size={16} />}
+        onPress={onOpenGitHub}
+      >
         {t("settings.about.viewGitHub")}
       </Button>
     </View>

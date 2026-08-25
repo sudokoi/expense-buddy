@@ -235,11 +235,13 @@ function PaymentInstrumentForm({
         <Button size="control" variant="ghost" onPress={onClose}>
           {t("common.cancel")}
         </Button>
-        <Button size="control" variant="accent" className="gap-2" onPress={handleSave}>
-          <Check size={20} />
-          <Text className="font-bold">
-            {isEditMode ? t("common.save") : t("common.add")}
-          </Text>
+        <Button
+          size="control"
+          variant="accent"
+          icon={<Check size={20} />}
+          onPress={handleSave}
+        >
+          {isEditMode ? t("common.save") : t("common.add")}
         </Button>
       </View>
     </View>

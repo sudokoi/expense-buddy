@@ -34,7 +34,6 @@ import { applyAllFilters } from "../../utils/analytics/filters"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
-import { useThemeColors } from "../../hooks/use-theme-colors"
 import { hapticWarning } from "../../utils/haptics"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -86,7 +85,6 @@ const layoutStyles = {
 export default function HistoryScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const theme = useThemeColors()
   const { state, deleteExpense, replaceAllExpenses } = useExpenses()
   const { addNotification } = useNotifications()
   const { syncConfig, settings } = useSettings()
@@ -499,8 +497,6 @@ export default function HistoryScreen() {
     logAsync("INFO", "UI_ACTION", "RESET_FILTERS")
   }, [applyFilters, saveFilters])
 
-  const filterIconColor = activeCount > 0 ? theme.accentForeground : theme.foreground
-
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
@@ -547,11 +543,10 @@ export default function HistoryScreen() {
           <Button
             size="chip"
             variant={activeCount > 0 ? "accent" : undefined}
-            className="gap-2"
+            icon={<Filter size={16} />}
             onPress={handleOpenFilterSheet}
             accessibilityLabel={t("common.filters")}
           >
-            <Filter size={16} color={filterIconColor} />
             {activeCount > 0
               ? `${t("common.filters")} (${activeCount})`
               : t("common.filters")}
@@ -608,11 +603,10 @@ export default function HistoryScreen() {
         <Button
           size="chip"
           variant={activeCount > 0 ? "accent" : undefined}
-          className="gap-2"
+          icon={<Filter size={16} />}
           onPress={handleOpenFilterSheet}
           accessibilityLabel={t("common.filters")}
         >
-          <Filter size={16} color={filterIconColor} />
           {activeCount > 0
             ? `${t("common.filters")} (${activeCount})`
             : t("common.filters")}

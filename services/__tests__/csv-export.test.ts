@@ -24,6 +24,7 @@ interface MockInstance {
 jest.mock("expo-file-system", () => {
   class MockFile {
     static instances: MockInstance[]
+    static files = new Map<string, MockFile>()
     static failNextWrite = false
     uri: string
     name: string
@@ -31,9 +32,21 @@ jest.mock("expo-file-system", () => {
     exists = false
 
     constructor(_dir: unknown, name: string) {
+      const dirStr =
+        typeof _dir === "string"
+          ? _dir
+          : ((_dir as { uri?: string })?.uri ?? "file://cache/")
       this.name = name
-      this.uri = `file://cache/${name}`
-      this.writtenContent = null
+      this.uri = `${dirStr}${name}`
+      const existing = MockFile.files.get(this.uri)
+      if (existing) {
+        this.exists = existing.exists
+        this.writtenContent = existing.writtenContent
+      } else {
+        this.exists = false
+        this.writtenContent = null
+      }
+      MockFile.files.set(this.uri, this)
       MockFile.instances.push(this)
     }
 
@@ -43,10 +56,12 @@ jest.mock("expo-file-system", () => {
       }
       this.writtenContent = content
       this.exists = true
+      MockFile.files.set(this.uri, this)
     }
 
     delete(): void {
       this.exists = false
+      MockFile.files.delete(this.uri)
     }
   }
 
@@ -56,11 +71,11 @@ jest.mock("expo-file-system", () => {
     uri: string
 
     constructor(uri: unknown, _name?: string) {
-      // Handle new Directory(Paths.document) or Directory.pickDirectoryAsync result
       if (typeof uri === "string" && uri.startsWith("file://")) {
-        this.uri = uri
+        this.uri = uri.endsWith("/") ? uri : `${uri}/`
       } else if (uri && typeof (uri as { uri?: string }).uri === "string") {
-        this.uri = (uri as { uri: string }).uri
+        const u = (uri as { uri: string }).uri
+        this.uri = u.endsWith("/") ? u : `${u}/`
       } else {
         this.uri = "file://document/"
       }
@@ -73,10 +88,7 @@ jest.mock("expo-file-system", () => {
     }
 
     createFile(name: string, _mimeType: string): MockFile {
-      const f = new MockFile(this.uri, name)
-      // Override uri to reflect picked directory
-      f.uri = `${this.uri}${name}`
-      return f as unknown as MockFile
+      return new MockFile(this.uri, name) as unknown as MockFile
     }
 
     get exists(): boolean {
@@ -95,11 +107,12 @@ jest.mock("expo-file-system", () => {
 import * as FileSystem from "expo-file-system"
 const MockFile = FileSystem.File as unknown as {
   instances: MockInstance[]
+  files: Map<string, MockInstance>
   failNextWrite: boolean
   new (
     dir: unknown,
     name: string
-  ): MockInstance & { write(content: string): Promise<void> }
+  ): MockInstance & { write(content: string): Promise<void>; delete(): void }
 }
 
 function makeExpense(overrides: Partial<Expense> = {}): Expense {
@@ -120,9 +133,12 @@ describe("csv-export", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     MockFile.instances = []
+    MockFile.files.clear()
     MockFile.failNextWrite = false
     mockIsAvailable.mockResolvedValue(true)
     mockShareAsync.mockResolvedValue(undefined)
+    const FS = FileSystem as unknown as { Directory: { pickShouldCancel: boolean } }
+    FS.Directory.pickShouldCancel = false
   })
 
   describe("buildExpenseExportFilename", () => {

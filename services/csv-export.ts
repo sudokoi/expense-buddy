@@ -1,4 +1,4 @@
-import { File, Paths } from "expo-file-system"
+import { Directory, File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
 import { Platform } from "react-native"
 
@@ -78,9 +78,6 @@ export async function saveExpenseExportToFile(
   try {
     if (Platform.OS === "android") {
       try {
-        // New FileSystem API — Directory.pickDirectoryAsync is the supported
-        // replacement for `expo-file-system/legacy` StorageAccessFramework.
-        const { Directory } = await import("expo-file-system")
         const dir = await Directory.pickDirectoryAsync()
         if (!dir) {
           return { uri: null, success: false, cancelled: true }
@@ -88,8 +85,14 @@ export async function saveExpenseExportToFile(
         const file = dir.createFile(filename, EXPORT_MIME_TYPE)
         await file.write(csv)
         return { uri: file.uri, success: true }
-      } catch {
-        // Picker unavailable / denied or not mocked in Jest — fall through to File fallback
+      } catch (error) {
+        // Only fall through for picker unavailable; surface write errors
+        const message = String(error)
+        if (message.includes("pickDirectory") || message.includes("SAF")) {
+          // fall through to File fallback
+        } else {
+          throw error
+        }
       }
     }
 
