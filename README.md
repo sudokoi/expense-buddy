@@ -76,6 +76,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Saved payment instruments for cards and UPI handles
 - Full create, edit, delete, and soft-delete sync behavior
 - Day-level detail view and searchable history
+- Local CSV export of the full ledger (including soft-deleted rows) directly to a file on your device via Settings
 
 ### GitHub Sync
 
