@@ -7,7 +7,8 @@ import { validateGitHubConfig } from "../../../utils/github-config-validation"
 import {
   SEMANTIC_COLORS,
   SEMANTIC_FOREGROUND_COLORS,
-} from "../../../constants/theme-colors"
+  getReadableTextColor,
+} from "../../../constants/palette"
 import { getGitHubOAuthClientIdStatus } from "../../../constants/runtime-config"
 import { useRouter, useFocusEffect } from "expo-router"
 import { secureStorage } from "../../../services/secure-storage"
@@ -52,9 +53,11 @@ export interface GitHubConfigSectionProps {
   onNotification: (message: string, type: "success" | "error" | "info") => void
 }
 
-// Memoized theme colors
+// Memoized theme colors — success/error use pastel fills with readable dark text (WCAG AA)
 const successColor = SEMANTIC_COLORS.success
 const errorColor = SEMANTIC_COLORS.error
+const successTextColor = getReadableTextColor(successColor)
+const errorTextColor = getReadableTextColor(errorColor)
 
 /**
  * GitHubConfigSection - Collapsible GitHub configuration form
@@ -415,18 +418,33 @@ export function GitHubConfigSection({
               size="control"
               onPress={handleTestConnection}
               disabled={isTesting || !token || !repo}
-              variant="accent"
+              variant={
+                connectionStatus === "success" || connectionStatus === "error"
+                  ? "default"
+                  : "accent"
+              }
               icon={
                 connectionStatus === "success" ? (
-                  <Check size={16} />
+                  <Check size={16} color={successTextColor} />
                 ) : connectionStatus === "error" ? (
-                  <X size={16} />
+                  <X size={16} color={errorTextColor} />
                 ) : isTesting ? (
                   <Spinner size="small" />
                 ) : null
               }
             >
-              {isTesting ? t("settings.github.testing") : t("settings.github.test")}
+              <Text
+                style={{
+                  color:
+                    connectionStatus === "success"
+                      ? successTextColor
+                      : connectionStatus === "error"
+                        ? errorTextColor
+                        : undefined,
+                }}
+              >
+                {isTesting ? t("settings.github.testing") : t("settings.github.test")}
+              </Text>
             </Button>
           </View>
 
