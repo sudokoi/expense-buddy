@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 4.1.2
+
+### Patch Changes
+
+- [#129](https://github.com/sudokoi/expense-buddy/pull/129) [`a10281f`](https://github.com/sudokoi/expense-buddy/commit/a10281f18db6d6ce458a4890bcae5da2350b6a96) Thanks [@sudokoi](https://github.com/sudokoi)! - Fix button contrast, category selection, and export to direct file download
+
+  - Centralize button colors via palette and fix accent/outline contrast
+  - Show category config colors only when selected
+  - Export CSV directly to device file via SAF with share fallback
+
 ## 4.1.1
 
 ### Patch Changes
