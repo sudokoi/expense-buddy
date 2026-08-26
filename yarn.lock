@@ -6029,7 +6029,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-constants@npm:57.0.14, expo-constants@npm:~57.0.14":
+"expo-constants@npm:57.0.14":
   version: 57.0.14
   resolution: "expo-constants@npm:57.0.14"
   dependencies:
@@ -6038,18 +6038,6 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10/9d4c4891f0f8004fc40dfc3ce58e5ae137fabf841b15d534b565dfd25daa4e3586cb7395a60e0204c279843bb3abeaba3d414b827b8a25bf2e846d8de409cd80
-  languageName: node
-  linkType: hard
-
-"expo-constants@npm:~57.0.13":
-  version: 57.0.13
-  resolution: "expo-constants@npm:57.0.13"
-  dependencies:
-    "@expo/env": "npm:~2.4.2"
-  peerDependencies:
-    expo: "*"
-    react-native: "*"
-  checksum: 10/0b54cb3b0a032db6add6efc97e96d699fb3f448745a6da3e96d238f241a02fcb024100c39a09ec3680177b072821ca157f9224e1ec414d6b0471c80ad7aa98fb
   languageName: node
   linkType: hard
 

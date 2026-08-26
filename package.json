@@ -55,6 +55,9 @@
     "ml:test": "uv run --directory tools/sms-ml --project . pytest",
     "ml:check": "yarn ml:lint && yarn ml:format:check && yarn ml:typecheck && yarn ml:test"
   },
+  "resolutions": {
+    "expo-constants": "57.0.14"
+  },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
