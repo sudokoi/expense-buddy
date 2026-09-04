@@ -34,7 +34,10 @@ class TrendWidgetProvider : WidgetProviderBase() {
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Empty -> {
-                views.setTextViewText(R.id.widget_total, WidgetFormat.amount(0.0, "INR"))
+                views.setTextViewText(
+                    R.id.widget_total,
+                    WidgetFormat.amount(0.0, displayCurrency(context)),
+                )
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Unavailable -> {

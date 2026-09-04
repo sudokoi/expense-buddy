@@ -43,7 +43,8 @@ class SummaryWidgetProvider : WidgetProviderBase() {
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Empty -> {
-                views.setTextViewText(R.id.widget_today_total, WidgetFormat.amount(0.0, "INR"))
+                val currency = displayCurrency(context)
+                views.setTextViewText(R.id.widget_today_total, WidgetFormat.amount(0.0, currency))
                 views.setTextViewText(R.id.widget_subtitle, "No expenses yet")
                 manager.updateAppWidget(widgetId, views)
             }

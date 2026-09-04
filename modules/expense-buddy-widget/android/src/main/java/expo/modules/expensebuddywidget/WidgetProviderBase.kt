@@ -53,4 +53,15 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         val mmkv = MmkvAndroidReader(app)
         return ExpenseWidgetStore(mmkv, SettingsAndroidReader(mmkv))
     }
+
+    /** Currency for empty states: assist hint, else settings default, else INR. */
+    protected fun displayCurrency(context: Context): String {
+        val app = context.applicationContext
+        WidgetAssistStore(app)
+            .load()
+            ?.currency
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { return it }
+        return SettingsAndroidReader(MmkvAndroidReader(app)).defaultCurrency()
+    }
 }
