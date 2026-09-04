@@ -3,6 +3,7 @@ package expo.modules.expensebuddywidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 
 class RecentWidgetProvider : WidgetProviderBase() {
@@ -36,7 +37,7 @@ class RecentWidgetProvider : WidgetProviderBase() {
             }
             WidgetResult.Empty -> {
                 views.setTextViewText(R.id.widget_empty, "No expenses yet")
-                views.setViewVisibility(R.id.widget_empty, android.view.View.VISIBLE)
+                views.setViewVisibility(R.id.widget_empty, View.VISIBLE)
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Unavailable -> {
