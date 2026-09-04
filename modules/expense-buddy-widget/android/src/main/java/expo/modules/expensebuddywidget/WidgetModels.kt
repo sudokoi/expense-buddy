@@ -81,6 +81,10 @@ data class WidgetAssist(
         private fun readCopy(o: JSONObject?): WidgetCopy? {
             if (o == null) return null
             return try {
+                // Strict: every field must parse. Old snapshots missing newer
+                // fields (e.g. written before an app update added them) fall
+                // back to English wholesale instead of rendering a mix of
+                // stale strings and raw keys. The next assist push heals it.
                 WidgetCopy(
                     today = o.getString("today"),
                     last7Days = o.getString("last7Days"),
@@ -91,7 +95,7 @@ data class WidgetAssist(
                     thisMonthTemplate = o.getString("thisMonth"),
                     other = o.getString("other"),
                     configTitle = o.getString("configTitle"),
-                    configSubtitle = o.optString("configSubtitle", ""),
+                    configSubtitle = o.getString("configSubtitle"),
                     configCategory = o.getString("configCategory"),
                     configAll = o.getString("configAll"),
                     configHide = o.getString("configHide"),

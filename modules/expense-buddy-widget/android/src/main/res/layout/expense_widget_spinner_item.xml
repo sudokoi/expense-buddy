@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected-item layout: no horizontal inset so the text aligns with the
+     surrounding labels (framework simple_spinner_item indents text). -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="48dp"
+    android:gravity="center_vertical"
+    android:textColor="@color/expense_widget_text_primary"
+    android:textSize="16sp" />

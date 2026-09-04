@@ -67,8 +67,8 @@ class WidgetConfigActivity : Activity() {
 
         val spinner = findViewById<Spinner>(R.id.config_category)
         spinner.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, options).also {
-                it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            ArrayAdapter(this, R.layout.expense_widget_spinner_item, options).also {
+                it.setDropDownViewResource(R.layout.expense_widget_spinner_dropdown)
             }
         val selectedIndex =
             existing.category?.let { labels.indexOf(it).takeIf { i -> i >= 0 }?.plus(1) } ?: 0
