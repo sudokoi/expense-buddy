@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget tokens mirror constants/palette.ts light. values-night/ overrides in dark mode. -->
+    <color name="expense_widget_background">#FFF8F0</color>
+    <color name="expense_widget_text_primary">#473E4B</color>
+    <color name="expense_widget_text_muted">#6C5A6C</color>
+    <color name="expense_widget_accent">#C0406A</color>
+    <color name="expense_widget_track">#D6C9C2</color>
+</resources>

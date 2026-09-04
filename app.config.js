@@ -165,6 +165,7 @@ export default {
       "expo-splash-screen",
       "./plugins/withDisableNoDiscoveredTests",
       "./plugins/withThemedIconBackground",
+      "./plugins/withExpenseWidgets",
       [
         "expo-build-properties",
         {

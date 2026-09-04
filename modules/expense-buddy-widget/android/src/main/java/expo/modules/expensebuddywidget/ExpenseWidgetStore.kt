@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
  * Deep module behind `fun read`. Owns MMKV parsing, day-key parity,
  * currency fallback, and aggregation. Providers stay thin adapters.
  */
-internal class ExpenseWidgetStore(
+class ExpenseWidgetStore(
     private val mmkv: MmkvReader,
     private val settings: SettingsReader,
     private val zone: ZoneId = ZoneId.systemDefault(),
@@ -85,7 +85,7 @@ internal class ExpenseWidgetStore(
         }
     }
 
-    internal fun parseExpense(raw: String): WidgetExpense? =
+    internal fun parseExpense(raw: String): WidgetExpense? {
         try {
             val o = JSONObject(raw)
             if (!o.isNull("deletedAt")) return null
@@ -93,27 +93,30 @@ internal class ExpenseWidgetStore(
             if (id.isEmpty()) return null
             val amount = kotlin.math.abs(o.optDouble("amount", Double.NaN))
             if (amount.isNaN()) return null
-            WidgetExpense(
+            val dayKey = toDayKey(o.optString("date", "")) ?: return null
+            return WidgetExpense(
                 id = id,
                 amount = amount,
                 currency = o.optString("currency", "").ifEmpty { null },
                 category = o.optString("category", "Other").ifEmpty { "Other" },
                 note = o.optString("note", ""),
-                dayKey = toDayKey(o.optString("date", "")) ?: return null,
+                dayKey = dayKey,
                 updatedAt = o.optString("updatedAt", ""),
             )
         } catch (_: Exception) {
-            null
+            return null
         }
+    }
 
     /** Parity with `getLocalDayKey`: parse instant, render in device zone. */
-    internal fun toDayKey(iso: String): String? =
+    internal fun toDayKey(iso: String): String? {
         try {
             if (iso.isEmpty()) return null
-            formatDay(Instant.parse(iso).atZone(zone).toLocalDate())
+            return formatDay(Instant.parse(iso).atZone(zone).toLocalDate())
         } catch (_: Exception) {
-            null
+            return null
         }
+    }
 
     private fun formatDay(day: LocalDate): String = day.format(DateTimeFormatter.ISO_LOCAL_DATE)
 }
