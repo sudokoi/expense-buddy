@@ -78,6 +78,13 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 - Day-level detail view and searchable history
 - Local CSV export of the full ledger (including soft-deleted rows) directly to a file on your device via Settings
 
+### Home-Screen Widgets (Android)
+
+- Three resizable widgets rendered natively from the on-device store: Summary (today/month totals with quick-add), 7-day Trend (spending bars), and Recent (latest expenses list)
+- Per-widget configuration on placement: category filter and hide-amounts privacy option
+- Widgets re-derive from live data on every system update (open, reboot, midnight rollover, 30-minute backstop) and refresh right after in-app changes
+- Widget copy follows the app language (`translation.json` single source); amounts follow the device locale
+
 ### GitHub Sync
 
 - Private repository sync using a fetch-merge-push workflow
@@ -99,6 +106,7 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 - Android app for core expense tracking
 - SMS import is Android-only and requires a native build
+- Home-screen widgets are Android-only and require a native build
 - Play-installed Android builds support native in-app update checks and standard full-screen Play update flows
 - In-app review prompts are Play-only, lightly rate-limited locally, and still subject to Google Play eligibility decisions
 - Dynamic locale loading for English (US, UK, CA, AU, IN), Hindi, and Japanese — CA/AU share the en-GB translation bundle
