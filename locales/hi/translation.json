@@ -81,18 +81,18 @@
     "settings": "सेटिंग्स"
   },
   "widget": {
-    "today": "Today",
-    "last7Days": "Last 7 days",
-    "recent": "Recent expenses",
-    "empty": "No expenses yet",
-    "expensesOne": "1 expense today",
-    "expensesMany": "{{count}} expenses today",
-    "thisMonth": "{{total}} this month",
-    "configTitle": "Widget settings",
-    "configCategory": "Category",
-    "configAll": "All categories",
-    "configHide": "Hide amounts",
-    "configSave": "Add widget"
+    "today": "आज",
+    "last7Days": "पिछले 7 दिन",
+    "recent": "हाल के खर्च",
+    "empty": "अभी तक कोई खर्च नहीं",
+    "expensesOne": "आज 1 खर्च",
+    "expensesMany": "आज {{count}} खर्च",
+    "thisMonth": "इस महीने {{total}}",
+    "configTitle": "विजेट सेटिंग",
+    "configCategory": "श्रेणी",
+    "configAll": "सभी श्रेणियां",
+    "configHide": "राशि छिपाएं",
+    "configSave": "विजेट जोड़ें"
   },
   "history": {
     "emptyTitle": "अभी तक कोई खर्च नहीं।",

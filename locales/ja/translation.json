@@ -81,18 +81,18 @@
     "settings": "設定"
   },
   "widget": {
-    "today": "Today",
-    "last7Days": "Last 7 days",
-    "recent": "Recent expenses",
-    "empty": "No expenses yet",
-    "expensesOne": "1 expense today",
-    "expensesMany": "{{count}} expenses today",
-    "thisMonth": "{{total}} this month",
-    "configTitle": "Widget settings",
-    "configCategory": "Category",
-    "configAll": "All categories",
-    "configHide": "Hide amounts",
-    "configSave": "Add widget"
+    "today": "今日",
+    "last7Days": "過去7日間",
+    "recent": "最近の支出",
+    "empty": "支出がまだありません",
+    "expensesOne": "今日の支出 1件",
+    "expensesMany": "今日の支出 {{count}}件",
+    "thisMonth": "今月 {{total}}",
+    "configTitle": "ウィジェット設定",
+    "configCategory": "カテゴリー",
+    "configAll": "すべてのカテゴリー",
+    "configHide": "金額を非表示",
+    "configSave": "ウィジェットを追加"
   },
   "history": {
     "emptyTitle": "支出がまだありません。",
