@@ -2,6 +2,20 @@ import { buildWidgetAssist } from "./widget-assist"
 import type { Expense } from "../types/expense"
 import { DEFAULT_SETTINGS } from "./settings-manager"
 
+// Resolve t() against the real en-US bundle so the test verifies the
+// single-source copy (keys exist, placeholders intact).
+jest.mock("i18next", () => {
+  const bundle = require("../locales/en-US/translation.json")
+  const lookup = (key: string): string =>
+    key.split(".").reduce<string | unknown>((node, part) => {
+      if (typeof node === "object" && node !== null && part in node) {
+        return (node as Record<string, unknown>)[part]
+      }
+      return key
+    }, bundle) as string
+  return { t: (key: string) => lookup(key) }
+})
+
 function expense(overrides: Partial<Expense> & { id: string }): Expense {
   return {
     amount: 100,
@@ -40,5 +54,14 @@ describe("buildWidgetAssist", () => {
   it("carries category colors for widget dots", () => {
     const assist = buildWidgetAssist([], DEFAULT_SETTINGS, "INR")
     expect(assist.categoryColors["Food"]).toBeTruthy()
+  })
+
+  it("carries localized copy with native format placeholders", () => {
+    const assist = buildWidgetAssist([], DEFAULT_SETTINGS, "INR")
+    expect(assist.copy.today).toBeTruthy()
+    expect(assist.copy.expensesMany).toContain("%d")
+    expect(assist.copy.expensesMany).not.toContain("{{count}}")
+    expect(assist.copy.thisMonth).toContain("%s")
+    expect(assist.copy.thisMonth).not.toContain("{{total}}")
   })
 })

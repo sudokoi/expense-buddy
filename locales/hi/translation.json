@@ -80,6 +80,20 @@
     "history": "इतिहास",
     "settings": "सेटिंग्स"
   },
+  "widget": {
+    "today": "Today",
+    "last7Days": "Last 7 days",
+    "recent": "Recent expenses",
+    "empty": "No expenses yet",
+    "expensesOne": "1 expense today",
+    "expensesMany": "{{count}} expenses today",
+    "thisMonth": "{{total}} this month",
+    "configTitle": "Widget settings",
+    "configCategory": "Category",
+    "configAll": "All categories",
+    "configHide": "Hide amounts",
+    "configSave": "Add widget"
+  },
   "history": {
     "emptyTitle": "अभी तक कोई खर्च नहीं।",
     "emptySubtitle": "खर्च जोड़ें टैब से एक जोड़ें।",

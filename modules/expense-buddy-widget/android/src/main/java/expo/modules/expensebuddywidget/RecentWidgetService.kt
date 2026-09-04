@@ -27,6 +27,7 @@ class RecentWidgetService : RemoteViewsService() {
         private var currency: String = "INR"
         private var filter: WidgetFilter = WidgetFilter()
         private var colors: Map<String, String> = emptyMap()
+        private var copy: WidgetCopy = WidgetCopy.fallback()
 
         override fun onCreate() {
             // No-op: data loads in onDataSetChanged per collection cycle.
@@ -50,6 +51,7 @@ class RecentWidgetService : RemoteViewsService() {
             rows = ready.data.recent
             currency = ready.data.currency
             colors = assist?.categoryColors ?: emptyMap()
+            copy = assist?.copy ?: WidgetCopy.fallback()
         }
 
         override fun getCount(): Int = rows.size
@@ -58,9 +60,12 @@ class RecentWidgetService : RemoteViewsService() {
             if (position < 0 || position >= rows.size) return null
             val expense = rows[position]
             val views = RemoteViews(context.packageName, R.layout.expense_widget_recent_row)
-            val title = expense.note.ifEmpty { expense.category }
+            val title = expense.note.ifEmpty { copy.displayCategory(expense.category) }
             views.setTextViewText(R.id.row_title, title)
-            views.setTextViewText(R.id.row_subtitle, "${expense.category} · ${expense.dayKey}")
+            views.setTextViewText(
+                R.id.row_subtitle,
+                "${copy.displayCategory(expense.category)} · ${expense.dayKey}",
+            )
             val amount =
                 WidgetFormat.maskedAmount(
                     expense.amount,

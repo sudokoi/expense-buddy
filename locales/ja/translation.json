@@ -80,6 +80,20 @@
     "history": "履歴",
     "settings": "設定"
   },
+  "widget": {
+    "today": "Today",
+    "last7Days": "Last 7 days",
+    "recent": "Recent expenses",
+    "empty": "No expenses yet",
+    "expensesOne": "1 expense today",
+    "expensesMany": "{{count}} expenses today",
+    "thisMonth": "{{total}} this month",
+    "configTitle": "Widget settings",
+    "configCategory": "Category",
+    "configAll": "All categories",
+    "configHide": "Hide amounts",
+    "configSave": "Add widget"
+  },
   "history": {
     "emptyTitle": "支出がまだありません。",
     "emptySubtitle": "「支出を追加」タブから追加してください。",

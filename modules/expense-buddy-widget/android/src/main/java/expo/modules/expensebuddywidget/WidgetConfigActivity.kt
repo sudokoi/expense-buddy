@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.Switch
+import android.widget.TextView
 
 /**
  * `android:configure` screen for all three widget kinds. Writes the
@@ -33,14 +34,24 @@ class WidgetConfigActivity : Activity() {
 
         setContentView(R.layout.expense_widget_config)
 
+        // Labels come from the assist copy (translation.json single source);
+        // layout android:text values are the English fallback when no assist
+        // exists yet (e.g. first placement before the app ever ran).
+        val assist = WidgetAssistStore(this).load()
+        val copy = assist?.copy ?: WidgetCopy.fallback()
+        findViewById<TextView>(R.id.config_title).text = copy.configTitle
+        findViewById<TextView>(R.id.config_category_label).text = copy.configCategory
+        findViewById<TextView>(R.id.config_hide_label).text = copy.configHide
+        findViewById<Button>(R.id.config_save).text = copy.configSave
+
         val existing = WidgetFilterStore(this, widgetId).load()
         val mmkv = MmkvAndroidReader(this)
         val labels =
             WidgetConfigData.categoryLabels(
                 mmkv.getString(WidgetKeys.SETTINGS),
-                WidgetAssistStore(this).load(),
+                assist,
             )
-        val options = listOf(getString(R.string.expense_widget_config_all)) + labels
+        val options = listOf(copy.configAll) + labels.map { copy.displayCategory(it) }
 
         val spinner = findViewById<Spinner>(R.id.config_category)
         spinner.adapter =

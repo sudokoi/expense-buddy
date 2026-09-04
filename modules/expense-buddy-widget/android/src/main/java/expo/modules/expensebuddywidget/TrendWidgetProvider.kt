@@ -12,11 +12,13 @@ class TrendWidgetProvider : WidgetProviderBase() {
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
+        val copy = assist?.copy ?: WidgetCopy.fallback()
         val views = RemoteViews(context.packageName, R.layout.expense_widget_trend)
         views.setOnClickPendingIntent(
             R.id.widget_root,
             WidgetIntents.openApp(context, "history", widgetId),
         )
+        views.setTextViewText(R.id.widget_label, copy.last7Days)
 
         when (
             val result =
