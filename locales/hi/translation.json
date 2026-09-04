@@ -84,12 +84,10 @@
     "today": "आज",
     "last7Days": "पिछले 7 दिन",
     "recent": "हाल के खर्च",
-    "empty": "अभी तक कोई खर्च नहीं",
     "expensesOne": "आज 1 खर्च",
     "expensesMany": "आज {{count}} खर्च",
     "thisMonth": "इस महीने {{total}}",
     "configTitle": "विजेट सेटिंग",
-    "configCategory": "श्रेणी",
     "configAll": "सभी श्रेणियां",
     "configHide": "राशि छिपाएं",
     "configSave": "विजेट जोड़ें"
