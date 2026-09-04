@@ -61,8 +61,6 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
             null
         }
 
-    protected fun copyFor(context: Context): WidgetCopy = assistFor(context)?.copy ?: WidgetCopy.fallback()
-
     /** Currency for empty states: assist hint, else settings default, else INR. */
     protected fun displayCurrency(context: Context): String {
         val app = context.applicationContext

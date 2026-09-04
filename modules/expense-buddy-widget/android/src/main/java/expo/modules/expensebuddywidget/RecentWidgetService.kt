@@ -51,7 +51,7 @@ class RecentWidgetService : RemoteViewsService() {
             rows = ready.data.recent
             currency = ready.data.currency
             colors = assist?.categoryColors ?: emptyMap()
-            copy = assist?.copy ?: WidgetCopy.fallback()
+            copy = assist.toCopy()
         }
 
         override fun getCount(): Int = rows.size

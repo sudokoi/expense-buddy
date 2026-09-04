@@ -38,7 +38,7 @@ class WidgetConfigActivity : Activity() {
         // layout android:text values are the English fallback when no assist
         // exists yet (e.g. first placement before the app ever ran).
         val assist = WidgetAssistStore(this).load()
-        val copy = assist?.copy ?: WidgetCopy.fallback()
+        val copy = assist.toCopy()
         findViewById<TextView>(R.id.config_title).text = copy.configTitle
         findViewById<TextView>(R.id.config_category_label).text = copy.configCategory
         findViewById<TextView>(R.id.config_hide_label).text = copy.configHide
