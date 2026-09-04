@@ -14,6 +14,15 @@ import kotlinx.coroutines.launch
  * Subclasses implement [render] (suspend, IO) per WidgetKind.
  */
 abstract class WidgetProviderBase : AppWidgetProvider() {
+    override fun onEnabled(context: Context) {
+        // Idempotent: first placed widget arms the 30-min backstop.
+        try {
+            WidgetRefreshSchedule.ensure(context)
+        } catch (_: Exception) {
+            // Best-effort: system updates still refresh without the worker.
+        }
+    }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,

@@ -3,6 +3,7 @@ import { useColorScheme } from "nativewind"
 import { StoreProvider } from "../stores/store-provider"
 import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-data"
 import { useSettings } from "../stores/hooks"
+import { useWidgetAssist } from "../hooks/use-widget-assist"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 
 /**
@@ -40,9 +41,17 @@ export function Provider({ children }: { children: React.ReactNode }) {
     <StoreProvider>
       <DerivedExpenseDataProvider>
         <SmsImportReviewProvider>
-          <ThemedProvider>{children}</ThemedProvider>
+          <ThemedProvider>
+            <WidgetAssistMount />
+            {children}
+          </ThemedProvider>
         </SmsImportReviewProvider>
       </DerivedExpenseDataProvider>
     </StoreProvider>
   )
+}
+
+function WidgetAssistMount() {
+  useWidgetAssist()
+  return null
 }

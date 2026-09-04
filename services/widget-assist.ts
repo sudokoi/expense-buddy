@@ -41,14 +41,11 @@ export async function pushWidgetAssist(
 ): Promise<void> {
   try {
     const { default: WidgetModule } = await import("../modules/expense-buddy-widget")
-    const native = WidgetModule as unknown as {
-      persistAssist?: (json: string) => Promise<void>
-      refreshWidgets?: () => Promise<void>
-    }
-    await native.persistAssist?.(
+    if (!WidgetModule) return
+    await WidgetModule.persistAssist(
       JSON.stringify(buildWidgetAssist(expenses, settings, effectiveCurrency))
     )
-    await native.refreshWidgets?.()
+    await WidgetModule.refreshWidgets()
   } catch {
     // Best-effort: widgets re-derive from live MMKV on next system update.
   }
