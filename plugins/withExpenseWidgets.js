@@ -19,6 +19,7 @@ function withExpenseWidgets(config) {
     const app = manifest.application[0]
     app.receiver = app.receiver || []
     app.service = app.service || []
+    app.activity = app.activity || []
 
     for (const { name, xml } of PROVIDERS) {
       const fqcn = `${WIDGET_PACKAGE}.${name}`
@@ -76,6 +77,20 @@ function withExpenseWidgets(config) {
             ],
           },
         ],
+      })
+    }
+
+    // Launched explicitly by the widget host during placement, so it must
+    // be exported. Benign screen: writes only its own widget-id prefs.
+    const configActivity = `${WIDGET_PACKAGE}.WidgetConfigActivity`
+    if (!app.activity.some((a) => a.$["android:name"] === configActivity)) {
+      app.activity.push({
+        $: {
+          "android:name": configActivity,
+          "android:exported": "true",
+          "android:theme": "@android:style/Theme.Material.Light.Dialog.NoActionBar",
+          "android:windowSoftInputMode": "stateHidden",
+        },
       })
     }
 
