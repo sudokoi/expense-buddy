@@ -47,14 +47,13 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <TextView
+        <ImageView
             android:id="@+id/widget_add"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/expense_widget_add_bg"
-            android:gravity="center"
-            android:text="+"
-            android:textColor="@color/expense_widget_accent_text"
-            android:textSize="26sp" />
+            android:contentDescription="+"
+            android:padding="12dp"
+            android:src="@drawable/expense_widget_plus" />
     </LinearLayout>
 </LinearLayout>
