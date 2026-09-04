@@ -5,5 +5,6 @@
     <color name="expense_widget_text_primary">#F2E9EE</color>
     <color name="expense_widget_text_muted">#CCBFC9</color>
     <color name="expense_widget_accent">#FFB6C1</color>
+    <color name="expense_widget_accent_text">#1D161B</color>
     <color name="expense_widget_track">#3B3342</color>
 </resources>
