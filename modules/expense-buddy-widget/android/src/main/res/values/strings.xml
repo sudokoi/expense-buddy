@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="expense_widget_summary_desc">Today and month spend at a glance</string>
+    <string name="expense_widget_trend_desc">Last 7 days spending bars</string>
+    <string name="expense_widget_recent_desc">Latest expenses list</string>
+</resources>

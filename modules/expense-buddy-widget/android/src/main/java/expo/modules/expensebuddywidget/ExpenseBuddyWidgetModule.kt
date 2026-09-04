@@ -9,12 +9,12 @@ class ExpenseBuddyWidgetModule : Module() {
             Name("ExpenseBuddyWidget")
 
             AsyncFunction("refreshWidgets") {
-                val ctx = appContext.reactContext?.applicationContext ?: return@AsyncFunction
+                val ctx = appContext.reactContext?.applicationContext ?: return@AsyncFunction null
                 WidgetRefresh.broadcastAll(ctx)
             }
 
             AsyncFunction("persistAssist") { assistJson: String ->
-                val ctx = appContext.reactContext?.applicationContext ?: return@AsyncFunction
+                val ctx = appContext.reactContext?.applicationContext ?: return@AsyncFunction null
                 WidgetAssistStore(ctx).save(assistJson)
             }
         }
