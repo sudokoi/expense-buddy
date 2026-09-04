@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Card-radius background mirroring the app's `card` token (20px). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/expense_widget_background" />
+    <corners android:radius="20dp" />
+</shape>
