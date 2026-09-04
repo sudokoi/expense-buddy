@@ -19,6 +19,8 @@ class RecentWidgetProvider : WidgetProviderBase() {
         )
 
         val assist = assistFor(context)
+        val copy = assist?.copy ?: WidgetCopy.fallback()
+        views.setTextViewText(R.id.widget_label, copy.recent)
         when (
             store(context).read(
                 filter = WidgetFilterStore(context, widgetId).load(),
@@ -43,7 +45,7 @@ class RecentWidgetProvider : WidgetProviderBase() {
                 manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list)
             }
             WidgetResult.Empty -> {
-                views.setTextViewText(R.id.widget_empty, "No expenses yet")
+                views.setTextViewText(R.id.widget_empty, copy.empty)
                 views.setViewVisibility(R.id.widget_empty, View.VISIBLE)
                 manager.updateAppWidget(widgetId, views)
             }

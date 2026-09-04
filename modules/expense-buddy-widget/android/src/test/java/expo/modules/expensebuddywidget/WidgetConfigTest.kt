@@ -60,3 +60,36 @@ class WidgetConfigDataTest {
             .containsExactly("Other")
     }
 }
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class WidgetCopyTest {
+    @Test
+    fun `fallback formats counts and totals`() {
+        val copy = WidgetCopy.fallback()
+        assertThat(copy.expensesToday(1)).isEqualTo("1 expense today")
+        assertThat(copy.expensesToday(5)).isEqualTo("5 expenses today")
+        assertThat(copy.monthTotal("₹100")).isEqualTo("₹100 this month")
+        assertThat(copy.displayCategory("Other")).isEqualTo("Other")
+        assertThat(copy.displayCategory("Food")).isEqualTo("Food")
+    }
+
+    @Test
+    fun `assist copy parses and maps Other`() {
+        val json =
+            """{"dataVersion":"v","currency":"INR","categoryColors":{},
+              "copy":{"today":"Heute","last7Days":"L7","recent":"R","empty":"E",
+              "expensesOne":"1","expensesMany":"%d X","thisMonth":"%s Y",
+              "other":"Sonstiges","configTitle":"T","configCategory":"C",
+              "configAll":"A","configHide":"H","configSave":"S"}}"""
+        val assist = WidgetAssist.fromJson(json)
+        assertThat(assist?.copy?.displayCategory("Other")).isEqualTo("Sonstiges")
+        assertThat(assist?.copy?.expensesToday(3)).isEqualTo("3 X")
+    }
+
+    @Test
+    fun `assist without copy yields null copy`() {
+        val assist = WidgetAssist.fromJson("""{"dataVersion":"v","currency":"INR"}""")
+        assertThat(assist?.copy).isNull()
+    }
+}

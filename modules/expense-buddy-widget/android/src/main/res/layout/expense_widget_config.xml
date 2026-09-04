@@ -7,6 +7,7 @@
     android:padding="20dp">
 
     <TextView
+        android:id="@+id/config_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/expense_widget_config_title"
@@ -15,6 +16,7 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/config_category_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -36,6 +38,7 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/config_hide_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

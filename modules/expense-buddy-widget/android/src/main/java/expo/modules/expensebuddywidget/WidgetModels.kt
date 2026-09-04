@@ -52,6 +52,8 @@ data class WidgetAssist(
     val dataVersion: String,
     val currency: String,
     val categoryColors: Map<String, String> = emptyMap(),
+    /** Localized display strings captured by the app; null in old snapshots. */
+    val copy: WidgetCopy? = null,
 ) {
     companion object {
         fun fromJson(json: String): WidgetAssist? =
@@ -70,9 +72,33 @@ data class WidgetAssist(
                     dataVersion = o.optString("dataVersion"),
                     currency = o.optString("currency", "INR").ifEmpty { "INR" },
                     categoryColors = colors,
+                    copy = readCopy(o.optJSONObject("copy")),
                 )
             } catch (_: Exception) {
                 null
             }
+
+        private fun readCopy(o: JSONObject?): WidgetCopy? {
+            if (o == null) return null
+            return try {
+                WidgetCopy(
+                    today = o.getString("today"),
+                    last7Days = o.getString("last7Days"),
+                    recent = o.getString("recent"),
+                    empty = o.getString("empty"),
+                    expensesOne = o.getString("expensesOne"),
+                    expensesManyTemplate = o.getString("expensesMany"),
+                    thisMonthTemplate = o.getString("thisMonth"),
+                    other = o.getString("other"),
+                    configTitle = o.getString("configTitle"),
+                    configCategory = o.getString("configCategory"),
+                    configAll = o.getString("configAll"),
+                    configHide = o.getString("configHide"),
+                    configSave = o.getString("configSave"),
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 }

@@ -12,6 +12,7 @@ class SummaryWidgetProvider : WidgetProviderBase() {
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
+        val copy = assist?.copy ?: WidgetCopy.fallback()
         val views = RemoteViews(context.packageName, R.layout.expense_widget_summary)
         views.setOnClickPendingIntent(
             R.id.widget_root,
@@ -34,16 +35,19 @@ class SummaryWidgetProvider : WidgetProviderBase() {
                 val data = result.data
                 val today = WidgetFormat.maskedAmount(data.todayTotal, data.currency, filter.hideAmounts)
                 val month = WidgetFormat.maskedAmount(data.monthTotal, data.currency, filter.hideAmounts)
+                views.setTextViewText(R.id.widget_label, copy.today)
                 views.setTextViewText(R.id.widget_today_total, today)
-                val count =
-                    if (data.todayCount == 1) "1 expense today" else "${data.todayCount} expenses today"
-                views.setTextViewText(R.id.widget_subtitle, "$count · $month this month")
+                views.setTextViewText(
+                    R.id.widget_subtitle,
+                    "${copy.expensesToday(data.todayCount)} · ${copy.monthTotal(month)}",
+                )
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Empty -> {
                 val currency = displayCurrency(context)
+                views.setTextViewText(R.id.widget_label, copy.today)
                 views.setTextViewText(R.id.widget_today_total, WidgetFormat.amount(0.0, currency))
-                views.setTextViewText(R.id.widget_subtitle, "No expenses yet")
+                views.setTextViewText(R.id.widget_subtitle, copy.empty)
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Unavailable -> {
