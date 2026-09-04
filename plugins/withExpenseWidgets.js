@@ -58,6 +58,27 @@ function withExpenseWidgets(config) {
       })
     }
 
+    const systemReceiver = `${WIDGET_PACKAGE}.WidgetSystemReceiver`
+    if (!app.receiver.some((r) => r.$["android:name"] === systemReceiver)) {
+      app.receiver.push({
+        $: {
+          "android:name": systemReceiver,
+          "android:exported": "false",
+        },
+        "intent-filter": [
+          {
+            action: [
+              { $: { "android:name": "android.intent.action.DATE_CHANGED" } },
+              { $: { "android:name": "android.intent.action.TIME_SET" } },
+              { $: { "android:name": "android.intent.action.TIMEZONE_CHANGED" } },
+              { $: { "android:name": "android.intent.action.BOOT_COMPLETED" } },
+              { $: { "android:name": "android.intent.action.MY_PACKAGE_REPLACED" } },
+            ],
+          },
+        ],
+      })
+    }
+
     return config
   })
 }

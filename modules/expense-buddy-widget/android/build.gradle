@@ -26,6 +26,9 @@ dependencies {
   // Same coordinates as react-native-mmkv so Gradle dedupes the classes.
   implementation "io.github.zhongwuzw:mmkv:2.4.1"
 
+  // Periodic refresh backstop (30 min) when the app is never opened.
+  implementation "androidx.work:work-runtime-ktx:2.9.0"
+
   // Tests
   testImplementation "junit:junit:4.13.2"
   testImplementation "org.robolectric:robolectric:4.11.1"
