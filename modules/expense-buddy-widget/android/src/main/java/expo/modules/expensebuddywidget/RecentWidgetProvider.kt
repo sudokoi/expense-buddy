@@ -19,7 +19,7 @@ class RecentWidgetProvider : WidgetProviderBase() {
         )
 
         val assist = assistFor(context)
-        val copy = assist?.copy ?: WidgetCopy.fallback()
+        val copy = assist.toCopy()
         views.setTextViewText(R.id.widget_label, copy.recent)
         when (
             store(context).read(

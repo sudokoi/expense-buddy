@@ -47,3 +47,6 @@ class WidgetCopy internal constructor(
             )
     }
 }
+
+/** Single owner of the assist-or-fallback resolution used by every renderer. */
+internal fun WidgetAssist?.toCopy(): WidgetCopy = this?.copy ?: WidgetCopy.fallback()
