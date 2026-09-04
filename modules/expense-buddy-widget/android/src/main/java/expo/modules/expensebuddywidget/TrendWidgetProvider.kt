@@ -11,21 +11,29 @@ class TrendWidgetProvider : WidgetProviderBase() {
         widgetId: Int,
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
+        val assist = assistFor(context)
         val views = RemoteViews(context.packageName, R.layout.expense_widget_trend)
         views.setOnClickPendingIntent(
             R.id.widget_root,
             WidgetIntents.openApp(context, "history", widgetId),
         )
 
-        when (val result = store(context).read(filter = filter)) {
+        when (
+            val result =
+                store(context).read(
+                    filter = filter,
+                    assistCurrency = assist?.currency,
+                    assistVersion = assist?.dataVersion,
+                )
+        ) {
             is WidgetResult.Ready -> {
                 val data = result.data
                 val total =
-                    if (filter.hideAmounts) {
-                        WidgetFormat.HIDDEN
-                    } else {
-                        WidgetFormat.amount(data.last7Days.sumOf { it.total }, data.currency)
-                    }
+                    WidgetFormat.maskedAmount(
+                        data.last7Days.sumOf { it.total },
+                        data.currency,
+                        filter.hideAmounts,
+                    )
                 views.setTextViewText(R.id.widget_total, total)
                 views.setImageViewBitmap(
                     R.id.widget_chart,

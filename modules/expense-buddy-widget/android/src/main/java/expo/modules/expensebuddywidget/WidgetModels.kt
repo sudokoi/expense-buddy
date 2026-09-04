@@ -3,11 +3,6 @@ package expo.modules.expensebuddywidget
 import org.json.JSONObject
 
 /** Per-instance filter. v1: category + hideAmounts only (ADR-012). */
-@JvmInline
-value class WidgetId(
-    val value: Int,
-)
-
 data class WidgetFilter(
     val category: String? = null,
     val hideAmounts: Boolean = false,
@@ -59,8 +54,6 @@ data class WidgetAssist(
     val categoryColors: Map<String, String> = emptyMap(),
 ) {
     companion object {
-        fun fallback(defaultCurrency: String): WidgetAssist = WidgetAssist(dataVersion = "", currency = defaultCurrency)
-
         fun fromJson(json: String): WidgetAssist? =
             try {
                 val o = JSONObject(json)

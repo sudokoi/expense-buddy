@@ -1,7 +1,7 @@
 # ADR-012: Android Home-Screen Widgets — Native-Read-First
 
-**Date:** 2026-09-04
-**Status:** Accepted
+**Date:** 2026-09-04 (amended 2026-09-05)
+**Status:** Accepted (amended)
 **Related:** ARCHITECTURE.md (local-first, explicit state boundaries), ADR-007 (native-owned SMS queue), `services/expense-storage.ts`, `services/settings-manager.ts`, `services/storage.ts`, Ritulaya `ritulaya-widget` (reference only)
 
 ---
@@ -18,23 +18,23 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 
 ### 1. Native-read-first, assist-hints-only (Ritulaya shape, MMKV source)
 
-- The widget's source of truth is the same MMKV files the app reads. A new Kotlin `ExpenseWidgetStore` reads index + items natively on every `onUpdate` and derives all numbers at render time (today/month/7d/recent), applying the same semantics as JS: drop `deletedAt`, `Math.abs(amount)`, `currency ?: defaultCurrency ?: INR`, device-local day keys (`ZoneId.systemDefault`, `yyyy-MM-dd`).
-- JS is a fast path only: a tiny `WidgetAssist` snapshot (`currency, categoryColors, labels, dataVersion=max(updatedAt)`) written best-effort on mutations, plus a `refreshWidgets()` broadcast. Correctness never depends on it.
-- Staleness rule (mirrors Ritulaya's `dataVersion` check): if assist `dataVersion` is older than live `max(updatedAt)`, ignore assist numbers and recompute from live rows; assist strings may still be used with English fallback.
+- The widget's source of truth is the same MMKV files the app reads. A new Kotlin `ExpenseWidgetStore` reads index + items natively on every `onUpdate` and derives all numbers at render time (today/month/7d/recent), applying the same semantics as JS: drop `deletedAt`, `Math.abs(amount)`, single-currency grouping (never mixed sums — mirrors `groupExpensesByCurrency`), device-local day keys (`ZoneId.systemDefault`, `yyyy-MM-dd`), recent sorted newest-first.
+- JS is a fast path only: a tiny `WidgetAssist` snapshot (`currency, categoryColors, dataVersion=max(updatedAt)`) written best-effort on mutations, plus bridge functions `refreshWidgets()` (broadcast) and `persistAssist(json)` (hint write). Correctness never depends on either. (No separate `labels` field: category labels come from live `app_settings`, with assist `categoryColors` keys as fallback.)
+- Staleness rule (mirrors Ritulaya's `dataVersion` check): the assist carries no numbers, only the effective-currency hint and dot colors. The hint is trusted only when its `dataVersion` equals live `max(updatedAt)`; otherwise the settings default (then most-recent-row) currency wins. All totals always come from live rows.
 
 ### 2. Three providers, one data Module
 
 - One deep Module `ExpenseWidgetStore` with interface `fun read(now, filter): WidgetResult` (`Ready | Empty | Unavailable`). Hides MMKV keys, JSON parsing, timezone, currency fallback, aggregation.
 - One narrow `WidgetAssist` reader (`fun load(): Assist?`).
-- Three thin provider Adapters at the `RemoteViews` seam: `Summary`, `Trend7d` (7 weighted `View` bars, zero-filled), `Recent` (`RemoteViewsService` list, capped at 8).
-- One bridge Module `ExpenseBuddyWidgetModule` with a single `refreshWidgets()` broadcast. No data params.
+- Three thin provider Adapters at the `RemoteViews` seam: `Summary`, `Trend7d` (7 bars drawn to a bitmap with `Canvas` — `RemoteViews` cannot host chart views and pre-S cannot set layout weights dynamically; zero-filled with faint track slots), `Recent` (`RemoteViewsService` list, capped at 8).
+- One bridge Module `ExpenseBuddyWidgetModule` with `refreshWidgets()` (broadcast, no data params) plus `persistAssist(json)` (hint write). Broadcasts use string `ComponentName`s, never `Class.forName`, so they survive release obfuscation.
 
 ### 3. v1 scope limits
 
 - Per-instance filter is `category + hideAmounts` only (stored in `expense_widget_<id>` prefs). Full `FilterState` parity (time/method/instrument/search) stays in-app.
-- No widget-side editing or quick-add-without-app. Taps deep-link (`myapp://add`, review route); `+` opens the app.
-- Theming uses Material You system colors, not `constants/palette.ts`. `hideAmounts` covers lock-screen privacy.
-- Freshness without JS: `ACTION_DATE_CHANGED` receiver (midnight rollover) + `BOOT_COMPLETED` + 30-min `WorkManager` backstop. `updatePeriodMillis=0`.
+- No widget-side editing or quick-add-without-app. Taps deep-link into the app (`myapp://` home, `myapp://add` from `+`, `myapp://history` from list/trend).
+- Theming uses static light/dark tokens mirroring `constants/palette.ts` (`values-night/` qualifier), not dynamic Material You — keeps brand parity with the app like Ritulaya does. `hideAmounts` covers lock-screen privacy.
+- Freshness without JS: system receiver (`ACTION_DATE_CHANGED` midnight rollover, plus `TIME_SET`/`TIMEZONE_CHANGED` since day keys are zone-local, `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`) + 30-min `WorkManager` backstop armed on first `onEnabled`. `updatePeriodMillis=0`.
 
 ## Consequences
 
@@ -46,9 +46,9 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 
 ### Negative
 
-- MMKV must be added as a native dependency of the new module (`com.tencent:mmkv`), including multi-process mode; JS and widget race on the same file (tolerated: reads are best-effort, JS heals corrupt index on next launch).
-- Aggregation logic exists twice (TS + Kotlin) with a parity contract to maintain (day keys, abs amounts, currency fallback, zero-fill). Mitigated by focused unit tests on both sides asserting the same invariants.
-- `RemoteViews` limits: no real charts, no custom fonts — bars are weighted views, lists are plain rows.
+- MMKV must be added as a native dependency of the new module (`io.github.zhongwuzw:mmkv`, same coordinates as `react-native-mmkv` so Gradle dedupes the classes — not `com.tencent:mmkv`, which ships identical classes under different coordinates and breaks the build), read in multi-process mode; JS and widget race on the same file (tolerated: reads are best-effort, JS heals corrupt index on next launch).
+- Aggregation logic exists twice (TS + Kotlin) with a parity contract to maintain (day keys, abs amounts, single-currency grouping, zero-fill, newest-first recent). Mitigated by focused unit tests on both sides asserting the same invariants.
+- `RemoteViews` limits: no real charts (bars are a rendered bitmap), no custom fonts — lists are plain rows.
 
 ## Rejected alternatives
 

@@ -15,10 +15,16 @@ class ExpenseWidgetStore(
     private val settings: SettingsReader,
     private val zone: ZoneId = ZoneId.systemDefault(),
 ) {
+    /**
+     * @param assistCurrency effective currency hint from JS. Trusted only
+     * when [assistVersion] matches the live rows (staleness rule, ADR-012).
+     */
     fun read(
         now: LocalDate = LocalDate.now(zone),
         filter: WidgetFilter = WidgetFilter(),
         recentLimit: Int = 8,
+        assistCurrency: String? = null,
+        assistVersion: String? = null,
     ): WidgetResult {
         val indexRaw = mmkv.getString(WidgetKeys.EXPENSES_INDEX) ?: return WidgetResult.Unavailable
         val ids = parseIndex(indexRaw)
@@ -35,31 +41,57 @@ class ExpenseWidgetStore(
         if (filtered.isEmpty()) return WidgetResult.Empty
 
         val defaultCurrency = settings.defaultCurrency()
-        val currency = filtered.firstNotNullOfOrNull { it.currency } ?: defaultCurrency
+        val liveVersion = filtered.maxOf { it.updatedAt }
+        // Mirror TS currency grouping: totals cover one currency group, never
+        // a mixed sum. Assist wins only when fresh; otherwise the default;
+        // when neither group exists, fall back to the most recent row.
+        val freshAssist =
+            !assistCurrency.isNullOrEmpty() &&
+                !assistVersion.isNullOrEmpty() &&
+                assistVersion == liveVersion
+        val candidates =
+            listOfNotNull(
+                assistCurrency.takeIf { freshAssist },
+                defaultCurrency,
+            )
+        val rowCurrency = { row: WidgetExpense -> row.currency ?: defaultCurrency }
+        val target =
+            candidates.firstOrNull { code -> filtered.any { rowCurrency(it) == code } }
+                ?: filtered
+                    .maxWithOrNull(
+                        compareBy<WidgetExpense> { it.dayKey }.thenBy { it.updatedAt },
+                    )?.let { rowCurrency(it) }
+                ?: defaultCurrency
+        val grouped = filtered.filter { rowCurrency(it) == target }
+        if (grouped.isEmpty()) return WidgetResult.Empty
 
         val todayKey = formatDay(now)
         val monthPrefix = todayKey.substring(0, 7)
-        val todayRows = filtered.filter { it.dayKey == todayKey }
-        val monthRows = filtered.filter { it.dayKey.startsWith(monthPrefix) }
+        val todayRows = grouped.filter { it.dayKey == todayKey }
+        val monthRows = grouped.filter { it.dayKey.startsWith(monthPrefix) }
 
         val last7Days =
             (6 downTo 0).map { offset ->
                 val day = now.minusDays(offset.toLong())
                 val key = formatDay(day)
-                DayTotal(key, filtered.filter { it.dayKey == key }.sumOf { it.amount })
+                DayTotal(key, grouped.filter { it.dayKey == key }.sumOf { it.amount })
             }
-        val recent = filtered.take(recentLimit)
-        val dataVersion = filtered.maxOf { it.updatedAt }
+        val recent =
+            grouped
+                .sortedWith(
+                    compareByDescending<WidgetExpense> { it.dayKey }
+                        .thenByDescending { it.updatedAt },
+                ).take(recentLimit)
 
         return WidgetResult.Ready(
             WidgetData(
-                currency = currency,
+                currency = target,
                 todayTotal = todayRows.sumOf { it.amount },
                 todayCount = todayRows.size,
                 monthTotal = monthRows.sumOf { it.amount },
                 last7Days = last7Days,
                 recent = recent,
-                dataVersion = dataVersion,
+                dataVersion = liveVersion,
             ),
         )
     }

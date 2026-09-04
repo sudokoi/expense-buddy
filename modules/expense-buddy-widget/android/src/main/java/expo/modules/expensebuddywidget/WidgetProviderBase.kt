@@ -54,6 +54,13 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         return ExpenseWidgetStore(mmkv, SettingsAndroidReader(mmkv))
     }
 
+    protected fun assistFor(context: Context): WidgetAssist? =
+        try {
+            WidgetAssistStore(context.applicationContext).load()
+        } catch (_: Exception) {
+            null
+        }
+
     /** Currency for empty states: assist hint, else settings default, else INR. */
     protected fun displayCurrency(context: Context): String {
         val app = context.applicationContext
