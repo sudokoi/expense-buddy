@@ -440,7 +440,7 @@ export function GitHubConfigSection({
                       ? successTextColor
                       : connectionStatus === "error"
                         ? errorTextColor
-                        : undefined,
+                        : theme.accentForeground,
                 }}
               >
                 {isTesting ? t("settings.github.testing") : t("settings.github.test")}

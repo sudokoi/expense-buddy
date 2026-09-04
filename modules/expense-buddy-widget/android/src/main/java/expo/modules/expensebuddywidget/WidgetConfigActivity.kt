@@ -51,7 +51,10 @@ class WidgetConfigActivity : Activity() {
                 androidx.core.content.ContextCompat
                     .getColor(this, R.color.expense_widget_accent),
             )
-        saveButton.setTextColor(android.graphics.Color.WHITE)
+        saveButton.setTextColor(
+            androidx.core.content.ContextCompat
+                .getColor(this, R.color.expense_widget_accent_text),
+        )
 
         val existing = WidgetFilterStore(this, widgetId).load()
         val mmkv = MmkvAndroidReader(this)
@@ -73,6 +76,17 @@ class WidgetConfigActivity : Activity() {
 
         val hideSwitch = findViewById<Switch>(R.id.config_hide_amounts)
         hideSwitch.isChecked = existing.hideAmounts
+        val accent =
+            androidx.core.content.ContextCompat
+                .getColor(this, R.color.expense_widget_accent)
+        hideSwitch.thumbTintList =
+            android.content.res.ColorStateList
+                .valueOf(accent)
+        hideSwitch.trackTintList =
+            android.content.res.ColorStateList.valueOf(
+                androidx.core.graphics.ColorUtils
+                    .setAlphaComponent(accent, 102),
+            )
 
         findViewById<Button>(R.id.config_save).setOnClickListener {
             val position = spinner.selectedItemPosition
