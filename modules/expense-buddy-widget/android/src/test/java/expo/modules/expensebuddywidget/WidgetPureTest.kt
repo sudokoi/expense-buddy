@@ -22,6 +22,37 @@ class TrendChartRendererTest {
     fun `fractions of empty is empty`() {
         assertThat(TrendChartRenderer.fractions(emptyList())).isEmpty()
     }
+
+    @Test
+    fun `single month labels are day numbers`() {
+        val days = listOf(DayTotal("2026-09-02", 1.0), DayTotal("2026-09-03", 2.0))
+        assertThat(TrendChartRenderer.dayLabels(days, java.util.Locale.ENGLISH))
+            .containsExactly("2", "3")
+            .inOrder()
+    }
+
+    @Test
+    fun `cross-month span names edge months`() {
+        val days = listOf(DayTotal("2026-08-30", 1.0), DayTotal("2026-08-31", 1.0), DayTotal("2026-09-01", 1.0))
+        assertThat(TrendChartRenderer.dayLabels(days, java.util.Locale.ENGLISH))
+            .containsExactly("30 Aug", "31", "1 Sep")
+            .inOrder()
+    }
+
+    @Test
+    fun `year boundary names both months`() {
+        val days = listOf(DayTotal("2025-12-31", 1.0), DayTotal("2026-01-01", 1.0))
+        assertThat(TrendChartRenderer.dayLabels(days, java.util.Locale.ENGLISH))
+            .containsExactly("31 Dec", "1 Jan")
+            .inOrder()
+    }
+
+    @Test
+    fun `corrupt day keys fall back to raw suffix`() {
+        val days = listOf(DayTotal("2026-13-99", 1.0))
+        assertThat(TrendChartRenderer.dayLabels(days, java.util.Locale.ENGLISH))
+            .containsExactly("99")
+    }
 }
 
 class WidgetFormatTest {

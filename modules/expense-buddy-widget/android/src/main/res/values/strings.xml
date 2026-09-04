@@ -4,6 +4,7 @@
     <string name="expense_widget_trend_desc">Last 7 days spending bars</string>
     <string name="expense_widget_recent_desc">Latest expenses list</string>
     <string name="expense_widget_config_title">Widget settings</string>
+    <string name="expense_widget_config_subtitle">Choose what this widget shows</string>
     <string name="expense_widget_config_category">Category</string>
     <string name="expense_widget_config_all">All categories</string>
     <string name="expense_widget_config_hide_amounts">Hide amounts</string>

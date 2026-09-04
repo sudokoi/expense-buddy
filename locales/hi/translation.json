@@ -88,6 +88,7 @@
     "expensesMany": "आज {{count}} खर्च",
     "thisMonth": "इस महीने {{total}}",
     "configTitle": "विजेट सेटिंग",
+    "configSubtitle": "यह विजेट क्या दिखाएगा, चुनें",
     "configAll": "सभी श्रेणियां",
     "configHide": "राशि छिपाएं",
     "configSave": "विजेट जोड़ें"

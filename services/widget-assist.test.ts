@@ -59,6 +59,8 @@ describe("buildWidgetAssist", () => {
   it("carries localized copy with native format placeholders", () => {
     const assist = buildWidgetAssist([], DEFAULT_SETTINGS, "INR")
     expect(assist.copy.today).toBeTruthy()
+    expect(assist.copy.configSubtitle).toBeTruthy()
+    expect(assist.copy.configCategory).toBe("Category")
     expect(assist.copy.expensesMany).toContain("%d")
     expect(assist.copy.expensesMany).not.toContain("{{count}}")
     expect(assist.copy.thisMonth).toContain("%s")

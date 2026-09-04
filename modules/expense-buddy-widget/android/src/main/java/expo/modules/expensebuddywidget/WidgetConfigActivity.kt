@@ -40,9 +40,18 @@ class WidgetConfigActivity : Activity() {
         val assist = WidgetAssistStore(this).load()
         val copy = assist.toCopy()
         findViewById<TextView>(R.id.config_title).text = copy.configTitle
+        findViewById<TextView>(R.id.config_subtitle).text = copy.configSubtitle
         findViewById<TextView>(R.id.config_category_label).text = copy.configCategory
         findViewById<TextView>(R.id.config_hide_label).text = copy.configHide
-        findViewById<Button>(R.id.config_save).text = copy.configSave
+        val saveButton = findViewById<Button>(R.id.config_save)
+        saveButton.text = copy.configSave
+        saveButton.isAllCaps = false
+        saveButton.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat
+                    .getColor(this, R.color.expense_widget_accent),
+            )
+        saveButton.setTextColor(android.graphics.Color.WHITE)
 
         val existing = WidgetFilterStore(this, widgetId).load()
         val mmkv = MmkvAndroidReader(this)
@@ -55,7 +64,9 @@ class WidgetConfigActivity : Activity() {
 
         val spinner = findViewById<Spinner>(R.id.config_category)
         spinner.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, options)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, options).also {
+                it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            }
         val selectedIndex =
             existing.category?.let { labels.indexOf(it).takeIf { i -> i >= 0 }?.plus(1) } ?: 0
         spinner.setSelection(selectedIndex)
