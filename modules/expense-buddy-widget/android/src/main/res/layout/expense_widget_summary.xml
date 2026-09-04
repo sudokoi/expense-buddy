@@ -3,7 +3,7 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/expense_widget_background"
+    android:background="@drawable/expense_widget_bg"
     android:orientation="vertical"
     android:padding="12dp">
 
