@@ -88,6 +88,7 @@
     "expensesMany": "今日の支出 {{count}}件",
     "thisMonth": "今月 {{total}}",
     "configTitle": "ウィジェット設定",
+    "configSubtitle": "ウィジェットに表示する内容を選択",
     "configAll": "すべてのカテゴリー",
     "configHide": "金額を非表示",
     "configSave": "ウィジェットを追加"

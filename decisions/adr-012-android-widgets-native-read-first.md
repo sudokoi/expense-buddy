@@ -32,7 +32,8 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 ### 3. v1 scope limits
 
 - Per-instance filter is `category + hideAmounts` only (stored in `expense_widget_<id>` prefs). Full `FilterState` parity (time/method/instrument/search) stays in-app.
-- No widget-side editing or quick-add-without-app. Taps deep-link into the app (`myapp://` home, `myapp://add` from `+`, `myapp://history` from list/trend).
+- No widget-side editing or quick-add-without-app. Taps deep-link into the app (`myapp://` home/Analytics tab, `myapp://add` from `+`, `myapp://history` from list rows and labels).
+- The `android:configure` screen is a full-screen activity (a dialog window clipped labels and buttons); it writes per-instance prefs and returns `RESULT_OK`.
 - Theming uses static light/dark tokens mirroring `constants/palette.ts` (`values-night/` qualifier), not dynamic Material You — keeps brand parity with the app like Ritulaya does. `hideAmounts` covers lock-screen privacy.
 - Freshness without JS: system receiver (`ACTION_DATE_CHANGED` midnight rollover, plus `TIME_SET`/`TIMEZONE_CHANGED` since day keys are zone-local, `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`) + 30-min `WorkManager` backstop armed on first `onEnabled`. `updatePeriodMillis=0`.
 

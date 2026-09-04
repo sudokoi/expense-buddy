@@ -91,6 +91,7 @@ data class WidgetAssist(
                     thisMonthTemplate = o.getString("thisMonth"),
                     other = o.getString("other"),
                     configTitle = o.getString("configTitle"),
+                    configSubtitle = o.optString("configSubtitle", ""),
                     configCategory = o.getString("configCategory"),
                     configAll = o.getString("configAll"),
                     configHide = o.getString("configHide"),

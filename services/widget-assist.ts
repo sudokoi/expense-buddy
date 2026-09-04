@@ -21,6 +21,7 @@ export interface WidgetAssistCopy {
   thisMonth: string
   other: string
   configTitle: string
+  configSubtitle: string
   configCategory: string
   configAll: string
   configHide: string
@@ -46,7 +47,8 @@ export function widgetAssistCopy(): WidgetAssistCopy {
     thisMonth: t("widget.thisMonth").replace("{{total}}", "%s"),
     other: t("settings.categories.other"),
     configTitle: t("widget.configTitle"),
-    configCategory: t("add.fields.category"),
+    configSubtitle: t("widget.configSubtitle"),
+    configCategory: t("add.category"),
     configAll: t("widget.configAll"),
     configHide: t("widget.configHide"),
     configSave: t("widget.configSave"),

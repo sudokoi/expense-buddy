@@ -81,14 +81,14 @@ function withExpenseWidgets(config) {
     }
 
     // Launched explicitly by the widget host during placement, so it must
-    // be exported. Benign screen: writes only its own widget-id prefs.
+    // be exported. Full-screen (app theme): the dialog-sized window cut
+    // off labels and buttons. Benign screen: writes only its own prefs.
     const configActivity = `${WIDGET_PACKAGE}.WidgetConfigActivity`
     if (!app.activity.some((a) => a.$["android:name"] === configActivity)) {
       app.activity.push({
         $: {
           "android:name": configActivity,
           "android:exported": "true",
-          "android:theme": "@android:style/Theme.Material.Light.Dialog.NoActionBar",
           "android:windowSoftInputMode": "stateHidden",
         },
       })

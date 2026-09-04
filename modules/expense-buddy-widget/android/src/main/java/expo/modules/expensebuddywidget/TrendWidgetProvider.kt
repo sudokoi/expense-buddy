@@ -14,9 +14,10 @@ class TrendWidgetProvider : WidgetProviderBase() {
         val assist = assistFor(context)
         val copy = assist.toCopy()
         val views = RemoteViews(context.packageName, R.layout.expense_widget_trend)
+        // Home tab hosts the Analytics screen, so the chart deep-links there.
         views.setOnClickPendingIntent(
             R.id.widget_root,
-            WidgetIntents.openApp(context, "history", widgetId),
+            WidgetIntents.openApp(context, "", widgetId),
         )
         views.setTextViewText(R.id.widget_label, copy.last7Days)
 

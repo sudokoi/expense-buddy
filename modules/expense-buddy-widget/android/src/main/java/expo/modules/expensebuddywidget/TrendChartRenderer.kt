@@ -8,8 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.withTranslation
 
 /**
- * Renders 7-day bars to a bitmap (RemoteViews cannot host chart views).
- * [fractions] is pure and unit-tested; [render] only maps fractions to pixels.
+ * Renders 7-day bars with a trend line to a bitmap (RemoteViews cannot host
+ * chart views). [fractions] and [dayLabels] are pure and unit-tested;
+ * [render] only maps them to pixels.
  */
 internal object TrendChartRenderer {
     fun fractions(totals: List<Double>): List<Float> {
@@ -17,6 +18,38 @@ internal object TrendChartRenderer {
         val max = totals.maxOrNull() ?: 0.0
         if (max <= 0.0) return totals.map { 0f }
         return totals.map { (it / max).toFloat().coerceIn(0f, 1f) }
+    }
+
+    /**
+     * Day numbers, with month context at the range edges when the span
+     * crosses a month boundary ("29 Aug … 4 Sep"). Locale-aware short names.
+     */
+    fun dayLabels(
+        days: List<DayTotal>,
+        locale: java.util.Locale = java.util.Locale.getDefault(),
+    ): List<String> {
+        val dates =
+            days.map {
+                try {
+                    java.time.LocalDate.parse(it.dayKey)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+        if (dates.any { it == null }) return days.map { it.dayKey.substring(8) }
+        val nonNull = dates.filterNotNull()
+        val months = nonNull.map { java.time.YearMonth.from(it) }.toSet()
+        if (months.size <= 1) return nonNull.map { it.dayOfMonth.toString() }
+        val monthName = { date: java.time.LocalDate ->
+            date.month.getDisplayName(java.time.format.TextStyle.SHORT, locale)
+        }
+        return nonNull.mapIndexed { index, date ->
+            when (index) {
+                0 -> "${date.dayOfMonth} ${monthName(date)}"
+                nonNull.lastIndex -> "${date.dayOfMonth} ${monthName(date)}"
+                else -> date.dayOfMonth.toString()
+            }
+        }
     }
 
     fun render(
@@ -42,6 +75,16 @@ internal object TrendChartRenderer {
 
         val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = barColor }
         val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = trackColor }
+        val linePaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = ContextCompat.getColor(context, R.color.expense_widget_text_primary)
+                strokeWidth = 2 * density
+                style = Paint.Style.STROKE
+            }
+        val dotPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = ContextCompat.getColor(context, R.color.expense_widget_text_primary)
+            }
         val labelPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = labelColor
@@ -49,6 +92,8 @@ internal object TrendChartRenderer {
                 textAlign = Paint.Align.CENTER
             }
 
+        val labels = dayLabels(days)
+        val tops = mutableListOf<Pair<Float, Float>>()
         days.forEachIndexed { index, day ->
             val centerX = slot * index + slot / 2
             val left = centerX - barWidth / 2
@@ -69,8 +114,28 @@ internal object TrendChartRenderer {
                     barPaint,
                 )
             }
+            tops.add(centerX to (plotHeight - barHeight))
             canvas.withTranslation(centerX, heightPx - 2 * density) {
-                drawText(day.dayKey.substring(8), 0f, 0f, labelPaint)
+                drawText(labels[index], 0f, 0f, labelPaint)
+            }
+        }
+        // Trend line through the bar tops, skipped where nothing was spent.
+        if (tops.size > 1 && fracs.any { it > 0 }) {
+            val path = android.graphics.Path()
+            var started = false
+            tops.forEachIndexed { index, (x, y) ->
+                if (fracs[index] <= 0) {
+                    started = false
+                } else if (!started) {
+                    path.moveTo(x, y)
+                    started = true
+                } else {
+                    path.lineTo(x, y)
+                }
+            }
+            canvas.drawPath(path, linePaint)
+            tops.forEachIndexed { index, (x, y) ->
+                if (fracs[index] > 0) canvas.drawCircle(x, y, 2.5f * density, dotPaint)
             }
         }
         return bitmap

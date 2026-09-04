@@ -88,6 +88,7 @@
     "expensesMany": "{{count}} expenses today",
     "thisMonth": "{{total}} this month",
     "configTitle": "Widget settings",
+    "configSubtitle": "Choose what this widget shows",
     "configAll": "All categories",
     "configHide": "Hide amounts",
     "configSave": "Add widget"
