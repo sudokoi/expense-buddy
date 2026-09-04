@@ -37,8 +37,8 @@ class WidgetFormatTest {
     }
 
     @Test
-    fun `plain trims zero decimals`() {
-        assertThat(WidgetFormat.plain(100.0)).isEqualTo("100")
-        assertThat(WidgetFormat.plain(100.5)).isEqualTo("100.5")
+    fun `maskedAmount hides when requested`() {
+        assertThat(WidgetFormat.maskedAmount(100.0, "INR", true)).isEqualTo(WidgetFormat.HIDDEN)
+        assertThat(WidgetFormat.maskedAmount(100.0, "XXQ", false)).isEqualTo("XXQ 100")
     }
 }

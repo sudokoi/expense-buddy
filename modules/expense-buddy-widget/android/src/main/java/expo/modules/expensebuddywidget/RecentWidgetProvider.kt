@@ -18,7 +18,14 @@ class RecentWidgetProvider : WidgetProviderBase() {
             WidgetIntents.openApp(context, "history", widgetId),
         )
 
-        when (store(context).read(filter = WidgetFilterStore(context, widgetId).load())) {
+        val assist = assistFor(context)
+        when (
+            store(context).read(
+                filter = WidgetFilterStore(context, widgetId).load(),
+                assistCurrency = assist?.currency,
+                assistVersion = assist?.dataVersion,
+            )
+        ) {
             is WidgetResult.Ready -> {
                 val service =
                     Intent(context, RecentWidgetService::class.java).apply {

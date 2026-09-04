@@ -11,6 +11,7 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         widgetId: Int,
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
+        val assist = assistFor(context)
         val views = RemoteViews(context.packageName, R.layout.expense_widget_summary)
         views.setOnClickPendingIntent(
             R.id.widget_root,
@@ -21,21 +22,18 @@ class SummaryWidgetProvider : WidgetProviderBase() {
             WidgetIntents.openApp(context, "add", widgetId + ADD_OFFSET),
         )
 
-        when (val result = store(context).read(filter = filter)) {
+        when (
+            val result =
+                store(context).read(
+                    filter = filter,
+                    assistCurrency = assist?.currency,
+                    assistVersion = assist?.dataVersion,
+                )
+        ) {
             is WidgetResult.Ready -> {
                 val data = result.data
-                val today =
-                    if (filter.hideAmounts) {
-                        WidgetFormat.HIDDEN
-                    } else {
-                        WidgetFormat.amount(data.todayTotal, data.currency)
-                    }
-                val month =
-                    if (filter.hideAmounts) {
-                        WidgetFormat.HIDDEN
-                    } else {
-                        WidgetFormat.amount(data.monthTotal, data.currency)
-                    }
+                val today = WidgetFormat.maskedAmount(data.todayTotal, data.currency, filter.hideAmounts)
+                val month = WidgetFormat.maskedAmount(data.monthTotal, data.currency, filter.hideAmounts)
                 views.setTextViewText(R.id.widget_today_total, today)
                 val count =
                     if (data.todayCount == 1) "1 expense today" else "${data.todayCount} expenses today"

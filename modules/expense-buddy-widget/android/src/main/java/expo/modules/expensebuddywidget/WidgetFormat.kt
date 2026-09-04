@@ -24,7 +24,13 @@ internal object WidgetFormat {
             "$currencyCode ${trimTrailingZeros(value)}"
         }
 
-    fun plain(value: Double): String = trimTrailingZeros(value)
+    /** Single owner of the hide-amounts branch repeated across providers. */
+    fun maskedAmount(
+        value: Double,
+        currencyCode: String,
+        hidden: Boolean,
+        locale: Locale = Locale.getDefault(),
+    ): String = if (hidden) HIDDEN else amount(value, currencyCode, locale)
 
     private fun trimTrailingZeros(value: Double): String =
         if (value == kotlin.math.floor(value) && !value.isInfinite()) {

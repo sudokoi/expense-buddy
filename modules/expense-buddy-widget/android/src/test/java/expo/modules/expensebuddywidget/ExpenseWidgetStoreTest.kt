@@ -104,4 +104,55 @@ class ExpenseWidgetStoreTest {
             store.read(LocalDate.of(2026, 9, 4), WidgetFilter(category = "Rent")) as WidgetResult.Ready
         assertThat(ready.data.todayTotal).isWithin(0.001).of(300.0)
     }
+
+    @Test
+    fun `mixed currencies are grouped never summed`() {
+        val map =
+            mapOf(
+                WidgetKeys.EXPENSES_INDEX to """["a","b"]""",
+                WidgetKeys.itemKey("a") to expenseJson("a", 100.0, "2026-09-04T05:00:00.000Z", currency = "INR"),
+                WidgetKeys.itemKey("b") to expenseJson("b", 300.0, "2026-09-04T05:00:00.000Z", currency = "USD"),
+            )
+        val store = ExpenseWidgetStore(FakeMmkv(map), settings, zone)
+        // Fresh assist picks the INR group only.
+        val ready =
+            store.read(
+                LocalDate.of(2026, 9, 4),
+                assistCurrency = "INR",
+                assistVersion = "2026-09-04T10:00:00.000Z",
+            ) as WidgetResult.Ready
+        assertThat(ready.data.currency).isEqualTo("INR")
+        assertThat(ready.data.todayTotal).isWithin(0.001).of(100.0)
+    }
+
+    @Test
+    fun `stale assist currency is ignored`() {
+        val map =
+            mapOf(
+                WidgetKeys.EXPENSES_INDEX to """["a"]""",
+                WidgetKeys.itemKey("a") to expenseJson("a", 100.0, "2026-09-04T05:00:00.000Z", currency = "INR"),
+            )
+        val store = ExpenseWidgetStore(FakeMmkv(map), settings, zone)
+        val ready =
+            store.read(
+                LocalDate.of(2026, 9, 4),
+                assistCurrency = "USD",
+                assistVersion = "2020-01-01T00:00:00.000Z",
+            ) as WidgetResult.Ready
+        assertThat(ready.data.currency).isEqualTo("INR")
+        assertThat(ready.data.todayTotal).isWithin(0.001).of(100.0)
+    }
+
+    @Test
+    fun `recent is newest first regardless of index order`() {
+        val map =
+            mapOf(
+                WidgetKeys.EXPENSES_INDEX to """["old","new"]""",
+                WidgetKeys.itemKey("old") to expenseJson("old", 10.0, "2026-09-01T05:00:00.000Z"),
+                WidgetKeys.itemKey("new") to expenseJson("new", 20.0, "2026-09-04T05:00:00.000Z"),
+            )
+        val store = ExpenseWidgetStore(FakeMmkv(map), settings, zone)
+        val ready = store.read(LocalDate.of(2026, 9, 4)) as WidgetResult.Ready
+        assertThat(ready.data.recent.map { it.id }).containsExactly("new", "old").inOrder()
+    }
 }

@@ -35,7 +35,13 @@ class RecentWidgetService : RemoteViewsService() {
         override fun onDataSetChanged() {
             filter = WidgetFilterStore(context, widgetId).load()
             val mmkv = MmkvAndroidReader(context)
-            val result = ExpenseWidgetStore(mmkv, SettingsAndroidReader(mmkv)).read(filter = filter)
+            val assist = WidgetAssistStore(context).load()
+            val result =
+                ExpenseWidgetStore(mmkv, SettingsAndroidReader(mmkv)).read(
+                    filter = filter,
+                    assistCurrency = assist?.currency,
+                    assistVersion = assist?.dataVersion,
+                )
             val ready = result as? WidgetResult.Ready
             if (ready == null) {
                 rows = emptyList()
@@ -43,7 +49,7 @@ class RecentWidgetService : RemoteViewsService() {
             }
             rows = ready.data.recent
             currency = ready.data.currency
-            colors = WidgetAssistStore(context).load()?.categoryColors ?: emptyMap()
+            colors = assist?.categoryColors ?: emptyMap()
         }
 
         override fun getCount(): Int = rows.size
@@ -56,11 +62,11 @@ class RecentWidgetService : RemoteViewsService() {
             views.setTextViewText(R.id.row_title, title)
             views.setTextViewText(R.id.row_subtitle, "${expense.category} · ${expense.dayKey}")
             val amount =
-                if (filter.hideAmounts) {
-                    WidgetFormat.HIDDEN
-                } else {
-                    WidgetFormat.amount(expense.amount, expense.currency ?: currency)
-                }
+                WidgetFormat.maskedAmount(
+                    expense.amount,
+                    expense.currency ?: currency,
+                    filter.hideAmounts,
+                )
             views.setTextViewText(R.id.row_amount, amount)
             views.setInt(R.id.row_dot, "setColorFilter", dotColor(expense.category))
             views.setOnClickFillInIntent(R.id.row_root, Intent())
