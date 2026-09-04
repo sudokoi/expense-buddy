@@ -43,7 +43,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:minHeight="56dp" />
+            android:minHeight="56dp"
+            android:paddingStart="0dp" />
 
         <LinearLayout
             android:layout_width="match_parent"

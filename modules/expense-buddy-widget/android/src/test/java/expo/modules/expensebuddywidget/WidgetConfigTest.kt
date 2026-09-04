@@ -80,11 +80,19 @@ class WidgetCopyTest {
             """{"dataVersion":"v","currency":"INR","categoryColors":{},
               "copy":{"today":"Heute","last7Days":"L7","recent":"R","empty":"E",
               "expensesOne":"1","expensesMany":"%d X","thisMonth":"%s Y",
-              "other":"Sonstiges","configTitle":"T","configCategory":"C",
-              "configAll":"A","configHide":"H","configSave":"S"}}"""
+              "other":"Sonstiges","configTitle":"T","configSubtitle":"S",
+              "configCategory":"C","configAll":"A","configHide":"H","configSave":"S"}}"""
         val assist = WidgetAssist.fromJson(json)
         assertThat(assist?.copy?.displayCategory("Other")).isEqualTo("Sonstiges")
         assertThat(assist?.copy?.expensesToday(3)).isEqualTo("3 X")
+    }
+
+    @Test
+    fun `partial copy from older app version falls back wholesale`() {
+        val json =
+            """{"dataVersion":"v","currency":"INR",
+              "copy":{"today":"Heute","configCategory":"C"}}"""
+        assertThat(WidgetAssist.fromJson(json)?.copy).isNull()
     }
 
     @Test
