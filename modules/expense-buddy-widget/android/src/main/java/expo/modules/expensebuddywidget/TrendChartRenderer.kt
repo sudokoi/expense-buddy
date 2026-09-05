@@ -10,10 +10,22 @@ import androidx.core.graphics.withTranslation
 
 /**
  * Renders 7-day bars with a trend line to a bitmap (RemoteViews cannot host
- * chart views). [fractions] and [dayLabels] are pure and unit-tested;
- * [render] only maps them to pixels.
+ * chart views). Calculation helpers are pure and unit-tested; [render] only
+ * maps them to pixels.
  */
 internal object TrendChartRenderer {
+    internal data class ChartPoint(
+        val x: Float,
+        val y: Float,
+    )
+
+    internal data class CubicSegment(
+        val start: ChartPoint,
+        val control1: ChartPoint,
+        val control2: ChartPoint,
+        val end: ChartPoint,
+    )
+
     fun fractions(totals: List<Double>): List<Float> {
         if (totals.isEmpty()) return emptyList()
         val max = totals.maxOrNull() ?: 0.0
@@ -70,6 +82,55 @@ internal object TrendChartRenderer {
             (chartHeightDp.coerceAtMost(220) * density).toInt()
     }
 
+    /**
+     * Fritsch-Carlson monotone cubic segments. Each curve passes through the
+     * source points and cannot overshoot the vertical range of its endpoints.
+     */
+    internal fun monotoneSegments(points: List<ChartPoint>): List<CubicSegment> {
+        if (points.size < 2) return emptyList()
+        val secants =
+            points.zipWithNext { first, second ->
+                val width = second.x - first.x
+                if (width <= 0f) 0f else (second.y - first.y) / width
+            }
+        val tangents = MutableList(points.size) { 0f }
+        tangents[0] = secants.first()
+        tangents[tangents.lastIndex] = secants.last()
+        for (index in 1 until tangents.lastIndex) {
+            val before = secants[index - 1]
+            val after = secants[index]
+            tangents[index] = if (before * after <= 0f) 0f else (before + after) / 2f
+        }
+
+        secants.forEachIndexed { index, secant ->
+            if (secant == 0f) {
+                tangents[index] = 0f
+                tangents[index + 1] = 0f
+                return@forEachIndexed
+            }
+            val firstRatio = tangents[index] / secant
+            val secondRatio = tangents[index + 1] / secant
+            if (firstRatio < 0f) tangents[index] = 0f
+            if (secondRatio < 0f) tangents[index + 1] = 0f
+            val magnitude = kotlin.math.hypot(firstRatio, secondRatio)
+            if (magnitude > 3f) {
+                val scale = 3f / magnitude
+                tangents[index] = scale * firstRatio * secant
+                tangents[index + 1] = scale * secondRatio * secant
+            }
+        }
+
+        return points.zipWithNext().mapIndexed { index, (start, end) ->
+            val third = (end.x - start.x) / 3f
+            CubicSegment(
+                start = start,
+                control1 = ChartPoint(start.x + third, start.y + tangents[index] * third),
+                control2 = ChartPoint(end.x - third, end.y - tangents[index + 1] * third),
+                end = end,
+            )
+        }
+    }
+
     fun render(
         context: Context,
         days: List<DayTotal>,
@@ -117,7 +178,7 @@ internal object TrendChartRenderer {
 
         val labels = dayLabels(days, locale)
         val categoryOrder = categoryStyles.ordered(days.flatMap { it.categories }.map { it.category }.toSet())
-        val tops = mutableListOf<Pair<Float, Float>>()
+        val tops = mutableListOf<ChartPoint>()
         days.forEachIndexed { index, day ->
             val centerX = slot * index + slot / 2
             val left = centerX - barWidth / 2
@@ -158,20 +219,30 @@ internal object TrendChartRenderer {
                 }
                 canvas.restore()
             }
-            tops.add(centerX to (plotBottom - barHeight))
+            tops.add(ChartPoint(centerX, plotBottom - barHeight))
             canvas.withTranslation(centerX, heightPx - 2 * density) {
                 drawText(labels[index], 0f, 0f, labelPaint)
             }
         }
         // A zero is data, not a gap: keep the line continuous down to baseline.
         if (tops.size > 1 && fracs.any { it > 0 }) {
-            val path = android.graphics.Path()
-            tops.forEachIndexed { index, (x, y) ->
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
+            val path =
+                android.graphics.Path().apply {
+                    moveTo(tops.first().x, tops.first().y)
+                    monotoneSegments(tops).forEach { segment ->
+                        cubicTo(
+                            segment.control1.x,
+                            segment.control1.y,
+                            segment.control2.x,
+                            segment.control2.y,
+                            segment.end.x,
+                            segment.end.y,
+                        )
+                    }
+                }
             canvas.drawPath(path, linePaint)
-            tops.forEach { (x, y) ->
-                canvas.drawCircle(x, y, 2.5f * density, dotPaint)
+            tops.forEach { point ->
+                canvas.drawCircle(point.x, point.y, 2.5f * density, dotPaint)
             }
         }
         return bitmap
