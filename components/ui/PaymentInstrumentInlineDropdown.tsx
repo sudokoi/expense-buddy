@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Pressable, Text, View } from "react-native"
+import { Text, View } from "react-native"
+import { CompactControl } from "./CompactControl"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { Check, Plus } from "lucide-react-native"
 import { Button } from "./Button"
 import { Input } from "./Input"
@@ -119,12 +121,16 @@ function InstrumentEntryField({
       {available.length > 0 || kind === "saved" ? (
         <View className="flex-row flex-wrap gap-2">
           {options.map((option) => (
-            <Pressable
+            <CompactControl
               key={option.value}
               accessibilityRole="radio"
               accessibilityState={{ checked: value === option.value }}
               accessibilityLabel={`${option.label}, ${option.description}`}
-              className={`min-h-12 max-w-full flex-row items-center gap-2 rounded-control border px-3 py-2 active:opacity-60 ${value === option.value ? "border-accent bg-muted" : "border-border bg-surface"}`}
+              surfaceStyle={{
+                flex: 1,
+                backgroundColor: value === option.value ? theme.muted : theme.surface,
+                borderColor: value === option.value ? theme.accent : theme.border,
+              }}
               onPress={() => {
                 if (value === option.value) return
                 const next = resolveInstrumentChoice(option.value, available, {
@@ -148,8 +154,10 @@ function InstrumentEntryField({
                   </Text>
                 ) : null}
               </View>
-              {value === option.value ? <Check size={18} color={theme.accent} /> : null}
-            </Pressable>
+              {value === option.value ? (
+                <Check size={UI_ICON_SIZE.mini} color={theme.accent} />
+              ) : null}
+            </CompactControl>
           ))}
         </View>
       ) : null}

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from "react"
+import { memo, useCallback } from "react"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
@@ -20,17 +20,6 @@ export const CategoryFilter = memo(function CategoryFilter({
   const { categories } = useCategories()
   const { t } = useTranslation()
   const isAllSelected = selectedCategories.length === 0
-
-  // Memoize category items with icons and pre-built selected style
-  const categoryItems = useMemo(() => {
-    return categories.map((cat) => {
-      const IconComponent = CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle
-      return {
-        label: cat.label,
-        Icon: IconComponent,
-      }
-    })
-  }, [categories])
 
   const handleAllPress = useCallback(() => {
     onChange([])
@@ -58,15 +47,16 @@ export const CategoryFilter = memo(function CategoryFilter({
         onPress={handleAllPress}
       />
 
-      {categoryItems.map((cat) => {
+      {categories.map((cat) => {
         const isSelected = selectedCategories.includes(cat.label)
         return (
           <FilterChip
             key={cat.label}
             label={cat.label === "Other" ? t("settings.categories.other") : cat.label}
             selected={isSelected}
+            categoryColor={cat.color}
+            Icon={CATEGORY_ICON_MAP[cat.icon] ?? CATEGORY_ICON_MAP.Circle}
             onPress={() => handleCategoryPress(cat.label)}
-            Icon={cat.Icon}
           />
         )
       })}

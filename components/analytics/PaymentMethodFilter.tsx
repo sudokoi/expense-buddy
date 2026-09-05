@@ -1,6 +1,4 @@
 import React, { memo, useCallback, useMemo } from "react"
-import { Text } from "react-native"
-import { Button } from "../ui/Button"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import type { PaymentMethodType } from "../../types/expense"
@@ -71,14 +69,11 @@ export const PaymentMethodFilter = memo(function PaymentMethodFilter({
 
   return (
     <FilterChipBar>
-      <Button
-        size="chip"
-        variant={isAllSelected ? "accent" : "outline"}
+      <FilterChip
+        label={t("common.all")}
+        selected={isAllSelected}
         onPress={handleAllPress}
-        accessibilityState={{ selected: isAllSelected }}
-      >
-        <Text>{t("common.all")}</Text>
-      </Button>
+      />
 
       {chipItems.map((item) => {
         const isSelected = selected.includes(item.key)

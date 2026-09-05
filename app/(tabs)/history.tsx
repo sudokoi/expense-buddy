@@ -1,7 +1,7 @@
-import React, { useCallback, useDeferredValue, useMemo, useState } from "react"
-import { Text, View, ScrollView, Modal } from "react-native"
+import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import { Text, View, ScrollView } from "react-native"
 import { Filter } from "lucide-react-native"
-import { BackHandler } from "react-native"
+import { useAppDialog } from "../../providers/app-dialog-provider"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { FlashList } from "@shopify/flash-list"
 import { useRouter, Href } from "expo-router"
@@ -22,6 +22,7 @@ import { syncDownMore } from "../../services/sync-manager"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { ExpenseRow } from "../../components/ui/ExpenseRow"
 import { Button } from "../../components/ui/Button"
+import { CompactControl } from "../../components/ui/CompactControl"
 import { useTranslation } from "react-i18next"
 import {
   formatListBreakdown,
@@ -98,7 +99,7 @@ export default function HistoryScreen() {
   const { save: saveFilters } = useFilterPersistence()
 
   // Local UI state
-  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const { showDialog } = useAppDialog()
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
@@ -120,19 +121,6 @@ export default function HistoryScreen() {
   // `deferredFilters` (may lag one frame behind but keeps the UI responsive).
   const deferredFilters = useDeferredValue(filters)
   const isFilterStale = deferredFilters !== filters
-
-  // Handle back button to close the delete dialog instead of navigating
-  React.useEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (deletingExpenseId) {
-        setDeletingExpenseId(null)
-        return true
-      }
-      return false
-    })
-
-    return () => backHandler.remove()
-  }, [deletingExpenseId])
 
   // === Expensive computation chain (uses deferredFilters for concurrent rendering) ===
 
@@ -376,19 +364,24 @@ export default function HistoryScreen() {
     [router]
   )
 
-  const handleDelete = useCallback((id: string) => {
-    setDeletingExpenseId(id)
-  }, [])
-
-  const confirmDelete = useCallback(() => {
-    if (deletingExpenseId) {
-      deleteExpense(deletingExpenseId)
-      void hapticWarning()
-      addNotification(t("history.deleted"), "success")
-      logAsync("INFO", "UI_ACTION", `DELETE_EXPENSE id=${deletingExpenseId}`)
-      setDeletingExpenseId(null)
-    }
-  }, [deletingExpenseId, deleteExpense, addNotification, t])
+  const handleDelete = useCallback(
+    (id: string) => {
+      showDialog(t("history.deleteDialog.title"), t("history.deleteDialog.description"), [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => {
+            deleteExpense(id)
+            void hapticWarning()
+            addNotification(t("history.deleted"), "success")
+            logAsync("INFO", "UI_ACTION", `DELETE_EXPENSE id=${id}`)
+          },
+        },
+      ])
+    },
+    [showDialog, deleteExpense, addNotification, t]
+  )
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return
@@ -550,16 +543,14 @@ export default function HistoryScreen() {
             style={{ flex: 1 }}
           >
             {filterChips.map((chip) => (
-              <Button
+              <CompactControl
                 key={chip.key}
-                size="chip"
-                variant="outline"
+                className="max-w-64"
+                accessibilityLabel={chip.label}
                 onPress={handleOpenFilterSheet}
               >
-                <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
-                  {chip.label}
-                </Text>
-              </Button>
+                <Text className="shrink text-sm text-foreground">{chip.label}</Text>
+              </CompactControl>
             ))}
           </ScrollView>
 
@@ -610,16 +601,14 @@ export default function HistoryScreen() {
           style={{ flex: 1 }}
         >
           {filterChips.map((chip) => (
-            <Button
+            <CompactControl
               key={chip.key}
-              size="chip"
-              variant="outline"
+              className="max-w-64"
+              accessibilityLabel={chip.label}
               onPress={handleOpenFilterSheet}
             >
-              <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
-                {chip.label}
-              </Text>
-            </Button>
+              <Text className="shrink text-sm text-foreground">{chip.label}</Text>
+            </CompactControl>
           ))}
         </ScrollView>
 
@@ -661,45 +650,6 @@ export default function HistoryScreen() {
           ListFooterComponent={ListFooterComponent}
         />
       </View>
-
-      {/* Delete Confirmation Dialog */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={!!deletingExpenseId}
-        onRequestClose={() => setDeletingExpenseId(null)}
-      >
-        <View className="flex-1 items-center justify-center bg-black/50 px-6">
-          <View
-            className="w-full max-w-sm gap-4 rounded-card bg-surface border border-border p-6"
-            accessibilityViewIsModal
-          >
-            <Text className="text-lg font-semibold text-foreground">
-              {t("history.deleteDialog.title")}
-            </Text>
-            <Text className="text-[13px] text-muted-foreground">
-              {t("history.deleteDialog.description")}
-            </Text>
-            <View className="flex-row justify-end gap-3">
-              <Button
-                size="control"
-                onPress={() => setDeletingExpenseId(null)}
-                accessibilityLabel={t("common.cancel")}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button
-                size="control"
-                variant="destructive"
-                onPress={confirmDelete}
-                accessibilityLabel={t("common.delete")}
-              >
-                {t("common.delete")}
-              </Button>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   )
 }

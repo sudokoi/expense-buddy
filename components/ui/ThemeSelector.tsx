@@ -1,10 +1,10 @@
 import { View, Text } from "react-native"
 import { Sun, Moon, Smartphone } from "lucide-react-native"
-import { Pressable } from "react-native"
 import { useTranslation } from "react-i18next"
 import { ThemePreference } from "../../services/settings-manager"
-import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { CompactControl } from "./CompactControl"
 
 interface ThemeSelectorProps {
   value: ThemePreference
@@ -31,26 +31,23 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
   const theme = useThemeColors()
 
   return (
-    <View className="max-w-full self-start flex-row flex-wrap gap-1 p-1 rounded-control border border-border bg-surface">
+    <View className="max-w-full self-start flex-row flex-wrap gap-x-2">
       {themeOptions.map(({ key, labelKey, Icon }) => {
         const isSelected = value === key
         const label = t(labelKey)
         return (
-          <Pressable
+          <CompactControl
             key={key}
             onPress={() => onChange(key)}
-            role="button"
-            aria-selected={isSelected}
-            aria-label={label}
-            style={{
-              borderWidth: UI_BORDER_WIDTH.thin,
-              backgroundColor: isSelected ? theme.muted : "transparent",
-              borderColor: isSelected ? theme.accent : "transparent",
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={label}
+            surfaceStyle={{
+              backgroundColor: isSelected ? theme.muted : theme.surface,
+              borderColor: isSelected ? theme.accent : theme.border,
             }}
-            className="min-h-12 max-w-full flex-row items-center justify-center gap-2 rounded-control px-3 py-2 active:opacity-60"
           >
             <Icon
-              size={UI_ICON_SIZE.regular}
+              size={UI_ICON_SIZE.mini}
               color={isSelected ? theme.accent : theme.mutedForeground}
             />
             <Text
@@ -61,7 +58,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             >
               {label}
             </Text>
-          </Pressable>
+          </CompactControl>
         )
       })}
     </View>

@@ -9,7 +9,8 @@ import Animated, {
   LinearTransition,
   useReducedMotion,
 } from "react-native-reanimated"
-import { Alert, Text, View } from "react-native"
+import { Text, View } from "react-native"
+import { useAppDialog } from "../../providers/app-dialog-provider"
 import { Button } from "./Button"
 import { Card } from "./Card"
 import { Input } from "./Input"
@@ -225,6 +226,7 @@ export function SmsImportReviewScreen({
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
+  const { showDialog } = useAppDialog()
   const theme = useThemeColors()
   const reduceMotion = useReducedMotion()
   const { categories } = useCategories()
@@ -415,7 +417,7 @@ export function SmsImportReviewScreen({
       return
     }
 
-    Alert.alert(
+    showDialog(
       t("smsImport.sheet.rejectAllDialogTitle"),
       t("smsImport.sheet.rejectAllDialogMessage", { count: pendingItems.length }),
       [
@@ -435,7 +437,7 @@ export function SmsImportReviewScreen({
         },
       ]
     )
-  }, [addNotification, markItemsRejected, pendingItems, t])
+  }, [addNotification, markItemsRejected, pendingItems, t, showDialog])
 
   const subtitle = useMemo(() => {
     if (editingItem) {
@@ -514,7 +516,7 @@ export function SmsImportReviewScreen({
   )
 
   const confirmClearResolved = () =>
-    Alert.alert(
+    showDialog(
       t("smsImport.sheet.footer.clearResolved"),
       t("smsImport.sheet.clearResolvedMessage"),
       [
@@ -527,7 +529,7 @@ export function SmsImportReviewScreen({
       ]
     )
   const confirmAcceptAll = () =>
-    Alert.alert(
+    showDialog(
       t("smsImport.sheet.footer.acceptAllSuggested"),
       t("smsImport.sheet.acceptAllMessage", { count: pendingItems.length }),
       [

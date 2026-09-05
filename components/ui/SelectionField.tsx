@@ -3,7 +3,8 @@ import { Pressable, Text, View } from "react-native"
 import { Check, ChevronRight } from "lucide-react-native"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { Button } from "./Button"
+import { CompactControl } from "./CompactControl"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 export interface SelectionOption {
   value: string
@@ -45,17 +46,14 @@ export function SelectionField({
           <Text className="min-w-[96px] flex-1 text-sm text-muted-foreground">
             {label}
           </Text>
-          <Button
-            className="max-w-full"
-            size="control"
-            variant="outline"
+          <CompactControl
             onPress={() => setOpen(true)}
             accessibilityLabel={`${label}, ${summary}`}
             accessibilityState={{ expanded: open }}
           >
             <Text className="shrink text-sm text-foreground">{summary}</Text>
-            <ChevronRight size={16} color={theme.mutedForeground} />
-          </Button>
+            <ChevronRight size={UI_ICON_SIZE.mini} color={theme.mutedForeground} />
+          </CompactControl>
         </View>
       ) : (
         <Pressable

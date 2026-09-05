@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { Alert, Pressable, Text, View } from "react-native"
+import { Pressable, Text, View } from "react-native"
+import { useAppDialog } from "../../../providers/app-dialog-provider"
 import { Plus, Trash, ChevronDown, ChevronUp } from "lucide-react-native"
 import { Button } from "../Button"
 import { IconActionButton } from "../IconActionButton"
@@ -17,6 +18,7 @@ import type { PaymentInstrument } from "../../../types/payment-instrument"
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
 export function PaymentInstrumentsSection() {
+  const { showDialog } = useAppDialog()
   const { t } = useTranslation()
   const theme = useThemeColors()
   const { settings, updateSettings } = useSettings()
@@ -35,7 +37,7 @@ export function PaymentInstrumentsSection() {
 
   const handleDelete = useCallback(
     (instrument: PaymentInstrument) => {
-      Alert.alert(
+      showDialog(
         t("instruments.removeDialog.title"),
         t("instruments.removeDialog.message", { nickname: instrument.nickname }),
         [
@@ -57,7 +59,7 @@ export function PaymentInstrumentsSection() {
         ]
       )
     },
-    [instruments, updateSettings, t]
+    [instruments, updateSettings, t, showDialog]
   )
 
   const handleSave = useCallback(

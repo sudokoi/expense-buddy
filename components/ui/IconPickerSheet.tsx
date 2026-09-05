@@ -12,6 +12,7 @@ import {
   UI_OPACITY,
   UI_ICON_SIZE,
   UI_BORDER_WIDTH,
+  UI_COMPACT_TOUCH_TARGET,
 } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
@@ -138,8 +139,8 @@ const IconButton = memo(function IconButton({
       <View
         className="items-center justify-center rounded-chip"
         style={{
-          width: UI_ICON_SIZE.huge,
-          height: UI_ICON_SIZE.huge,
+          width: UI_COMPACT_TOUCH_TARGET,
+          height: UI_COMPACT_TOUCH_TARGET,
           borderWidth: UI_BORDER_WIDTH.normal,
           backgroundColor: isSelected ? selectedBg : theme.surface,
           borderColor: isSelected ? selectedBg : theme.border,
@@ -147,7 +148,7 @@ const IconButton = memo(function IconButton({
       >
         <DynamicCategoryIcon
           name={iconName}
-          size={UI_ICON_SIZE.large}
+          size={UI_ICON_SIZE.medium}
           color={isSelected ? selectedFg : undefined}
         />
         {isSelected && (

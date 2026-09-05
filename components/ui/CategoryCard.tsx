@@ -6,7 +6,13 @@ import { resolveCategoryVisual } from "../../utils/resolve-category-color"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { UI_FONT_SIZE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_FONT_SIZE,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+  UI_ICON_SIZE,
+} from "../../constants/ui-tokens"
+import { CompactControl } from "./CompactControl"
 
 interface CategoryCardProps {
   isSelected: boolean
@@ -38,32 +44,21 @@ export const CategoryCard = memo(function CategoryCard({
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? displayLabel}
-      accessibilityState={{ selected: isSelected }}
-      className={
-        compact
-          ? "min-h-12 max-w-full flex-row items-center gap-2 rounded-control px-3 py-2 active:opacity-60"
-          : "min-h-12 max-w-full flex-row items-center gap-2 rounded-chip p-3 active:opacity-60"
-      }
-      style={{
-        backgroundColor: visual.backgroundColor,
-        borderColor: visual.borderColor,
-        borderWidth: UI_BORDER_WIDTH.thin,
-      }}
-    >
+  const content = (
+    <>
       <View
-        className="h-6 w-6 items-center justify-center rounded-full"
+        className={
+          compact
+            ? "h-5 w-5 items-center justify-center rounded-full"
+            : "h-6 w-6 items-center justify-center rounded-full"
+        }
         style={{ backgroundColor: categoryColor }}
         accessible={false}
         importantForAccessibility="no-hide-descendants"
       >
         <DynamicCategoryIcon
           name={iconName}
-          size={16}
+          size={compact ? UI_ICON_SIZE.mini : UI_ICON_SIZE.small}
           color={getReadableTextColor(categoryColor)}
         />
       </View>
@@ -77,7 +72,33 @@ export const CategoryCard = memo(function CategoryCard({
       >
         {displayLabel}
       </Text>
-      {isSelected ? <Check size={14} color={visual.textColor} /> : null}
+      {isSelected ? <Check size={UI_ICON_SIZE.mini} color={visual.textColor} /> : null}
+    </>
+  )
+  const surfaceStyle = {
+    backgroundColor: visual.backgroundColor,
+    borderColor: visual.borderColor,
+    borderWidth: UI_BORDER_WIDTH.thin,
+  }
+  return compact ? (
+    <CompactControl
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel ?? displayLabel}
+      accessibilityState={{ selected: isSelected }}
+      surfaceStyle={surfaceStyle}
+    >
+      {content}
+    </CompactControl>
+  ) : (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? displayLabel}
+      accessibilityState={{ selected: isSelected }}
+      className="min-h-12 max-w-full flex-row items-center gap-2 rounded-chip p-3 active:opacity-60"
+      style={surfaceStyle}
+    >
+      {content}
     </Pressable>
   )
 })

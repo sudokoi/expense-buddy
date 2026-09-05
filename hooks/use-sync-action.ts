@@ -9,7 +9,7 @@
  * no matter which screen triggers the sync — every consumer sees the same value.
  */
 import { useCallback, useMemo, useRef } from "react"
-import { Alert } from "react-native"
+import { useAppDialog } from "../providers/app-dialog-provider"
 import { useTranslation } from "react-i18next"
 import { useExpenses, useNotifications, useSettings } from "../stores/hooks"
 import { useSyncMachine, TrueConflict, ConflictResolution } from "./use-sync-machine"
@@ -32,6 +32,7 @@ export interface UseSyncActionReturn {
 }
 
 export function useSyncAction(): UseSyncActionReturn {
+  const { showDialog } = useAppDialog()
   const { t } = useTranslation()
 
   const { state, replaceAllExpenses, clearDirtyDaysAfterSync } = useExpenses()
@@ -83,7 +84,7 @@ export function useSyncAction(): UseSyncActionReturn {
           .join("\n\n")
         const moreText = conflictCount > 3 ? `\n\n...and ${conflictCount - 3} more` : ""
 
-        Alert.alert(
+        showDialog(
           t("settings.conflicts.title", {
             count: conflictCount,
             s: conflictCount > 1 ? "s" : "",
@@ -122,7 +123,7 @@ export function useSyncAction(): UseSyncActionReturn {
         )
       })
     },
-    [t]
+    [t, showDialog]
   )
 
   // Handle sync using XState machine with callbacks

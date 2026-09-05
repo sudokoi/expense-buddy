@@ -197,3 +197,63 @@ animations, or expense-data changes are introduced.
   currency, or region. Theme switching still works; font scale was restored.
 - Typecheck, JS/TS ESLint, and targeted formatting passed. This is a presentation
   change; the native smoke checks, not the Node utility tests, cover its layout.
+
+## Filter consistency and shared confirmations
+
+- Filter categories retain their category colors and icons, with a checkmark as
+  well as color to show selection. Other filter choices use theme-aware accent
+  foregrounds on selected rose backgrounds and soft fills when unselected.
+- The payment-method and payment-instrument “All” buttons previously wrapped
+  their labels in unstyled native Text, bypassing Button's foreground. Both now
+  use the shared filter chip; the audit of other custom Button content found
+  explicit foreground styling rather than the same bare-Text bug. Instrument
+  fallback labels also use the existing translated “Others” string.
+- Filters, theme options, and inline locale values share `CompactControl`: a
+  36dp visual surface inside a real 40dp touch target, without overlapping hit
+  slop. Padding and icon sizes are reduced, while text can wrap. Primary form
+  actions stay full-sized; Filter Cancel now follows the outlined secondary style.
+- App-owned confirmations now share the rounded Delete Expense presentation via
+  `AppDialog` and `AppDialogProvider`. This covers expense/category/instrument
+  deletion, GitHub disconnection, first-setup download, language reset, report
+  logs, sync conflicts, and SMS bulk acceptance/rejection/clearing. Locale and
+  region selection sheets stay unchanged; OS-owned prompts are not replaced.
+- Back/escape cancels rather than confirms. Concurrent requests queue instead
+  of replacing one another, repeated taps cannot run an action twice, and caller
+  unmount cancels its pending requests (including promise-based sync conflicts).
+  Async action errors reach the existing notification system. Three-choice and
+  large-text dialogs stack their actions; bounded scrolling keeps long content
+  reachable. The heading receives initial accessibility focus, and reduced
+  motion disables the fade.
+- Regression tests cover queue ordering, dismissal, action selection, repeat
+  taps, caller cleanup, and rejected callbacks. A source audit test guards against
+  reintroducing native Alert imports or bare custom Text inside shared Buttons.
+- Android smoke checks: filter category/instrument selection and draft cancellation;
+  compact preference sizing; Delete Expense dismissal with Back; and the themed
+  language confirmation followed by Cancel, preserving language/currency/region.
+  Full TalkBack and authenticated sync-conflict/download/report execution remain
+  unverified; populated SMS bulk actions were not exercised on-device.
+
+### Compact choices versus main actions
+
+- The product density preference now uses `UI_COMPACT_TOUCH_TARGET` (40dp) for
+  compact choices, below Android's recommended 48dp. The general
+  `UI_MIN_TOUCH_TARGET` remains 48dp; shared Button sizes are unchanged.
+- Add/Edit category, payment-method, and saved-instrument choices use the shared
+  compact surface, with `UI_ICON_SIZE.mini` (14dp) icons. Category colors and
+  selection marks remain; instrument names and digits can occupy multiple lines.
+- Analytics and both History result states use compact applied-filter summaries.
+  Long summaries wrap within a bounded width instead of shrinking their text.
+- Category icon/color grids use 40dp cells rather than 56dp cells, with 20dp
+  preview icons so the choices remain distinguishable and existing grid gaps remain.
+- Main Add/Save/Apply actions and paired secondary actions, filter-sheet opening
+  buttons, direct Edit/Delete controls, inputs, sheet option rows, and chart
+  navigation retain their existing sizing. This is a selective density change,
+  not a global reduction of button or text sizes.
+- Validation: 93 Jest suites / 857 tests, typecheck, repository-wide JS/TS ESLint,
+  theme sync/flow, translations, targeted formatting, and diff whitespace checks
+  passed. Android light-mode smoke checks covered Add payment choices at normal
+  text, categories/payment choices at 150% text, and History summaries at 150%.
+  Native bounds confirmed 40dp single-line choices versus 48dp main actions;
+  multi-line instruments and enlarged footer labels grew as needed. Font scale
+  was restored to 1.0. This density pass still needs dark-mode, picker-grid,
+  small-width, and TalkBack checks; it does not claim full accessibility validation.
