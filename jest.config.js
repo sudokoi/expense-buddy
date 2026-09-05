@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: "node",
   testMatch: [
+    "**/plugins/**/*.test.js",
     "**/utils/**/*.test.ts",
     "**/services/**/*.test.ts",
     "**/stores/**/*.test.ts",

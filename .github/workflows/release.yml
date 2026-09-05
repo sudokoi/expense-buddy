@@ -7,6 +7,10 @@ on:
         description: "Version suffix (leave empty to use commit SHA)"
         required: false
         default: ""
+      submit_to_play:
+        description: "Submit the production AAB to Google Play"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -41,7 +45,7 @@ jobs:
 
       - name: 📁 Get yarn cache directory
         id: yarn-cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: 📦 Cache yarn downloads
         uses: actions/cache@v6
@@ -62,7 +66,7 @@ jobs:
       - name: 🛠️ Setup EAS
         uses: expo/expo-github-action@v9
         with:
-          eas-version: latest
+          eas-version: 23.2.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📥 Install dependencies
@@ -70,14 +74,9 @@ jobs:
 
       - name: 🔧 Determine version name
         id: version
-        run: |
-          if [ -n "${{ github.event.inputs.version_suffix }}" ]; then
-            VERSION="${{ github.event.inputs.version_suffix }}"
-          else
-            VERSION="${GITHUB_SHA:0:7}"
-          fi
-          echo "version_name=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
+        run: bash scripts/resolve-build-version.sh
 
       - name: 🚀 Trigger EAS Build (${{ matrix.profile }})
         id: build
@@ -86,7 +85,7 @@ jobs:
           eas build --platform android --profile ${{ matrix.profile }} --non-interactive --json > build-output.json
           cat build-output.json
           BUILD_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
-          echo "${{ matrix.profile }}_build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "${{ matrix.profile }}_build_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
           echo "Build URL: $BUILD_URL"
 
       - name: 📥 Download app bundle
@@ -104,11 +103,12 @@ jobs:
       - name: 📤 Upload build as artifact
         uses: actions/upload-artifact@v7
         with:
+          compression-level: 0
           name: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}
           path: expense-buddy-${{ steps.version.outputs.version_name }}-${{ matrix.profile }}.${{ matrix.profile == 'production' && 'aab' || 'apk' }}
 
       - name: 💬 Comment on merged PRs
-        if: matrix.profile == 'production'
+        if: matrix.profile == 'production' && inputs.submit_to_play == true
         uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GH_PAT }}
@@ -191,6 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
+    if: inputs.submit_to_play == true
     steps:
       - name: 🏗️ Checkout
         uses: actions/checkout@v7
@@ -202,7 +203,7 @@ jobs:
 
       - name: 📁 Get yarn cache directory
         id: yarn-cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: 📦 Cache yarn downloads
         uses: actions/cache@v6
@@ -223,7 +224,7 @@ jobs:
       - name: 🛠️ Setup EAS CLI
         uses: expo/expo-github-action@v9
         with:
-          eas-version: latest
+          eas-version: 23.2.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📥 Install dependencies
