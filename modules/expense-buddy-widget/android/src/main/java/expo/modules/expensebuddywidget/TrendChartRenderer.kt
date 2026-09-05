@@ -75,6 +75,7 @@ internal object TrendChartRenderer {
         days: List<DayTotal>,
         options: Bundle,
         theme: WidgetTheme,
+        categoryStyles: WidgetCategoryStyles,
         locale: java.util.Locale = java.util.Locale.getDefault(),
     ): Bitmap {
         val density = context.resources.displayMetrics.density
@@ -115,6 +116,7 @@ internal object TrendChartRenderer {
             }
 
         val labels = dayLabels(days, locale)
+        val categoryOrder = categoryStyles.ordered(days.flatMap { it.categories }.map { it.category }.toSet())
         val tops = mutableListOf<Pair<Float, Float>>()
         days.forEachIndexed { index, day ->
             val centerX = slot * index + slot / 2
@@ -126,15 +128,35 @@ internal object TrendChartRenderer {
                     if (day.total > 0) 3 * density else 0f,
                 )
             if (barHeight > 0) {
-                canvas.drawRoundRect(
-                    left,
-                    plotBottom - barHeight,
-                    left + barWidth,
-                    plotBottom,
-                    radius,
-                    radius,
-                    barPaint,
-                )
+                val barTop = plotBottom - barHeight
+                val clip =
+                    android.graphics.Path().apply {
+                        addRoundRect(left, barTop, left + barWidth, plotBottom, radius, radius, android.graphics.Path.Direction.CW)
+                    }
+                canvas.save()
+                canvas.clipPath(clip)
+                val segments =
+                    categoryOrder.mapNotNull { category ->
+                        day.categories.firstOrNull { it.category == category }
+                    }
+                if (segments.isEmpty()) {
+                    canvas.drawRect(left, barTop, left + barWidth, plotBottom, barPaint)
+                } else {
+                    var segmentBottom = plotBottom
+                    segments.forEachIndexed { segmentIndex, segment ->
+                        val segmentTop =
+                            if (segmentIndex == segments.lastIndex) {
+                                barTop
+                            } else {
+                                segmentBottom - (barHeight * (segment.total / day.total)).toFloat()
+                            }
+                        barPaint.color = categoryStyles.color(segment.category, barColor)
+                        canvas.drawRect(left, segmentTop, left + barWidth, segmentBottom, barPaint)
+                        segmentBottom = segmentTop
+                    }
+                    barPaint.color = barColor
+                }
+                canvas.restore()
             }
             tops.add(centerX to (plotBottom - barHeight))
             canvas.withTranslation(centerX, heightPx - 2 * density) {

@@ -3,7 +3,6 @@ package expo.modules.expensebuddywidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 
@@ -26,7 +25,7 @@ class RecentWidgetService : RemoteViewsService() {
         private var rows: List<WidgetExpense> = emptyList()
         private var currency: String = "INR"
         private var filter: WidgetFilter = WidgetFilter()
-        private var colors: Map<String, String> = emptyMap()
+        private var categoryStyles = WidgetCategoryStyles(listOf("Other"), emptyMap())
         private var copy: WidgetCopy = WidgetCopy.fallback()
         private var theme: WidgetTheme = WidgetTheme.LIGHT
         private var locale: java.util.Locale = java.util.Locale.getDefault()
@@ -52,7 +51,7 @@ class RecentWidgetService : RemoteViewsService() {
             }
             rows = ready.data.recent
             currency = ready.data.currency
-            colors = assist?.categoryColors ?: emptyMap()
+            categoryStyles = WidgetCategoryStyles.parse(mmkv.getString(WidgetKeys.SETTINGS), assist)
             copy = assist.toCopy()
             theme = WidgetTheme.resolve(context)
             locale = assist?.locale?.let(java.util.Locale::forLanguageTag) ?: java.util.Locale.getDefault()
@@ -102,12 +101,6 @@ class RecentWidgetService : RemoteViewsService() {
             rows = emptyList()
         }
 
-        private fun dotColor(category: String): Int =
-            try {
-                val hex = colors[category] ?: return theme.color(context, theme.accent)
-                Color.parseColor(hex)
-            } catch (_: Exception) {
-                theme.color(context, theme.accent)
-            }
+        private fun dotColor(category: String): Int = categoryStyles.color(category, theme.color(context, theme.accent))
     }
 }

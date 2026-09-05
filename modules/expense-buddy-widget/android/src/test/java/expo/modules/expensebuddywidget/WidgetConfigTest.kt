@@ -1,5 +1,6 @@
 package expo.modules.expensebuddywidget
 
+import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -58,6 +59,31 @@ class WidgetConfigDataTest {
     fun `corrupt settings fall back to Other`() {
         assertThat(WidgetConfigData.categoryLabels("not-json", null))
             .containsExactly("Other")
+    }
+
+    @Test
+    fun `live settings own category order and colors`() {
+        val settings =
+            """{"categories":[{"label":"Rent","color":"#112233"},{"label":"Food","color":"#445566"}]}"""
+        val assist =
+            WidgetAssist(
+                dataVersion = "v",
+                currency = "INR",
+                categoryColors = mapOf("Rent" to "#ffffff", "Travel" to "#000000"),
+            )
+        val styles = WidgetCategoryStyles.parse(settings, assist)
+
+        assertThat(styles.ordered(setOf("Food", "Travel", "Rent")))
+            .containsExactly("Rent", "Food", "Travel")
+            .inOrder()
+        assertThat(styles.color("Rent", Color.BLACK)).isEqualTo(Color.rgb(0x11, 0x22, 0x33))
+        assertThat(styles.color("Travel", Color.MAGENTA)).isEqualTo(Color.MAGENTA)
+    }
+
+    @Test
+    fun `invalid category color uses supplied theme fallback`() {
+        val styles = WidgetCategoryStyles(listOf("Food"), mapOf("Food" to "not-a-color"))
+        assertThat(styles.color("Food", Color.MAGENTA)).isEqualTo(Color.MAGENTA)
     }
 }
 

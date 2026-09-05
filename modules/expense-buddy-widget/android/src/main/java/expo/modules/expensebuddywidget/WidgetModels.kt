@@ -23,6 +23,12 @@ data class WidgetExpense(
 data class DayTotal(
     val dayKey: String,
     val total: Double,
+    val categories: List<CategoryTotal> = emptyList(),
+)
+
+data class CategoryTotal(
+    val category: String,
+    val total: Double,
 )
 
 data class WidgetData(
