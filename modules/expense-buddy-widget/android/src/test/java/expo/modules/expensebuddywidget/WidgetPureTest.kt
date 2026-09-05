@@ -76,14 +76,13 @@ class TrendChartRendererTest {
     }
 
     @Test
-    fun `monotone curve controls stay within adjacent daily totals`() {
+    fun `monotone curve clamps flat-to-steep transitions within adjacent totals`() {
         val points =
             listOf(
                 TrendChartRenderer.ChartPoint(0f, 100f),
-                TrendChartRenderer.ChartPoint(10f, 10f),
-                TrendChartRenderer.ChartPoint(20f, 90f),
-                TrendChartRenderer.ChartPoint(30f, 90f),
-                TrendChartRenderer.ChartPoint(40f, 30f),
+                TrendChartRenderer.ChartPoint(20f, 101f),
+                TrendChartRenderer.ChartPoint(40f, 150f),
+                TrendChartRenderer.ChartPoint(60f, 200f),
             )
 
         TrendChartRenderer.monotoneSegments(points).forEach { segment ->
