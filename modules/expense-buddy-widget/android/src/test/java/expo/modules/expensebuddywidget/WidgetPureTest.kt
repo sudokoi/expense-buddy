@@ -59,6 +59,42 @@ class TrendChartRendererTest {
     fun `bitmap size follows widget options and subtracts content chrome`() {
         assertThat(TrendChartRenderer.bitmapSize(320, 180, 2f)).isEqualTo(592 to 220)
     }
+
+    @Test
+    fun `monotone curve preserves every daily point`() {
+        val points =
+            listOf(
+                TrendChartRenderer.ChartPoint(0f, 80f),
+                TrendChartRenderer.ChartPoint(10f, 20f),
+                TrendChartRenderer.ChartPoint(20f, 100f),
+                TrendChartRenderer.ChartPoint(30f, 60f),
+            )
+        val segments = TrendChartRenderer.monotoneSegments(points)
+
+        assertThat(segments.first().start).isEqualTo(points.first())
+        assertThat(segments.map { it.end }).containsExactlyElementsIn(points.drop(1)).inOrder()
+    }
+
+    @Test
+    fun `monotone curve controls stay within adjacent daily totals`() {
+        val points =
+            listOf(
+                TrendChartRenderer.ChartPoint(0f, 100f),
+                TrendChartRenderer.ChartPoint(10f, 10f),
+                TrendChartRenderer.ChartPoint(20f, 90f),
+                TrendChartRenderer.ChartPoint(30f, 90f),
+                TrendChartRenderer.ChartPoint(40f, 30f),
+            )
+
+        TrendChartRenderer.monotoneSegments(points).forEach { segment ->
+            val minimum = minOf(segment.start.y, segment.end.y)
+            val maximum = maxOf(segment.start.y, segment.end.y)
+            assertThat(segment.control1.y).isAtLeast(minimum)
+            assertThat(segment.control1.y).isAtMost(maximum)
+            assertThat(segment.control2.y).isAtLeast(minimum)
+            assertThat(segment.control2.y).isAtMost(maximum)
+        }
+    }
 }
 
 class WidgetThemeTest {
