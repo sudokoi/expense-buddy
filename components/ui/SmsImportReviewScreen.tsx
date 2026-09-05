@@ -3,12 +3,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import Animated, {
-  FadeIn,
-  FadeOutUp,
-  LinearTransition,
-  useReducedMotion,
-} from "react-native-reanimated"
+import { FlashList, useRecyclingState } from "@shopify/flash-list"
 import { Text, View } from "react-native"
 import { useAppDialog } from "../../providers/app-dialog-provider"
 import { Button } from "./Button"
@@ -16,7 +11,6 @@ import { Card } from "./Card"
 import { Input } from "./Input"
 import { Label } from "./Label"
 import {
-  type PaymentMethod,
   PaymentMethodType,
   type Expense,
   type ExpenseCategory,
@@ -50,7 +44,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_FONT_WEIGHT, UI_DURATION } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { formatCurrency } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
@@ -213,6 +207,118 @@ function buildExpenseFromDraft(
   }
 }
 
+const SmsReviewRow = React.memo(function SmsReviewRow({
+  item,
+  categories,
+  instruments,
+  currency,
+  onAccept,
+  onEdit,
+  onReject,
+  onDismiss,
+}: {
+  item: SmsImportReviewItem
+  categories: Category[]
+  instruments: PaymentInstrument[]
+  currency: string
+  onAccept: (item: SmsImportReviewItem) => void
+  onEdit: (item: SmsImportReviewItem) => void
+  onReject: (fingerprint: string) => Promise<void>
+  onDismiss: (fingerprint: string) => Promise<void>
+}) {
+  const { t } = useTranslation()
+  const [expanded, setExpanded] = useRecyclingState(false, [item.id])
+  const suggestion = useMemo(
+    () => ({
+      category: resolveCategoryLabel(item, categories),
+      paymentMethod: resolveSmsImportPaymentSuggestion(item, instruments),
+    }),
+    [item, categories, instruments]
+  )
+  const debugText = __DEV__ && expanded ? formatSuggestionDebugText(item, t) : null
+  return (
+    <Card className="mb-3 p-3">
+      <View className="gap-3">
+        <View className="gap-1">
+          <Text className="font-bold text-foreground">
+            {item.merchantName || item.sourceMessage.sender}
+          </Text>
+          <Text className="text-xs text-muted-foreground">
+            {formatTimestamp(item.sourceMessage.receivedAt)}
+          </Text>
+        </View>
+        {item.status === "pending" ? (
+          <>
+            <View className="gap-1">
+              {debugText ? (
+                <Text className="text-micro text-muted-foreground">{debugText}</Text>
+              ) : null}
+              <Text className="text-foreground">
+                {t("smsImport.sheet.labels.amount")}:{" "}
+                {typeof item.amount === "number"
+                  ? formatCurrency(item.amount, item.currency || currency)
+                  : t("smsImport.sheet.values.needsReview")}
+              </Text>
+              <Text className="text-foreground">
+                {t("smsImport.sheet.labels.category")}:{" "}
+                {getLocalizedCategoryLabel(suggestion.category, t)}
+              </Text>
+              <Text className="text-foreground">
+                {t("smsImport.sheet.labels.payment")}:{" "}
+                {getLocalizedPaymentMethodLabel(suggestion.paymentMethod, instruments, t)}
+              </Text>
+              <Button
+                size="compact"
+                variant="ghost"
+                onPress={() => setExpanded(!expanded)}
+                accessibilityState={{ expanded }}
+              >
+                {t("smsImport.sheet.sourceSms")}
+              </Button>
+              {expanded ? (
+                <Text className="text-sm text-muted-foreground">
+                  {item.sourceMessage.body}
+                </Text>
+              ) : null}
+            </View>
+            <View className="flex-row flex-wrap gap-2">
+              <Button variant="accent" onPress={() => onAccept(item)}>
+                {t("smsImport.sheet.actions.accept")}
+              </Button>
+              <Button onPress={() => onEdit(item)}>{t("common.edit")}</Button>
+              <Button
+                variant="destructive"
+                onPress={() => {
+                  void onReject(item.fingerprint)
+                }}
+              >
+                {t("smsImport.sheet.actions.reject")}
+              </Button>
+              <Button
+                onPress={() => {
+                  void onDismiss(item.fingerprint)
+                }}
+              >
+                {t("smsImport.sheet.actions.dismiss")}
+              </Button>
+            </View>
+          </>
+        ) : (
+          <>
+            <Text className="text-foreground">
+              {t("smsImport.sheet.labels.status")}:{" "}
+              {getLocalizedReviewStatus(item.status, t)}
+            </Text>
+            <Text className="text-muted-foreground" numberOfLines={2}>
+              {item.sourceMessage.body}
+            </Text>
+          </>
+        )}
+      </View>
+    </Card>
+  )
+})
+
 export function SmsImportReviewScreen({
   initialFocusItemId,
 }: {
@@ -223,7 +329,6 @@ export function SmsImportReviewScreen({
   const { t } = useTranslation()
   const { showDialog } = useAppDialog()
   const theme = useThemeColors()
-  const reduceMotion = useReducedMotion()
   const { categories } = useCategories()
   const { settings, updateSettings } = useSettings()
   const paymentInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -244,22 +349,12 @@ export function SmsImportReviewScreen({
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
-  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const scrollViewRef = useRef<React.ElementRef<typeof KeyboardAwareScrollView>>(null)
-  const resolvedSuggestions = useMemo(() => {
-    const map = new Map<
-      string,
-      { category: ExpenseCategory; paymentMethod: PaymentMethod | undefined }
-    >()
-    for (const item of pendingItems) {
-      map.set(item.id, {
-        category: resolveCategoryLabel(item, categories),
-        paymentMethod: resolveSmsImportPaymentSuggestion(item, paymentInstruments),
-      })
-    }
-    return map
-  }, [pendingItems, categories, paymentInstruments])
+  const visibleItems = useMemo(
+    () => (showResolvedItems ? [...pendingItems, ...resolvedItems] : pendingItems),
+    [pendingItems, resolvedItems, showResolvedItems]
+  )
   const handledInitialFocusIdRef = useRef<string | null>(null)
 
   const editingItem = useMemo(
@@ -333,6 +428,30 @@ export function SmsImportReviewScreen({
       void acceptItem(item, createDraftFromItem(item, categories, paymentInstruments))
     },
     [acceptItem, categories, paymentInstruments]
+  )
+
+  const renderReviewItem = useCallback(
+    ({ item }: { item: SmsImportReviewItem }) => (
+      <SmsReviewRow
+        item={item}
+        categories={categories}
+        instruments={paymentInstruments}
+        currency={settings.defaultCurrency}
+        onAccept={handleAcceptSuggested}
+        onEdit={openEditor}
+        onReject={markItemRejected}
+        onDismiss={dismissItem}
+      />
+    ),
+    [
+      categories,
+      paymentInstruments,
+      settings.defaultCurrency,
+      handleAcceptSuggested,
+      openEditor,
+      markItemRejected,
+      dismissItem,
+    ]
   )
 
   const handleAcceptEdited = useCallback(() => {
@@ -574,6 +693,59 @@ export function SmsImportReviewScreen({
     </View>
   )
 
+  if (!editingItem || !editingDraft) {
+    return (
+      <View className="flex-1 bg-background">
+        <FlashList
+          data={visibleItems}
+          renderItem={renderReviewItem}
+          keyExtractor={(item) => item.id}
+          getItemType={(item) => (item.status === "pending" ? "pending" : "resolved")}
+          contentContainerStyle={{ padding: UI_SPACE.content }}
+          ListHeaderComponent={
+            <Card className="mb-4 p-3">
+              <View className="gap-2">
+                <Text className="text-lg font-semibold text-foreground">
+                  {t("smsImport.sheet.title")}
+                </Text>
+                <Text className="text-body text-muted-foreground">{subtitle}</Text>
+              </View>
+            </Card>
+          }
+          ListEmptyComponent={
+            <Card className="p-4">
+              <View className="gap-2">
+                <Text className="font-bold text-foreground">
+                  {t("smsImport.sheet.emptyTitle")}
+                </Text>
+                <Text className="text-muted-foreground">
+                  {t(
+                    items.length === 0
+                      ? "smsImport.sheet.emptyDescription"
+                      : "smsImport.sheet.emptyResolved"
+                  )}
+                </Text>
+              </View>
+            </Card>
+          }
+          ListFooterComponent={
+            showResolvedItems && resolvedItems.length > 0 ? (
+              <Button onPress={confirmClearResolved}>
+                {t("smsImport.sheet.footer.clearResolved")}
+              </Button>
+            ) : null
+          }
+        />
+        <View
+          className="border-t border-border bg-background px-4 pt-3"
+          style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
+        >
+          {footer}
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
@@ -780,222 +952,9 @@ export function SmsImportReviewScreen({
                 {footer}
               </View>
             </View>
-          ) : items.length === 0 ? (
-            <Card className="p-4">
-              <View className="gap-2">
-                <Text
-                  className="text-foreground"
-                  style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                >
-                  {t("smsImport.sheet.emptyTitle")}
-                </Text>
-                <Text className="text-muted-foreground">
-                  {t("smsImport.sheet.emptyDescription")}
-                </Text>
-              </View>
-            </Card>
-          ) : (
-            <View className="gap-4 pb-2">
-              {pendingItems.length > 0 ? (
-                <View className="gap-3">
-                  <Text
-                    className="text-foreground"
-                    style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                  >
-                    {t("smsImport.sheet.sectionTitles.pendingReview")}
-                  </Text>
-
-                  {pendingItems.map((item) => (
-                    <Animated.View
-                      key={item.id}
-                      layout={
-                        reduceMotion
-                          ? undefined
-                          : LinearTransition.duration(UI_DURATION.instant)
-                      }
-                      entering={
-                        reduceMotion ? undefined : FadeIn.duration(UI_DURATION.instant)
-                      }
-                      exiting={
-                        reduceMotion ? undefined : FadeOutUp.duration(UI_DURATION.subtle)
-                      }
-                    >
-                      <Card className="p-3">
-                        <View className="gap-3">
-                          <View className="gap-1">
-                            <Text
-                              className="text-foreground"
-                              style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {item.merchantName || item.sourceMessage.sender}
-                            </Text>
-                            <Text className="text-xs text-muted-foreground">
-                              {formatTimestamp(item.sourceMessage.receivedAt)}
-                            </Text>
-                          </View>
-
-                          <View className="gap-1">
-                            {__DEV__ &&
-                            expandedMessageId === item.id &&
-                            formatSuggestionDebugText(item, t) ? (
-                              <Text className="text-micro text-muted-foreground">
-                                {formatSuggestionDebugText(item, t)}
-                              </Text>
-                            ) : null}
-                            <Text className="text-foreground">
-                              {t("smsImport.sheet.labels.amount")}:{" "}
-                              {typeof item.amount === "number"
-                                ? formatCurrency(
-                                    item.amount,
-                                    item.currency || settings.defaultCurrency
-                                  )
-                                : t("smsImport.sheet.values.needsReview")}
-                            </Text>
-                            <Text className="text-foreground">
-                              {t("smsImport.sheet.labels.category")}:{" "}
-                              {getLocalizedCategoryLabel(
-                                resolvedSuggestions.get(item.id)?.category ??
-                                  item.categorySuggestion ??
-                                  t("settings.categories.other"),
-                                t
-                              )}
-                            </Text>
-                            <Text className="text-foreground">
-                              {t("smsImport.sheet.labels.payment")}:{" "}
-                              {getLocalizedPaymentMethodLabel(
-                                resolvedSuggestions.get(item.id)?.paymentMethod,
-                                paymentInstruments,
-                                t
-                              )}
-                            </Text>
-                            <Button
-                              size="compact"
-                              variant="ghost"
-                              onPress={() =>
-                                setExpandedMessageId(
-                                  expandedMessageId === item.id ? null : item.id
-                                )
-                              }
-                              accessibilityState={{
-                                expanded: expandedMessageId === item.id,
-                              }}
-                            >
-                              {t("smsImport.sheet.sourceSms")}
-                            </Button>
-                            {expandedMessageId === item.id ? (
-                              <Text className="text-sm text-muted-foreground">
-                                {item.sourceMessage.body}
-                              </Text>
-                            ) : null}
-                          </View>
-
-                          <View className="flex-row flex-wrap gap-2">
-                            <Button
-                              variant="accent"
-                              onPress={() => handleAcceptSuggested(item)}
-                            >
-                              {t("smsImport.sheet.actions.accept")}
-                            </Button>
-                            <Button onPress={() => openEditor(item)}>
-                              {t("common.edit")}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onPress={() => markItemRejected(item.fingerprint)}
-                            >
-                              {t("smsImport.sheet.actions.reject")}
-                            </Button>
-                            <Button onPress={() => dismissItem(item.fingerprint)}>
-                              {t("smsImport.sheet.actions.dismiss")}
-                            </Button>
-                          </View>
-                        </View>
-                      </Card>
-                    </Animated.View>
-                  ))}
-                </View>
-              ) : null}
-
-              {resolvedItems.length > 0 && showResolvedItems ? (
-                <View className="gap-3">
-                  <View className="flex-row items-center justify-between">
-                    <Text
-                      className="text-foreground"
-                      style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                    >
-                      {t("smsImport.sheet.sectionTitles.resolved")}
-                    </Text>
-                    <Button size="compact" onPress={confirmClearResolved}>
-                      {t("smsImport.sheet.footer.clearResolved")}
-                    </Button>
-                  </View>
-
-                  {resolvedItems.map((item) => (
-                    <Animated.View
-                      key={item.id}
-                      layout={
-                        reduceMotion
-                          ? undefined
-                          : LinearTransition.duration(UI_DURATION.instant)
-                      }
-                      entering={
-                        reduceMotion ? undefined : FadeIn.duration(UI_DURATION.instant)
-                      }
-                    >
-                      <Card className="p-3">
-                        <View className="gap-2">
-                          <Text
-                            className="text-foreground"
-                            style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                          >
-                            {item.merchantName || item.sourceMessage.sender}
-                          </Text>
-                          <Text className="text-xs text-muted-foreground">
-                            {formatTimestamp(item.sourceMessage.receivedAt)}
-                          </Text>
-                          <Text className="text-foreground">
-                            {t("smsImport.sheet.labels.status")}:{" "}
-                            {getLocalizedReviewStatus(item.status, t)}
-                          </Text>
-                          <Text className="text-muted-foreground" numberOfLines={2}>
-                            {item.sourceMessage.body}
-                          </Text>
-                        </View>
-                      </Card>
-                    </Animated.View>
-                  ))}
-                </View>
-              ) : null}
-
-              {pendingItems.length === 0 &&
-              resolvedItems.length > 0 &&
-              !showResolvedItems ? (
-                <Card className="p-3">
-                  <Text className="text-muted-foreground">
-                    {t("smsImport.sheet.emptyResolved")}
-                  </Text>
-                </Card>
-              ) : null}
-            </View>
-          )}
+          ) : null}
         </View>
       </KeyboardAwareScrollView>
-
-      {editingItem ? null : (
-        <View
-          className="border-t border-border bg-background px-4 pt-3"
-          style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
-        >
-          <View
-            className="w-full"
-            style={{ maxWidth: UI_SPACE.empty * 18, alignSelf: "center" }}
-          >
-            {footer}
-          </View>
-        </View>
-      )}
     </View>
   )
 }
