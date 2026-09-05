@@ -1,165 +1,162 @@
 package expo.modules.expensebuddysmsmodule
 
 import android.content.Context
+import android.os.CancellationSignal
 import android.provider.Telephony
-import expo.modules.expensebuddylogger.LoggerApi
 import expo.modules.expensebuddysmsparser.CategoryClassifier
 import expo.modules.expensebuddysmsparser.SmsCategoryPredictionRequest
-import expo.modules.expensebuddysmsparser.SmsCategoryPredictionResult
 import expo.modules.expensebuddysmsparser.SmsMessageParser
-import expo.modules.expensebuddysmsparser.SmsParsedMessage
+import expo.modules.expensebuddysmsparser.SmsRawMessage
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class SmsInboxScanner(
+data class SmsScanPosition(
+    val timestamp: Long,
+    val messageId: Long,
+)
+
+data class SmsInboxPage(
+    val messages: List<SmsRawMessage>,
+    val position: SmsScanPosition?,
+)
+
+data class SmsScanPage(
+    val items: List<BackgroundSmsReviewItem>,
+    val position: SmsScanPosition?,
+)
+
+/** Pages are oldest-first so committing a position never jumps over an unread row. */
+fun interface SmsInboxSource {
+    suspend fun readAfter(
+        position: SmsScanPosition,
+        until: Long,
+        limit: Int,
+    ): SmsInboxPage
+}
+
+class AndroidSmsInboxSource(
     private val context: Context,
-) {
-    fun scanAndParseMessages(
-        sinceTimestampMillis: Long,
-        limit: Int? = null,
-        classifier: CategoryClassifier? = null,
-        useMlOnly: Boolean = false,
-        regionCode: String = "IN",
-    ): List<Map<String, Any?>> {
-        val rulePack = SmsMessageParser.resolveRulePack(regionCode)
-        val rawMessages = queryRecentMessages(sinceTimestampMillis, limit)
-        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: scanned=${rawMessages.size} region=${rulePack.regionCode}")
-
-        val parsedList = mutableListOf<Pair<Map<String, String>, SmsParsedMessage>>()
-        for (msg in rawMessages) {
-            val sender = msg["sender"] ?: continue
-            val body = msg["body"] ?: ""
-            val receivedAt = msg["receivedAt"] ?: continue
-            val messageId = msg["messageId"] ?: continue
-
-            val parseResult = SmsMessageParser.parseRawMessageWithReason(sender, body, receivedAt, rulePack)
-            val parsed = parseResult.parsed
-
-            if (parsed == null) {
-                LoggerApi.d("SMS_MODULE", "scanAndParseMessages: skipped message=$messageId reason=${parseResult.skipReason}")
-                continue
-            }
-
-            parsedList.add(msg to parsed)
-        }
-
-        val mlPredictions = mutableMapOf<String, SmsCategoryPredictionResult>()
-        if (classifier != null && parsedList.isNotEmpty()) {
-            val requests =
-                parsedList.map { (msg, parsed) ->
-                    SmsCategoryPredictionRequest(
-                        messageId = msg["messageId"] ?: "",
-                        sender = msg["sender"] ?: "",
-                        body = msg["body"] ?: "",
-                        merchantName = parsed.merchantName,
-                    )
+) : SmsInboxSource {
+    override suspend fun readAfter(
+        position: SmsScanPosition,
+        until: Long,
+        limit: Int,
+    ): SmsInboxPage =
+        withContext(Dispatchers.IO) {
+            require(limit in 1..500)
+            val messages = mutableListOf<SmsRawMessage>()
+            var next: SmsScanPosition? = null
+            val id = Telephony.Sms._ID
+            val date = Telephony.Sms.DATE
+            currentCoroutineContext().ensureActive()
+            val signal = CancellationSignal()
+            val cancellation =
+                launch(start = CoroutineStart.UNDISPATCHED) {
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        signal.cancel()
+                    }
                 }
-            for (prediction in classifier.classify(requests)) {
-                mlPredictions[prediction.messageId] = prediction
-            }
-            LoggerApi.d("SMS_MODULE", "scanAndParseMessages: ml_classified=${mlPredictions.size}")
-        }
-
-        val results =
-            parsedList.map { (msg, parsed) ->
-                val messageId = msg["messageId"] ?: ""
-                val prediction = mlPredictions[messageId]
-                val useMlCategory =
-                    if (useMlOnly) {
-                        prediction != null
-                    } else {
-                        prediction?.shouldUsePrediction == true
-                    }
-
-                mapOf(
-                    "fingerprint" to parsed.fingerprint,
-                    "messageId" to messageId,
-                    "sender" to msg["sender"],
-                    "body" to msg["body"],
-                    "receivedAt" to msg["receivedAt"],
-                    "amount" to parsed.amount,
-                    "currency" to parsed.currency,
-                    "merchantName" to parsed.merchantName,
-                    "categorySuggestion" to if (useMlCategory) prediction!!.category else parsed.categorySuggestion,
-                    "categorySuggestionSource" to if (useMlCategory) "ml" else "regex",
-                    "categorySuggestionConfidence" to if (useMlCategory) prediction!!.confidence else null,
-                    "categorySuggestionModelId" to if (useMlCategory) prediction!!.modelId else null,
-                    "paymentMethodType" to parsed.paymentMethodSuggestion?.type,
-                    "paymentMethodIdentifier" to parsed.paymentMethodSuggestion?.identifier,
-                    "paymentMethodInstrumentId" to parsed.paymentMethodSuggestion?.instrumentId,
-                    "noteSuggestion" to parsed.noteSuggestion,
-                    "transactionDate" to parsed.transactionDate,
-                    "matchedLocale" to parsed.matchedLocale,
-                    "matchedPatternKey" to parsed.matchedPatternKey,
-                )
-            }
-
-        LoggerApi.d("SMS_MODULE", "scanAndParseMessages: parsed=${results.size}")
-        return results
-    }
-
-    private fun queryRecentMessages(
-        sinceTimestampMillis: Long,
-        limit: Int?,
-    ): List<Map<String, String>> {
-        val contentResolver = context.contentResolver
-        val resultLimit = resolveLimit(limit)
-        val projection =
-            arrayOf(
-                Telephony.Sms._ID,
-                Telephony.Sms.ADDRESS,
-                Telephony.Sms.BODY,
-                Telephony.Sms.DATE,
-            )
-        val sortOrder = "${Telephony.Sms.DATE} DESC, ${Telephony.Sms._ID} DESC"
-        val messages = mutableListOf<Map<String, String>>()
-
-        contentResolver
-            .query(
-                Telephony.Sms.Inbox.CONTENT_URI,
-                projection,
-                "${Telephony.Sms.DATE} > ?",
-                arrayOf(sinceTimestampMillis.toString()),
-                sortOrder,
-            )?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(Telephony.Sms._ID)
-                val addressColumn = cursor.getColumnIndexOrThrow(Telephony.Sms.ADDRESS)
-                val bodyColumn = cursor.getColumnIndexOrThrow(Telephony.Sms.BODY)
-                val dateColumn = cursor.getColumnIndexOrThrow(Telephony.Sms.DATE)
-
-                while (cursor.moveToNext()) {
-                    if (resultLimit != null && messages.size >= resultLimit) {
-                        break
-                    }
-
-                    val messageId = cursor.getLong(idColumn).toString()
-                    val sender = cursor.getString(addressColumn).orEmpty()
-                    val body = cursor.getString(bodyColumn).orEmpty()
-                    val receivedAt = Instant.ofEpochMilli(cursor.getLong(dateColumn)).toString()
-
-                    messages.add(
-                        mapOf(
-                            "messageId" to messageId,
-                            "sender" to sender,
-                            "body" to body,
-                            "receivedAt" to receivedAt,
+            try {
+                context.contentResolver
+                    .query(
+                        Telephony.Sms.Inbox.CONTENT_URI,
+                        arrayOf(id, Telephony.Sms.ADDRESS, Telephony.Sms.BODY, date),
+                        "($date > ? OR ($date = ? AND $id > ?)) AND $date <= ?",
+                        arrayOf(
+                            position.timestamp.toString(),
+                            position.timestamp.toString(),
+                            position.messageId.toString(),
+                            until.toString(),
                         ),
+                        "$date ASC, $id ASC",
+                        signal,
+                    )?.use { cursor ->
+                        while (messages.size < limit && cursor.moveToNext()) {
+                            currentCoroutineContext().ensureActive()
+                            val timestamp = cursor.getLong(3)
+                            val messageId = cursor.getLong(0)
+                            messages.add(
+                                SmsRawMessage(
+                                    messageId.toString(),
+                                    cursor.getString(1).orEmpty(),
+                                    cursor.getString(2).orEmpty(),
+                                    Instant.ofEpochMilli(timestamp).toString(),
+                                ),
+                            )
+                            next = SmsScanPosition(timestamp, messageId)
+                        }
+                    }
+            } finally {
+                cancellation.cancel()
+            }
+            SmsInboxPage(messages, next)
+        }
+}
+
+/** Typed native pipeline: progress includes non-matches; only candidates enter Room. */
+class SmsInboxScanner(
+    private val source: SmsInboxSource,
+) {
+    constructor(context: Context) : this(AndroidSmsInboxSource(context.applicationContext))
+
+    suspend fun scan(
+        position: SmsScanPosition?,
+        until: Long,
+        region: String,
+        useMlOnly: Boolean = false,
+        classifier: () -> CategoryClassifier? = { null },
+    ): SmsScanPage {
+        val floor = SmsScanPosition(until - 7L * 24 * 60 * 60 * 1000, -1)
+        val start = position?.takeIf { it.timestamp in floor.timestamp..until } ?: floor
+        val page = source.readAfter(start, until, 500)
+        return withContext(Dispatchers.Default) {
+            val rules = SmsMessageParser.resolveRulePack(region)
+            val parsed =
+                page.messages.mapNotNull { raw ->
+                    currentCoroutineContext().ensureActive()
+                    SmsMessageParser.parseRawMessageWithReason(raw.sender, raw.body, raw.receivedAt, rules).parsed?.let { raw to it }
+                }
+            val model = if (parsed.isEmpty()) null else classifier()
+            val now = Instant.ofEpochMilli(until).toString()
+            val items =
+                parsed.map { (raw, result) ->
+                    currentCoroutineContext().ensureActive()
+                    // Yield cancellation between inferences; Interpreter is a blocking call.
+                    val prediction =
+                        model
+                            ?.classify(
+                                listOf(SmsCategoryPredictionRequest(raw.messageId, raw.sender, raw.body, result.merchantName)),
+                            )?.firstOrNull()
+                    val usePrediction = prediction != null && (useMlOnly || prediction.shouldUsePrediction)
+                    BackgroundSmsReviewItem(
+                        id = "${result.fingerprint}_${raw.messageId}",
+                        fingerprint = result.fingerprint,
+                        sourceMessage = raw,
+                        amount = result.amount,
+                        currency = result.currency,
+                        merchantName = result.merchantName,
+                        categorySuggestion = if (usePrediction) prediction!!.category else result.categorySuggestion,
+                        categorySuggestionSource = if (usePrediction) "ml" else "regex",
+                        categorySuggestionConfidence = if (usePrediction) prediction!!.confidence else null,
+                        categorySuggestionModelId = if (usePrediction) prediction!!.modelId else null,
+                        paymentMethodSuggestion = result.paymentMethodSuggestion,
+                        noteSuggestion = result.noteSuggestion,
+                        transactionDate = result.transactionDate,
+                        matchedLocale = result.matchedLocale,
+                        matchedPatternKey = result.matchedPatternKey,
+                        createdAt = now,
+                        updatedAt = now,
                     )
                 }
-            }
-
-        return messages
-    }
-
-    private fun resolveLimit(limit: Int?): Int? {
-        if (limit == null) {
-            return null
+            SmsScanPage(items, page.position)
         }
-
-        if (limit <= 0) {
-            LoggerApi.w("SMS_MODULE", "resolveLimit: invalid limit=$limit, clamping to default 500")
-            return 500
-        }
-
-        return limit
     }
 }

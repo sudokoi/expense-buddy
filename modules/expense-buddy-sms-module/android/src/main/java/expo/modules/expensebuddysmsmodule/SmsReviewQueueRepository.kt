@@ -1,184 +1,117 @@
 package expo.modules.expensebuddysmsmodule
 
 import android.content.Context
-import expo.modules.expensebuddylogger.LoggerApi
-import expo.modules.expensebuddysmsmodule.db.ImportJournalDao
+import androidx.room.withTransaction
 import expo.modules.expensebuddysmsmodule.db.ImportJournalEntity
-import expo.modules.expensebuddysmsmodule.db.ReviewQueueDao
 import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import expo.modules.expensebuddysmsmodule.db.SmsReviewQueueDatabase
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.util.Locale
 
-private const val STATUS_PENDING = "PENDING"
-private const val STATUS_APPROVED = "APPROVED"
-private const val STATUS_REJECTED = "REJECTED"
-private const val STATUS_DISMISSED = "DISMISSED"
-private const val STATUS_FAILED = "FAILED"
-
+/** Every mutation, including its journal, commits atomically through the same database. */
 class SmsReviewQueueRepository(
-    private val context: Context? = null,
-    private val injectedDao: ReviewQueueDao? = null,
-    private val injectedJournalDao: ImportJournalDao? = null,
+    private val db: SmsReviewQueueDatabase,
 ) {
-    init {
-        require(injectedDao != null || context != null) {
-            "SmsReviewQueueRepository requires either a Context or an injected ReviewQueueDao"
-        }
-    }
+    constructor(context: Context) : this(SmsReviewQueueDatabase.getInstance(context))
 
-    private val dbInstance by lazy { context?.let { SmsReviewQueueDatabase.getInstance(it) } }
-    private val dao get() = injectedDao ?: dbInstance!!.reviewQueueDao()
-    private val journalDao get() = injectedJournalDao ?: dbInstance!!.importJournalDao()
-
-    private val mutex = Mutex()
+    private val dao get() = db.reviewQueueDao()
+    private val journal get() = db.importJournalDao()
 
     suspend fun upsertItems(
         items: List<ReviewQueueEntity>,
         source: String,
-    ): Int {
-        val db = dbInstance
-        if (db != null) {
-            return db.upsertItems(items, source)
+    ): Int =
+        db.withTransaction {
+            var inserted = 0
+            for (item in items) {
+                val added = dao.insertIfNotExists(item) != -1L
+                if (added) inserted++
+                journal.insert(
+                    ImportJournalEntity(
+                        fingerprint = item.fingerprint,
+                        source = source,
+                        action = if (added) "INSERTED" else "DEDUPED",
+                        timestamp = System.currentTimeMillis(),
+                        details = null,
+                    ),
+                )
+            }
+            inserted
         }
-        var count = 0
-        for (item in items) {
-            if (upsertItem(item, source)) count++
-        }
-        return count
-    }
 
     suspend fun upsertItem(
         item: ReviewQueueEntity,
         source: String,
-    ): Boolean {
-        val db = dbInstance
-        if (db != null) {
-            return db.upsertItem(item, source)
-        }
-        return mutex.withLock {
-            val existing = dao.getItemByFingerprint(item.fingerprint)
-            if (existing != null) {
-                LoggerApi.d("SMS_QUEUE", "DEDUPED fingerprint=${item.fingerprint} source=$source status=${existing.status}")
-                journalDao.insert(
-                    ImportJournalEntity(
-                        fingerprint = item.fingerprint,
-                        source = source,
-                        action = "DEDUPED",
-                        timestamp = System.currentTimeMillis(),
-                        details = "existing_status=${existing.status}",
-                    ),
-                )
-                return@withLock false
-            }
-            val inserted = dao.insertIfNotExists(item)
-            if (inserted == -1L) {
-                LoggerApi.d("SMS_QUEUE", "DEDUPED fingerprint=${item.fingerprint} source=$source reason=race_condition_insert_failed")
-                journalDao.insert(
-                    ImportJournalEntity(
-                        fingerprint = item.fingerprint,
-                        source = source,
-                        action = "DEDUPED",
-                        timestamp = System.currentTimeMillis(),
-                        details = "race_condition_insert_failed",
-                    ),
-                )
-                return@withLock false
-            }
-            LoggerApi.d("SMS_QUEUE", "INSERTED fingerprint=${item.fingerprint} source=$source")
-            journalDao.insert(
-                ImportJournalEntity(
-                    fingerprint = item.fingerprint,
-                    source = source,
-                    action = "INSERTED",
-                    timestamp = System.currentTimeMillis(),
-                    details = null,
-                ),
-            )
-            true
-        }
-    }
+    ): Boolean = upsertItems(listOf(item), source) == 1
 
     suspend fun approveItem(
         fingerprint: String,
         source: String,
         expenseId: String? = null,
-    ) {
-        val db = dbInstance
-        if (db != null) {
-            return db.approveItem(fingerprint, source, expenseId)
-        }
-        mutex.withLock {
-            val now = System.currentTimeMillis()
-            dao.approveItem(fingerprint, STATUS_APPROVED, expenseId, now)
-            LoggerApi.d("SMS_QUEUE", "APPROVED fingerprint=$fingerprint source=$source${expenseId?.let { " expense_id=$it" } ?: ""}")
-            journalDao.insert(
-                ImportJournalEntity(
-                    fingerprint = fingerprint,
-                    source = source,
-                    action = "APPROVED",
-                    timestamp = now,
-                    details = expenseId?.let { "expense_id=$it" },
-                ),
-            )
-        }
-    }
+    ) = resolveItems(listOf(fingerprint), source, "APPROVED", expenseId)
 
     suspend fun rejectItem(
         fingerprint: String,
         source: String,
-    ) {
-        val db = dbInstance
-        if (db != null) {
-            return db.rejectItem(fingerprint, source)
-        }
-        mutex.withLock {
-            val now = System.currentTimeMillis()
-            dao.updateStatus(fingerprint, STATUS_REJECTED, now)
-            LoggerApi.d("SMS_QUEUE", "REJECTED fingerprint=$fingerprint source=$source")
-            journalDao.insert(
-                ImportJournalEntity(
-                    fingerprint = fingerprint,
-                    source = source,
-                    action = "REJECTED",
-                    timestamp = now,
-                    details = null,
-                ),
-            )
-        }
-    }
+    ) = rejectItems(listOf(fingerprint), source)
 
     suspend fun dismissItem(
         fingerprint: String,
         source: String,
+    ) = dismissItems(listOf(fingerprint), source)
+
+    suspend fun approveItems(
+        fingerprints: List<String>,
+        source: String,
+    ) = resolveItems(fingerprints, source, "APPROVED")
+
+    suspend fun rejectItems(
+        fingerprints: List<String>,
+        source: String,
+    ) = resolveItems(fingerprints, source, "REJECTED")
+
+    suspend fun dismissItems(
+        fingerprints: List<String>,
+        source: String,
+    ) = resolveItems(fingerprints, source, "DISMISSED")
+
+    private suspend fun resolveItems(
+        fingerprints: List<String>,
+        source: String,
+        status: String,
+        expenseId: String? = null,
     ) {
-        val db = dbInstance
-        if (db != null) {
-            return db.dismissItem(fingerprint, source)
-        }
-        mutex.withLock {
+        db.withTransaction {
             val now = System.currentTimeMillis()
-            dao.updateStatus(fingerprint, STATUS_DISMISSED, now)
-            LoggerApi.d("SMS_QUEUE", "DISMISSED fingerprint=$fingerprint source=$source")
-            journalDao.insert(
-                ImportJournalEntity(
-                    fingerprint = fingerprint,
-                    source = source,
-                    action = "DISMISSED",
-                    timestamp = now,
-                    details = null,
-                ),
-            )
+            for (fingerprint in fingerprints.distinct()) {
+                val item = dao.getItemByFingerprint(fingerprint) ?: continue
+                if (item.status != "PENDING") continue
+                if (status == "APPROVED") {
+                    dao.approveItem(fingerprint, status, expenseId, now)
+                } else {
+                    dao.updateStatus(fingerprint, status, now)
+                }
+                journal.insert(
+                    ImportJournalEntity(
+                        fingerprint = fingerprint,
+                        source = source,
+                        action = status,
+                        timestamp = now,
+                        details = expenseId?.let { "expense_id=$it" },
+                    ),
+                )
+            }
         }
     }
 
     suspend fun getPendingItems(): List<ReviewQueueEntity> = dao.getPendingItems()
 
-    fun observePendingItems(): Flow<List<ReviewQueueEntity>> = dao.observePendingItems()
-
     suspend fun countPending(): Int = dao.countPending()
+
+    /** Invalidation includes same-count edits without materializing SMS bodies. */
+    fun observeChanges(): Flow<Unit> = db.invalidationTracker.createFlow("sms_review_queue").map { }
 
     fun toReviewQueueEntity(
         item: BackgroundSmsReviewItem,
@@ -187,26 +120,27 @@ class SmsReviewQueueRepository(
         val timestamp =
             try {
                 Instant.parse(item.sourceMessage.receivedAt).toEpochMilli()
-            } catch (_: Exception) {
+            } catch (
+                _: Exception,
+            ) {
                 System.currentTimeMillis()
             }
-
         return ReviewQueueEntity(
             fingerprint = item.fingerprint,
             sender = item.sourceMessage.sender,
             body = item.sourceMessage.body,
             amount = item.amount,
-            amountNormalized = item.amount?.let { String.format("%.2f", it) } ?: "",
+            amountNormalized = item.amount?.let { String.format(Locale.ROOT, "%.2f", it) } ?: "",
             timestamp = timestamp,
             sourceMessageId = item.sourceMessage.messageId,
             sourceReceivedAt = item.sourceMessage.receivedAt,
-            status = STATUS_PENDING,
+            status = "PENDING",
             currency = item.currency,
             merchantName = item.merchantName,
             categorySuggestion = item.categorySuggestion,
-            categorySuggestionConfidence = null,
-            categorySuggestionModelId = null,
-            categorySuggestionSource = null,
+            categorySuggestionConfidence = item.categorySuggestionConfidence,
+            categorySuggestionModelId = item.categorySuggestionModelId,
+            categorySuggestionSource = item.categorySuggestionSource,
             paymentMethodType = item.paymentMethodSuggestion?.type,
             paymentMethodIdentifier = item.paymentMethodSuggestion?.identifier,
             paymentMethodInstrumentId = item.paymentMethodSuggestion?.instrumentId,

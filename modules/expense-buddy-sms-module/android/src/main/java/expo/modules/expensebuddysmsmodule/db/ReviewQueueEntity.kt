@@ -7,9 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "sms_review_queue",
     indices = [
-        Index(value = ["status"]),
-        Index(value = ["fingerprint"]),
-        Index(value = ["timestamp"]),
+        Index(value = ["status", "timestamp"]),
     ],
 )
 data class ReviewQueueEntity(
