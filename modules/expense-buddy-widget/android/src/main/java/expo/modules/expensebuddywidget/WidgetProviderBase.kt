@@ -4,10 +4,12 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.os.Bundle
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * Shared update plumbing. No stored scope: each `onUpdate` owns a
@@ -15,6 +17,14 @@ import kotlinx.coroutines.launch
  * Subclasses implement [render] (suspend, IO) per WidgetKind.
  */
 abstract class WidgetProviderBase : AppWidgetProvider() {
+    override fun onDisabled(context: Context) {
+        try {
+            WidgetRefreshSchedule.cancelIfUnused(context)
+        } catch (_: Exception) {
+            // Match onEnabled's best-effort behavior if WorkManager is unavailable.
+        }
+    }
+
     override fun onEnabled(context: Context) {
         // Idempotent: first placed widget arms the 30-min backstop.
         try {
@@ -49,9 +59,14 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         val pending = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                for (widgetId in appWidgetIds) {
-                    render(context, appWidgetManager, widgetId)
+                withTimeout(8000L) {
+                    val snapshot by lazy { store(context).capture() }
+                    for (widgetId in appWidgetIds) {
+                        render(context, appWidgetManager, widgetId) { snapshot }
+                    }
                 }
+            } catch (error: CancellationException) {
+                throw error
             } catch (_: Exception) {
                 // Best-effort: leave existing widget content on failure.
             } finally {
@@ -64,6 +79,7 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         context: Context,
         manager: AppWidgetManager,
         widgetId: Int,
+        snapshot: () -> ExpenseWidgetStore.Snapshot,
     )
 
     protected fun store(context: Context): ExpenseWidgetStore {

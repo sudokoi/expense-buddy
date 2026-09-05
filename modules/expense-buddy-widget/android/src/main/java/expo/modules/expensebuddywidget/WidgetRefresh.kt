@@ -34,7 +34,7 @@ internal object WidgetRefresh {
         }
     }
 
-    private fun widgetProviders(context: Context): List<ComponentName> =
+    internal fun widgetProviders(context: Context): List<ComponentName> =
         listOf(
             "expo.modules.expensebuddywidget.SummaryWidgetProvider",
             "expo.modules.expensebuddywidget.TrendWidgetProvider",
