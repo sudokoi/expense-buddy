@@ -19,8 +19,10 @@ Expo module code, synthetic calls into the actual TypeScript functions, and a
 host SQLite query-plan probe. Operation counts below are not Android timings or
 promised speedups. Priorities describe recommended implementation order.
 
-Only the explicitly requested Expo dependency repair has been implemented. The
-performance and workflow changes below are recommendations, not completed fixes.
+This section records the original audit baseline. The subsequently authorized
+implementation and its remaining validation limits are recorded in
+[performance implementation](performance-implementation.md); line references and
+operation counts below refer to the baseline, not the refactored source.
 
 ## Highest-priority findings
 

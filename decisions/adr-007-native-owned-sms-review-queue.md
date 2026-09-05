@@ -8,6 +8,17 @@
 
 ## Context
 
+> **Implementation update — 2026-09-05:** The ownership decision below remains
+> accepted. The earlier mutex/cursor implementation details are superseded by
+> explicit repository-owned Room transactions, table invalidation, and suspending
+> Expo functions. Schema 3 preserves existing Room queue/journal rows and removes
+> destructive fallback. Scan progress tracks all scanned messages using regional
+> timestamp/ID positions; the old parsed-only cursor is not trusted, so upgrade
+> replays the bounded seven-day window with fingerprint deduplication. See
+> [performance implementation](../docs/performance-implementation.md) for the
+> migration, cancellation, and validation contracts. Historical rollout steps
+> below describe the original SharedPreferences-to-Room transition, not schema 3.
+
 The SMS import review queue currently has split ownership across three layers:
 
 1. **JS XState store** — authoritative for in-memory state during a session

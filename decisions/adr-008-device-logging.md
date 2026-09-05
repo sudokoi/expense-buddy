@@ -7,6 +7,16 @@
 
 ## Context
 
+> **Implementation update — 2026-09-05:** Room and the shared native logging
+> interface remain accepted. The per-entry coroutine/count/prune strategy below
+> is superseded by one application-owned writer with a 256-entry bounded mailbox,
+> batched transactional insert/prune, idempotent initialization, and explicit
+> overflow accounting. DEBUG/INFO are discarded before WARN/ERROR under pressure;
+> a high-severity-only queue keeps the newest high-severity entries. Stored
+> capacity remains 1,000. See
+> [performance implementation](../docs/performance-implementation.md) for the
+> failure, export, and validation contracts.
+
 The SMS import system spans JS and native layers, including a `BroadcastReceiver` that runs outside the React Native lifecycle. Debugging issues like duplicate queue entries, missed fingerprints, or background receiver crashes currently relies on scattered `console.warn` calls and silent `catch` blocks. The project has no centralized logging, no crash reporting, and no way to inspect what happened on-device after the fact.
 
 Key drivers:
