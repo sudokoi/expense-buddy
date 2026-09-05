@@ -429,7 +429,7 @@ export function GitHubConfigSection({
                 ) : connectionStatus === "error" ? (
                   <X size={16} color={errorTextColor} />
                 ) : isTesting ? (
-                  <Spinner size="small" />
+                  <Spinner size="small" color={theme.accentForeground} />
                 ) : null
               }
             >
