@@ -80,10 +80,10 @@ For the model-workspace architecture diagrams and the current Android-ready mode
 
 ### Home-Screen Widgets (Android)
 
-- Three resizable widgets rendered natively from the on-device store: Summary (today/month totals with quick-add), 7-day Trend (spending bars), and Recent (latest expenses list)
+- Three resizable widgets rendered natively from the on-device store: Summary (today/month totals with quick-add), 7-day Trend (category-stacked bars with a smooth total line), and Recent (latest expenses list)
 - Per-widget configuration on placement: category filter and hide-amounts privacy option
 - Widgets re-derive from live data on every system update (open, reboot, midnight rollover, 30-minute backstop) and refresh right after in-app changes
-- Widget copy follows the app language (`translation.json` single source); amounts follow the device locale
+- Widgets follow the app's light/dark preference, language, and category colors; amounts follow the device locale
 
 ### GitHub Sync
 

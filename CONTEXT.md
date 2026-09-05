@@ -16,11 +16,11 @@ Single source for product terms that have one meaning in this repo. Prefer these
 | **Sync (fetch-merge-push)** | Git Trees + SHA cache → download changed daily CSV only → merge by `id`/`deletedAt` → push dirty-day CSV. Credentials stay in SecureStore, `settings.json` optional. | `services/sync-manager.ts`, `services/github/api.ts`, `stores/helpers.ts` |
 | **Dirty Day** | Date string `YYYY-MM-DD` marking a day whose local file changed since last sync. Limits hashing/uploads. | `services/dirty-days.ts` |
 | **AppSplashGate** | Keeps native splash until fonts + `useThemeSplashGate` (forced theme visible in NativeWind's scheme; override lands asynchronously); fail-open timer arms only after settings load, so it can't race the async preference read — prevents OS-theme flash without resolving `"system"` in JS. | `app/_layout.tsx`, `utils/theme.ts`, `hooks/use-theme-colors.ts` |
-| **WidgetKind** | Which home-screen widget renders: `summary` (today + month totals), `trend7d` (last-7-day bars), `recent` (latest expenses list). Three providers share one data module. | `modules/expense-buddy-widget`, `decisions/adr-012-android-widgets-native-read-first.md` |
+| **WidgetKind** | Which home-screen widget renders: `summary` (today + month totals), `trend7d` (category-stacked last-7-day bars + smooth total line), `recent` (latest expenses list). Three providers share one data module. | `modules/expense-buddy-widget`, `decisions/adr-012-android-widgets-native-read-first.md` |
 | **WidgetInstance** | One placed widget (`appWidgetId`) with its own filter. Filter lives in `expense_widget_<id>` prefs, never in a store. | `modules/expense-buddy-widget/.../WidgetModels.kt` |
 | **WidgetFilter** | Per-instance subset: `category?` + `hideAmounts`. Full `FilterState` parity stays in-app. | `modules/expense-buddy-widget/.../WidgetModels.kt` |
 | **LiveRows** | Expenses read natively from MMKV at render time. Source of truth for every widget number. | `modules/expense-buddy-widget/.../ExpenseWidgetStore.kt` |
-| **WidgetAssist** | JS-written hints only (`currency`, `categoryColors`, `dataVersion=max(updatedAt)`). Numbers are recomputed from LiveRows when stale. | `services/widget-assist.ts`, `modules/expense-buddy-widget/.../WidgetAssistStore.kt` |
+| **WidgetAssist** | JS-written hints only (`currency`, `locale`, localized copy, `categoryColors`, `dataVersion=max(updatedAt)`). Numbers are always derived from LiveRows. | `services/widget-assist.ts`, `modules/expense-buddy-widget/.../WidgetAssistStore.kt` |
 | **DataVersion** | `max(updatedAt)` over live rows. Compared against assist at render to detect JS-unseen changes. | `services/widget-assist.ts`, `modules/expense-buddy-widget/.../ExpenseWidgetStore.kt` |
 
 ## Boundaries (from ARCHITECTURE.md)
