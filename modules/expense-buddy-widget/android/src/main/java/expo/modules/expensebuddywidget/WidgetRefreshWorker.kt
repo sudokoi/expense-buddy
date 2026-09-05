@@ -26,6 +26,13 @@ class WidgetRefreshWorker(
 internal object WidgetRefreshSchedule {
     const val WORK_NAME = "expense_widget_refresh"
 
+    fun cancelIfUnused(context: Context) {
+        val manager = android.appwidget.AppWidgetManager.getInstance(context)
+        if (WidgetRefresh.widgetProviders(context).all { manager.getAppWidgetIds(it).isEmpty() }) {
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+        }
+    }
+
     fun ensure(context: Context) {
         val request =
             PeriodicWorkRequestBuilder<WidgetRefreshWorker>(30, TimeUnit.MINUTES).build()

@@ -34,6 +34,55 @@ private fun expenseJson(
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class ExpenseWidgetStoreTest {
+    @Test
+    fun `refresh snapshot reuses parsing but next refresh observes deletes and settings`() {
+        val values =
+            mutableMapOf<String, String?>(
+                WidgetKeys.EXPENSES_INDEX to "[\"a\",\"b\"]",
+                WidgetKeys.itemKey("a") to expenseJson("a", 10.0, "2026-09-04T10:00:00Z", currency = "INR"),
+                WidgetKeys.itemKey("b") to expenseJson("b", 20.0, "2026-09-04T10:00:00Z", currency = "USD"),
+            )
+        var reads = 0
+        var currency = "INR"
+        val reader =
+            object : MmkvReader {
+                override fun getString(key: String) = values[key]
+
+                override fun multiGet(keys: List<String>): List<Pair<String, String?>> {
+                    reads++
+                    return keys.map { it to values[it] }
+                }
+            }
+        val store = ExpenseWidgetStore(reader, SettingsReader { currency }, ZoneId.of("UTC"))
+        val snapshot = store.capture()
+        repeat(4) {
+            assertThat((store.read(LocalDate.of(2026, 9, 4), snapshot = snapshot) as WidgetResult.Ready).data.todayTotal).isEqualTo(10.0)
+        }
+        assertThat(reads).isEqualTo(1)
+        // max(updatedAt) is unchanged; it must not be used as a cache key.
+        values.remove(WidgetKeys.itemKey("a"))
+        currency = "USD"
+        val refreshed = (store.read(LocalDate.of(2026, 9, 5)) as WidgetResult.Ready).data
+        assertThat(reads).isEqualTo(2)
+        assertThat(refreshed.currency).isEqualTo("USD")
+        assertThat(refreshed.todayTotal).isEqualTo(0.0)
+        assertThat(refreshed.monthTotal).isEqualTo(20.0)
+    }
+
+    @Test
+    fun `bounded recent selection matches stable full sorting`() {
+        val rows =
+            (0..999).map {
+                WidgetExpense("$it", 1.0, "INR", "Food", "", "2026-09-${(it % 5 + 1).toString().padStart(2, '0')}", "same")
+            }
+        val store = ExpenseWidgetStore(FakeMmkv(emptyMap()), SettingsReader { "INR" })
+        val result = store.read(snapshot = ExpenseWidgetStore.Snapshot(rows, "INR")) as WidgetResult.Ready
+        assertThat(result.data.recent)
+            .containsExactlyElementsIn(
+                rows.sortedWith(compareByDescending<WidgetExpense> { it.dayKey }.thenByDescending { it.updatedAt }).take(8),
+            ).inOrder()
+    }
+
     private val zone = ZoneId.of("Asia/Kolkata")
     private val settings = SettingsReader { "INR" }
 

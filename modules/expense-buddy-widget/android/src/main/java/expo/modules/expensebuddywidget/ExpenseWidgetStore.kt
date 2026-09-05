@@ -15,6 +15,17 @@ class ExpenseWidgetStore(
     private val settings: SettingsReader,
     private val zone: ZoneId = ZoneId.systemDefault(),
 ) {
+    data class Snapshot internal constructor(
+        val rows: List<WidgetExpense>?,
+        val defaultCurrency: String,
+    )
+
+    /** A refresh-local immutable snapshot, never retained across system updates. */
+    fun capture(): Snapshot {
+        val index = mmkv.getString(WidgetKeys.EXPENSES_INDEX)
+        return Snapshot(index?.let { parseItems(parseIndex(it)) }, settings.defaultCurrency())
+    }
+
     /**
      * @param assistCurrency effective currency hint from JS. Trusted only
      * when [assistVersion] matches the live rows (staleness rule, ADR-012).
@@ -25,12 +36,9 @@ class ExpenseWidgetStore(
         recentLimit: Int = 8,
         assistCurrency: String? = null,
         assistVersion: String? = null,
+        snapshot: Snapshot = capture(),
     ): WidgetResult {
-        val indexRaw = mmkv.getString(WidgetKeys.EXPENSES_INDEX) ?: return WidgetResult.Unavailable
-        val ids = parseIndex(indexRaw)
-        if (ids.isEmpty()) return WidgetResult.Empty
-
-        val rows = parseItems(ids)
+        val rows = snapshot.rows ?: return WidgetResult.Unavailable
         if (rows.isEmpty()) return WidgetResult.Empty
 
         val filtered =
@@ -40,7 +48,7 @@ class ExpenseWidgetStore(
             }
         if (filtered.isEmpty()) return WidgetResult.Empty
 
-        val defaultCurrency = settings.defaultCurrency()
+        val defaultCurrency = snapshot.defaultCurrency
         val liveVersion = filtered.maxOf { it.updatedAt }
         // Mirror TS currency grouping: totals cover one currency group, never
         // a mixed sum. Assist wins only when fresh; otherwise the default;
@@ -67,34 +75,36 @@ class ExpenseWidgetStore(
 
         val todayKey = formatDay(now)
         val monthPrefix = todayKey.substring(0, 7)
-        val todayRows = grouped.filter { it.dayKey == todayKey }
-        val monthRows = grouped.filter { it.dayKey.startsWith(monthPrefix) }
-
-        val last7Days =
-            (6 downTo 0).map { offset ->
-                val day = now.minusDays(offset.toLong())
-                val key = formatDay(day)
-                val dayRows = grouped.filter { it.dayKey == key }
-                val categories =
-                    dayRows
-                        .groupBy { it.category }
-                        .map { (category, rows) -> CategoryTotal(category, rows.sumOf { it.amount }) }
-                        .sortedBy { it.category }
-                DayTotal(key, dayRows.sumOf { it.amount }, categories)
+        var todayTotal = 0.0
+        var todayCount = 0
+        var monthTotal = 0.0
+        val days = (6 downTo 0).associate { formatDay(now.minusDays(it.toLong())) to sortedMapOf<String, Double>() }
+        val newestFirst = compareByDescending<WidgetExpense> { it.dayKey }.thenByDescending { it.updatedAt }
+        val recent = mutableListOf<WidgetExpense>()
+        for (row in grouped) {
+            if (row.dayKey == todayKey) {
+                todayTotal += row.amount
+                todayCount++
             }
-        val recent =
-            grouped
-                .sortedWith(
-                    compareByDescending<WidgetExpense> { it.dayKey }
-                        .thenByDescending { it.updatedAt },
-                ).take(recentLimit)
+            if (row.dayKey.startsWith(monthPrefix)) monthTotal += row.amount
+            days[row.dayKey]?.let { totals -> totals[row.category] = (totals[row.category] ?: 0.0) + row.amount }
+            if (recentLimit > 0) {
+                // Bounded insertion preserves stable input order for equal timestamps.
+                val index = recent.indexOfFirst { newestFirst.compare(row, it) < 0 }.let { if (it < 0) recent.size else it }
+                if (index < recentLimit) {
+                    recent.add(index, row)
+                    if (recent.size > recentLimit) recent.removeAt(recent.lastIndex)
+                }
+            }
+        }
+        val last7Days = days.map { (key, totals) -> DayTotal(key, totals.values.sum(), totals.map { CategoryTotal(it.key, it.value) }) }
 
         return WidgetResult.Ready(
             WidgetData(
                 currency = target,
-                todayTotal = todayRows.sumOf { it.amount },
-                todayCount = todayRows.size,
-                monthTotal = monthRows.sumOf { it.amount },
+                todayTotal = todayTotal,
+                todayCount = todayCount,
+                monthTotal = monthTotal,
                 last7Days = last7Days,
                 recent = recent,
                 dataVersion = liveVersion,

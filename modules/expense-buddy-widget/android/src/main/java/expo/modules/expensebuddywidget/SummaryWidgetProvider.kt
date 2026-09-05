@@ -10,6 +10,7 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         context: Context,
         manager: AppWidgetManager,
         widgetId: Int,
+        snapshot: () -> ExpenseWidgetStore.Snapshot,
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
@@ -55,6 +56,8 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         when (
             val result =
                 store(context).read(
+                    snapshot = snapshot(),
+                    recentLimit = 0,
                     filter = filter,
                     assistCurrency = assist?.currency,
                     assistVersion = assist?.dataVersion,
