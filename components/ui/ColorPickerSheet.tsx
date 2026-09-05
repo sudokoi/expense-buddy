@@ -7,6 +7,7 @@ import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
 import { UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { getReadableTextColor } from "../../constants/palette"
 
 interface ColorPickerSheetProps {
   /** Whether the sheet is open */
@@ -45,6 +46,7 @@ export function ColorPickerSheet({
       title={t("settings.categories.form.chooseColor")}
       snapPoints={[50]}
       unmountWhenClosed
+      scroll
     >
       <View className="flex-row flex-wrap justify-center gap-3">
         {CATEGORY_COLOR_PALETTE.map((color) => (
@@ -76,7 +78,7 @@ const ColorButton = memo(function ColorButton({
 }: ColorButtonProps) {
   const theme = useThemeColors()
   const selectedBorderColor = theme.accent
-  const checkColor = theme.foreground
+  const checkColor = getReadableTextColor(color)
 
   const handlePress = useCallback(() => {
     onSelect(color)
@@ -85,6 +87,7 @@ const ColorButton = memo(function ColorButton({
   return (
     <Pressable
       onPress={handlePress}
+      accessibilityRole="button"
       accessibilityLabel={`Select color ${color}`}
       accessibilityState={{ selected: isSelected }}
     >

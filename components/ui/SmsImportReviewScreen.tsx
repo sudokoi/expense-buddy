@@ -3,7 +3,12 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import Animated, { FadeIn, FadeOutUp, LinearTransition } from "react-native-reanimated"
+import Animated, {
+  FadeIn,
+  FadeOutUp,
+  LinearTransition,
+  useReducedMotion,
+} from "react-native-reanimated"
 import { Alert, Text, View } from "react-native"
 import { Button } from "./Button"
 import { Card } from "./Card"
@@ -51,6 +56,8 @@ import {
   UI_DURATION,
 } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { formatCurrency } from "../../utils/currency"
+import { formatDate } from "../../utils/date"
 
 type EditableSmsImportDraft = {
   amount: string
@@ -70,7 +77,7 @@ function formatTimestamp(value: string): string {
     return value
   }
 
-  return date.toLocaleString()
+  return formatDate(date, "PPp")
 }
 
 function getLocalizedCategoryLabel(
@@ -219,6 +226,7 @@ export function SmsImportReviewScreen({
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const reduceMotion = useReducedMotion()
   const { categories } = useCategories()
   const { settings, updateSettings } = useSettings()
   const paymentInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -239,6 +247,8 @@ export function SmsImportReviewScreen({
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
+  const [amountError, setAmountError] = useState<string | null>(null)
   const scrollViewRef = useRef<React.ElementRef<typeof KeyboardAwareScrollView>>(null)
   const resolvedSuggestions = useMemo(() => {
     const map = new Map<
@@ -261,12 +271,14 @@ export function SmsImportReviewScreen({
   )
 
   const closeEditor = useCallback(() => {
+    setAmountError(null)
     setEditingItemId(null)
     setEditingDraft(null)
   }, [])
 
   const openEditor = useCallback(
     (item: SmsImportReviewItem) => {
+      setAmountError(null)
       setEditingItemId(item.id)
       setEditingDraft(createDraftFromItem(item, categories, paymentInstruments))
     },
@@ -331,11 +343,15 @@ export function SmsImportReviewScreen({
       return
     }
 
+    if (!parseNumericAmount(editingDraft.amount, { allowZero: false }).success) {
+      setAmountError(t("smsImport.sheet.notifications.invalidAmount"))
+      return
+    }
     const accepted = acceptItem(editingItem, editingDraft)
     if (accepted) {
       closeEditor()
     }
-  }, [acceptItem, closeEditor, editingDraft, editingItem])
+  }, [acceptItem, closeEditor, editingDraft, editingItem, t])
 
   const handleAcceptAllSuggested = useCallback(() => {
     const acceptedPairs = pendingItems
@@ -497,6 +513,32 @@ export function SmsImportReviewScreen({
     [selectedPaymentConfig?.maxLength]
   )
 
+  const confirmClearResolved = () =>
+    Alert.alert(
+      t("smsImport.sheet.footer.clearResolved"),
+      t("smsImport.sheet.clearResolvedMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("smsImport.sheet.footer.clearResolved"),
+          style: "destructive",
+          onPress: clearResolvedItems,
+        },
+      ]
+    )
+  const confirmAcceptAll = () =>
+    Alert.alert(
+      t("smsImport.sheet.footer.acceptAllSuggested"),
+      t("smsImport.sheet.acceptAllMessage", { count: pendingItems.length }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("smsImport.sheet.footer.acceptAllSuggested"),
+          onPress: handleAcceptAllSuggested,
+        },
+      ]
+    )
+
   const footer = editingItem ? (
     <View className="flex-row justify-end gap-2">
       <Button onPress={closeEditor}>{t("common.cancel")}</Button>
@@ -514,7 +556,7 @@ export function SmsImportReviewScreen({
       <Button variant="destructive" onPress={handleRejectAllSuggested}>
         {t("smsImport.sheet.footer.rejectAllSuggested")}
       </Button>
-      <Button variant="accent" onPress={handleAcceptAllSuggested}>
+      <Button variant="accent" onPress={confirmAcceptAll}>
         {t("smsImport.sheet.footer.acceptAllSuggested")}
       </Button>
     </View>
@@ -525,7 +567,7 @@ export function SmsImportReviewScreen({
           ? t("smsImport.sheet.footer.hideResolved")
           : t("smsImport.sheet.footer.showResolved")}
       </Button>
-      <Button onPress={clearResolvedItems}>
+      <Button onPress={confirmClearResolved}>
         {t("smsImport.sheet.footer.clearResolved")}
       </Button>
     </View>
@@ -596,9 +638,12 @@ export function SmsImportReviewScreen({
               <View className="gap-2">
                 <Label>{t("smsImport.sheet.fields.amount")}</Label>
                 <Input
-                  keyboardType="numeric"
+                  keyboardType="decimal-pad"
+                  accessibilityLabel={t("smsImport.sheet.fields.amount")}
+                  className={amountError ? "border-error" : undefined}
                   value={editingDraft.amount}
                   onChangeText={(amount) => {
+                    setAmountError(null)
                     setEditingDraft((current) =>
                       current
                         ? {
@@ -610,6 +655,11 @@ export function SmsImportReviewScreen({
                   }}
                   placeholderTextColor={theme.foreground}
                 />
+                {amountError ? (
+                  <Text className="text-sm text-error" accessibilityRole="alert">
+                    {amountError}
+                  </Text>
+                ) : null}
               </View>
 
               <View className="gap-2">
@@ -621,6 +671,7 @@ export function SmsImportReviewScreen({
                       compact
                       isSelected={editingDraft.category === category.label}
                       categoryColor={category.color}
+                      iconName={category.icon}
                       label={category.label}
                       onPress={() => {
                         setEditingDraft((current) =>
@@ -707,6 +758,7 @@ export function SmsImportReviewScreen({
                             : "numeric"
                         }
                         value={editingDraft.paymentMethodIdentifier ?? ""}
+                        accessibilityLabel={t("history.editDialog.fields.identifier")}
                         onChangeText={handleIdentifierChange}
                         maxLength={selectedPaymentConfig.maxLength}
                         placeholderTextColor={theme.foreground}
@@ -720,6 +772,7 @@ export function SmsImportReviewScreen({
                 <Label>{t("smsImport.sheet.fields.note")}</Label>
                 <Input
                   value={editingDraft.note}
+                  accessibilityLabel={t("smsImport.sheet.fields.note")}
                   onChangeText={(note) => {
                     setEditingDraft((current) =>
                       current
@@ -770,9 +823,17 @@ export function SmsImportReviewScreen({
                   {pendingItems.map((item) => (
                     <Animated.View
                       key={item.id}
-                      layout={LinearTransition.duration(UI_DURATION.instant)}
-                      entering={FadeIn.duration(UI_DURATION.instant)}
-                      exiting={FadeOutUp.duration(UI_DURATION.subtle)}
+                      layout={
+                        reduceMotion
+                          ? undefined
+                          : LinearTransition.duration(UI_DURATION.instant)
+                      }
+                      entering={
+                        reduceMotion ? undefined : FadeIn.duration(UI_DURATION.instant)
+                      }
+                      exiting={
+                        reduceMotion ? undefined : FadeOutUp.duration(UI_DURATION.subtle)
+                      }
                     >
                       <Card className="p-3">
                         <View className="gap-3">
@@ -794,7 +855,9 @@ export function SmsImportReviewScreen({
                           </View>
 
                           <View className="gap-1">
-                            {formatSuggestionDebugText(item, t) ? (
+                            {__DEV__ &&
+                            expandedMessageId === item.id &&
+                            formatSuggestionDebugText(item, t) ? (
                               <Text
                                 className="text-[11px] text-foreground"
                                 style={{ opacity: UI_OPACITY.faint }}
@@ -805,7 +868,10 @@ export function SmsImportReviewScreen({
                             <Text className="text-foreground">
                               {t("smsImport.sheet.labels.amount")}:{" "}
                               {typeof item.amount === "number"
-                                ? `${item.currency || settings.defaultCurrency || "INR"} ${item.amount}`
+                                ? formatCurrency(
+                                    item.amount,
+                                    item.currency || settings.defaultCurrency
+                                  )
                                 : t("smsImport.sheet.values.needsReview")}
                             </Text>
                             <Text className="text-foreground">
@@ -825,13 +891,25 @@ export function SmsImportReviewScreen({
                                 t
                               )}
                             </Text>
-                            <Text
-                              className="text-foreground"
-                              numberOfLines={3}
-                              style={{ opacity: UI_OPACITY.medium }}
+                            <Button
+                              size="compact"
+                              variant="ghost"
+                              onPress={() =>
+                                setExpandedMessageId(
+                                  expandedMessageId === item.id ? null : item.id
+                                )
+                              }
+                              accessibilityState={{
+                                expanded: expandedMessageId === item.id,
+                              }}
                             >
-                              {item.sourceMessage.body}
-                            </Text>
+                              {t("smsImport.sheet.sourceSms")}
+                            </Button>
+                            {expandedMessageId === item.id ? (
+                              <Text className="text-sm text-muted-foreground">
+                                {item.sourceMessage.body}
+                              </Text>
+                            ) : null}
                           </View>
 
                           <View className="flex-row flex-wrap gap-2">
@@ -870,7 +948,7 @@ export function SmsImportReviewScreen({
                     >
                       {t("smsImport.sheet.sectionTitles.resolved")}
                     </Text>
-                    <Button size="compact" onPress={clearResolvedItems}>
+                    <Button size="compact" onPress={confirmClearResolved}>
                       {t("smsImport.sheet.footer.clearResolved")}
                     </Button>
                   </View>
@@ -878,8 +956,14 @@ export function SmsImportReviewScreen({
                   {resolvedItems.map((item) => (
                     <Animated.View
                       key={item.id}
-                      layout={LinearTransition.duration(UI_DURATION.instant)}
-                      entering={FadeIn.duration(UI_DURATION.instant)}
+                      layout={
+                        reduceMotion
+                          ? undefined
+                          : LinearTransition.duration(UI_DURATION.instant)
+                      }
+                      entering={
+                        reduceMotion ? undefined : FadeIn.duration(UI_DURATION.instant)
+                      }
                     >
                       <Card className="p-3" style={{ opacity: UI_OPACITY.strong }}>
                         <View className="gap-2">

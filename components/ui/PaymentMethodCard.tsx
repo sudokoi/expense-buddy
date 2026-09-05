@@ -4,6 +4,7 @@ import { PaymentMethodConfig } from "../../constants/payment-methods"
 import { useTranslation } from "react-i18next"
 import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { Check } from "lucide-react-native"
 
 interface PaymentMethodCardProps {
   config: PaymentMethodConfig
@@ -34,22 +35,21 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? t(`paymentMethods.${config.i18nKey}`)}
       accessibilityState={{ selected: isSelected }}
-      className="rounded-card bg-surface p-2 px-3"
+      className="min-h-12 max-w-full justify-center rounded-control p-2 px-3 active:opacity-60"
       style={{
-        backgroundColor: isSelected ? theme.accent : theme.muted,
+        backgroundColor: isSelected ? theme.accent : theme.surface,
         borderColor: isSelected ? accent : theme.border,
-        borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
+        borderWidth: UI_BORDER_WIDTH.thin,
       }}
     >
       <View className="flex-row items-center gap-2">
-        <Icon
-          size={UI_ICON_SIZE.small}
-          color={isSelected ? theme.accentForeground : theme.foreground}
-        />
+        {isSelected ? (
+          <Check size={UI_ICON_SIZE.small} color={theme.accentForeground} />
+        ) : (
+          <Icon size={UI_ICON_SIZE.small} color={theme.foreground} />
+        )}
         <Text
-          className="text-xs text-foreground"
-          adjustsFontSizeToFit
-          numberOfLines={1}
+          className="shrink text-sm text-foreground"
           style={{
             fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
             color: isSelected ? theme.accentForeground : theme.foreground,

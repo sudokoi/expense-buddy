@@ -257,15 +257,15 @@ export function GitHubConfigSection({
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         accessibilityLabel={t("settings.github.configTitle")}
-        className="bg-surface flex-row items-center justify-between p-3 rounded-control"
+        className="min-h-12 bg-surface flex-row items-center justify-between py-2 rounded-control"
       >
-        <View className="flex-row items-center flex-1 gap-2 min-w-0 max-w-[85%]">
+        <View className="flex-1 gap-1 pr-3">
           <Text className="font-medium text-foreground">
             {t("settings.github.configTitle")}
           </Text>
           {isConfigured && (
             <View className="flex-col items-start gap-0.5 shrink min-w-0">
-              <View style={{ minWidth: 0, alignItems: "center", gap: UI_SPACE.micro }}>
+              <View className="flex-row items-center gap-1">
                 <Check
                   size={14}
                   color={SEMANTIC_FOREGROUND_COLORS[themeScheme].success}
@@ -276,8 +276,8 @@ export function GitHubConfigSection({
               </View>
               {repo ? (
                 <Text
-                  className="text-xs text-foreground opacity-70"
-                  numberOfLines={1}
+                  className="text-xs text-muted-foreground"
+                  numberOfLines={2}
                   ellipsizeMode="middle"
                   style={{ flexShrink: 1, minWidth: 0 }}
                 >
@@ -371,6 +371,7 @@ export function GitHubConfigSection({
                 className={configErrors.repo ? "border-error" : undefined}
                 placeholder={t("settings.github.repoPlaceholderNative")}
                 value={repo}
+                accessibilityLabel={t("settings.github.repoLabel")}
                 readOnly
               />
               <Button size="compact" onPress={handleChooseRepo} disabled={!token}>
@@ -389,6 +390,9 @@ export function GitHubConfigSection({
               className={configErrors.branch ? "border-error" : undefined}
               placeholder="main"
               value={branch}
+              accessibilityLabel={t("settings.github.branchLabel")}
+              autoCapitalize="none"
+              autoCorrect={false}
               onChangeText={handleBranchChange}
             />
             {configErrors.branch && (
@@ -421,7 +425,7 @@ export function GitHubConfigSection({
               variant={
                 connectionStatus === "success" || connectionStatus === "error"
                   ? "default"
-                  : "accent"
+                  : "outline"
               }
               icon={
                 connectionStatus === "success" ? (
@@ -429,7 +433,7 @@ export function GitHubConfigSection({
                 ) : connectionStatus === "error" ? (
                   <X size={16} color={errorTextColor} />
                 ) : isTesting ? (
-                  <Spinner size="small" color={theme.accentForeground} />
+                  <Spinner size="small" color={theme.foreground} />
                 ) : null
               }
             >
@@ -440,7 +444,7 @@ export function GitHubConfigSection({
                       ? successTextColor
                       : connectionStatus === "error"
                         ? errorTextColor
-                        : theme.accentForeground,
+                        : theme.foreground,
                 }}
               >
                 {isTesting ? t("settings.github.testing") : t("settings.github.test")}

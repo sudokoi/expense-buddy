@@ -1,8 +1,10 @@
-import { Pressable, Text } from "react-native"
+import { Pressable, Text, View } from "react-native"
+import { Check } from "lucide-react-native"
+import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
+import { getReadableTextColor } from "../../constants/palette"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { resolveCategoryVisual } from "../../utils/resolve-category-color"
 import { UI_FONT_SIZE, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
 
 interface CategoryCardProps {
@@ -12,6 +14,7 @@ interface CategoryCardProps {
   onPress: () => void
   compact?: boolean
   accessibilityLabel?: string
+  iconName?: string
 }
 
 /**
@@ -26,10 +29,10 @@ export const CategoryCard = memo(function CategoryCard({
   onPress,
   compact = false,
   accessibilityLabel,
+  iconName = "Circle",
 }: CategoryCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
-  const visual = resolveCategoryVisual(categoryColor, isSelected, theme)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
@@ -41,23 +44,35 @@ export const CategoryCard = memo(function CategoryCard({
       accessibilityState={{ selected: isSelected }}
       className={
         compact
-          ? "w-[22%] items-center justify-center rounded-control p-2"
-          : "w-[30%] items-center justify-center rounded-chip p-3"
+          ? "min-h-12 max-w-full flex-row items-center gap-2 rounded-control px-3 py-2 active:opacity-60"
+          : "min-h-12 max-w-full flex-row items-center gap-2 rounded-chip p-3 active:opacity-60"
       }
       style={{
-        backgroundColor: visual.backgroundColor,
-        borderColor: visual.borderColor,
-        borderWidth: isSelected ? UI_BORDER_WIDTH.normal : UI_BORDER_WIDTH.thin,
+        backgroundColor: isSelected ? theme.accent : theme.surface,
+        borderColor: isSelected ? theme.accent : theme.border,
+        borderWidth: UI_BORDER_WIDTH.thin,
       }}
     >
+      {isSelected ? (
+        <Check size={16} color={theme.accentForeground} />
+      ) : (
+        <View
+          className="h-6 w-6 items-center justify-center rounded-full"
+          style={{ backgroundColor: categoryColor }}
+        >
+          <DynamicCategoryIcon
+            name={iconName}
+            size={14}
+            color={getReadableTextColor(categoryColor)}
+          />
+        </View>
+      )}
       <Text
-        className="text-foreground"
-        adjustsFontSizeToFit
-        numberOfLines={1}
+        className="shrink text-foreground"
         style={{
           fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
-          color: visual.textColor,
-          fontSize: compact ? UI_FONT_SIZE.micro : UI_FONT_SIZE.body,
+          color: isSelected ? theme.accentForeground : theme.foreground,
+          fontSize: UI_FONT_SIZE.label,
         }}
       >
         {displayLabel}

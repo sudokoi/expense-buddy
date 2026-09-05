@@ -75,6 +75,7 @@
     "required": "必須"
   },
   "navigation": {
+    "addTab": "追加",
     "add": "支出を追加",
     "analytics": "分析",
     "history": "履歴",
@@ -94,6 +95,9 @@
     "configSave": "ウィジェットを追加"
   },
   "history": {
+    "transactionActions": "取引の操作",
+    "resultsSummary_one": "{{count}}件の支出 · {{total}}",
+    "resultsSummary_other": "{{count}}件の支出 · {{total}}",
     "emptyTitle": "支出がまだありません。",
     "emptySubtitle": "「支出を追加」タブから追加してください。",
     "deleteDialog": {
@@ -141,6 +145,7 @@
     }
   },
   "add": {
+    "saveAndAddAnother": "保存して次を追加",
     "amount": "金額",
     "amountPlaceholder": "0 または 100+50",
     "amountPlaceholderNumeric": "0.00",
@@ -161,6 +166,11 @@
   "analytics": {
     "subtitle": "支出パターンを追跡",
     "filters": {
+      "apply": "フィルターを適用",
+      "sharedHelp": "フィルターは分析と履歴の両方に適用されます。カテゴリーや支払方法は複数選択できます。",
+      "noLimit": "上限なし",
+      "invalidAmount": "0以上の有効な金額を入力してください。",
+      "invalidRange": "上限額は下限額以上にしてください。",
       "button": "フィルター",
       "time": "期間: {{window}}",
       "month": "月: {{month}}",
@@ -192,6 +202,7 @@
       "others": "その他"
     },
     "stats": {
+      "allTime": "全期間",
       "totalSpent": "総支出",
       "dailyAvg": "一日平均",
       "topCategory": "最多カテゴリー",
@@ -204,7 +215,8 @@
         "noData": "この期間のデータはありません"
       },
       "category": {
-        "title": "カテゴリー別支出"
+        "title": "カテゴリー別支出",
+        "hint": "カテゴリーをタップするとフィルターを切り替えられます。"
       },
       "paymentMethod": {
         "title": "支払方法別支出"
@@ -215,6 +227,13 @@
       },
       "trend": {
         "title": "支出傾向",
+        "daily": "日別の支出",
+        "weekly": "週別の支出",
+        "monthly": "月別の支出",
+        "periodTotal": "期間の合計: {{total}}",
+        "previous": "前の期間",
+        "next": "次の期間",
+        "hint": "チャートをタップするか矢印で期間ごとの支出を確認できます。",
         "accessibilityLabel": "支出トレンド。合計 {{total}}"
       }
     }
@@ -435,6 +454,8 @@
   },
   "smsImport": {
     "sheet": {
+      "clearResolvedMessage": "処理済みの項目をこの確認リストから削除しますか？保存した支出は削除されません。",
+      "acceptAllMessage": "未処理の{{count}}件から提案された支出を保存しますか？金額が未入力または無効な項目は確認用に残ります。",
       "title": "SMSインポートを確認",
       "editTitle": "SMSインポートを編集",
       "subtitle": {

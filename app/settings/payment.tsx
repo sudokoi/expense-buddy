@@ -4,11 +4,11 @@ import { Alert, Text, View } from "react-native"
 import { useTranslation } from "react-i18next"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { SettingsSection } from "../../components/ui/SettingsSection"
+import { Card } from "../../components/ui/Card"
 import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPaymentMethodSelector"
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { CategorySection } from "../../components/ui/CategorySection"
 import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
-import { Label } from "../../components/ui/Label"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useCategories,
@@ -39,7 +39,7 @@ export default function PaymentSettingsScreen() {
     const value = settings.defaultPaymentMethod
     if (!value) return t("settings.defaultPayment.none")
     const match = PAYMENT_METHODS.find((method) => method.value === value)
-    return match?.label ?? value
+    return match ? t(`paymentMethods.${match.i18nKey}`) : value
   }, [settings.defaultPaymentMethod, t])
   const activePaymentInstrumentCount = useMemo(
     () =>
@@ -139,7 +139,7 @@ export default function PaymentSettingsScreen() {
             gap="$gutter"
           >
             <View className="flex-row flex-wrap gap-3">
-              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+              <View className="flex-1 gap-1 min-w-[80px]">
                 <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.defaultPayment.label")}
                 </Text>
@@ -148,7 +148,7 @@ export default function PaymentSettingsScreen() {
                 </Text>
               </View>
 
-              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+              <View className="flex-1 gap-1 min-w-[80px]">
                 <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.payment.instrumentsTitle")}
                 </Text>
@@ -157,7 +157,7 @@ export default function PaymentSettingsScreen() {
                 </Text>
               </View>
 
-              <View className="flex-1 bg-surface p-3 gap-1 min-w-[120px] rounded-chip">
+              <View className="flex-1 gap-1 min-w-[80px]">
                 <Text className="text-xs text-foreground opacity-60 font-bold">
                   {t("settings.payment.categoriesTitle")}
                 </Text>
@@ -173,8 +173,7 @@ export default function PaymentSettingsScreen() {
             description={t("settings.defaultPayment.description")}
           >
             <View className="gap-2">
-              <Label>{t("settings.sections.defaultPayment")}</Label>
-              <View className="bg-surface p-3 rounded-card">
+              <View>
                 <DefaultPaymentMethodSelector
                   value={settings.defaultPaymentMethod}
                   onChange={(paymentMethod) =>
@@ -190,17 +189,11 @@ export default function PaymentSettingsScreen() {
             </View>
           </SettingsSection>
 
-          <SettingsSection
-            title={t("settings.payment.instrumentsTitle")}
-            description={t("instruments.description")}
-          >
+          <Card className="p-3">
             <PaymentInstrumentsSection />
-          </SettingsSection>
+          </Card>
 
-          <SettingsSection
-            title={t("settings.payment.categoriesTitle")}
-            description={t("settings.categories.description")}
-          >
+          <Card className="p-3">
             <CategorySection
               categories={categories}
               onAdd={() => {
@@ -215,7 +208,7 @@ export default function PaymentSettingsScreen() {
               onReorder={reorderCategories}
               getExpenseCount={getExpenseCountForCategory}
             />
-          </SettingsSection>
+          </Card>
         </View>
       </ScreenContainer>
 

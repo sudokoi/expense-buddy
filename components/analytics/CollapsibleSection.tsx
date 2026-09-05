@@ -33,15 +33,15 @@ export const CollapsibleSection = memo(function CollapsibleSection({
       <Pressable
         onPress={toggleExpanded}
         accessibilityRole="button"
-        accessibilityLabel={isExpanded ? `${title}, collapse` : `${title}, expand`}
+        accessibilityLabel={title}
         accessibilityState={{ expanded: isExpanded }}
       >
         <View
-          className={`flex-row items-center justify-between rounded-t-card bg-surface p-2.5 ${
+          className={`min-h-12 flex-row items-center justify-between gap-2 rounded-t-card bg-surface p-3 ${
             isExpanded ? "rounded-b-none" : "rounded-b-card"
           }`}
         >
-          <Text className="text-sm font-bold text-foreground">{title}</Text>
+          <Text className="flex-1 text-sm font-bold text-foreground">{title}</Text>
           {isExpanded ? (
             <ChevronUp size={UI_ICON_SIZE.medium} color={theme.foreground} />
           ) : (

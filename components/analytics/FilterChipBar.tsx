@@ -2,31 +2,29 @@ import type { ReactNode, ComponentType } from "react"
 import { memo } from "react"
 import { ScrollView, View } from "react-native"
 import { Button } from "../ui/Button"
+import { Check } from "lucide-react-native"
 
 /**
- * Deep module for analytics filter chips — owns the horizontal ScrollView seam
- * and the selected-vs-outline variant logic so individual filters stay anemic
- * and keep only their data-mapping (`interface`).
- *
- * Benefits: locality (gap, paddingHorizontal, nestedScrollEnabled in one place),
- * leverage (adding a chip type touches data array, not 6 style branches),
- * testability (interface is items + onToggle).
+ * Shared filter chip layout and selection styling. Wrap choices so they remain
+ * discoverable; opt into horizontal scrolling for open-ended month lists.
  */
 
 interface FilterChipBarProps {
   children: ReactNode
+  horizontal?: boolean
 }
 
 export const FilterChipBar = memo(function FilterChipBar({
   children,
+  horizontal = false,
 }: FilterChipBarProps) {
+  if (!horizontal) return <View className="flex-row flex-wrap gap-2">{children}</View>
   return (
     <ScrollView
       horizontal
       nestedScrollEnabled
-      showsHorizontalScrollIndicator={false}
-      className="mb-5"
-      contentContainerStyle={{ paddingHorizontal: 4 }}
+      showsHorizontalScrollIndicator
+      contentContainerStyle={{ paddingBottom: 8 }}
     >
       <View className="flex-row gap-2">{children}</View>
     </ScrollView>
@@ -50,9 +48,11 @@ export const FilterChip = memo(function FilterChip({
 }: FilterChipProps) {
   return (
     <Button
-      size="chip"
+      size="compact"
       variant={selected ? "accent" : "outline"}
-      icon={Icon ? <Icon size={iconSize} /> : undefined}
+      icon={
+        selected ? <Check size={iconSize} /> : Icon ? <Icon size={iconSize} /> : undefined
+      }
       onPress={onPress}
       accessibilityState={{ selected }}
     >

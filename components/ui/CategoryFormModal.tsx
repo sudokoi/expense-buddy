@@ -203,6 +203,7 @@ export function CategoryFormModal({
             : t("settings.categories.form.addTitle")
         }
         snapPoints={[90]}
+        scroll
         frameStyle={frameStyle}
       >
         <View className="gap-4">
@@ -235,6 +236,7 @@ export function CategoryFormModal({
             </Label>
             <Pressable
               onPress={handleOpenIconPicker}
+              accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseIcon")}
             >
               <View className="flex-row items-center gap-3 p-3 rounded-control border-2 bg-surface border-border">
@@ -264,6 +266,7 @@ export function CategoryFormModal({
             </Label>
             <Pressable
               onPress={handleOpenColorPicker}
+              accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseColor")}
             >
               <View className="flex-row justify-end gap-3 mt-2">

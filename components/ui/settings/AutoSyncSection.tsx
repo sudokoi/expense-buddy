@@ -91,31 +91,29 @@ export function AutoSyncSection({
         <View className="gap-2 mt-1 rounded-card bg-surface p-3">
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
-            <View className="flex-row items-center gap-2 my-2">
-              <RadioGroup.Item
-                value="on_launch"
-                accessibilityLabel={t("settings.autoSync.onLaunch")}
-              />
+            <RadioGroup.Item
+              value="on_launch"
+              accessibilityLabel={t("settings.autoSync.onLaunch")}
+            >
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onLaunch")}</Label>
                 <Text className="text-xs text-foreground opacity-60">
                   {t("settings.autoSync.onLaunchHelp")}
                 </Text>
               </View>
-            </View>
+            </RadioGroup.Item>
 
-            <View className="flex-row items-center gap-2 my-2">
-              <RadioGroup.Item
-                value="on_change"
-                accessibilityLabel={t("settings.autoSync.onChange")}
-              />
+            <RadioGroup.Item
+              value="on_change"
+              accessibilityLabel={t("settings.autoSync.onChange")}
+            >
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onChange")}</Label>
                 <Text className="text-xs text-foreground opacity-60">
                   {t("settings.autoSync.onChangeHelp")}
                 </Text>
               </View>
-            </View>
+            </RadioGroup.Item>
           </RadioGroup>
         </View>
       )}

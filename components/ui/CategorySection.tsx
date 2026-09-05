@@ -105,6 +105,9 @@ export const CategorySection = memo(function CategorySection({
       <View>
         <Pressable
           onPress={() => setExpanded((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          accessibilityLabel={t("settings.categories.manage")}
           className="flex-row items-center justify-between rounded-control bg-surface p-3"
         >
           <View className="flex-1 flex-row items-center gap-2">
@@ -141,9 +144,10 @@ export const CategorySection = memo(function CategorySection({
             <View className="gap-2">
               {reorderableCategories.map((category, index) => (
                 <View key={category.label} className="flex-row items-center gap-1">
-                  <View className="w-6 items-center justify-center">
+                  <View className="w-12 items-center justify-center">
                     <Pressable
                       onPress={() => handleMoveUp(index)}
+                      className="h-12 w-12 items-center justify-center"
                       disabled={index === 0}
                       accessibilityRole="button"
                       accessibilityLabel={t("settings.categories.moveUp", {
@@ -158,6 +162,7 @@ export const CategorySection = memo(function CategorySection({
                     </Pressable>
                     <Pressable
                       onPress={() => handleMoveDown(index)}
+                      className="h-12 w-12 items-center justify-center"
                       disabled={index === reorderableCategories.length - 1}
                       accessibilityRole="button"
                       accessibilityLabel={t("settings.categories.moveDown", {

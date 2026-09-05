@@ -1,7 +1,6 @@
 import { View, Text } from "react-native"
 import { ReactNode } from "react"
 import { Card } from "./Card"
-import { UI_OPACITY } from "../../constants/ui-tokens"
 
 type SemanticSpaceToken =
   "$micro" | "$control" | "$section" | "$gutter" | "$block" | "$empty"
@@ -36,22 +35,17 @@ export function SettingsSection({
   gap = "$section",
 }: SettingsSectionProps) {
   return (
-    <Card className="p-4">
+    <Card className="p-3">
       <View className={gapClass[gap]}>
         <View className="gap-1 border-b border-border pb-2">
           <Text
-            className="text-xs font-bold uppercase tracking-wide text-foreground"
-            style={{ opacity: UI_OPACITY.faint }}
+            className="text-sm font-semibold text-foreground"
+            accessibilityRole="header"
           >
             {title}
           </Text>
           {description ? (
-            <Text
-              className="text-[13px] text-foreground"
-              style={{ opacity: UI_OPACITY.medium }}
-            >
-              {description}
-            </Text>
+            <Text className="text-sm text-muted-foreground">{description}</Text>
           ) : null}
         </View>
         {children}

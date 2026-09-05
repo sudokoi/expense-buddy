@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { View } from "react-native"
 import { Input } from "../ui/Input"
 import { X } from "lucide-react-native"
@@ -9,44 +8,26 @@ import { useTranslation } from "react-i18next"
 interface SearchFilterProps {
   value: string
   onChange: (value: string) => void
-  debounceMs?: number
 }
 
-export function SearchFilter({ value, onChange, debounceMs = 300 }: SearchFilterProps) {
+export function SearchFilter({ value, onChange }: SearchFilterProps) {
   const { t } = useTranslation()
-  const [inputValue, setInputValue] = useState(value)
-
-  // Debounce the actual filter update
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (inputValue !== value) {
-        onChange(inputValue)
-      }
-    }, debounceMs)
-
-    return () => clearTimeout(timer)
-  }, [inputValue, debounceMs, onChange, value])
-
-  // Sync external value changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs controlled prop to internal debounced state
-    setInputValue(value)
-  }, [value])
 
   return (
     <View className="flex-row items-center gap-2">
       <Input
         className="flex-1 bg-background"
-        value={inputValue}
-        onChangeText={setInputValue}
+        value={value}
+        onChangeText={onChange}
+        autoCorrect={false}
+        returnKeyType="search"
         placeholder={t("analytics.filters.search")}
         accessibilityLabel={t("analytics.filters.search")}
       />
-      {inputValue.length > 0 && (
+      {value.length > 0 && (
         <IconActionButton
           icon={<X size={UI_ICON_SIZE.small} />}
           onPress={() => {
-            setInputValue("")
             onChange("")
           }}
           tooltip={t("common.clearSearch")}

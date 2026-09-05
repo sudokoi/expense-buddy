@@ -1,202 +1,86 @@
 import { memo } from "react"
 import { Text, View } from "react-native"
 import { Card } from "../ui/Card"
-import { parseISO } from "date-fns"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import type { AnalyticsStatistics } from "../../utils/analytics/statistics"
-import { CARD_COLORS } from "../../constants/palette"
 import { useTranslation } from "react-i18next"
-import { useThemeScheme } from "../../hooks/use-theme-colors"
 
 interface StatisticsCardsProps {
   statistics: AnalyticsStatistics
   currencyCode?: string
-  /** Full-period (grand) total ignoring all filters, shown as subtext */
+  periodLabel: string
   fullPeriodTotalSpending?: number
-  /** Show the subtext whenever any filter is active (not the default/reset state) */
   hasActiveFilters?: boolean
 }
 
-/**
- * StatisticsCards - Display four summary cards in a 2x2 grid
- * Shows total spending, average daily, highest category, and highest day
- */
+const amountTextStyle = { fontVariant: ["tabular-nums" as const] }
+
 export const StatisticsCards = memo(function StatisticsCards({
   statistics,
   currencyCode = "INR",
+  periodLabel,
   fullPeriodTotalSpending,
   hasActiveFilters = false,
 }: StatisticsCardsProps) {
   const { t } = useTranslation()
-  const scheme = useThemeScheme()
-  const colors = CARD_COLORS[scheme]
-
-  // Tabular numerals keep digit widths fixed so card values don't jitter as
-  // they update, and prevent layout shifts while typing in the amount field.
-  const amountTextStyle = { fontVariant: ["tabular-nums" as const] }
-
-  // Show the subtext whenever any filter narrows the data below the full-period
-  // total. In the default/reset state (no active filters) the headline already
-  // equals the full-period total, so the subtext would just repeat it.
-  const showSubtext = hasActiveFilters && fullPeriodTotalSpending !== undefined
-
-  const formatDateStr = (dateStr: string): string => {
-    try {
-      return formatDate(parseISO(dateStr), "MMM d")
-    } catch {
-      return dateStr
-    }
-  }
-
   return (
-    <View className="mb-4 gap-3">
-      {/* First row */}
-      <View className="flex-row gap-3">
-        <Card className="flex-1 p-3" style={{ backgroundColor: colors.blue.bg }}>
-          <Text
-            className="text-xs font-bold uppercase"
-            style={{ color: colors.blue.text }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {t("analytics.stats.totalSpent")}
+    <Card className="mb-4 gap-4 p-4">
+      <View className="gap-1">
+        <Text className="text-sm text-muted-foreground">
+          {t("analytics.stats.totalSpent")} · {periodLabel}
+        </Text>
+        <Text className="text-3xl font-semibold text-foreground" style={amountTextStyle}>
+          {formatCurrency(statistics.totalSpending, currencyCode)}
+        </Text>
+        {hasActiveFilters && fullPeriodTotalSpending !== undefined ? (
+          <Text className="text-xs text-muted-foreground">
+            {t("analytics.stats.ofTotal", {
+              total: formatCurrency(fullPeriodTotalSpending, currencyCode),
+            })}
           </Text>
-          <Text
-            className="mt-2 text-lg font-semibold"
-            style={{ color: colors.blue.accent, ...amountTextStyle }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {formatCurrency(statistics.totalSpending, currencyCode)}
-          </Text>
-          {showSubtext && (
-            <Text
-              className="text-xs"
-              style={{ color: colors.blue.text }}
-              numberOfLines={1}
-            >
-              {t("analytics.stats.ofTotal", {
-                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
-              })}
-            </Text>
-          )}
-        </Card>
-
-        <Card className="flex-1 p-3" style={{ backgroundColor: colors.green.bg }}>
-          <Text
-            className="text-xs font-bold uppercase"
-            style={{ color: colors.green.text }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
+        ) : null}
+      </View>
+      <View className="flex-row flex-wrap gap-4 border-t border-border pt-3">
+        <View className="min-w-[120px] flex-1 gap-1">
+          <Text className="text-xs text-muted-foreground">
             {t("analytics.stats.dailyAvg")}
           </Text>
           <Text
-            className="mt-2 text-lg font-semibold"
-            style={{ color: colors.green.accent, ...amountTextStyle }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
+            className="text-base font-semibold text-foreground"
+            style={amountTextStyle}
           >
             {formatCurrency(statistics.averageDaily, currencyCode)}
           </Text>
-          {showSubtext && (
-            <Text
-              className="text-xs"
-              style={{ color: colors.green.text }}
-              numberOfLines={1}
-            >
-              {t("analytics.stats.ofTotal", {
-                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
-              })}
-            </Text>
-          )}
-        </Card>
-      </View>
-
-      {/* Second row */}
-      <View className="flex-row gap-3">
-        <Card className="flex-1 p-3" style={{ backgroundColor: colors.orange.bg }}>
-          <Text
-            className="text-xs font-bold uppercase"
-            style={{ color: colors.orange.text }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
+        </View>
+        <View className="min-w-[120px] flex-1 gap-1">
+          <Text className="text-xs text-muted-foreground">
             {t("analytics.stats.topCategory")}
           </Text>
-          <Text
-            className="mt-2 text-lg font-semibold"
-            style={{ color: colors.orange.accent }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-          >
+          <Text className="text-base font-semibold text-foreground">
             {statistics.highestCategory?.category === "Other"
               ? t("settings.categories.other")
               : (statistics.highestCategory?.category ?? "—")}
           </Text>
-          {statistics.highestCategory && (
-            <Text className="text-xs" style={{ color: colors.orange.text }}>
+          {statistics.highestCategory ? (
+            <Text className="text-xs text-muted-foreground">
               {formatCurrency(statistics.highestCategory.amount, currencyCode)}
             </Text>
-          )}
-          {showSubtext && (
-            <Text
-              className="text-xs"
-              style={{ color: colors.orange.text }}
-              numberOfLines={1}
-            >
-              {t("analytics.stats.ofTotal", {
-                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
-              })}
-            </Text>
-          )}
-        </Card>
-
-        <Card className="flex-1 p-3" style={{ backgroundColor: colors.purple.bg }}>
-          <Text
-            className="text-xs font-bold uppercase"
-            style={{ color: colors.purple.text }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {t("analytics.stats.peakDay")}
-          </Text>
-          <Text
-            className="mt-2 text-lg font-semibold"
-            style={{ color: colors.purple.accent }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.5}
-          >
-            {statistics.highestDay ? formatDateStr(statistics.highestDay.date) : "—"}
-          </Text>
-          {statistics.highestDay && (
-            <Text className="text-xs" style={{ color: colors.purple.text }}>
-              {formatCurrency(statistics.highestDay.amount, currencyCode)}
-            </Text>
-          )}
-          {showSubtext && (
-            <Text
-              className="text-xs"
-              style={{ color: colors.purple.text }}
-              numberOfLines={1}
-            >
-              {t("analytics.stats.ofTotal", {
-                total: formatCurrency(fullPeriodTotalSpending!, currencyCode),
-              })}
-            </Text>
-          )}
-        </Card>
+          ) : null}
+        </View>
       </View>
-    </View>
+      {statistics.highestDay ? (
+        <View className="flex-row flex-wrap justify-between gap-2 border-t border-border pt-3">
+          <Text className="text-xs text-muted-foreground">
+            {t("analytics.stats.peakDay")} ·{" "}
+            {formatDate(statistics.highestDay.date, "PP")}
+          </Text>
+          <Text className="text-xs font-semibold text-foreground" style={amountTextStyle}>
+            {formatCurrency(statistics.highestDay.amount, currencyCode)}
+          </Text>
+        </View>
+      ) : null}
+    </Card>
   )
 })
 

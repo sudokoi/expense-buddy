@@ -119,11 +119,11 @@ export function IconActionButton({
           onPress={handlePress}
           onLongPress={handleLongPress}
           disabled={disabled}
-          hitSlop={8}
           aria-label={accessibilityLabel ?? tooltip}
           accessibilityRole="button"
           accessibilityState={{ disabled: !!disabled }}
-          className="items-center justify-center p-2"
+          className="min-h-12 min-w-12 items-center justify-center rounded-control p-2 active:opacity-60"
+          style={{ opacity: disabled ? 0.4 : 1 }}
         >
           <LucideProvider color={theme.foreground}>{icon}</LucideProvider>
         </Pressable>

@@ -51,14 +51,20 @@ function RadioGroupItem({
       onPress={() => ctx.onValueChange(value)}
       accessibilityRole="radio"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ selected }}
+      accessibilityState={{ checked: selected }}
       className={cn(
-        "h-5 w-5 items-center justify-center rounded-full border-2",
-        selected ? "border-accent" : "border-border",
+        "min-h-12 flex-row items-center gap-3 rounded-control py-2",
         className
       )}
     >
-      {selected ? <View className="h-2.5 w-2.5 rounded-full bg-accent" /> : null}
+      <View
+        className={cn(
+          "h-5 w-5 items-center justify-center rounded-full border-2",
+          selected ? "border-accent" : "border-border"
+        )}
+      >
+        {selected ? <View className="h-2.5 w-2.5 rounded-full bg-accent" /> : null}
+      </View>
       {children}
     </Pressable>
   )

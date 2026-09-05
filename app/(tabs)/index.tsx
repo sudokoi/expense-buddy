@@ -8,7 +8,7 @@ import { useAnalyticsStatistics } from "../../hooks/use-analytics-statistics"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { StatisticsCards } from "../../components/analytics/StatisticsCards"
 import type { PaymentMethodSelectionKey } from "../../utils/analytics/filters"
-import { PieChartSection } from "../../components/analytics/PieChartSection"
+import { CategoryBreakdown } from "../../components/analytics/CategoryBreakdown"
 import { PaymentMethodPieChart } from "../../components/analytics/PaymentMethodPieChart"
 import { LineChartSection } from "../../components/analytics/LineChartSection"
 import { PaymentInstrumentPieChart } from "../../components/analytics/PaymentInstrumentPieChart"
@@ -28,7 +28,7 @@ import { Filter, RefreshCw, Download } from "lucide-react-native"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
-import { getCurrencySymbol } from "../../utils/currency"
+import { getCurrencySymbol, formatCurrency } from "../../utils/currency"
 import { useSyncAction } from "../../hooks/use-sync-action"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { IconActionButton } from "../../components/ui/IconActionButton"
@@ -170,9 +170,9 @@ export default function AnalyticsScreen() {
     fullPeriodExpenses
   )
 
-  // Handle category selection from pie chart segment tap - memoized
+  // Category rows toggle the shared filter; selected styling comes from that same state.
   const handleCategorySelect = useCallback(
-    (category: string | null) => {
+    (category: string) => {
       logAsync("INFO", "UI_ACTION", "ANALYTICS_CATEGORY_SELECT")
       if (category) {
         const newCategories = selectedCategories.includes(category)
@@ -399,7 +399,21 @@ export default function AnalyticsScreen() {
       }
     }
 
-    return chips
+    if (searchQuery.trim()) chips.push({ key: "search", label: searchQuery.trim() })
+    if (minAmount !== null || maxAmount !== null)
+      chips.push({
+        key: "amount",
+        label: `${formatCurrency(minAmount ?? 0, effectiveCurrency)} – ${maxAmount !== null ? formatCurrency(maxAmount, effectiveCurrency) : t("analytics.filters.noLimit")}`,
+      })
+    return chips.filter((chip) =>
+      chip.key === "category"
+        ? selectedCategories.length > 0
+        : chip.key === "payment-method"
+          ? selectedPaymentMethods.length > 0
+          : chip.key === "payment-instrument"
+            ? selectedPaymentInstruments.length > 0
+            : true
+    )
   }, [
     t,
     timeWindow,
@@ -412,6 +426,9 @@ export default function AnalyticsScreen() {
     paymentInstruments,
     availableCurrencies,
     effectiveCurrency,
+    searchQuery,
+    minAmount,
+    maxAmount,
   ])
 
   return (
@@ -476,6 +493,13 @@ export default function AnalyticsScreen() {
             <>
               <StatisticsCards
                 statistics={statistics}
+                periodLabel={
+                  effectiveSelectedMonth
+                    ? formatMonthLabel(effectiveSelectedMonth)
+                    : timeWindow === "all"
+                      ? t("analytics.stats.allTime")
+                      : t(`analytics.timeWindow.${timeWindow}`)
+                }
                 currencyCode={effectiveCurrency}
                 fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
                 hasActiveFilters={activeCount > 0}
@@ -509,9 +533,10 @@ export default function AnalyticsScreen() {
                   currencyCode={effectiveCurrency}
                   autoScrollToEnd={!effectiveSelectedMonth}
                 />
-                <PieChartSection
+                <CategoryBreakdown
                   data={pieChartData}
                   currencyCode={effectiveCurrency}
+                  selectedCategories={selectedCategories}
                   onCategorySelect={handleCategorySelect}
                 />
                 <PaymentMethodPieChart

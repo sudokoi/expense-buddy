@@ -10,7 +10,12 @@ type ExpenseCardProps = React.ComponentProps<typeof Card>
  * Note: Parent container should control spacing between cards
  */
 export const ExpenseCard = memo(function ExpenseCard(props: ExpenseCardProps) {
-  return <Card className="mb-3 flex-row items-center justify-between p-3" {...props} />
+  return (
+    <Card
+      className="flex-row items-center justify-between rounded-none border-0 border-b border-border py-3"
+      {...props}
+    />
+  )
 })
 
 export type { ExpenseCardProps }

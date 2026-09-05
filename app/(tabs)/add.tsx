@@ -12,7 +12,7 @@ import {
 } from "../../stores/hooks"
 import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { logAsync } from "../../services/logger"
-import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { PAYMENT_METHODS, getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
 import {
   Calendar,
@@ -48,6 +48,7 @@ import {
 } from "../../components/ui/PaymentInstrumentInlineDropdown"
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
+import { formatDate } from "../../utils/date"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
@@ -148,6 +149,7 @@ export default function AddExpenseScreen() {
             key={cat.label}
             isSelected={isSelected}
             categoryColor={cat.color}
+            iconName={cat.icon}
             label={cat.label}
             onPress={() => handleCategorySelect(cat.label)}
             compact
@@ -301,12 +303,13 @@ export default function AddExpenseScreen() {
           paddingBottom: insets.bottom || UI_SPACE.gutter,
         }}
         bottomOffset={50}
+        keyboardShouldPersistTaps="handled"
       >
         <View className="max-w-[600px] w-full self-center gap-3">
           {Platform.OS === "android" ? (
             <Button
               size="control"
-              variant="accent"
+              variant="outline"
               icon={<Download size={20} />}
               onPress={() => {
                 void handleOpenSmsImport()
@@ -327,12 +330,14 @@ export default function AddExpenseScreen() {
           {/* Amount Input */}
           <View className="gap-2">
             <Label className="opacity-80">{t("add.amount")}</Label>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-sm font-bold text-foreground opacity-80">
+            <View
+              className={`flex-row items-center rounded-control border bg-surface px-3 ${errors.amount ? "border-error" : "border-border"}`}
+            >
+              <Text className="text-xl font-semibold text-muted-foreground">
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
-                className={errors.amount ? "flex-1 border-error" : "flex-1"}
+                className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -354,7 +359,11 @@ export default function AddExpenseScreen() {
                 accessibilityLabel={t("add.amount")}
               />
             </View>
-            {errors.amount && <Text className="text-xs text-error">{errors.amount}</Text>}
+            {errors.amount && (
+              <Text className="text-xs text-error" accessibilityRole="alert">
+                {errors.amount}
+              </Text>
+            )}
             {expressionPreview && !errors.amount && (
               <Text className="text-[13px] text-foreground opacity-70">
                 {t("add.preview", { amount: expressionPreview })}
@@ -378,7 +387,7 @@ export default function AddExpenseScreen() {
                 onPress={() => setShowDatePicker(true)}
                 accessibilityLabel={t("add.date")}
               >
-                {date.toLocaleDateString()}
+                {formatDate(date, "PP")}
               </Button>
             </View>
             {showDatePicker && (
@@ -410,11 +419,19 @@ export default function AddExpenseScreen() {
               onPress={togglePaymentMethodSection}
               style={{ paddingHorizontal: 0, paddingVertical: 0 }}
               accessibilityLabel={t("add.paymentMethod")}
+              accessibilityState={{ expanded: paymentMethodSectionExpanded }}
             >
               <View className="flex-1 flex-row items-center justify-between">
-                <Label className="opacity-80" pointerEvents="none">
-                  {t("add.paymentMethod")}
-                </Label>
+                <View className="flex-1 gap-1" pointerEvents="none">
+                  <Label>{t("add.paymentMethod")}</Label>
+                  {!paymentMethodSectionExpanded && effectivePaymentMethod ? (
+                    <Text className="text-sm text-muted-foreground">
+                      {t(
+                        `paymentMethods.${getPaymentMethodI18nKey(effectivePaymentMethod)}`
+                      )}
+                    </Text>
+                  ) : null}
+                </View>
                 {paymentMethodSectionExpanded ? (
                   <ChevronUp
                     size={20}
@@ -505,19 +522,8 @@ export default function AddExpenseScreen() {
           </View>
 
           {/* Save Buttons */}
-          <View className="mt-4 flex-row gap-2">
+          <View className="mt-4 gap-2">
             <Button
-              className="flex-1"
-              size="control"
-              variant="outline"
-              icon={<Plus size={20} />}
-              onPress={() => handleSave({ stayOnAdd: true })}
-              accessibilityLabel={t("add.addAnother")}
-            >
-              {t("add.addAnother")}
-            </Button>
-            <Button
-              className="flex-1"
               size="control"
               variant="accent"
               icon={<Check size={20} />}
@@ -525,6 +531,15 @@ export default function AddExpenseScreen() {
               accessibilityLabel={t("add.save")}
             >
               {t("add.save")}
+            </Button>
+            <Button
+              size="control"
+              variant="ghost"
+              icon={<Plus size={20} />}
+              onPress={() => handleSave({ stayOnAdd: true })}
+              accessibilityLabel={t("add.saveAndAddAnother")}
+            >
+              {t("add.saveAndAddAnother")}
             </Button>
           </View>
         </View>

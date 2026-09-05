@@ -131,6 +131,7 @@ const IconButton = memo(function IconButton({
   return (
     <Pressable
       onPress={handlePress}
+      accessibilityRole="button"
       accessibilityLabel={`Select icon ${iconName}`}
       accessibilityState={{ selected: isSelected }}
     >
