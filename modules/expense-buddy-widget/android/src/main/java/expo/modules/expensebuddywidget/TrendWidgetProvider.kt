@@ -14,6 +14,11 @@ class TrendWidgetProvider : WidgetProviderBase() {
         val assist = assistFor(context)
         val copy = assist.toCopy()
         val theme = WidgetTheme.resolve(context)
+        val categoryStyles =
+            WidgetCategoryStyles.parse(
+                MmkvAndroidReader(context).getString(WidgetKeys.SETTINGS),
+                assist,
+            )
         val views = RemoteViews(context.packageName, R.layout.expense_widget_trend)
         theme.applyCard(
             context,
@@ -53,6 +58,7 @@ class TrendWidgetProvider : WidgetProviderBase() {
                         data.last7Days,
                         manager.getAppWidgetOptions(widgetId),
                         theme,
+                        categoryStyles,
                         assist?.locale?.let(java.util.Locale::forLanguageTag)
                             ?: java.util.Locale.getDefault(),
                     ),

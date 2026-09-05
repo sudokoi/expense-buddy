@@ -74,7 +74,13 @@ class ExpenseWidgetStore(
             (6 downTo 0).map { offset ->
                 val day = now.minusDays(offset.toLong())
                 val key = formatDay(day)
-                DayTotal(key, grouped.filter { it.dayKey == key }.sumOf { it.amount })
+                val dayRows = grouped.filter { it.dayKey == key }
+                val categories =
+                    dayRows
+                        .groupBy { it.category }
+                        .map { (category, rows) -> CategoryTotal(category, rows.sumOf { it.amount }) }
+                        .sortedBy { it.category }
+                DayTotal(key, dayRows.sumOf { it.amount }, categories)
             }
         val recent =
             grouped

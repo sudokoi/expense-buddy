@@ -2,6 +2,7 @@ package expo.modules.expensebuddywidget
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.view.View
 import android.widget.RemoteViews
 
 class SummaryWidgetProvider : WidgetProviderBase() {
@@ -14,6 +15,11 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         val assist = assistFor(context)
         val copy = assist.toCopy()
         val theme = WidgetTheme.resolve(context)
+        val categoryStyles =
+            WidgetCategoryStyles.parse(
+                MmkvAndroidReader(context).getString(WidgetKeys.SETTINGS),
+                assist,
+            )
         val views = RemoteViews(context.packageName, R.layout.expense_widget_summary)
         theme.applyCard(
             context,
@@ -25,6 +31,18 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         views.setInt(R.id.widget_add, "setBackgroundResource", theme.addBackground)
         views.setInt(R.id.widget_add, "setColorFilter", theme.color(context, theme.accentForeground))
         views.setContentDescription(R.id.widget_add, copy.addExpense)
+        filter.category?.let { category ->
+            views.setViewVisibility(R.id.widget_category_dot, View.VISIBLE)
+            views.setInt(
+                R.id.widget_category_dot,
+                "setColorFilter",
+                categoryStyles.color(category, theme.color(context, theme.accent)),
+            )
+            views.setTextViewText(R.id.widget_label, "${copy.today} · ${copy.displayCategory(category)}")
+        } ?: run {
+            views.setViewVisibility(R.id.widget_category_dot, View.GONE)
+            views.setTextViewText(R.id.widget_label, copy.today)
+        }
         views.setOnClickPendingIntent(
             R.id.widget_root,
             WidgetIntents.openApp(context, "", widgetId),
@@ -46,7 +64,6 @@ class SummaryWidgetProvider : WidgetProviderBase() {
                 val data = result.data
                 val today = WidgetFormat.maskedAmount(data.todayTotal, data.currency, filter.hideAmounts)
                 val month = WidgetFormat.maskedAmount(data.monthTotal, data.currency, filter.hideAmounts)
-                views.setTextViewText(R.id.widget_label, copy.today)
                 views.setTextViewText(R.id.widget_today_total, today)
                 views.setTextViewText(
                     R.id.widget_subtitle,
@@ -56,7 +73,6 @@ class SummaryWidgetProvider : WidgetProviderBase() {
             }
             WidgetResult.Empty -> {
                 val currency = displayCurrency(context)
-                views.setTextViewText(R.id.widget_label, copy.today)
                 views.setTextViewText(
                     R.id.widget_today_total,
                     WidgetFormat.maskedAmount(0.0, currency, filter.hideAmounts),

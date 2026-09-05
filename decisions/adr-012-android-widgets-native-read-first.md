@@ -26,7 +26,7 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 
 - One deep Module `ExpenseWidgetStore` with interface `fun read(now, filter): WidgetResult` (`Ready | Empty | Unavailable`). Hides MMKV keys, JSON parsing, timezone, currency fallback, aggregation.
 - One narrow `WidgetAssist` reader (`fun load(): Assist?`).
-- Three thin provider Adapters at the `RemoteViews` seam: `Summary`, `Trend7d` (7 bars drawn to a bitmap with `Canvas` — `RemoteViews` cannot host chart views and pre-S cannot set layout weights dynamically; zero-filled with faint track slots), `Recent` (`RemoteViewsService` list, capped at 8).
+- Three thin provider Adapters at the `RemoteViews` seam: `Summary`, `Trend7d` (7 category-stacked bars drawn to a bitmap with `Canvas` — `RemoteViews` cannot host chart views; zero-filled with faint track slots and a total trend line), `Recent` (`RemoteViewsService` list, capped at 8). Category order and colors come from live `app_settings`; assist colors are degraded fallback only. Summary identifies a selected category with its dot and label, while Recent uses the same native style owner for row dots.
 - One bridge Module `ExpenseBuddyWidgetModule` with `refreshWidgets()` (broadcast, no data params) plus `persistAssist(json)` (hint write). Broadcasts use string `ComponentName`s, never `Class.forName`, so they survive release obfuscation.
 
 ### 3. v1 scope limits

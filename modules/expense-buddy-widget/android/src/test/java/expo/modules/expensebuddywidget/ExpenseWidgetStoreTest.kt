@@ -103,6 +103,32 @@ class ExpenseWidgetStoreTest {
         val ready =
             store.read(LocalDate.of(2026, 9, 4), WidgetFilter(category = "Rent")) as WidgetResult.Ready
         assertThat(ready.data.todayTotal).isWithin(0.001).of(300.0)
+        assertThat(
+            ready.data.last7Days
+                .last()
+                .categories,
+        ).containsExactly(CategoryTotal("Rent", 300.0))
+    }
+
+    @Test
+    fun `trend days aggregate category segments without changing total`() {
+        val map =
+            mapOf(
+                WidgetKeys.EXPENSES_INDEX to """["a","b","c"]""",
+                WidgetKeys.itemKey("a") to expenseJson("a", 100.0, "2026-09-04T05:00:00.000Z", category = "Food"),
+                WidgetKeys.itemKey("b") to expenseJson("b", 50.0, "2026-09-04T06:00:00.000Z", category = "Food"),
+                WidgetKeys.itemKey("c") to expenseJson("c", 300.0, "2026-09-04T07:00:00.000Z", category = "Rent"),
+            )
+        val store = ExpenseWidgetStore(FakeMmkv(map), settings, zone)
+        val day =
+            (store.read(LocalDate.of(2026, 9, 4)) as WidgetResult.Ready)
+                .data.last7Days
+                .last()
+
+        assertThat(day.total).isWithin(0.001).of(450.0)
+        assertThat(day.categories)
+            .containsExactly(CategoryTotal("Food", 150.0), CategoryTotal("Rent", 300.0))
+            .inOrder()
     }
 
     @Test
