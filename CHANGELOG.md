@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 4.2.0
+
+### Minor Changes
+
+- [#131](https://github.com/sudokoi/expense-buddy/pull/131) [`32de494`](https://github.com/sudokoi/expense-buddy/commit/32de4943e5355b9032ad87896d8fdbb1b9f44479) Thanks [@sudokoi](https://github.com/sudokoi)! - Add three native Android home-screen widgets: Summary, category-stacked 7-day Trend, and Recent expenses.
+
+  Widgets read live on-device data, support per-instance category and privacy filters, and follow the app's theme, language, and category colors.
+
 ## 4.1.2
 
 ### Patch Changes
