@@ -19,6 +19,7 @@ import {
   dismissNotificationAsync,
 } from "../services/background-sms/android-background-sms-module"
 import ExpenseBuddySmsModule from "../modules/expense-buddy-sms-module"
+import { createSnapshotRefresher } from "../utils/snapshot-refresher"
 
 interface SmsImportReviewContextValue {
   items: SmsImportReviewItem[]
@@ -42,48 +43,40 @@ export const SmsImportReviewProvider: React.FC<{ children: React.ReactNode }> = 
 }) => {
   const [items, setItems] = useState<SmsImportReviewItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const isFetchingRef = useRef(false)
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refresherRef = useRef<ReturnType<
+    typeof createSnapshotRefresher<SmsImportReviewItem[]>
+  > | null>(null)
 
   const fetchItems = useCallback(async () => {
-    if (isFetchingRef.current) return
-    isFetchingRef.current = true
-    try {
-      setIsLoading(true)
-      const data = await getPendingReviewQueueAsync()
-      setItems(data)
-    } catch (error) {
-      console.warn("Failed to fetch pending review queue", error)
-    } finally {
-      setIsLoading(false)
-      isFetchingRef.current = false
-    }
+    await refresherRef.current?.refresh()
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchItems syncs native Room queue into React state on mount
-    fetchItems()
-  }, [fetchItems])
-
-  useEffect(() => {
-    if (!ExpenseBuddySmsModule) return
-
-    const subscription = ExpenseBuddySmsModule.addListener("onReviewQueueUpdated", () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
-      debounceTimerRef.current = setTimeout(() => {
-        void fetchItems()
-      }, 300)
+    const refresher = createSnapshotRefresher({
+      load: getPendingReviewQueueAsync,
+      publish: setItems,
+      loading: setIsLoading,
+      onError: (error) => console.warn("Failed to fetch pending review queue", error),
     })
-
-    return () => {
-      subscription.remove()
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
+    refresherRef.current = refresher
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const subscription = ExpenseBuddySmsModule?.addListener(
+      "onReviewQueueUpdated",
+      () => {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          void refresher.refresh()
+        }, 300)
       }
+    )
+    void refresher.refresh()
+    return () => {
+      subscription?.remove()
+      clearTimeout(timer)
+      refresher.dispose()
+      refresherRef.current = null
     }
-  }, [fetchItems])
+  }, [])
 
   const pendingItems = useMemo(
     () => items.filter((item) => item.status === "pending"),
