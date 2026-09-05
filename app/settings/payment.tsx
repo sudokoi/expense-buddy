@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { Stack } from "expo-router"
-import { Alert, Text, View } from "react-native"
+import { Text, View } from "react-native"
+import { useAppDialog } from "../../providers/app-dialog-provider"
 import { useTranslation } from "react-i18next"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -19,6 +20,7 @@ import type { Category } from "../../types/category"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 export default function PaymentSettingsScreen() {
+  const { showDialog } = useAppDialog()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const { settings, setDefaultPaymentMethod } = useSettings()
@@ -59,7 +61,7 @@ export default function PaymentSettingsScreen() {
             })
           : t("settings.categories.deleteDialog.messageSimple", { label })
 
-      Alert.alert(t("settings.categories.deleteDialog.title"), message, [
+      showDialog(t("settings.categories.deleteDialog.title"), message, [
         { text: t("common.cancel"), style: "cancel" },
         {
           text: t("common.delete"),
@@ -81,6 +83,7 @@ export default function PaymentSettingsScreen() {
       addNotification,
       deleteCategory,
       getExpenseCountForCategory,
+      showDialog,
       reassignExpensesToOther,
       t,
     ]

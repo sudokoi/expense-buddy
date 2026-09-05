@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
-import { Alert, Keyboard, Linking, Pressable, Text, View } from "react-native"
+import { Keyboard, Linking, Pressable, Text, View } from "react-native"
+import { useAppDialog } from "../../../providers/app-dialog-provider"
 import { Check, X, ChevronDown, ChevronUp } from "lucide-react-native"
 import * as Clipboard from "expo-clipboard"
 import { SyncConfig } from "../../../types/sync"
@@ -79,6 +80,7 @@ export function GitHubConfigSection({
   onConnectionStatusChange,
   onNotification,
 }: GitHubConfigSectionProps) {
+  const { showDialog } = useAppDialog()
   const { t } = useTranslation()
   const router = useRouter()
   const theme = useThemeColors()
@@ -201,7 +203,7 @@ export function GitHubConfigSection({
   }, [onTestConnection, onConnectionStatusChange])
 
   const handleClearConfig = useCallback(() => {
-    Alert.alert(
+    showDialog(
       t("settings.github.clearConfigDialogTitle"),
       t("settings.github.clearConfigDialogMessage"),
       [
@@ -220,7 +222,7 @@ export function GitHubConfigSection({
         },
       ]
     )
-  }, [auth, onClearConfig, onConnectionStatusChange, t])
+  }, [auth, onClearConfig, onConnectionStatusChange, t, showDialog])
 
   const handleSignOut = useCallback(async () => {
     // If a full sync config is saved, signing out should fully disconnect.

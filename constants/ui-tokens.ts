@@ -73,6 +73,7 @@ export const UI_BORDER_WIDTH = {
 
 export const UI_ICON_SIZE = {
   micro: 12,
+  mini: 14,
   small: 16,
   regular: 18,
   medium: 20,
@@ -85,3 +86,6 @@ export const UI_ICON_SIZE = {
 
 /** Minimum interactive target size in dp (Material/Web accessibility guidance). */
 export const UI_MIN_TOUCH_TARGET = 48
+
+/** Product density choice for chips/preferences; below Android's 48dp recommendation. */
+export const UI_COMPACT_TOUCH_TARGET = 40

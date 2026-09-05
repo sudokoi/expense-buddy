@@ -34,6 +34,7 @@ import { useSyncAction } from "../../hooks/use-sync-action"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { IconActionButton } from "../../components/ui/IconActionButton"
 import { Button } from "../../components/ui/Button"
+import { CompactControl } from "../../components/ui/CompactControl"
 import { UI_OPACITY } from "../../constants/ui-tokens"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
@@ -435,17 +436,15 @@ export default function AnalyticsScreen() {
           className="flex-1"
         >
           {appliedChips.map((chip) => (
-            <Button
+            <CompactControl
               key={chip.key}
-              size="chip"
-              variant="outline"
+              className="max-w-64"
+              accessibilityLabel={chip.label}
               disabled={!filtersHydrated}
               onPress={openFilters}
             >
-              <Text className="text-foreground" adjustsFontSizeToFit numberOfLines={1}>
-                {chip.label}
-              </Text>
-            </Button>
+              <Text className="shrink text-sm text-foreground">{chip.label}</Text>
+            </CompactControl>
           ))}
         </ScrollView>
 

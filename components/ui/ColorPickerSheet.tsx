@@ -5,7 +5,11 @@ import { Check } from "lucide-react-native"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import { UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_ICON_SIZE,
+  UI_BORDER_WIDTH,
+  UI_COMPACT_TOUCH_TARGET,
+} from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { getReadableTextColor } from "../../constants/palette"
 
@@ -94,14 +98,14 @@ const ColorButton = memo(function ColorButton({
       <View
         className="items-center justify-center rounded-chip"
         style={{
-          width: UI_ICON_SIZE.huge,
-          height: UI_ICON_SIZE.huge,
+          width: UI_COMPACT_TOUCH_TARGET,
+          height: UI_COMPACT_TOUCH_TARGET,
           borderWidth: UI_BORDER_WIDTH.thick,
           backgroundColor: color,
           borderColor: isSelected ? selectedBorderColor : "transparent",
         }}
       >
-        {isSelected && <Check size={UI_ICON_SIZE.large} color={checkColor} />}
+        {isSelected && <Check size={UI_ICON_SIZE.medium} color={checkColor} />}
       </View>
     </Pressable>
   )

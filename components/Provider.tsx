@@ -5,6 +5,7 @@ import { DerivedExpenseDataProvider } from "../stores/hooks/use-derived-expense-
 import { useSettings } from "../stores/hooks"
 import { useWidgetAssist } from "../hooks/use-widget-assist"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
+import { AppDialogProvider } from "../providers/app-dialog-provider"
 
 /**
  * Inner provider that drives NativeWind's color scheme from the user's theme
@@ -42,8 +43,10 @@ export function Provider({ children }: { children: React.ReactNode }) {
       <DerivedExpenseDataProvider>
         <SmsImportReviewProvider>
           <ThemedProvider>
-            <WidgetAssistMount />
-            {children}
+            <AppDialogProvider>
+              <WidgetAssistMount />
+              {children}
+            </AppDialogProvider>
           </ThemedProvider>
         </SmsImportReviewProvider>
       </DerivedExpenseDataProvider>

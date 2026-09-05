@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react"
-import { Alert, Linking, Platform, Pressable, Text, View } from "react-native"
+import { Linking, Platform, Pressable, Text, View } from "react-native"
+import { useAppDialog } from "../../providers/app-dialog-provider"
 import { getLogsForBugReportAsync } from "../../services/logger"
 import * as Clipboard from "expo-clipboard"
 import {
@@ -51,6 +52,7 @@ function countAttachedLogEntries(logs: string): number {
 }
 
 export default function SettingsScreen() {
+  const { showDialog } = useAppDialog()
   const router = useRouter()
   const { t } = useTranslation()
   const theme = useThemeColors()
@@ -181,7 +183,7 @@ export default function SettingsScreen() {
 
       // Only prompt to download if this is first-time setup AND no local expenses
       if (isFirstTimeSetup && state.expenses.length === 0) {
-        Alert.alert(
+        showDialog(
           t("settings.downloadPrompt.title"),
           t("settings.downloadPrompt.message"),
           [
@@ -228,6 +230,7 @@ export default function SettingsScreen() {
     },
     [
       syncConfig,
+      showDialog,
       state.expenses.length,
       settings.autoSyncEnabled,
       saveSyncConfig,
@@ -318,7 +321,7 @@ export default function SettingsScreen() {
       Linking.openURL(`${APP_CONFIG.github.url}/issues/${issueNumber}`)
     }
 
-    Alert.alert(
+    showDialog(
       t("settings.about.includeLogsTitle", {
         defaultValue: "Include Device Logs?",
       }),
@@ -401,7 +404,7 @@ export default function SettingsScreen() {
         },
       ]
     )
-  }, [t, addNotification, syncConfig])
+  }, [t, addNotification, syncConfig, showDialog])
 
   // Theme and settings handlers
   const handleThemeChange = useCallback(
@@ -419,7 +422,7 @@ export default function SettingsScreen() {
 
       // Language change resets currency and SMS region per the language maps
       // (ADR-010). Warn before applying since overrides are stomped.
-      Alert.alert(
+      showDialog(
         t("settings.localization.languageChangeTitle", {
           defaultValue: "Change Language?",
         }),
@@ -441,7 +444,7 @@ export default function SettingsScreen() {
         ]
       )
     },
-    [setLanguage, settings.language, t]
+    [setLanguage, settings.language, t, showDialog]
   )
 
   const handleCurrencyChange = useCallback(

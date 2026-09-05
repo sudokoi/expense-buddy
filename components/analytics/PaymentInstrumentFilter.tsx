@@ -1,7 +1,5 @@
 import { memo, useCallback, useMemo } from "react"
-import { Text } from "react-native"
 import { useTranslation } from "react-i18next"
-import { Button } from "../ui/Button"
 import { FilterChip, FilterChipBar } from "./FilterChipBar"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import {
@@ -62,7 +60,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       // Always include an "Others" chip per method (covers missing/deleted/manual)
       items.push({
         key: makePaymentInstrumentSelectionKey(method, undefined),
-        label: `${methodShortLabel(method)} • Others`,
+        label: t("instruments.dropdown.othersLabel", { method: methodShortLabel(method) }),
       })
 
       for (const inst of methodActive) {
@@ -74,7 +72,7 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
     }
 
     return items
-  }, [active, allowedMethods])
+  }, [active, allowedMethods, t])
 
   const handleAllPress = useCallback(() => {
     onChange([])
@@ -93,14 +91,11 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
 
   return (
     <FilterChipBar>
-      <Button
-        size="chip"
-        variant={isAllSelected ? "accent" : "outline"}
+      <FilterChip
+        label={t("common.all")}
+        selected={isAllSelected}
         onPress={handleAllPress}
-        accessibilityState={{ selected: isAllSelected }}
-      >
-        <Text>{t("common.all")}</Text>
-      </Button>
+      />
 
       {chipItems.map((item) => {
         const isSelected = selected.includes(item.key)

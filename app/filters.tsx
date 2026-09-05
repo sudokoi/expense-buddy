@@ -317,6 +317,7 @@ export default function FiltersScreen() {
         >
           <Button
             size="control"
+            variant="outline"
             className="flex-1"
             onPress={() => router.back()}
             accessibilityLabel={t("common.cancel")}
