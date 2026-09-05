@@ -7,23 +7,25 @@ import type {
   PieChartDataItem,
   PaymentMethodChartDataItem,
   PaymentInstrumentChartDataItem,
-  LineChartDataItem,
   CategoryColorMap,
 } from "../utils/analytics/aggregations"
 import {
   aggregateByCategory,
   aggregateByPaymentMethod,
   aggregateByPaymentInstrument,
-  aggregateByDay,
 } from "../utils/analytics/aggregations"
 import { getLocale } from "../utils/date"
 import { TFunction } from "i18next"
+import {
+  aggregateSpendingTrend,
+  type SpendingTrend,
+} from "../utils/analytics/spending-trend"
 
 export interface AnalyticsChartsResult {
   pieChartData: PieChartDataItem[]
   paymentMethodChartData: PaymentMethodChartDataItem[]
   paymentInstrumentChartData: PaymentInstrumentChartDataItem[]
-  lineChartData: LineChartDataItem[]
+  spendingTrend: SpendingTrend
 }
 
 /**
@@ -64,14 +66,14 @@ export function useAnalyticsCharts(
   }, [filteredExpenses, paymentInstruments, t])
 
   // Line chart data by day
-  const lineChartData = useMemo(() => {
-    return aggregateByDay(filteredExpenses, dateRange, locale)
+  const spendingTrend = useMemo(() => {
+    return aggregateSpendingTrend(filteredExpenses, dateRange, locale)
   }, [filteredExpenses, dateRange, locale])
 
   return {
     pieChartData,
     paymentMethodChartData,
     paymentInstrumentChartData,
-    lineChartData,
+    spendingTrend,
   }
 }

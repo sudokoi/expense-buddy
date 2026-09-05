@@ -11,16 +11,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react-native"
 import { LineChart } from "react-native-gifted-charts"
 import { useTranslation } from "react-i18next"
 import { CollapsibleSection } from "./CollapsibleSection"
-import type { LineChartDataItem } from "../../utils/analytics/aggregations"
-import { buildSpendingTrend, getTrendScale } from "../../utils/analytics/spending-trend"
+import { getTrendScale, type SpendingTrend } from "../../utils/analytics/spending-trend"
 import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { formatCurrency } from "../../utils/currency"
-import { getLocale } from "../../utils/date"
 import { UI_ICON_SIZE, UI_FONT_SIZE } from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
-  data: LineChartDataItem[]
+  data: SpendingTrend
   currencyCode?: string
   /** Month selections start at the beginning; rolling windows show the latest point. */
   autoScrollToEnd?: boolean
@@ -42,11 +40,7 @@ export const LineChartSection = memo(function LineChartSection({
   const { fontScale } = useWindowDimensions()
   const yAxisWidth = Y_AXIS_WIDTH * fontScale
   const chartColors = getChartColors(useThemeScheme())
-  const locale = getLocale()
-  const { points, granularity } = useMemo(
-    () => buildSpendingTrend(data, locale),
-    [data, locale]
-  )
+  const { points, granularity } = data
   const [containerWidth, setContainerWidth] = useState(0)
   const [selection, setSelection] = useState<{ range: string; date: string } | null>(null)
   const scrollRef = useRef<ScrollView>(null)

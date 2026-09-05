@@ -25,7 +25,7 @@ export function makePaymentInstrumentSelectionKey(
 
 export function resolveInstrumentKeyForExpense(
   expense: Expense,
-  instruments: PaymentInstrument[]
+  instruments: PaymentInstrument[] | ReadonlyMap<string, PaymentInstrument>
 ): {
   method: PaymentInstrumentMethod
   key: PaymentInstrumentSelectionKey
@@ -36,7 +36,11 @@ export function resolveInstrumentKeyForExpense(
   if (!method || !isPaymentInstrumentMethod(method)) return null
 
   const instrumentId = expense.paymentMethod?.instrumentId
-  const inst = findInstrumentById(instruments, instrumentId)
+  const inst = Array.isArray(instruments)
+    ? findInstrumentById(instruments, instrumentId)
+    : instrumentId
+      ? instruments.get(instrumentId)
+      : undefined
   if (!inst || inst.deletedAt) {
     return {
       method,
@@ -115,15 +119,8 @@ export function filterExpensesByPaymentMethods(
 // Optimized Single-Pass Filter Application
 // ============================================================================
 
-import {
-  parseISO,
-  isWithinInterval,
-  startOfDay,
-  endOfDay,
-  subDays,
-  isValid,
-} from "date-fns"
-import { getDateRangeForMonth } from "./time"
+import { parseISO, isWithinInterval, isValid } from "date-fns"
+import { getDateRangeForMonth, getDateRangeForTimeWindow } from "./time"
 import type { TimeWindow } from "./time"
 
 export interface FilterState {
@@ -201,36 +198,11 @@ function matchesSearch(
  */
 function isExpenseInTimeWindow(
   expense: Expense,
-  timeWindow: TimeWindow,
-  monthRange: { start: Date; end: Date } | null
+  range: { start: Date; end: Date }
 ): boolean {
-  if (monthRange) {
-    const expenseDate = parseISO(expense.date)
-    if (!isValid(expenseDate)) return false
-    return isWithinInterval(expenseDate, monthRange)
-  }
-
-  if (timeWindow === "all") return true
-
   const expenseDate = parseISO(expense.date)
   if (!isValid(expenseDate)) return false
-  const now = new Date()
-  const end = endOfDay(now)
-
-  const daysMap: Record<TimeWindow, number> = {
-    "7d": 7,
-    "15d": 15,
-    "1m": 30,
-    "3m": 90,
-    "6m": 180,
-    "1y": 365,
-    all: -1,
-  }
-
-  const days = daysMap[timeWindow]
-  const start = startOfDay(subDays(end, days - 1))
-
-  return isWithinInterval(expenseDate, { start, end })
+  return isWithinInterval(expenseDate, range)
 }
 
 /**
@@ -278,11 +250,14 @@ export function applyAllFilters(
   const monthRange = filters.selectedMonth
     ? getDateRangeForMonth(filters.selectedMonth)
     : null
+  const timeRange =
+    monthRange ??
+    (filters.timeWindow === "all" ? null : getDateRangeForTimeWindow(filters.timeWindow))
 
   return expenses.filter((expense) => {
     // 1. Time window check (fast)
-    if (filters.timeWindow !== "all" || monthRange) {
-      if (!isExpenseInTimeWindow(expense, filters.timeWindow, monthRange)) {
+    if (timeRange) {
+      if (!isExpenseInTimeWindow(expense, timeRange)) {
         return false
       }
     }
