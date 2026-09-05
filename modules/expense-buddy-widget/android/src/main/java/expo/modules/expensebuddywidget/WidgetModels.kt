@@ -31,17 +31,6 @@ data class CategoryTotal(
     val total: Double,
 )
 
-data class WidgetData(
-    val currency: String,
-    val todayTotal: Double,
-    val todayCount: Int,
-    val monthTotal: Double,
-    val last7Days: List<DayTotal>,
-    val recent: List<WidgetExpense>,
-    /** max(updatedAt) over live rows; compared against assist dataVersion. */
-    val dataVersion: String,
-)
-
 /** Closed render outcome — callers use exhaustive `when`, no `else`. */
 sealed interface WidgetResult {
     data class Ready(

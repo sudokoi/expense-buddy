@@ -6,8 +6,8 @@ import android.content.Context
 import android.content.Intent
 
 /**
- * Refresh owner: broadcast-only, no stored scope. Providers do their own
- * goAsync + per-update scope (see ADR-012). Intents use string ComponentNames
+ * Refresh trigger: providers join a shared process-owned render queue.
+ * Intents use string ComponentNames
  * (never Class.forName) so they survive release obfuscation.
  */
 internal object WidgetRefresh {
@@ -34,10 +34,5 @@ internal object WidgetRefresh {
         }
     }
 
-    internal fun widgetProviders(context: Context): List<ComponentName> =
-        listOf(
-            "expo.modules.expensebuddywidget.SummaryWidgetProvider",
-            "expo.modules.expensebuddywidget.TrendWidgetProvider",
-            "expo.modules.expensebuddywidget.RecentWidgetProvider",
-        ).map { ComponentName(context, it) }
+    internal fun widgetProviders(context: Context): List<ComponentName> = WidgetKind.entries.map { ComponentName(context, it.providerName) }
 }

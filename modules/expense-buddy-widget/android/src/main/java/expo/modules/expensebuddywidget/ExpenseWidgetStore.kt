@@ -73,40 +73,12 @@ class ExpenseWidgetStore(
         val grouped = filtered.filter { rowCurrency(it) == target }
         if (grouped.isEmpty()) return WidgetResult.Empty
 
-        val todayKey = formatDay(now)
-        val monthPrefix = todayKey.substring(0, 7)
-        var todayTotal = 0.0
-        var todayCount = 0
-        var monthTotal = 0.0
-        val days = (6 downTo 0).associate { formatDay(now.minusDays(it.toLong())) to sortedMapOf<String, Double>() }
-        val newestFirst = compareByDescending<WidgetExpense> { it.dayKey }.thenByDescending { it.updatedAt }
-        val recent = mutableListOf<WidgetExpense>()
-        for (row in grouped) {
-            if (row.dayKey == todayKey) {
-                todayTotal += row.amount
-                todayCount++
-            }
-            if (row.dayKey.startsWith(monthPrefix)) monthTotal += row.amount
-            days[row.dayKey]?.let { totals -> totals[row.category] = (totals[row.category] ?: 0.0) + row.amount }
-            if (recentLimit > 0) {
-                // Bounded insertion preserves stable input order for equal timestamps.
-                val index = recent.indexOfFirst { newestFirst.compare(row, it) < 0 }.let { if (it < 0) recent.size else it }
-                if (index < recentLimit) {
-                    recent.add(index, row)
-                    if (recent.size > recentLimit) recent.removeAt(recent.lastIndex)
-                }
-            }
-        }
-        val last7Days = days.map { (key, totals) -> DayTotal(key, totals.values.sum(), totals.map { CategoryTotal(it.key, it.value) }) }
-
         return WidgetResult.Ready(
             WidgetData(
                 currency = target,
-                todayTotal = todayTotal,
-                todayCount = todayCount,
-                monthTotal = monthTotal,
-                last7Days = last7Days,
-                recent = recent,
+                rows = grouped,
+                now = now,
+                recentLimit = recentLimit,
                 dataVersion = liveVersion,
             ),
         )
