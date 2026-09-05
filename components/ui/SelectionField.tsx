@@ -43,9 +43,7 @@ export function SelectionField({
     <>
       {layout === "inline" ? (
         <View className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <Text className="min-w-[96px] flex-1 text-sm text-muted-foreground">
-            {label}
-          </Text>
+          <Text className="min-w-24 flex-1 text-sm text-muted-foreground">{label}</Text>
           <CompactControl
             onPress={() => setOpen(true)}
             accessibilityLabel={`${label}, ${summary}`}
@@ -67,7 +65,7 @@ export function SelectionField({
             <Text className="text-xs text-muted-foreground">{label}</Text>
             <Text className="text-base font-medium text-foreground">{summary}</Text>
           </View>
-          <ChevronRight size={20} color={theme.mutedForeground} />
+          <ChevronRight size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
         </Pressable>
       )}
       <AppSheetScaffold
@@ -104,7 +102,9 @@ export function SelectionField({
                   </Text>
                 ) : null}
               </View>
-              {option.value === value ? <Check size={20} color={theme.accent} /> : null}
+              {option.value === value ? (
+                <Check size={UI_ICON_SIZE.medium} color={theme.accent} />
+              ) : null}
             </Pressable>
           ))}
         </View>

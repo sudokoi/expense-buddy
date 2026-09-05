@@ -11,7 +11,7 @@ export default function NotFoundScreen() {
       <View className="m-2.5">
         <Text className="text-foreground">{t("notFound.message")}</Text>
         <Link href="/" style={styles.link}>
-          <Text className="text-[13px] text-info">{t("notFound.goHome")}</Text>
+          <Text className="text-body text-info">{t("notFound.goHome")}</Text>
         </Link>
       </View>
     </>

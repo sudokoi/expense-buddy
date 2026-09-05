@@ -6,15 +6,8 @@ interface LanguageSelectorProps {
   onChange: (lang: string) => void
 }
 
-const languages = [
-  { value: "en-US", label: "English (US)" },
-  { value: "en-GB", label: "English (UK)" },
-  { value: "en-CA", label: "English (CA)" },
-  { value: "en-AU", label: "English (AU)" },
-  { value: "en-IN", label: "English (IN)" },
-  { value: "hi", label: "हिंदी (Hindi)" },
-  { value: "ja", label: "日本語 (Japanese)" },
-]
+// Autonyms stay recognizable even when the user cannot read the current language.
+const languages = ["en-US", "en-GB", "en-CA", "en-AU", "en-IN", "hi", "ja"] as const
 
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const { t } = useTranslation()
@@ -27,7 +20,10 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
       onChange={onChange}
       options={[
         { value: "system", label: t("settings.appearance.options.system") },
-        ...languages,
+        ...languages.map((language) => ({
+          value: language,
+          label: t(`ui.languages.${language}`),
+        })),
       ]}
     />
   )

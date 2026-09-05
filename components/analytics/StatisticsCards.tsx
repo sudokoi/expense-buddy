@@ -46,7 +46,7 @@ export const StatisticsCards = memo(function StatisticsCards({
       </View>
       <View className="flex-row flex-wrap gap-3 p-3">
         <View
-          className="min-w-[120px] flex-1 gap-1 rounded-control p-3"
+          className="min-w-metric flex-1 gap-1 rounded-control p-3"
           style={{ backgroundColor: colors.green.bg }}
         >
           <Text className="text-xs" style={{ color: colors.green.text }}>
@@ -60,7 +60,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
         </View>
         <View
-          className="min-w-[120px] flex-1 gap-1 rounded-control p-3"
+          className="min-w-metric flex-1 gap-1 rounded-control p-3"
           style={{ backgroundColor: colors.orange.bg }}
         >
           <Text className="text-xs" style={{ color: colors.orange.text }}>

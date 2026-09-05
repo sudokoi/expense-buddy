@@ -26,7 +26,7 @@ class RecentWidgetService : RemoteViewsService() {
         private var currency: String = "INR"
         private var filter: WidgetFilter = WidgetFilter()
         private var categoryStyles = WidgetCategoryStyles(listOf("Other"), emptyMap())
-        private var copy: WidgetCopy = WidgetCopy.fallback()
+        private var copy: WidgetCopy = WidgetCopy.fallback(context)
         private var theme: WidgetTheme = WidgetTheme.LIGHT
         private var locale: java.util.Locale = java.util.Locale.getDefault()
 
@@ -52,7 +52,7 @@ class RecentWidgetService : RemoteViewsService() {
             rows = ready.data.recent
             currency = ready.data.currency
             categoryStyles = WidgetCategoryStyles.parse(mmkv.getString(WidgetKeys.SETTINGS), assist)
-            copy = assist.toCopy()
+            copy = assist.toCopy(context)
             theme = WidgetTheme.resolve(context)
             locale = assist?.locale?.let(java.util.Locale::forLanguageTag) ?: java.util.Locale.getDefault()
         }

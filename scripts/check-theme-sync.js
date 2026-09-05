@@ -7,6 +7,7 @@
  */
 const fs = require("fs")
 const path = require("path")
+const ts = require("typescript")
 
 const root = path.join(__dirname, "..")
 const read = (p) => fs.readFileSync(path.join(root, p), "utf8")
@@ -20,36 +21,39 @@ function ok(msg) {
   console.log(`✓ ${msg}`)
 }
 
-// 1. palette.ts values
-const paletteRaw = read("constants/palette.ts")
-function extractHexes(block) {
-  const m = paletteRaw.match(
-    new RegExp(`${block}:[\\\\s\\\\S]*?background: "(#[0-9A-Fa-f]{6})"`)
-  )
-  return m ? m[1] : null
+// Read literal token declarations, rather than validating against a second palette.
+function readTokens(file) {
+  const source = ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true)
+  function literal(node) {
+    if (ts.isAsExpression(node)) return literal(node.expression)
+    if (ts.isStringLiteral(node)) return node.text
+    if (ts.isNumericLiteral(node)) return Number(node.text)
+    if (ts.isIdentifier(node) && Object.hasOwn(result, node.text))
+      return result[node.text]
+    if (ts.isPropertyAccessExpression(node))
+      return literal(node.expression)[node.name.text]
+    if (ts.isObjectLiteralExpression(node)) {
+      return Object.fromEntries(
+        node.properties.map((property) => [
+          property.name.getText(source),
+          literal(property.initializer),
+        ])
+      )
+    }
+    throw new Error(`Non-literal theme token: ${node.getText(source)}`)
+  }
+  const result = {}
+  for (const statement of source.statements) {
+    if (!ts.isVariableStatement(statement)) continue
+    for (const declaration of statement.declarationList.declarations) {
+      result[declaration.name.getText(source)] = literal(declaration.initializer)
+    }
+  }
+  return result
 }
-
-// Light palette 8 tokens
-const lightTokens = {
-  background: "#FFF8F0",
-  surface: "#FFFAF5",
-  muted: "#FFE0D2",
-  foreground: "#473E4B",
-  mutedForeground: "#6C5A6C",
-  border: "#D6C9C2",
-  accent: "#C0406A",
-  accentForeground: "#FFFFFF",
-}
-const darkTokens = {
-  background: "#1D161B",
-  surface: "#27202A",
-  muted: "#4A3D52",
-  foreground: "#F2E9EE",
-  mutedForeground: "#CCBFC9",
-  border: "#3B3342",
-  accent: "#FFB6C1",
-  accentForeground: "#1D161B",
-}
+const tokens = readTokens("constants/palette.ts")
+const lightTokens = tokens.palette.light
+const darkTokens = tokens.palette.dark
 
 const css = read("global.css")
 const tailwind = read("tailwind.config.js")
@@ -82,17 +86,21 @@ for (const [key, val] of Object.entries(darkTokens)) {
 }
 
 // Semantic + kawaii + financial
+const kebab = (key) => key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
 const extraVars = {
-  "--expense": "#FF8A8A",
-  "--expense-light": "#FFD4D4",
-  "--income": "#7FDBAA",
-  "--income-light": "#C8F7DC",
-  "--destructive": "#C93A3F",
-  "--kawaii-pink": "#FFB6C1",
-  "--kawaii-pink-light": "#FFD1DC",
-  "--kawaii-pink-dark": "#FF91A4",
-  "--kawaii-lavender": "#E6E6FA",
-  "--kawaii-mint": "#98FB98",
+  ...Object.fromEntries(
+    Object.entries(tokens.FINANCIAL_COLORS).map(([key, value]) => [
+      `--${kebab(key)}`,
+      value,
+    ])
+  ),
+  ...Object.fromEntries(
+    Object.entries(tokens.KAWAII_COLORS).map(([key, value]) => [
+      `--kawaii-${kebab(key)}`,
+      value,
+    ])
+  ),
+  "--destructive": tokens.DESTRUCTIVE_COLOR,
 }
 for (const [v, hex] of Object.entries(extraVars)) {
   if (!new RegExp(`${v}:\\s*${hex}`, "i").test(css))
@@ -107,7 +115,9 @@ for (const v of Object.keys(extraVars).concat(
       ` --${k === "mutedForeground" ? "muted-foreground" : k === "accentForeground" ? "accent-foreground" : k}`
   )
 )) {
-  // Already checked css; now tailwind mapping
+  const variable = v.trim().slice(2)
+  if (!tailwind.includes(`"var(--${variable})"`))
+    fail(`tailwind missing --${variable} mapping`)
 }
 if (!tailwind.includes('background: "var(--background)"'))
   fail("tailwind missing background var")
@@ -129,6 +139,49 @@ if (
 )
   fail("ui-tokens UI_RADIUS mismatch")
 else ok("ui-tokens UI_RADIUS 12/14/20")
+
+const numeric = readTokens("constants/ui-tokens.ts")
+const config = require("../tailwind.config.js").theme.extend
+for (const key of ["body", "micro"]) {
+  if (config.fontSize[key] !== `${numeric.UI_FONT_SIZE[key]}px`)
+    fail(`fontSize.${key} differs from UI_FONT_SIZE`)
+}
+if (config.maxWidth.content !== `${numeric.UI_LAYOUT.contentMaxWidth}px`)
+  fail("content width differs from UI_LAYOUT")
+if (config.height["chart-empty"] !== `${numeric.UI_LAYOUT.chartEmptyHeight}px`)
+  fail("chart empty height differs from UI_LAYOUT")
+
+const nativeColors = read(
+  "modules/expense-buddy-widget/android/src/main/res/values/colors.xml"
+)
+const nativeNames = {
+  background: "background",
+  surface: "surface",
+  foreground: "text_primary",
+  mutedForeground: "text_muted",
+  accent: "accent",
+  accentForeground: "accent_text",
+  border: "track",
+}
+for (const [scheme, palette] of Object.entries(tokens.palette)) {
+  for (const [key, name] of Object.entries(nativeNames)) {
+    if (
+      !nativeColors.includes(
+        `name="expense_widget_${name}_${scheme}">${palette[key]}</color>`
+      )
+    )
+      fail(`native widget ${scheme} ${key} differs from palette`)
+  }
+  const block =
+    scheme === "dark"
+      ? css.match(/\.dark:root\s*\{([\s\S]*?)\}/)?.[1]
+      : css.match(/:root\s*\{([\s\S]*?)\}/)?.[1]
+  for (const [key, color] of Object.entries(tokens.SEMANTIC_FOREGROUND_COLORS[scheme])) {
+    if (!block?.includes(`--${key}: ${color};`))
+      fail(`${scheme} semantic ${key} differs from palette`)
+  }
+}
+ok("numeric aliases, semantic foregrounds, and native widget palette checked")
 
 // app.config.js splash should match palette light background (not black)
 const appConfig = read("app.config.js")

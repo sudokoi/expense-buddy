@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useReducedMotion } from "react-native-reanimated"
 import { Button } from "./Button"
 import type { AppDialogAction } from "../../utils/app-dialog-queue"
+import { UI_SPACE } from "../../constants/ui-tokens"
+import { MODAL_BACKDROP_COLOR } from "../../constants/palette"
 
 interface AppDialogProps {
   title: string
@@ -33,6 +35,7 @@ export function AppDialog({
   const insets = useSafeAreaInsets()
   const reducedMotion = useReducedMotion()
   const heading = useRef<Text>(null)
+  // Dialog-specific fit thresholds: avoid crowded actions on narrow/large-text screens.
   const stacked = actions.length > 2 || fontScale > 1.2 || width < 360
 
   return (
@@ -47,16 +50,28 @@ export function AppDialog({
       }}
     >
       <View
-        className="flex-1 items-center justify-center bg-black/50 px-6"
-        style={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }}
+        className="flex-1 items-center justify-center px-6"
+        style={{
+          backgroundColor: MODAL_BACKDROP_COLOR,
+          paddingTop: insets.top + UI_SPACE.content,
+          paddingBottom: insets.bottom + UI_SPACE.content,
+        }}
       >
         <View
           className="w-full max-w-sm rounded-card border border-border bg-surface"
-          style={{ maxHeight: Math.max(0, height - insets.top - insets.bottom - 32) }}
+          style={{
+            maxHeight: Math.max(
+              0,
+              height - insets.top - insets.bottom - UI_SPACE.content * 2
+            ),
+          }}
           accessibilityViewIsModal
           onAccessibilityEscape={onDismiss}
         >
-          <ScrollView bounces={false} contentContainerStyle={{ padding: 24, gap: 16 }}>
+          <ScrollView
+            bounces={false}
+            contentContainerStyle={{ padding: UI_SPACE.block, gap: UI_SPACE.content }}
+          >
             <Text
               ref={heading}
               className="text-lg font-semibold text-foreground"

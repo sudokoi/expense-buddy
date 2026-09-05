@@ -80,7 +80,8 @@ export function useSmsImportActions() {
         permissionStatus,
       }
     } catch (error) {
-      addNotification(error instanceof Error ? error.message : String(error), "error")
+      console.warn("SMS import failed", error)
+      addNotification(t("ui.actionFailed"), "error")
       return {
         createdCount: 0,
         pendingCount: pendingItems.length,

@@ -1,4 +1,5 @@
 import { memo, useState } from "react"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { Pressable, Text, View } from "react-native"
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Plus } from "lucide-react-native"
 import type { Category } from "../../types/category"
@@ -55,13 +56,13 @@ export const CategorySection = memo(function CategorySection({
             {t("settings.payment.categoriesTitle")} ({categories.length})
           </Text>
           {expanded ? (
-            <ChevronUp size={20} color={theme.mutedForeground} />
+            <ChevronUp size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
           ) : (
-            <ChevronDown size={20} color={theme.mutedForeground} />
+            <ChevronDown size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
           )}
         </Pressable>
         <Button
-          icon={<Plus size={16} />}
+          icon={<Plus size={UI_ICON_SIZE.small} />}
           onPress={onAdd}
           accessibilityLabel={t("settings.categories.add")}
         >
@@ -123,7 +124,7 @@ export const CategorySection = memo(function CategorySection({
                           )
                         }
                       >
-                        <ArrowUp size={18} />
+                        <ArrowUp size={UI_ICON_SIZE.regular} />
                       </Button>
                       <Button
                         size="icon"
@@ -141,7 +142,7 @@ export const CategorySection = memo(function CategorySection({
                           )
                         }
                       >
-                        <ArrowDown size={18} />
+                        <ArrowDown size={UI_ICON_SIZE.regular} />
                       </Button>
                     </>
                   ) : null}

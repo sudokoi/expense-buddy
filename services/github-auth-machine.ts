@@ -246,7 +246,7 @@ export const githubAuthMachine = setup({
             guard: ({ event }) => event.output.type === "expired",
             target: "error",
             actions: assign({
-              error: () => "GitHub sign-in expired. Please try again.",
+              error: () => i18next.t("githubDeviceFlow.errors.signInExpired"),
               deviceCode: () => null,
               expiresAtMs: () => null,
             }),

@@ -1,4 +1,5 @@
 import { memo } from "react"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { Pressable, Text, View } from "react-native"
 import { Trash2 } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
@@ -39,7 +40,11 @@ export const CategoryListItem = memo(function CategoryListItem({
           className="h-8 w-8 items-center justify-center rounded-control"
           style={{ backgroundColor: resolvedColor }}
         >
-          <DynamicCategoryIcon name={category.icon} size={18} color={iconColor} />
+          <DynamicCategoryIcon
+            name={category.icon}
+            size={UI_ICON_SIZE.regular}
+            color={iconColor}
+          />
         </View>
         <View className="flex-1 gap-1">
           <Text className="text-base font-medium text-foreground">{label}</Text>
@@ -50,7 +55,7 @@ export const CategoryListItem = memo(function CategoryListItem({
       </Pressable>
       {canDelete ? (
         <IconActionButton
-          icon={<Trash2 size={18} />}
+          icon={<Trash2 size={UI_ICON_SIZE.regular} />}
           onPress={() => onDelete(category.label)}
           accessibilityLabel={t("common.deleteLabel", { label })}
           tooltip={t("common.deleteLabel", { label })}

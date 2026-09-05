@@ -12,6 +12,7 @@ import { Keyboard } from "react-native"
 import { AppDialog } from "../components/ui/AppDialog"
 import { createAppDialogQueue, type AppDialogAction } from "../utils/app-dialog-queue"
 import { useNotifications } from "../stores/hooks"
+import i18next from "i18next"
 
 const AppDialogContext = createContext<ReturnType<typeof createAppDialogQueue> | null>(
   null
@@ -22,7 +23,7 @@ export function AppDialogProvider({ children }: { children: ReactNode }) {
   const [queue] = useState(() =>
     createAppDialogQueue((error) => {
       console.warn("Dialog action failed:", error)
-      addNotification(String(error), "error")
+      addNotification(i18next.t("ui.actionFailed"), "error")
     })
   )
   const dialog = useSyncExternalStore(queue.subscribe, queue.getSnapshot)

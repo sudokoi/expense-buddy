@@ -1,5 +1,11 @@
 import { CATEGORY_COLORS } from "../constants/category-colors"
-import { CARD_COLORS, palette } from "../constants/palette"
+import {
+  CARD_COLORS,
+  palette,
+  SEMANTIC_FOREGROUND_COLORS,
+  DESTRUCTIVE_COLOR,
+  NEUTRAL_COLORS,
+} from "../constants/palette"
 import { resolveCategoryColor, resolveCategoryVisual } from "./resolve-category-color"
 
 // WCAG relative luminance for the opaque six-digit theme/category colors.
@@ -54,6 +60,16 @@ describe.each(["light", "dark"] as const)("%s character surfaces", (scheme) => {
     expect(contrast(theme.mutedForeground, theme.muted)).toBeGreaterThanOrEqual(4.5)
     expect(contrast(theme.accent, theme.surface)).toBeGreaterThanOrEqual(4.5)
     expect(contrast(theme.accentForeground, theme.accent)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it("keeps income/expense amounts and destructive labels readable", () => {
+    const status = SEMANTIC_FOREGROUND_COLORS[scheme]
+    for (const background of [theme.background, theme.surface]) {
+      expect(contrast(status.error, background)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(status.success, background)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(theme.mutedForeground, background)).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(contrast(NEUTRAL_COLORS.white, DESTRUCTIVE_COLOR)).toBeGreaterThanOrEqual(4.5)
   })
 })
 

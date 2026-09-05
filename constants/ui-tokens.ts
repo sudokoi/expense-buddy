@@ -12,6 +12,7 @@ export const UI_SPACE = {
   micro: 4,
   control: 8,
   section: 12,
+  content: 16,
   gutter: 20,
   block: 24,
   empty: 40,
@@ -89,3 +90,9 @@ export const UI_MIN_TOUCH_TARGET = 48
 
 /** Product density choice for chips/preferences; below Android's 48dp recommendation. */
 export const UI_COMPACT_TOUCH_TARGET = 40
+
+/** Component geometry shared across native inline styles and Tailwind aliases. */
+export const UI_LAYOUT = {
+  contentMaxWidth: 600,
+  chartEmptyHeight: 150,
+} as const

@@ -19,14 +19,14 @@ import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
 
 const INSTRUMENT_OTHERS_ID = "__others__"
 
-export function methodShortLabel(method: string): string {
+export function methodShortLabel(method: string, t: (key: string) => string): string {
   switch (method) {
     case "Credit Card":
-      return "CC"
+      return t("ui.paymentShort.creditCard")
     case "Debit Card":
-      return "DC"
+      return t("ui.paymentShort.debitCard")
     case "UPI":
-      return "UPI"
+      return t("ui.paymentShort.upi")
     default:
       return method
   }
@@ -60,7 +60,7 @@ export function formatSelectedPaymentInstrumentLabel(
   t: TFunction
 ): string {
   const [method, instrumentId] = key.split("::")
-  const shortMethod = methodShortLabel(method)
+  const shortMethod = methodShortLabel(method, t)
 
   if (!instrumentId || instrumentId === INSTRUMENT_OTHERS_ID) {
     return `${shortMethod} • ${t("analytics.chart.others")}`
@@ -84,7 +84,7 @@ export function formatSelectedPaymentInstrumentsSummary(
   const countsByMethod = new Map<string, number>()
   for (const key of keys) {
     const [method] = key.split("::")
-    const short = methodShortLabel(method)
+    const short = methodShortLabel(method, t)
     countsByMethod.set(short, (countsByMethod.get(short) ?? 0) + 1)
   }
 

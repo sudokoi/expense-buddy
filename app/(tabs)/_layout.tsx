@@ -7,7 +7,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { useTabBarHeight } from "../../hooks/use-tab-bar-height"
-import { UI_FONT_SIZE, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import {
+  UI_FONT_SIZE,
+  UI_ICON_SIZE,
+  UI_FONT_WEIGHT,
+  UI_SPACE,
+} from "../../constants/ui-tokens"
 import { logAsync } from "../../services/logger"
 
 export default function TabLayout() {
@@ -39,13 +44,17 @@ export default function TabLayout() {
         tabBarShowLabel: true,
         tabBarInactiveTintColor: theme.mutedForeground,
         tabBarLabelPosition: "below-icon",
-        tabBarLabelStyle: { fontSize: UI_FONT_SIZE.caption, fontWeight: "600" },
+        tabBarLabelStyle: {
+          fontSize: UI_FONT_SIZE.caption,
+          fontWeight: UI_FONT_WEIGHT.semiBold,
+        },
+        // Navigator slot, not a touch target: leaves room for wide platform tab glyphs.
         tabBarIconStyle: { width: 56, height: 32 },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
           height: tabBarHeight,
-          paddingTop: 4,
+          paddingTop: UI_SPACE.micro,
           paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,

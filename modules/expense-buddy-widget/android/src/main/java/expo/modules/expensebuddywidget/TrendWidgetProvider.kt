@@ -12,7 +12,7 @@ class TrendWidgetProvider : WidgetProviderBase() {
     ) {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
-        val copy = assist.toCopy()
+        val copy = assist.toCopy(context)
         val theme = WidgetTheme.resolve(context)
         val categoryStyles =
             WidgetCategoryStyles.parse(

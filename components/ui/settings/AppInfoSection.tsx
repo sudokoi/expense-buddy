@@ -1,4 +1,5 @@
 import { Text, View } from "react-native"
+import { UI_ICON_SIZE } from "../../../constants/ui-tokens"
 
 import { Download, ExternalLink, Bug } from "lucide-react-native"
 import { UpdateInfo } from "../../../services/update-checker"
@@ -61,18 +62,18 @@ export function AppInfoSection({
     <View className="gap-2">
       <View className="flex-row flex-wrap items-center gap-2">
         {/* Current Version */}
-        <View className="min-w-[120px] flex-1 gap-1">
+        <View className="min-w-metric flex-1 gap-1">
           <Text className="text-xs text-muted-foreground">
             {t("settings.about.currentVersion")}
           </Text>
           <Text className="text-base font-semibold text-foreground">
-            v{currentVersion}
+            {t("ui.version", { version: currentVersion })}
           </Text>
 
           {/* Update Info */}
           {updateInfo?.latestVersion && !updateInfo.error && (
             <Text className="text-xs text-muted-foreground">
-              {t("settings.about.latestVersion")}: v{updateInfo.latestVersion}
+              {t("ui.latestVersion", { version: updateInfo.latestVersion })}
             </Text>
           )}
         </View>
@@ -81,7 +82,13 @@ export function AppInfoSection({
         <Button
           size="control"
           className="max-w-full"
-          icon={isCheckingUpdate ? <Spinner size="small" /> : <Download size={16} />}
+          icon={
+            isCheckingUpdate ? (
+              <Spinner size="small" />
+            ) : (
+              <Download size={UI_ICON_SIZE.small} />
+            )
+          }
           onPress={onCheckForUpdates}
           disabled={isCheckingUpdate}
         >
@@ -96,7 +103,7 @@ export function AppInfoSection({
         <Button
           size="control"
           variant="accent"
-          icon={<ExternalLink size={16} />}
+          icon={<ExternalLink size={UI_ICON_SIZE.small} />}
           onPress={onStartUpdate}
         >
           {isUpdateReadyToInstall
@@ -111,9 +118,9 @@ export function AppInfoSection({
       <View className="flex-row flex-wrap gap-2 border-t border-border pt-1">
         <Button
           size="compact"
-          className="min-w-[140px] flex-1"
+          className="min-w-action flex-1"
           variant="ghost"
-          icon={<Bug size={16} />}
+          icon={<Bug size={UI_ICON_SIZE.small} />}
           onPress={onReportIssue}
         >
           {t("settings.about.reportIssue")}
@@ -122,9 +129,9 @@ export function AppInfoSection({
         {/* GitHub Link */}
         <Button
           size="compact"
-          className="min-w-[140px] flex-1"
+          className="min-w-action flex-1"
           variant="ghost"
-          icon={<ExternalLink size={16} />}
+          icon={<ExternalLink size={UI_ICON_SIZE.small} />}
           onPress={onOpenGitHub}
         >
           {t("settings.about.viewGitHub")}

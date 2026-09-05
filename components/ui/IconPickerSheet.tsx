@@ -88,7 +88,7 @@ const IconGroup = memo(function IconGroup({
   return (
     <View className="mb-4 gap-2">
       <Text
-        className="text-[13px] font-semibold uppercase text-foreground"
+        className="text-body font-semibold uppercase text-foreground"
         style={{ opacity: UI_OPACITY.medium }}
       >
         {name}
@@ -121,6 +121,7 @@ const IconButton = memo(function IconButton({
   isSelected,
   onSelect,
 }: IconButtonProps) {
+  const { t } = useTranslation()
   const theme = useThemeColors()
   const handlePress = useCallback(() => {
     onSelect(iconName)
@@ -133,7 +134,7 @@ const IconButton = memo(function IconButton({
     <Pressable
       onPress={handlePress}
       accessibilityRole="button"
-      accessibilityLabel={`Select icon ${iconName}`}
+      accessibilityLabel={t("ui.selectIcon", { icon: iconName })}
       accessibilityState={{ selected: isSelected }}
     >
       <View

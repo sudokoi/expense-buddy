@@ -215,11 +215,11 @@ export function aggregateByPaymentInstrument(
   for (const [key, entry] of totals) {
     if (entry.value <= 0) continue
 
-    let text = `${methodShortLabel(entry.method)} • ${t("instruments.dropdown.others").split(" / ")[0]}`
+    let text = `${methodShortLabel(entry.method, t)} • ${t("analytics.chart.others")}`
     if (!entry.isOther && entry.instrumentId) {
       const inst = findInstrumentById(instruments, entry.instrumentId)
       if (inst && !inst.deletedAt) {
-        text = `${methodShortLabel(entry.method)} • ${formatPaymentInstrumentLabel(inst)}`
+        text = `${methodShortLabel(entry.method, t)} • ${formatPaymentInstrumentLabel(inst)}`
       }
     }
 

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { Keyboard, Text, View } from "react-native"
 import { Check } from "lucide-react-native"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
@@ -193,7 +194,7 @@ export function PaymentInstrumentForm({
         <Button
           size="control"
           variant="accent"
-          icon={<Check size={20} />}
+          icon={<Check size={UI_ICON_SIZE.medium} />}
           onPress={handleSave}
         >
           {isEditMode ? t("common.save") : t("common.add")}

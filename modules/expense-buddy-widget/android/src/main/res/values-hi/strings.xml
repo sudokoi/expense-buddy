@@ -1,0 +1,23 @@
+<resources>
+    <string name="expense_widget_summary_desc">आज और इस महीने का खर्च एक नज़र में</string>
+    <string name="expense_widget_trend_desc">पिछले 7 दिनों के खर्च का चार्ट</string>
+    <string name="expense_widget_recent_desc">हाल के खर्चों की सूची</string>
+    <string name="expense_widget_config_title">विजेट सेटिंग्स</string>
+    <string name="expense_widget_config_subtitle">चुनें कि यह विजेट क्या दिखाए</string>
+    <string name="expense_widget_config_category">श्रेणी</string>
+    <string name="expense_widget_config_all">सभी श्रेणियां</string>
+    <string name="expense_widget_config_hide_amounts">राशियां छुपाएं</string>
+    <string name="expense_widget_config_save">विजेट जोड़ें</string>
+    <string name="expense_widget_add_expense">खर्च जोड़ें</string>
+    <string name="expense_widget_trend_accessibility">खर्च का रुझान</string>
+    <string name="expense_widget_today">आज</string>
+    <string name="expense_widget_last_7_days">पिछले 7 दिन</string>
+    <string name="expense_widget_recent">हाल के खर्च</string>
+    <string name="expense_widget_empty">अभी कोई खर्च नहीं</string>
+    <string name="expense_widget_amount_placeholder">—</string>
+    <string name="expense_widget_expenses_one">आज 1 खर्च</string>
+    <string name="expense_widget_expenses_many">आज %d खर्च</string>
+    <string name="expense_widget_month_total">इस महीने %s</string>
+    <string name="expense_widget_other">अन्य</string>
+    <string name="expense_widget_trend_total">खर्च का रुझान। कुल %s</string>
+</resources>

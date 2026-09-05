@@ -1,5 +1,6 @@
 import {
   formatCurrency,
+  formatPercentage,
   computeEffectiveCurrency,
   getDefaultCurrencyForLanguage,
   getSupportedSystemCurrency,
@@ -53,6 +54,22 @@ describe("formatCurrency", () => {
     // JPY usually has no decimals or different depending on locale settings, but standard JPY has 0 fraction digits by default?
     // Actually default display for JPY in en-US might be "¥100"
     expect(jpy).toContain("¥")
+  })
+})
+
+describe("formatPercentage", () => {
+  it("formats the 0–100 chart scale with one decimal", () => {
+    i18next.language = "en-US"
+    expect(formatPercentage(96.5)).toBe("96.5%")
+    expect(formatPercentage(0)).toBe("0.0%")
+    expect(formatPercentage(100)).toBe("100.0%")
+  })
+
+  it("uses the active locale rather than a stale cached formatter", () => {
+    i18next.language = "de-DE"
+    expect(formatPercentage(96.5)).toBe("96,5\u00a0%")
+    i18next.language = "en-US"
+    expect(formatPercentage(96.5)).toBe("96.5%")
   })
 })
 

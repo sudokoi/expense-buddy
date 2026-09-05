@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { LucideProvider } from "lucide-react-native"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { UI_DURATION, UI_OPACITY } from "../../constants/ui-tokens"
 
 interface IconActionButtonProps {
   icon: ReactNode
@@ -39,7 +40,7 @@ function SpinningIcon({ active, children }: { active: boolean; children: ReactNo
         // Fallback: start animation immediately (async check may be slower)
         rotation.value = 0
         rotation.value = withRepeat(
-          withTiming(360, { duration: 1000, easing: Easing.linear }),
+          withTiming(360, { duration: UI_DURATION.emphasis, easing: Easing.linear }),
           -1,
           false
         )
@@ -52,7 +53,7 @@ function SpinningIcon({ active, children }: { active: boolean; children: ReactNo
       } catch {
         rotation.value = 0
         rotation.value = withRepeat(
-          withTiming(360, { duration: 1000, easing: Easing.linear }),
+          withTiming(360, { duration: UI_DURATION.emphasis, easing: Easing.linear }),
           -1,
           false
         )
@@ -123,7 +124,7 @@ export function IconActionButton({
           accessibilityRole="button"
           accessibilityState={{ disabled: !!disabled }}
           className="min-h-12 min-w-12 items-center justify-center rounded-control p-2 active:opacity-60"
-          style={{ opacity: disabled ? 0.4 : 1 }}
+          style={{ opacity: disabled ? UI_OPACITY.ghost : 1 }}
         >
           <LucideProvider color={theme.foreground}>{icon}</LucideProvider>
         </Pressable>
@@ -135,10 +136,10 @@ export function IconActionButton({
           pointerEvents="none"
         >
           <View
-            className="px-2 py-1 rounded-control"
-            style={{ minWidth: 100, backgroundColor: theme.foreground }}
+            className="min-w-legend px-2 py-1 rounded-control"
+            style={{ backgroundColor: theme.foreground }}
           >
-            <Text className="text-[13px] text-background">{tooltip}</Text>
+            <Text className="text-body text-background">{tooltip}</Text>
           </View>
         </View>
       )}

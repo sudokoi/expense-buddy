@@ -15,7 +15,6 @@ export interface PaymentMethodConfig {
   value: PaymentMethodType
   icon: IconComponent
   hasIdentifier: boolean
-  identifierLabel?: string
   maxLength?: number
   i18nKey: string
 }
@@ -60,7 +59,6 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     i18nKey: "upi",
     icon: Smartphone,
     hasIdentifier: true,
-    identifierLabel: "Last 3 digits of bank A/C",
     maxLength: 3,
   },
   {
@@ -69,7 +67,6 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     i18nKey: "creditCard",
     icon: CreditCard,
     hasIdentifier: true,
-    identifierLabel: "Last 4 digits",
     maxLength: 4,
   },
   {
@@ -78,7 +75,6 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     i18nKey: "debitCard",
     icon: CreditCard,
     hasIdentifier: true,
-    identifierLabel: "Last 4 digits",
     maxLength: 4,
   },
   {
@@ -94,7 +90,6 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
     i18nKey: "other",
     icon: Circle,
     hasIdentifier: true,
-    identifierLabel: "Description",
     maxLength: 50,
   },
 ]

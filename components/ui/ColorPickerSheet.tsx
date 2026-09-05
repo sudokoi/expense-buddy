@@ -80,6 +80,7 @@ const ColorButton = memo(function ColorButton({
   isSelected,
   onSelect,
 }: ColorButtonProps) {
+  const { t } = useTranslation()
   const theme = useThemeColors()
   const selectedBorderColor = theme.accent
   const checkColor = getReadableTextColor(color)
@@ -92,7 +93,7 @@ const ColorButton = memo(function ColorButton({
     <Pressable
       onPress={handlePress}
       accessibilityRole="button"
-      accessibilityLabel={`Select color ${color}`}
+      accessibilityLabel={t("ui.selectColor", { color })}
       accessibilityState={{ selected: isSelected }}
     >
       <View

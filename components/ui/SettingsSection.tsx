@@ -55,6 +55,7 @@ export function SettingsSection({
                 accessible={false}
                 importantForAccessibility="no-hide-descendants"
               >
+                {/* Optical one-off: 22dp balances this decorative 40dp badge. */}
                 <Icon size={22} color={colors.text} />
               </View>
             ) : null}

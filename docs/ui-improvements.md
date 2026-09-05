@@ -1,5 +1,9 @@
 # UI readability and interaction pass
 
+This document records successive passes; later sections supersede earlier layout
+descriptions. See [the final source audit](./ui-audit.md) for current sizing rules,
+theme/localization findings, documented exceptions, and validation boundaries.
+
 This pass preserves the warm light/dark palette and existing expense, filter, and
 sync workflows. It covers the full route/component tree, not only the screenshot
 viewports.
@@ -257,3 +261,12 @@ animations, or expense-data changes are introduced.
   multi-line instruments and enlarged footer labels grew as needed. Font scale
   was restored to 1.0. This density pass still needs dark-mode, picker-grid,
   small-width, and TalkBack checks; it does not claim full accessibility validation.
+
+## Compact payment chart legends
+
+- Payment-method and payment-instrument legends place amount and percentage
+  together, for example `$1,234.50 (96.5%)`, instead of stacking two value lines.
+- Row gaps decrease from 8dp to 4dp; each interactive legend row retains its 48dp
+  minimum. Long instrument labels and large text can still wrap.
+- The combined value is a locale template, with currency and percentage formatted
+  for the active language. Selection and filtering behavior are unchanged.

@@ -204,7 +204,7 @@ function InstrumentEntryField({
       {onCreateInstrument && !showAdd ? (
         <Button
           variant="outline"
-          icon={<Plus size={16} />}
+          icon={<Plus size={UI_ICON_SIZE.small} />}
           onPress={() => {
             setShowAdd(true)
           }}

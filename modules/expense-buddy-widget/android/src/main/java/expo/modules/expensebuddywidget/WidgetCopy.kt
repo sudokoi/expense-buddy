@@ -1,10 +1,12 @@
 package expo.modules.expensebuddywidget
 
+import android.content.Context
+
 /**
  * Widget display strings. The primary source is the app-persisted assist,
  * which carries copy captured from `translation.json` at compute time — this
- * class only supplies the degraded English fallback for the path where the
- * assist is missing/stale. `%d`/`%s` templates are formatted at render time.
+ * class supplies Android-localized resource fallbacks when the assist is
+ * missing/stale. `%d`/`%s` templates are formatted at render time.
  */
 class WidgetCopy internal constructor(
     val today: String,
@@ -34,27 +36,27 @@ class WidgetCopy internal constructor(
     fun displayCategory(canonical: String): String = if (canonical == "Other") other else canonical
 
     companion object {
-        fun fallback(): WidgetCopy =
+        fun fallback(context: Context): WidgetCopy =
             WidgetCopy(
-                today = "Today",
-                last7Days = "Last 7 days",
-                recent = "Recent expenses",
-                empty = "No expenses yet",
-                expensesOne = "1 expense today",
-                expensesManyTemplate = "%d expenses today",
-                thisMonthTemplate = "%s this month",
-                other = "Other",
-                configTitle = "Widget settings",
-                configSubtitle = "Choose what this widget shows",
-                configCategory = "Category",
-                configAll = "All categories",
-                configHide = "Hide amounts",
-                configSave = "Add widget",
-                addExpense = "Add Expense",
-                trendDescriptionTemplate = "Spending trend. Total %s",
+                today = context.getString(R.string.expense_widget_today),
+                last7Days = context.getString(R.string.expense_widget_last_7_days),
+                recent = context.getString(R.string.expense_widget_recent),
+                empty = context.getString(R.string.expense_widget_empty),
+                expensesOne = context.getString(R.string.expense_widget_expenses_one),
+                expensesManyTemplate = context.getString(R.string.expense_widget_expenses_many),
+                thisMonthTemplate = context.getString(R.string.expense_widget_month_total),
+                other = context.getString(R.string.expense_widget_other),
+                configTitle = context.getString(R.string.expense_widget_config_title),
+                configSubtitle = context.getString(R.string.expense_widget_config_subtitle),
+                configCategory = context.getString(R.string.expense_widget_config_category),
+                configAll = context.getString(R.string.expense_widget_config_all),
+                configHide = context.getString(R.string.expense_widget_config_hide_amounts),
+                configSave = context.getString(R.string.expense_widget_config_save),
+                addExpense = context.getString(R.string.expense_widget_add_expense),
+                trendDescriptionTemplate = context.getString(R.string.expense_widget_trend_total),
             )
     }
 }
 
 /** Single owner of the assist-or-fallback resolution used by every renderer. */
-internal fun WidgetAssist?.toCopy(): WidgetCopy = this?.copy ?: WidgetCopy.fallback()
+internal fun WidgetAssist?.toCopy(context: Context): WidgetCopy = this?.copy ?: WidgetCopy.fallback(context)

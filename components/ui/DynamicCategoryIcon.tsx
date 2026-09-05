@@ -1,4 +1,6 @@
 import { memo } from "react"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import {
   // Food & Drink
   Utensils,
@@ -166,15 +168,12 @@ interface DynamicCategoryIconProps {
  */
 export const DynamicCategoryIcon = memo(function DynamicCategoryIcon({
   name,
-  size = 24,
+  size = UI_ICON_SIZE.large,
   color,
 }: DynamicCategoryIconProps) {
+  const theme = useThemeColors()
   const IconComponent = ICON_MAP[name as keyof typeof ICON_MAP] || Circle
-  // Render with or without color - lucide-react-native icons accept an optional color prop
-  if (color) {
-    return <IconComponent size={size} color={color} />
-  }
-  return <IconComponent size={size} />
+  return <IconComponent size={size} color={color ?? theme.foreground} />
 })
 
 export type { DynamicCategoryIconProps }

@@ -36,7 +36,7 @@ export const CategoryBreakdown = memo(function CategoryBreakdown({
   return (
     <CollapsibleSection title={t("analytics.charts.category.title")}>
       {data.length === 0 ? (
-        <View className="h-[150px] items-center justify-center">
+        <View className="h-chart-empty items-center justify-center">
           <Text className="text-muted-foreground">
             {t("analytics.charts.common.noData")}
           </Text>

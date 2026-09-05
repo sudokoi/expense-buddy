@@ -25,7 +25,7 @@ import {
   PAYMENT_METHODS,
   getPaymentMethodI18nKey,
 } from "../../../constants/payment-methods"
-import { UI_SPACE } from "../../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_SPACE } from "../../../constants/ui-tokens"
 import { useThemeColors } from "../../../hooks/use-theme-colors"
 import { getCurrencySymbol, getFallbackCurrency } from "../../../utils/currency"
 import { formatDate } from "../../../utils/date"
@@ -235,7 +235,7 @@ export default function EditExpenseScreen() {
           extraKeyboardSpace={footerHeight}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="max-w-[600px] w-full self-center gap-3">
+          <View className="max-w-content w-full self-center gap-3">
             <View className="gap-2 rounded-card bg-muted p-3">
               <Label>{t("history.editDialog.fields.amount")}</Label>
               <View
@@ -297,7 +297,7 @@ export default function EditExpenseScreen() {
                 </Label>
                 <Button
                   size="control"
-                  icon={<Calendar size={16} />}
+                  icon={<Calendar size={UI_ICON_SIZE.small} />}
                   onPress={() => setShowDatePicker(true)}
                   accessibilityLabel={t("history.editDialog.fields.date")}
                 >
@@ -373,9 +373,12 @@ export default function EditExpenseScreen() {
                     ) : null}
                   </View>
                   {paymentExpanded ? (
-                    <ChevronUp size={20} color={theme.mutedForeground} />
+                    <ChevronUp size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
                   ) : (
-                    <ChevronDown size={20} color={theme.mutedForeground} />
+                    <ChevronDown
+                      size={UI_ICON_SIZE.medium}
+                      color={theme.mutedForeground}
+                    />
                   )}
                 </View>
               </Button>
@@ -451,7 +454,7 @@ export default function EditExpenseScreen() {
             style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.control) }}
             onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
           >
-            <View className="max-w-[600px] w-full self-center flex-row gap-3">
+            <View className="max-w-content w-full self-center flex-row gap-3">
               <Button
                 className="flex-1"
                 size="control"
@@ -468,7 +471,7 @@ export default function EditExpenseScreen() {
                 className="flex-1"
                 size="control"
                 variant="accent"
-                icon={<Check size={20} />}
+                icon={<Check size={UI_ICON_SIZE.medium} />}
                 onPress={handleSave}
                 accessibilityLabel={t("common.save")}
               >

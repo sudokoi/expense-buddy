@@ -130,7 +130,7 @@ export default function PaymentSettingsScreen() {
         bottomOffset={50}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="max-w-[600px] w-full self-center gap-4">
+        <View className="max-w-content w-full self-center gap-4">
           <View className="gap-2">
             <DefaultPaymentMethodSelector
               value={settings.defaultPaymentMethod}

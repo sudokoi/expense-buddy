@@ -14,6 +14,13 @@ module.exports = {
         sans: ["Inter", "System", "sans-serif"],
         bold: ["InterBold", "System", "sans-serif"],
       },
+      fontSize: {
+        micro: "11px",
+        body: "13px",
+      },
+      maxWidth: { content: "600px" },
+      minWidth: { legend: "100px", metric: "120px", action: "140px" },
+      height: { "chart-empty": "150px" },
       colors: {
         background: "var(--background)",
         surface: "var(--surface)",

@@ -21,7 +21,12 @@ import { useCategories, useSettings } from "../../stores/hooks"
 import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { getCurrencySymbol, getFallbackCurrency } from "../../utils/currency"
-import { UI_OPACITY, UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import {
+  UI_ICON_SIZE,
+  UI_OPACITY,
+  UI_FONT_WEIGHT,
+  UI_BORDER_WIDTH,
+} from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -317,7 +322,9 @@ export function EditExpenseModal({
             {selectedPaymentConfig?.hasIdentifier && (
               <View className="mt-2 gap-1">
                 <Label className="text-xs" style={{ opacity: UI_OPACITY.subtle }}>
-                  {selectedPaymentConfig.identifierLabel} {t("common.optional")}
+                  {paymentMethodType === "Other"
+                    ? t("history.editDialog.fields.identifier")
+                    : `${t("instruments.form.digitsLabel", { count: selectedPaymentConfig.maxLength })} ${t("common.optional")}`}
                 </Label>
 
                 {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) ? (
@@ -333,7 +340,6 @@ export function EditExpenseModal({
                     }
                     selectedInstrumentId={paymentInstrumentId}
                     manualDigits={paymentMethodId}
-                    identifierLabel={selectedPaymentConfig.identifierLabel}
                     maxLength={selectedPaymentConfig.maxLength}
                     onChange={(next) => {
                       setInstrumentEntryKind(next.kind)
@@ -378,7 +384,7 @@ export function EditExpenseModal({
             <Button
               size="control"
               variant="accent"
-              icon={<Check size={16} />}
+              icon={<Check size={UI_ICON_SIZE.small} />}
               onPress={handleSave}
             >
               {t("common.save")}

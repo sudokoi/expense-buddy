@@ -34,6 +34,26 @@ The main dependency direction is:
 
 ## State Model
 
+### Shared UI contracts
+
+- Theme colors live in `constants/palette.ts`; numeric tokens live in
+  `constants/ui-tokens.ts`. CSS, Tailwind aliases, and native widget colors are
+  checked against them by `yarn check:theme`.
+- `Button` owns task actions and variant-aware text/icon foregrounds, with a
+  48dp minimum. `CompactControl` owns compact choices: a 36dp visual minimum
+  inside a 40dp target that grows with content. This density exception is an
+  explicit product choice, below Android's 48dp recommendation.
+- `AppDialogProvider` owns a transient queue of app confirmations. Each caller
+  owns its pending requests; unmount and Back cancel them. `AppDialog` renders
+  the common themed surface. OS permission prompts remain native.
+- App copy uses i18next resources. Native SMS notifications and widget fallback
+  copy use Android string resources before JS is available; these follow the
+  Android locale. Widgets prefer the app-localized assist copy when available.
+
+See [UI audit and exceptions](./docs/ui-audit.md) for validation boundaries.
+
+### Persisted state
+
 Expense Buddy uses XState lightweight stores for most long-lived state, plus a dedicated XState machine for sync lifecycle control.
 
 | Store              | Purpose                                                 | Persists locally | Syncs across devices      |

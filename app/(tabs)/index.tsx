@@ -35,7 +35,7 @@ import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { IconActionButton } from "../../components/ui/IconActionButton"
 import { Button } from "../../components/ui/Button"
 import { CompactControl } from "../../components/ui/CompactControl"
-import { UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_OPACITY } from "../../constants/ui-tokens"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 // Memoized empty state component
@@ -77,11 +77,11 @@ const Header = memo(function Header() {
 
   return (
     <View className="mb-4 flex-row items-center justify-between">
-      <Text className="text-foreground opacity-60">{t("analytics.subtitle")}</Text>
+      <Text className="text-muted-foreground">{t("analytics.subtitle")}</Text>
       <View className="flex-row items-center gap-2 px-1">
         {syncConfig !== null ? (
           <IconActionButton
-            icon={<RefreshCw size={20} />}
+            icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
             onPress={handleSync}
             tooltip={t("settings.autoSync.syncNow")}
             disabled={isSyncing}
@@ -91,7 +91,7 @@ const Header = memo(function Header() {
           />
         ) : null}
         <IconActionButton
-          icon={<Download size={20} />}
+          icon={<Download size={UI_ICON_SIZE.medium} />}
           onPress={handleImportPress}
           tooltip={t("settings.smsImport.actions.review")}
           disabled={isScanningSmsImports}
@@ -450,7 +450,7 @@ export default function AnalyticsScreen() {
 
         <Button
           size="chip"
-          icon={<Filter size={16} />}
+          icon={<Filter size={UI_ICON_SIZE.small} />}
           disabled={!filtersHydrated}
           onPress={openFilters}
           variant={activeCount > 0 ? "accent" : undefined}
