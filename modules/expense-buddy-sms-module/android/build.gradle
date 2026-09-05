@@ -9,6 +9,7 @@ version = '1.0.0'
 
 android {
   namespace "expo.modules.expensebuddysmsmodule"
+  sourceSets.test.resources.srcDir("schemas")
   defaultConfig {
     versionCode 1
     versionName "1.0.0"

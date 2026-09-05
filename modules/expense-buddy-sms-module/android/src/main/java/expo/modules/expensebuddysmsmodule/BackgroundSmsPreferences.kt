@@ -7,13 +7,38 @@ import expo.modules.expensebuddylogger.LoggerApi
 
 private const val PREFS_NAME = "expense_buddy_background_sms"
 private const val ENABLED_KEY = "enabled"
-private const val LAST_SCAN_CURSOR_KEY = "lastScanCursor"
 private const val SMS_REGION_KEY = "smsRegion"
 
 /** Default when no region was ever pushed from JS (historical behavior). */
 const val DEFAULT_SMS_REGION = "IN"
 
 object BackgroundSmsPreferences {
+    fun getScanPosition(
+        context: Context,
+        region: String = getSmsRegion(context),
+    ): SmsScanPosition? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.contains("scanTimestampV2.$region")) return null
+        return SmsScanPosition(prefs.getLong("scanTimestampV2.$region", 0), prefs.getLong("scanMessageIdV2.$region", -1))
+    }
+
+    fun setScanPosition(
+        context: Context,
+        position: SmsScanPosition,
+        region: String = getSmsRegion(context),
+    ) {
+        check(
+            context
+                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putLong("scanTimestampV2.$region", position.timestamp)
+                .putLong("scanMessageIdV2.$region", position.messageId)
+                .commit(),
+        ) {
+            "Could not persist SMS scan progress"
+        }
+    }
+
     fun getState(context: Context): BackgroundSmsState {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return BackgroundSmsState(
@@ -41,22 +66,6 @@ object BackgroundSmsPreferences {
         if (getState(context).enabled != enabled) {
             LoggerApi.e("SMS_STORAGE", "setEnabled: state mismatch after write, enabled=$enabled")
         }
-    }
-
-    fun getLastScanCursor(context: Context): String? {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(LAST_SCAN_CURSOR_KEY, null)
-    }
-
-    fun setLastScanCursor(
-        context: Context,
-        cursor: String?,
-    ) {
-        context
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(LAST_SCAN_CURSOR_KEY, cursor)
-            .apply()
     }
 
     fun getSmsRegion(context: Context): String =

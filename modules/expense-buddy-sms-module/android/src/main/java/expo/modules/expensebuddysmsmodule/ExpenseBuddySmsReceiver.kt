@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import expo.modules.expensebuddylogger.LoggerApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,23 +31,16 @@ class ExpenseBuddySmsReceiver : BroadcastReceiver() {
             return
         }
 
-        val reviewItem =
-            BackgroundSmsParser.parseIncomingMessage(
-                messages,
-                regionCode = BackgroundSmsPreferences.getSmsRegion(context),
-            )
-        if (reviewItem == null) {
-            LoggerApi.d("SMS_RECEIVER", "SMS received but did not match any transaction pattern")
-            return
-        }
-
-        LoggerApi.d("SMS_RECEIVER", "SMS matched: sender=${reviewItem.sourceMessage.sender} fingerprint=${reviewItem.fingerprint}")
-
         val pendingResult = goAsync()
         // Per-invocation scope avoids the previous static companion leak; BroadcastReceiver is ephemeral.
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 withTimeout(8000L) {
+                    val reviewItem =
+                        BackgroundSmsParser.parseIncomingMessage(
+                            messages,
+                            regionCode = BackgroundSmsPreferences.getSmsRegion(context),
+                        ) ?: return@withTimeout
                     val repo = SmsReviewQueueRepository(context)
                     val entity =
                         repo.toReviewQueueEntity(
@@ -69,6 +63,8 @@ class ExpenseBuddySmsReceiver : BroadcastReceiver() {
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 LoggerApi.e("SMS_RECEIVER", "Failed to process incoming SMS", e)
             } finally {

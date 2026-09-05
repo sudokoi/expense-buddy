@@ -4,361 +4,158 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import expo.modules.expensebuddylogger.LoggerApi
-import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import expo.modules.expensebuddysmsparser.SmsCategoryLiteRtClassifier
-import expo.modules.expensebuddysmsparser.SmsPaymentMethod
-import expo.modules.expensebuddysmsparser.SmsRawMessage
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.exception.CodedException
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val READ_SMS_PERMISSION = Manifest.permission.READ_SMS
-
-class BackgroundSmsContextLostException :
-    CodedException(
-        code = "ERR_BACKGROUND_SMS_CONTEXT_LOST",
-        message = "React context is not available.",
-        cause = null,
-    )
+class BackgroundSmsContextLostException : CodedException("ERR_BACKGROUND_SMS_CONTEXT_LOST", "React context is not available.", null)
 
 class SmsPermissionMissingException :
-    CodedException(
-        code = "ERR_SMS_PERMISSION_MISSING",
-        message = "READ_SMS permission is required to scan SMS messages.",
-        cause = null,
-    )
+    CodedException("ERR_SMS_PERMISSION_MISSING", "READ_SMS permission is required to scan SMS messages.", null)
 
 class ExpenseBuddySmsModule : Module() {
     private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var observerStarted = false
+    private var observer: Job? = null
     private val isSyncing = AtomicBoolean(false)
+    private val context get() = appContext.reactContext?.applicationContext ?: throw BackgroundSmsContextLostException()
 
+    private fun repository() = SmsReviewQueueRepository(context)
+
+    @Synchronized
     private fun startQueueObserver() {
-        if (observerStarted) return
-        observerStarted = true
-
-        moduleScope.launch {
-            try {
-                val reactContext = appContext.reactContext ?: return@launch
-                val repo = SmsReviewQueueRepository(reactContext)
-                repo.observePendingItems().collect {
-                    sendEvent("onReviewQueueUpdated")
+        if (observer?.isActive == true) return
+        val repo = repository()
+        observer =
+            moduleScope.launch {
+                try {
+                    repo.observeChanges().collect { sendEvent("onReviewQueueUpdated") }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    LoggerApi.e("SMS_MODULE", "Queue observation failed", error)
                 }
-            } catch (_: Exception) {
-                observerStarted = false
             }
-        }
     }
 
     override fun definition() =
         ModuleDefinition {
             Name("ExpenseBuddySms")
-
             Events("onReviewQueueUpdated")
-
-            AsyncFunction("getBackgroundSmsStateAsync") {
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                val state = BackgroundSmsPreferences.getState(reactContext)
-                LoggerApi.d("SMS_MODULE", "getBackgroundSmsStateAsync: enabled=${state.enabled}")
-                mapOf("enabled" to state.enabled)
-            }
-
             AsyncFunction("getPermissionStatusAsync") { promise: expo.modules.kotlin.Promise ->
-                Permissions.getPermissionsWithPermissionsManager(appContext.permissions, promise, READ_SMS_PERMISSION)
+                Permissions.getPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_SMS)
             }
-
             AsyncFunction("requestPermissionAsync") { promise: expo.modules.kotlin.Promise ->
-                Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, READ_SMS_PERMISSION)
+                Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_SMS)
             }
-
-            AsyncFunction("setBackgroundSmsEnabledAsync") { enabled: Boolean ->
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                LoggerApi.d("SMS_MODULE", "setBackgroundSmsEnabledAsync: enabled=$enabled")
-                BackgroundSmsPreferences.setEnabled(reactContext, enabled)
-            }
-
-            AsyncFunction("setSmsRegionAsync") { region: String ->
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                LoggerApi.d("SMS_MODULE", "setSmsRegionAsync: region=$region")
-                BackgroundSmsPreferences.setSmsRegion(reactContext, region)
-            }
-
-            AsyncFunction("syncInboxAsync") { useMlOnly: Boolean ->
-                startQueueObserver()
-                if (!isSyncing.compareAndSet(false, true)) {
-                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: already syncing, skipping")
-                    return@AsyncFunction 0
+            AsyncFunction("getBackgroundSmsStateAsync")
+                .SuspendBody<Map<String, Boolean>> {
+                    mapOf("enabled" to BackgroundSmsPreferences.getState(context).enabled)
+                }.runOnQueue(moduleScope)
+            (
+                AsyncFunction("setBackgroundSmsEnabledAsync") Coroutine { enabled: Boolean ->
+                    BackgroundSmsPreferences.setEnabled(context, enabled)
                 }
-                try {
-                    val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                    ensureSmsPermissionGranted(reactContext)
-
-                    // 1. Read the high-water mark cursor
-                    val cursor = BackgroundSmsPreferences.getLastScanCursor(reactContext)
-                    val lookbackBound =
-                        java.time.Instant
-                            .now()
-                            .minus(7, java.time.temporal.ChronoUnit.DAYS)
-                            .toEpochMilli()
-
-                    val sinceBoundMillis =
-                        cursor?.let {
-                            try {
-                                java.time.Instant
-                                    .parse(it)
-                                    .toEpochMilli()
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-
-                    val scanSinceMillis =
-                        if (sinceBoundMillis != null) {
-                            maxOf(lookbackBound, sinceBoundMillis)
-                        } else {
-                            lookbackBound
-                        }
-
-                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: started since=$scanSinceMillis")
-                    val startTimeMs = System.currentTimeMillis()
-
-                    // 2. Scan the inbox natively without crossing the JS bridge
-                    val scanner = SmsInboxScanner(reactContext)
-                    val smsRegion = BackgroundSmsPreferences.getSmsRegion(reactContext)
-
-                    val classifier =
-                        try {
-                            SmsCategoryLiteRtClassifier
-                                .getInstance(reactContext)
-                        } catch (e: Exception) {
-                            LoggerApi.w("SMS_MODULE", "ML classifier unavailable, falling back to regex-only: ${e.message}")
-                            null
-                        }
-                    val parsedResults =
-                        scanner.scanAndParseMessages(
-                            sinceTimestampMillis = scanSinceMillis,
-                            limit = 500,
-                            classifier = classifier,
-                            useMlOnly = useMlOnly,
-                            regionCode = smsRegion,
-                        )
-
-                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: scanned ${parsedResults.size} messages since $cursor")
-
-                    // 3. Insert parsed results into the queue database in a single transaction
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    var latestReceivedAt: Long = -1
-                    var insertedCount = 0
-                    val entities = mutableListOf<ReviewQueueEntity>()
-
-                    runBlocking(Dispatchers.IO) {
-                        for (parsed in parsedResults) {
-                            val receivedAtStr = parsed["receivedAt"] as? String ?: continue
-                            val receivedAtMillis =
-                                java.time.Instant
-                                    .parse(receivedAtStr)
-                                    .toEpochMilli()
-                            if (receivedAtMillis > latestReceivedAt) {
-                                latestReceivedAt = receivedAtMillis
-                            }
-
-                            val item =
-                                BackgroundSmsReviewItem(
-                                    id = "${parsed["fingerprint"]}_${parsed["messageId"]}",
-                                    fingerprint = parsed["fingerprint"] as String,
-                                    sourceMessage =
-                                        SmsRawMessage(
-                                            messageId = parsed["messageId"] as String,
-                                            sender = parsed["sender"] as String,
-                                            body = parsed["body"] as String,
-                                            receivedAt = receivedAtStr,
-                                        ),
-                                    amount = (parsed["amount"] as? Number)?.toDouble(),
-                                    currency = parsed["currency"] as? String,
-                                    merchantName = parsed["merchantName"] as? String,
-                                    categorySuggestion = parsed["categorySuggestion"] as? String,
-                                    paymentMethodSuggestion =
-                                        (parsed["paymentMethodType"] as? String)?.let { type ->
-                                            SmsPaymentMethod(
-                                                type = type,
-                                                identifier = parsed["paymentMethodIdentifier"] as? String,
-                                                instrumentId = parsed["paymentMethodInstrumentId"] as? String,
-                                            )
-                                        },
-                                    noteSuggestion = parsed["noteSuggestion"] as? String,
-                                    transactionDate = parsed["transactionDate"] as? String,
-                                    matchedLocale = parsed["matchedLocale"] as? String,
-                                    matchedPatternKey = parsed["matchedPatternKey"] as? String,
-                                    status = "pending",
-                                    acceptedExpenseId = null,
-                                    createdAt =
-                                        java.time.Instant
-                                            .now()
-                                            .toString(),
-                                    updatedAt =
-                                        java.time.Instant
-                                            .now()
-                                            .toString(),
-                                )
-
-                            val entity = repo.toReviewQueueEntity(item, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                            entities.add(entity)
-                        }
-
-                        if (entities.isNotEmpty()) {
-                            insertedCount = repo.upsertItems(entities, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                            LoggerApi.d("SMS_MODULE", "syncInboxAsync: inserted $insertedCount / ${entities.size} items")
-                        }
-                    }
-
-                    // 4. Update the high-water mark cursor — advance past the latest
-                    //    scanned message so it is not re-read on the next scan.
-                    val nextCursor =
-                        java.time.Instant
-                            .ofEpochMilli(
-                                kotlin.math.max(latestReceivedAt, scanSinceMillis + 1),
-                            ).toString()
-                    BackgroundSmsPreferences.setLastScanCursor(reactContext, nextCursor)
-                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: next_cursor=$nextCursor")
-
-                    val durationMs = System.currentTimeMillis() - startTimeMs
-                    LoggerApi.d("SMS_MODULE", "syncInboxAsync: completed in ${durationMs}ms with ${parsedResults.size} parsed items")
-
-                    insertedCount
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "syncInboxAsync: failed", e)
-                    throw e
-                } finally {
-                    isSyncing.set(false)
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("setSmsRegionAsync") Coroutine { region: String ->
+                    BackgroundSmsPreferences.setSmsRegion(context, region)
                 }
-            }
-
-            AsyncFunction("getPendingReviewQueueAsync") {
-                startQueueObserver()
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    val items = runBlocking(Dispatchers.IO) { repo.getPendingItems() }
-                    LoggerApi.d("SMS_MODULE", "getPendingReviewQueueAsync: count=${items.size}")
-                    items.map { it.toDto() }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "getPendingReviewQueueAsync: failed", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (AsyncFunction("syncInboxAsync") Coroutine { useMlOnly: Boolean -> syncInbox(useMlOnly) }).runOnQueue(moduleScope)
+            AsyncFunction("getPendingReviewQueueAsync")
+                .SuspendBody<List<Map<String, Any?>>> {
+                    startQueueObserver()
+                    repository().getPendingItems().map { it.toDto() }
+                }.runOnQueue(moduleScope)
+            (
+                AsyncFunction("approveReviewItemAsync") Coroutine { fingerprint: String ->
+                    repository().approveItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("approveReviewItemAsync") { fingerprint: String ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "approveReviewItemAsync: fingerprint=$fingerprint")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) { repo.approveItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION) }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "approveReviewItemAsync: failed for fingerprint=$fingerprint", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("rejectReviewItemAsync") Coroutine { fingerprint: String ->
+                    repository().rejectItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("rejectReviewItemAsync") { fingerprint: String ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "rejectReviewItemAsync: fingerprint=$fingerprint")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) { repo.rejectItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION) }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "rejectReviewItemAsync: failed for fingerprint=$fingerprint", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("dismissReviewItemAsync") Coroutine { fingerprint: String ->
+                    repository().dismissItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("dismissReviewItemAsync") { fingerprint: String ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "dismissReviewItemAsync: fingerprint=$fingerprint")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) { repo.dismissItem(fingerprint, SmsReviewQueueRepository.SOURCE_JS_ACTION) }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "dismissReviewItemAsync: failed for fingerprint=$fingerprint", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("approveItemsAsync") Coroutine { fingerprints: List<String> ->
+                    repository().approveItems(fingerprints, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("approveItemsAsync") { fingerprints: List<String> ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "approveItemsAsync: count=${fingerprints.size}")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) {
-                        for (fp in fingerprints) {
-                            repo.approveItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                        }
-                    }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "approveItemsAsync: failed", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("rejectItemsAsync") Coroutine { fingerprints: List<String> ->
+                    repository().rejectItems(fingerprints, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("rejectItemsAsync") { fingerprints: List<String> ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "rejectItemsAsync: count=${fingerprints.size}")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) {
-                        for (fp in fingerprints) {
-                            repo.rejectItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                        }
-                    }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "rejectItemsAsync: failed", e)
-                    throw e
+            ).runOnQueue(moduleScope)
+            (
+                AsyncFunction("dismissItemsAsync") Coroutine { fingerprints: List<String> ->
+                    repository().dismissItems(fingerprints, SmsReviewQueueRepository.SOURCE_JS_ACTION)
                 }
-            }
-
-            AsyncFunction("dismissItemsAsync") { fingerprints: List<String> ->
-                startQueueObserver()
-                LoggerApi.d("SMS_MODULE", "dismissItemsAsync: count=${fingerprints.size}")
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                try {
-                    val repo = SmsReviewQueueRepository(reactContext)
-                    runBlocking(Dispatchers.IO) {
-                        for (fp in fingerprints) {
-                            repo.dismissItem(fp, SmsReviewQueueRepository.SOURCE_JS_ACTION)
-                        }
-                    }
-                } catch (e: Exception) {
-                    LoggerApi.e("SMS_MODULE", "dismissItemsAsync: failed", e)
-                    throw e
-                }
-            }
-
-            AsyncFunction("dismissNotificationAsync") {
-                val reactContext = appContext.reactContext ?: throw BackgroundSmsContextLostException()
-                BackgroundSmsNotificationManager.dismissNotification(reactContext)
-            }
-
-            OnDestroy {
-                moduleScope.cancel()
-            }
+            ).runOnQueue(moduleScope)
+            AsyncFunction("dismissNotificationAsync")
+                .SuspendBody<Unit> {
+                    BackgroundSmsNotificationManager.dismissNotification(context)
+                }.runOnQueue(moduleScope)
+            OnDestroy { moduleScope.cancel() }
         }
 
-    private fun ensureSmsPermissionGranted(context: android.content.Context) {
-        val status = ContextCompat.checkSelfPermission(context, READ_SMS_PERMISSION)
-        if (status != PackageManager.PERMISSION_GRANTED) {
-            throw SmsPermissionMissingException()
+    private suspend fun syncInbox(useMlOnly: Boolean): Int {
+        startQueueObserver()
+        if (!isSyncing.compareAndSet(false, true)) return 0
+        try {
+            val app = context
+            if (ContextCompat.checkSelfPermission(app, Manifest.permission.READ_SMS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                throw SmsPermissionMissingException()
+            }
+            val repo = SmsReviewQueueRepository(app)
+            val scanner = SmsInboxScanner(app)
+            val until = System.currentTimeMillis()
+            val region = BackgroundSmsPreferences.getSmsRegion(app)
+            var position = BackgroundSmsPreferences.getScanPosition(app, region)
+            var inserted = 0
+            // Drain a fixed seven-day window in bounded pages, not just its first 500 SMS.
+            while (true) {
+                val page =
+                    scanner.scan(position, until, region, useMlOnly) {
+                        try {
+                            SmsCategoryLiteRtClassifier.getInstance(app)
+                        } catch (error: Exception) {
+                            LoggerApi.w("SMS_MODULE", "Classifier unavailable: ${error.javaClass.simpleName}")
+                            null
+                        }
+                    }
+                val next = page.position ?: break
+                inserted +=
+                    repo.upsertItems(
+                        page.items.map { repo.toReviewQueueEntity(it, SmsReviewQueueRepository.SOURCE_JS_ACTION) },
+                        SmsReviewQueueRepository.SOURCE_JS_ACTION,
+                    )
+                // A failed cursor write replays a page safely through deduplication.
+                BackgroundSmsPreferences.setScanPosition(app, next, region)
+                position = next
+            }
+            LoggerApi.i("SMS_MODULE", "Scan completed: inserted=$inserted")
+            return inserted
+        } finally {
+            isSyncing.set(false)
         }
     }
 }
