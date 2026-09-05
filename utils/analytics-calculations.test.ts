@@ -5,7 +5,6 @@
 import {
   filterExpensesByTimeWindow,
   aggregateByCategory,
-  aggregateByDay,
   calculateStatistics,
   getDateRangeForTimeWindow,
   getTimeWindowDays,
@@ -15,6 +14,8 @@ import {
 } from "./analytics-calculations"
 import { Expense, ExpenseCategory, PaymentMethodType } from "../types/expense"
 import fc from "fast-check"
+import { enGB } from "date-fns/locale"
+import { aggregateSpendingTrend } from "./analytics/spending-trend"
 import { format, parseISO, subDays, isWithinInterval } from "date-fns"
 
 // Helper to generate valid expense categories
@@ -243,27 +244,18 @@ describe("Analytics Calculations Properties", () => {
   })
 })
 
-/**
- * Property 5: Line Chart Data Completeness
- * For any time window, the line chart data should contain exactly one data point
- * for each day in the period, with days having no expenses showing a value of zero,
- * and days with expenses showing the correct daily total.
- *
- * Feature: expense-analytics, Property 5: Line Chart Data Completeness
- * Validates: Requirements 3.1, 3.5
- */
-describe("Property 5: Line Chart Data Completeness", () => {
-  it("should have exactly one data point per day in the time window", () => {
+describe("Spending trend completeness", () => {
+  it("has one point per day for daily-granularity windows", () => {
     fc.assert(
       fc.property(
         fc.array(expenseArb({ minDaysAgo: 0, maxDaysAgo: 30 }), {
           minLength: 0,
           maxLength: 50,
         }),
-        timeWindowArb,
+        fc.constantFrom<TimeWindow>("7d", "15d", "1m"),
         (expenses, timeWindow) => {
           const dateRange = getDateRangeForTimeWindow(timeWindow)
-          const lineData = aggregateByDay(expenses, dateRange)
+          const lineData = aggregateSpendingTrend(expenses, dateRange, enGB).points
           const expectedDays = getTimeWindowDays(timeWindow)
 
           return lineData.length === expectedDays
@@ -278,7 +270,7 @@ describe("Property 5: Line Chart Data Completeness", () => {
       fc.property(timeWindowArb, (timeWindow) => {
         // Empty expenses array
         const dateRange = getDateRangeForTimeWindow(timeWindow)
-        const lineData = aggregateByDay([], dateRange)
+        const lineData = aggregateSpendingTrend([], dateRange, enGB).points
 
         // All values should be zero
         return lineData.every((item) => item.value === 0)
@@ -296,7 +288,7 @@ describe("Property 5: Line Chart Data Completeness", () => {
         }),
         (expenses) => {
           const dateRange = getDateRangeForTimeWindow("7d")
-          const lineData = aggregateByDay(expenses, dateRange)
+          const lineData = aggregateSpendingTrend(expenses, dateRange, enGB).points
 
           // For each day in line data, verify the sum matches
           for (const dayData of lineData) {
@@ -496,7 +488,11 @@ describe("Property 10: Category Filter Consistency", () => {
 
           // Get line chart data from filtered expenses
           const dateRange = getDateRangeForTimeWindow("7d")
-          const lineData = aggregateByDay(filteredExpenses, dateRange)
+          const lineData = aggregateSpendingTrend(
+            filteredExpenses,
+            dateRange,
+            enGB
+          ).points
 
           // Get statistics from filtered expenses
           const stats = calculateStatistics(filteredExpenses, 7)

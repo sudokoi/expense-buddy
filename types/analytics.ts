@@ -21,7 +21,6 @@ export type {
   PieChartDataItem,
   PaymentMethodChartDataItem,
   PaymentInstrumentChartDataItem,
-  LineChartDataItem,
 } from "../utils/analytics/aggregations"
 
 // Date range type (local)
