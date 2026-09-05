@@ -1,19 +1,18 @@
 import { memo, useCallback, useRef } from "react"
-import { View, Text } from "react-native"
+import { Alert, Pressable, View, Text } from "react-native"
 
-import { Trash, Edit3 } from "lucide-react-native"
+import { MoreHorizontal } from "lucide-react-native"
 
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import { formatPaymentMethodDisplay } from "../../utils/payment-method-display"
 import { ExpenseCard } from "./ExpenseCard"
-import { AmountText } from "./AmountText"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
-import { UI_OPACITY, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { IconActionButton } from "./IconActionButton"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
@@ -58,66 +57,68 @@ export const ExpenseRow = memo(function ExpenseRow({
     ? formatPaymentMethodDisplay(expense.paymentMethod, instruments)
     : null
 
-  const subtitleDate = subtitleMode === "time" ? "h:mm a" : "dd/MM/yyyy"
+  const subtitleDate = subtitleMode === "time" ? "p" : "PP"
   const categoryLabel =
     categoryInfo.label === "Other" ? t("settings.categories.other") : categoryInfo.label
 
   return (
     <ExpenseCard>
-      <View className="flex-1 flex-row items-center gap-3">
+      <Pressable
+        className="flex-1 flex-row items-center gap-3 py-1"
+        onPress={showActions ? handleEdit : undefined}
+        accessibilityRole={showActions ? "button" : undefined}
+        accessibilityHint={showActions ? t("common.edit") : undefined}
+        style={({ pressed }) => ({ opacity: pressed && showActions ? 0.6 : 1 })}
+      >
         <DynamicCategoryIcon
           name={categoryInfo.icon}
           size={subtitleMode === "time" ? 20 : 16}
           color={categoryInfo.color as `#${string}`}
         />
         <View className="min-w-0 flex-1">
-          <Text
-            className="text-sm text-foreground"
-            style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {expense.note || categoryLabel}
-          </Text>
-          <Text
-            className="text-xs text-foreground"
-            style={{ opacity: UI_OPACITY.subtle }}
-          >
+          <View className="flex-row flex-wrap items-start justify-between gap-x-3 gap-y-1">
+            <Text
+              className="min-w-[100px] flex-1 text-sm text-foreground"
+              style={{ fontWeight: UI_FONT_WEIGHT.bold }}
+              numberOfLines={2}
+            >
+              {expense.note || categoryLabel}
+            </Text>
+            <Text
+              className="text-right text-base font-semibold text-foreground"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              {formatCurrency(Math.abs(expense.amount), expense.currency)}
+            </Text>
+          </View>
+          <Text className="text-xs text-muted-foreground">
             {formatDate(expense.date, subtitleDate)} • {categoryLabel}
           </Text>
           {paymentMethodDisplay ? (
-            <Text
-              className="text-xs text-foreground"
-              style={{ opacity: UI_OPACITY.faint }}
-            >
+            <Text className="text-xs text-muted-foreground" numberOfLines={1}>
               {paymentMethodDisplay}
             </Text>
           ) : null}
         </View>
-      </View>
-
-      <View className="flex-row items-center gap-3">
-        <AmountText type="expense">
-          -{formatCurrency(expense.amount, expense.currency)}
-        </AmountText>
-
-        {showActions ? (
-          <>
-            <IconActionButton
-              icon={<Edit3 size={UI_ICON_SIZE.small} color={theme.foreground} />}
-              onPress={handleEdit}
-              tooltip={t("common.edit")}
-              accessibilityLabel={t("common.edit")}
-            />
-            <IconActionButton
-              icon={<Trash size={UI_ICON_SIZE.small} color={theme.foreground} />}
-              onPress={handleDelete}
-              tooltip={t("common.delete")}
-              accessibilityLabel={t("common.delete")}
-            />
-          </>
-        ) : null}
-      </View>
+      </Pressable>
+      {showActions ? (
+        <IconActionButton
+          icon={<MoreHorizontal size={UI_ICON_SIZE.medium} color={theme.foreground} />}
+          onPress={() =>
+            Alert.alert(
+              expense.note || categoryLabel,
+              formatCurrency(Math.abs(expense.amount), expense.currency),
+              [
+                { text: t("common.edit"), onPress: handleEdit },
+                { text: t("common.delete"), style: "destructive", onPress: handleDelete },
+                { text: t("common.cancel"), style: "cancel" },
+              ]
+            )
+          }
+          tooltip={t("history.transactionActions")}
+          accessibilityLabel={`${t("history.transactionActions")}: ${expense.note || categoryLabel}`}
+        />
+      ) : null}
     </ExpenseCard>
   )
 })

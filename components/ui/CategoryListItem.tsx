@@ -1,7 +1,6 @@
 import { memo, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { View, Text } from "react-native"
-import { Pressable, Alert } from "react-native"
 import { Pencil, Trash2 } from "lucide-react-native"
 import { IconActionButton } from "./IconActionButton"
 import { Category } from "../../types/category"
@@ -36,7 +35,6 @@ export const CategoryListItem = memo(function CategoryListItem({
   category,
   onEdit,
   onDelete,
-  expenseCount = 0,
   canDelete = true,
 }: CategoryListItemProps) {
   const { t } = useTranslation()
@@ -49,27 +47,10 @@ export const CategoryListItem = memo(function CategoryListItem({
     onEdit(category)
   }, [category, onEdit])
 
-  // Handle delete with confirmation
+  // The payment settings screen owns confirmation and explains expense reassignment.
   const handleDelete = useCallback(() => {
-    const message =
-      expenseCount > 0
-        ? t("settings.categories.deleteDialog.messageReassign", {
-            label: category.label,
-            count: expenseCount,
-          })
-        : t("settings.categories.deleteDialog.messageSimple", {
-            label: category.label,
-          })
-
-    Alert.alert(t("settings.categories.deleteDialog.title"), message, [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () => onDelete(category.label),
-      },
-    ])
-  }, [category.label, expenseCount, onDelete, t])
+    onDelete(category.label)
+  }, [category.label, onDelete])
 
   // Calculate font size based on label length to fit text
   const labelFontSize = useMemo(() => {
@@ -80,7 +61,7 @@ export const CategoryListItem = memo(function CategoryListItem({
   }, [category.label.length])
 
   return (
-    <Pressable onPress={handleEdit}>
+    <View>
       <View
         className="flex-row items-center gap-2 rounded-control bg-surface p-2"
         style={{ minHeight: UI_ICON_SIZE.huge }}
@@ -105,7 +86,7 @@ export const CategoryListItem = memo(function CategoryListItem({
         <View className="min-w-0 flex-1">
           <View className="flex-row items-center gap-1">
             <Text
-              className="text-foreground"
+              className="flex-1 text-foreground"
               style={{ fontWeight: UI_FONT_WEIGHT.medium, fontSize: labelFontSize }}
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -161,7 +142,7 @@ export const CategoryListItem = memo(function CategoryListItem({
           )}
         </View>
       </View>
-    </Pressable>
+    </View>
   )
 })
 

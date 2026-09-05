@@ -44,10 +44,10 @@ export function DefaultPaymentMethodSelector({
         key={key}
         onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
         role="button"
-        accessibilityLabel={`${displayLabel} payment method`}
+        accessibilityLabel={displayLabel}
         accessibilityState={{ selected: isSelected }}
         style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        className="min-h-[44]"
+        className="min-h-12 max-w-full"
       >
         <View
           className="flex-row items-center justify-center gap-2 rounded-control p-2"

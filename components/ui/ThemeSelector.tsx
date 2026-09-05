@@ -47,12 +47,12 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             onPress={() => onChange(key)}
             role="button"
             aria-selected={isSelected}
-            aria-label={`${label} theme`}
+            aria-label={label}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            className="flex-1 min-h-[44]"
+            className="flex-1 min-h-12"
           >
             <View
-              className="flex-1 flex-row items-center justify-center gap-2 rounded-control p-2"
+              className="flex-1 items-center justify-center gap-2 rounded-control p-2"
               style={{
                 borderWidth: UI_BORDER_WIDTH.normal,
                 backgroundColor: isSelected ? theme.muted : "transparent",
@@ -65,7 +65,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
                 style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
               />
               <Text
-                className="text-[13px] text-foreground"
+                className="text-center text-sm text-foreground"
                 style={{
                   fontWeight: isSelected
                     ? UI_FONT_WEIGHT.semiBold

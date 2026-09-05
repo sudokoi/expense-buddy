@@ -14,10 +14,11 @@ export const Input = forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
       <TextInput
         ref={ref}
         className={cn(
-          "rounded-control bg-surface border border-border px-3 py-2 text-foreground",
+          "min-h-12 rounded-control bg-surface border border-border px-3 py-2 text-base text-foreground focus:border-accent",
           className
         )}
         placeholderTextColor={theme.mutedForeground}
+        selectionColor={theme.accent}
         {...props}
       />
     )

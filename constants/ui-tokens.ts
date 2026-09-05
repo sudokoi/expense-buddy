@@ -84,4 +84,4 @@ export const UI_ICON_SIZE = {
 } as const
 
 /** Minimum interactive target size in dp (Material/Web accessibility guidance). */
-export const UI_MIN_TOUCH_TARGET = 44
+export const UI_MIN_TOUCH_TARGET = 48

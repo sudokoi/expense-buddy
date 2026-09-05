@@ -18,7 +18,7 @@ export const MonthSelector = memo(function MonthSelector({
   const { t } = useTranslation()
 
   return (
-    <FilterChipBar>
+    <FilterChipBar horizontal>
       <FilterChip
         label={t("common.all")}
         selected={value === null}

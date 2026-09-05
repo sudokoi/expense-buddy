@@ -1,76 +1,66 @@
-import { useState } from "react"
 import { Text, View } from "react-native"
 import { Input } from "../ui/Input"
 import { getCurrencySymbol } from "../../utils/currency"
-import { useSettings } from "../../stores/hooks"
-import { getAmountInputProps, parseAmountInput } from "../../utils/amount-input"
+import { getAmountInputProps } from "../../utils/amount-input"
 import { useTranslation } from "react-i18next"
 
 interface AmountRangeFilterProps {
-  minAmount: number | null
-  maxAmount: number | null
-  onChange: (min: number | null, max: number | null) => void
+  min: string
+  max: string
+  currencyCode: string
+  allowMathExpressions: boolean
+  onMinChange: (value: string) => void
+  onMaxChange: (value: string) => void
   error?: string
 }
 
 export function AmountRangeFilter({
-  minAmount,
-  maxAmount,
-  onChange,
+  min,
+  max,
+  currencyCode,
+  allowMathExpressions,
+  onMinChange,
+  onMaxChange,
   error,
 }: AmountRangeFilterProps) {
-  const { settings } = useSettings()
   const { t } = useTranslation()
-  const symbol = getCurrencySymbol(settings.defaultCurrency)
-  const amountInputProps = getAmountInputProps(settings.enableMathExpressions)
-
-  const [min, setMin] = useState(minAmount?.toString() ?? "")
-  const [max, setMax] = useState(maxAmount?.toString() ?? "")
-
-  const handleBlur = () => {
-    const minResult = min
-      ? parseAmountInput(min, {
-          allowMathExpressions: settings.enableMathExpressions,
-          allowZero: true,
-        })
-      : null
-    const maxResult = max
-      ? parseAmountInput(max, {
-          allowMathExpressions: settings.enableMathExpressions,
-          allowZero: true,
-        })
-      : null
-    const minNum = minResult?.success ? (minResult.value ?? null) : null
-    const maxNum = maxResult?.success ? (maxResult.value ?? null) : null
-    onChange(minNum, maxNum)
-  }
-
+  const inputProps = getAmountInputProps(allowMathExpressions)
+  const symbol = getCurrencySymbol(currencyCode)
   return (
     <View className="gap-2">
-      <View className="flex-row items-center gap-2">
-        <Input
-          className="flex-1 bg-background"
-          value={min}
-          onChangeText={setMin}
-          onBlur={handleBlur}
-          placeholder={`${symbol} Min`}
-          keyboardType={amountInputProps.keyboardType}
-          inputMode={amountInputProps.inputMode}
-          accessibilityLabel={t("analytics.filters.minAmount")}
-        />
-        <Text className="text-foreground">to</Text>
-        <Input
-          className="flex-1 bg-background"
-          value={max}
-          onChangeText={setMax}
-          onBlur={handleBlur}
-          placeholder={`${symbol} Max`}
-          keyboardType={amountInputProps.keyboardType}
-          inputMode={amountInputProps.inputMode}
-          accessibilityLabel={t("analytics.filters.maxAmount")}
-        />
+      <View className="flex-row gap-3">
+        <View className="flex-1 gap-1">
+          <Text className="text-xs text-muted-foreground">
+            {t("analytics.filters.minAmount")} ({symbol})
+          </Text>
+          <Input
+            value={min}
+            onChangeText={onMinChange}
+            placeholder="0"
+            {...inputProps}
+            accessibilityLabel={t("analytics.filters.minAmount")}
+            className={error ? "border-error" : undefined}
+          />
+        </View>
+        <View className="flex-1 gap-1">
+          <Text className="text-xs text-muted-foreground">
+            {t("analytics.filters.maxAmount")} ({symbol})
+          </Text>
+          <Input
+            value={max}
+            onChangeText={onMaxChange}
+            placeholder={t("analytics.filters.noLimit")}
+            {...inputProps}
+            accessibilityLabel={t("analytics.filters.maxAmount")}
+            className={error ? "border-error" : undefined}
+          />
+        </View>
       </View>
-      {error && <Text className="text-xs text-error">{error}</Text>}
+      {error ? (
+        <Text className="text-xs text-error" accessibilityRole="alert">
+          {error}
+        </Text>
+      ) : null}
     </View>
   )
 }

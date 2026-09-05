@@ -1,5 +1,5 @@
 import { Switch as RNSwitch, type SwitchProps as RNSwitchProps } from "react-native"
-import { SEMANTIC_COLORS } from "../../constants/palette"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import { hapticLight } from "../../utils/haptics"
 
 export interface SwitchProps extends Omit<RNSwitchProps, "value" | "onValueChange"> {
@@ -14,6 +14,7 @@ export function Switch({
   accessibilityLabel,
   ...props
 }: SwitchProps) {
+  const theme = useThemeColors()
   return (
     <RNSwitch
       value={checked}
@@ -24,7 +25,8 @@ export function Switch({
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="switch"
       accessibilityState={{ checked }}
-      trackColor={{ true: SEMANTIC_COLORS.success, false: undefined }}
+      trackColor={{ true: theme.accent, false: theme.border }}
+      thumbColor={checked ? theme.accentForeground : theme.surface}
       {...props}
     />
   )

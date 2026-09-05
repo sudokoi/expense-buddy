@@ -12,16 +12,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        outline: "border border-border bg-muted",
+        outline: "border border-border bg-surface",
         accent: "bg-accent",
         ghost: "bg-transparent",
         destructive: "bg-destructive",
       },
       size: {
-        icon: "h-5 px-1",
-        chip: "h-7 px-2",
-        compact: "h-9 px-3",
-        control: "h-11 px-4",
+        icon: "min-h-12 min-w-12 p-2",
+        chip: "min-h-12 px-3 py-2",
+        compact: "min-h-12 px-3 py-2",
+        control: "min-h-12 px-4 py-3",
       },
     },
     defaultVariants: {
@@ -117,7 +117,7 @@ const ButtonBase = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
 
     const content =
       typeof children === "string" || typeof children === "number" ? (
-        <ButtonText>{children}</ButtonText>
+        <ButtonText className="shrink text-center">{children}</ButtonText>
       ) : (
         children
       )
@@ -134,12 +134,13 @@ const ButtonBase = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
         accessibilityRole="button"
         hitSlop={hitSlop}
         {...props}
+        accessibilityState={{ ...props.accessibilityState, disabled: !!disabled }}
       >
         <ButtonContext.Provider
           value={{ variant: resolvedVariant, iconColor, textClass }}
         >
           <LucideProvider color={iconColor}>
-            <View className="flex-row items-center justify-center gap-2">
+            <View className="min-w-0 shrink flex-row items-center justify-center gap-2">
               {icon}
               {content}
             </View>

@@ -31,7 +31,7 @@ import {
   showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
 } from "../../utils/analytics/filter-summary"
 import { applyAllFilters } from "../../utils/analytics/filters"
-import { getCurrencySymbol } from "../../utils/currency"
+import { getCurrencySymbol, formatCurrency } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
 import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 import { hapticWarning } from "../../utils/haptics"
@@ -92,7 +92,7 @@ export default function HistoryScreen() {
   const insets = useSafeAreaInsets()
 
   // Filter state from shared store (single source of truth for all tabs)
-  const { filters, activeCount, hasActive, applyFilters } = useFilters()
+  const { filters, activeCount, hasActive, applyFilters, isHydrated } = useFilters()
 
   // Initialize filter persistence (loads persisted filters from storage on mount)
   const { save: saveFilters } = useFilterPersistence()
@@ -164,7 +164,7 @@ export default function HistoryScreen() {
       if (dayKey !== currentIsoDate) {
         currentIsoDate = dayKey
         currentSection = {
-          title: formatDate(expense.date, "dd/MM/yyyy"),
+          title: formatDate(expense.date, "PP"),
           data: [],
         }
         sections.push(currentSection)
@@ -190,12 +190,17 @@ export default function HistoryScreen() {
   // Flatten for FlashList
   const flattenedExpenses = useMemo(() => {
     const items: Array<
-      | { type: "header"; title: string; id: string }
+      | { type: "header"; title: string; total: number; id: string }
       | { type: "expense"; expense: Expense; id: string }
     > = []
 
     for (const section of groupedExpenses) {
-      items.push({ type: "header", title: section.title, id: `header-${section.title}` })
+      items.push({
+        type: "header",
+        title: section.title,
+        total: section.data.reduce((sum, expense) => sum + Math.abs(expense.amount), 0),
+        id: `header-${section.title}`,
+      })
       for (const expense of section.data) {
         items.push({ type: "expense", expense, id: expense.id })
       }
@@ -337,7 +342,22 @@ export default function HistoryScreen() {
       }
     }
 
-    return chips
+    if (filters.searchQuery.trim())
+      chips.push({ key: "search", label: filters.searchQuery.trim() })
+    if (filters.minAmount !== null || filters.maxAmount !== null)
+      chips.push({
+        key: "amount",
+        label: `${formatCurrency(filters.minAmount ?? 0, effectiveCurrency)} – ${filters.maxAmount !== null ? formatCurrency(filters.maxAmount, effectiveCurrency) : t("analytics.filters.noLimit")}`,
+      })
+    return chips.filter((chip) =>
+      chip.key === "category"
+        ? filters.selectedCategories.length > 0
+        : chip.key === "payment"
+          ? filters.selectedPaymentMethods.length > 0
+          : chip.key === "instrument"
+            ? filters.selectedPaymentInstruments.length > 0
+            : true
+    )
   }, [
     filters,
     effectiveSelectedMonth,
@@ -397,17 +417,17 @@ export default function HistoryScreen() {
       item,
     }: {
       item:
-        | { type: "header"; title: string; id: string }
+        | { type: "header"; title: string; total: number; id: string }
         | { type: "expense"; expense: Expense; id: string }
     }) => {
       if (item.type === "header") {
         return (
-          <View className="bg-background py-2">
-            <Text
-              className="text-base font-semibold text-foreground"
-              style={{ opacity: UI_OPACITY.strong }}
-            >
+          <View className="flex-row flex-wrap items-center justify-between gap-2 bg-background pb-2 pt-4">
+            <Text className="text-sm font-semibold text-muted-foreground">
               {item.title}
+            </Text>
+            <Text className="text-xs font-medium text-muted-foreground">
+              {formatCurrency(item.total, effectiveCurrency)}
             </Text>
           </View>
         )
@@ -429,7 +449,7 @@ export default function HistoryScreen() {
         />
       )
     },
-    [handleEdit, handleDelete, allInstruments, categoryByLabel]
+    [handleEdit, handleDelete, allInstruments, categoryByLabel, effectiveCurrency]
   )
 
   // Key extractor for FlashList
@@ -476,8 +496,9 @@ export default function HistoryScreen() {
 
   // Open the shared filters screen
   const handleOpenFilterSheet = useCallback(() => {
+    if (!isHydrated) return
     router.push("/filters" as Href)
-  }, [router])
+  }, [router, isHydrated])
 
   const handleResetFilters = useCallback(() => {
     // Clear every filter to "show everything". Uses "all" for timeWindow because
@@ -614,6 +635,18 @@ export default function HistoryScreen() {
       </View>
 
       {/* List - FlashList for optimal performance with large datasets */}
+      <Text
+        className="mb-2 text-sm text-muted-foreground"
+        accessibilityLiveRegion="polite"
+      >
+        {t("history.resultsSummary", {
+          count: filteredExpenses.length,
+          total: formatCurrency(
+            filteredExpenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0),
+            effectiveCurrency
+          ),
+        })}
+      </Text>
       <View style={{ flex: 1, opacity: isFilterStale ? 0.6 : 1 }}>
         <FlashList
           data={flattenedExpenses}
@@ -635,7 +668,10 @@ export default function HistoryScreen() {
         onRequestClose={() => setDeletingExpenseId(null)}
       >
         <View className="flex-1 items-center justify-center bg-black/50 px-6">
-          <View className="w-full max-w-sm gap-4 rounded-card bg-surface border border-border p-6">
+          <View
+            className="w-full max-w-sm gap-4 rounded-card bg-surface border border-border p-6"
+            accessibilityViewIsModal
+          >
             <Text className="text-lg font-semibold text-foreground">
               {t("history.deleteDialog.title")}
             </Text>

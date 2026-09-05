@@ -1,10 +1,8 @@
 import { memo, useCallback, useMemo } from "react"
-import { Text } from "react-native"
 import { useCategories } from "../../stores/hooks"
 import { CATEGORY_ICON_MAP } from "../../constants/category-icons"
 import { useTranslation } from "react-i18next"
 import { FilterChip, FilterChipBar } from "./FilterChipBar"
-import { Button } from "../ui/Button"
 
 interface CategoryFilterProps {
   selectedCategories: string[]
@@ -54,14 +52,11 @@ export const CategoryFilter = memo(function CategoryFilter({
 
   return (
     <FilterChipBar>
-      <Button
-        size="chip"
-        variant={isAllSelected ? "accent" : "outline"}
+      <FilterChip
+        label={t("common.all")}
+        selected={isAllSelected}
         onPress={handleAllPress}
-        accessibilityState={{ selected: isAllSelected }}
-      >
-        <Text>{t("common.all")}</Text>
-      </Button>
+      />
 
       {categoryItems.map((cat) => {
         const isSelected = selectedCategories.includes(cat.label)

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { FilterChip, FilterChipBar } from "./FilterChipBar"
 
 interface TimeWindowSelectorProps {
-  value: TimeWindow
+  value: TimeWindow | null
   onChange: (value: TimeWindow) => void
 }
 

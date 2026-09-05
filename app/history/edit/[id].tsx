@@ -296,6 +296,7 @@ export default function EditExpenseScreen() {
                     key={cat.label}
                     isSelected={isSelected}
                     categoryColor={cat.color}
+                    iconName={cat.icon}
                     label={cat.label}
                     onPress={() => handleCategorySelect(cat.label)}
                     compact

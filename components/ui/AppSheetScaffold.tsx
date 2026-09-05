@@ -8,6 +8,7 @@ import {
   Pressable,
   ScrollView,
   View,
+  useWindowDimensions,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -57,6 +58,7 @@ export function AppSheetScaffold({
 }: AppSheetScaffoldProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { height } = useWindowDimensions()
 
   useEffect(() => {
     if (open) {
@@ -83,18 +85,24 @@ export function AppSheetScaffold({
         />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="max-h-full"
+          className="flex-1 justify-end"
+          pointerEvents="box-none"
         >
           <View
             style={[
               {
-                height: `${heightPercent}%`,
+                height: Math.min(
+                  (height * heightPercent) / 100,
+                  height - insets.top - UI_SPACE.control
+                ),
+                maxHeight: "100%",
                 padding: UI_SPACE.gutter,
                 paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
               },
               frameStyle,
             ]}
             className="rounded-t-card bg-surface"
+            accessibilityViewIsModal
           >
             <View className="mb-2 items-center">
               <View className="h-1 w-10 rounded-full bg-border" />
@@ -123,7 +131,11 @@ export function AppSheetScaffold({
               </View>
 
               {scroll ? (
-                <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  className="flex-1"
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator
+                >
                   {children}
                 </ScrollView>
               ) : (

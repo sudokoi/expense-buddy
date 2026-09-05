@@ -58,6 +58,7 @@ export function PaymentInstrumentFormModal({
         isEditMode ? t("instruments.form.editTitle") : t("instruments.form.addTitle")
       }
       snapPoints={[90]}
+      scroll
     >
       {open ? (
         <PaymentInstrumentForm
@@ -206,6 +207,7 @@ function PaymentInstrumentForm({
           className={errors.nickname ? "border-error" : undefined}
           placeholder={t("instruments.form.nicknamePlaceholder")}
           value={nickname}
+          accessibilityLabel={t("instruments.form.nickname")}
           onChangeText={handleNicknameChange}
           maxLength={30}
         />
@@ -223,6 +225,7 @@ function PaymentInstrumentForm({
           })}
           keyboardType="numeric"
           value={lastDigits}
+          accessibilityLabel={t("instruments.form.lastDigits")}
           onChangeText={handleLastDigitsChange}
           maxLength={getLastDigitsLength(method)}
         />

@@ -111,7 +111,7 @@ export default function SettingsScreen() {
     const value = settings.defaultPaymentMethod
     if (!value) return t("settings.defaultPayment.none")
     const match = PAYMENT_METHODS.find((m) => m.value === value)
-    return match?.label ?? value
+    return match ? t(`paymentMethods.${match.i18nKey}`) : value
   }, [settings.defaultPaymentMethod, t])
   const activePaymentInstrumentCount = useMemo(
     () =>
@@ -252,18 +252,10 @@ export default function SettingsScreen() {
   }, [addNotification, clearSyncConfig])
 
   const handleClearConfig = useCallback(() => {
-    Alert.alert(t("settings.clearDialog.title"), t("settings.clearDialog.message"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("settings.clearDialog.clear"),
-        style: "destructive",
-        onPress: () => {
-          clearSyncConfig()
-          setConnectionStatus("idle")
-          addNotification(t("settings.notifications.configCleared"), "success")
-        },
-      },
-    ])
+    // GitHubConfigSection owns the confirmation; don't prompt a second time.
+    clearSyncConfig()
+    setConnectionStatus("idle")
+    addNotification(t("settings.notifications.configCleared"), "success")
   }, [clearSyncConfig, addNotification, t])
 
   const handleConnectionStatusChange = useCallback(
@@ -463,12 +455,11 @@ export default function SettingsScreen() {
     [setSyncSettings]
   )
 
-  // Sync button text with pending count
+  // Keep the action label concise; pending changes are explained separately.
   const syncButtonText = useMemo(() => {
     if (isSyncing) return t("settings.autoSync.syncing")
-    if (pendingCount > 0) return `${t("settings.autoSync.syncNow")} (${pendingCount})`
     return t("settings.autoSync.syncNow")
-  }, [isSyncing, pendingCount, t])
+  }, [isSyncing, t])
 
   return (
     <ScreenContainer>
@@ -490,6 +481,14 @@ export default function SettingsScreen() {
 
           {isConfigured && (
             <View className="gap-4 mt-2">
+              {pendingCount > 0 ? (
+                <Text
+                  className="text-sm text-muted-foreground"
+                  accessibilityLiveRegion="polite"
+                >
+                  {t("settings.autoSync.pendingChanges")}
+                </Text>
+              ) : null}
               <Button
                 size="control"
                 onPress={handleSync}

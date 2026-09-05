@@ -1,5 +1,5 @@
 import { useMemo, useCallback, memo } from "react"
-import { Dimensions, Pressable, Text, View } from "react-native"
+import { useWindowDimensions, Pressable, Text, View } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentMethodChartDataItem } from "../../utils/analytics/aggregations"
@@ -34,27 +34,30 @@ const LegendItem = memo(function LegendItem({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ${formatCurrency(item.value, currencyCode)}`}
       accessibilityState={{ selected: isSelected }}
     >
       <View
-        className="flex-row items-center justify-between rounded-control p-2"
+        className="min-h-12 flex-row flex-wrap items-center justify-between gap-2 rounded-control p-2"
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <View className="flex-row items-center gap-2">
+        <View className="min-w-[100px] flex-1 flex-row items-center gap-2">
           <View
             className="h-3 w-3 rounded-control"
             style={{ backgroundColor: item.color }}
           />
-          <Text className={`${isSelected ? "font-bold" : "font-normal"} text-foreground`}>
+          <Text
+            className={`${isSelected ? "font-bold" : "font-normal"} flex-1 text-sm text-foreground`}
+          >
             {item.text}
           </Text>
         </View>
-        <View className="flex-row items-center gap-2">
-          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
+        <View className="items-end gap-1">
+          <Text className="text-xs text-muted-foreground">
             {item.percentage.toFixed(1)}%
           </Text>
-          <Text className="font-bold text-foreground">
+          <Text className="text-sm font-bold text-foreground">
             {formatCurrency(item.value, currencyCode)}
           </Text>
         </View>
@@ -75,7 +78,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
 }: PaymentMethodPieChartProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
-  const screenWidth = Dimensions.get("window").width
+  const { width: screenWidth } = useWindowDimensions()
   const chartSize = Math.min(screenWidth - 80, 200)
   const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
@@ -153,7 +156,7 @@ export const PaymentMethodPieChart = memo(function PaymentMethodPieChart({
             innerCircleColor={theme.background}
             centerLabelComponent={CenterLabel}
             focusOnPress
-            showText
+            showText={false}
             textColor="white"
             textSize={10}
           />

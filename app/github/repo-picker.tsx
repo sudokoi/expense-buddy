@@ -197,9 +197,12 @@ export default function GitHubRepoPickerScreen() {
         variant="outline"
         className="mb-2 justify-between"
         onPress={() => void handleSelect(item)}
+        accessibilityLabel={`${item.full_name}, ${item.private ? t("repoPicker.private") : t("repoPicker.public")}`}
       >
-        <Text numberOfLines={1}>{item.full_name}</Text>
-        <Text className="text-xs text-foreground opacity-60">
+        <Text className="flex-1 text-foreground" numberOfLines={2}>
+          {item.full_name}
+        </Text>
+        <Text className="text-xs text-muted-foreground">
           {item.private ? t("repoPicker.private") : t("repoPicker.public")}
         </Text>
       </Button>

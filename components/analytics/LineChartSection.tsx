@@ -1,214 +1,246 @@
-import { useMemo, memo, useCallback, useEffect, useRef } from "react"
-import { Dimensions, ScrollView, Text, View } from "react-native"
+import { useMemo, memo, useCallback, useEffect, useRef, useState } from "react"
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from "react-native"
+import { ChevronLeft, ChevronRight } from "lucide-react-native"
 import { LineChart } from "react-native-gifted-charts"
+import { useTranslation } from "react-i18next"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { LineChartDataItem } from "../../utils/analytics/aggregations"
-import { ACCENT_COLORS, getChartColors, getOverlayColors } from "../../constants/palette"
+import { buildSpendingTrend, getTrendScale } from "../../utils/analytics/spending-trend"
+import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
-import { useTranslation } from "react-i18next"
 import { formatCurrency } from "../../utils/currency"
-import {
-  UI_RADIUS,
-  UI_SPACE,
-  UI_OPACITY,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
+import { getLocale } from "../../utils/date"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
   currencyCode?: string
-  /** When false, don't auto-scroll to the end (e.g. month selector). */
+  /** Month selections start at the beginning; rolling windows show the latest point. */
   autoScrollToEnd?: boolean
 }
 
-/**
- * LineChartSection - Line chart with bar overlay showing spending trends
- * Wrapped in CollapsibleSection, supports horizontal scrolling and tooltips
- */
+const CHART_HEIGHT = 160
+const Y_AXIS_WIDTH = 64
+const EDGE_SPACING = 24
+
 export const LineChartSection = memo(function LineChartSection({
   data,
   currencyCode = "INR",
   autoScrollToEnd = true,
 }: LineChartSectionProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useThemeColors()
-  const colorScheme = useThemeScheme()
-  const chartColors = getChartColors(colorScheme)
-  const overlayColors = getOverlayColors(colorScheme)
-  const screenWidth = Dimensions.get("window").width
-
-  // Memoize styles with theme colors
-  const styles = useMemo(
-    () => ({
-      tooltipContainer: {
-        backgroundColor: overlayColors.background,
-        padding: UI_SPACE.control,
-        borderRadius: UI_RADIUS.control,
-        borderWidth: UI_BORDER_WIDTH.thin,
-        borderColor: overlayColors.border,
-        shadowColor: overlayColors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-    }),
-    [overlayColors]
+  const { fontScale } = useWindowDimensions()
+  const yAxisWidth = Y_AXIS_WIDTH * fontScale
+  const chartColors = getChartColors(useThemeScheme())
+  const locale = getLocale()
+  const { points, granularity } = useMemo(
+    () => buildSpendingTrend(data, locale),
+    [data, locale]
   )
+  const [containerWidth, setContainerWidth] = useState(0)
+  const [selection, setSelection] = useState<{ range: string; date: string } | null>(null)
+  const scrollRef = useRef<ScrollView>(null)
+  const rangeKey = `${currencyCode}:${granularity}:${points[0]?.date}:${points.at(-1)?.endDate}:${autoScrollToEnd}`
+  const selectionIndex =
+    selection?.range === rangeKey
+      ? points.findIndex((point) => point.date === selection.date)
+      : -1
+  const selectedIndex =
+    selectionIndex >= 0 ? selectionIndex : autoScrollToEnd ? points.length - 1 : 0
+  const selectedPoint = points[selectedIndex]
 
-  // Memoize chart dimensions
-  const { chartWidth, needsScroll, pointSpacing } = useMemo(() => {
-    // Prevent extreme scroll widths for large ranges (e.g. "all" with years of data)
-    const spacing =
-      data.length > 365 ? 12 : data.length > 180 ? 18 : data.length > 90 ? 28 : 50
-    const width = Math.max(screenWidth - 80, data.length * spacing)
-    return {
-      chartWidth: width,
-      needsScroll: width > screenWidth - 60,
-      pointSpacing: spacing,
-    }
-  }, [screenWidth, data.length])
-
-  // Default the scroll position to the right end so the latest spend trend is
-  // visible first when a window-based time filter is active. For month
-  // selectors we leave the scroll at the start. Uses a ref + effect so
-  // filter switches (month ↔ window) re-trigger correctly, unlike a
-  // callback ref which only fires on mount.
-  const scrollViewRef = useRef<ScrollView>(null)
-
-  useEffect(() => {
-    if (!autoScrollToEnd || !needsScroll) return
-    const id = requestAnimationFrame(() =>
-      scrollViewRef.current?.scrollToEnd({ animated: false })
-    )
-    return () => cancelAnimationFrame(id)
-  }, [autoScrollToEnd, needsScroll, data.length])
-
-  // Memoize theme colors - use kawaii pink accent
-  const colors = useMemo(
-    () => ({
-      line: theme.accent,
-      area:
-        colorScheme === "dark"
-          ? ACCENT_COLORS.primaryLightDark
-          : ACCENT_COLORS.primaryLight,
-      text: theme.foreground,
-    }),
-    [theme.accent, theme.foreground, colorScheme]
+  // The library owns horizontal scrolling so the Y axis stays fixed in the viewport.
+  // Reserve its end spacing as well as the Y-axis label width inside the measured card.
+  const chartWidth = Math.max(0, containerWidth - yAxisWidth - EDGE_SPACING - 8)
+  const spacing = Math.max(
+    32,
+    (chartWidth - EDGE_SPACING) / Math.max(points.length - 1, 1)
   )
-
-  // Memoize chart data transformation
-  const chartData = useMemo(() => {
-    const labelInterval = Math.ceil(data.length / 7)
-    return data.map((item, index) => ({
-      value: item.value,
-      label: index % labelInterval === 0 ? item.label : "",
-      dataPointText: item.dataPointText,
-      labelTextStyle: { color: colors.text, fontSize: 10 },
-    }))
-  }, [data, colors.text])
-
-  // Memoize max value calculation
-  const maxValue = useMemo(() => Math.max(...data.map((d) => d.value), 1) * 1.1, [data])
-
-  // Memoize pointer label component
-  const PointerLabel = useCallback(
-    (items: { value: number }[]) => {
-      const item = items[0]
-      if (!item) return null
-      return (
-        <View style={styles.tooltipContainer}>
-          <Text className="text-[13px] font-bold text-foreground">
-            {formatCurrency(item.value, currencyCode)}
-          </Text>
-        </View>
-      )
+  const labelInterval = Math.max(1, Math.ceil((72 * fontScale) / spacing))
+  const chartData = useMemo(
+    () =>
+      points.map((point, index) => ({
+        value: point.value,
+        label: index % labelInterval === 0 ? point.label : "",
+      })),
+    [points, labelInterval]
+  )
+  const scale = useMemo(() => getTrendScale(points), [points])
+  const total = useMemo(
+    () => points.reduce((sum, point) => sum + point.value, 0),
+    [points]
+  )
+  const axisFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(i18n.language || "en-IN", {
+        style: "currency",
+        currency: currencyCode,
+        notation: "compact",
+        maximumFractionDigits: 2,
+      }),
+    [i18n.language, currencyCode]
+  )
+  const formatYLabel = useCallback(
+    (label: string) => axisFormatter.format(Number(label)),
+    [axisFormatter]
+  )
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    setContainerWidth(event.nativeEvent.layout.width)
+  }, [])
+  const selectPoint = useCallback(
+    (index: number) => {
+      const point = points[index]
+      if (!point) return
+      setSelection({ range: rangeKey, date: point.date })
     },
-    [styles.tooltipContainer, currencyCode]
+    [points, rangeKey]
+  )
+  const handleFocus = useCallback(
+    (_item: unknown, index: number) => selectPoint(index),
+    [selectPoint]
   )
 
-  // Memoize pointer config
-  const pointerConfig = useMemo(
-    () => ({
-      pointerStripHeight: 200,
-      pointerStripColor: chartColors.axisLine,
-      pointerStripWidth: 2,
-      pointerColor: colors.line,
-      radius: 6,
-      pointerLabelWidth: 100,
-      pointerLabelHeight: 90,
-      activatePointersOnLongPress: true,
-      autoAdjustPointerLabelPosition: true,
-      pointerLabelComponent: PointerLabel,
-    }),
-    [colors.line, chartColors.axisLine, PointerLabel]
-  )
-
-  if (data.length === 0) {
-    return (
-      <CollapsibleSection title={t("analytics.charts.trend.title")}>
-        <View className="h-[150px] items-center justify-center">
-          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
-            {t("analytics.charts.common.noData")}
-          </Text>
-        </View>
-      </CollapsibleSection>
-    )
-  }
-
-  const chartContent = (
-    <View
-      accessible
-      accessibilityLabel={t("analytics.charts.trend.accessibilityLabel", {
-        total: formatCurrency(
-          data.reduce((sum, d) => sum + d.value, 0),
-          currencyCode
-        ),
-      })}
-    >
-      <LineChart
-        data={chartData}
-        width={needsScroll ? chartWidth : screenWidth - 100}
-        height={200}
-        spacing={pointSpacing}
-        initialSpacing={20}
-        endSpacing={20}
-        color={colors.line}
-        thickness={2}
-        startFillColor={colors.area}
-        endFillColor={colors.area}
-        startOpacity={0.4}
-        endOpacity={0.1}
-        areaChart
-        curved
-        hideDataPoints={false}
-        dataPointsColor={colors.line}
-        dataPointsRadius={4}
-        showVerticalLines
-        verticalLinesColor={chartColors.gridLine}
-        xAxisColor={chartColors.axisLine}
-        yAxisColor={chartColors.axisLine}
-        yAxisTextStyle={{ color: colors.text, fontSize: 10 }}
-        xAxisLabelTextStyle={{ color: colors.text, fontSize: 10 }}
-        noOfSections={4}
-        maxValue={maxValue}
-        rulesType="solid"
-        rulesColor={chartColors.rules}
-        pointerConfig={pointerConfig}
-      />
-    </View>
-  )
+  // Keep tap-button navigation and filter changes in sync with the visible plot.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        x: Math.max(0, EDGE_SPACING + selectedIndex * spacing - chartWidth / 2),
+        animated: false,
+      })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [selectedIndex, spacing, chartWidth, rangeKey])
 
   return (
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
-      <View>
-        {needsScroll ? (
-          <ScrollView ref={scrollViewRef} horizontal showsHorizontalScrollIndicator>
-            {chartContent}
-          </ScrollView>
-        ) : (
-          chartContent
-        )}
-      </View>
+      {!selectedPoint ? (
+        <View className="h-[150px] items-center justify-center">
+          <Text className="text-muted-foreground">
+            {t("analytics.charts.common.noData")}
+          </Text>
+        </View>
+      ) : (
+        <View onLayout={handleLayout} className="gap-3">
+          <View className="gap-1">
+            <Text className="text-xs text-muted-foreground">
+              {t(`analytics.charts.trend.${granularity}`)}
+            </Text>
+            <Text className="text-sm text-foreground">
+              {t("analytics.charts.trend.periodTotal", {
+                total: formatCurrency(total, currencyCode),
+              })}
+            </Text>
+          </View>
+
+          {chartWidth > 0 ? (
+            <View
+              accessible
+              accessibilityLabel={t("analytics.charts.trend.accessibilityLabel", {
+                total: formatCurrency(total, currencyCode),
+              })}
+            >
+              <LineChart
+                key={rangeKey}
+                scrollRef={scrollRef}
+                scrollToEnd={autoScrollToEnd}
+                scrollAnimation={false}
+                showScrollIndicator
+                data={chartData}
+                width={chartWidth}
+                height={CHART_HEIGHT}
+                spacing={spacing}
+                initialSpacing={EDGE_SPACING}
+                endSpacing={EDGE_SPACING}
+                color={theme.accent}
+                thickness={2}
+                areaChart
+                startFillColor={theme.accent}
+                endFillColor={theme.accent}
+                startOpacity={0.12}
+                endOpacity={0}
+                dataPointsColor={theme.accent}
+                dataPointsRadius={2}
+                focusEnabled
+                onFocus={handleFocus}
+                focusedDataPointIndex={selectedIndex}
+                unFocusOnPressOut={false}
+                showDataPointOnFocus
+                focusedDataPointRadius={5}
+                focusedDataPointColor={theme.accent}
+                showStripOnFocus
+                stripColor={chartColors.axisLine}
+                stripWidth={1}
+                xAxisColor={chartColors.axisLine}
+                yAxisThickness={0}
+                yAxisLabelWidth={yAxisWidth}
+                formatYLabel={formatYLabel}
+                yAxisTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
+                xAxisLabelTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
+                xAxisLabelsHeight={36 * fontScale}
+                labelsExtraHeight={12}
+                noOfSections={4}
+                maxValue={scale.maxValue}
+                stepValue={scale.stepValue}
+                showFractionalValues={scale.stepValue < 1}
+                roundToDigits={2}
+                rulesType="solid"
+                rulesColor={chartColors.rules}
+              />
+            </View>
+          ) : null}
+
+          <View className="flex-row items-center gap-2 rounded-control bg-background p-2">
+            <Pressable
+              className="min-h-12 min-w-12 items-center justify-center rounded-control"
+              accessibilityRole="button"
+              accessibilityLabel={t("analytics.charts.trend.previous")}
+              accessibilityState={{ disabled: selectedIndex <= 0 }}
+              disabled={selectedIndex <= 0}
+              onPress={() => selectPoint(selectedIndex - 1)}
+              style={{ opacity: selectedIndex <= 0 ? 0.3 : 1 }}
+            >
+              <ChevronLeft size={UI_ICON_SIZE.medium} color={theme.foreground} />
+            </Pressable>
+            <View
+              className="flex-1 items-center gap-1"
+              accessibilityLiveRegion="polite"
+              accessible
+            >
+              <Text className="text-center text-xs text-muted-foreground">
+                {selectedPoint.periodLabel}
+              </Text>
+              <Text
+                className="text-center text-base font-bold text-foreground"
+                style={{ fontVariant: ["tabular-nums"] }}
+              >
+                {formatCurrency(selectedPoint.value, currencyCode)}
+              </Text>
+            </View>
+            <Pressable
+              className="min-h-12 min-w-12 items-center justify-center rounded-control"
+              accessibilityRole="button"
+              accessibilityLabel={t("analytics.charts.trend.next")}
+              accessibilityState={{ disabled: selectedIndex >= points.length - 1 }}
+              disabled={selectedIndex >= points.length - 1}
+              onPress={() => selectPoint(selectedIndex + 1)}
+              style={{ opacity: selectedIndex >= points.length - 1 ? 0.3 : 1 }}
+            >
+              <ChevronRight size={UI_ICON_SIZE.medium} color={theme.foreground} />
+            </Pressable>
+          </View>
+          <Text className="text-xs text-muted-foreground">
+            {t("analytics.charts.trend.hint")}
+          </Text>
+        </View>
+      )}
     </CollapsibleSection>
   )
 })

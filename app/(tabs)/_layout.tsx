@@ -1,48 +1,18 @@
 import { Tabs, usePathname } from "expo-router"
 import { useEffect } from "react"
-import { Pressable } from "react-native"
+import { View, useWindowDimensions } from "react-native"
 import { PlusCircle, PieChart, Clock, Settings } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_FONT_SIZE, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { logAsync } from "../../services/logger"
-import type { BottomTabBarButtonProps } from "expo-router/build/react-navigation/bottom-tabs"
-
-function TabBarButton({
-  children,
-  style,
-  onPress,
-  onLongPress,
-  href: _href,
-  pressColor: _pressColor,
-  pressOpacity: _pressOpacity,
-  hoverEffect: _hoverEffect,
-  ref: _ref,
-  ...rest
-}: BottomTabBarButtonProps) {
-  return (
-    <Pressable
-      {...rest}
-      onPress={onPress}
-      onLongPress={onLongPress}
-      android_ripple={null}
-      hitSlop={8}
-      style={({ pressed }) => [
-        style,
-        { flex: 1, alignItems: "center", justifyContent: "center" },
-        pressed && { opacity: 0.55 },
-      ]}
-    >
-      {children}
-    </Pressable>
-  )
-}
 
 export default function TabLayout() {
   const theme = useThemeColors()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { fontScale } = useWindowDimensions()
   const pathname = usePathname()
 
   useEffect(() => {
@@ -55,16 +25,16 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.accent,
-        tabBarShowLabel: false,
-        tabBarButton: TabBarButton,
-        tabBarItemStyle: {
-          alignItems: "center",
-          justifyContent: "center",
-        },
+        tabBarShowLabel: true,
+        tabBarInactiveTintColor: theme.mutedForeground,
+        tabBarLabelPosition: "below-icon",
+        tabBarLabelStyle: { fontSize: UI_FONT_SIZE.caption, fontWeight: "600" },
+        tabBarIconStyle: { width: 56, height: 32 },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
-          height: Math.max(48, 40 + insets.bottom),
+          height: 64 + Math.max(0, fontScale - 1) * 24 + insets.bottom,
+          paddingTop: 4,
           paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,
@@ -80,15 +50,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("navigation.analytics"),
-          tabBarIcon: ({ color }) => <PieChart color={color} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              className="w-14 items-center rounded-full py-1"
+              style={focused ? { backgroundColor: theme.muted } : undefined}
+            >
+              <PieChart color={color} size={UI_ICON_SIZE.large} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
           title: t("navigation.add"),
-          tabBarIcon: ({ color }) => (
-            <PlusCircle color={color} size={UI_ICON_SIZE.large} />
+          tabBarLabel: t("navigation.addTab"),
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              className="w-14 items-center rounded-full py-1"
+              style={focused ? { backgroundColor: theme.muted } : undefined}
+            >
+              <PlusCircle color={color} size={UI_ICON_SIZE.large} />
+            </View>
           ),
         }}
       />
@@ -96,14 +79,28 @@ export default function TabLayout() {
         name="history"
         options={{
           title: t("navigation.history"),
-          tabBarIcon: ({ color }) => <Clock color={color} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              className="w-14 items-center rounded-full py-1"
+              style={focused ? { backgroundColor: theme.muted } : undefined}
+            >
+              <Clock color={color} size={UI_ICON_SIZE.large} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t("navigation.settings"),
-          tabBarIcon: ({ color }) => <Settings color={color} size={UI_ICON_SIZE.large} />,
+          tabBarIcon: ({ color, focused }) => (
+            <View
+              className="w-14 items-center rounded-full py-1"
+              style={focused ? { backgroundColor: theme.muted } : undefined}
+            >
+              <Settings color={color} size={UI_ICON_SIZE.large} />
+            </View>
+          ),
         }}
       />
     </Tabs>

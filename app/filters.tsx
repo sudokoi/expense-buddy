@@ -10,11 +10,16 @@
 
 import { useCallback, useMemo, useState } from "react"
 import { Stack, useRouter } from "expo-router"
-import { Text, View } from "react-native"
+import { Keyboard, Text, View } from "react-native"
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller"
+import { isValid, parseISO, format } from "date-fns"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 
-import { ScreenContainer } from "../components/ui/ScreenContainer"
+import { parseAmountRange } from "../utils/analytics/amount-range"
 import { TimeWindowSelector } from "../components/analytics/TimeWindowSelector"
 import { MonthSelector } from "../components/analytics/MonthSelector"
 import { SearchFilter } from "../components/analytics/SearchFilter"
@@ -52,7 +57,7 @@ export default function FiltersScreen() {
   const { save: saveFilters } = useFilterPersistence()
   const { settings } = useSettings()
   const {
-    availableMonths,
+    expensesByCurrency,
     availableCurrencies,
     defaultCurrency,
     effectiveSelectedMonth,
@@ -77,11 +82,25 @@ export default function FiltersScreen() {
     PaymentInstrumentSelectionKey[]
   >(filters.selectedPaymentInstruments)
   const [draftSearchQuery, setDraftSearchQuery] = useState(filters.searchQuery)
-  const [draftMinAmount, setDraftMinAmount] = useState<number | null>(filters.minAmount)
-  const [draftMaxAmount, setDraftMaxAmount] = useState<number | null>(filters.maxAmount)
+  const [draftMin, setDraftMin] = useState(filters.minAmount?.toString() ?? "")
+  const [draftMax, setDraftMax] = useState(filters.maxAmount?.toString() ?? "")
   const [draftCurrency, setDraftCurrency] = useState<string | null>(
     filters.selectedCurrency
   )
+  const range = parseAmountRange(draftMin, draftMax, settings.enableMathExpressions)
+  const draftEffectiveCurrency = draftCurrency ?? defaultCurrency
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>()
+    for (const expense of expensesByCurrency.get(draftEffectiveCurrency) ?? []) {
+      const date = parseISO(expense.date)
+      if (isValid(date)) months.add(format(date, "yyyy-MM"))
+    }
+    return [...months].sort((a, b) => b.localeCompare(a))
+  }, [expensesByCurrency, draftEffectiveCurrency])
+  const selectedMonth =
+    draftSelectedMonth && availableMonths.includes(draftSelectedMonth)
+      ? draftSelectedMonth
+      : null
 
   const handleTimeWindowChange = useCallback((window: TimeWindow) => {
     setDraftTimeWindow(window)
@@ -112,14 +131,6 @@ export default function FiltersScreen() {
     [allInstruments]
   )
 
-  const handleAmountRangeChange = useCallback(
-    (min: number | null, max: number | null) => {
-      setDraftMinAmount(min)
-      setDraftMaxAmount(max)
-    },
-    []
-  )
-
   const handleResetDraft = useCallback(() => {
     setDraftTimeWindow("all")
     setDraftSelectedMonth(null)
@@ -127,25 +138,27 @@ export default function FiltersScreen() {
     setDraftPaymentMethods([])
     setDraftPaymentInstruments([])
     setDraftSearchQuery("")
-    setDraftMinAmount(null)
-    setDraftMaxAmount(null)
+    setDraftMin("")
+    setDraftMax("")
     setDraftCurrency(null) // Reset to auto
     void hapticLight()
     logAsync("INFO", "UI_ACTION", "RESET_FILTER_DRAFT")
   }, [])
 
   const handleApply = useCallback(() => {
+    if (!isHydrated || range.error) return
+    Keyboard.dismiss()
     void hapticLight()
     applyFilters({
       timeWindow: draftTimeWindow,
-      selectedMonth: draftSelectedMonth,
+      selectedMonth,
       selectedCategories: draftCategories,
       selectedPaymentMethods: draftPaymentMethods,
       selectedPaymentInstruments: draftPaymentInstruments,
       selectedCurrency: draftCurrency,
       searchQuery: draftSearchQuery,
-      minAmount: draftMinAmount,
-      maxAmount: draftMaxAmount,
+      minAmount: range.minAmount,
+      maxAmount: range.maxAmount,
     })
     void saveFilters().catch((error) => console.warn("Failed to persist filters:", error))
     logAsync("INFO", "UI_ACTION", "APPLY_FILTERS")
@@ -156,17 +169,19 @@ export default function FiltersScreen() {
     router,
     draftCurrency,
     draftTimeWindow,
-    draftSelectedMonth,
+    selectedMonth,
     draftCategories,
     draftPaymentMethods,
     draftPaymentInstruments,
     draftSearchQuery,
-    draftMinAmount,
-    draftMaxAmount,
+    range.minAmount,
+    range.maxAmount,
+    range.error,
+    isHydrated,
   ])
 
   return (
-    <>
+    <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
           title: t("history.filterSheet.title"),
@@ -183,20 +198,35 @@ export default function FiltersScreen() {
         }}
       />
 
-      <ScreenContainer contentContainerStyle={{ paddingBottom: 0 }}>
-        <View className="gap-3">
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={100}
+        contentContainerStyle={{ padding: UI_SPACE.gutter, paddingBottom: 120 }}
+      >
+        <View className="w-full max-w-[600px] self-center gap-6">
           {!isHydrated && (
             <Text className="text-[13px] text-foreground opacity-60">
               {t("history.filterSheet.loading")}
             </Text>
           )}
 
+          <Text className="text-sm text-muted-foreground">
+            {t("analytics.filters.sharedHelp")}
+          </Text>
+
+          <View className="gap-2">
+            <Text className="font-semibold text-sm text-foreground">
+              {t("history.filterSheet.search")}
+            </Text>
+            <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
+          </View>
+
           <View className="gap-2">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.time")}
             </Text>
             <TimeWindowSelector
-              value={draftTimeWindow}
+              value={selectedMonth ? null : draftTimeWindow}
               onChange={handleTimeWindowChange}
             />
           </View>
@@ -206,7 +236,7 @@ export default function FiltersScreen() {
               {t("history.filterSheet.month")}
             </Text>
             <MonthSelector
-              value={draftSelectedMonth}
+              value={selectedMonth}
               availableMonths={availableMonths}
               onChange={handleMonthChange}
             />
@@ -228,19 +258,16 @@ export default function FiltersScreen() {
 
           <View className="gap-2">
             <Text className="font-semibold text-sm text-foreground">
-              {t("history.filterSheet.search")}
-            </Text>
-            <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
-          </View>
-
-          <View className="gap-2">
-            <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.amountRange")}
             </Text>
             <AmountRangeFilter
-              minAmount={draftMinAmount}
-              maxAmount={draftMaxAmount}
-              onChange={handleAmountRangeChange}
+              min={draftMin}
+              max={draftMax}
+              onMinChange={setDraftMin}
+              onMaxChange={setDraftMax}
+              currencyCode={draftEffectiveCurrency}
+              allowMathExpressions={settings.enableMathExpressions}
+              error={range.error ? t(`analytics.filters.${range.error}`) : undefined}
             />
           </View>
 
@@ -277,33 +304,37 @@ export default function FiltersScreen() {
               />
             </View>
           )}
-
-          <View
-            className="flex-row gap-2"
-            style={{
-              justifyContent: "flex-end",
-              paddingTop: UI_SPACE.control,
-              paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
-            }}
-          >
-            <Button
-              size="control"
-              onPress={() => router.back()}
-              accessibilityLabel={t("common.cancel")}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              size="control"
-              variant="accent"
-              onPress={handleApply}
-              accessibilityLabel={t("common.apply")}
-            >
-              {t("common.apply")}
-            </Button>
-          </View>
         </View>
-      </ScreenContainer>
-    </>
+      </KeyboardAwareScrollView>
+      <KeyboardStickyView>
+        <View
+          className="flex-row gap-2 border-t border-border bg-background px-5"
+          style={{
+            justifyContent: "flex-end",
+            paddingTop: UI_SPACE.control,
+            paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+          }}
+        >
+          <Button
+            size="control"
+            className="flex-1"
+            onPress={() => router.back()}
+            accessibilityLabel={t("common.cancel")}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            size="control"
+            variant="accent"
+            className="flex-1"
+            disabled={!isHydrated || !!range.error}
+            onPress={handleApply}
+            accessibilityLabel={t("common.apply")}
+          >
+            {t("analytics.filters.apply")}
+          </Button>
+        </View>
+      </KeyboardStickyView>
+    </View>
   )
 }

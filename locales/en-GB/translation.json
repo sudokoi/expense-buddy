@@ -75,6 +75,7 @@
     "required": "required"
   },
   "navigation": {
+    "addTab": "Add",
     "add": "Add Expense",
     "analytics": "Analytics",
     "history": "History",
@@ -94,6 +95,9 @@
     "configSave": "Add widget"
   },
   "history": {
+    "transactionActions": "Transaction actions",
+    "resultsSummary_one": "{{count}} expense · {{total}}",
+    "resultsSummary_other": "{{count}} expenses · {{total}}",
     "emptyTitle": "No expenses yet.",
     "emptySubtitle": "Add one from the Add Expense tab.",
     "deleteDialog": {
@@ -141,6 +145,7 @@
     }
   },
   "add": {
+    "saveAndAddAnother": "Save & add another",
     "amount": "Amount",
     "amountPlaceholder": "0.00 or 100+50",
     "amountPlaceholderNumeric": "0.00",
@@ -161,6 +166,11 @@
   "analytics": {
     "subtitle": "Track your spending patterns",
     "filters": {
+      "apply": "Apply filters",
+      "sharedHelp": "Filters apply to both Analytics and History. Select more than one category or payment method if needed.",
+      "noLimit": "No limit",
+      "invalidAmount": "Enter a valid amount of zero or more.",
+      "invalidRange": "Maximum amount must be at least the minimum.",
       "button": "Filters",
       "time": "Time: {{window}}",
       "month": "Month: {{month}}",
@@ -192,6 +202,7 @@
       "others": "Others"
     },
     "stats": {
+      "allTime": "All time",
       "totalSpent": "Total Spent",
       "dailyAvg": "Daily Avg",
       "topCategory": "Top Category",
@@ -204,7 +215,8 @@
         "noData": "No expense data for this period"
       },
       "category": {
-        "title": "Spending by Category"
+        "title": "Spending by Category",
+        "hint": "Tap a category to toggle its filter."
       },
       "paymentMethod": {
         "title": "Spending by Payment Method"
@@ -215,6 +227,13 @@
       },
       "trend": {
         "title": "Spending Trend",
+        "daily": "Daily spending",
+        "weekly": "Weekly spending",
+        "monthly": "Monthly spending",
+        "periodTotal": "Period total: {{total}}",
+        "previous": "Previous period",
+        "next": "Next period",
+        "hint": "Tap the chart or use the arrows to inspect a period.",
         "accessibilityLabel": "Spending trend. Total {{total}}"
       }
     }
@@ -435,6 +454,8 @@
   },
   "smsImport": {
     "sheet": {
+      "clearResolvedMessage": "Remove resolved items from this review list? Saved expenses will not be deleted.",
+      "acceptAllMessage": "Save suggested expenses from {{count}} pending items? Items with missing or invalid amounts will remain for review.",
       "title": "Review SMS Imports",
       "editTitle": "Edit SMS Import",
       "subtitle": {

@@ -140,6 +140,9 @@ export function PaymentInstrumentsSection() {
                 setPaymentInstrumentsExpanded(!paymentInstrumentsSectionExpanded)
               }
               className="flex-row items-center justify-between rounded-chip border border-border bg-surface px-3 py-2.5"
+              accessibilityRole="button"
+              accessibilityLabel={t("instruments.manage")}
+              accessibilityState={{ expanded: paymentInstrumentsSectionExpanded }}
             >
               <View className="flex-1 flex-row items-center gap-2">
                 <Text
