@@ -11,7 +11,9 @@
         android:id="@+id/widget_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Today"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/expense_widget_today"
         android:textColor="@color/expense_widget_text_muted"
         android:textSize="12sp" />
 
@@ -32,7 +34,13 @@
                 android:id="@+id/widget_today_total"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="—"
+                android:autoSizeMaxTextSize="26sp"
+                android:autoSizeMinTextSize="16sp"
+                android:autoSizeStepGranularity="1sp"
+                android:autoSizeTextType="uniform"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/expense_widget_amount_placeholder"
                 android:textColor="@color/expense_widget_text_primary"
                 android:textSize="26sp"
                 android:textStyle="bold" />
@@ -42,6 +50,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text=" "
                 android:textColor="@color/expense_widget_text_muted"
                 android:textSize="12sp" />
@@ -52,7 +62,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/expense_widget_add_bg"
-            android:contentDescription="+"
+            android:contentDescription="@string/expense_widget_add_expense"
             android:padding="12dp"
             android:src="@drawable/expense_widget_plus" />
     </LinearLayout>

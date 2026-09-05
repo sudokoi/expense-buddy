@@ -13,7 +13,18 @@ class SummaryWidgetProvider : WidgetProviderBase() {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
         val copy = assist.toCopy()
+        val theme = WidgetTheme.resolve(context)
         val views = RemoteViews(context.packageName, R.layout.expense_widget_summary)
+        theme.applyCard(
+            context,
+            views,
+            R.id.widget_root,
+            primaryTextIds = intArrayOf(R.id.widget_today_total),
+            mutedTextIds = intArrayOf(R.id.widget_label, R.id.widget_subtitle),
+        )
+        views.setInt(R.id.widget_add, "setBackgroundResource", theme.addBackground)
+        views.setInt(R.id.widget_add, "setColorFilter", theme.color(context, theme.accentForeground))
+        views.setContentDescription(R.id.widget_add, copy.addExpense)
         views.setOnClickPendingIntent(
             R.id.widget_root,
             WidgetIntents.openApp(context, "", widgetId),
@@ -46,7 +57,10 @@ class SummaryWidgetProvider : WidgetProviderBase() {
             WidgetResult.Empty -> {
                 val currency = displayCurrency(context)
                 views.setTextViewText(R.id.widget_label, copy.today)
-                views.setTextViewText(R.id.widget_today_total, WidgetFormat.amount(0.0, currency))
+                views.setTextViewText(
+                    R.id.widget_today_total,
+                    WidgetFormat.maskedAmount(0.0, currency, filter.hideAmounts),
+                )
                 views.setTextViewText(R.id.widget_subtitle, copy.empty)
                 manager.updateAppWidget(widgetId, views)
             }

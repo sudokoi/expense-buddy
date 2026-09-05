@@ -13,7 +13,7 @@ jest.mock("i18next", () => {
       }
       return key
     }, bundle) as string
-  return { t: (key: string) => lookup(key) }
+  return { t: (key: string) => lookup(key), resolvedLanguage: "en-US", language: "en-US" }
 })
 
 function expense(overrides: Partial<Expense> & { id: string }): Expense {
@@ -59,8 +59,11 @@ describe("buildWidgetAssist", () => {
   it("carries localized copy with native format placeholders", () => {
     const assist = buildWidgetAssist([], DEFAULT_SETTINGS, "INR")
     expect(assist.copy.today).toBeTruthy()
+    expect(assist.locale).toBe("en-US")
     expect(assist.copy.configSubtitle).toBeTruthy()
     expect(assist.copy.configCategory).toBe("Category")
+    expect(assist.copy.addExpense).toBe("Add Expense")
+    expect(assist.copy.trendDescription).toContain("%s")
     expect(assist.copy.expensesMany).toContain("%d")
     expect(assist.copy.expensesMany).not.toContain("{{count}}")
     expect(assist.copy.thisMonth).toContain("%s")

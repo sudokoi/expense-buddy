@@ -19,7 +19,7 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 ### 1. Native-read-first, assist-hints-only (Ritulaya shape, MMKV source)
 
 - The widget's source of truth is the same MMKV files the app reads. A new Kotlin `ExpenseWidgetStore` reads index + items natively on every `onUpdate` and derives all numbers at render time (today/month/7d/recent), applying the same semantics as JS: drop `deletedAt`, `Math.abs(amount)`, single-currency grouping (never mixed sums — mirrors `groupExpensesByCurrency`), device-local day keys (`ZoneId.systemDefault`, `yyyy-MM-dd`), recent sorted newest-first.
-- JS is a fast path only: a tiny `WidgetAssist` snapshot (`currency, categoryColors, dataVersion=max(updatedAt)`) written best-effort on mutations, plus bridge functions `refreshWidgets()` (broadcast) and `persistAssist(json)` (hint write). Correctness never depends on either. (No separate `labels` field: category labels come from live `app_settings`, with assist `categoryColors` keys as fallback.)
+- JS is a fast path only: a tiny `WidgetAssist` snapshot (`currency, locale, localized copy, categoryColors, dataVersion=max(updatedAt)`) written best-effort on mutations, plus bridge functions `refreshWidgets()` (broadcast) and `persistAssist(json)` (hint write). Correctness never depends on either. (No separate `labels` field: category labels come from live `app_settings`, with assist `categoryColors` keys as fallback.)
 - Staleness rule (mirrors Ritulaya's `dataVersion` check): the assist carries no numbers, only the effective-currency hint and dot colors. The hint is trusted only when its `dataVersion` equals live `max(updatedAt)`; otherwise the settings default (then most-recent-row) currency wins. All totals always come from live rows.
 
 ### 2. Three providers, one data Module
@@ -34,7 +34,8 @@ Widget shapes under consideration: Summary (2x1/2x2), Trend 7d (4x2), Recent lis
 - Per-instance filter is `category + hideAmounts` only (stored in `expense_widget_<id>` prefs). Full `FilterState` parity (time/method/instrument/search) stays in-app.
 - No widget-side editing or quick-add-without-app. Taps deep-link into the app (`myapp://` home/Analytics tab, `myapp://add` from `+`, `myapp://history` from list rows and labels).
 - The `android:configure` screen is a full-screen activity (a dialog window clipped labels and buttons); it writes per-instance prefs and returns `RESULT_OK`.
-- Theming uses static light/dark tokens mirroring `constants/palette.ts` (`values-night/` qualifier), not dynamic Material You — keeps brand parity with the app like Ritulaya does. `hideAmounts` covers lock-screen privacy.
+- Theming uses explicit light/dark token pairs mirroring `constants/palette.ts`, selected from the native-read `app_settings.theme` preference (with device `uiMode` for `system`), not dynamic Material You. This keeps launcher-hosted `RemoteViews` aligned with the app even when its preference differs from the device. `hideAmounts` covers lock-screen privacy, including empty totals.
+- Resizing triggers a native rerender; Trend sizes its bitmap from the widget options rather than stretching one fixed bitmap. Date labels use the app-language locale from assist and Android locale-aware compact date formatting.
 - Freshness without JS: system receiver (`ACTION_DATE_CHANGED` midnight rollover, plus `TIME_SET`/`TIMEZONE_CHANGED` since day keys are zone-local, `BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`) + 30-min `WorkManager` backstop armed on first `onEnabled`. `updatePeriodMillis=0`.
 
 ## Consequences

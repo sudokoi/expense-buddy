@@ -3,6 +3,7 @@ package expo.modules.expensebuddywidget
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +25,23 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
     }
 
     override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
+        renderAsync(context, appWidgetManager, appWidgetIds)
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle,
+    ) {
+        renderAsync(context, appWidgetManager, intArrayOf(appWidgetId))
+    }
+
+    private fun renderAsync(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,

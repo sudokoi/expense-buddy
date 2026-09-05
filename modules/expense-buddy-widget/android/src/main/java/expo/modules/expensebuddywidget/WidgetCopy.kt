@@ -21,10 +21,14 @@ class WidgetCopy internal constructor(
     val configAll: String,
     val configHide: String,
     val configSave: String,
+    val addExpense: String,
+    private val trendDescriptionTemplate: String,
 ) {
     fun expensesToday(count: Int): String = if (count == 1) expensesOne else String.format(expensesManyTemplate, count)
 
     fun monthTotal(total: String): String = String.format(thisMonthTemplate, total)
+
+    fun trendDescription(total: String): String = String.format(trendDescriptionTemplate, total)
 
     /** Canonical "Other" label never shows raw when a translation exists. */
     fun displayCategory(canonical: String): String = if (canonical == "Other") other else canonical
@@ -46,6 +50,8 @@ class WidgetCopy internal constructor(
                 configAll = "All categories",
                 configHide = "Hide amounts",
                 configSave = "Add widget",
+                addExpense = "Add Expense",
+                trendDescriptionTemplate = "Spending trend. Total %s",
             )
     }
 }
