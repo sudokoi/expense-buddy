@@ -117,16 +117,10 @@ function checkSourceKeys(keys) {
 }
 
 // Background notifications and first-launch widgets must work before JS starts.
-function checkNativeKeys() {
+function checkNativeKeys(root = path.join(__dirname, "..")) {
   let valid = true
   for (const module of ["expense-buddy-sms-module", "expense-buddy-widget"]) {
-    const directory = path.join(
-      __dirname,
-      "..",
-      "modules",
-      module,
-      "android/src/main/res"
-    )
+    const directory = path.join(root, "modules", module, "android/src/main/res")
     const keysFor = (folder) =>
       new Set(
         [
@@ -136,11 +130,23 @@ function checkNativeKeys() {
         ].map((match) => match[1])
       )
     const canonical = keysFor("values")
-    for (const locale of ["hi", "ja"]) {
-      const keys = keysFor(`values-${locale}`)
+    // Check locale bundles, not partial night/API/density overrides. Android's
+    // legacy language[-rREGION] and BCP-47 b+language+script+region forms are valid.
+    const localeFolders = fs
+      .readdirSync(directory, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory() &&
+          entry.name !== "values-car" &&
+          /^values-(?:[a-z]{2,3}(?:-r(?:[A-Z]{2}|\d{3}))?|b\+[A-Za-z0-9]+(?:\+[A-Za-z0-9]+)*)$/.test(
+            entry.name
+          )
+      )
+    for (const { name: folder } of localeFolders) {
+      const keys = keysFor(folder)
       if (keys.size !== canonical.size || [...canonical].some((key) => !keys.has(key))) {
         console.error(
-          `❌ ${module}: Android ${locale} resource keys differ from defaults`
+          `❌ ${module}: Android ${folder} resource keys differ from defaults`
         )
         valid = false
       }
@@ -238,4 +244,5 @@ function checkTranslations() {
   console.log("\nAll translations valid and synced; static source keys resolve!")
 }
 
-checkTranslations()
+if (require.main === module) checkTranslations()
+module.exports = { checkNativeKeys }
