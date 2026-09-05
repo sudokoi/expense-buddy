@@ -107,7 +107,14 @@ org.gradle.caching=true
 kotlin.daemon.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m
 ```
 
-The policy has a regression test and was checked through Expo config introspection.
+Heap limits and task caching apply to all builds. The two-worker/non-parallel
+concurrency limits apply only when `CI` or `EAS_BUILD` is `true`/`1`, or when a local
+developer explicitly sets `EXPENSE_BUDDY_LIMIT_BUILD_CONCURRENCY=1`. Ordinary local
+prebuilds preserve developer concurrency settings. Regenerate a previously
+budgeted Android project if it still contains old generated concurrency limits;
+the plugin does not erase existing developer-supplied properties.
+
+The policy has regression tests and was checked through Expo config introspection.
 It is a bounded starting budget, not a measured optimum. Heap caps do not cap RSS;
 no larger runner, global `JAVA_TOOL_OPTIONS`, swap workaround, or disabled
 desugaring is involved.
