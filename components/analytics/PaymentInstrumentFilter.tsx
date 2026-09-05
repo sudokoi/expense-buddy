@@ -60,13 +60,15 @@ export const PaymentInstrumentFilter = memo(function PaymentInstrumentFilter({
       // Always include an "Others" chip per method (covers missing/deleted/manual)
       items.push({
         key: makePaymentInstrumentSelectionKey(method, undefined),
-        label: t("instruments.dropdown.othersLabel", { method: methodShortLabel(method) }),
+        label: t("instruments.dropdown.othersLabel", {
+          method: methodShortLabel(method, t),
+        }),
       })
 
       for (const inst of methodActive) {
         items.push({
           key: makePaymentInstrumentSelectionKey(method, inst.id),
-          label: `${methodShortLabel(method)} • ${formatPaymentInstrumentLabel(inst)}`,
+          label: `${methodShortLabel(method, t)} • ${formatPaymentInstrumentLabel(inst)}`,
         })
       }
     }

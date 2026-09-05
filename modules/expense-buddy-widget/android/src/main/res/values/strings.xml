@@ -16,4 +16,9 @@
     <string name="expense_widget_recent">Recent expenses</string>
     <string name="expense_widget_empty">No expenses yet</string>
     <string name="expense_widget_amount_placeholder">—</string>
+    <string name="expense_widget_expenses_one">1 expense today</string>
+    <string name="expense_widget_expenses_many">%d expenses today</string>
+    <string name="expense_widget_month_total">%s this month</string>
+    <string name="expense_widget_other">Other</string>
+    <string name="expense_widget_trend_total">Spending trend. Total %s</string>
 </resources>

@@ -1,5 +1,6 @@
 const fs = require("fs")
 const path = require("path")
+const ts = require("typescript")
 
 const LOCALES_DIR = path.join(__dirname, "../locales")
 const I18N_FILE = path.join(__dirname, "../i18n.ts")
@@ -56,6 +57,96 @@ function getSupportedLocales() {
     throw new Error(`SUPPORTED_LOCALES in ${I18N_FILE} is empty or unparsable`)
   }
   return locales
+}
+
+/** Bundle parity alone misses keys absent from every locale. Check real call sites too. */
+function checkSourceKeys(keys) {
+  const root = path.join(__dirname, "..")
+  let valid = true
+  const visitDirectory = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name !== "__tests__") visitDirectory(file)
+        continue
+      }
+      if (!/\.(ts|tsx)$/.test(entry.name) || /\.test\./.test(entry.name)) continue
+      const source = ts.createSourceFile(
+        file,
+        fs.readFileSync(file, "utf8"),
+        ts.ScriptTarget.Latest,
+        true
+      )
+      const visit = (node) => {
+        if (
+          ts.isCallExpression(node) &&
+          /^(t|i18n\.t|i18next\.t)$/.test(node.expression.getText(source))
+        ) {
+          const key = node.arguments[0]
+          if (
+            key &&
+            ts.isStringLiteral(key) &&
+            !keys.has(key.text) &&
+            !keys.has(`${key.text}_other`)
+          ) {
+            const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1
+            console.error(
+              `❌ ${path.relative(root, file)}:${line}: unknown locale key "${key.text}"`
+            )
+            valid = false
+          }
+        }
+        ts.forEachChild(node, visit)
+      }
+      visit(source)
+    }
+  }
+  for (const directory of [
+    "app",
+    "components",
+    "hooks",
+    "providers",
+    "services",
+    "stores",
+    "utils",
+    "constants",
+  ]) {
+    visitDirectory(path.join(root, directory))
+  }
+  return valid
+}
+
+// Background notifications and first-launch widgets must work before JS starts.
+function checkNativeKeys() {
+  let valid = true
+  for (const module of ["expense-buddy-sms-module", "expense-buddy-widget"]) {
+    const directory = path.join(
+      __dirname,
+      "..",
+      "modules",
+      module,
+      "android/src/main/res"
+    )
+    const keysFor = (folder) =>
+      new Set(
+        [
+          ...fs
+            .readFileSync(path.join(directory, folder, "strings.xml"), "utf8")
+            .matchAll(/<(?:string|plurals) name="([^"]+)"/g),
+        ].map((match) => match[1])
+      )
+    const canonical = keysFor("values")
+    for (const locale of ["hi", "ja"]) {
+      const keys = keysFor(`values-${locale}`)
+      if (keys.size !== canonical.size || [...canonical].some((key) => !keys.has(key))) {
+        console.error(
+          `❌ ${module}: Android ${locale} resource keys differ from defaults`
+        )
+        valid = false
+      }
+    }
+  }
+  return valid
 }
 
 function checkTranslations() {
@@ -141,10 +232,10 @@ function checkTranslations() {
     }
   }
 
-  if (hasErrors) {
-    process.exit(1)
-  }
-  console.log("\nAll translations valid and synced!")
+  if (!checkSourceKeys(allKeys)) hasErrors = true
+  if (!checkNativeKeys()) hasErrors = true
+  if (hasErrors) process.exit(1)
+  console.log("\nAll translations valid and synced; static source keys resolve!")
 }
 
 checkTranslations()

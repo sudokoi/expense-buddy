@@ -34,7 +34,12 @@ import {
 import { applyAllFilters } from "../../utils/analytics/filters"
 import { getCurrencySymbol, formatCurrency } from "../../utils/currency"
 import { formatMonthLabel, isTimeWindowCovered } from "../../utils/analytics/time"
-import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import {
+  UI_ICON_SIZE,
+  UI_SPACE,
+  UI_OPACITY,
+  UI_FONT_SIZE,
+} from "../../constants/ui-tokens"
 import { hapticWarning } from "../../utils/haptics"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
@@ -55,10 +60,10 @@ function getFallbackCategory(label: string): Pick<Category, "label" | "icon" | "
 
 const layoutStyles = {
   emptyText: {
-    fontSize: 18,
+    fontSize: UI_FONT_SIZE.section,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: UI_FONT_SIZE.label,
     marginTop: UI_SPACE.control,
   },
   expenseDetails: {
@@ -557,7 +562,7 @@ export default function HistoryScreen() {
           <Button
             size="chip"
             variant={activeCount > 0 ? "accent" : undefined}
-            icon={<Filter size={16} />}
+            icon={<Filter size={UI_ICON_SIZE.small} />}
             onPress={handleOpenFilterSheet}
             accessibilityLabel={t("common.filters")}
           >
@@ -615,7 +620,7 @@ export default function HistoryScreen() {
         <Button
           size="chip"
           variant={activeCount > 0 ? "accent" : undefined}
-          icon={<Filter size={16} />}
+          icon={<Filter size={UI_ICON_SIZE.small} />}
           onPress={handleOpenFilterSheet}
           accessibilityLabel={t("common.filters")}
         >

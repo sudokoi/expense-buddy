@@ -1,4 +1,42 @@
 {
+  "ui": {
+    "syncDetails": {
+      "added": "リモートから追加: {{count}}件",
+      "updated": "リモートから更新: {{count}}件",
+      "pushed": "送信したローカル変更: {{count}}件",
+      "resolved": "自動解決: {{count}}件",
+      "uploaded": "アップロードしたファイル: {{count}}件",
+      "unchanged": "変更のないファイル: {{count}}件",
+      "deleted": "削除したファイル: {{count}}件",
+      "settings": "設定を同期しました",
+      "complete": "同期完了: {{summary}}"
+    },
+    "selectIcon": "アイコン {{icon}} を選択",
+    "selectColor": "色 {{color}} を選択",
+    "actionFailed": "操作を完了できませんでした。もう一度お試しください。",
+    "pendingChanges": "未同期の変更",
+    "syncing": "同期中",
+    "syncSuccess": "同期完了",
+    "syncError": "同期失敗",
+    "unnamedExpense": "名前のない支出",
+    "conflictTitle": "同期の競合: {{count}}件",
+    "conflictMessage": "ローカルとリモートの内容が異なります。どちらを保持しますか？\n\n{{summary}}",
+    "conflictEntry": "• ローカル: {{localNote}}（{{localAmount}}）\n  リモート: {{remoteNote}}（{{remoteAmount}}）",
+    "moreConflicts": "…ほか{{count}}件",
+    "githubError": "GitHub リクエストに失敗しました（{{status}}）。もう一度お試しください。",
+    "version": "v{{version}}",
+    "latestVersion": "最新: v{{version}}",
+    "paymentShort": { "creditCard": "クレジット", "debitCard": "デビット", "upi": "UPI" },
+    "languages": {
+      "en-US": "English (US)",
+      "en-GB": "English (UK)",
+      "en-CA": "English (CA)",
+      "en-AU": "English (AU)",
+      "en-IN": "English (IN)",
+      "hi": "हिंदी (Hindi)",
+      "ja": "日本語 (Japanese)"
+    }
+  },
   "notFound": {
     "title": "おっと!",
     "message": "この画面は存在しません。",
@@ -217,6 +255,7 @@
     "charts": {
       "common": {
         "total": "合計",
+        "amountWithPercentage": "{{amount}}（{{percentage}}）",
         "noData": "この期間のデータはありません"
       },
       "category": {

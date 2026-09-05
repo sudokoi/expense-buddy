@@ -85,42 +85,48 @@ function buildSyncMessage(
   const parts: string[] = []
 
   if (mergeResult.addedFromRemote.length > 0) {
-    parts.push(`${mergeResult.addedFromRemote.length} added from remote`)
+    parts.push(
+      i18next.t("ui.syncDetails.added", { count: mergeResult.addedFromRemote.length })
+    )
   }
 
   if (mergeResult.updatedFromRemote.length > 0) {
-    parts.push(`${mergeResult.updatedFromRemote.length} updated from remote`)
+    parts.push(
+      i18next.t("ui.syncDetails.updated", { count: mergeResult.updatedFromRemote.length })
+    )
   }
 
   const localChangesPushed =
     mergeResult.addedFromLocal.length + mergeResult.updatedFromLocal.length
   if (localChangesPushed > 0) {
-    parts.push(`${localChangesPushed} local changes pushed`)
+    parts.push(i18next.t("ui.syncDetails.pushed", { count: localChangesPushed }))
   }
 
   if (mergeResult.autoResolved.length > 0) {
-    parts.push(`${mergeResult.autoResolved.length} auto-resolved`)
+    parts.push(
+      i18next.t("ui.syncDetails.resolved", { count: mergeResult.autoResolved.length })
+    )
   }
 
   if (filesUploaded > 0) {
-    parts.push(`${filesUploaded} file(s) uploaded`)
+    parts.push(i18next.t("ui.syncDetails.uploaded", { count: filesUploaded }))
   }
   if (filesSkipped > 0) {
-    parts.push(`${filesSkipped} file(s) unchanged`)
+    parts.push(i18next.t("ui.syncDetails.unchanged", { count: filesSkipped }))
   }
   if (filesDeleted > 0) {
-    parts.push(`${filesDeleted} file(s) deleted`)
+    parts.push(i18next.t("ui.syncDetails.deleted", { count: filesDeleted }))
   }
 
   if (settingsSynced) {
-    parts.push("settings synced")
+    parts.push(i18next.t("ui.syncDetails.settings"))
   }
 
   if (parts.length === 0) {
-    return "Already in sync"
+    return i18next.t("settings.notifications.alreadyInSync")
   }
 
-  return `Sync complete: ${parts.join(", ")}`
+  return i18next.t("ui.syncDetails.complete", { summary: parts.join(", ") })
 }
 
 export async function gitStyleSync(

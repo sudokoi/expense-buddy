@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
+import { UI_ICON_SIZE } from "../../../constants/ui-tokens"
 import { Pressable, Text, View } from "react-native"
 import { useAppDialog } from "../../../providers/app-dialog-provider"
 import { Plus, Trash, ChevronDown, ChevronUp } from "lucide-react-native"
@@ -88,13 +89,13 @@ export function PaymentInstrumentsSection() {
             {t("instruments.title")} ({active.length})
           </Text>
           {expanded ? (
-            <ChevronUp size={20} color={theme.mutedForeground} />
+            <ChevronUp size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
           ) : (
-            <ChevronDown size={20} color={theme.mutedForeground} />
+            <ChevronDown size={UI_ICON_SIZE.medium} color={theme.mutedForeground} />
           )}
         </Pressable>
         <Button
-          icon={<Plus size={16} />}
+          icon={<Plus size={UI_ICON_SIZE.small} />}
           disabled={formOpen}
           onPress={() => {
             setEditing(undefined)
@@ -160,7 +161,7 @@ export function PaymentInstrumentsSection() {
                       </Text>
                     </Pressable>
                     <IconActionButton
-                      icon={<Trash size={18} />}
+                      icon={<Trash size={UI_ICON_SIZE.regular} />}
                       onPress={() => handleDelete(instrument)}
                       accessibilityLabel={t("common.removeLabel", {
                         label: instrument.nickname,

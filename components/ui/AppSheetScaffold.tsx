@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { Text } from "react-native"
 import { X } from "lucide-react-native"
-import { UI_SPACE, UI_OPACITY, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_SPACE, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { MODAL_BACKDROP_COLOR } from "../../constants/palette"
 import { hapticLight } from "../../utils/haptics"
 import { IconActionButton } from "./IconActionButton"
 
@@ -79,7 +80,7 @@ export function AppSheetScaffold({
       <View className="flex-1 justify-end">
         <Pressable
           className="absolute inset-0"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{ backgroundColor: MODAL_BACKDROP_COLOR }}
           onPress={dismissOnSnapToBottom ? onClose : undefined}
           accessible={false}
         />
@@ -113,12 +114,7 @@ export function AppSheetScaffold({
                 <View className="flex-1">
                   <Text className="text-lg font-semibold text-foreground">{title}</Text>
                   {subtitle ? (
-                    <Text
-                      className="text-[13px] text-muted-foreground"
-                      style={{ opacity: UI_OPACITY.medium }}
-                    >
-                      {subtitle}
-                    </Text>
+                    <Text className="text-body text-muted-foreground">{subtitle}</Text>
                   ) : null}
                 </View>
 

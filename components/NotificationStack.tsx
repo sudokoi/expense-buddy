@@ -15,6 +15,7 @@ import {
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
+  UI_FONT_SIZE,
 } from "../constants/ui-tokens"
 
 const NotificationIcon = React.memo(function NotificationIcon({
@@ -50,7 +51,7 @@ const NotificationIcon = React.memo(function NotificationIcon({
 })
 
 const notificationTextStyle: TextStyle = {
-  fontSize: 12,
+  fontSize: UI_FONT_SIZE.caption,
   fontWeight: UI_FONT_WEIGHT.medium as TextStyle["fontWeight"],
   flex: 1,
 }
@@ -87,7 +88,7 @@ export const NotificationStack: React.FC = () => {
           backgroundColor: bgColor,
           borderWidth: UI_BORDER_WIDTH.normal,
           borderColor: styles.borderColor,
-          // Soft shadow for kawaii feel
+          // Notification-only soft colored shadow; not the neutral card elevation.
           shadowColor: bgColor,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,

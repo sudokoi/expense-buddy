@@ -58,6 +58,49 @@ it("uses themed app confirmations and explicitly themed custom Button text", () 
           if (!themed) report(node, "Use Button.Text or explicit theme styling")
         }
       }
+      if (ts.isJsxText(node) && /[A-Za-z]/.test(node.text)) {
+        report(node, "Move visible copy into a locale key")
+      }
+      if (ts.isJsxAttribute(node)) {
+        const name = node.name.getText(source)
+        const value = node.initializer
+        const expression =
+          value && ts.isJsxExpression(value) ? value.expression : undefined
+        if (name === "size" && expression && ts.isNumericLiteral(expression)) {
+          // Documented optical adjustment inside the decorative SettingsSection badge.
+          if (!(file.endsWith("/SettingsSection.tsx") && expression.text === "22")) {
+            report(node, "Use UI_ICON_SIZE for icon sizes")
+          }
+        }
+        if (
+          [
+            "accessibilityLabel",
+            "accessibilityHint",
+            "title",
+            "label",
+            "placeholder",
+          ].includes(name)
+        ) {
+          if (
+            value &&
+            ts.isStringLiteral(value) &&
+            /[A-Za-z]/.test(value.text) &&
+            value.text !== "main"
+          ) {
+            report(node, "Use a locale key for UI copy (main is a Git branch identifier)")
+          }
+          if (
+            expression &&
+            ts.isTemplateExpression(expression) &&
+            /[A-Za-z]/.test(
+              expression.head.text +
+                expression.templateSpans.map((span) => span.literal.text).join("")
+            )
+          ) {
+            report(node, "Move English template copy into a locale key")
+          }
+        }
+      }
       ts.forEachChild(node, (child) => visit(child, inButton))
     }
     visit(source)

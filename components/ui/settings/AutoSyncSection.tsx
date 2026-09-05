@@ -52,7 +52,7 @@ export function AutoSyncSection({
 
   return (
     <View className="gap-3 border-t border-border pt-4">
-      <Text className="text-[13px] font-bold text-foreground opacity-80">
+      <Text className="text-body font-bold text-muted-foreground">
         {t("settings.autoSync.title")}
       </Text>
 
@@ -60,7 +60,7 @@ export function AutoSyncSection({
       <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
         <View className="flex-1">
           <Label>{t("settings.autoSync.enable")}</Label>
-          <Text className="text-xs text-foreground opacity-60 mt-1">
+          <Text className="text-xs text-muted-foreground mt-1">
             {t("settings.autoSync.enableHelp")}
           </Text>
         </View>
@@ -75,7 +75,7 @@ export function AutoSyncSection({
       <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
         <View className="flex-1">
           <Label>{t("settings.autoSync.syncSettings")}</Label>
-          <Text className="text-xs text-foreground opacity-60 mt-1">
+          <Text className="text-xs text-muted-foreground mt-1">
             {t("settings.autoSync.syncSettingsHelp")}
           </Text>
         </View>
@@ -97,7 +97,7 @@ export function AutoSyncSection({
             >
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onLaunch")}</Label>
-                <Text className="text-xs text-foreground opacity-60">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.autoSync.onLaunchHelp")}
                 </Text>
               </View>
@@ -109,7 +109,7 @@ export function AutoSyncSection({
             >
               <View className="flex-1">
                 <Label>{t("settings.autoSync.onChange")}</Label>
-                <Text className="text-xs text-foreground opacity-60">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.autoSync.onChangeHelp")}
                 </Text>
               </View>

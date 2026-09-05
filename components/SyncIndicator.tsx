@@ -4,13 +4,9 @@ import { View, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useSyncMachine } from "../hooks/use-sync-machine"
-import {
-  SEMANTIC_FOREGROUND_COLORS,
-  getOverlayColors,
-  ACCENT_COLORS,
-} from "../constants/theme-colors"
-import { useThemeScheme } from "../hooks/use-theme-colors"
-import { UI_ICON_SIZE } from "../constants/ui-tokens"
+import { SEMANTIC_FOREGROUND_COLORS, getOverlayColors } from "../constants/theme-colors"
+import { useThemeColors, useThemeScheme } from "../hooks/use-theme-colors"
+import { UI_ICON_SIZE, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
 
 /**
  * Global sync status indicator
@@ -27,6 +23,7 @@ export const SyncIndicator: React.FC = () => {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const colorScheme = useThemeScheme()
+  const theme = useThemeColors()
   const overlayColors = getOverlayColors(colorScheme)
   const semanticColors = SEMANTIC_FOREGROUND_COLORS[colorScheme]
 
@@ -37,15 +34,15 @@ export const SyncIndicator: React.FC = () => {
   if (!visible) return null
 
   const getStatusLabel = () => {
-    if (isSyncing) return t("sync.status.syncing")
-    if (isSuccess) return t("sync.status.success")
-    if (isError) return t("sync.status.error")
+    if (isSyncing) return t("ui.syncing")
+    if (isSuccess) return t("ui.syncSuccess")
+    if (isError) return t("ui.syncError")
     return ""
   }
 
   const getIcon = () => {
     if (isSyncing) {
-      return <ActivityIndicator size="small" color={ACCENT_COLORS.primary} />
+      return <ActivityIndicator size="small" color={theme.accent} />
     }
     if (isSuccess) {
       return <CheckCircle size={UI_ICON_SIZE.large} color={semanticColors.success} />
@@ -58,9 +55,10 @@ export const SyncIndicator: React.FC = () => {
 
   return (
     <View
-      className="absolute right-6 z-[10000] rounded-surface p-2 shadow-sm"
+      className="absolute right-6 rounded-card p-2 shadow-sm"
       style={{
-        top: insets.top + 20,
+        top: insets.top + UI_SPACE.gutter,
+        zIndex: UI_Z_INDEX.floating,
         backgroundColor: overlayColors.background,
         shadowColor: overlayColors.shadow,
       }}

@@ -221,7 +221,7 @@ export function CategoryFormModal({
               accessibilityLabel={t("settings.categories.form.nameLabel")}
             />
             {errors.label && <Text className="text-xs text-error">{errors.label}</Text>}
-            <Text className="text-xs text-foreground opacity-50">
+            <Text className="text-xs text-muted-foreground">
               {t("settings.categories.form.characterCount", {
                 count: label.length,
                 max: 30,
@@ -251,7 +251,7 @@ export function CategoryFormModal({
                 </View>
                 <View className="flex-1">
                   <Text className="font-medium text-foreground">{icon}</Text>
-                  <Text className="text-xs text-foreground opacity-60">
+                  <Text className="text-xs text-muted-foreground">
                     {t("settings.categories.form.iconHelp")}
                   </Text>
                 </View>
@@ -275,7 +275,7 @@ export function CategoryFormModal({
                 />
                 <View className="flex-1">
                   <Text className="font-medium text-foreground">{color}</Text>
-                  <Text className="text-xs text-foreground opacity-60">
+                  <Text className="text-xs text-muted-foreground">
                     {t("settings.categories.form.colorHelp")}
                   </Text>
                 </View>
@@ -291,7 +291,7 @@ export function CategoryFormModal({
             <Button
               size="control"
               variant="accent"
-              icon={<Check size={20} />}
+              icon={<Check size={UI_ICON_SIZE.medium} />}
               onPress={handleSave}
             >
               {isEditMode ? t("common.save") : t("settings.categories.form.addTitle")}

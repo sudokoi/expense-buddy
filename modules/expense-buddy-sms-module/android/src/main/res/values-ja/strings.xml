@@ -1,0 +1,10 @@
+<resources>
+    <string name="sms_notification_ready">新しい SMS 取引を確認できます</string>
+    <string name="sms_notification_title_one">取引をインポートできます</string>
+    <string name="sms_notification_title_many">未処理の SMS 取引を確認</string>
+    <string name="sms_notification_channel">取引の通知</string>
+    <string name="sms_notification_channel_description">バックグラウンド SMS 取引の通知</string>
+    <plurals name="sms_notification_pending">
+        <item quantity="other">%d件の SMS 取引を確認できます。</item>
+    </plurals>
+</resources>

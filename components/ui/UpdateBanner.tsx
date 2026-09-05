@@ -113,7 +113,7 @@ export function UpdateBanner({
             testID="update-banner-update-button"
           >
             <Text
-              className="text-[11px]"
+              className="text-micro"
               style={{ fontWeight: UI_FONT_WEIGHT.semiBold, color: textColor }}
             >
               {readyToInstall ? t("updateChecker.install") : t("updateChecker.update")}

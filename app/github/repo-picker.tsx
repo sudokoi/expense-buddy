@@ -75,17 +75,11 @@ export default function GitHubRepoPickerScreen() {
         const isRateLimit = lower.includes("rate limit")
 
         if (status === 401) {
-          setError(
-            t("repoPicker.sessionExpired") ||
-              "Your GitHub session is no longer valid. Please sign in again."
-          )
+          setError(t("repoPicker.sessionExpired"))
         } else if (isRateLimit) {
-          setError(
-            t("repoPicker.rateLimit") ||
-              "GitHub rate limit reached. Please wait a bit and try again."
-          )
+          setError(t("repoPicker.rateLimit"))
         } else {
-          setError(t("repoPicker.accessDenied") || "GitHub denied access (403).")
+          setError(t("repoPicker.accessDenied"))
         }
 
         // Force re-login by clearing saved credentials/config.
@@ -109,9 +103,8 @@ export default function GitHubRepoPickerScreen() {
       }
       if (!userResponse.ok) {
         const data = await userResponse.json().catch(() => ({}))
-        setError(
-          `GitHub error (${userResponse.status}): ${data.message || userResponse.statusText}`
-        )
+        console.warn("GitHub user request failed", userResponse.status, data.message)
+        setError(t("ui.githubError", { status: userResponse.status }))
         setRepos([])
         return
       }
@@ -135,7 +128,8 @@ export default function GitHubRepoPickerScreen() {
         }
         if (!resp.ok) {
           const data = await resp.json().catch(() => ({}))
-          setError(`GitHub error (${resp.status}): ${data.message || resp.statusText}`)
+          console.warn("GitHub repository request failed", resp.status, data.message)
+          setError(t("ui.githubError", { status: resp.status }))
           break
         }
 
@@ -161,7 +155,8 @@ export default function GitHubRepoPickerScreen() {
 
       setRepos(writable)
     } catch (e) {
-      setError(String(e))
+      console.warn("Repository loading failed", e)
+      setError(t("ui.actionFailed"))
       setRepos([])
     } finally {
       setIsLoading(false)
@@ -222,10 +217,10 @@ export default function GitHubRepoPickerScreen() {
           </Button>
         </View>
 
-        <Text className="text-foreground opacity-70">{t("repoPicker.subtitle")}</Text>
+        <Text className="text-muted-foreground">{t("repoPicker.subtitle")}</Text>
 
         {viewerLogin ? (
-          <Text className="text-foreground opacity-70">
+          <Text className="text-muted-foreground">
             {t("repoPicker.signedInAs", { login: viewerLogin })}
           </Text>
         ) : null}
@@ -270,7 +265,7 @@ export default function GitHubRepoPickerScreen() {
         ItemSeparatorComponent={() => <View style={{ height: UI_SPACE.control }} />}
         ListEmptyComponent={
           !isLoading && !error ? (
-            <Text className="text-foreground opacity-70">{t("repoPicker.empty")}</Text>
+            <Text className="text-muted-foreground">{t("repoPicker.empty")}</Text>
           ) : null
         }
       />

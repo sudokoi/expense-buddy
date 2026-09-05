@@ -188,7 +188,8 @@ export function GitHubConfigSection({
       await Clipboard.setStringAsync(code)
       onNotification(t("settings.github.copyCode"), "success")
     } catch (error) {
-      onNotification(String(error), "error")
+      console.warn("Device code copy failed", error)
+      onNotification(t("ui.actionFailed"), "error")
     }
   }, [auth.deviceCode?.user_code, onNotification, t])
 
@@ -236,7 +237,8 @@ export function GitHubConfigSection({
       onConnectionStatusChange("idle")
       onNotification(t("settings.github.signOut"), "success")
     } catch (error) {
-      onNotification(String(error), "error")
+      console.warn("GitHub sign-out failed", error)
+      onNotification(t("ui.actionFailed"), "error")
     }
   }, [auth, handleClearConfig, onConnectionStatusChange, onNotification, syncConfig, t])
 
@@ -269,7 +271,7 @@ export function GitHubConfigSection({
             <View className="flex-col items-start gap-0.5 shrink min-w-0">
               <View className="flex-row items-center gap-1">
                 <Check
-                  size={14}
+                  size={UI_ICON_SIZE.mini}
                   color={SEMANTIC_FOREGROUND_COLORS[themeScheme].success}
                 />
                 <Text className="text-xs text-success">
@@ -326,7 +328,7 @@ export function GitHubConfigSection({
             )}
             {auth.deviceCode && (
               <View className="gap-2" style={{ paddingTop: UI_SPACE.micro }}>
-                <Text className="text-xs text-foreground opacity-80">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.github.deviceCode")}
                 </Text>
                 <View
@@ -353,14 +355,14 @@ export function GitHubConfigSection({
                 >
                   {t("settings.github.openBrowser")}
                 </Button>
-                <Text className="text-xs text-foreground opacity-80">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.github.browserHelp", {
                     url: auth.deviceCode.verification_uri,
                   })}
                 </Text>
               </View>
             )}
-            <Text className="text-xs text-foreground opacity-60">
+            <Text className="text-xs text-muted-foreground">
               {t("settings.github.loginHelp")}
             </Text>
           </View>
@@ -431,9 +433,9 @@ export function GitHubConfigSection({
               }
               icon={
                 connectionStatus === "success" ? (
-                  <Check size={16} color={successTextColor} />
+                  <Check size={UI_ICON_SIZE.small} color={successTextColor} />
                 ) : connectionStatus === "error" ? (
-                  <X size={16} color={errorTextColor} />
+                  <X size={UI_ICON_SIZE.small} color={errorTextColor} />
                 ) : isTesting ? (
                   <Spinner size="small" color={theme.foreground} />
                 ) : null
@@ -460,7 +462,7 @@ export function GitHubConfigSection({
               size="compact"
               variant="destructive"
               className="mt-3"
-              icon={<X size={16} />}
+              icon={<X size={UI_ICON_SIZE.small} />}
               onPress={handleClearConfig}
             >
               {t("settings.github.clearConfig")}

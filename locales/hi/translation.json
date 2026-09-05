@@ -1,4 +1,42 @@
 {
+  "ui": {
+    "syncDetails": {
+      "added": "रिमोट से जोड़े गए: {{count}}",
+      "updated": "रिमोट से अपडेट किए गए: {{count}}",
+      "pushed": "भेजे गए स्थानीय बदलाव: {{count}}",
+      "resolved": "अपने आप हल हुए: {{count}}",
+      "uploaded": "अपलोड की गई फ़ाइलें: {{count}}",
+      "unchanged": "अपरिवर्तित फ़ाइलें: {{count}}",
+      "deleted": "हटाई गई फ़ाइलें: {{count}}",
+      "settings": "सेटिंग्स सिंक हुईं",
+      "complete": "सिंक पूरा हुआ: {{summary}}"
+    },
+    "selectIcon": "{{icon}} आइकन चुनें",
+    "selectColor": "{{color}} रंग चुनें",
+    "actionFailed": "यह कार्य पूरा नहीं हो सका। कृपया फिर से कोशिश करें।",
+    "pendingChanges": "लंबित बदलाव",
+    "syncing": "सिंक हो रहा है",
+    "syncSuccess": "सिंक पूरा हुआ",
+    "syncError": "सिंक विफल हुआ",
+    "unnamedExpense": "बिना नाम का खर्च",
+    "conflictTitle": "सिंक में विरोध: {{count}}",
+    "conflictMessage": "स्थानीय और रिमोट संस्करण अलग हैं। आप कौन सा संस्करण रखना चाहते हैं?\n\n{{summary}}",
+    "conflictEntry": "• स्थानीय: {{localNote}} ({{localAmount}})\n  रिमोट: {{remoteNote}} ({{remoteAmount}})",
+    "moreConflicts": "…और {{count}} अन्य",
+    "githubError": "GitHub अनुरोध विफल हुआ ({{status}})। कृपया फिर से कोशिश करें।",
+    "version": "v{{version}}",
+    "latestVersion": "नवीनतम: v{{version}}",
+    "paymentShort": { "creditCard": "क्रेडिट", "debitCard": "डेबिट", "upi": "यूपीआई" },
+    "languages": {
+      "en-US": "English (US)",
+      "en-GB": "English (UK)",
+      "en-CA": "English (CA)",
+      "en-AU": "English (AU)",
+      "en-IN": "English (IN)",
+      "hi": "हिंदी (Hindi)",
+      "ja": "日本語 (Japanese)"
+    }
+  },
   "notFound": {
     "title": "ओह!",
     "message": "यह स्क्रीन मौजूद नहीं है।",
@@ -217,6 +255,7 @@
     "charts": {
       "common": {
         "total": "कुल",
+        "amountWithPercentage": "{{amount}} ({{percentage}})",
         "noData": "इस अवधि के लिए कोई डेटा नहीं"
       },
       "category": {

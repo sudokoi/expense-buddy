@@ -182,6 +182,9 @@ export const NEUTRAL_COLORS = {
   black: "#000000",
 } as const
 
+/** Modal dimming stays neutral in both themes; shared by sheets and dialogs. */
+export const MODAL_BACKDROP_COLOR = "rgba(0, 0, 0, 0.5)"
+
 // Destructive (WCAG-safe on white text, identical across themes per c4fe782)
 export const DESTRUCTIVE_COLOR = "#C93A3F" as const
 

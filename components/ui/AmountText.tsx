@@ -1,7 +1,7 @@
 import { Text, type TextProps, type TextStyle } from "react-native"
-import { UI_FONT_WEIGHT } from "../../constants/ui-tokens"
-import { AMOUNT_COLORS } from "../../constants/palette"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import { UI_FONT_WEIGHT, UI_FONT_SIZE } from "../../constants/ui-tokens"
+import { SEMANTIC_FOREGROUND_COLORS } from "../../constants/palette"
+import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 
 type AmountType = "expense" | "income" | "neutral"
 
@@ -16,16 +16,20 @@ interface AmountTextProps extends Omit<TextProps, "style"> {
  */
 export function AmountText({ type = "expense", style, ...props }: AmountTextProps) {
   const theme = useThemeColors()
+  const status = SEMANTIC_FOREGROUND_COLORS[useThemeScheme()]
   const color =
     type === "expense"
-      ? AMOUNT_COLORS.expense
+      ? status.error
       : type === "income"
-        ? AMOUNT_COLORS.income
+        ? status.success
         : theme.foreground
 
   return (
     <Text
-      style={[{ fontWeight: UI_FONT_WEIGHT.bold, fontSize: 16, color }, style]}
+      style={[
+        { fontWeight: UI_FONT_WEIGHT.bold, fontSize: UI_FONT_SIZE.title, color },
+        style,
+      ]}
       {...props}
     />
   )

@@ -10,6 +10,7 @@
  */
 import { useCallback, useMemo, useRef } from "react"
 import { useAppDialog } from "../providers/app-dialog-provider"
+import { formatCurrency } from "../utils/currency"
 import { useTranslation } from "react-i18next"
 import { useExpenses, useNotifications, useSettings } from "../stores/hooks"
 import { useSyncMachine, TrueConflict, ConflictResolution } from "./use-sync-machine"
@@ -74,23 +75,35 @@ export function useSyncAction(): UseSyncActionReturn {
         const conflictSummary = conflicts
           .slice(0, 3)
           .map((c) => {
-            const localNote = c.localVersion.note || "Unnamed"
-            const remoteNote = c.remoteVersion.note || "Unnamed"
-            const localAmount = `${c.localVersion.amount}`
-            const remoteAmount = `${c.remoteVersion.amount}`
+            const localNote = c.localVersion.note || t("ui.unnamedExpense")
+            const remoteNote = c.remoteVersion.note || t("ui.unnamedExpense")
+            const localAmount = formatCurrency(
+              c.localVersion.amount,
+              c.localVersion.currency
+            )
+            const remoteAmount = formatCurrency(
+              c.remoteVersion.amount,
+              c.remoteVersion.currency
+            )
 
-            return `• Local: ${localNote} (${localAmount})\n  Remote: ${remoteNote} (${remoteAmount})`
+            return t("ui.conflictEntry", {
+              localNote,
+              remoteNote,
+              localAmount,
+              remoteAmount,
+            })
           })
           .join("\n\n")
-        const moreText = conflictCount > 3 ? `\n\n...and ${conflictCount - 3} more` : ""
+        const moreText =
+          conflictCount > 3
+            ? `\n\n${t("ui.moreConflicts", { count: conflictCount - 3 })}`
+            : ""
 
         showDialog(
-          t("settings.conflicts.title", {
+          t("ui.conflictTitle", {
             count: conflictCount,
-            s: conflictCount > 1 ? "s" : "",
           }),
-          t("settings.conflicts.message", {
-            s: conflictCount > 1 ? "s" : "",
+          t("ui.conflictMessage", {
             summary: `${conflictSummary}${moreText}`,
           }),
           [

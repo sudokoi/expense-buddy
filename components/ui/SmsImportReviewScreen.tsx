@@ -50,12 +50,7 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_DURATION,
-} from "../../constants/ui-tokens"
+import { UI_SPACE, UI_FONT_WEIGHT, UI_DURATION } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { formatCurrency } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
@@ -599,12 +594,7 @@ export function SmsImportReviewScreen({
                   ? t("smsImport.sheet.editTitle")
                   : t("smsImport.sheet.title")}
               </Text>
-              <Text
-                className="text-[13px] text-foreground"
-                style={{ opacity: UI_OPACITY.medium }}
-              >
-                {subtitle}
-              </Text>
+              <Text className="text-body text-muted-foreground">{subtitle}</Text>
             </View>
           </Card>
 
@@ -618,17 +608,11 @@ export function SmsImportReviewScreen({
                   >
                     {t("smsImport.sheet.sourceSms")}
                   </Text>
-                  <Text
-                    className="text-[13px] text-foreground"
-                    style={{ opacity: UI_OPACITY.medium }}
-                  >
+                  <Text className="text-body text-muted-foreground">
                     {editingItem.sourceMessage.sender ||
                       t("smsImport.sheet.unknownSender")}
                   </Text>
-                  <Text
-                    className="text-xs text-foreground"
-                    style={{ opacity: UI_OPACITY.subtle }}
-                  >
+                  <Text className="text-xs text-muted-foreground">
                     {formatTimestamp(editingItem.sourceMessage.receivedAt)}
                   </Text>
                   <Text className="text-foreground">
@@ -705,10 +689,10 @@ export function SmsImportReviewScreen({
 
                 {selectedPaymentConfig?.hasIdentifier ? (
                   <View className="mt-2 gap-1">
-                    <Label className="text-xs" style={{ opacity: UI_OPACITY.subtle }}>
-                      {selectedPaymentConfig.identifierLabel ||
-                        t("history.editDialog.fields.identifier")}{" "}
-                      {t("common.optional")}
+                    <Label className="text-xs text-muted-foreground">
+                      {editingDraft.paymentMethodType === "Other"
+                        ? t("history.editDialog.fields.identifier")
+                        : `${t("instruments.form.digitsLabel", { count: selectedPaymentConfig.maxLength })} ${t("common.optional")}`}
                     </Label>
 
                     {editingDraft.paymentMethodType &&
@@ -725,7 +709,6 @@ export function SmsImportReviewScreen({
                         }
                         selectedInstrumentId={editingDraft.paymentInstrumentId}
                         manualDigits={editingDraft.paymentMethodIdentifier ?? ""}
-                        identifierLabel={selectedPaymentConfig.identifierLabel}
                         maxLength={selectedPaymentConfig.maxLength}
                         onChange={(next) => {
                           setEditingDraft((current) =>
@@ -806,7 +789,7 @@ export function SmsImportReviewScreen({
                 >
                   {t("smsImport.sheet.emptyTitle")}
                 </Text>
-                <Text className="text-foreground" style={{ opacity: UI_OPACITY.medium }}>
+                <Text className="text-muted-foreground">
                   {t("smsImport.sheet.emptyDescription")}
                 </Text>
               </View>
@@ -848,10 +831,7 @@ export function SmsImportReviewScreen({
                             >
                               {item.merchantName || item.sourceMessage.sender}
                             </Text>
-                            <Text
-                              className="text-xs text-foreground"
-                              style={{ opacity: UI_OPACITY.subtle }}
-                            >
+                            <Text className="text-xs text-muted-foreground">
                               {formatTimestamp(item.sourceMessage.receivedAt)}
                             </Text>
                           </View>
@@ -860,10 +840,7 @@ export function SmsImportReviewScreen({
                             {__DEV__ &&
                             expandedMessageId === item.id &&
                             formatSuggestionDebugText(item, t) ? (
-                              <Text
-                                className="text-[11px] text-foreground"
-                                style={{ opacity: UI_OPACITY.faint }}
-                              >
+                              <Text className="text-micro text-muted-foreground">
                                 {formatSuggestionDebugText(item, t)}
                               </Text>
                             ) : null}
@@ -967,7 +944,7 @@ export function SmsImportReviewScreen({
                         reduceMotion ? undefined : FadeIn.duration(UI_DURATION.instant)
                       }
                     >
-                      <Card className="p-3" style={{ opacity: UI_OPACITY.strong }}>
+                      <Card className="p-3">
                         <View className="gap-2">
                           <Text
                             className="text-foreground"
@@ -975,21 +952,14 @@ export function SmsImportReviewScreen({
                           >
                             {item.merchantName || item.sourceMessage.sender}
                           </Text>
-                          <Text
-                            className="text-xs text-foreground"
-                            style={{ opacity: UI_OPACITY.subtle }}
-                          >
+                          <Text className="text-xs text-muted-foreground">
                             {formatTimestamp(item.sourceMessage.receivedAt)}
                           </Text>
                           <Text className="text-foreground">
                             {t("smsImport.sheet.labels.status")}:{" "}
                             {getLocalizedReviewStatus(item.status, t)}
                           </Text>
-                          <Text
-                            className="text-foreground"
-                            numberOfLines={2}
-                            style={{ opacity: UI_OPACITY.medium }}
-                          >
+                          <Text className="text-muted-foreground" numberOfLines={2}>
                             {item.sourceMessage.body}
                           </Text>
                         </View>
@@ -1003,10 +973,7 @@ export function SmsImportReviewScreen({
               resolvedItems.length > 0 &&
               !showResolvedItems ? (
                 <Card className="p-3">
-                  <Text
-                    className="text-foreground"
-                    style={{ opacity: UI_OPACITY.medium }}
-                  >
+                  <Text className="text-muted-foreground">
                     {t("smsImport.sheet.emptyResolved")}
                   </Text>
                 </Card>

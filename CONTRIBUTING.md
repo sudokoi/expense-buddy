@@ -69,8 +69,23 @@ Useful additional checks:
 
 ```bash
 yarn check:translations
+yarn check:theme
+yarn check:theme-flow
 yarn format:check
 ```
+
+`yarn lint` includes Kotlin lint, and `yarn test` includes the Android/Kotlin unit
+tests. `check:translations` checks bundle parity, literal translation calls, and
+native widget/SMS resource keys. `check:theme` checks palette mirrors in CSS and
+Android widgets, plus shared numeric aliases. ML workspace checks are separate
+(`yarn ml:check`); run them when changing ML tooling or models.
+
+For UI changes, use semantic colors and the existing numeric/Tailwind scales.
+Document genuinely component-specific geometry rather than adding a global token
+for every one-off value. Use locale keys for app-owned copy, including accessible
+labels; user-entered text, external content, identifiers, and diagnostic logs are
+not translated. See [the UI audit](./docs/ui-audit.md) for the sizing policy and
+documented exceptions.
 
 If your contribution changes release-note-worthy behavior, also run:
 

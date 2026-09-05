@@ -19,6 +19,23 @@ function getCachedCurrencyFormatter(locale: string, currency: string): Intl.Numb
 
 const SYMBOL_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>()
 
+const PERCENT_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>()
+
+/** Chart percentages arrive on a 0–100 scale, not as fractions. */
+export function formatPercentage(percentage: number): string {
+  const language = i18next.language || "en-IN"
+  let formatter = PERCENT_FORMATTER_CACHE.get(language)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(language, {
+      style: "percent",
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    })
+    PERCENT_FORMATTER_CACHE.set(language, formatter)
+  }
+  return formatter.format(percentage / 100)
+}
+
 function getCachedSymbolFormatter(currency: string): Intl.NumberFormat {
   let formatter = SYMBOL_FORMATTER_CACHE.get(currency)
   if (!formatter) {

@@ -1,0 +1,11 @@
+<resources>
+    <string name="sms_notification_ready">नए SMS लेनदेन की समीक्षा करें</string>
+    <string name="sms_notification_title_one">लेनदेन आयात के लिए तैयार है</string>
+    <string name="sms_notification_title_many">लंबित SMS लेनदेन की समीक्षा करें</string>
+    <string name="sms_notification_channel">लेनदेन सूचनाएं</string>
+    <string name="sms_notification_channel_description">बैकग्राउंड SMS लेनदेन सूचनाएं</string>
+    <plurals name="sms_notification_pending">
+        <item quantity="one">%d SMS लेनदेन समीक्षा के लिए तैयार है।</item>
+        <item quantity="other">%d SMS लेनदेन समीक्षा के लिए तैयार हैं।</item>
+    </plurals>
+</resources>

@@ -1,4 +1,42 @@
 {
+  "ui": {
+    "syncDetails": {
+      "added": "Added from remote: {{count}}",
+      "updated": "Updated from remote: {{count}}",
+      "pushed": "Local changes pushed: {{count}}",
+      "resolved": "Auto-resolved: {{count}}",
+      "uploaded": "Files uploaded: {{count}}",
+      "unchanged": "Files unchanged: {{count}}",
+      "deleted": "Files deleted: {{count}}",
+      "settings": "Settings synced",
+      "complete": "Sync complete: {{summary}}"
+    },
+    "selectIcon": "Select icon {{icon}}",
+    "selectColor": "Select color {{color}}",
+    "actionFailed": "This action could not be completed. Please try again.",
+    "pendingChanges": "Pending changes",
+    "syncing": "Syncing",
+    "syncSuccess": "Sync complete",
+    "syncError": "Sync failed",
+    "unnamedExpense": "Unnamed expense",
+    "conflictTitle": "Sync conflicts: {{count}}",
+    "conflictMessage": "Local and remote versions differ. Which version would you like to keep?\n\n{{summary}}",
+    "conflictEntry": "• Local: {{localNote}} ({{localAmount}})\n  Remote: {{remoteNote}} ({{remoteAmount}})",
+    "moreConflicts": "…and {{count}} more",
+    "githubError": "GitHub request failed ({{status}}). Please try again.",
+    "version": "v{{version}}",
+    "latestVersion": "Latest: v{{version}}",
+    "paymentShort": { "creditCard": "CC", "debitCard": "DC", "upi": "UPI" },
+    "languages": {
+      "en-US": "English (US)",
+      "en-GB": "English (UK)",
+      "en-CA": "English (CA)",
+      "en-AU": "English (AU)",
+      "en-IN": "English (IN)",
+      "hi": "हिंदी (Hindi)",
+      "ja": "日本語 (Japanese)"
+    }
+  },
   "notFound": {
     "title": "Oops!",
     "message": "This screen doesn't exist.",
@@ -217,6 +255,7 @@
     "charts": {
       "common": {
         "total": "Total",
+        "amountWithPercentage": "{{amount}} ({{percentage}})",
         "noData": "No expense data for this period"
       },
       "category": {

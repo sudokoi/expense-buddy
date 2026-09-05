@@ -8,8 +8,7 @@ import type { PaymentInstrumentMethod } from "../../types/payment-instrument"
 import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { useTranslation } from "react-i18next"
-import { formatCurrency } from "../../utils/currency"
-import { UI_OPACITY } from "../../constants/ui-tokens"
+import { formatCurrency, formatPercentage } from "../../utils/currency"
 
 interface PaymentInstrumentPieChartProps {
   data: PaymentInstrumentChartDataItem[]
@@ -33,18 +32,23 @@ const LegendItem = memo(function LegendItem({
   selectedBgColor: string
   onPress: () => void
 }) {
+  const { t } = useTranslation()
+  const valueLabel = t("analytics.charts.common.amountWithPercentage", {
+    amount: formatCurrency(item.value, currencyCode),
+    percentage: formatPercentage(item.percentage),
+  })
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${item.text}, ${item.percentage.toFixed(1)}%, ${formatCurrency(item.value, currencyCode)}`}
+      accessibilityLabel={`${item.text}, ${valueLabel}`}
       accessibilityState={{ selected: isSelected }}
     >
       <View
         className="min-h-12 flex-row flex-wrap items-center justify-between gap-2 rounded-control p-2"
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <View className="min-w-[100px] flex-1 flex-row items-center gap-2">
+        <View className="min-w-legend flex-1 flex-row items-center gap-2">
           <View
             className="h-3 w-3 rounded-control"
             style={{ backgroundColor: item.color }}
@@ -57,14 +61,9 @@ const LegendItem = memo(function LegendItem({
             {item.text}
           </Text>
         </View>
-        <View className="items-end gap-1">
-          <Text className="text-xs text-muted-foreground">
-            {item.percentage.toFixed(1)}%
-          </Text>
-          <Text className="text-sm font-bold text-foreground">
-            {formatCurrency(item.value, currencyCode)}
-          </Text>
-        </View>
+        <Text className="max-w-full text-right text-sm font-semibold text-foreground">
+          {valueLabel}
+        </Text>
       </View>
     </Pressable>
   )
@@ -162,7 +161,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   const CenterLabel = useCallback(
     () => (
       <View className="items-center">
-        <Text className="text-xs text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
+        <Text className="text-xs text-muted-foreground">
           {t("analytics.charts.common.total")}
         </Text>
         <Text className="text-sm font-bold text-foreground">
@@ -176,8 +175,8 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
-        <View className="h-[150px] items-center justify-center">
-          <Text className="text-foreground" style={{ opacity: UI_OPACITY.subtle }}>
+        <View className="h-chart-empty items-center justify-center">
+          <Text className="text-muted-foreground">
             {t("analytics.charts.paymentInstrument.noData")}
           </Text>
         </View>
@@ -198,12 +197,10 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
             centerLabelComponent={CenterLabel}
             focusOnPress
             showText={false}
-            textColor="white"
-            textSize={10}
           />
         </View>
 
-        <View className="w-full gap-2">
+        <View className="w-full gap-1">
           {data.map((item) => (
             <LegendItem
               key={item.key}

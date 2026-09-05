@@ -10,7 +10,12 @@ import {
   prunePaymentInstrumentSelection,
 } from "./filter-summary"
 
-const t = ((key: string) => key) as TFunction
+const shortLabels: Record<string, string> = {
+  "ui.paymentShort.creditCard": "CC",
+  "ui.paymentShort.debitCard": "DC",
+  "ui.paymentShort.upi": "UPI",
+}
+const t = ((key: string) => shortLabels[key] ?? key) as TFunction
 
 function makeInstrument(overrides: Partial<PaymentInstrument> = {}): PaymentInstrument {
   return {
@@ -26,13 +31,13 @@ function makeInstrument(overrides: Partial<PaymentInstrument> = {}): PaymentInst
 
 describe("methodShortLabel", () => {
   it("shortens known instrument methods", () => {
-    expect(methodShortLabel("Credit Card")).toBe("CC")
-    expect(methodShortLabel("Debit Card")).toBe("DC")
-    expect(methodShortLabel("UPI")).toBe("UPI")
+    expect(methodShortLabel("Credit Card", t)).toBe("CC")
+    expect(methodShortLabel("Debit Card", t)).toBe("DC")
+    expect(methodShortLabel("UPI", t)).toBe("UPI")
   })
 
   it("passes unknown methods through", () => {
-    expect(methodShortLabel("Cash")).toBe("Cash")
+    expect(methodShortLabel("Cash", t)).toBe("Cash")
   })
 })
 

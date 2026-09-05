@@ -220,7 +220,8 @@ export default function SettingsScreen() {
                     addNotification(result.error || result.message, "error")
                   }
                 } catch (error) {
-                  addNotification(String(error), "error")
+                  console.warn("Initial download failed", error)
+                  addNotification(t("ui.actionFailed"), "error")
                 }
               },
             },
@@ -476,7 +477,7 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer>
-      <View className="max-w-[600px] w-full self-center gap-4">
+      <View className="max-w-content w-full self-center gap-4">
         <SettingsSection
           title={t("settings.sections.sync")}
           icon={GitBranch}
@@ -501,7 +502,7 @@ export default function SettingsScreen() {
                   className="text-sm text-muted-foreground"
                   accessibilityLiveRegion="polite"
                 >
-                  {t("settings.autoSync.pendingChanges")}
+                  {t("ui.pendingChanges")}
                 </Text>
               ) : null}
               <Button
@@ -563,14 +564,14 @@ export default function SettingsScreen() {
               </View>
             ) : null}
 
-            <Text className="text-xs text-foreground opacity-60">
+            <Text className="text-xs text-muted-foreground">
               {t("settings.smsImport.helper")}
             </Text>
 
             <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
               <View className="flex-1 gap-1">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
-                <Text className="text-xs text-foreground opacity-60">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.smsImport.backgroundAlertsHelp")}
                 </Text>
               </View>
@@ -601,13 +602,13 @@ export default function SettingsScreen() {
             <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">
               <View className="flex-1 gap-1" pointerEvents="none">
                 <Label className="opacity-80">{t("settings.payment.manageTitle")}</Label>
-                <Text className="text-[13px] text-foreground opacity-60">
+                <Text className="text-body text-muted-foreground">
                   {t("settings.payment.summary", {
                     defaultMethod: defaultPaymentMethodLabel,
                     instrumentCount: activePaymentInstrumentCount,
                   })}
                 </Text>
-                <Text className="text-xs text-foreground opacity-50">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.payment.manageHelp")}
                 </Text>
               </View>
@@ -630,7 +631,7 @@ export default function SettingsScreen() {
           <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
             <View className="flex-1 gap-1">
               <Label>{t("settings.general.mathEntry")}</Label>
-              <Text className="text-xs text-foreground opacity-60">
+              <Text className="text-xs text-muted-foreground">
                 {t("settings.general.mathEntryHelp")}
               </Text>
             </View>
@@ -645,7 +646,7 @@ export default function SettingsScreen() {
             <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
               <View className="flex-1 gap-1">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
-                <Text className="text-xs text-foreground opacity-60">
+                <Text className="text-xs text-muted-foreground">
                   {t("settings.featureFlags.mlOnlySmsImportsHelp")}
                 </Text>
               </View>
@@ -686,7 +687,7 @@ export default function SettingsScreen() {
                 ? t("settings.general.exporting")
                 : t("settings.general.exportButton")}
             </Button>
-            <Text className="text-xs text-foreground opacity-50 px-1">
+            <Text className="text-xs text-muted-foreground px-1">
               {t("settings.general.exportHelp")}
             </Text>
           </View>

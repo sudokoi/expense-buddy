@@ -54,7 +54,7 @@ import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -314,12 +314,12 @@ export default function AddExpenseScreen() {
         extraKeyboardSpace={footerHeight}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="max-w-[600px] w-full self-center gap-3">
+        <View className="max-w-content w-full self-center gap-3">
           {Platform.OS === "android" ? (
             <Button
               size="control"
               variant="outline"
-              icon={<Download size={20} />}
+              icon={<Download size={UI_ICON_SIZE.medium} />}
               onPress={() => {
                 void handleOpenSmsImport()
               }}
@@ -374,7 +374,7 @@ export default function AddExpenseScreen() {
               </Text>
             )}
             {expressionPreview && !errors.amount && (
-              <Text className="text-[13px] text-foreground opacity-70">
+              <Text className="text-body text-muted-foreground">
                 {t("add.preview", { amount: expressionPreview })}
               </Text>
             )}
@@ -392,7 +392,7 @@ export default function AddExpenseScreen() {
               <Label className="opacity-80">{t("add.date")}</Label>
               <Button
                 size="control"
-                icon={<Calendar size={16} />}
+                icon={<Calendar size={UI_ICON_SIZE.small} />}
                 onPress={() => setShowDatePicker(true)}
                 accessibilityLabel={t("add.date")}
               >
@@ -443,13 +443,13 @@ export default function AddExpenseScreen() {
                 </View>
                 {paymentMethodSectionExpanded ? (
                   <ChevronUp
-                    size={20}
+                    size={UI_ICON_SIZE.medium}
                     color={theme.foreground}
                     style={{ opacity: UI_OPACITY.subtle }}
                   />
                 ) : (
                   <ChevronDown
-                    size={20}
+                    size={UI_ICON_SIZE.medium}
                     color={theme.foreground}
                     style={{ opacity: UI_OPACITY.subtle }}
                   />
@@ -529,12 +529,12 @@ export default function AddExpenseScreen() {
           className="border-t border-border bg-background px-5 py-2"
           onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
         >
-          <View className="max-w-[600px] w-full self-center flex-row gap-3">
+          <View className="max-w-content w-full self-center flex-row gap-3">
             <Button
               className="flex-1"
               size="control"
               variant="outline"
-              icon={<Plus size={20} />}
+              icon={<Plus size={UI_ICON_SIZE.medium} />}
               onPress={() => handleSave({ stayOnAdd: true })}
               accessibilityLabel={t("add.saveAndAddAnother")}
             >
@@ -544,7 +544,7 @@ export default function AddExpenseScreen() {
               className="flex-1"
               size="control"
               variant="accent"
-              icon={<Check size={20} />}
+              icon={<Check size={UI_ICON_SIZE.medium} />}
               onPress={() => handleSave({ stayOnAdd: false })}
               accessibilityLabel={t("add.save")}
             >

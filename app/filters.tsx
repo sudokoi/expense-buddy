@@ -203,9 +203,9 @@ export default function FiltersScreen() {
         bottomOffset={100}
         contentContainerStyle={{ padding: UI_SPACE.gutter, paddingBottom: 120 }}
       >
-        <View className="w-full max-w-[600px] self-center gap-6">
+        <View className="w-full max-w-content self-center gap-6">
           {!isHydrated && (
-            <Text className="text-[13px] text-foreground opacity-60">
+            <Text className="text-body text-muted-foreground">
               {t("history.filterSheet.loading")}
             </Text>
           )}

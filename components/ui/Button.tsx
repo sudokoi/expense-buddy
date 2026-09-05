@@ -38,6 +38,7 @@ const buttonTextVariants = cva("", {
       outline: "text-foreground",
       accent: "text-accent-foreground",
       ghost: "text-foreground",
+      // The destructive fill is theme-invariant; white is its tested foreground.
       destructive: "text-white",
     },
   },

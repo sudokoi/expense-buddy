@@ -91,8 +91,24 @@ class WidgetConfigDataTest {
 @Config(sdk = [34])
 class WidgetCopyTest {
     @Test
+    @Config(qualifiers = "hi")
+    fun `fallback uses Hindi resources without an assist`() {
+        val copy = WidgetCopy.fallback(ApplicationProvider.getApplicationContext())
+        assertThat(copy.today).isEqualTo("आज")
+        assertThat(copy.displayCategory("Other")).isEqualTo("अन्य")
+    }
+
+    @Test
+    @Config(qualifiers = "ja")
+    fun `fallback uses Japanese resources without an assist`() {
+        val copy = WidgetCopy.fallback(ApplicationProvider.getApplicationContext())
+        assertThat(copy.today).isEqualTo("今日")
+        assertThat(copy.monthTotal("￥100")).isEqualTo("今月 ￥100")
+    }
+
+    @Test
     fun `fallback formats counts and totals`() {
-        val copy = WidgetCopy.fallback()
+        val copy = WidgetCopy.fallback(ApplicationProvider.getApplicationContext())
         assertThat(copy.expensesToday(1)).isEqualTo("1 expense today")
         assertThat(copy.expensesToday(5)).isEqualTo("5 expenses today")
         assertThat(copy.monthTotal("₹100")).isEqualTo("₹100 this month")

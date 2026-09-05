@@ -41,10 +41,10 @@ class WidgetConfigActivity : Activity() {
         applyTheme(theme)
 
         // Labels come from the assist copy (translation.json single source);
-        // layout android:text values are the English fallback when no assist
+        // layout android:text values are the Android-localized fallback when no assist
         // exists yet (e.g. first placement before the app ever ran).
         val assist = WidgetAssistStore(this).load()
-        val copy = assist.toCopy()
+        val copy = assist.toCopy(this)
         val hideSwitch = findViewById<Switch>(R.id.config_hide_amounts)
         findViewById<TextView>(R.id.config_title).text = copy.configTitle
         findViewById<TextView>(R.id.config_subtitle).text = copy.configSubtitle

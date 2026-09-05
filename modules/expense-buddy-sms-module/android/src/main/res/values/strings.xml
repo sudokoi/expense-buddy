@@ -1,0 +1,12 @@
+<resources>
+    <!-- Native background copy follows Android's locale, without requiring a JS runtime. -->
+    <string name="sms_notification_ready">New SMS transaction ready to review</string>
+    <string name="sms_notification_title_one">Transaction ready to import</string>
+    <string name="sms_notification_title_many">Review pending SMS transactions</string>
+    <string name="sms_notification_channel">Transaction alerts</string>
+    <string name="sms_notification_channel_description">Background SMS transaction alerts</string>
+    <plurals name="sms_notification_pending">
+        <item quantity="one">%d SMS transaction is ready to review.</item>
+        <item quantity="other">%d SMS transactions are ready to review.</item>
+    </plurals>
+</resources>

@@ -57,16 +57,16 @@ object BackgroundSmsNotificationManager {
         val notificationText =
             if (pendingItems.size == 1) {
                 val item = pendingItems.first()
-                item.merchantName ?: item.sender.ifBlank { "New SMS transaction ready to review" }
+                item.merchantName ?: item.sender.ifBlank { context.getString(R.string.sms_notification_ready) }
             } else {
-                "${pendingItems.size} SMS transactions are ready to review."
+                context.resources.getQuantityString(R.plurals.sms_notification_pending, pendingItems.size, pendingItems.size)
             }
 
         val notificationTitle =
             if (pendingItems.size == 1) {
-                "Transaction ready to import"
+                context.getString(R.string.sms_notification_title_one)
             } else {
-                "Review pending SMS transactions"
+                context.getString(R.string.sms_notification_title_many)
             }
 
         val builder =
@@ -92,18 +92,15 @@ object BackgroundSmsNotificationManager {
         }
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val existing = manager.getNotificationChannel(TRANSACTION_IMPORT_CHANNEL_ID)
-        if (existing != null) {
-            return
-        }
-
+        // Re-register to refresh translated channel copy after a system locale change.
+        // Android preserves the user's channel importance and notification preferences.
         manager.createNotificationChannel(
             NotificationChannel(
                 TRANSACTION_IMPORT_CHANNEL_ID,
-                "Transaction alerts",
+                context.getString(R.string.sms_notification_channel),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
-                description = "Background SMS transaction alerts"
+                description = context.getString(R.string.sms_notification_channel_description)
             },
         )
     }

@@ -78,12 +78,16 @@ export const ExpenseRow = memo(function ExpenseRow({
           accessible={false}
           importantForAccessibility="no-hide-descendants"
         >
-          <DynamicCategoryIcon name={categoryInfo.icon} size={20} color={iconColor} />
+          <DynamicCategoryIcon
+            name={categoryInfo.icon}
+            size={UI_ICON_SIZE.medium}
+            color={iconColor}
+          />
         </View>
         <View className="min-w-0 flex-1">
           <View className="flex-row flex-wrap items-start justify-between gap-x-3 gap-y-1">
             <Text
-              className="min-w-[100px] flex-1 text-sm text-foreground"
+              className="min-w-legend flex-1 text-sm text-foreground"
               style={{ fontWeight: UI_FONT_WEIGHT.bold }}
               numberOfLines={2}
             >

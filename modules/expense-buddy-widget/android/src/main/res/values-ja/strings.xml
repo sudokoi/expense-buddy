@@ -1,0 +1,23 @@
+<resources>
+    <string name="expense_widget_summary_desc">今日と今月の支出を一覧表示</string>
+    <string name="expense_widget_trend_desc">過去7日間の支出グラフ</string>
+    <string name="expense_widget_recent_desc">最近の支出一覧</string>
+    <string name="expense_widget_config_title">ウィジェット設定</string>
+    <string name="expense_widget_config_subtitle">表示する内容を選択</string>
+    <string name="expense_widget_config_category">カテゴリ</string>
+    <string name="expense_widget_config_all">すべてのカテゴリ</string>
+    <string name="expense_widget_config_hide_amounts">金額を非表示</string>
+    <string name="expense_widget_config_save">ウィジェットを追加</string>
+    <string name="expense_widget_add_expense">支出を追加</string>
+    <string name="expense_widget_trend_accessibility">支出の推移</string>
+    <string name="expense_widget_today">今日</string>
+    <string name="expense_widget_last_7_days">過去7日間</string>
+    <string name="expense_widget_recent">最近の支出</string>
+    <string name="expense_widget_empty">支出はまだありません</string>
+    <string name="expense_widget_amount_placeholder">—</string>
+    <string name="expense_widget_expenses_one">今日の支出1件</string>
+    <string name="expense_widget_expenses_many">今日の支出%d件</string>
+    <string name="expense_widget_month_total">今月 %s</string>
+    <string name="expense_widget_other">その他</string>
+    <string name="expense_widget_trend_total">支出の推移。合計 %s</string>
+</resources>

@@ -17,7 +17,7 @@ import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { formatCurrency } from "../../utils/currency"
 import { getLocale } from "../../utils/date"
-import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_FONT_SIZE } from "../../constants/ui-tokens"
 
 interface LineChartSectionProps {
   data: LineChartDataItem[]
@@ -124,7 +124,7 @@ export const LineChartSection = memo(function LineChartSection({
   return (
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
       {!selectedPoint ? (
-        <View className="h-[150px] items-center justify-center">
+        <View className="h-chart-empty items-center justify-center">
           <Text className="text-muted-foreground">
             {t("analytics.charts.common.noData")}
           </Text>
@@ -184,8 +184,14 @@ export const LineChartSection = memo(function LineChartSection({
                 yAxisThickness={0}
                 yAxisLabelWidth={yAxisWidth}
                 formatYLabel={formatYLabel}
-                yAxisTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
-                xAxisLabelTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
+                yAxisTextStyle={{
+                  color: theme.mutedForeground,
+                  fontSize: UI_FONT_SIZE.micro,
+                }}
+                xAxisLabelTextStyle={{
+                  color: theme.mutedForeground,
+                  fontSize: UI_FONT_SIZE.micro,
+                }}
                 xAxisLabelsHeight={X_AXIS_LABEL_HEIGHT * fontScale}
                 // Offset added height downward; a taller bottom-anchored box otherwise
                 // lifts the text above the axis instead of reserving space below it.
