@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 /**
- * Shared update plumbing. No stored scope: each `onUpdate` owns a
- * per-call scope tied to `goAsync`, so a dead provider never leaks work.
- * Subclasses implement [render] (suspend, IO) per WidgetKind.
+ * Each broadcast owns a bounded waiter; the process renderer coalesces actual work.
  */
 abstract class WidgetProviderBase : AppWidgetProvider() {
+    internal abstract val kind: WidgetKind
+
     override fun onDisabled(context: Context) {
         try {
             WidgetRefreshSchedule.cancelIfUnused(context)
@@ -39,7 +39,7 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        renderAsync(context, appWidgetManager, appWidgetIds)
+        renderAsync(context, appWidgetIds)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -48,22 +48,18 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle,
     ) {
-        renderAsync(context, appWidgetManager, intArrayOf(appWidgetId))
+        renderAsync(context, intArrayOf(appWidgetId))
     }
 
     private fun renderAsync(
         context: Context,
-        appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
         val pending = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 withTimeout(8000L) {
-                    val snapshot by lazy { store(context).capture() }
-                    for (widgetId in appWidgetIds) {
-                        render(context, appWidgetManager, widgetId) { snapshot }
-                    }
+                    WidgetUpdates.refresh(context.applicationContext, kind, appWidgetIds)
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -75,7 +71,7 @@ abstract class WidgetProviderBase : AppWidgetProvider() {
         }
     }
 
-    protected abstract suspend fun render(
+    internal abstract suspend fun render(
         context: Context,
         manager: AppWidgetManager,
         widgetId: Int,

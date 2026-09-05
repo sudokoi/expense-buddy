@@ -6,6 +6,8 @@ import android.view.View
 import android.widget.RemoteViews
 
 class SummaryWidgetProvider : WidgetProviderBase() {
+    internal override val kind = WidgetKind.SUMMARY
+
     override suspend fun render(
         context: Context,
         manager: AppWidgetManager,
@@ -57,7 +59,6 @@ class SummaryWidgetProvider : WidgetProviderBase() {
             val result =
                 store(context).read(
                     snapshot = snapshot(),
-                    recentLimit = 0,
                     filter = filter,
                     assistCurrency = assist?.currency,
                     assistVersion = assist?.dataVersion,

@@ -7,6 +7,8 @@ import android.widget.RemoteViews
 
 /** Shell only: the collection factory alone owns the live ledger read and empty state. */
 class RecentWidgetProvider : WidgetProviderBase() {
+    internal override val kind = WidgetKind.RECENT
+
     override suspend fun render(
         context: Context,
         manager: AppWidgetManager,

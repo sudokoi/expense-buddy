@@ -5,6 +5,8 @@ import android.content.Context
 import android.widget.RemoteViews
 
 class TrendWidgetProvider : WidgetProviderBase() {
+    internal override val kind = WidgetKind.TREND
+
     override suspend fun render(
         context: Context,
         manager: AppWidgetManager,
@@ -39,7 +41,6 @@ class TrendWidgetProvider : WidgetProviderBase() {
             val result =
                 store(context).read(
                     snapshot = snapshot(),
-                    recentLimit = 0,
                     filter = filter,
                     assistCurrency = assist?.currency,
                     assistVersion = assist?.dataVersion,
