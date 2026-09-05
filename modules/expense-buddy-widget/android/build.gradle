@@ -8,6 +8,12 @@ version = '1.0.0'
 
 android {
   namespace "expo.modules.expensebuddywidget"
+  compileOptions {
+    // Widgets run on API 24+, while aggregation/date formatting uses java.time.
+    coreLibraryDesugaringEnabled true
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
   defaultConfig {
     versionCode 1
     versionName "1.0.0"
@@ -21,6 +27,7 @@ android {
 
 dependencies {
   implementation "androidx.core:core-ktx:1.15.0"
+  coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
 
   // Direct read of the JS-owned MMKV store ("expense-buddy"): index + item JSON.
   // Same coordinates as react-native-mmkv so Gradle dedupes the classes.

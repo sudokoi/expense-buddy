@@ -11,7 +11,9 @@
         android:id="@+id/widget_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Last 7 days"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/expense_widget_last_7_days"
         android:textColor="@color/expense_widget_text_muted"
         android:textSize="12sp" />
 
@@ -20,7 +22,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:text="—"
+        android:autoSizeMaxTextSize="22sp"
+        android:autoSizeMinTextSize="14sp"
+        android:autoSizeStepGranularity="1sp"
+        android:autoSizeTextType="uniform"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/expense_widget_amount_placeholder"
         android:textColor="@color/expense_widget_text_primary"
         android:textSize="22sp"
         android:textStyle="bold" />
@@ -31,5 +39,5 @@
         android:layout_height="0dp"
         android:layout_marginTop="6dp"
         android:layout_weight="1"
-        android:contentDescription="7-day spending bars" />
+        android:contentDescription="@string/expense_widget_trend_accessibility" />
 </LinearLayout>

@@ -81,7 +81,8 @@ class WidgetCopyTest {
               "copy":{"today":"Heute","last7Days":"L7","recent":"R","empty":"E",
               "expensesOne":"1","expensesMany":"%d X","thisMonth":"%s Y",
               "other":"Sonstiges","configTitle":"T","configSubtitle":"S",
-              "configCategory":"C","configAll":"A","configHide":"H","configSave":"S"}}"""
+              "configCategory":"C","configAll":"A","configHide":"H","configSave":"S",
+              "addExpense":"Add","trendDescription":"Trend %s"}}"""
         val assist = WidgetAssist.fromJson(json)
         assertThat(assist?.copy?.displayCategory("Other")).isEqualTo("Sonstiges")
         assertThat(assist?.copy?.expensesToday(3)).isEqualTo("3 X")

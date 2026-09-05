@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Widget tokens mirror constants/palette.ts light. values-night/ overrides in dark mode. -->
-    <color name="expense_widget_background">#FFF8F0</color>
-    <color name="expense_widget_text_primary">#473E4B</color>
-    <color name="expense_widget_text_muted">#6C5A6C</color>
-    <color name="expense_widget_accent">#C0406A</color>
-    <color name="expense_widget_accent_text">#FFFFFF</color>
-    <color name="expense_widget_track">#D6C9C2</color>
+    <!-- Explicit pairs let widgets honor the in-app preference, independently of launcher uiMode. -->
+    <color name="expense_widget_background_light">#FFF8F0</color>
+    <color name="expense_widget_surface_light">#FFFAF5</color>
+    <color name="expense_widget_text_primary_light">#473E4B</color>
+    <color name="expense_widget_text_muted_light">#6C5A6C</color>
+    <color name="expense_widget_accent_light">#C0406A</color>
+    <color name="expense_widget_accent_text_light">#FFFFFF</color>
+    <color name="expense_widget_track_light">#D6C9C2</color>
+    <color name="expense_widget_background_dark">#1D161B</color>
+    <color name="expense_widget_surface_dark">#27202A</color>
+    <color name="expense_widget_text_primary_dark">#F2E9EE</color>
+    <color name="expense_widget_text_muted_dark">#CCBFC9</color>
+    <color name="expense_widget_accent_dark">#FFB6C1</color>
+    <color name="expense_widget_accent_text_dark">#1D161B</color>
+    <color name="expense_widget_track_dark">#3B3342</color>
+
+    <!-- Picker previews and first inflation follow system mode until the first native render. -->
+    <color name="expense_widget_background">@color/expense_widget_background_light</color>
+    <color name="expense_widget_surface">@color/expense_widget_surface_light</color>
+    <color name="expense_widget_text_primary">@color/expense_widget_text_primary_light</color>
+    <color name="expense_widget_text_muted">@color/expense_widget_text_muted_light</color>
+    <color name="expense_widget_accent">@color/expense_widget_accent_light</color>
+    <color name="expense_widget_accent_text">@color/expense_widget_accent_text_light</color>
+    <color name="expense_widget_track">@color/expense_widget_track_light</color>
 </resources>

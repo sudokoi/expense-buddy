@@ -9,4 +9,11 @@
     <string name="expense_widget_config_all">All categories</string>
     <string name="expense_widget_config_hide_amounts">Hide amounts</string>
     <string name="expense_widget_config_save">Add widget</string>
+    <string name="expense_widget_add_expense">Add Expense</string>
+    <string name="expense_widget_trend_accessibility">Spending trend</string>
+    <string name="expense_widget_today">Today</string>
+    <string name="expense_widget_last_7_days">Last 7 days</string>
+    <string name="expense_widget_recent">Recent expenses</string>
+    <string name="expense_widget_empty">No expenses yet</string>
+    <string name="expense_widget_amount_placeholder">—</string>
 </resources>

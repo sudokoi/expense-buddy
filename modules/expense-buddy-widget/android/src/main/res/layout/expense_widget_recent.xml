@@ -11,7 +11,9 @@
         android:id="@+id/widget_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Recent expenses"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/expense_widget_recent"
         android:textColor="@color/expense_widget_text_muted"
         android:textSize="12sp" />
 
@@ -21,8 +23,8 @@
         android:layout_height="0dp"
         android:layout_marginTop="4dp"
         android:layout_weight="1"
-        android:divider="@color/expense_widget_track"
-        android:dividerHeight="1dp" />
+        android:divider="@null"
+        android:dividerHeight="0dp" />
 
     <TextView
         android:id="@+id/widget_empty"
@@ -30,7 +32,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="No expenses yet"
+        android:text="@string/expense_widget_empty"
         android:textColor="@color/expense_widget_text_muted"
         android:textSize="13sp"
         android:visibility="gone" />

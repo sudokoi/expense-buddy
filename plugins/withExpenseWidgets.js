@@ -1,4 +1,4 @@
-const { withAndroidManifest } = require("expo/config-plugins")
+const { withAndroidManifest, withAppBuildGradle } = require("expo/config-plugins")
 
 const WIDGET_PACKAGE = "expo.modules.expensebuddywidget"
 
@@ -9,7 +9,7 @@ const PROVIDERS = [
 ]
 
 function withExpenseWidgets(config) {
-  return withAndroidManifest(config, async (config) => {
+  config = withAndroidManifest(config, async (config) => {
     const manifest = config.modResults.manifest
 
     if (!Array.isArray(manifest.application)) {
@@ -94,6 +94,31 @@ function withExpenseWidgets(config) {
       })
     }
 
+    return config
+  })
+
+  return withAppBuildGradle(config, (config) => {
+    if (config.modResults.language !== "groovy") return config
+    let contents = config.modResults.contents
+    if (!contents.includes("coreLibraryDesugaringEnabled true")) {
+      contents = contents.replace(
+        /android\s*\{\s*/,
+        (match) =>
+          `${match}compileOptions {\n        coreLibraryDesugaringEnabled true\n    }\n\n    `
+      )
+    }
+    if (
+      !contents.includes(
+        'coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"'
+      )
+    ) {
+      contents = contents.replace(
+        /dependencies\s*\{\s*/,
+        (match) =>
+          `${match}coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"\n    `
+      )
+    }
+    config.modResults.contents = contents
     return config
   })
 }

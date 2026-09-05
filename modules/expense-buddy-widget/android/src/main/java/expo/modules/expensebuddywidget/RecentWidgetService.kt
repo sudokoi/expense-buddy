@@ -28,6 +28,8 @@ class RecentWidgetService : RemoteViewsService() {
         private var filter: WidgetFilter = WidgetFilter()
         private var colors: Map<String, String> = emptyMap()
         private var copy: WidgetCopy = WidgetCopy.fallback()
+        private var theme: WidgetTheme = WidgetTheme.LIGHT
+        private var locale: java.util.Locale = java.util.Locale.getDefault()
 
         override fun onCreate() {
             // No-op: data loads in onDataSetChanged per collection cycle.
@@ -52,6 +54,8 @@ class RecentWidgetService : RemoteViewsService() {
             currency = ready.data.currency
             colors = assist?.categoryColors ?: emptyMap()
             copy = assist.toCopy()
+            theme = WidgetTheme.resolve(context)
+            locale = assist?.locale?.let(java.util.Locale::forLanguageTag) ?: java.util.Locale.getDefault()
         }
 
         override fun getCount(): Int = rows.size
@@ -64,8 +68,10 @@ class RecentWidgetService : RemoteViewsService() {
             views.setTextViewText(R.id.row_title, title)
             views.setTextViewText(
                 R.id.row_subtitle,
-                "${copy.displayCategory(expense.category)} · ${expense.dayKey}",
+                "${copy.displayCategory(expense.category)} · ${WidgetDateFormat.dayMonth(expense.dayKey, locale)}",
             )
+            views.setTextColor(R.id.row_title, theme.color(context, theme.foreground))
+            views.setTextColor(R.id.row_subtitle, theme.color(context, theme.mutedForeground))
             val amount =
                 WidgetFormat.maskedAmount(
                     expense.amount,
@@ -73,6 +79,7 @@ class RecentWidgetService : RemoteViewsService() {
                     filter.hideAmounts,
                 )
             views.setTextViewText(R.id.row_amount, amount)
+            views.setTextColor(R.id.row_amount, theme.color(context, theme.foreground))
             views.setInt(R.id.row_dot, "setColorFilter", dotColor(expense.category))
             views.setOnClickFillInIntent(R.id.row_root, Intent())
             return views
@@ -97,10 +104,10 @@ class RecentWidgetService : RemoteViewsService() {
 
         private fun dotColor(category: String): Int =
             try {
-                val hex = colors[category] ?: return context.getColor(R.color.expense_widget_accent)
+                val hex = colors[category] ?: return theme.color(context, theme.accent)
                 Color.parseColor(hex)
             } catch (_: Exception) {
-                context.getColor(R.color.expense_widget_accent)
+                theme.color(context, theme.accent)
             }
     }
 }

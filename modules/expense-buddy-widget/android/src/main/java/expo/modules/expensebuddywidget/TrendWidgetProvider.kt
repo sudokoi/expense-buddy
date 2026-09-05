@@ -13,7 +13,15 @@ class TrendWidgetProvider : WidgetProviderBase() {
         val filter = WidgetFilterStore(context, widgetId).load()
         val assist = assistFor(context)
         val copy = assist.toCopy()
+        val theme = WidgetTheme.resolve(context)
         val views = RemoteViews(context.packageName, R.layout.expense_widget_trend)
+        theme.applyCard(
+            context,
+            views,
+            R.id.widget_root,
+            primaryTextIds = intArrayOf(R.id.widget_total),
+            mutedTextIds = intArrayOf(R.id.widget_label),
+        )
         // Home tab hosts the Analytics screen, so the chart deep-links there.
         views.setOnClickPendingIntent(
             R.id.widget_root,
@@ -40,15 +48,31 @@ class TrendWidgetProvider : WidgetProviderBase() {
                 views.setTextViewText(R.id.widget_total, total)
                 views.setImageViewBitmap(
                     R.id.widget_chart,
-                    TrendChartRenderer.render(context, data.last7Days),
+                    TrendChartRenderer.render(
+                        context,
+                        data.last7Days,
+                        manager.getAppWidgetOptions(widgetId),
+                        theme,
+                        assist?.locale?.let(java.util.Locale::forLanguageTag)
+                            ?: java.util.Locale.getDefault(),
+                    ),
                 )
+                views.setContentDescription(R.id.widget_chart, copy.trendDescription(total))
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Empty -> {
+                val amount =
+                    WidgetFormat.maskedAmount(
+                        0.0,
+                        displayCurrency(context),
+                        filter.hideAmounts,
+                    )
                 views.setTextViewText(
                     R.id.widget_total,
-                    WidgetFormat.amount(0.0, displayCurrency(context)),
+                    amount,
                 )
+                views.setImageViewResource(R.id.widget_chart, 0)
+                views.setContentDescription(R.id.widget_chart, copy.trendDescription(amount))
                 manager.updateAppWidget(widgetId, views)
             }
             WidgetResult.Unavailable -> {

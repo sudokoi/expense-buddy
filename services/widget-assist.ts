@@ -26,11 +26,14 @@ export interface WidgetAssistCopy {
   configAll: string
   configHide: string
   configSave: string
+  addExpense: string
+  trendDescription: string
 }
 
 export interface WidgetAssistPayload {
   dataVersion: string
   currency: string
+  locale: string
   categoryColors: Record<string, string>
   copy: WidgetAssistCopy
 }
@@ -52,6 +55,11 @@ export function widgetAssistCopy(): WidgetAssistCopy {
     configAll: t("widget.configAll"),
     configHide: t("widget.configHide"),
     configSave: t("widget.configSave"),
+    addExpense: t("navigation.add"),
+    trendDescription: t("analytics.charts.trend.accessibilityLabel").replace(
+      "{{total}}",
+      "%s"
+    ),
   }
 }
 
@@ -73,6 +81,7 @@ export function buildWidgetAssist(
   return {
     dataVersion,
     currency: effectiveCurrency ?? settings.defaultCurrency ?? "INR",
+    locale: i18next.resolvedLanguage ?? i18next.language ?? "en-US",
     categoryColors,
     copy: widgetAssistCopy(),
   }

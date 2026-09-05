@@ -51,6 +51,7 @@ sealed interface WidgetResult {
 data class WidgetAssist(
     val dataVersion: String,
     val currency: String,
+    val locale: String? = null,
     val categoryColors: Map<String, String> = emptyMap(),
     /** Localized display strings captured by the app; null in old snapshots. */
     val copy: WidgetCopy? = null,
@@ -71,6 +72,7 @@ data class WidgetAssist(
                 WidgetAssist(
                     dataVersion = o.optString("dataVersion"),
                     currency = o.optString("currency", "INR").ifEmpty { "INR" },
+                    locale = o.optString("locale", "").ifEmpty { null },
                     categoryColors = colors,
                     copy = readCopy(o.optJSONObject("copy")),
                 )
@@ -100,6 +102,8 @@ data class WidgetAssist(
                     configAll = o.getString("configAll"),
                     configHide = o.getString("configHide"),
                     configSave = o.getString("configSave"),
+                    addExpense = o.getString("addExpense"),
+                    trendDescriptionTemplate = o.getString("trendDescription"),
                 )
             } catch (_: Exception) {
                 null

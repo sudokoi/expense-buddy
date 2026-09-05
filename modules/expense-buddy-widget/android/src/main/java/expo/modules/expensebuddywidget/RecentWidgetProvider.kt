@@ -13,6 +13,12 @@ class RecentWidgetProvider : WidgetProviderBase() {
         widgetId: Int,
     ) {
         val views = RemoteViews(context.packageName, R.layout.expense_widget_recent)
+        WidgetTheme.resolve(context).applyCard(
+            context,
+            views,
+            R.id.widget_root,
+            mutedTextIds = intArrayOf(R.id.widget_label, R.id.widget_empty),
+        )
         views.setOnClickPendingIntent(
             R.id.widget_label,
             WidgetIntents.openApp(context, "history", widgetId),
@@ -29,6 +35,8 @@ class RecentWidgetProvider : WidgetProviderBase() {
             )
         ) {
             is WidgetResult.Ready -> {
+                views.setViewVisibility(R.id.widget_list, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_empty, View.GONE)
                 val service =
                     Intent(context, RecentWidgetService::class.java).apply {
                         putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
@@ -46,6 +54,7 @@ class RecentWidgetProvider : WidgetProviderBase() {
             }
             WidgetResult.Empty -> {
                 views.setTextViewText(R.id.widget_empty, copy.empty)
+                views.setViewVisibility(R.id.widget_list, View.GONE)
                 views.setViewVisibility(R.id.widget_empty, View.VISIBLE)
                 manager.updateAppWidget(widgetId, views)
             }
