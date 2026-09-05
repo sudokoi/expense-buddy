@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native"
 import { Check, ChevronRight } from "lucide-react-native"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { Button } from "./Button"
 
 export interface SelectionOption {
   value: string
@@ -18,6 +19,8 @@ interface SelectionFieldProps {
   description?: string
   /** Preserve an unavailable historical selection without changing stored data. */
   valueLabel?: string
+  /** Inline preferences keep their label outside a compact value button. */
+  layout?: "stacked" | "inline"
 }
 
 /** A compact summary that opens a scrollable, single-choice sheet. Dismissal changes nothing. */
@@ -28,6 +31,7 @@ export function SelectionField({
   onChange,
   description,
   valueLabel,
+  layout = "stacked",
 }: SelectionFieldProps) {
   const [open, setOpen] = useState(false)
   const theme = useThemeColors()
@@ -36,19 +40,38 @@ export function SelectionField({
 
   return (
     <>
-      <Pressable
-        onPress={() => setOpen(true)}
-        accessibilityRole="button"
-        accessibilityLabel={`${label}, ${summary}`}
-        accessibilityState={{ expanded: open }}
-        className="min-h-12 flex-row items-center gap-3 rounded-control border border-border bg-surface px-3 py-3 active:opacity-60"
-      >
-        <View className="flex-1 gap-1">
-          <Text className="text-xs text-muted-foreground">{label}</Text>
-          <Text className="text-base font-medium text-foreground">{summary}</Text>
+      {layout === "inline" ? (
+        <View className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <Text className="min-w-[96px] flex-1 text-sm text-muted-foreground">
+            {label}
+          </Text>
+          <Button
+            className="max-w-full"
+            size="control"
+            variant="outline"
+            onPress={() => setOpen(true)}
+            accessibilityLabel={`${label}, ${summary}`}
+            accessibilityState={{ expanded: open }}
+          >
+            <Text className="shrink text-sm text-foreground">{summary}</Text>
+            <ChevronRight size={16} color={theme.mutedForeground} />
+          </Button>
         </View>
-        <ChevronRight size={20} color={theme.mutedForeground} />
-      </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => setOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`${label}, ${summary}`}
+          accessibilityState={{ expanded: open }}
+          className="min-h-12 flex-row items-center gap-3 rounded-control border border-border bg-surface px-3 py-3 active:opacity-60"
+        >
+          <View className="flex-1 gap-1">
+            <Text className="text-xs text-muted-foreground">{label}</Text>
+            <Text className="text-base font-medium text-foreground">{summary}</Text>
+          </View>
+          <ChevronRight size={20} color={theme.mutedForeground} />
+        </Pressable>
+      )}
       <AppSheetScaffold
         open={open}
         onClose={() => setOpen(false)}

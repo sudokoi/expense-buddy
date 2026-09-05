@@ -3,13 +3,7 @@ import { Sun, Moon, Smartphone } from "lucide-react-native"
 import { Pressable } from "react-native"
 import { useTranslation } from "react-i18next"
 import { ThemePreference } from "../../services/settings-manager"
-import { Card } from "./Card"
-import {
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface ThemeSelectorProps {
@@ -37,7 +31,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
   const theme = useThemeColors()
 
   return (
-    <Card className="flex-row gap-1 p-1 rounded-control">
+    <View className="max-w-full self-start flex-row flex-wrap gap-1 p-1 rounded-control border border-border bg-surface">
       {themeOptions.map(({ key, labelKey, Icon }) => {
         const isSelected = value === key
         const label = t(labelKey)
@@ -48,38 +42,29 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             role="button"
             aria-selected={isSelected}
             aria-label={label}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            className="flex-1 min-h-12"
+            style={{
+              borderWidth: UI_BORDER_WIDTH.thin,
+              backgroundColor: isSelected ? theme.muted : "transparent",
+              borderColor: isSelected ? theme.accent : "transparent",
+            }}
+            className="min-h-12 max-w-full flex-row items-center justify-center gap-2 rounded-control px-3 py-2 active:opacity-60"
           >
-            <View
-              className="flex-1 items-center justify-center gap-2 rounded-control p-2"
+            <Icon
+              size={UI_ICON_SIZE.regular}
+              color={isSelected ? theme.accent : theme.mutedForeground}
+            />
+            <Text
+              className="shrink text-center text-sm text-foreground"
               style={{
-                borderWidth: UI_BORDER_WIDTH.normal,
-                backgroundColor: isSelected ? theme.muted : "transparent",
-                borderColor: isSelected ? theme.accent : "transparent",
+                fontWeight: isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal,
               }}
             >
-              <Icon
-                size={UI_ICON_SIZE.regular}
-                color={theme.foreground}
-                style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
-              />
-              <Text
-                className="text-center text-sm text-foreground"
-                style={{
-                  fontWeight: isSelected
-                    ? UI_FONT_WEIGHT.semiBold
-                    : UI_FONT_WEIGHT.normal,
-                  opacity: isSelected ? 1 : UI_OPACITY.medium,
-                }}
-              >
-                {label}
-              </Text>
-            </View>
+              {label}
+            </Text>
           </Pressable>
         )
       })}
-    </Card>
+    </View>
   )
 }
 

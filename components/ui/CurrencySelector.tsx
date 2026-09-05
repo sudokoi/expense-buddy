@@ -13,6 +13,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
   const { t } = useTranslation()
   return (
     <SelectionField
+      layout="inline"
       label={t("settings.localization.currency")}
       value={value}
       onChange={onChange}

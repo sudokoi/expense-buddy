@@ -337,12 +337,12 @@ export default function AddExpenseScreen() {
           ) : null}
 
           {/* Amount Input */}
-          <View className="gap-2">
-            <Label className="opacity-80">{t("add.amount")}</Label>
+          <View className="gap-2 rounded-card bg-muted p-3">
+            <Label>{t("add.amount")}</Label>
             <View
               className={`flex-row items-center rounded-control border bg-surface px-3 ${errors.amount ? "border-error" : "border-border"}`}
             >
-              <Text className="text-xl font-semibold text-muted-foreground">
+              <Text className="text-2xl font-semibold text-accent">
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input

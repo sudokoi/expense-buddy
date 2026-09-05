@@ -2,7 +2,17 @@ import { useState, useCallback, useMemo } from "react"
 import { Alert, Linking, Platform, Pressable, Text, View } from "react-native"
 import { getLogsForBugReportAsync } from "../../services/logger"
 import * as Clipboard from "expo-clipboard"
-import { ChevronRight, FileDown } from "lucide-react-native"
+import {
+  ChevronRight,
+  FileDown,
+  GitBranch,
+  MessageSquare,
+  Wallet,
+  SlidersHorizontal,
+  Palette,
+  Globe,
+  Info,
+} from "lucide-react-native"
 import { Href, useRouter } from "expo-router"
 import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import { useExpenses, useNotifications, useSettings } from "../../stores/hooks"
@@ -466,6 +476,8 @@ export default function SettingsScreen() {
       <View className="max-w-[600px] w-full self-center gap-4">
         <SettingsSection
           title={t("settings.sections.sync")}
+          icon={GitBranch}
+          tone="purple"
           description={t("settings.sync.description")}
         >
           <GitHubConfigSection
@@ -514,6 +526,8 @@ export default function SettingsScreen() {
         {Platform.OS === "android" ? (
           <SettingsSection
             title={t("settings.smsImport.title")}
+            icon={MessageSquare}
+            tone="blue"
             description={t("settings.smsImport.description")}
             gap="$gutter"
           >
@@ -570,6 +584,8 @@ export default function SettingsScreen() {
 
         <SettingsSection
           title={t("settings.sections.payment")}
+          icon={Wallet}
+          tone="orange"
           description={t("settings.payment.description")}
           gap="$gutter"
         >
@@ -603,6 +619,8 @@ export default function SettingsScreen() {
 
         <SettingsSection
           title={t("settings.sections.featureFlags")}
+          icon={SlidersHorizontal}
+          tone="blue"
           description={t("settings.featureFlags.description")}
           gap="$gutter"
         >
@@ -641,14 +659,14 @@ export default function SettingsScreen() {
 
         <SettingsSection
           title={t("settings.sections.general")}
+          icon={Palette}
+          tone="purple"
           description={t("settings.general.description")}
           gap="$gutter"
         >
           <View className="gap-2">
             <Label>{t("settings.appearance.theme")}</Label>
-            <View className="bg-surface p-3 rounded-card">
-              <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
-            </View>
+            <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
           </View>
 
           <View className="gap-2">
@@ -673,6 +691,8 @@ export default function SettingsScreen() {
 
         <SettingsSection
           title={t("settings.sections.localization")}
+          icon={Globe}
+          tone="green"
           description={t("settings.localization.description")}
         >
           <LocalizationSection
@@ -686,7 +706,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         {/* APP INFORMATION Section */}
-        <SettingsSection title={t("settings.sections.about")}>
+        <SettingsSection title={t("settings.sections.about")} icon={Info} tone="orange">
           <AppInfoSection
             currentVersion={APP_CONFIG.version}
             updateInfo={updateInfo}

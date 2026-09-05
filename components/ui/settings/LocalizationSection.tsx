@@ -30,6 +30,7 @@ export function LocalizationSection({
       {smsRegion !== undefined && onRegionChange ? (
         <>
           <SelectionField
+            layout="inline"
             label={t("settings.localization.region")}
             description={t("settings.localization.regionHelp")}
             value={smsRegion}
