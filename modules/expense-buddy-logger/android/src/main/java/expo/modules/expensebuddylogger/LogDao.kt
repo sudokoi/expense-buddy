@@ -3,9 +3,22 @@ package expo.modules.expensebuddylogger
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Dao
 interface LogDao {
+    @Insert
+    suspend fun insertAll(logs: List<LogEntity>)
+
+    @Transaction
+    suspend fun insertAndPrune(
+        logs: List<LogEntity>,
+        capacity: Int,
+    ) {
+        insertAll(logs)
+        prune(capacity)
+    }
+
     @Insert
     suspend fun insert(log: LogEntity)
 
