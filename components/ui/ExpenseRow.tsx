@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef } from "react"
-import { Alert, Pressable, View, Text } from "react-native"
+import { Pressable, View, Text } from "react-native"
 
-import { MoreHorizontal } from "lucide-react-native"
+import { Pencil, Trash2 } from "lucide-react-native"
 
 import type { Expense } from "../../types/expense"
 import type { Category } from "../../types/category"
@@ -102,22 +102,24 @@ export const ExpenseRow = memo(function ExpenseRow({
         </View>
       </Pressable>
       {showActions ? (
-        <IconActionButton
-          icon={<MoreHorizontal size={UI_ICON_SIZE.medium} color={theme.foreground} />}
-          onPress={() =>
-            Alert.alert(
-              expense.note || categoryLabel,
-              formatCurrency(Math.abs(expense.amount), expense.currency),
-              [
-                { text: t("common.edit"), onPress: handleEdit },
-                { text: t("common.delete"), style: "destructive", onPress: handleDelete },
-                { text: t("common.cancel"), style: "cancel" },
-              ]
-            )
-          }
-          tooltip={t("history.transactionActions")}
-          accessibilityLabel={`${t("history.transactionActions")}: ${expense.note || categoryLabel}`}
-        />
+        <View className="flex-row">
+          <IconActionButton
+            icon={<Pencil size={UI_ICON_SIZE.medium} color={theme.foreground} />}
+            onPress={handleEdit}
+            tooltip={t("common.edit")}
+            accessibilityLabel={t("common.editLabel", {
+              label: expense.note || categoryLabel,
+            })}
+          />
+          <IconActionButton
+            icon={<Trash2 size={UI_ICON_SIZE.medium} color={theme.foreground} />}
+            onPress={handleDelete}
+            tooltip={t("common.delete")}
+            accessibilityLabel={t("common.deleteLabel", {
+              label: expense.note || categoryLabel,
+            })}
+          />
+        </View>
       ) : null}
     </ExpenseCard>
   )

@@ -26,6 +26,7 @@ import {
 } from "../../utils/analytics/filter-summary"
 import { Filter, RefreshCw, Download } from "lucide-react-native"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
+import { useSettings } from "../../stores/hooks"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { getCurrencySymbol, formatCurrency } from "../../utils/currency"
@@ -66,6 +67,7 @@ const EmptyState = memo(function EmptyState({
 const Header = memo(function Header() {
   const { t } = useTranslation()
   const { handleSync, isSyncing } = useSyncAction()
+  const { syncConfig } = useSettings()
   const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
 
   const handleImportPress = useCallback(() => {
@@ -76,15 +78,17 @@ const Header = memo(function Header() {
     <View className="mb-4 flex-row items-center justify-between">
       <Text className="text-foreground opacity-60">{t("analytics.subtitle")}</Text>
       <View className="flex-row items-center gap-2 px-1">
-        <IconActionButton
-          icon={<RefreshCw size={20} />}
-          onPress={handleSync}
-          tooltip={t("settings.autoSync.syncNow")}
-          disabled={isSyncing}
-          spinning={isSyncing}
-          accessibilityLabel={t("settings.autoSync.syncNow")}
-          tooltipAlign="right"
-        />
+        {syncConfig !== null ? (
+          <IconActionButton
+            icon={<RefreshCw size={20} />}
+            onPress={handleSync}
+            tooltip={t("settings.autoSync.syncNow")}
+            disabled={isSyncing}
+            spinning={isSyncing}
+            accessibilityLabel={t("settings.autoSync.syncNow")}
+            tooltipAlign="right"
+          />
+        ) : null}
         <IconActionButton
           icon={<Download size={20} />}
           onPress={handleImportPress}
@@ -114,10 +118,9 @@ export default function AnalyticsScreen() {
     setSelectedCategories,
     setSelectedPaymentMethods,
     setSelectedPaymentInstruments,
-    setSelectedCurrency,
   } = useFilters()
   // Initialize filter persistence (loads persisted filters from storage on mount)
-  const { save: saveFilters } = useFilterPersistence()
+  useFilterPersistence()
 
   const router = useRouter()
 
@@ -223,20 +226,6 @@ export default function AnalyticsScreen() {
       setSelectedPaymentInstruments,
     ]
   )
-
-  const currencyButtons = useMemo(() => {
-    return availableCurrencies.map((c) => ({
-      code: c,
-      isSelected: effectiveCurrency === c,
-      onPress: () => {
-        logAsync("INFO", "UI_ACTION", "ANALYTICS_CURRENCY_FILTER")
-        startTransition(() => setSelectedCurrency(c))
-        void saveFilters().catch((error) =>
-          console.warn("Failed to persist currency selection:", error)
-        )
-      },
-    }))
-  }, [availableCurrencies, effectiveCurrency, setSelectedCurrency, saveFilters])
 
   const selectedPaymentMethodForChart: PaymentMethodType | null =
     selectedPaymentMethods.length === 1 && selectedPaymentMethods[0] !== "__none__"
@@ -504,29 +493,6 @@ export default function AnalyticsScreen() {
                 fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
                 hasActiveFilters={activeCount > 0}
               />
-              {/* Currency Filter - Show only if multiple currencies exist */}
-              {availableCurrencies.length > 1 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{
-                    gap: UI_SPACE.control,
-                    paddingBottom: UI_SPACE.gutter,
-                  }}
-                  style={{ marginBottom: UI_SPACE.control }}
-                >
-                  {currencyButtons.map(({ code, isSelected, onPress }) => (
-                    <Button
-                      key={code}
-                      size="chip"
-                      variant={isSelected ? "accent" : "outline"}
-                      onPress={onPress}
-                    >
-                      {code} ({getCurrencySymbol(code)})
-                    </Button>
-                  ))}
-                </ScrollView>
-              )}
               <View className="gap-4">
                 <LineChartSection
                   data={lineChartData}

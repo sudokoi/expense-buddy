@@ -1,9 +1,14 @@
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { useLocalSearchParams, useRouter, Stack } from "expo-router"
-import { Platform, Text, View } from "react-native"
+import { Keyboard, Platform, Text, View } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { parseISO } from "date-fns"
-import { Calendar } from "lucide-react-native"
+import { Calendar, Check, ChevronDown, ChevronUp } from "lucide-react-native"
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller"
 import { useTranslation } from "react-i18next"
 import {
   useExpenses,
@@ -11,13 +16,17 @@ import {
   useSettings,
   useCategories,
 } from "../../../stores/hooks"
-import { ScreenContainer } from "../../../components/ui/ScreenContainer"
 import { CategoryCard } from "../../../components/ui/CategoryCard"
 import { PaymentMethodCard } from "../../../components/ui/PaymentMethodCard"
 import { Button } from "../../../components/ui/Button"
 import { Input } from "../../../components/ui/Input"
 import { Label } from "../../../components/ui/Label"
-import { PAYMENT_METHODS } from "../../../constants/payment-methods"
+import {
+  PAYMENT_METHODS,
+  getPaymentMethodI18nKey,
+} from "../../../constants/payment-methods"
+import { UI_SPACE } from "../../../constants/ui-tokens"
+import { useThemeColors } from "../../../hooks/use-theme-colors"
 import { getCurrencySymbol, getFallbackCurrency } from "../../../utils/currency"
 import { formatDate } from "../../../utils/date"
 import {
@@ -48,6 +57,9 @@ export default function EditExpenseScreen() {
   const router = useRouter()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const theme = useThemeColors()
+  const [footerHeight, setFooterHeight] = useState(80)
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null)
 
   const { state, editExpense } = useExpenses()
   const { addNotification } = useNotifications()
@@ -80,6 +92,8 @@ export default function EditExpenseScreen() {
     expense?.paymentMethod?.instrumentId
   )
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [paymentExpanded, setPaymentExpanded] = useState(false)
+  const [amountError, setAmountError] = useState("")
   const [instrumentEntryKind, setInstrumentEntryKind] = useState<InstrumentEntryKind>(
     expense?.paymentMethod?.instrumentId
       ? "saved"
@@ -150,6 +164,8 @@ export default function EditExpenseScreen() {
     if (!expense) return
 
     if (!amount.trim()) {
+      setAmountError(t("history.editDialog.fields.amountError"))
+      scrollRef.current?.scrollTo({ y: 0, animated: true })
       addNotification(t("history.editDialog.fields.amountError"), "error")
       return
     }
@@ -159,6 +175,8 @@ export default function EditExpenseScreen() {
     })
 
     if (!result.success) {
+      setAmountError(result.error || t("history.editDialog.fields.expressionError"))
+      scrollRef.current?.scrollTo({ y: 0, animated: true })
       addNotification(
         result.error || t("history.editDialog.fields.expressionError"),
         "error"
@@ -181,6 +199,7 @@ export default function EditExpenseScreen() {
       note,
       paymentMethod,
     })
+    Keyboard.dismiss()
     addNotification(t("history.updated"), "success")
     logAsync("INFO", "UI_ACTION", `EDIT_EXPENSE id=${expense.id}`)
     router.back()
@@ -205,208 +224,260 @@ export default function EditExpenseScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("history.editDialog.title") }} />
-
-      <ScreenContainer>
-        <View className="gap-3">
-          <View className="gap-2">
-            <View className="flex-row items-center justify-between">
-              <Label className="opacity-80">{t("history.editDialog.fields.date")}</Label>
-              <Button
-                size="control"
-                icon={<Calendar size={16} />}
-                onPress={() => setShowDatePicker(true)}
-                accessibilityLabel={t("history.editDialog.fields.date")}
+      <View className="flex-1 bg-background">
+        <KeyboardAwareScrollView
+          ref={scrollRef}
+          className="flex-1 bg-background"
+          contentContainerStyle={{
+            padding: UI_SPACE.gutter,
+          }}
+          bottomOffset={footerHeight + UI_SPACE.control}
+          extraKeyboardSpace={footerHeight}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="max-w-[600px] w-full self-center gap-3">
+            <View className="gap-2">
+              <Label>{t("history.editDialog.fields.amount")}</Label>
+              <View
+                className={`flex-row items-center rounded-control border bg-surface px-3 ${amountError ? "border-error" : "border-border"}`}
               >
-                {date
-                  ? formatDate(date, "dd/MM/yyyy")
-                  : t("history.editDialog.fields.datePlaceholder")}
-              </Button>
-            </View>
-            {showDatePicker && (
-              <>
-                <DateTimePicker
-                  value={date ? parseISO(date) : new Date()}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={(event, selectedDate) => {
-                    setShowDatePicker(Platform.OS === "ios")
-                    if (selectedDate && event.type !== "dismissed") {
-                      const originalDate = date ? parseISO(date) : new Date()
-                      selectedDate.setHours(
-                        originalDate.getHours(),
-                        originalDate.getMinutes(),
-                        originalDate.getSeconds(),
-                        originalDate.getMilliseconds()
-                      )
-                      setDate(selectedDate.toISOString())
-                    }
+                <Text className="text-xl font-semibold text-muted-foreground">
+                  {getCurrencySymbol(expense.currency || getFallbackCurrency())}
+                </Text>
+                <Input
+                  className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
+                  value={amount}
+                  onChangeText={(text) => {
+                    setAmount(text)
+                    setAmountError("")
                   }}
+                  placeholder={
+                    settings.enableMathExpressions
+                      ? t("history.editDialog.fields.amountPlaceholder")
+                      : t("history.editDialog.fields.amountPlaceholderNumeric")
+                  }
+                  keyboardType={amountInputProps.keyboardType}
+                  inputMode={amountInputProps.inputMode}
+                  accessibilityLabel={t("history.editDialog.fields.amount")}
                 />
-                {showDatePicker && Platform.OS === "ios" && (
-                  <Button
-                    size="control"
-                    onPress={() => setShowDatePicker(false)}
-                    accessibilityLabel={t("common.done")}
-                  >
-                    {t("common.done")}
-                  </Button>
-                )}
-              </>
-            )}
-          </View>
-
-          <View className="gap-2">
-            <Label className="opacity-80">{t("history.editDialog.fields.amount")}</Label>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-sm font-bold text-foreground opacity-80">
-                {getCurrencySymbol(expense.currency || getFallbackCurrency())}
-              </Text>
-              <Input
-                className="flex-1"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder={
-                  settings.enableMathExpressions
-                    ? t("history.editDialog.fields.amountPlaceholder")
-                    : t("history.editDialog.fields.amountPlaceholderNumeric")
-                }
-                keyboardType={amountInputProps.keyboardType}
-                inputMode={amountInputProps.inputMode}
-                accessibilityLabel={t("history.editDialog.fields.amount")}
-              />
+              </View>
+              {amountError ? (
+                <Text className="text-xs text-error" accessibilityRole="alert">
+                  {amountError}
+                </Text>
+              ) : null}
+              {expressionPreview && !amountError ? (
+                <Text className="text-sm text-muted-foreground">
+                  {t("history.editDialog.fields.preview", { amount: expressionPreview })}
+                </Text>
+              ) : null}
             </View>
-            {expressionPreview && (
-              <Text className="text-[13px] text-foreground opacity-70">
-                {t("history.editDialog.fields.preview", {
-                  amount: expressionPreview,
-                })}
-              </Text>
-            )}
-          </View>
 
-          <View className="gap-2">
-            <Label className="opacity-80">
-              {t("history.editDialog.fields.category")}
-            </Label>
-            <View className="flex-row flex-wrap gap-2">
-              {categories.map((cat) => {
-                const isSelected = category === cat.label
-                return (
+            <View className="gap-2">
+              <Label>{t("history.editDialog.fields.category")}</Label>
+              <View className="flex-row flex-wrap gap-2">
+                {categories.map((cat) => (
                   <CategoryCard
                     key={cat.label}
-                    isSelected={isSelected}
+                    isSelected={category === cat.label}
                     categoryColor={cat.color}
                     iconName={cat.icon}
                     label={cat.label}
                     onPress={() => handleCategorySelect(cat.label)}
                     compact
                   />
-                )
-              })}
-            </View>
-          </View>
-
-          <View className="gap-2">
-            <Label className="opacity-80">{t("history.editDialog.fields.note")}</Label>
-            <Input
-              value={note}
-              onChangeText={setNote}
-              placeholder={t("history.editDialog.fields.notePlaceholder")}
-              selectTextOnFocus
-              accessibilityLabel={t("history.editDialog.fields.note")}
-            />
-          </View>
-
-          <View className="gap-2">
-            <Label className="opacity-80">
-              {t("history.editDialog.fields.paymentMethod")}
-            </Label>
-            <View className="flex-row flex-wrap gap-2">
-              {PAYMENT_METHODS.map((pm) => (
-                <PaymentMethodCard
-                  key={pm.value}
-                  config={pm}
-                  isSelected={paymentMethodType === pm.value}
-                  onPress={() => handlePaymentMethodSelect(pm.value)}
-                />
-              ))}
-            </View>
-
-            {selectedPaymentConfig?.hasIdentifier && (
-              <View className="gap-1 mt-2">
-                <Label className="text-xs opacity-60">
-                  {selectedPaymentConfig.identifierLabel ||
-                    t("history.editDialog.fields.identifier")}
-                </Label>
-
-                {paymentMethodType && isPaymentInstrumentMethod(paymentMethodType) ? (
-                  <PaymentInstrumentInlineDropdown
-                    method={paymentMethodType as PaymentInstrumentMethod}
-                    instruments={allInstruments}
-                    kind={
-                      paymentInstrumentId
-                        ? "saved"
-                        : instrumentEntryKind === "manual"
-                          ? "manual"
-                          : "none"
-                    }
-                    selectedInstrumentId={paymentInstrumentId}
-                    manualDigits={paymentMethodId}
-                    identifierLabel={selectedPaymentConfig.identifierLabel}
-                    maxLength={selectedPaymentConfig.maxLength}
-                    onChange={(next) => {
-                      setInstrumentEntryKind(next.kind)
-                      setPaymentInstrumentId(next.selectedInstrumentId)
-                      setPaymentMethodId(next.manualDigits)
-                    }}
-                    onCreateInstrument={(inst) => {
-                      updateSettings({
-                        paymentInstruments: [inst, ...allInstruments],
-                      })
-                    }}
-                  />
-                ) : (
-                  <Input
-                    placeholder={
-                      paymentMethodType === "Other"
-                        ? t("history.editDialog.fields.otherPlaceholder")
-                        : t("history.editDialog.fields.identifierPlaceholder", {
-                            max: selectedPaymentConfig.maxLength,
-                          })
-                    }
-                    keyboardType={paymentMethodType === "Other" ? "default" : "numeric"}
-                    value={paymentMethodId}
-                    onChangeText={handleIdentifierChange}
-                    maxLength={selectedPaymentConfig.maxLength}
-                    accessibilityLabel={t("history.editDialog.fields.identifier")}
-                  />
-                )}
+                ))}
               </View>
-            )}
-          </View>
+            </View>
 
-          <View
-            className="flex-row gap-3 justify-end mt-4"
-            style={{ paddingBottom: insets.bottom }}
-          >
-            <Button
-              size="control"
-              onPress={() => router.back()}
-              accessibilityLabel={t("common.cancel")}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              size="control"
-              variant="accent"
-              onPress={handleSave}
-              accessibilityLabel={t("common.save")}
-            >
-              {t("common.save")}
-            </Button>
+            <View className="gap-2">
+              <View className="flex-row flex-wrap items-center justify-between gap-2">
+                <Label className="opacity-80">
+                  {t("history.editDialog.fields.date")}
+                </Label>
+                <Button
+                  size="control"
+                  icon={<Calendar size={16} />}
+                  onPress={() => setShowDatePicker(true)}
+                  accessibilityLabel={t("history.editDialog.fields.date")}
+                >
+                  {date
+                    ? formatDate(date, "PP")
+                    : t("history.editDialog.fields.datePlaceholder")}
+                </Button>
+              </View>
+              {showDatePicker && (
+                <>
+                  <DateTimePicker
+                    value={date ? parseISO(date) : new Date()}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(Platform.OS === "ios")
+                      if (selectedDate && event.type !== "dismissed") {
+                        const originalDate = date ? parseISO(date) : new Date()
+                        selectedDate.setHours(
+                          originalDate.getHours(),
+                          originalDate.getMinutes(),
+                          originalDate.getSeconds(),
+                          originalDate.getMilliseconds()
+                        )
+                        setDate(selectedDate.toISOString())
+                      }
+                    }}
+                  />
+                  {showDatePicker && Platform.OS === "ios" && (
+                    <Button
+                      size="control"
+                      onPress={() => setShowDatePicker(false)}
+                      accessibilityLabel={t("common.done")}
+                    >
+                      {t("common.done")}
+                    </Button>
+                  )}
+                </>
+              )}
+            </View>
+
+            <View className="gap-2">
+              <Label className="opacity-80">{t("history.editDialog.fields.note")}</Label>
+              <Input
+                value={note}
+                onChangeText={setNote}
+                placeholder={t("history.editDialog.fields.notePlaceholder")}
+                selectTextOnFocus
+                accessibilityLabel={t("history.editDialog.fields.note")}
+              />
+            </View>
+
+            <View className="gap-2">
+              <Button
+                variant="ghost"
+                onPress={() => setPaymentExpanded(!paymentExpanded)}
+                style={{ paddingHorizontal: 0 }}
+                accessibilityLabel={t("history.editDialog.fields.paymentMethod")}
+                accessibilityState={{ expanded: paymentExpanded }}
+              >
+                <View className="flex-1 flex-row items-center gap-2">
+                  <View className="flex-1 gap-1" pointerEvents="none">
+                    <Label>{t("history.editDialog.fields.paymentMethod")}</Label>
+                    {!paymentExpanded ? (
+                      <Text className="text-sm text-muted-foreground">
+                        {paymentMethodType
+                          ? t(
+                              `paymentMethods.${getPaymentMethodI18nKey(paymentMethodType)}`
+                            )
+                          : t("settings.defaultPayment.none")}
+                        {paymentMethodId ? ` · ${paymentMethodId}` : ""}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {paymentExpanded ? (
+                    <ChevronUp size={20} color={theme.mutedForeground} />
+                  ) : (
+                    <ChevronDown size={20} color={theme.mutedForeground} />
+                  )}
+                </View>
+              </Button>
+              {paymentExpanded ? (
+                <View className="gap-2">
+                  <View className="flex-row flex-wrap gap-2">
+                    {PAYMENT_METHODS.map((pm) => (
+                      <PaymentMethodCard
+                        key={pm.value}
+                        config={pm}
+                        isSelected={paymentMethodType === pm.value}
+                        onPress={() => handlePaymentMethodSelect(pm.value)}
+                      />
+                    ))}
+                  </View>
+
+                  {selectedPaymentConfig?.hasIdentifier && (
+                    <View className="gap-1 mt-2">
+                      {paymentMethodType &&
+                      isPaymentInstrumentMethod(paymentMethodType) ? (
+                        <PaymentInstrumentInlineDropdown
+                          method={paymentMethodType as PaymentInstrumentMethod}
+                          instruments={allInstruments}
+                          kind={
+                            paymentInstrumentId
+                              ? "saved"
+                              : instrumentEntryKind === "manual"
+                                ? "manual"
+                                : "none"
+                          }
+                          selectedInstrumentId={paymentInstrumentId}
+                          manualDigits={paymentMethodId}
+                          maxLength={selectedPaymentConfig.maxLength}
+                          onChange={(next) => {
+                            setInstrumentEntryKind(next.kind)
+                            setPaymentInstrumentId(next.selectedInstrumentId)
+                            setPaymentMethodId(next.manualDigits)
+                          }}
+                          onCreateInstrument={(inst) => {
+                            updateSettings({
+                              paymentInstruments: [inst, ...allInstruments],
+                            })
+                          }}
+                        />
+                      ) : (
+                        <Input
+                          placeholder={
+                            paymentMethodType === "Other"
+                              ? t("history.editDialog.fields.otherPlaceholder")
+                              : t("history.editDialog.fields.identifierPlaceholder", {
+                                  max: selectedPaymentConfig.maxLength,
+                                })
+                          }
+                          keyboardType={
+                            paymentMethodType === "Other" ? "default" : "numeric"
+                          }
+                          value={paymentMethodId}
+                          onChangeText={handleIdentifierChange}
+                          maxLength={selectedPaymentConfig.maxLength}
+                          accessibilityLabel={t("history.editDialog.fields.identifier")}
+                        />
+                      )}
+                    </View>
+                  )}
+                </View>
+              ) : null}
+            </View>
           </View>
-        </View>
-      </ScreenContainer>
+        </KeyboardAwareScrollView>
+        <KeyboardStickyView>
+          <View
+            className="border-t border-border bg-background px-5 pt-2"
+            style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.control) }}
+            onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+          >
+            <View className="max-w-[600px] w-full self-center flex-row gap-3">
+              <Button
+                className="flex-1"
+                size="control"
+                variant="outline"
+                onPress={() => {
+                  Keyboard.dismiss()
+                  router.back()
+                }}
+                accessibilityLabel={t("common.cancel")}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                className="flex-1"
+                size="control"
+                variant="accent"
+                icon={<Check size={20} />}
+                onPress={handleSave}
+                accessibilityLabel={t("common.save")}
+              >
+                {t("common.save")}
+              </Button>
+            </View>
+          </View>
+        </KeyboardStickyView>
+      </View>
     </>
   )
 }

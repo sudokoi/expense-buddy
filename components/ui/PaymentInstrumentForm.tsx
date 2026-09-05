@@ -15,7 +15,6 @@ import {
   sanitizeLastDigits,
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
-import { AppSheetScaffold } from "./AppSheetScaffold"
 import { Button } from "./Button"
 import { Input } from "./Input"
 import { Label } from "./Label"
@@ -24,8 +23,7 @@ function getInstrumentMethodConfig(method: PaymentInstrumentMethod) {
   return PAYMENT_METHODS.find((pm) => pm.value === method)
 }
 
-interface PaymentInstrumentFormModalProps {
-  open: boolean
+interface PaymentInstrumentFormProps {
   onClose: () => void
   existingInstruments: PaymentInstrument[]
   instrument?: PaymentInstrument
@@ -33,60 +31,14 @@ interface PaymentInstrumentFormModalProps {
   onSave: (instrument: PaymentInstrument) => void
 }
 
-export function PaymentInstrumentFormModal({
-  open,
+/** Mount with a key for the edited instrument so a different row starts a fresh draft. */
+export function PaymentInstrumentForm({
   onClose,
   existingInstruments,
   instrument,
   initialMethod,
   onSave,
-}: PaymentInstrumentFormModalProps) {
-  const { t } = useTranslation()
-  const isEditMode = !!instrument
-
-  const handleClose = useCallback(() => {
-    onClose()
-  }, [onClose])
-
-  const formKey = `${instrument?.id ?? "new"}:${initialMethod ?? ""}`
-
-  return (
-    <AppSheetScaffold
-      open={open}
-      onClose={handleClose}
-      title={
-        isEditMode ? t("instruments.form.editTitle") : t("instruments.form.addTitle")
-      }
-      snapPoints={[90]}
-      scroll
-    >
-      {open ? (
-        <PaymentInstrumentForm
-          key={formKey}
-          onClose={handleClose}
-          existingInstruments={existingInstruments}
-          instrument={instrument}
-          initialMethod={initialMethod}
-          onSave={onSave}
-        />
-      ) : null}
-    </AppSheetScaffold>
-  )
-}
-
-function PaymentInstrumentForm({
-  onClose,
-  existingInstruments,
-  instrument,
-  initialMethod,
-  onSave,
-}: {
-  onClose: () => void
-  existingInstruments: PaymentInstrument[]
-  instrument?: PaymentInstrument
-  initialMethod?: PaymentInstrumentMethod
-  onSave: (instrument: PaymentInstrument) => void
-}) {
+}: PaymentInstrumentFormProps) {
   const isEditMode = !!instrument
 
   const [method, setMethod] = useState<PaymentInstrumentMethod>(
@@ -216,7 +168,7 @@ function PaymentInstrumentForm({
 
       <View className="gap-2">
         <Label className="opacity-80">
-          {selectedMethodConfig?.identifierLabel ?? t("instruments.form.lastDigits")}
+          {t("instruments.form.digitsLabel", { count: getLastDigitsLength(method) })}
         </Label>
         <Input
           className={errors.lastDigits ? "border-error" : undefined}
@@ -251,4 +203,4 @@ function PaymentInstrumentForm({
   )
 }
 
-export type { PaymentInstrumentFormModalProps }
+export type { PaymentInstrumentFormProps }

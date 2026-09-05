@@ -58,42 +58,38 @@ export function AppInfoSection({
   const { t } = useTranslation()
 
   return (
-    <View className="gap-3">
-      {/* Current Version */}
-      <View className="flex-row items-center justify-between">
-        <Text className="text-foreground opacity-80">
-          {t("settings.about.currentVersion")}
-        </Text>
-        <Text className="font-bold text-foreground">v{currentVersion}</Text>
-      </View>
+    <View className="gap-2">
+      <View className="flex-row flex-wrap items-center gap-2">
+        {/* Current Version */}
+        <View className="min-w-[120px] flex-1 gap-1">
+          <Text className="text-xs text-muted-foreground">
+            {t("settings.about.currentVersion")}
+          </Text>
+          <Text className="text-base font-semibold text-foreground">
+            v{currentVersion}
+          </Text>
 
-      {/* Update Info */}
-      {updateInfo?.latestVersion && !updateInfo.error && (
-        <View className="flex-row items-center justify-between">
-          <Text className="text-foreground opacity-80">
-            {t("settings.about.latestVersion")}
-          </Text>
-          <Text
-            className={`font-bold ${
-              updateInfo.hasUpdate ? "text-success" : "text-foreground opacity-80"
-            }`}
-          >
-            v{updateInfo.latestVersion}
-          </Text>
+          {/* Update Info */}
+          {updateInfo?.latestVersion && !updateInfo.error && (
+            <Text className="text-xs text-muted-foreground">
+              {t("settings.about.latestVersion")}: v{updateInfo.latestVersion}
+            </Text>
+          )}
         </View>
-      )}
 
-      {/* Check for Updates Button */}
-      <Button
-        size="control"
-        icon={isCheckingUpdate ? <Spinner size="small" /> : <Download size={16} />}
-        onPress={onCheckForUpdates}
-        disabled={isCheckingUpdate}
-      >
-        {isCheckingUpdate
-          ? t("settings.about.checking")
-          : t("settings.about.checkForUpdates")}
-      </Button>
+        {/* Check for Updates Button */}
+        <Button
+          size="control"
+          className="max-w-full"
+          icon={isCheckingUpdate ? <Spinner size="small" /> : <Download size={16} />}
+          onPress={onCheckForUpdates}
+          disabled={isCheckingUpdate}
+        >
+          {isCheckingUpdate
+            ? t("settings.about.checking")
+            : t("settings.about.checkForUpdates")}
+        </Button>
+      </View>
 
       {/* Update Available - Open Release */}
       {updateInfo?.hasUpdate && (
@@ -112,24 +108,28 @@ export function AppInfoSection({
       )}
 
       {/* Report an Issue */}
-      <Button
-        size="compact"
-        variant="ghost"
-        icon={<Bug size={16} />}
-        onPress={onReportIssue}
-      >
-        {t("settings.about.reportIssue")}
-      </Button>
+      <View className="flex-row flex-wrap gap-2 border-t border-border pt-1">
+        <Button
+          size="compact"
+          className="min-w-[140px] flex-1"
+          variant="ghost"
+          icon={<Bug size={16} />}
+          onPress={onReportIssue}
+        >
+          {t("settings.about.reportIssue")}
+        </Button>
 
-      {/* GitHub Link */}
-      <Button
-        size="compact"
-        variant="ghost"
-        icon={<ExternalLink size={16} />}
-        onPress={onOpenGitHub}
-      >
-        {t("settings.about.viewGitHub")}
-      </Button>
+        {/* GitHub Link */}
+        <Button
+          size="compact"
+          className="min-w-[140px] flex-1"
+          variant="ghost"
+          icon={<ExternalLink size={16} />}
+          onPress={onOpenGitHub}
+        >
+          {t("settings.about.viewGitHub")}
+        </Button>
+      </View>
     </View>
   )
 }

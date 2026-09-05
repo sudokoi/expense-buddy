@@ -33,6 +33,7 @@
       "nickname": "ニックネーム",
       "nicknamePlaceholder": "例: HDFC Visa",
       "lastDigits": "末尾の数字",
+      "digitsLabel": "末尾{{count}}桁",
       "identifierPlaceholder": "{{count}}桁を入力",
       "nicknameRequired": "ニックネームは必須です",
       "nicknameTooLong": "ニックネームは30文字以内で入力してください",
@@ -40,15 +41,19 @@
       "nicknameTaken": "この支払い方法のニックネームは既に存在します"
     },
     "dropdown": {
-      "none": "なし",
-      "others": "その他 / 数字を入力",
+      "none": "識別番号なし",
+      "noneHelp": "支払い方法のみを記録します。",
+      "others": "この支出用に数字を入力",
+      "manualHelp": "この支出のみに使用し、保存済みの手段には追加しません。",
+      "unavailable": "保存された手段は利用できません",
+      "unavailableHelp": "別の選択肢を選ぶまで、元の支払い情報は保持されます。",
       "othersLabel": "{{method}} • その他",
       "othersLabelWithDigits": "{{method}} • その他 ({{digits}})",
       "selectSaved": "保存された手段を選択 (任意)",
-      "addSaved": "保存済みを追加",
+      "addSaved": "新しい支払い手段を保存",
       "cancelAdd": "追加をキャンセル",
       "selected": "選択中",
-      "saved": "保存された手段"
+      "saved": "支払い詳細（任意）"
     },
     "remove": "削除"
   },
@@ -145,7 +150,7 @@
     }
   },
   "add": {
-    "saveAndAddAnother": "保存して次を追加",
+    "saveAndAddAnother": "続けて追加",
     "amount": "金額",
     "amountPlaceholder": "0 または 100+50",
     "amountPlaceholderNumeric": "0.00",
@@ -159,7 +164,7 @@
     "importSms": "SMSを取り込む",
     "importSmsWithPending": "SMSを取り込む (保留 {{count}} 件)",
     "addAnother": "続けて追加",
-    "save": "支出を保存",
+    "save": "追加",
     "success": "支出を追加しました",
     "successAddAnother": "支出を追加しました。続けて追加します。"
   },
@@ -253,6 +258,7 @@
       "description": "GitHub を接続し、手動同期と自動同期の動作を管理します。"
     },
     "payment": {
+      "title": "支払い設定",
       "description": "支払いのデフォルト、保存済み手段、カテゴリーを一か所で管理します。",
       "manageTitle": "支払い設定を開く",
       "manageHelp": "デフォルトの方法、保存済み手段、支出カテゴリーはここで管理できます。",
@@ -362,6 +368,10 @@
       "manage": "カテゴリーを管理",
       "add": "カテゴリーを追加",
       "otherHelp": "「その他」は常に一番下に表示されます",
+      "search": "カテゴリーを検索",
+      "reorder": "並べ替え",
+      "noMatches": "一致するカテゴリーはありません。",
+      "usage": "支出：{{count}}件",
       "deleteDialog": {
         "title": "カテゴリーを削除",
         "messageSimple": "「{{label}}」を削除しますか？",

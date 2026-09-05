@@ -1,97 +1,33 @@
-import { View, Text } from "react-native"
-import { Pressable } from "react-native"
-import { Ban, type LucideIcon } from "lucide-react-native"
-import { PaymentMethodType } from "../../types/expense"
-import { PAYMENT_METHODS, getPaymentMethodI18nKey } from "../../constants/payment-methods"
-import { Card } from "./Card"
 import { useTranslation } from "react-i18next"
-import {
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import type { PaymentMethodType } from "../../types/expense"
+import { PAYMENT_METHODS } from "../../constants/payment-methods"
+import { SelectionField } from "./SelectionField"
 
 interface DefaultPaymentMethodSelectorProps {
   value?: PaymentMethodType
   onChange: (type: PaymentMethodType | undefined) => void
 }
 
-/**
- * DefaultPaymentMethodSelector - A selector for choosing default payment method in settings
- */
 export function DefaultPaymentMethodSelector({
   value,
   onChange,
 }: DefaultPaymentMethodSelectorProps) {
   const { t } = useTranslation()
-  const theme = useThemeColors()
-
-  const renderOption = (
-    key: PaymentMethodType | "none",
-    _label: string,
-    Icon: LucideIcon,
-    isSelected: boolean
-  ) => {
-    const displayLabel =
-      key === "none"
-        ? t("settings.defaultPayment.none")
-        : t(`paymentMethods.${getPaymentMethodI18nKey(key as PaymentMethodType)}`)
-
-    return (
-      <Pressable
-        key={key}
-        onPress={() => onChange(key === "none" ? undefined : (key as PaymentMethodType))}
-        role="button"
-        accessibilityLabel={displayLabel}
-        accessibilityState={{ selected: isSelected }}
-        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        className="min-h-12 max-w-full"
-      >
-        <View
-          className="flex-row items-center justify-center gap-2 rounded-control p-2"
-          style={{
-            borderWidth: UI_BORDER_WIDTH.normal,
-            backgroundColor: isSelected ? theme.muted : "transparent",
-            borderColor: isSelected ? theme.accent : "transparent",
-          }}
-        >
-          <Icon
-            size={UI_ICON_SIZE.small}
-            color={theme.foreground}
-            style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
-          />
-          <Text
-            className="text-xs text-foreground"
-            style={{
-              fontWeight: isSelected ? UI_FONT_WEIGHT.semiBold : UI_FONT_WEIGHT.normal,
-              opacity: isSelected ? 1 : UI_OPACITY.medium,
-            }}
-          >
-            {displayLabel}
-          </Text>
-        </View>
-      </Pressable>
-    )
-  }
-
   return (
-    <Card className="gap-2 rounded-control p-2">
-      <View className="flex-row flex-wrap gap-2">
-        {renderOption("none", "None", Ban, value === undefined)}
-
-        {PAYMENT_METHODS.map((method) =>
-          renderOption(
-            method.value,
-            method.label,
-            method.icon as LucideIcon,
-            value === method.value
-          )
-        )}
-      </View>
-    </Card>
+    <SelectionField
+      label={t("settings.defaultPayment.label")}
+      description={t("settings.defaultPayment.description")}
+      value={value ?? "none"}
+      onChange={(next) =>
+        onChange(next === "none" ? undefined : (next as PaymentMethodType))
+      }
+      options={[
+        { value: "none", label: t("settings.defaultPayment.none") },
+        ...PAYMENT_METHODS.map((method) => ({
+          value: method.value,
+          label: t(`paymentMethods.${method.i18nKey}`),
+        })),
+      ]}
+    />
   )
 }
-
-export type { DefaultPaymentMethodSelectorProps }

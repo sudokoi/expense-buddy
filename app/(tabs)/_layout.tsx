@@ -1,10 +1,12 @@
 import { Tabs, usePathname } from "expo-router"
+import { PlatformPressable } from "expo-router/react-navigation"
 import { useEffect } from "react"
-import { View, useWindowDimensions } from "react-native"
+import { View } from "react-native"
 import { PlusCircle, PieChart, Clock, Settings } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { useTabBarHeight } from "../../hooks/use-tab-bar-height"
 import { UI_FONT_SIZE, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { logAsync } from "../../services/logger"
 
@@ -12,7 +14,7 @@ export default function TabLayout() {
   const theme = useThemeColors()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
-  const { fontScale } = useWindowDimensions()
+  const tabBarHeight = useTabBarHeight()
   const pathname = usePathname()
 
   useEffect(() => {
@@ -24,6 +26,15 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        animation: "none",
+        tabBarButton: (props) => (
+          <PlatformPressable
+            {...props}
+            pressColor="transparent"
+            pressOpacity={1}
+            android_ripple={{ color: "transparent" }}
+          />
+        ),
         tabBarActiveTintColor: theme.accent,
         tabBarShowLabel: true,
         tabBarInactiveTintColor: theme.mutedForeground,
@@ -33,7 +44,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
-          height: 64 + Math.max(0, fontScale - 1) * 24 + insets.bottom,
+          height: tabBarHeight,
           paddingTop: 4,
           paddingBottom: insets.bottom,
           elevation: 0,
