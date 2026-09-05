@@ -144,3 +144,56 @@ The reference `screenshots/` directory is user-owned and intentionally untouched
   used the existing preview installation, not a new native build. Full TalkBack,
   locale/device matrices, landscape, and populated SMS flows
   remain outside the completed smoke checks.
+
+## Character-restoring visual pass
+
+This pass restores the original warm, rounded identity without undoing the simpler
+workflows. It reuses existing palette tokens; no new colors, fonts, dependencies,
+animations, or expense-data changes are introduced.
+
+- Add and Edit place amount entry on a peach/plum rounded panel. The field keeps
+  a distinct input surface, visible label, and accent-colored currency symbol.
+- Category choices use their own category color when selected, with contrasting
+  text, the category icon, and an explicit checkmark. Unselected choices use a
+  soft theme fill. Payment choices also regain soft fills and keep their method
+  icon when selected, alongside a checkmark.
+- History shows category icons on rounded colored badges rather than small
+  low-contrast standalone glyphs. Expense cards and direct Edit/Delete controls
+  remain intact; badges do not add accessibility stops.
+- Settings uses small tinted section icons and less rigid heading separators.
+  English section titles use sentence case; Hindi and Japanese copy is unchanged.
+  The compact selectors and GitHub-configuration visibility rules are preserved.
+- Analytics retains the prominent Total Spent hierarchy, now with a warm summary
+  panel and green/orange/purple supporting statistics. Chart behavior is unchanged.
+
+### Checks
+
+- 91 Jest suites / 846 tests passed. The 32 new color regression cases cover
+  selected category identity, built-in/custom color contrast, unselected fills,
+  and the summary/amount color pairs in both themes (at least 4.5:1).
+- Typecheck, repository-wide JS/TS ESLint, theme synchronization, translation
+  parity, and targeted formatting checks passed.
+- Android preview: inspected Add, History, Analytics, and Settings in light/dark
+  mode. Verified category selection in Edit and cancelled without saving; History
+  retained its two USD records and $1,279.50 total.
+- At 150% text, inspected History wrapping and both Add/Edit footers above the
+  docked keyboard. Labels wrap without hiding the primary actions. Font scale and
+  keyboard preferences were restored after testing.
+- Full TalkBack, landscape, locale/device matrices, and populated SMS review are
+  still outside this pass's native smoke checks. No native source changes or new
+  native build were needed. Reference screenshots remain untouched.
+
+### Compact Settings preferences
+
+- Theme options now place icon and label side by side in a content-sized segmented
+  control. The redundant padded wrapper is removed; each option keeps a 48dp
+  minimum touch target and the group can wrap on narrow layouts.
+- Language, currency, and SMS region place their labels outside compact outlined
+  value buttons, sized like Scan recent messages. Rows wrap rather than truncate
+  at large text sizes. The default-payment selector retains its stacked layout.
+- The existing selection sheets and language-change confirmation are unchanged.
+  Android checks covered light/dark presentation, 150% text, opening all three
+  locale sheets, and cancelling a language change without altering language,
+  currency, or region. Theme switching still works; font scale was restored.
+- Typecheck, JS/TS ESLint, and targeted formatting passed. This is a presentation
+  change; the native smoke checks, not the Node utility tests, cover its layout.

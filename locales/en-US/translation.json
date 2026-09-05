@@ -245,14 +245,14 @@
   },
   "settings": {
     "sections": {
-      "sync": "SYNC",
-      "payment": "PAYMENT",
-      "defaultPayment": "DEFAULT PAYMENT METHOD",
-      "categories": "CATEGORIES",
-      "localization": "LOCALIZATION",
-      "featureFlags": "FEATURE FLAGS",
-      "general": "GENERAL",
-      "about": "APP INFORMATION"
+      "sync": "Sync",
+      "payment": "Payment",
+      "defaultPayment": "Default payment method",
+      "categories": "Categories",
+      "localization": "Localization",
+      "featureFlags": "Feature flags",
+      "general": "General",
+      "about": "App information"
     },
     "sync": {
       "description": "Connect GitHub, run manual syncs, and control automatic syncing."

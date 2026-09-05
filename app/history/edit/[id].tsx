@@ -236,12 +236,12 @@ export default function EditExpenseScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="max-w-[600px] w-full self-center gap-3">
-            <View className="gap-2">
+            <View className="gap-2 rounded-card bg-muted p-3">
               <Label>{t("history.editDialog.fields.amount")}</Label>
               <View
                 className={`flex-row items-center rounded-control border bg-surface px-3 ${amountError ? "border-error" : "border-border"}`}
               >
-                <Text className="text-xl font-semibold text-muted-foreground">
+                <Text className="text-2xl font-semibold text-accent">
                   {getCurrencySymbol(expense.currency || getFallbackCurrency())}
                 </Text>
                 <Input

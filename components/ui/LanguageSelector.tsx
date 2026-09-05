@@ -20,6 +20,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const { t } = useTranslation()
   return (
     <SelectionField
+      layout="inline"
       label={t("settings.localization.language")}
       description={t("settings.localization.languageChangeMessage")}
       value={value}

@@ -2,6 +2,7 @@ import { Pressable, Text, View } from "react-native"
 import { Check } from "lucide-react-native"
 import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { getReadableTextColor } from "../../constants/palette"
+import { resolveCategoryVisual } from "../../utils/resolve-category-color"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
@@ -33,6 +34,7 @@ export const CategoryCard = memo(function CategoryCard({
 }: CategoryCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const visual = resolveCategoryVisual(categoryColor, isSelected, theme)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
 
@@ -48,35 +50,34 @@ export const CategoryCard = memo(function CategoryCard({
           : "min-h-12 max-w-full flex-row items-center gap-2 rounded-chip p-3 active:opacity-60"
       }
       style={{
-        backgroundColor: isSelected ? theme.accent : theme.surface,
-        borderColor: isSelected ? theme.accent : theme.border,
+        backgroundColor: visual.backgroundColor,
+        borderColor: visual.borderColor,
         borderWidth: UI_BORDER_WIDTH.thin,
       }}
     >
-      {isSelected ? (
-        <Check size={16} color={theme.accentForeground} />
-      ) : (
-        <View
-          className="h-6 w-6 items-center justify-center rounded-full"
-          style={{ backgroundColor: categoryColor }}
-        >
-          <DynamicCategoryIcon
-            name={iconName}
-            size={14}
-            color={getReadableTextColor(categoryColor)}
-          />
-        </View>
-      )}
+      <View
+        className="h-6 w-6 items-center justify-center rounded-full"
+        style={{ backgroundColor: categoryColor }}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <DynamicCategoryIcon
+          name={iconName}
+          size={16}
+          color={getReadableTextColor(categoryColor)}
+        />
+      </View>
       <Text
         className="shrink text-foreground"
         style={{
           fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
-          color: isSelected ? theme.accentForeground : theme.foreground,
+          color: visual.textColor,
           fontSize: UI_FONT_SIZE.label,
         }}
       >
         {displayLabel}
       </Text>
+      {isSelected ? <Check size={14} color={visual.textColor} /> : null}
     </Pressable>
   )
 })

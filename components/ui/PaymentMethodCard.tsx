@@ -35,19 +35,18 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? t(`paymentMethods.${config.i18nKey}`)}
       accessibilityState={{ selected: isSelected }}
-      className="min-h-12 max-w-full justify-center rounded-control p-2 px-3 active:opacity-60"
+      className="min-h-12 max-w-full justify-center rounded-chip p-2 px-3 active:opacity-60"
       style={{
-        backgroundColor: isSelected ? theme.accent : theme.surface,
+        backgroundColor: isSelected ? theme.accent : theme.muted,
         borderColor: isSelected ? accent : theme.border,
         borderWidth: UI_BORDER_WIDTH.thin,
       }}
     >
       <View className="flex-row items-center gap-2">
-        {isSelected ? (
-          <Check size={UI_ICON_SIZE.small} color={theme.accentForeground} />
-        ) : (
-          <Icon size={UI_ICON_SIZE.small} color={theme.foreground} />
-        )}
+        <Icon
+          size={UI_ICON_SIZE.small}
+          color={isSelected ? theme.accentForeground : theme.foreground}
+        />
         <Text
           className="shrink text-sm text-foreground"
           style={{
@@ -57,6 +56,7 @@ export const PaymentMethodCard = memo(function PaymentMethodCard({
         >
           {t(`paymentMethods.${config.i18nKey}`)}
         </Text>
+        {isSelected ? <Check size={14} color={theme.accentForeground} /> : null}
       </View>
     </Pressable>
   )

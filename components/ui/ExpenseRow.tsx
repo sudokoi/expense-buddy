@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next"
 import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { IconActionButton } from "./IconActionButton"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { resolveCategoryColor } from "../../utils/resolve-category-color"
 
 export type ExpenseRowSubtitleMode = "time" | "date"
 
@@ -41,6 +42,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 }: ExpenseRowProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const { resolvedColor, iconColor } = resolveCategoryColor(categoryInfo.color)
 
   const expenseRef = useRef(expense)
   expenseRef.current = expense
@@ -70,11 +72,14 @@ export const ExpenseRow = memo(function ExpenseRow({
         accessibilityHint={showActions ? t("common.edit") : undefined}
         style={({ pressed }) => ({ opacity: pressed && showActions ? 0.6 : 1 })}
       >
-        <DynamicCategoryIcon
-          name={categoryInfo.icon}
-          size={subtitleMode === "time" ? 20 : 16}
-          color={categoryInfo.color as `#${string}`}
-        />
+        <View
+          className="h-10 w-10 items-center justify-center rounded-control"
+          style={{ backgroundColor: resolvedColor }}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+        >
+          <DynamicCategoryIcon name={categoryInfo.icon} size={20} color={iconColor} />
+        </View>
         <View className="min-w-0 flex-1">
           <View className="flex-row flex-wrap items-start justify-between gap-x-3 gap-y-1">
             <Text
