@@ -23,7 +23,8 @@
     "sourceMap": false,
     "strictNullChecks": true,
     "target": "es2020",
-    "types": ["node", "jest"],
+    // Clean checkouts have no generated expo-env.d.ts; load Expo globals explicitly.
+    "types": ["node", "jest", "expo/types"],
     "lib": ["dom", "esnext"]
   },
   "exclude": ["_"],
