@@ -1,12 +1,8 @@
-import { format, eachDayOfInterval } from "date-fns"
-import type { Locale } from "date-fns"
 import { Expense, PaymentMethodType } from "../../types/expense"
-import type { DateRange } from "../../types/analytics"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
 } from "../../types/payment-instrument"
-import { getLocalDayKey } from "../date"
 import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import {
@@ -14,7 +10,6 @@ import {
   formatPaymentInstrumentLabel,
 } from "../../services/payment-instruments"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
-import { getCurrencySymbol } from "../currency"
 import { PaymentInstrumentSelectionKey, resolveInstrumentKeyForExpense } from "./filters"
 import { methodShortLabel } from "./filter-summary"
 
@@ -48,14 +43,6 @@ export interface PaymentInstrumentChartDataItem {
   method: PaymentInstrumentMethod
   instrumentId?: string
   isOther: boolean
-}
-
-// Line chart data item
-export interface LineChartDataItem {
-  value: number
-  date: string
-  label: string
-  dataPointText?: string
 }
 
 /**
@@ -246,46 +233,5 @@ export function aggregateByPaymentInstrument(
     const bOrder = methodOrder.get(b.method) ?? 999
     if (aOrder !== bOrder) return aOrder - bOrder
     return b.value - a.value
-  })
-}
-
-/**
- * Aggregate expenses by day for line chart
- * Returns one data point per day in the date range, with zero-fill for days without expenses
- */
-export function aggregateByDay(
-  expenses: Expense[],
-  dateRange: DateRange,
-  locale?: Locale,
-  currencyCode: string = "INR"
-): LineChartDataItem[] {
-  // Get all days in the range
-  const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end })
-  const symbol = getCurrencySymbol(currencyCode)
-
-  // Group expenses by day
-  const dailyTotals = new Map<string, number>()
-
-  for (const expense of expenses) {
-    try {
-      const dayKey = getLocalDayKey(expense.date)
-      const current = dailyTotals.get(dayKey) ?? 0
-      dailyTotals.set(dayKey, current + Math.abs(expense.amount))
-    } catch {
-      // Skip invalid dates
-    }
-  }
-
-  // Create line chart data with zero-fill
-  return days.map((day) => {
-    const dayKey = format(day, "yyyy-MM-dd")
-    const value = dailyTotals.get(dayKey) ?? 0
-
-    return {
-      value,
-      date: dayKey,
-      label: format(day, "MMM d", { locale }),
-      dataPointText: value > 0 ? `${symbol}${value.toFixed(0)}` : undefined,
-    }
   })
 }

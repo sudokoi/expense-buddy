@@ -3,16 +3,11 @@ import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
 } from "../../types/payment-instrument"
-import {
-  isPaymentInstrumentMethod,
-  findInstrumentById,
-} from "../../services/payment-instruments"
+import { isPaymentInstrumentMethod } from "../../services/payment-instruments"
 
 export type PaymentInstrumentSelectionKey = string
 
 export type PaymentMethodSelectionKey = PaymentMethodType | "__none__"
-
-const PAYMENT_METHOD_NONE_KEY: PaymentMethodSelectionKey = "__none__"
 
 const INSTRUMENT_OTHERS_ID = "__others__"
 
@@ -25,7 +20,7 @@ export function makePaymentInstrumentSelectionKey(
 
 export function resolveInstrumentKeyForExpense(
   expense: Expense,
-  instruments: PaymentInstrument[] | ReadonlyMap<string, PaymentInstrument>
+  instruments: ReadonlyMap<string, PaymentInstrument>
 ): {
   method: PaymentInstrumentMethod
   key: PaymentInstrumentSelectionKey
@@ -36,11 +31,7 @@ export function resolveInstrumentKeyForExpense(
   if (!method || !isPaymentInstrumentMethod(method)) return null
 
   const instrumentId = expense.paymentMethod?.instrumentId
-  const inst = Array.isArray(instruments)
-    ? findInstrumentById(instruments, instrumentId)
-    : instrumentId
-      ? instruments.get(instrumentId)
-      : undefined
+  const inst = instrumentId ? instruments.get(instrumentId) : undefined
   if (!inst || inst.deletedAt) {
     return {
       method,
@@ -58,27 +49,6 @@ export function resolveInstrumentKeyForExpense(
 }
 
 /**
- * Filter expenses by selected payment instrument keys.
- * If selection is empty, returns all expenses.
- * When selection is non-empty, includes ONLY expenses whose payment method is an instrument method
- * and whose resolved instrument key matches.
- */
-export function filterExpensesByPaymentInstruments(
-  expenses: Expense[],
-  selectedInstrumentKeys: PaymentInstrumentSelectionKey[],
-  instruments: PaymentInstrument[]
-): Expense[] {
-  if (selectedInstrumentKeys.length === 0) return expenses
-
-  const selection = new Set(selectedInstrumentKeys)
-  return expenses.filter((expense) => {
-    const resolved = resolveInstrumentKeyForExpense(expense, instruments)
-    if (!resolved) return false
-    return selection.has(resolved.key)
-  })
-}
-
-/**
  * Filter expenses by selected categories
  */
 export function filterExpensesByCategories(
@@ -91,28 +61,6 @@ export function filterExpensesByCategories(
 
   const selection = new Set(selectedCategories)
   return expenses.filter((expense) => selection.has(expense.category))
-}
-
-/**
- * Filter expenses by selected payment methods.
- * Empty selection means "All".
- * Supports a "__none__" key to include expenses without a payment method.
- */
-export function filterExpensesByPaymentMethods(
-  expenses: Expense[],
-  selected: PaymentMethodSelectionKey[]
-): Expense[] {
-  if (selected.length === 0) return expenses
-
-  const selection = new Set(selected)
-
-  return expenses.filter((expense) => {
-    const method = expense.paymentMethod?.type
-    // Note: analytics aggregates missing payment methods under "Other".
-    // So selecting "Other" should include both explicit "Other" and missing-method expenses.
-    if (!method) return selection.has(PAYMENT_METHOD_NONE_KEY) || selection.has("Other")
-    return selection.has(method)
-  })
 }
 
 // ============================================================================

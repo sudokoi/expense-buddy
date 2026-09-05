@@ -63,19 +63,25 @@ one atomic transaction.
 
 ## Widgets and logging
 
-- Widget updates capture a refresh-local ledger/settings snapshot once per
-  provider update, shared across its widget IDs. It is never cached by
+- Widget updates merge installed targets across provider broadcasts in a fixed
+  25ms collection window. One process-owned consumer renders each batch serially,
+  sharing a refresh-local ledger/settings snapshot across provider kinds and IDs.
+  An invalidation during rendering creates a fresh trailing batch. Cancelling one
+  broadcast waiter does not cancel the batch for others. Data is never cached by
   `max(updatedAt)` across updates. Tests verify reuse, deletes, settings changes,
   and date changes even when the maximum update timestamp stays the same.
-- Widget daily totals/categories use a single accumulation pass. Recent selection
-  retains only the top eight in stable order; Summary/Trend skip recent selection.
+- Summary, trend, and recent projections are lazy within the selected live data.
+  Each scans rows only if requested, then reuses that result for the current render.
+  Summary no longer computes seven-day data, and the Recent collection no longer
+  computes totals or categories it does not display. Recent selection retains only
+  the top eight in stable order.
   The Recent provider renders only the shell; its collection factory owns the live
   data read and empty view, eliminating the former duplicate ledger read.
 - Removing a provider's last widget checks **all** provider kinds before cancelling
   the periodic worker; adding widgets still schedules the unique work. Each update
-  has an eight-second coroutine timeout. Separate provider broadcasts/collection
-  callbacks still take separate live snapshots; cross-broadcast coalescing and
-  system widget lifecycle behavior remain candidates for device validation.
+  waiter has an eight-second timeout, and each render batch has a seven-second
+  coroutine timeout. Independent collection callbacks still take their own live
+  snapshots. System widget lifecycle behavior remains to be validated on-device.
 - Logging has one application-owned writer, a 256-entry mailbox, up-to-64-entry
   batches plus an overflow diagnostic, and atomic batch insertion/pruning. A drain
   pass is bounded so exports/clear cannot be starved indefinitely by producers.
@@ -125,10 +131,36 @@ administrative safeguard, not something this source change can guarantee.
 
 ## Validation boundary
 
+### Code and test cleanup follow-up
+
+A targeted reference/test review found obsolete paths rather than evidence that
+all generated-looking code was unnecessary:
+
+- Removed the unused `aggregateByDay` implementation and `LineChartDataItem` type.
+  Its meaningful completeness/sum properties now exercise the active
+  `aggregateSpendingTrend` pipeline instead of keeping the obsolete path alive.
+- Removed unused standalone payment-instrument/payment-method filters and their
+  redundant empty-selection test. The active `applyAllFilters` path retains
+  coverage. Instrument resolution now accepts its production map input only.
+- Replaced unseeded random filter fixtures with deterministic defaults, preserved
+  explicit zero amounts, and strengthened subset-only assertions to compare the
+  complete expected result. Returning no matches can no longer pass those tests.
+- Removed logger test polling around already-suspending reads, and made the count
+  test exercise `count()` rather than the length of a fetched list.
+
+Meaningful migration, cancellation, theme/localization, parser, and regression
+tests are retained. This was a targeted review, not a claim that every file in the
+repository has been exhaustively reviewed.
+
+### Checks
+
 Automated validation includes Jest, Kotlin/Robolectric, TypeScript, ESLint/ktlint,
 theme/translation checks, formatting, actionlint, shellcheck, and Expo config
-introspection. Final `yarn test` passed **96 Jest suites / 871 tests**, followed by
-the Android Kotlin tests. Expo Doctor passed **21/21** checks and Expo dependency
+introspection. After the widget/cleanup follow-up, `yarn test` passed **96 Jest suites / 870 tests**, followed by
+the Android Kotlin tests, including five new widget projection/coalescing tests.
+The Jest count decreased by one because the obsolete payment-filter helper's
+empty-selection test was removed; the active filter path retains that coverage.
+Expo Doctor previously passed **21/21** checks and Expo dependency
 validation remained clean. The original audit's lower-confidence font, subscription, startup
 storage, and R8 candidates remain deferred until release-mode profiling supports
 changing them.

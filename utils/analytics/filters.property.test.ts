@@ -12,7 +12,6 @@ import {
   applyAllFilters,
   resolveInstrumentKeyForExpense,
   filterExpensesByCategories,
-  filterExpensesByPaymentMethods,
   filterExpensesByAmountRange,
   makePaymentInstrumentSelectionKey,
 } from "./filters"
@@ -29,16 +28,15 @@ const categories = ["Food", "Transport", "Shopping", "Entertainment", "Bills", "
 // Generate a valid expense object
 function generateExpense(overrides: Partial<Expense> = {}): Expense {
   return {
-    id: overrides.id ?? `exp-${Math.random().toString(36).substr(2, 9)}`,
-    amount: overrides.amount || Math.random() * 1000,
-    category:
-      overrides.category || categories[Math.floor(Math.random() * categories.length)],
-    date: overrides.date || new Date().toISOString(),
+    id: overrides.id ?? "expense-fixture",
+    amount: overrides.amount ?? 100,
+    category: overrides.category ?? "Food",
+    date: overrides.date ?? "2026-09-05T12:00:00Z",
     note: overrides.note ?? "",
     paymentMethod: overrides.paymentMethod,
     currency: overrides.currency,
-    createdAt: overrides.createdAt || new Date().toISOString(),
-    updatedAt: overrides.updatedAt || new Date().toISOString(),
+    createdAt: overrides.createdAt ?? "2026-09-05T12:00:00Z",
+    updatedAt: overrides.updatedAt ?? "2026-09-05T12:00:00Z",
   }
 }
 
@@ -47,12 +45,12 @@ function generateInstrument(
   overrides: Partial<PaymentInstrument> = {}
 ): PaymentInstrument {
   return {
-    id: overrides.id || `inst-${Math.random().toString(36).substr(2, 9)}`,
-    method: (overrides.method || "Credit Card") as PaymentInstrument["method"],
-    nickname: overrides.nickname || "Test Card",
-    lastDigits: overrides.lastDigits || "1234",
-    createdAt: overrides.createdAt || new Date().toISOString(),
-    updatedAt: overrides.updatedAt || new Date().toISOString(),
+    id: overrides.id ?? "instrument-fixture",
+    method: overrides.method ?? "Credit Card",
+    nickname: overrides.nickname ?? "Test Card",
+    lastDigits: overrides.lastDigits ?? "1234",
+    createdAt: overrides.createdAt ?? "2026-09-05T12:00:00Z",
+    updatedAt: overrides.updatedAt ?? "2026-09-05T12:00:00Z",
     deletedAt: overrides.deletedAt,
   }
 }
@@ -111,10 +109,7 @@ describe("applyAllFilters", () => {
         }
 
         const result = applyAllFilters(expenses, filterState, [])
-        return result.every((expense) => {
-          const date = new Date(expense.date)
-          return date.getFullYear() === 2024 && date.getMonth() === 0
-        })
+        expect(result).toEqual(expenses)
       })
     )
   })
@@ -145,10 +140,9 @@ describe("applyAllFilters", () => {
 
           const result = applyAllFilters(expenses, filterState, [])
 
-          // All results should have the target category
-          expect(result.every((e) => e.category === targetCategory)).toBe(true)
-
-          return true
+          expect(result).toEqual(
+            expenses.filter((expense) => expense.category === targetCategory)
+          )
         }
       ),
       { numRuns: 100 }
@@ -185,12 +179,11 @@ describe("applyAllFilters", () => {
 
           const result = applyAllFilters(expenses, filterState, [])
 
-          // All results should be within amount range
-          expect(
-            result.every((e) => e.amount >= minAmount && e.amount <= maxAmount)
-          ).toBe(true)
-
-          return true
+          expect(result).toEqual(
+            expenses.filter(
+              (expense) => expense.amount >= minAmount && expense.amount <= maxAmount
+            )
+          )
         }
       ),
       { numRuns: 100 }
@@ -229,18 +222,14 @@ describe("applyAllFilters", () => {
 
           const result = applyAllFilters(expenses, filterState, [])
 
-          // Result should be a subset of original expenses
-          expect(result.length).toBeLessThanOrEqual(expenses.length)
-
-          // All results should satisfy category filter
-          expect(result.every((e) => e.category === targetCategory)).toBe(true)
-
-          // All results should satisfy amount filter
-          expect(
-            result.every((e) => e.amount >= minAmount && e.amount <= maxAmount)
-          ).toBe(true)
-
-          return true
+          expect(result).toEqual(
+            expenses.filter(
+              (expense) =>
+                expense.category === targetCategory &&
+                expense.amount >= minAmount &&
+                expense.amount <= maxAmount
+            )
+          )
         }
       ),
       { numRuns: 100 }
@@ -254,7 +243,7 @@ describe("resolveInstrumentKeyForExpense", () => {
       paymentMethod: { type: "Cash" },
     })
 
-    const result = resolveInstrumentKeyForExpense(expense, [])
+    const result = resolveInstrumentKeyForExpense(expense, new Map())
 
     expect(result).toBeNull()
   })
@@ -267,7 +256,7 @@ describe("resolveInstrumentKeyForExpense", () => {
       },
     })
 
-    const result = resolveInstrumentKeyForExpense(expense, [])
+    const result = resolveInstrumentKeyForExpense(expense, new Map())
 
     expect(result).not.toBeNull()
     expect(result!.isOther).toBe(true)
@@ -283,7 +272,10 @@ describe("resolveInstrumentKeyForExpense", () => {
       },
     })
 
-    const result = resolveInstrumentKeyForExpense(expense, [instrument])
+    const result = resolveInstrumentKeyForExpense(
+      expense,
+      new Map([[instrument.id, instrument]])
+    )
 
     expect(result).not.toBeNull()
     expect(result!.isOther).toBe(false)
@@ -300,7 +292,10 @@ describe("resolveInstrumentKeyForExpense", () => {
       },
     })
 
-    const result = resolveInstrumentKeyForExpense(expense, [instrument])
+    const result = resolveInstrumentKeyForExpense(
+      expense,
+      new Map([[instrument.id, instrument]])
+    )
 
     expect(result).not.toBeNull()
     expect(result!.isOther).toBe(true)
@@ -329,16 +324,6 @@ describe("filterExpensesByCategories", () => {
 
     expect(result.length).toBe(2)
     expect(result.every((e) => e.category === targetCategory)).toBe(true)
-  })
-})
-
-describe("filterExpensesByPaymentMethods", () => {
-  it("should return all expenses when no methods selected", () => {
-    const expenses = [generateExpense(), generateExpense(), generateExpense()]
-
-    const result = filterExpensesByPaymentMethods(expenses, [])
-
-    expect(result).toEqual(expenses)
   })
 })
 
