@@ -29,6 +29,8 @@ interface LineChartSectionProps {
 const CHART_HEIGHT = 160
 const Y_AXIS_WIDTH = 64
 const EDGE_SPACING = 24
+// Gifted Charts bottom-anchors a single-line X-axis label using an 18dp line box.
+const X_AXIS_LABEL_HEIGHT = 18
 
 export const LineChartSection = memo(function LineChartSection({
   data,
@@ -184,7 +186,10 @@ export const LineChartSection = memo(function LineChartSection({
                 formatYLabel={formatYLabel}
                 yAxisTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
                 xAxisLabelTextStyle={{ color: theme.mutedForeground, fontSize: 11 }}
-                xAxisLabelsHeight={36 * fontScale}
+                xAxisLabelsHeight={X_AXIS_LABEL_HEIGHT * fontScale}
+                // Offset added height downward; a taller bottom-anchored box otherwise
+                // lifts the text above the axis instead of reserving space below it.
+                xAxisLabelsVerticalShift={X_AXIS_LABEL_HEIGHT * (fontScale - 1)}
                 labelsExtraHeight={12}
                 noOfSections={4}
                 maxValue={scale.maxValue}

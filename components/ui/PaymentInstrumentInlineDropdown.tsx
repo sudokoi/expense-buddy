@@ -1,430 +1,243 @@
-import { useCallback, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Pressable, Text, View } from "react-native"
-import { ChevronDown, ChevronUp, Plus } from "lucide-react-native"
+import { Check, Plus } from "lucide-react-native"
 import { Button } from "./Button"
-import { Card } from "./Card"
 import { Input } from "./Input"
 import { Label } from "./Label"
+import { useThemeColors } from "../../hooks/use-theme-colors"
 import type {
   PaymentInstrument,
   PaymentInstrumentMethod,
 } from "../../types/payment-instrument"
 import {
-  formatPaymentInstrumentLabel,
   generatePaymentInstrumentId,
-  getActivePaymentInstruments,
   getLastDigitsLength,
   sanitizeLastDigits,
   validatePaymentInstrumentInput,
 } from "../../services/payment-instruments"
-import { validateIdentifier } from "../../utils/payment-method-validation"
-import { UI_RADIUS, UI_SPACE } from "../../constants/ui-tokens"
+import {
+  getAvailableInstruments,
+  resolveInstrumentChoice,
+  type InstrumentEntry,
+  type InstrumentEntryKind,
+} from "../../utils/payment-instrument-entry"
 
-export type InstrumentEntryKind = "none" | "manual" | "saved"
+export type { InstrumentEntryKind }
 
 interface PaymentInstrumentInlineDropdownProps {
   method: PaymentInstrumentMethod
   instruments: PaymentInstrument[]
-
   kind: InstrumentEntryKind
   selectedInstrumentId?: string
   manualDigits: string
-
   identifierLabel?: string
   maxLength?: number
-
-  onChange: (next: {
-    kind: InstrumentEntryKind
-    selectedInstrumentId?: string
-    manualDigits: string
-  }) => void
-
+  onChange: (next: InstrumentEntry) => void
   onCreateInstrument?: (instrument: PaymentInstrument) => void
 }
 
-export function PaymentInstrumentInlineDropdown({
+export function PaymentInstrumentInlineDropdown(
+  props: PaymentInstrumentInlineDropdownProps
+) {
+  // Changing methods must not carry an unfinished new-card draft into another method.
+  return <InstrumentEntryField key={props.method} {...props} />
+}
+
+function InstrumentEntryField({
   method,
   instruments,
   kind,
   selectedInstrumentId,
   manualDigits,
-  identifierLabel,
   maxLength,
   onChange,
   onCreateInstrument,
 }: PaymentInstrumentInlineDropdownProps) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const theme = useThemeColors()
   const [showAdd, setShowAdd] = useState(false)
-
-  const effectiveMaxLength = maxLength ?? getLastDigitsLength(method)
-  const effectiveIdentifierLabel = identifierLabel ?? `Last ${effectiveMaxLength} digits`
-
   const [nickname, setNickname] = useState("")
-  const [newLastDigits, setNewLastDigits] = useState("")
-  const [addErrors, setAddErrors] = useState<Record<string, string>>({})
-
-  const activeForMethod = useMemo(() => {
-    return getActivePaymentInstruments(instruments)
-      .filter((i) => i.method === method)
-      .sort((a, b) => a.nickname.localeCompare(b.nickname))
-  }, [instruments, method])
-
-  const selectedInstrument = useMemo(() => {
-    if (!selectedInstrumentId) return undefined
-    return instruments.find((i) => i.id === selectedInstrumentId)
-  }, [instruments, selectedInstrumentId])
-
-  const headerLabel = useMemo(() => {
-    if (kind === "saved") {
-      if (selectedInstrument && !selectedInstrument.deletedAt) {
-        return formatPaymentInstrumentLabel(selectedInstrument)
-      }
-      return `${method} • ${t("instruments.dropdown.saved")}`
-    }
-    if (kind === "manual") {
-      return manualDigits.trim()
-        ? t("instruments.dropdown.othersLabelWithDigits", {
-            method,
-            digits: manualDigits.trim(),
-          })
-        : t("instruments.dropdown.othersLabel", { method })
-    }
-    return t("instruments.dropdown.selectSaved")
-  }, [kind, manualDigits, method, selectedInstrument, t])
-
-  const closeDropdown = useCallback(() => setOpen(false), [])
-
-  const resetAddForm = useCallback(() => {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const available = useMemo(
+    () => getAvailableInstruments(instruments, method),
+    [instruments, method]
+  )
+  const selected = available.find((item) => item.id === selectedInstrumentId)
+  const digitsCount = maxLength ?? getLastDigitsLength(method)
+  const identifierLabel = t("instruments.form.digitsLabel", { count: digitsCount })
+  const value = kind === "saved" ? `saved:${selectedInstrumentId}` : kind
+  const options = [
+    {
+      value: "none",
+      label: t("instruments.dropdown.none"),
+      description: t("instruments.dropdown.noneHelp"),
+    },
+    ...available.map((item) => ({
+      value: `saved:${item.id}`,
+      label: item.nickname,
+      description: `•••• ${item.lastDigits}`,
+    })),
+  ]
+  const closeAdd = () => {
+    setShowAdd(false)
     setNickname("")
-    setNewLastDigits("")
-    setAddErrors({})
-  }, [])
-
-  const handleSelectNone = useCallback(() => {
-    onChange({ kind: "none", selectedInstrumentId: undefined, manualDigits: "" })
-    setShowAdd(false)
-    resetAddForm()
-    closeDropdown()
-  }, [closeDropdown, onChange, resetAddForm])
-
-  const handleSelectManual = useCallback(() => {
-    const nextDigits = kind === "manual" ? manualDigits : ""
-    onChange({
-      kind: "manual",
-      selectedInstrumentId: undefined,
-      manualDigits: nextDigits,
-    })
-    setShowAdd(false)
-    resetAddForm()
-    closeDropdown()
-  }, [closeDropdown, kind, manualDigits, onChange, resetAddForm])
-
-  const handleSelectInstrument = useCallback(
-    (inst: PaymentInstrument) => {
-      onChange({
-        kind: "saved",
-        selectedInstrumentId: inst.id,
-        manualDigits: inst.lastDigits,
-      })
-      setShowAdd(false)
-      resetAddForm()
-      closeDropdown()
-    },
-    [closeDropdown, onChange, resetAddForm]
-  )
-
-  const handleManualDigitsChange = useCallback(
-    (text: string) => {
-      onChange({
-        kind: "manual",
-        selectedInstrumentId: undefined,
-        manualDigits: validateIdentifier(text, effectiveMaxLength),
-      })
-    },
-    [effectiveMaxLength, onChange]
-  )
-
-  const handleStartAdd = useCallback(() => {
-    setShowAdd((prev) => {
-      const next = !prev
-      if (next) {
-        // Prefer pre-filling last digits from manual entry if available.
-        const expectedLen = getLastDigitsLength(method)
-        const seed = sanitizeLastDigits(manualDigits, expectedLen)
-        setNewLastDigits(seed)
-      } else {
-        resetAddForm()
-      }
-      return next
-    })
-  }, [manualDigits, method, resetAddForm])
-
-  const handleSaveNew = useCallback(() => {
+    setErrors({})
+  }
+  const saveNew = () => {
     if (!onCreateInstrument) return
-
-    const expectedLen = getLastDigitsLength(method)
-    const validation = validatePaymentInstrumentInput(
-      {
-        method,
-        nickname,
-        lastDigits: sanitizeLastDigits(newLastDigits, expectedLen),
-      },
+    const lastDigits = sanitizeLastDigits(manualDigits, getLastDigitsLength(method))
+    const result = validatePaymentInstrumentInput(
+      { method, nickname, lastDigits },
       instruments
     )
-
-    if (!validation.success) {
-      setAddErrors(validation.errors)
+    if (!result.success) {
+      setErrors(result.errors)
       return
     }
-
     const now = new Date().toISOString()
-    const inst: PaymentInstrument = {
+    const instrument: PaymentInstrument = {
       id: generatePaymentInstrumentId(),
       method,
       nickname: nickname.trim(),
-      lastDigits: sanitizeLastDigits(newLastDigits, expectedLen),
+      lastDigits,
       createdAt: now,
       updatedAt: now,
     }
-
-    onCreateInstrument(inst)
+    onCreateInstrument(instrument)
     onChange({
       kind: "saved",
-      selectedInstrumentId: inst.id,
-      manualDigits: inst.lastDigits,
+      selectedInstrumentId: instrument.id,
+      manualDigits: lastDigits,
     })
-    setShowAdd(false)
-    resetAddForm()
-  }, [
-    instruments,
-    method,
-    nickname,
-    newLastDigits,
-    onChange,
-    onCreateInstrument,
-    resetAddForm,
-  ])
+    closeAdd()
+  }
 
   return (
-    <View className="gap-2">
-      <Button
-        size="control"
-        variant="ghost"
-        className={open ? "border border-border bg-muted" : "border border-border"}
-        icon={open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        onPress={() => setOpen((v) => !v)}
-      >
-        {headerLabel}
-      </Button>
-
-      {open && (
-        <Card className="gap-1 p-1 rounded-control">
-          <Pressable
-            onPress={handleSelectNone}
-            role="button"
-            aria-selected={kind === "none"}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            className="min-h-[44]"
-          >
-            <View
-              className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
-                kind === "none" ? "border-accent bg-muted" : "border-border bg-surface"
-              }`}
+    <View className="gap-3">
+      <Label>{t("instruments.dropdown.saved")}</Label>
+      {available.length > 0 || kind === "saved" ? (
+        <View className="flex-row flex-wrap gap-2">
+          {options.map((option) => (
+            <Pressable
+              key={option.value}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: value === option.value }}
+              accessibilityLabel={`${option.label}, ${option.description}`}
+              className={`min-h-12 max-w-full flex-row items-center gap-2 rounded-control border px-3 py-2 active:opacity-60 ${value === option.value ? "border-accent bg-muted" : "border-border bg-surface"}`}
+              onPress={() => {
+                if (value === option.value) return
+                const next = resolveInstrumentChoice(option.value, available, {
+                  kind,
+                  selectedInstrumentId,
+                  manualDigits,
+                })
+                if (next) {
+                  onChange(next)
+                  closeAdd()
+                }
+              }}
             >
-              <Text
-                className={`flex-1 shrink pr-3 text-left text-foreground ${kind === "none" ? "font-bold" : "font-medium"}`}
-                numberOfLines={1}
-              >
-                {t("instruments.dropdown.none")}
-              </Text>
-              {kind === "none" && (
-                <Text className="font-bold text-accent">
-                  {t("instruments.dropdown.selected")}
+              <View className="shrink gap-1">
+                <Text className="text-sm font-medium text-foreground">
+                  {option.label}
                 </Text>
-              )}
-              {kind !== "none" && (
-                <Text
-                  className="font-bold opacity-0"
-                  importantForAccessibility="no-hide-descendants"
-                >
-                  {t("instruments.dropdown.selected")}
-                </Text>
-              )}
-            </View>
-          </Pressable>
-
-          <Pressable
-            onPress={handleSelectManual}
-            role="button"
-            aria-selected={kind === "manual"}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            className="min-h-[44]"
-          >
-            <View
-              className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
-                kind === "manual" ? "border-accent bg-muted" : "border-border bg-surface"
-              }`}
-            >
-              <Text
-                className={`flex-1 shrink pr-3 text-left text-foreground ${kind === "manual" ? "font-bold" : "font-medium"}`}
-                numberOfLines={1}
-              >
-                {t("instruments.dropdown.others")}
-              </Text>
-              {kind === "manual" && (
-                <Text className="font-bold text-accent">
-                  {t("instruments.dropdown.selected")}
-                </Text>
-              )}
-              {kind !== "manual" && (
-                <Text
-                  className="font-bold opacity-0"
-                  importantForAccessibility="no-hide-descendants"
-                >
-                  {t("instruments.dropdown.selected")}
-                </Text>
-              )}
-            </View>
-          </Pressable>
-
-          {activeForMethod.map((inst) => {
-            const isSelected = kind === "saved" && inst.id === selectedInstrumentId
-            return (
-              <Pressable
-                key={inst.id}
-                onPress={() => handleSelectInstrument(inst)}
-                role="button"
-                aria-selected={isSelected}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                className="min-h-[44]"
-              >
-                <View
-                  className={`flex-row items-center justify-between py-3 px-3 rounded-chip border ${
-                    isSelected ? "border-accent bg-muted" : "border-border bg-surface"
-                  }`}
-                >
-                  <Text
-                    className={`flex-1 shrink pr-3 text-left text-foreground ${isSelected ? "font-bold" : "font-medium"}`}
-                    numberOfLines={1}
-                  >
-                    {formatPaymentInstrumentLabel(inst)}
+                {option.value !== "none" ? (
+                  <Text className="text-xs text-muted-foreground">
+                    {option.description}
                   </Text>
-                  {isSelected && (
-                    <Text className="font-bold text-accent">
-                      {t("instruments.dropdown.selected")}
-                    </Text>
-                  )}
-                  {!isSelected && (
-                    <Text
-                      className="font-bold opacity-0"
-                      importantForAccessibility="no-hide-descendants"
-                    >
-                      {t("instruments.dropdown.selected")}
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-            )
-          })}
-
-          {onCreateInstrument && (
-            <Button
-              size="control"
-              variant="accent"
-              className="border border-border"
-              icon={<Plus size={16} />}
-              onPress={handleStartAdd}
-            >
-              {showAdd
-                ? t("instruments.dropdown.cancelAdd")
-                : t("instruments.dropdown.addSaved")}
-            </Button>
-          )}
-        </Card>
-      )}
-
-      {kind === "manual" && (
-        <View className="gap-1">
-          <Label className="text-xs opacity-60">
-            {effectiveIdentifierLabel} {t("common.optional")}
-          </Label>
-          <Input
-            placeholder={t("instruments.form.identifierPlaceholder", {
-              count: effectiveMaxLength,
-            })}
-            keyboardType="numeric"
-            value={manualDigits}
-            onChangeText={handleManualDigitsChange}
-            maxLength={effectiveMaxLength}
-          />
+                ) : null}
+              </View>
+              {value === option.value ? <Check size={18} color={theme.accent} /> : null}
+            </Pressable>
+          ))}
         </View>
-      )}
-
-      {showAdd && onCreateInstrument && (
-        <View
-          className="gap-2 border border-border"
-          style={{ padding: UI_SPACE.control, borderRadius: UI_RADIUS.chip }}
+      ) : null}
+      {kind === "saved" && !selected ? (
+        <Text className="text-xs text-muted-foreground">
+          {t("instruments.dropdown.unavailable")}.{" "}
+          {t("instruments.dropdown.unavailableHelp")}
+        </Text>
+      ) : null}
+      <View className="gap-1">
+        <Label>
+          {identifierLabel} {t("common.optional")}
+        </Label>
+        <Input
+          value={manualDigits}
+          onChangeText={(text) => {
+            const digits = sanitizeLastDigits(text, digitsCount)
+            setErrors((prev) => ({ ...prev, lastDigits: "" }))
+            onChange({
+              kind: digits ? "manual" : "none",
+              selectedInstrumentId: undefined,
+              manualDigits: digits,
+            })
+          }}
+          keyboardType="number-pad"
+          maxLength={digitsCount}
+          accessibilityLabel={identifierLabel}
+          className={errors.lastDigits ? "border-error" : undefined}
+          placeholder={t("instruments.form.identifierPlaceholder", {
+            count: digitsCount,
+          })}
+        />
+        {errors.lastDigits ? (
+          <Text className="text-xs text-error" accessibilityRole="alert">
+            {errors.lastDigits}
+          </Text>
+        ) : null}
+        {kind !== "saved" && !showAdd ? (
+          <Text className="text-xs text-muted-foreground">
+            {t("instruments.dropdown.manualHelp")}
+          </Text>
+        ) : null}
+      </View>
+      {onCreateInstrument && !showAdd ? (
+        <Button
+          variant="outline"
+          icon={<Plus size={16} />}
+          onPress={() => {
+            setShowAdd(true)
+          }}
         >
+          {t("instruments.dropdown.addSaved")}
+        </Button>
+      ) : null}
+      {showAdd && onCreateInstrument ? (
+        <View className="gap-3 rounded-control border border-border bg-surface p-3">
+          <Text className="text-sm font-semibold text-foreground">
+            {t("instruments.dropdown.addSaved")}
+          </Text>
           <View className="gap-1">
-            <Label className="opacity-80">{t("instruments.form.nickname")}</Label>
+            <Label>{t("instruments.form.nickname")}</Label>
             <Input
-              className={addErrors.nickname ? "border-error" : undefined}
-              placeholder={t("instruments.form.nicknamePlaceholder")}
               value={nickname}
               onChangeText={(text) => {
                 setNickname(text)
-                if (addErrors.nickname) {
-                  setAddErrors((prev) => {
-                    const { nickname: _n, ...rest } = prev
-                    return rest
-                  })
-                }
+                setErrors((prev) => ({ ...prev, nickname: "" }))
               }}
+              accessibilityLabel={t("instruments.form.nickname")}
+              placeholder={t("instruments.form.nicknamePlaceholder")}
               maxLength={30}
+              className={errors.nickname ? "border-error" : undefined}
             />
-            {addErrors.nickname && (
-              <Text className="text-xs text-error">{addErrors.nickname}</Text>
-            )}
+            {errors.nickname ? (
+              <Text className="text-xs text-error" accessibilityRole="alert">
+                {errors.nickname}
+              </Text>
+            ) : null}
           </View>
-
-          <View className="gap-1">
-            <Label className="opacity-80">{effectiveIdentifierLabel}</Label>
-            <Input
-              className={addErrors.lastDigits ? "border-error" : undefined}
-              placeholder={t("instruments.form.identifierPlaceholder", {
-                count: getLastDigitsLength(method),
-              })}
-              keyboardType="numeric"
-              value={newLastDigits}
-              onChangeText={(text) => {
-                const expectedLen = getLastDigitsLength(method)
-                setNewLastDigits(sanitizeLastDigits(text, expectedLen))
-                if (addErrors.lastDigits) {
-                  setAddErrors((prev) => {
-                    const { lastDigits: _d, ...rest } = prev
-                    return rest
-                  })
-                }
-              }}
-              maxLength={getLastDigitsLength(method)}
-            />
-            {addErrors.lastDigits && (
-              <Text className="text-xs text-error">{addErrors.lastDigits}</Text>
-            )}
-          </View>
-
-          <View className="flex-row gap-2" style={{ justifyContent: "flex-end" }}>
-            <Button size="control" variant="ghost" onPress={handleStartAdd}>
+          <View className="flex-row gap-2">
+            <Button className="flex-1" onPress={closeAdd}>
               {t("common.cancel")}
             </Button>
-            <Button size="control" variant="accent" onPress={handleSaveNew}>
-              {t("common.save")}
+            <Button className="flex-1" variant="accent" onPress={saveNew}>
+              {t("instruments.form.addTitle")}
             </Button>
           </View>
         </View>
-      )}
+      ) : null}
     </View>
   )
 }

@@ -23,8 +23,12 @@ import {
   Download,
 } from "lucide-react-native"
 import { Keyboard, Platform, Text, View } from "react-native"
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller"
+import { useTabBarHeight } from "../../hooks/use-tab-bar-height"
 import {
   getAmountInputProps,
   getAmountPreview,
@@ -70,7 +74,9 @@ export default function AddExpenseScreen() {
   const { paymentMethodSectionExpanded, setPaymentMethodExpanded } = useUIState()
   const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
   const { categories } = useCategories()
-  const insets = useSafeAreaInsets()
+  const tabBarHeight = useTabBarHeight()
+  const [footerHeight, setFooterHeight] = useState(72)
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null)
 
   // Track if user has interacted with payment method to prevent overwriting their choice
   const hasUserInteractedRef = useRef(false)
@@ -239,6 +245,7 @@ export default function AddExpenseScreen() {
 
     if (!validation.success) {
       setErrors(validation.errors)
+      scrollRef.current?.scrollTo({ y: 0, animated: true })
       void hapticError()
       return // Don't submit, keep user's input for correction
     }
@@ -298,11 +305,13 @@ export default function AddExpenseScreen() {
   return (
     <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
+        ref={scrollRef}
+        className="flex-1"
         contentContainerStyle={{
           padding: UI_SPACE.gutter,
-          paddingBottom: insets.bottom || UI_SPACE.gutter,
         }}
-        bottomOffset={50}
+        bottomOffset={footerHeight + UI_SPACE.control}
+        extraKeyboardSpace={footerHeight}
         keyboardShouldPersistTaps="handled"
       >
         <View className="max-w-[600px] w-full self-center gap-3">
@@ -464,12 +473,6 @@ export default function AddExpenseScreen() {
                 {/* Identifier input for cards/UPI/Other */}
                 {selectedPaymentConfig?.hasIdentifier && (
                   <View className="gap-1" style={{ marginTop: UI_SPACE.control }}>
-                    <Label className="text-xs opacity-60">
-                      {selectedPaymentConfig.identifierLabel ||
-                        t("history.editDialog.fields.identifier")}{" "}
-                      {t("common.optional")}
-                    </Label>
-
                     {effectivePaymentMethod &&
                     isPaymentInstrumentMethod(effectivePaymentMethod) ? (
                       <PaymentInstrumentInlineDropdown
@@ -484,7 +487,6 @@ export default function AddExpenseScreen() {
                         }
                         selectedInstrumentId={paymentInstrumentId}
                         manualDigits={paymentMethodId}
-                        identifierLabel={selectedPaymentConfig.identifierLabel}
                         maxLength={selectedPaymentConfig.maxLength}
                         onChange={(next) => {
                           setInstrumentEntryKind(next.kind)
@@ -520,10 +522,26 @@ export default function AddExpenseScreen() {
               </View>
             )}
           </View>
-
-          {/* Save Buttons */}
-          <View className="mt-4 gap-2">
+        </View>
+      </KeyboardAwareScrollView>
+      <KeyboardStickyView offset={{ closed: 0, opened: tabBarHeight }}>
+        <View
+          className="border-t border-border bg-background px-5 py-2"
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+        >
+          <View className="max-w-[600px] w-full self-center flex-row gap-3">
             <Button
+              className="flex-1"
+              size="control"
+              variant="outline"
+              icon={<Plus size={20} />}
+              onPress={() => handleSave({ stayOnAdd: true })}
+              accessibilityLabel={t("add.saveAndAddAnother")}
+            >
+              {t("add.saveAndAddAnother")}
+            </Button>
+            <Button
+              className="flex-1"
               size="control"
               variant="accent"
               icon={<Check size={20} />}
@@ -532,18 +550,9 @@ export default function AddExpenseScreen() {
             >
               {t("add.save")}
             </Button>
-            <Button
-              size="control"
-              variant="ghost"
-              icon={<Plus size={20} />}
-              onPress={() => handleSave({ stayOnAdd: true })}
-              accessibilityLabel={t("add.saveAndAddAnother")}
-            >
-              {t("add.saveAndAddAnother")}
-            </Button>
           </View>
         </View>
-      </KeyboardAwareScrollView>
+      </KeyboardStickyView>
     </View>
   )
 }

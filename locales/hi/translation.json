@@ -33,6 +33,7 @@
       "nickname": "उपनाम",
       "nicknamePlaceholder": "उदा. HDFC Visa",
       "lastDigits": "अंतिम अंक",
+      "digitsLabel": "अंतिम {{count}} अंक",
       "identifierPlaceholder": "{{count}} अंक दर्ज करें",
       "nicknameRequired": "उपनाम आवश्यक है",
       "nicknameTooLong": "उपनाम 30 अक्षर या उससे कम होना चाहिए",
@@ -40,15 +41,19 @@
       "nicknameTaken": "इस भुगतान विधि के लिए उपनाम पहले से मौजूद है"
     },
     "dropdown": {
-      "none": "कोई नहीं",
-      "others": "अन्य / अंक दर्ज करें",
+      "none": "पहचान के अंक नहीं",
+      "noneHelp": "केवल भुगतान का तरीका दर्ज करें।",
+      "others": "इस खर्च के लिए अंक दर्ज करें",
+      "manualHelp": "केवल इस खर्च के लिए; सहेजे गए साधनों में नहीं जोड़ा जाएगा।",
+      "unavailable": "सहेजा गया साधन उपलब्ध नहीं है",
+      "unavailableHelp": "जब तक आप कोई दूसरा विकल्प नहीं चुनते, मूल भुगतान विवरण रखा जाएगा।",
       "othersLabel": "{{method}} • अन्य",
       "othersLabelWithDigits": "{{method}} • अन्य ({{digits}})",
       "selectSaved": "सहेजा गया साधन चुनें (वैकल्पिक)",
-      "addSaved": "सहेजा गया जोड़ें",
+      "addSaved": "नया साधन सहेजें",
       "cancelAdd": "जोड़ना रद्द करें",
       "selected": "चयनित",
-      "saved": "सहेजा गया साधन"
+      "saved": "भुगतान विवरण (वैकल्पिक)"
     },
     "remove": "हटाएं"
   },
@@ -145,7 +150,7 @@
     }
   },
   "add": {
-    "saveAndAddAnother": "सहेजें और अगला जोड़ें",
+    "saveAndAddAnother": "एक और जोड़ें",
     "amount": "राशि",
     "amountPlaceholder": "0.00 या 100+50",
     "amountPlaceholderNumeric": "0.00",
@@ -159,7 +164,7 @@
     "importSms": "एसएमएस आयात करें",
     "importSmsWithPending": "एसएमएस आयात करें ({{count}} लंबित)",
     "addAnother": "एक और जोड़ें",
-    "save": "व्यय सहेजें",
+    "save": "जोड़ें",
     "success": "व्यय जोड़ा गया",
     "successAddAnother": "व्यय जोड़ा गया। एक और जोड़ें।"
   },
@@ -253,6 +258,7 @@
       "description": "गिटहब कनेक्ट करें, मैनुअल सिंक चलाएँ और ऑटो-सिंक नियंत्रित करें।"
     },
     "payment": {
+      "title": "भुगतान सेटिंग्स",
       "description": "भुगतान डिफ़ॉल्ट, सहेजे गए साधन और श्रेणियाँ एक ही जगह रखें।",
       "manageTitle": "भुगतान सेटिंग्स खोलें",
       "manageHelp": "डिफ़ॉल्ट विधि, सहेजे गए साधन और खर्च श्रेणियाँ यहाँ मिलेंगी।",
@@ -362,6 +368,10 @@
       "manage": "श्रेणियाँ प्रबंधित करें",
       "add": "श्रेणी जोड़ें",
       "otherHelp": "\"अन्य\" हमेशा सबसे नीचे रहता है",
+      "search": "श्रेणियाँ खोजें",
+      "reorder": "क्रम बदलें",
+      "noMatches": "कोई मेल खाती श्रेणी नहीं मिली।",
+      "usage": "खर्च: {{count}}",
       "deleteDialog": {
         "title": "श्रेणी हटाएं",
         "messageSimple": "\"{{label}}\" हटाएं?",

@@ -2,14 +2,13 @@ import { useCallback, useMemo, useState } from "react"
 import { Stack } from "expo-router"
 import { Alert, Text, View } from "react-native"
 import { useTranslation } from "react-i18next"
-import { ScreenContainer } from "../../components/ui/ScreenContainer"
-import { SettingsSection } from "../../components/ui/SettingsSection"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Card } from "../../components/ui/Card"
 import { DefaultPaymentMethodSelector } from "../../components/ui/DefaultPaymentMethodSelector"
 import { PaymentInstrumentsSection } from "../../components/ui/settings/PaymentInstrumentsSection"
 import { CategorySection } from "../../components/ui/CategorySection"
 import { CategoryFormModal } from "../../components/ui/CategoryFormModal"
-import { PAYMENT_METHODS } from "../../constants/payment-methods"
 import {
   useCategories,
   useExpenses,
@@ -17,11 +16,11 @@ import {
   useSettings,
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
-import type { PaymentMethodType } from "../../types/expense"
 import { UI_SPACE } from "../../constants/ui-tokens"
 
 export default function PaymentSettingsScreen() {
   const { t } = useTranslation()
+  const insets = useSafeAreaInsets()
   const { settings, setDefaultPaymentMethod } = useSettings()
   const { state, reassignExpensesToOther } = useExpenses()
   const { addNotification } = useNotifications()
@@ -35,19 +34,6 @@ export default function PaymentSettingsScreen() {
     () => categories.map((category) => category.label),
     [categories]
   )
-  const defaultPaymentMethodLabel = useMemo(() => {
-    const value = settings.defaultPaymentMethod
-    if (!value) return t("settings.defaultPayment.none")
-    const match = PAYMENT_METHODS.find((method) => method.value === value)
-    return match ? t(`paymentMethods.${match.i18nKey}`) : value
-  }, [settings.defaultPaymentMethod, t])
-  const activePaymentInstrumentCount = useMemo(
-    () =>
-      (settings.paymentInstruments ?? []).filter((instrument) => !instrument.deletedAt)
-        .length,
-    [settings.paymentInstruments]
-  )
-
   const getExpenseCountForCategory = useCallback(
     (label: string): number => {
       return state.expenses.filter(
@@ -129,65 +115,28 @@ export default function PaymentSettingsScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("settings.payment.manageTitle") }} />
+      <Stack.Screen options={{ title: t("settings.payment.title") }} />
 
-      <ScreenContainer contentContainerStyle={{ paddingTop: UI_SPACE.control }}>
+      <KeyboardAwareScrollView
+        className="flex-1 bg-background"
+        contentContainerStyle={{
+          padding: UI_SPACE.gutter,
+          paddingTop: UI_SPACE.control,
+          paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+        }}
+        bottomOffset={50}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="max-w-[600px] w-full self-center gap-4">
-          <SettingsSection
-            title={t("settings.sections.payment")}
-            description={t("settings.payment.manageHelp")}
-            gap="$gutter"
-          >
-            <View className="flex-row flex-wrap gap-3">
-              <View className="flex-1 gap-1 min-w-[80px]">
-                <Text className="text-xs text-foreground opacity-60 font-bold">
-                  {t("settings.defaultPayment.label")}
-                </Text>
-                <Text className="text-base text-foreground font-bold" numberOfLines={2}>
-                  {defaultPaymentMethodLabel}
-                </Text>
-              </View>
-
-              <View className="flex-1 gap-1 min-w-[80px]">
-                <Text className="text-xs text-foreground opacity-60 font-bold">
-                  {t("settings.payment.instrumentsTitle")}
-                </Text>
-                <Text className="text-base text-foreground font-bold">
-                  {activePaymentInstrumentCount}
-                </Text>
-              </View>
-
-              <View className="flex-1 gap-1 min-w-[80px]">
-                <Text className="text-xs text-foreground opacity-60 font-bold">
-                  {t("settings.payment.categoriesTitle")}
-                </Text>
-                <Text className="text-base text-foreground font-bold">
-                  {categories.length}
-                </Text>
-              </View>
-            </View>
-          </SettingsSection>
-
-          <SettingsSection
-            title={t("settings.sections.defaultPayment")}
-            description={t("settings.defaultPayment.description")}
-          >
-            <View className="gap-2">
-              <View>
-                <DefaultPaymentMethodSelector
-                  value={settings.defaultPaymentMethod}
-                  onChange={(paymentMethod) =>
-                    setDefaultPaymentMethod(
-                      paymentMethod as PaymentMethodType | undefined
-                    )
-                  }
-                />
-              </View>
-              <Text className="text-xs text-foreground opacity-60">
-                {t("settings.payment.defaultMethodHelp")}
-              </Text>
-            </View>
-          </SettingsSection>
+          <View className="gap-2">
+            <DefaultPaymentMethodSelector
+              value={settings.defaultPaymentMethod}
+              onChange={setDefaultPaymentMethod}
+            />
+            <Text className="text-sm text-muted-foreground">
+              {t("settings.defaultPayment.description")}
+            </Text>
+          </View>
 
           <Card className="p-3">
             <PaymentInstrumentsSection />
@@ -210,7 +159,7 @@ export default function PaymentSettingsScreen() {
             />
           </Card>
         </View>
-      </ScreenContainer>
+      </KeyboardAwareScrollView>
 
       <CategoryFormModal
         open={categoryFormOpen}

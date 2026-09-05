@@ -33,6 +33,7 @@
       "nickname": "Nickname",
       "nicknamePlaceholder": "e.g., HDFC Visa",
       "lastDigits": "Last digits",
+      "digitsLabel": "Last {{count}} digits",
       "identifierPlaceholder": "Enter {{count}} digits",
       "nicknameRequired": "Nickname is required",
       "nicknameTooLong": "Nickname must be 30 characters or less",
@@ -40,15 +41,19 @@
       "nicknameTaken": "Nickname already exists for this payment method"
     },
     "dropdown": {
-      "none": "None",
-      "others": "Others / Enter digits",
+      "none": "No identifier",
+      "noneHelp": "Record just the payment method.",
+      "others": "Enter digits for this expense",
+      "manualHelp": "One-off details; not added to your saved instruments.",
+      "unavailable": "Saved instrument unavailable",
+      "unavailableHelp": "The original payment details are kept unless you choose a different option.",
       "othersLabel": "{{method}} • Others",
       "othersLabelWithDigits": "{{method}} • Others ({{digits}})",
       "selectSaved": "Select saved instrument (optional)",
-      "addSaved": "Add saved",
+      "addSaved": "Create saved instrument",
       "cancelAdd": "Cancel Add",
       "selected": "Selected",
-      "saved": "Saved instrument"
+      "saved": "Payment details (optional)"
     },
     "remove": "Remove"
   },
@@ -145,7 +150,7 @@
     }
   },
   "add": {
-    "saveAndAddAnother": "Save & add another",
+    "saveAndAddAnother": "Add another",
     "amount": "Amount",
     "amountPlaceholder": "0.00 or 100+50",
     "amountPlaceholderNumeric": "0.00",
@@ -159,7 +164,7 @@
     "importSms": "Import SMS",
     "importSmsWithPending": "Import SMS ({{count}} pending)",
     "addAnother": "Add another",
-    "save": "Save Expense",
+    "save": "Add",
     "success": "Expense added",
     "successAddAnother": "Expense added. Add another."
   },
@@ -253,6 +258,7 @@
       "description": "Connect GitHub, run manual syncs, and control automatic syncing."
     },
     "payment": {
+      "title": "Payment settings",
       "description": "Keep payment defaults, saved instruments, and categories together in one place.",
       "manageTitle": "Open payment settings",
       "manageHelp": "Default method, saved instruments, and spending categories live here.",
@@ -362,6 +368,10 @@
       "manage": "Manage Categories",
       "add": "Add Category",
       "otherHelp": "\"Other\" always stays at the bottom",
+      "search": "Search categories",
+      "reorder": "Reorder",
+      "noMatches": "No matching categories.",
+      "usage": "Expenses: {{count}}",
       "deleteDialog": {
         "title": "Delete Category",
         "messageSimple": "Delete \"{{label}}\"?",

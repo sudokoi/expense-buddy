@@ -438,15 +438,17 @@ export default function HistoryScreen() {
         getFallbackCategory(item.expense.category)
 
       return (
-        <ExpenseRow
-          expense={item.expense}
-          categoryInfo={categoryInfo}
-          subtitleMode="time"
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          instruments={allInstruments}
-          showActions
-        />
+        <View className="pb-2">
+          <ExpenseRow
+            expense={item.expense}
+            categoryInfo={categoryInfo}
+            subtitleMode="time"
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            instruments={allInstruments}
+            showActions
+          />
+        </View>
       )
     },
     [handleEdit, handleDelete, allInstruments, categoryByLabel, effectiveCurrency]

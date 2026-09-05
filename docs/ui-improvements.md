@@ -4,7 +4,7 @@ This pass preserves the warm light/dark palette and existing expense, filter, an
 sync workflows. It covers the full route/component tree, not only the screenshot
 viewports.
 
-## Changes by area
+## Initial pass: changes by area
 
 | Area                 | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,3 +54,93 @@ changes are required.
   deliberate data/behavior decisions outside this presentation pass.
 
 The reference `screenshots/` directory is user-owned and intentionally untouched.
+
+## Follow-up: settings, payment entry, and Edit Expense
+
+- Payment Settings now shows its default choice directly, without a duplicate
+  summary card. Saved instruments use compact nickname/method/masked-digit rows;
+  tapping a row expands its form inline. Adding an instrument also uses an inline
+  form, not a modal. Removal retains the existing confirmation.
+- Category rows show usage counts. Search narrows the list; a separate reorder
+  mode exposes accessible move buttons only when viewing the full order. Boundary
+  moves are disabled and “Other” remains last. Deletion confirmation/reassignment
+  is still owned by the payment screen.
+- Language, currency, SMS region, and default payment choices open scrollable
+  single-selection sheets. Dismissal changes nothing. Language changes retain the
+  confirmation about resetting currency and SMS region.
+- Payment entry shows saved instruments as directly selectable, wrapping choices.
+  The digits input is always available; editing digits switches to one-off details
+  without modifying a saved instrument. Creating an instrument adds a nickname
+  inline and reuses the entered digits, with the existing validation. Unavailable
+  historical instruments are explained without silently changing expense data.
+- Edit Expense matches Add's amount-first hierarchy, localized date, collapsible
+  payment summary, and keyboard-aware scrolling.
+  Invalid amounts show an inline error; currency and save semantics are unchanged.
+- Add and Edit have pinned keyboard-sticky actions outside their scroll areas.
+  Add has “Add” and “Add another” side by side directly above the tabs, with no
+  Cancel action. Add saves and opens History; Add another saves and resets the
+  form for the next expense. Edit keeps Cancel on the left and Save on the right;
+  cancellation discards only its unsaved edits.
+  Footer height is measured for focused-input clearance; Add accounts for the
+  tab bar below it. Invalid amounts scroll back to the fields.
+- History retains compact content but restores the shared rounded, fully bordered
+  card surface with spacing between expenses, following user feedback. Edit and
+  Delete are directly accessible buttons, with no intermediate action prompt.
+  Tap-to-edit and the final deletion confirmation remain.
+- Tabs keep the navigator's press handling and static selected styling, but disable
+  the ripple, opacity press effect, and screen transition animation.
+- App Information groups current/latest version details alongside Check for
+  Updates, with Report Issue and GitHub actions sharing a wrapping row. Available
+  update/install actions are retained.
+- Analytics no longer duplicates currency selection below Total Spent. Currency
+  changes remain in the shared Filters screen; existing amount formatting is unchanged.
+- Analytics shows Sync Now only when a GitHub sync configuration is saved, matching
+  Settings' existing guard for manual sync, pending changes, and auto-sync options.
+  GitHub setup and SMS import remain available without a sync configuration.
+  Verified both screens in the unconfigured Android preview; authenticated sync
+  was not exercised for this visibility-only change.
+- Spending Trend uses the chart library's 18dp single-line X-axis label box and
+  shifts any font-scaled height downward. A taller box without that offset lifts
+  the bottom-anchored date labels into the plot.
+
+### Form action styling
+
+- Primary submission actions (Add, Save) use `accent`: filled accent background.
+- Adjacent secondary actions (Cancel in Edit, Add another in Add) use `outline`:
+  a visible rounded border and surface background, with the same touch-target size.
+- `ghost` is for lower-emphasis tertiary actions, not the paired Cancel action in
+  the persistent Edit footer. Button role depends on context, not its label alone.
+
+### Follow-up checks
+
+- JavaScript: 90 suites, 814 tests passed, including 14 new cases for instrument
+  choices and category ordering. Kotlin tests, typecheck, ESLint, translation
+  parity, and theme checks passed.
+- Android preview: created a saved card; moved a category down and back up; checked
+  empty category search, disabled reorder while searching, and clear recovery.
+  Selected manual digits and a saved card in Add, saved an expense, edited its
+  amount, and confirmed History retained its payment details. Empty Edit amount
+  showed validation and did not save.
+- Language-change cancellation preserved all three localization values; currency
+  and region choices updated their summaries independently. Light/dark surfaces,
+  rounded History cards, and Payment Settings/selection sheet at 150% text were
+  inspected. Emulator font scale was restored to 1.0.
+- Further feedback checks: direct History Edit navigation and Delete confirmation
+  (cancelled without deleting); inline saved-instrument creation with nickname
+  validation and reuse of entered digits; inline Payment Settings form; compact
+  App Information. Before the final action-label revision, Add cancellation kept
+  an `88` amount draft and did not change the saved History total; that temporary
+  Cancel action has since been removed at the user's request.
+- Docked Android keyboard: Add's footer remained above the keyboard; Edit scrolled
+  the focused note input above its footer. Add's earlier Cancel/Save row was inspected
+  at 150% text with the keyboard open. Font scale and keyboard preferences were
+  restored after testing.
+- Trend label regression: a temporary Android screenshot/UI-bounds probe measured
+  the date starting 34px above the X-axis before the fix, and 13px below afterward
+  at both 100% and 150% system text. The 16 trend utility tests, typecheck, and
+  chart ESLint check passed. Pixel positioning was validated natively, not by the
+  Node-only utility suite; the checked fixture has a single daily point.
+- The original app and reference screenshots remain untouched. This follow-up
+  used the existing preview installation, not a new native build. Full TalkBack,
+  locale/device matrices, landscape, and populated SMS flows
+  remain outside the completed smoke checks.

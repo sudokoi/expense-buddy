@@ -1,98 +1,34 @@
-import { View, Text } from "react-native"
-import { Globe, Languages, type LucideIcon } from "lucide-react-native"
-import { Pressable } from "react-native"
-import { Card } from "./Card"
 import { useTranslation } from "react-i18next"
-import {
-  UI_SPACE,
-  UI_OPACITY,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-  UI_MIN_TOUCH_TARGET,
-} from "../../constants/ui-tokens"
-import { useThemeColors } from "../../hooks/use-theme-colors"
+import { SelectionField } from "./SelectionField"
 
 interface LanguageSelectorProps {
   value: string
   onChange: (lang: string) => void
 }
 
-interface LanguageOption {
-  key: string
-  label: string
-  Icon: LucideIcon
-}
-
-const languageOptions: LanguageOption[] = [
-  { key: "system", label: "System Default", Icon: Globe },
-  { key: "en-US", label: "English (US)", Icon: Globe },
-  { key: "en-GB", label: "English (UK)", Icon: Globe },
-  { key: "en-CA", label: "English (CA)", Icon: Globe },
-  { key: "en-AU", label: "English (AU)", Icon: Globe },
-  { key: "en-IN", label: "English (IN)", Icon: Globe },
-  { key: "hi", label: "Hindi (हिंदी)", Icon: Languages },
-  { key: "ja", label: "Japanese (日本語)", Icon: Languages },
+const languages = [
+  { value: "en-US", label: "English (US)" },
+  { value: "en-GB", label: "English (UK)" },
+  { value: "en-CA", label: "English (CA)" },
+  { value: "en-AU", label: "English (AU)" },
+  { value: "en-IN", label: "English (IN)" },
+  { value: "hi", label: "हिंदी (Hindi)" },
+  { value: "ja", label: "日本語 (Japanese)" },
 ]
 
-/**
- * LanguageSelector - A selector for app language
- */
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
-  const theme = useThemeColors()
   const { t } = useTranslation()
-
-  const options = languageOptions.map((opt) => ({
-    ...opt,
-    label: opt.key === "system" ? t("settings.appearance.options.system") : opt.label,
-  }))
-
   return (
-    <Card className="flex-row flex-wrap rounded-control p-1">
-      {options.map(({ key, label, Icon }) => {
-        const isSelected = value === key
-        return (
-          <Pressable
-            key={key}
-            onPress={() => onChange(key)}
-            role="button"
-            aria-selected={isSelected}
-            aria-label={t("settings.localization.selectOption", { option: label })}
-            style={({ pressed }) => [
-              { flexBasis: "50%", minHeight: UI_MIN_TOUCH_TARGET },
-              { opacity: pressed ? UI_OPACITY.subtle : 1 },
-            ]}
-          >
-            <View
-              className="flex-row items-center justify-center gap-2 rounded-control p-2"
-              style={{
-                borderWidth: UI_BORDER_WIDTH.normal,
-                backgroundColor: isSelected ? theme.muted : "transparent",
-                borderColor: isSelected ? theme.accent : "transparent",
-                margin: UI_SPACE.micro / 2,
-              }}
-            >
-              <Icon
-                size={UI_ICON_SIZE.regular}
-                color={theme.foreground}
-                style={{ opacity: isSelected ? 1 : UI_OPACITY.medium }}
-              />
-              <Text
-                className="text-[13px] text-foreground"
-                style={{
-                  fontWeight: isSelected
-                    ? UI_FONT_WEIGHT.semiBold
-                    : UI_FONT_WEIGHT.normal,
-                  opacity: isSelected ? 1 : UI_OPACITY.medium,
-                }}
-              >
-                {label}
-              </Text>
-            </View>
-          </Pressable>
-        )
-      })}
-    </Card>
+    <SelectionField
+      label={t("settings.localization.language")}
+      description={t("settings.localization.languageChangeMessage")}
+      value={value}
+      onChange={onChange}
+      options={[
+        { value: "system", label: t("settings.appearance.options.system") },
+        ...languages,
+      ]}
+    />
   )
 }
 
