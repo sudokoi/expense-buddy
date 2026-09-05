@@ -164,7 +164,7 @@ export default function AnalyticsScreen() {
     pieChartData,
     paymentMethodChartData,
     paymentInstrumentChartData,
-    lineChartData,
+    spendingTrend,
   } = useAnalyticsCharts(filteredExpenses, dateRange, paymentInstruments, t)
 
   const { statistics } = useAnalyticsStatistics(
@@ -273,7 +273,8 @@ export default function AnalyticsScreen() {
 
   // Check if there's any data to display
   const hasData = filteredExpenses.length > 0
-  const hasAnyExpenses = pieChartData.length > 0 || lineChartData.some((d) => d.value > 0)
+  const hasAnyExpenses =
+    pieChartData.length > 0 || spendingTrend.points.some((d) => d.value > 0)
 
   // Helper to format category labels (translate "Other" category)
   const formatCategoryLabel = useCallback(
@@ -494,7 +495,7 @@ export default function AnalyticsScreen() {
               />
               <View className="gap-4">
                 <LineChartSection
-                  data={lineChartData}
+                  data={spendingTrend}
                   currencyCode={effectiveCurrency}
                   autoScrollToEnd={!effectiveSelectedMonth}
                 />

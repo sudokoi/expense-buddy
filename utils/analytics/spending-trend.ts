@@ -1,9 +1,22 @@
-import { format, parseISO, startOfMonth, startOfWeek } from "date-fns"
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  differenceInCalendarDays,
+  endOfDay,
+  format,
+  isValid,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "date-fns"
 import type { Locale } from "date-fns"
-import type { LineChartDataItem } from "./aggregations"
+import type { DateRange } from "../../types/analytics"
+import type { Expense } from "../../types/expense"
 
 export type TrendGranularity = "daily" | "weekly" | "monthly"
-
 export interface SpendingTrendPoint {
   value: number
   date: string
@@ -11,46 +24,62 @@ export interface SpendingTrendPoint {
   label: string
   periodLabel: string
 }
+export interface SpendingTrend {
+  granularity: TrendGranularity
+  points: SpendingTrendPoint[]
+}
 
-/** Build readable buckets from the chronological, zero-filled daily series. */
-export function buildSpendingTrend(data: LineChartDataItem[], locale: Locale) {
+/** O(expenses + displayed buckets), with local-day and partial-period semantics. */
+export function aggregateSpendingTrend(
+  expenses: Pick<Expense, "date" | "amount">[],
+  range: DateRange,
+  locale: Locale
+): SpendingTrend {
+  const start = startOfDay(range.start)
+  const end = endOfDay(range.end)
+  if (!isValid(start) || !isValid(end) || end < start)
+    return { granularity: "daily", points: [] }
+  const count = differenceInCalendarDays(end, start) + 1
   const granularity: TrendGranularity =
-    data.length <= 45 ? "daily" : data.length <= 180 ? "weekly" : "monthly"
-  const buckets = new Map<string, { value: number; date: string; endDate: string }>()
-
-  for (const item of data) {
-    const date = parseISO(item.date)
-    const bucketStart =
-      granularity === "monthly"
-        ? startOfMonth(date)
-        : granularity === "weekly"
-          ? startOfWeek(date, { locale })
-          : date
-    const key = format(bucketStart, "yyyy-MM-dd")
-    const bucket = buckets.get(key)
-    if (bucket) {
-      bucket.value += item.value
-      bucket.endDate = item.date
-    } else {
-      buckets.set(key, { value: item.value, date: item.date, endDate: item.date })
-    }
-  }
-
-  const points: SpendingTrendPoint[] = Array.from(buckets.values(), (bucket) => {
-    const start = parseISO(bucket.date)
-    const end = parseISO(bucket.endDate)
-    return {
-      ...bucket,
-      label: format(start, granularity === "monthly" ? "MMM yy" : "d MMM", { locale }),
-      // Use actual covered dates so partial weeks/months aren't presented as full periods.
+    count <= 45 ? "daily" : count <= 180 ? "weekly" : "monthly"
+  const bucketStart = (date: Date) =>
+    granularity === "monthly"
+      ? startOfMonth(date)
+      : granularity === "weekly"
+        ? startOfWeek(date, { locale })
+        : startOfDay(date)
+  const nextBucket = (date: Date) =>
+    granularity === "monthly"
+      ? addMonths(date, 1)
+      : granularity === "weekly"
+        ? addWeeks(date, 1)
+        : addDays(date, 1)
+  const keyOf = (date: Date) => format(date, "yyyy-MM-dd")
+  const buckets = new Map<string, SpendingTrendPoint>()
+  for (let cursor = bucketStart(start); cursor <= end; cursor = nextBucket(cursor)) {
+    const first = cursor < start ? start : cursor
+    const last = subDays(nextBucket(cursor), 1)
+    const clippedLast = last > end ? end : last
+    const date = keyOf(first)
+    const endDate = keyOf(clippedLast)
+    buckets.set(keyOf(cursor), {
+      value: 0,
+      date,
+      endDate,
+      label: format(first, granularity === "monthly" ? "MMM yy" : "d MMM", { locale }),
       periodLabel:
-        bucket.date === bucket.endDate
-          ? format(start, "PP", { locale })
-          : `${format(start, "PP", { locale })} – ${format(end, "PP", { locale })}`,
-    }
-  })
-
-  return { granularity, points }
+        date === endDate
+          ? format(first, "PP", { locale })
+          : `${format(first, "PP", { locale })} – ${format(clippedLast, "PP", { locale })}`,
+    })
+  }
+  for (const expense of expenses) {
+    const date = parseISO(expense.date)
+    if (!isValid(date) || date < start || date > end) continue
+    const bucket = buckets.get(keyOf(bucketStart(date)))
+    if (bucket) bucket.value += Math.abs(expense.amount)
+  }
+  return { granularity, points: [...buckets.values()] }
 }
 
 /** Zero-based scale with four readable steps and headroom; never clip an outlier. */

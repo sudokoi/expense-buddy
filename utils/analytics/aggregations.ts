@@ -11,7 +11,6 @@ import { CATEGORY_COLORS } from "../../constants/category-colors"
 import { PAYMENT_METHOD_COLORS } from "../../constants/payment-method-colors"
 import {
   PAYMENT_INSTRUMENT_METHODS,
-  findInstrumentById,
   formatPaymentInstrumentLabel,
 } from "../../services/payment-instruments"
 import { getPaymentMethodI18nKey } from "../../constants/payment-methods"
@@ -184,6 +183,9 @@ export function aggregateByPaymentInstrument(
   instruments: PaymentInstrument[],
   t: (key: string) => string
 ): PaymentInstrumentChartDataItem[] {
+  const instrumentById = new Map(
+    instruments.map((instrument) => [instrument.id, instrument])
+  )
   const totals = new Map<
     PaymentInstrumentSelectionKey,
     {
@@ -195,7 +197,7 @@ export function aggregateByPaymentInstrument(
   >()
 
   for (const expense of expenses) {
-    const resolved = resolveInstrumentKeyForExpense(expense, instruments)
+    const resolved = resolveInstrumentKeyForExpense(expense, instrumentById)
     if (!resolved) continue
 
     const current = totals.get(resolved.key)
@@ -217,7 +219,7 @@ export function aggregateByPaymentInstrument(
 
     let text = `${methodShortLabel(entry.method, t)} • ${t("analytics.chart.others")}`
     if (!entry.isOther && entry.instrumentId) {
-      const inst = findInstrumentById(instruments, entry.instrumentId)
+      const inst = instrumentById.get(entry.instrumentId)
       if (inst && !inst.deletedAt) {
         text = `${methodShortLabel(entry.method, t)} • ${formatPaymentInstrumentLabel(inst)}`
       }
