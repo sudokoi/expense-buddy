@@ -174,6 +174,7 @@ export default {
           },
         },
       ],
+      "./plugins/withAndroidBuildBudget",
     ],
     experiments: {
       typedRoutes: true,
