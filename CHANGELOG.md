@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 4.2.2
+
+### Patch Changes
+
+- [#135](https://github.com/sudokoi/expense-buddy/pull/135) [`65c17cb`](https://github.com/sudokoi/expense-buddy/commit/65c17cbbb11987aef0ed38560cb7c29fab9b886d) Thanks [@sudokoi](https://github.com/sudokoi)! - Improve SMS review accuracy and sync feedback
+
+  - Reduce false transaction detections and improve amount, currency, merchant, and bank-message parsing across supported regions.
+  - Preserve existing review decisions and useful custom-category and saved-instrument suggestions.
+  - Keep the sync indicator consistently circular across all states.
+
 ## 4.2.1
 
 ### Patch Changes
