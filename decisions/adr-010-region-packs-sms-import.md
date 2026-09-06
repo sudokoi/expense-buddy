@@ -94,7 +94,30 @@ The region set grew from three to six (`+US`, `+GB`, `+JP`). Two architectural c
 
 **Category-ordering contract:** pack collisions like Tesco Metro / Metro Inc (grocer names containing transit nouns) are resolved by a documented rule order — brand-heavy categories (Food, Groceries) precede mode-noun categories (Transport). Canada's Transport list drops bare `metro` in favor of specific tokens (STM/TTC/Presto).
 
-## Rejected alternatives
+## Amendment: shared extraction and evidence-based suggestions (2026-09-06)
+
+The six packs retain locale metadata and regional state/category/payment hints.
+Money validation and merchant extraction now have shared internal owners rather
+than six permissive first-match amount patterns. Explicit supported currency
+wins over the regional default; bare dollars still require US/CA/AU selection.
+Multiple distinct transaction amounts are rejected as ambiguous.
+
+Category inference now evaluates merchant evidence before message prose and
+prefers longer matching phrases, using the existing list order only for ties.
+Latin token boundaries prevent substring collisions; Japanese compounds retain
+their script-appropriate matching. Generic Visa/Mastercard hints no longer imply
+credit-card use. These are deliberate suggestion corrections, not changes to
+saved instruments or confirmed expenses.
+
+Matching-only whitespace/digit normalization is separate from historical
+fingerprint normalization. Locale-independent amount formatting and corrected
+amounts are protected by the source deduplication amendment in ADR-007. Region
+seeding, language cascades, the stored legacy INR fallback, review-first import,
+and the public parser/bridge result contract are unchanged.
+
+See [the corpus, provenance, and validation limits](../docs/sms-regex-parser.md).
+
+## Rejected alternatives (original decision)
 
 1. **SIM/network country auto-detection.**
    - Rejected: ambiguous on dual-SIM devices, hidden runtime input, untestable determinism, and wrong during travel.

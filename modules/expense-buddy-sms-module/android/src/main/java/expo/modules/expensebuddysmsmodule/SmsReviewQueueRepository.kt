@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import expo.modules.expensebuddysmsmodule.db.ImportJournalEntity
 import expo.modules.expensebuddysmsmodule.db.ReviewQueueEntity
 import expo.modules.expensebuddysmsmodule.db.SmsReviewQueueDatabase
+import expo.modules.expensebuddysmsparser.SmsMessageParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -25,12 +26,31 @@ class SmsReviewQueueRepository(
     ): Int =
         db.withTransaction {
             var inserted = 0
+            // Refresh-local cache: one indexed read/hash pass per time window,
+            // including inserts made earlier in this same atomic batch.
+            val sourceWindows = mutableMapOf<Long, MutableMap<String, String>>()
             for (item in items) {
-                val added = dao.insertIfNotExists(item) != -1L
-                if (added) inserted++
+                // Extraction is not message identity: corrected amounts or locale
+                // formatting must not resurrect an already handled source SMS.
+                val sourceKey = SmsMessageParser.createFingerprint(item.sender, item.body, item.sourceReceivedAt)
+                val window = Math.floorDiv(item.timestamp, 180000L) * 180000L
+                val identities =
+                    sourceWindows.getOrPut(window) {
+                        dao
+                            .getSourceIdentities(window, window + 180000L)
+                            .associate {
+                                SmsMessageParser.createFingerprint(it.sender, it.body, it.sourceReceivedAt) to it.fingerprint
+                            }.toMutableMap()
+                    }
+                val existing = identities[sourceKey]
+                val added = existing == null && dao.insertIfNotExists(item) != -1L
+                if (added) {
+                    inserted++
+                    identities[sourceKey] = item.fingerprint
+                }
                 journal.insert(
                     ImportJournalEntity(
-                        fingerprint = item.fingerprint,
+                        fingerprint = existing ?: item.fingerprint,
                         source = source,
                         action = if (added) "INSERTED" else "DEDUPED",
                         timestamp = System.currentTimeMillis(),

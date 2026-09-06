@@ -1,0 +1,36 @@
+package expo.modules.expensebuddysmsparser
+
+internal object SmsMerchantRules {
+    private val upi = Regex("\\bUPI/(?:DR|DEBIT)/[^/\\s]+/([^/\\r\\n]{1,100})", RegexOption.IGNORE_CASE)
+    private val english =
+        Regex(
+            "\\b(?:at|to|merchant)[: ]+([\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}&'’@_./#*() -]{0,119}?)(?=\\s+(?:on|using|via|with|by|for|ref|reference|card|ending|avl|available|balance|if|not|completed|successfully|to complete)\\b|[.!?](?:\\s|$)|[,;\\r\\n]|$)",
+            RegexOption.IGNORE_CASE,
+        )
+    private val japanese = Regex("(?:利用先|加盟店|利用店名)[：:]?\\s*(.{1,100}?)(?=\\s*(?:利用日|ご利用|金額|利用金額)|[。;\\r\\n]|$)")
+    private val nonMerchant = Regex("^(?:(?:your|the|my)\\s+)?(?:a/c|account|acct|card|bank|complete|proceed)\\b", RegexOption.IGNORE_CASE)
+    private val whitespace = Regex("\\s+")
+
+    fun extract(
+        pack: SmsRulePack,
+        body: String,
+    ): String? {
+        val patterns =
+            when (pack.regionCode) {
+                "IN" -> listOf(upi, english)
+                "JP" -> listOf(japanese, english)
+                else -> listOf(english)
+            }
+        for (pattern in patterns) {
+            for (match in pattern.findAll(body)) {
+                val merchant =
+                    match.groupValues[1]
+                        .replace(whitespace, " ")
+                        .trim()
+                        .trimEnd('.', ',')
+                if (merchant.any(Char::isLetter) && !nonMerchant.containsMatchIn(merchant)) return merchant
+            }
+        }
+        return null
+    }
+}

@@ -12,15 +12,8 @@ object CanadaSmsRulePack : SmsRulePack {
     override val currencyCode = "CAD"
     override val patternKeyPrefix = "canada"
 
-    override val amountPattern =
-        Regex("(?:CAD|C\\$|\\$)\\s*([0-9][0-9,]*(?:\\.\\d{1,2})?)", RegexOption.IGNORE_CASE)
-    override val debitKeywords =
-        Regex(
-            "debited|spent|withdrawn|paid|purchase|txn|transaction|charged|payment of|auto-debit|debit of|sent|e-?transfer",
-            RegexOption.IGNORE_CASE,
-        )
     override val settledDebitKeywords =
-        Regex("debited|spent|withdrawn|paid|purchase|charged|sent", RegexOption.IGNORE_CASE)
+        Regex("debited|spent|withdrawn|paid|purchase(?:d)?|charged|sent", RegexOption.IGNORE_CASE)
     override val creditOnlyKeywords = Regex("credited|received|deposited", RegexOption.IGNORE_CASE)
     override val otpKeywords =
         Regex(
@@ -43,20 +36,11 @@ object CanadaSmsRulePack : SmsRulePack {
             RegexOption.IGNORE_CASE,
         )
 
-    override val merchantPatterns =
-        listOf(
-            Regex(
-                "\\b(?:at|to|from|merchant)\\s+([A-Za-z0-9][\\w&\\-. ]{1,40}?)(?:\\s+(?:on|using|via|with|card|ending)\\b|[.,!]|$)",
-                RegexOption.IGNORE_CASE,
-            ),
-            Regex("\\b(?:at|to)\\s+(\\w+(?:[&\\-]\\w+)?(?:\\s+\\w+(?:[&\\-]\\w+)?)?)", RegexOption.IGNORE_CASE),
-        )
-
     override val categoryInferenceRules =
         listOf(
             "Food" to
                 Regex(
-                    "tim hortons|starbucks|mcdonald|restaurant|cafe|coffee|pizza|burger|dining|eatery|bakery|food|uber eats|skipthedishes|doordash|a\\&w|harvey",
+                    "tim hortons|starbucks|mcdonald(?:['’]?s)?|restaurant|cafe|coffee|pizza|burger|dining|eatery|bakery|food|uber eats|skipthedishes|doordash|a\\&w|harvey",
                     RegexOption.IGNORE_CASE,
                 ),
             "Groceries" to
@@ -92,10 +76,10 @@ object CanadaSmsRulePack : SmsRulePack {
             "Net Banking" to Regex("interac|e-?transfer", RegexOption.IGNORE_CASE),
             "Credit Card" to
                 Regex(
-                    "credit card|credit a/c|credit acct|\\bamex\\b|american express|\\bvisa\\b|master\\s?card|\\bmastercard\\b",
+                    "credit card|\\bamex\\b|american express",
                     RegexOption.IGNORE_CASE,
                 ),
             "Debit Card" to
-                Regex("debit card|debit a/c|debited from a/c|debited from acct|debit purchase", RegexOption.IGNORE_CASE),
+                Regex("\\b(?:debit card|debit purchase)\\b", RegexOption.IGNORE_CASE),
         )
 }

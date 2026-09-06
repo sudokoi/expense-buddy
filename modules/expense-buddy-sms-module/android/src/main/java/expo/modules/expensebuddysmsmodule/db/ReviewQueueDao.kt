@@ -17,6 +17,15 @@ interface ReviewQueueDao {
     @Query("SELECT * FROM sms_review_queue WHERE fingerprint = :fingerprint")
     suspend fun getItemByFingerprint(fingerprint: String): ReviewQueueEntity?
 
+    // Uses the existing (status, timestamp) index, including terminal decisions.
+    @Query(
+        "SELECT fingerprint, sender, body, sourceReceivedAt FROM sms_review_queue WHERE status IN ('PENDING', 'APPROVED', 'REJECTED', 'DISMISSED') AND timestamp >= :start AND timestamp < :end",
+    )
+    suspend fun getSourceIdentities(
+        start: Long,
+        end: Long,
+    ): List<ReviewSourceIdentity>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertIfNotExists(entity: ReviewQueueEntity): Long
 
@@ -43,3 +52,10 @@ interface ReviewQueueDao {
     @Query("DELETE FROM sms_review_queue")
     suspend fun clearAll()
 }
+
+data class ReviewSourceIdentity(
+    val fingerprint: String,
+    val sender: String,
+    val body: String,
+    val sourceReceivedAt: String,
+)

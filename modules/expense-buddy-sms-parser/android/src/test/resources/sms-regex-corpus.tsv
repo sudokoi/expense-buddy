@@ -1,0 +1,74 @@
+# id	origin	region	amount	currency	merchant	category	method	skip	body
+category-footer	generated	IN	250	INR	APOLLO PHARMACY	Health	-	-	INR 250 spent at APOLLO PHARMACY. Please contact your bank for assistance.
+category-substring	generated	IN	250	INR	CHOCOLATE WORLD	Other	Debit Card	-	INR 250 spent at CHOCOLATE WORLD using debit card.
+category-brand	generated	CA	50	CAD	FOOD BASICS	Groceries	Debit Card	-	$50 spent at FOOD BASICS using debit card.
+failed-short	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	UPI txn of Rs. 250 failed. Please retry.
+future-debit	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	Your account will be debited INR 499 tomorrow for your subscription.
+collect-request	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	UPI collect request for INR 500 from Alex. Please pay.
+approve-purchase	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	Approve purchase of INR 499 at Amazon to complete your transaction.
+promotion	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	Get Rs. 100 cashback on your next purchase at Amazon.
+otp-footer	generated	IN	250	INR	Swiggy	Food	UPI	-	INR 250 debited via UPI to Swiggy. Never share your OTP or PIN.
+otp-purchase	generated	IN	-	-	-	-	-	OTP_MATCH	OTP 123456 for purchase of INR 250 at Swiggy. Never share your OTP.
+balance-first	generated	IN	250	INR	Swiggy	Food	UPI	-	Avl bal INR 10,000. INR 250 debited via UPI to Swiggy.
+balance-last	public-adaptation	IN	2000	INR	ECS PAY	Other	-	-	A/c XX9876 debited INR 2000 at ECS PAY. Avl Bal- INR 2343.23.
+bad-grouping	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 1,2,3 spent at Amazon.
+too-many-decimals	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 12.345 spent at Amazon.
+zero-amount	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 0.00 spent at Amazon.
+suffix-inr	generated	IN	250	INR	Swiggy	Food	UPI	-	250 INR debited via UPI to Swiggy.
+indian-grouping	generated	IN	123456.78	INR	Amazon	Other	-	-	INR 1,23,456.78 spent at Amazon.
+foreign-dollar	generated	CA	25	USD	TARGET	Other	Credit Card	-	USD $25 spent at TARGET using credit card.
+merchant-long	generated	IN	250	INR	THE COFFEE HOUSE BANGALORE	Food	-	-	INR 250 paid to THE COFFEE HOUSE BANGALORE on 06-09-2026.
+merchant-stop-date	generated	IN	250.5	INR	Swiggy	Food	UPI	-	Rs. 250.50 debited via UPI to Swiggy on 06-09-2026.
+merchant-japanese	generated	JP	480	JPY	イオン	Groceries	-	-	ご利用金額 480円 加盟店：イオン
+merchant-domain	generated	US	15	USD	NETFLIX.COM	Entertainment	Credit Card	-	USD 15 spent at NETFLIX.COM using credit card.
+visa-debit	generated	US	25	USD	TARGET	Other	Debit Card	-	$25 spent at TARGET using Visa debit card ending 1234.
+neft-account	generated	IN	500	INR	Alex	Other	Net Banking	-	INR 500 debited from a/c XX1234 via NEFT to Alex.
+account-not-card	generated	IN	500	INR	Alex	Other	-	-	INR 500 debited from a/c XX1234 to Alex.
+network-not-credit	generated	CA	25	CAD	LOBLAWS	Groceries	-	-	$25 spent at LOBLAWS using Visa ending 1234.
+in-hindi-debit	generated	IN	250	INR	-	Other	UPI	-	आपके खाते से ₹250 UPI द्वारा डेबिट हुए।
+in-hindi-future	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	आपके खाते से ₹250 कल डेबिट होंगे।
+in-hindi-credit	generated	IN	-	-	-	-	-	NOT_DEBIT	आपके खाते में ₹250 जमा हुए।
+in-upi-structured	generated	IN	480	INR	CORNER CAFE	Food	UPI	-	A/c XX1234 debited INR 480 UPI/DR/123456789012/CORNER CAFE/BANK/shop@upi.
+in-two-debits	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 250 paid to Alex and INR 500 paid to Bob.
+us-balance-first	generated	US	25	USD	TARGET	Other	Debit Card	-	Available balance $900. $25 spent at TARGET using Mastercard debit card.
+us-incoming-purchase	generated	US	-	-	-	-	-	NOT_DEBIT	You received $25 for your purchase at TARGET.
+us-prepaid-info	generated	US	-	-	-	-	-	NOT_DEBIT	Your prepaid card has $50 loaded and is ready to use.
+us-future-charge	generated	US	-	-	-	-	-	NEGATIVE_ALERT	You will be charged USD 15 tomorrow by NETFLIX.
+us-zelle-complete	generated	US	250	USD	Alex	Other	Net Banking	-	You sent $250 to Alex via Zelle.
+gb-unpaid	generated	GB	-	-	-	-	-	NOT_DEBIT	Unpaid invoice GBP 90 for services.
+gb-limit	generated	GB	-	-	-	-	-	NEGATIVE_ALERT	Your purchase limit is GBP 2000.
+gb-fps	generated	GB	850	GBP	J SMITH	Rent	Net Banking	-	£850 paid to J SMITH by Faster Payment. Ref: RENT AUG.
+gb-balance-first	generated	GB	12.4	GBP	TESCO METRO	Groceries	Debit Card	-	Available balance £1200. £12.40 spent at TESCO METRO using Visa debit card.
+gb-approval	generated	GB	-	-	-	-	-	NEGATIVE_ALERT	Did you make a purchase of £45 at STORE? Reply YES to confirm.
+ca-transfer-request	generated	CA	-	-	-	-	-	NEGATIVE_ALERT	Interac e-Transfer money request for C$75 from Alex.
+ca-transfer-complete	generated	CA	75	CAD	alex@example.com	Other	Net Banking	-	You sent C$75 to alex@example.com via Interac e-Transfer.
+ca-balance-first	generated	CA	42.1	CAD	TIM HORTONS	Food	Debit Card	-	Available balance C$1200. C$42.10 spent at TIM HORTONS using Visa debit card.
+ca-incoming	generated	CA	-	-	-	-	-	NOT_DEBIT	You received CAD 50 via Interac e-Transfer.
+ca-otp-footer	generated	CA	50	CAD	FOOD BASICS	Groceries	-	-	C$50 spent at FOOD BASICS. Never share your OTP.
+au-payid-complete	generated	AU	250	AUD	B SMITH	Rent	Net Banking	-	You paid A$250 via PayID to B SMITH. Ref: RENT AUG.
+au-payid-request	generated	AU	-	-	-	-	-	NEGATIVE_ALERT	PayID payment request for AUD 250 from B SMITH.
+au-balance-first	generated	AU	63.95	AUD	WOOLWORTHS	Groceries	Debit Card	-	Available balance A$2000. A$63.95 spent at WOOLWORTHS using eftpos.
+au-foodland	generated	AU	80	AUD	FOODLAND	Groceries	-	-	AUD 80 spent at FOODLAND.
+au-osko-failed	generated	AU	-	-	-	-	-	NEGATIVE_ALERT	Osko payment of AUD 50 failed. Please retry.
+jp-balance-first	generated	JP	480	JPY	イオン	Groceries	-	-	残高 25000円。ご利用金額 480円 加盟店：イオン
+jp-fullwidth	generated	JP	1200	JPY	イオン	Groceries	-	-	ご利用金額 ￥１，２００ 加盟店：イオン
+jp-debit-card	generated	JP	1200	JPY	イオン	Groceries	Debit Card	-	デビットカード ご利用金額 1200円 加盟店：イオン
+jp-upcoming	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	明日 1200円 引き落とし予定です。
+jp-rejected	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	ご利用金額 1200円 カードをご利用いただけませんでした。
+jp-refunded	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	ご利用金額 1200円 返金されました。
+jp-auth-prompt	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	ご利用金額 1200円 ご本人のご利用か確認してください。
+in-comma-punctuation	generated	IN	250	INR	Swiggy	Food	UPI	-	INR 250.00, debited via UPI to Swiggy.
+in-number-suffix	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 250abc spent at Store.
+in-balance-sentence	generated	IN	250	INR	Swiggy	Food	UPI	-	Balance updated. INR 250 debited via UPI to Swiggy.
+in-balance-only-after-debit	generated	IN	-	-	-	-	-	AMOUNT_MISSING	Your account was debited. Available balance INR 2500.
+in-public-upi	public-adaptation	IN	450	INR	-	Other	UPI	-	INR 450.00 debited from your account XX9876. UPI Ref: 98765432.
+in-autodebit-completed	generated	IN	499	INR	NETFLIX	Entertainment	-	-	Auto-debit of INR 499 to NETFLIX completed successfully.
+gb-explicit-euro	generated	GB	25.5	EUR	STORE	Other	-	-	EUR 25.50 spent at STORE.
+ca-unknown-currency	generated	CA	-	-	-	-	-	AMOUNT_MISSING	CHF $25 spent at STORE.
+jp-decimal-rejected	generated	JP	-	-	-	-	-	AMOUNT_MISSING	ご利用金額 JPY 1200.50 加盟店：イオン
+in-precision-loss	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 9007199254740993 spent at STORE.
+in-upi-dr	generated	IN	480	INR	CORNER CAFE	Food	UPI	-	INR 480 UPI/DR/123456789012/CORNER CAFE/BANK/shop@upi.
+in-upi-cr	generated	IN	-	-	-	-	-	NOT_DEBIT	INR 480 UPI/CR/123456789012/CORNER CAFE/BANK/shop@upi.
+us-brand-plural	generated	US	10	USD	MCDONALDS	Food	-	-	USD 10 spent at MCDONALDS.
+in-transport-descriptor	generated	IN	12	INR	BMTCBUSKA51AK0649	Transport	UPI	-	Rs.12 spent at BMTCBUSKA51AK0649 via UPI.
+in-food-descriptor	generated	IN	200	INR	UBEREATS	Food	UPI	-	INR 200 paid to UBEREATS via UPI.

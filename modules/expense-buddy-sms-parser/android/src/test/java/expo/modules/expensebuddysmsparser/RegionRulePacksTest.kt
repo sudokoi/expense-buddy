@@ -52,7 +52,7 @@ class RegionRulePacksTest {
         assertThat(parsed?.matchedPatternKey).isEqualTo("canada.generic.transaction")
         assertThat(parsed?.merchantName).contains("TIM HORTONS")
         assertThat(parsed?.categorySuggestion).isEqualTo("Food")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Credit Card")
+        assertThat(parsed?.paymentMethodSuggestion).isNull() // Visa alone does not identify credit vs debit.
     }
 
     @Test
@@ -148,7 +148,7 @@ class RegionRulePacksTest {
         assertThat(parsed?.matchedPatternKey).isEqualTo("australia.generic.transaction")
         assertThat(parsed?.merchantName).contains("WOOLWORTHS")
         assertThat(parsed?.categorySuggestion).isEqualTo("Groceries")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Credit Card")
+        assertThat(parsed?.paymentMethodSuggestion).isNull() // Visa alone does not identify credit vs debit.
     }
 
     @Test
