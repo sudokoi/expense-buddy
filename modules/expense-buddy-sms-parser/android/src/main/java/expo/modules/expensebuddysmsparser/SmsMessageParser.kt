@@ -86,15 +86,21 @@ object SmsMessageParser {
             return ParseResult(null, SkipReason.EMPTY_BODY)
         }
 
-        SmsTransactionRules.skipReason(rulePack, normalizedBody)?.let { return ParseResult(null, it) }
+        val moneyEvidence = SmsAmountRules.evidence(rulePack, normalizedBody)
+        val templates = SmsTransactionTemplates.matches(rulePack, normalizedBody)
+        val template = templates.firstOrNull()
+        val merchantEvidence = template?.merchant ?: SmsMerchantRules.evidence(rulePack, normalizedBody)
+        val stateText = SmsEvidence.without(normalizedBody, merchantEvidence?.range)
+        SmsTransactionRules.skipReason(rulePack, stateText, moneyEvidence, template)?.let { return ParseResult(null, it) }
+        if (templates.size > 1) return ParseResult(null, SkipReason.NEGATIVE_ALERT)
 
-        val money = SmsAmountRules.extract(rulePack, normalizedBody)
+        val money = SmsAmountRules.extract(moneyEvidence)
         if (money == null) {
             Log.d("SMS_PARSER", "skip reason=AMOUNT_MISSING sender=$sender")
             return ParseResult(null, SkipReason.AMOUNT_MISSING)
         }
         val amount = money.amount
-        val merchantName = SmsMerchantRules.extract(rulePack, normalizedBody)
+        val merchantName = merchantEvidence?.name
 
         val messageId = "scan_${sha256("$sender|$body|$receivedAt")}"
         val rawMessage =
@@ -106,11 +112,11 @@ object SmsMessageParser {
             )
         val fingerprint = createFingerprint(sender, body, receivedAt, amount)
         val category = SmsCategoryRules.infer(rulePack, normalizedBody, merchantName)
-        val paymentMethod = inferPaymentMethod(rulePack, normalizedBody)
+        val paymentMethod = SmsPaymentMethodRules.infer(rulePack, stateText, template?.method)
 
         Log.d(
             "SMS_PARSER",
-            "parsed sender=$sender amount=$amount merchant=$merchantName category=$category paymentMethod=$paymentMethod fingerprint=$fingerprint",
+            "parsed rule=${template?.ruleId ?: "generic"} sender=$sender amount=$amount merchant=$merchantName category=$category paymentMethod=${paymentMethod?.type} fingerprint=$fingerprint",
         )
 
         return ParseResult(
@@ -130,14 +136,6 @@ object SmsMessageParser {
             null,
         )
     }
-
-    private fun inferPaymentMethod(
-        rulePack: SmsRulePack,
-        body: String,
-    ): SmsPaymentMethod? =
-        rulePack.paymentMethodHints
-            .firstOrNull { (_, pattern) -> pattern.containsMatchIn(body) }
-            ?.let { (type, _) -> SmsPaymentMethod(type = type) }
 
     private fun getTimeWindow(receivedAt: String): Long? {
         val timestamp =

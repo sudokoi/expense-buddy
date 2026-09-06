@@ -16,7 +16,7 @@ object JpSmsRulePack : SmsRulePack {
 
     override val settledDebitKeywords =
         Regex(
-            "debited|spent|withdrawn|paid|purchase|charged|sent|引き落とし|引落|引き出し|支払い|ご利用|決済",
+            "debited|spent|withdrawn|paid|purchase|charged|sent|引き落とし|引落|引き出し|支払い|カード利用|ご利用|決済",
             RegexOption.IGNORE_CASE,
         )
     override val creditOnlyKeywords =

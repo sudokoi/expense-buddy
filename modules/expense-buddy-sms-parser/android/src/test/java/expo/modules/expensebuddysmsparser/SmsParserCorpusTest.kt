@@ -49,9 +49,9 @@ class SmsParserCorpusTest(
         @JvmStatic
         @Parameterized.Parameters(name = "{index}: {0}")
         fun cases(): List<Array<Any>> =
-            requireNotNull(SmsParserCorpusTest::class.java.getResource("/sms-regex-corpus.tsv"))
-                .readText()
-                .lineSequence()
+            listOf("/sms-regex-corpus.tsv", "/sms-evidence-corpus.tsv")
+                .asSequence()
+                .flatMap { requireNotNull(SmsParserCorpusTest::class.java.getResource(it)).readText().lineSequence() }
                 .filter { it.isNotBlank() && !it.startsWith("#") }
                 .map { line ->
                     val fields = line.split('\t')

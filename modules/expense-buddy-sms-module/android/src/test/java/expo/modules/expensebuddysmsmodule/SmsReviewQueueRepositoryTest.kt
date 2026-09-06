@@ -207,8 +207,21 @@ class SmsReviewQueueRepositoryTest {
                     "REJECTED" -> repo.rejectItem(legacy.fingerprint, "TEST")
                     "DISMISSED" -> repo.dismissItem(legacy.fingerprint, "TEST")
                 }
-                val corrected = legacy.copy(fingerprint = "new_$status", amount = 250.0)
+                val saved = db.reviewQueueDao().getItemByFingerprint(legacy.fingerprint)
+                val corrected =
+                    legacy.copy(
+                        fingerprint = "new_$status",
+                        amount = 250.0,
+                        amountNormalized = "250.00",
+                        currency = "USD",
+                        paymentMethodType = "UPI",
+                    )
                 assertThat(repo.upsertItem(corrected, "TEST")).isFalse()
+                assertThat(db.reviewQueueDao().getItemByFingerprint(legacy.fingerprint)).isEqualTo(saved)
+                assertThat(db.reviewQueueDao().getItemByFingerprint(corrected.fingerprint)).isNull()
+                val deduped = db.importJournalDao().getRecentEntries(100).filter { it.action == "DEDUPED" }
+                assertThat(deduped.any { it.fingerprint == legacy.fingerprint }).isTrue()
+                assertThat(deduped.none { it.fingerprint == corrected.fingerprint }).isTrue()
             }
             assertThat(repo.getPendingItems()).isEmpty()
         }
@@ -234,6 +247,40 @@ class SmsReviewQueueRepositoryTest {
                 ),
             ).isTrue()
             assertThat(repo.countPending()).isEqualTo(2)
+        }
+
+    @Test
+    fun `billed currency correction does not replace a pending source`() =
+        runTest {
+            val legacy =
+                entity("purchase-amount").copy(
+                    body = "USD 10 spent at Store. Amount billed INR 840.",
+                    amount = 10.0,
+                    amountNormalized = "10.00",
+                    currency = "USD",
+                    merchantName = "User edited merchant",
+                    paymentMethodType = "Credit Card",
+                    paymentMethodIdentifier = "9876",
+                )
+            repo.upsertItem(legacy, "TEST")
+            val corrected =
+                legacy.copy(
+                    fingerprint = "billed-amount",
+                    amount = 840.0,
+                    amountNormalized = "840.00",
+                    currency = "INR",
+                    merchantName = "Store",
+                )
+            assertThat(repo.upsertItem(corrected, "TEST")).isFalse()
+            assertThat(repo.getPendingItems()).containsExactly(legacy)
+            assertThat(
+                db
+                    .importJournalDao()
+                    .getRecentEntries(10)
+                    .filter {
+                        it.action == "DEDUPED"
+                    }.map { it.fingerprint },
+            ).containsExactly(legacy.fingerprint)
         }
 
     private fun entity(fingerprint: String): ReviewQueueEntity =

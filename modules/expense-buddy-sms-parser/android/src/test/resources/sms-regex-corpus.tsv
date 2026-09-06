@@ -29,7 +29,7 @@ in-hindi-debit	generated	IN	250	INR	-	Other	UPI	-	आपके खाते स�
 in-hindi-future	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	आपके खाते से ₹250 कल डेबिट होंगे।
 in-hindi-credit	generated	IN	-	-	-	-	-	NOT_DEBIT	आपके खाते में ₹250 जमा हुए।
 in-upi-structured	generated	IN	480	INR	CORNER CAFE	Food	UPI	-	A/c XX1234 debited INR 480 UPI/DR/123456789012/CORNER CAFE/BANK/shop@upi.
-in-two-debits	generated	IN	-	-	-	-	-	AMOUNT_MISSING	INR 250 paid to Alex and INR 500 paid to Bob.
+in-two-debits	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	INR 250 paid to Alex and INR 500 paid to Bob.
 us-balance-first	generated	US	25	USD	TARGET	Other	Debit Card	-	Available balance $900. $25 spent at TARGET using Mastercard debit card.
 us-incoming-purchase	generated	US	-	-	-	-	-	NOT_DEBIT	You received $25 for your purchase at TARGET.
 us-prepaid-info	generated	US	-	-	-	-	-	NOT_DEBIT	Your prepaid card has $50 loaded and is ready to use.
