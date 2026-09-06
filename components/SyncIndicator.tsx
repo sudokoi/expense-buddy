@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import { SEMANTIC_FOREGROUND_COLORS, getOverlayColors } from "../constants/theme-colors"
 import { useThemeColors, useThemeScheme } from "../hooks/use-theme-colors"
-import { UI_ICON_SIZE, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
+
+const INDICATOR_SIZE = UI_ICON_SIZE.large + UI_SPACE.control * 2
 
 /**
  * Global sync status indicator
@@ -55,8 +57,11 @@ export const SyncIndicator: React.FC = () => {
 
   return (
     <View
-      className="absolute right-6 rounded-card p-2 shadow-sm"
+      className="absolute right-6 items-center justify-center shadow-sm"
       style={{
+        width: INDICATOR_SIZE,
+        height: INDICATOR_SIZE,
+        borderRadius: UI_RADIUS.round,
         top: insets.top + UI_SPACE.gutter,
         zIndex: UI_Z_INDEX.floating,
         backgroundColor: overlayColors.background,
