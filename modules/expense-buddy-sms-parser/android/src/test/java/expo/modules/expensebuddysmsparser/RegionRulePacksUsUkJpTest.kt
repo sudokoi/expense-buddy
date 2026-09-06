@@ -47,7 +47,7 @@ class RegionRulePacksUsUkJpTest {
         assertThat(parsed?.matchedPatternKey).isEqualTo("usa.generic.transaction")
         assertThat(parsed?.merchantName).contains("STARBUCKS")
         assertThat(parsed?.categorySuggestion).isEqualTo("Food")
-        assertThat(parsed?.paymentMethodSuggestion?.type).isEqualTo("Credit Card")
+        assertThat(parsed?.paymentMethodSuggestion).isNull() // Visa alone does not identify credit vs debit.
     }
 
     @Test

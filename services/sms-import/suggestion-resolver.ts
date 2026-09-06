@@ -61,6 +61,15 @@ const categoryMatchingRules: CategoryMatchingRule[] = [
   },
 ]
 
+// Apply Latin token boundaries without imposing English segmentation on CJK.
+const boundedCategoryRules = categoryMatchingRules.map((rule) => ({
+  ...rule,
+  contentPattern: new RegExp(
+    `(?:^|[^a-z])(?:${rule.contentPattern.source})(?![a-z])`,
+    "i"
+  ),
+}))
+
 const maskedDigitsPattern =
   /(?:card|a\/c|acct|account)[^0-9]{0,12}(?:x+|\*+)?\s*(\d{3,4})\b/gi
 
@@ -116,6 +125,8 @@ function extractIdentifierFromBody(
 }
 
 function bodyHintsMethod(body: string, type: PaymentMethod["type"]): boolean {
+  if (type === "Credit Card" && hasDebitCardHint(body)) return false
+  if (type === "Debit Card" && hasCreditCardHint(body)) return false
   switch (type) {
     case "UPI":
       return hasUpiHint(body)
@@ -171,7 +182,7 @@ export function resolveSmsImportCategory(
     return directMatch
   }
 
-  for (const rule of categoryMatchingRules) {
+  for (const rule of boundedCategoryRules) {
     if (!rule.contentPattern.test(itemContent)) {
       continue
     }
@@ -249,6 +260,9 @@ export function resolveSmsImportPaymentSuggestion(
   }
 
   const matchingInstruments = activeInstruments.filter((instrument) => {
+    if (baseSuggestion?.type && instrument.method !== baseSuggestion.type) {
+      return false
+    }
     if (!bodyContainsInstrumentDigits(body, instrument.lastDigits)) {
       return false
     }

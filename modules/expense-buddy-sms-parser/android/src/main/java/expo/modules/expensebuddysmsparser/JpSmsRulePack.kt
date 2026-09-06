@@ -14,13 +14,6 @@ object JpSmsRulePack : SmsRulePack {
     override val currencyCode = "JPY"
     override val patternKeyPrefix = "japan"
 
-    override val amountPattern =
-        Regex("(?:(?:JPY)|[¥￥])\\s*([0-9][0-9,]*)|([0-9][0-9,]*)\\s*円", RegexOption.IGNORE_CASE)
-    override val debitKeywords =
-        Regex(
-            "debited|spent|withdrawn|paid|purchase|txn|transaction|charged|sent|引き落とし|引落|引き出し|支払い|ご利用|利用金額|決済",
-            RegexOption.IGNORE_CASE,
-        )
     override val settledDebitKeywords =
         Regex(
             "debited|spent|withdrawn|paid|purchase|charged|sent|引き落とし|引落|引き出し|支払い|ご利用|決済",
@@ -40,7 +33,9 @@ object JpSmsRulePack : SmsRulePack {
         )
     override val nonExpenseTransactionOutcomeKeywords =
         Regex(
-            "declined due to|was declined|failed due to|unsuccessful|reversed|reversal|refund initiated|chargeback|no amount debited|取り消し|返金",
+            "declined due to|was declined|failed due to|unsuccessful|reversed|reversal|" +
+                "refund initiated|chargeback|no amount debited|取り消し|返金|" +
+                "(?:引き落とし|引落|支払い|決済).{0,16}(?:予定|失敗|できません)|(?:利用|決済)(?:取消|キャンセル)|承認してください|確認してください|ご利用いただけません",
             RegexOption.IGNORE_CASE,
         )
     override val approvalPromptKeywords =
@@ -49,20 +44,11 @@ object JpSmsRulePack : SmsRulePack {
             RegexOption.IGNORE_CASE,
         )
 
-    override val merchantPatterns =
-        listOf(
-            Regex(
-                "\\b(?:at|to|merchant)\\s+([A-Za-z0-9][\\w&\\-. ]{1,40}?)(?:\\s+(?:on|using|via|with|card)\\b|[.,!]|$)",
-                RegexOption.IGNORE_CASE,
-            ),
-            Regex("(?:利用先|加盟店)[：:]?\\s*([\\w&\\-.]+)", RegexOption.IGNORE_CASE),
-        )
-
     override val categoryInferenceRules =
         listOf(
             "Food" to
                 Regex(
-                    "mcdonald|starbucks|restaurant|cafe|coffee|pizza|burger|food|uber eats|demaecan|出前館|すき家|吉野家|松屋|セブンイレブン food",
+                    "mcdonald(?:['’]?s)?|starbucks|restaurant|cafe|coffee|pizza|burger|food|uber eats|demaecan|出前館|すき家|吉野家|松屋|セブンイレブン food",
                     RegexOption.IGNORE_CASE,
                 ),
             "Groceries" to
@@ -90,5 +76,9 @@ object JpSmsRulePack : SmsRulePack {
                 ),
         )
 
-    override val paymentMethodHints = emptyList<Pair<String, Regex>>()
+    override val paymentMethodHints =
+        listOf(
+            "Debit Card" to Regex("デビットカード|\\bdebit card\\b", RegexOption.IGNORE_CASE),
+            "Credit Card" to Regex("クレジットカード|\\bcredit card\\b", RegexOption.IGNORE_CASE),
+        )
 }

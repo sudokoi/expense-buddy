@@ -56,6 +56,29 @@ function createItem(overrides: Partial<SmsImportReviewItem> = {}): SmsImportRevi
 }
 
 describe("resolveSmsImportCategory", () => {
+  it.each([
+    ["APOLLO PHARMACY", "Health Care", "Please contact your bank."],
+    ["CHOCOLATE WORLD", "Other", ""],
+  ])(
+    "does not infer a category from a substring or footer for %s",
+    (merchant, expected, footer) => {
+      const item = createItem({
+        categorySuggestion: undefined,
+        merchantName: merchant,
+        noteSuggestion: undefined,
+        sourceMessage: {
+          ...createItem().sourceMessage,
+          body: `INR 250 spent at ${merchant}. ${footer}`,
+        },
+      })
+      expect(
+        resolveSmsImportCategory(
+          item,
+          ["Rent", "Transport", "Health Care", "Other"].map(createCategory)
+        )
+      ).toBe(expected)
+    }
+  )
   it("uses a semantically matching custom category from the current device list", () => {
     const categories = [createCategory("Dining Out", 0), createCategory("Other", 1)]
 
@@ -89,6 +112,45 @@ describe("resolveSmsImportCategory", () => {
 })
 
 describe("resolveSmsImportPaymentSuggestion", () => {
+  it("keeps an explicit bank-transfer rail when a saved card is mentioned as the recipient", () => {
+    const item = createItem({
+      paymentMethodSuggestion: { type: "Net Banking" },
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 500 paid via NEFT for credit card ending 4321.",
+      },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument({ method: "Credit Card" }),
+      ])
+    ).toEqual({ type: "Net Banking" })
+  })
+  it("does not match an account debit to a saved debit card", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 500 debited from a/c XX4321 to Alex.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toBeUndefined()
+  })
+
+  it("does not select a saved credit card over explicit Visa debit wording", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 500 spent at Store using Visa debit card ending 4321.",
+      },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument({ method: "Credit Card" }),
+      ])
+    ).toBeUndefined()
+  })
   it("matches a saved card instrument from the current device settings", () => {
     expect(resolveSmsImportPaymentSuggestion(createItem(), [createInstrument()])).toEqual(
       {

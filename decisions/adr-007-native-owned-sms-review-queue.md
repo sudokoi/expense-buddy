@@ -182,3 +182,20 @@ This ADR does not change the privacy boundary defined in ADR-003. Raw SMS conten
 18. **React Context provider**: Replaced the XState `sms-import-review-store` with a React Context provider (`SmsImportReviewProvider` in `providers/sms-import-review-provider.tsx`) that subscribes to native `onReviewQueueUpdated` events and refetches snapshots. The `useSmsImportReview()` hook is re-exported through `stores/hooks.ts` for compatibility.
 19. **Parser diagnostics**: Added `SkipReason` enum and `parseRawMessageWithReason` to `SmsMessageParser.kt` for structured skip-reason logging. Added combining-marks stripping (NFKD + `\u0300-\u036f\ufe20-\ufe2f`) to handle Mathematical Sans-Serif and other decorated Unicode characters in SMS text.
 20. **Concurrent sync guard**: Added `AtomicBoolean` mutex to `syncInboxAsync` to prevent duplicate work from rapid button taps.
+
+## Amendment: parser-upgrade deduplication (2026-09-06)
+
+An extracted amount is not an immutable source identity. Correcting balance
+selection or locale-sensitive amount formatting can change a fingerprint for the
+same SMS. Repository insertion therefore also compares the normalized sender,
+body, and existing three-minute receipt bucket without the extracted amount.
+Candidate identities are read across all four statuses using the existing
+`(status, timestamp)` index, cached only within the batch transaction.
+
+An existing source wins: keep its fingerprint, fields, status, and accepted-expense
+link; journal the deduplication against that existing fingerprint. Do not rewrite
+old queue rows or confirmed expenses. No schema migration, cursor reset, or
+automatic historical replay accompanies this parser change. This preserves
+decisions at the cost of not automatically repairing old suggestions. The
+three-minute bucket boundary limitation remains unchanged. Details and tests:
+[Regex SMS parser robustness](../docs/sms-regex-parser.md).

@@ -8,6 +8,28 @@ import org.junit.Test
 
 class SmsMessageParserTest {
     @Test
+    fun `fingerprint amount is independent of device formatting locale`() {
+        val original = java.util.Locale.getDefault()
+        try {
+            java.util.Locale.setDefault(java.util.Locale.US)
+            // Fixed protocol vector, independently calculated from the historical
+            // sender|amount|three-minute-bucket|body SHA-256 input.
+            val baseline = "sms_4ae1288b11c52d6c4445b85d16e1c45c396bab753021bcb395cfe485c8f2a691"
+            assertEquals(baseline, SmsMessageParser.createFingerprint("BANK", "INR 250 debited", "2026-09-06T10:15:30Z", 250.0))
+            assertEquals(
+                "sms_7bd4aeacb9cbd3957b71fd96535020a28672aeee511d2bd65dc63d85432e0e65",
+                SmsMessageParser.createFingerprint("BANK", "INR 250 debited", "2026-09-06T10:15:30Z"),
+            )
+            for (locale in listOf(java.util.Locale.GERMANY, java.util.Locale.forLanguageTag("ar-EG"), java.util.Locale.JAPAN)) {
+                java.util.Locale.setDefault(locale)
+                assertEquals(baseline, SmsMessageParser.createFingerprint("BANK", "INR 250 debited", "2026-09-06T10:15:30Z", 250.0))
+            }
+        } finally {
+            java.util.Locale.setDefault(original)
+        }
+    }
+
+    @Test
     fun `parseRawMessage parses debit UPI transaction with merchant and amount`() {
         val result =
             SmsMessageParser.parseRawMessage(

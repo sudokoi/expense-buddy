@@ -21,6 +21,8 @@ data class ParseResult(
 
 object SmsMessageParser {
     private val latinAccentMarksPattern = Regex("([a-zA-Z])[\\u0300-\\u036f\\ufe20-\\ufe2f]+")
+    private val matchingWhitespace = Regex("[\\s\\p{Z}]+")
+    private val invisibleSeparators = Regex("[\\u200b\\ufeff]")
 
     /**
      * Normalizes message text for pattern matching.
@@ -69,41 +71,30 @@ object SmsMessageParser {
         receivedAt: String,
         rulePack: SmsRulePack = resolveRulePack(null),
     ): ParseResult {
-        val normalizedBody = normalizeUnicode(body).trim()
+        // Matching normalization may evolve, but raw text and the historical
+        // fingerprint normalization below must retain their identity contract.
+        val matchingBody =
+            normalizeUnicode(body)
+                .replace(invisibleSeparators, "")
+                .map { char -> if (char.isDigit()) Character.digit(char, 10).digitToChar() else char }
+                .joinToString("")
+                .replace(matchingWhitespace, " ")
+                .trim()
+        val normalizedBody = SmsTransactionRules.transactionText(matchingBody)
         if (normalizedBody.isEmpty()) {
             Log.d("SMS_PARSER", "skip reason=EMPTY_BODY sender=$sender")
             return ParseResult(null, SkipReason.EMPTY_BODY)
         }
 
-        if (rulePack.otpKeywords.containsMatchIn(normalizedBody)) {
-            Log.d("SMS_PARSER", "skip reason=OTP_MATCH sender=$sender")
-            return ParseResult(null, SkipReason.OTP_MATCH)
-        }
+        SmsTransactionRules.skipReason(rulePack, normalizedBody)?.let { return ParseResult(null, it) }
 
-        if (isNegativeBankAlert(rulePack, normalizedBody)) {
-            Log.d("SMS_PARSER", "skip reason=NEGATIVE_ALERT sender=$sender")
-            return ParseResult(null, SkipReason.NEGATIVE_ALERT)
-        }
-
-        if (!rulePack.debitKeywords.containsMatchIn(normalizedBody)) {
-            Log.d("SMS_PARSER", "skip reason=NOT_DEBIT sender=$sender")
-            return ParseResult(null, SkipReason.NOT_DEBIT)
-        }
-
-        // Reject pure credit messages (credited/received without any debit signal)
-        if (rulePack.creditOnlyKeywords.containsMatchIn(normalizedBody) &&
-            !rulePack.settledDebitKeywords.containsMatchIn(normalizedBody)
-        ) {
-            Log.d("SMS_PARSER", "skip reason=NOT_DEBIT (credit-only) sender=$sender")
-            return ParseResult(null, SkipReason.NOT_DEBIT)
-        }
-
-        val amount = parseAmount(rulePack, normalizedBody)
-        if (amount == null) {
+        val money = SmsAmountRules.extract(rulePack, normalizedBody)
+        if (money == null) {
             Log.d("SMS_PARSER", "skip reason=AMOUNT_MISSING sender=$sender")
             return ParseResult(null, SkipReason.AMOUNT_MISSING)
         }
-        val merchantName = inferMerchant(rulePack, normalizedBody)
+        val amount = money.amount
+        val merchantName = SmsMerchantRules.extract(rulePack, normalizedBody)
 
         val messageId = "scan_${sha256("$sender|$body|$receivedAt")}"
         val rawMessage =
@@ -114,7 +105,7 @@ object SmsMessageParser {
                 receivedAt = receivedAt,
             )
         val fingerprint = createFingerprint(sender, body, receivedAt, amount)
-        val category = inferCategory(rulePack, normalizedBody, merchantName)
+        val category = SmsCategoryRules.infer(rulePack, normalizedBody, merchantName)
         val paymentMethod = inferPaymentMethod(rulePack, normalizedBody)
 
         Log.d(
@@ -127,7 +118,7 @@ object SmsMessageParser {
                 fingerprint = fingerprint,
                 sourceMessage = rawMessage,
                 amount = amount,
-                currency = rulePack.currencyCode,
+                currency = money.currency,
                 merchantName = merchantName,
                 categorySuggestion = category,
                 paymentMethodSuggestion = paymentMethod,
@@ -140,61 +131,6 @@ object SmsMessageParser {
         )
     }
 
-    private fun parseAmount(
-        rulePack: SmsRulePack,
-        body: String,
-    ): Double? {
-        val match = rulePack.amountPattern.find(body) ?: return null
-        // Contract: the numeric amount may land in any capture group
-        // (prefix-symbol packs use group 1; suffix-form packs like JPY need two).
-        return match.groupValues
-            .drop(1)
-            .firstOrNull { it.isNotBlank() && it.any(Char::isDigit) }
-            ?.replace(",", "")
-            ?.toDoubleOrNull()
-    }
-
-    private fun inferMerchant(
-        rulePack: SmsRulePack,
-        body: String,
-    ): String? {
-        for (pattern in rulePack.merchantPatterns) {
-            val match = pattern.find(body)
-            if (match != null) {
-                val merchant =
-                    match.groupValues
-                        .getOrNull(1)
-                        ?.replace(Regex("\\s+"), " ")
-                        ?.trim()
-                        ?.takeIf { it.isNotEmpty() }
-                if (merchant != null) return merchant
-            }
-        }
-
-        return null
-    }
-
-    private fun inferCategory(
-        rulePack: SmsRulePack,
-        body: String,
-        merchantName: String?,
-    ): String {
-        val normalizedContent =
-            listOfNotNull(merchantName, body)
-                .joinToString(separator = " ")
-                .trim()
-                .lowercase(Locale.ROOT)
-
-        if (normalizedContent.isEmpty()) {
-            return "Other"
-        }
-
-        return rulePack.categoryInferenceRules
-            .firstOrNull { (_, pattern) ->
-                pattern.containsMatchIn(normalizedContent)
-            }?.first ?: "Other"
-    }
-
     private fun inferPaymentMethod(
         rulePack: SmsRulePack,
         body: String,
@@ -202,28 +138,6 @@ object SmsMessageParser {
         rulePack.paymentMethodHints
             .firstOrNull { (_, pattern) -> pattern.containsMatchIn(body) }
             ?.let { (type, _) -> SmsPaymentMethod(type = type) }
-
-    private fun isNegativeBankAlert(
-        rulePack: SmsRulePack,
-        body: String,
-    ): Boolean {
-        val hasDebitSignal =
-            rulePack.debitKeywords.containsMatchIn(body) && !rulePack.creditOnlyKeywords.containsMatchIn(body)
-        val hasSettledDebitSignal =
-            rulePack.settledDebitKeywords.containsMatchIn(body) && !rulePack.creditOnlyKeywords.containsMatchIn(body)
-
-        // Filter out declined/failed/reversed transactions
-        if (rulePack.nonExpenseTransactionOutcomeKeywords.containsMatchIn(body)) return true
-
-        // Filter out info-only messages (balance updates, card limits, etc.) when no debit signal
-        if (!hasDebitSignal && rulePack.nonExpenseInfoKeywords.containsMatchIn(body)) return true
-
-        // Filter out OTP/approval prompts ONLY when there's no settled debit signal
-        // Banks often append "if not you" disclaimers to legitimate debit SMS — those should pass
-        if (rulePack.approvalPromptKeywords.containsMatchIn(body) && !hasSettledDebitSignal) return true
-
-        return false
-    }
 
     private fun getTimeWindow(receivedAt: String): Long? {
         val timestamp =
@@ -237,7 +151,7 @@ object SmsMessageParser {
         return (timestamp / windowMs) * windowMs
     }
 
-    private fun normalizeAmount(amount: Double?): String = amount?.let { String.format("%.2f", it) } ?: ""
+    private fun normalizeAmount(amount: Double?): String = amount?.let { String.format(Locale.ROOT, "%.2f", it) } ?: ""
 
     private fun sha256(value: String): String {
         val digest = MessageDigest.getInstance("SHA-256")

@@ -14,21 +14,11 @@ interface SmsRulePack {
     /** BCP-47 locale tag stamped onto parsed messages (e.g. "en-IN"). */
     val localeTag: String
 
-    /** ISO 4217 currency code stamped onto parsed amounts (e.g. "INR"). */
+    /** Default for ambiguous local currency symbols; explicit currency wins. */
     val currencyCode: String
 
     /** Prefix for matchedPatternKey values (e.g. "india" -> "india.generic.transaction"). */
     val patternKeyPrefix: String
-
-    /**
-     * Matches the transaction amount. Contract: the numeric value may land in
-     * any capture group — the parser uses the first non-blank group
-     * (prefix-symbol packs like `$42.10` use a single group; suffix-form
-     * packs like `480円` need two).
-     */
-    val amountPattern: Regex
-
-    val debitKeywords: Regex
 
     val settledDebitKeywords: Regex
 
@@ -42,18 +32,10 @@ interface SmsRulePack {
 
     val approvalPromptKeywords: Regex
 
-    /** Merchant patterns tried in order; first match wins. */
-    val merchantPatterns: List<Regex>
-
     /**
-     * Category inference rules; first match wins, falling back to "Other".
-     *
-     * Ordering contract: rules MUST be ordered most-specific-brand-first —
-     * Food, Groceries, Transport, Rent, Utilities, Entertainment, Health.
-     * Brand names routinely contain generic mode nouns (Tesco Metro,
-     * Montreal's Metro grocer vs transit), and brand categories must win
-     * those collisions; a genuine transit charge still matches via its own
-     * specific tokens (TfL, STM, Opal, Suica...).
+     * Merchant matches outrank body matches; longer phrases outrank shorter
+     * words. List order breaks equal-specificity ties. Generic Latin terms
+     * must match complete tokens, not substrings (lease must not match please).
      */
     val categoryInferenceRules: List<Pair<String, Regex>>
 
@@ -68,3 +50,10 @@ interface SmsRulePack {
      */
     val paymentMethodHints: List<Pair<String, Regex>>
 }
+
+/** Latin boundaries without imposing English word segmentation on other scripts. */
+internal fun Regex.tokenMatches(text: String): Sequence<MatchResult> =
+    findAll(text).filter { match ->
+        text.getOrNull(match.range.first - 1)?.lowercaseChar() !in 'a'..'z' &&
+            text.getOrNull(match.range.last + 1)?.lowercaseChar() !in 'a'..'z'
+    }

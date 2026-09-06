@@ -2,8 +2,8 @@ import type { PaymentMethod } from "../../types/expense"
 
 const upiHintPattern = /\bupi\b/i
 const creditCardHintPattern =
-  /credit card|credit a\/c|credit acct|\bamex\b|american express/i
-const debitCardHintPattern = /debit card|debit a\/c|debited from a\/c|debited from acct/i
+  /\bcredit card\b|\bamex\b|american express|クレジットカード/i
+const debitCardHintPattern = /\bdebit card\b|デビットカード/i
 const cardBrandHintPattern =
   /\bamex\b|american express|\bvisa\b|master\s?card|\bmastercard\b|\brupay\b|\bmaestro\b|\bdiscover\b|\bdiners(?:\s+club)?\b|\bjcb\b/i
 

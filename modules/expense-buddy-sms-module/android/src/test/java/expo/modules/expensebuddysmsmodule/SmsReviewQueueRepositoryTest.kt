@@ -186,14 +186,64 @@ class SmsReviewQueueRepositoryTest {
             assertThat(db.importJournalDao().getRecentEntries(10)).hasSize(4)
         }
 
+    @Test
+    fun `a corrected parse preserves the existing pending candidate and its identity`() =
+        runTest {
+            val legacy = entity("legacy").copy(amount = 10000.0, amountNormalized = "10000.00")
+            repo.upsertItem(legacy, "TEST")
+            val corrected = legacy.copy(fingerprint = "corrected", amount = 250.0, amountNormalized = "250.00")
+            assertThat(repo.upsertItem(corrected, "TEST")).isFalse()
+            assertThat(repo.getPendingItems()).containsExactly(legacy)
+        }
+
+    @Test
+    fun `parser changes cannot resurrect approved rejected or dismissed messages`() =
+        runTest {
+            for (status in listOf("APPROVED", "REJECTED", "DISMISSED")) {
+                val legacy = entity("legacy_$status")
+                repo.upsertItem(legacy, "TEST")
+                when (status) {
+                    "APPROVED" -> repo.approveItem(legacy.fingerprint, "TEST", "expense-1")
+                    "REJECTED" -> repo.rejectItem(legacy.fingerprint, "TEST")
+                    "DISMISSED" -> repo.dismissItem(legacy.fingerprint, "TEST")
+                }
+                val corrected = legacy.copy(fingerprint = "new_$status", amount = 250.0)
+                assertThat(repo.upsertItem(corrected, "TEST")).isFalse()
+            }
+            assertThat(repo.getPendingItems()).isEmpty()
+        }
+
+    @Test
+    fun `concurrent parser versions deduplicate the source but not a later transaction`() =
+        runTest {
+            val original = entity("legacy")
+            val results =
+                (1..5)
+                    .map { index ->
+                        async { SmsReviewQueueRepository(db).upsertItem(original.copy(fingerprint = "version_$index"), "TEST") }
+                    }.awaitAll()
+            assertThat(results.count { it }).isEqualTo(1)
+            assertThat(
+                repo.upsertItem(
+                    original.copy(
+                        fingerprint = "later",
+                        timestamp = original.timestamp + 180000,
+                        sourceReceivedAt = "2026-01-01T00:03:00Z",
+                    ),
+                    "TEST",
+                ),
+            ).isTrue()
+            assertThat(repo.countPending()).isEqualTo(2)
+        }
+
     private fun entity(fingerprint: String): ReviewQueueEntity =
         ReviewQueueEntity(
             fingerprint = fingerprint,
             sender = "TestBank",
-            body = "Your account debited INR 500.00",
+            body = "Your account debited INR 500.00 Ref $fingerprint",
             amount = 500.0,
             amountNormalized = "500.00",
-            timestamp = 1000L,
+            timestamp = 1767225600000L,
             sourceMessageId = "msg_$fingerprint",
             sourceReceivedAt = "2026-01-01T00:00:00Z",
             status = "PENDING",
