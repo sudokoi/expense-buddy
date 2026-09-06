@@ -63,6 +63,19 @@ class SmsParserRobustnessTest(
     }
 
     @Test
+    fun `infinitive passive payments are not completed expenses`() {
+        for (action in listOf("paid", "debited", "charged")) {
+            val future = "$currency 250 to be $action via UPI to CAFE. Ref 1234."
+            val result = parse(future)
+            assertNull(future, result.parsed)
+            assertEquals(future, SkipReason.NEGATIVE_ALERT, result.skipReason)
+
+            val completed = "$currency 250 $action via UPI to CAFE. Ref 1234."
+            assertEquals(completed, 250.0, parse(completed).parsed?.amount)
+        }
+    }
+
+    @Test
     fun `offers and unresolved purchases are not completed expenses`() {
         for (body in listOf(
             "You can purchase $currency 250 at STORE.",

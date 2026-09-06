@@ -12,7 +12,7 @@ internal object SmsTransactionRules {
     private val notCompleted =
         Regex(
             "\\b(?:failed|declined|unsuccessful|reversed|reversal|refund|refunded|cancelled|canceled|pending)\\b|" +
-                "\\b(?:will|would|shall) be (?:debited|charged|paid)\\b|\\b(?:scheduled|upcoming|due) (?:payment|debit)\\b|" +
+                "\\b(?:will|would|shall|to) be (?:debited|charged|paid)\\b|\\b(?:scheduled|upcoming|due) (?:payment|debit)\\b|" +
                 "\\b(?:collect|payment|money) request\\b|\\brequest (?:for|to pay)\\b|\\bnext purchase\\b|" +
                 "\\b(?:approve|authori[sz]e|authenticate|confirm) (?:this |the |your )?(?:purchase|payment|transaction)\\b|" +
                 "\\b(?:requires? (?:authentication|approval)|to complete (?:your |the )?transaction|" +

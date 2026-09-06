@@ -4,7 +4,8 @@ internal object SmsMerchantRules {
     private val upi = Regex("\\bUPI/(?:DR|DEBIT)/[^/\\s]+/([^/\\r\\n]{1,100})", RegexOption.IGNORE_CASE)
     private val english =
         Regex(
-            "\\b(?:at|to|towards|merchant)[: ]+([\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}&'’@_./#*() -]{0,119}?)(?=\\s+(?:on|using|via|with|by|for|ref|reference|card|ending|avl|available|balance|if|not|was|is|paid|debited|spent|received|credited|completed|successfully|failed|declined|refunded|reversed|pending|to complete)\\b|\\s+and\\s+(?:[A-Z]{3}\\s*\\d|[₹$£€¥￥])|[.!?](?:\\s|$)|[,;\\r\\n]|$)",
+            "\\b(?!to be (?:debited|charged|paid)\\b)(?:at|to|towards|merchant)[: ]+" +
+                "([\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}&'’@_./#*() -]{0,119}?)(?=\\s+(?:on|using|via|with|by|for|ref|reference|card|ending|avl|available|balance|if|not|was|is|paid|debited|spent|received|credited|completed|successfully|failed|declined|refunded|reversed|pending|to complete)\\b|\\s+and\\s+(?:[A-Z]{3}\\s*\\d|[₹$£€¥￥])|[.!?](?:\\s|$)|[,;\\r\\n]|$)",
             RegexOption.IGNORE_CASE,
         )
     private val japanese = Regex("(?:利用先|加盟店|利用店名)[：:]?\\s*(.{1,100}?)(?=\\s*(?:利用日|ご利用|金額|利用金額)|[。;\\r\\n]|$)")
