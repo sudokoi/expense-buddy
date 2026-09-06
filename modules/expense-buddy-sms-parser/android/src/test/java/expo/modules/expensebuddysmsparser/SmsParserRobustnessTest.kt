@@ -62,9 +62,36 @@ class SmsParserRobustnessTest(
         }
     }
 
+    @Test
+    fun `offers and unresolved purchases are not completed expenses`() {
+        for (body in listOf(
+            "You can purchase $currency 250 at STORE.",
+            "Your $currency 250 purchase at STORE is awaiting approval.",
+            "$currency 250 paid to Alex. $currency 250 paid to Bob.",
+            "Your account credited $currency 250. You previously paid at STORE.",
+        )) {
+            assertNull(body, parse(body).parsed)
+        }
+    }
+
+    @Test
+    fun `conditional instructions leave a completed purchase intact`() {
+        val body = "$currency 250 spent at CORNER CAFE using debit card. If your payment failed, contact support."
+        assertEquals(250.0, parse(body).parsed?.amount)
+    }
+
+    @Test(timeout = 10000)
+    fun `long adversarial messages terminate without selecting a transaction`() {
+        for (length in listOf(1024, 8192, 32768)) {
+            val body = "$currency 250 paid to Alex. ".repeat(length / 25)
+            assertNull(parse(body).parsed)
+            assertNull(parse("reference ".repeat(length / 10) + " $currency 250 purchase pending.").parsed)
+        }
+    }
+
     @Test(timeout = 5000)
     fun `malformed and very long amounts are never partially accepted`() {
-        for (amount in listOf("0", "1,2,3", "12.345", "9".repeat(400), "1.2.3")) {
+        for (amount in listOf("0", "1,2,3", "12.345", "9".repeat(400), "9" + ",999".repeat(8000), "1.2.3")) {
             val body = "$currency $amount spent at STORE."
             assertNull(body, parse(body).parsed)
         }

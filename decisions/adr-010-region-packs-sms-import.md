@@ -117,6 +117,38 @@ and the public parser/bridge result contract are unchanged.
 
 See [the corpus, provenance, and validation limits](../docs/sms-regex-parser.md).
 
+## Amendment: positioned transaction evidence and configured review guesses (2026-09-06)
+
+The deterministic parser now retains money/merchant ranges and money roles in
+matching text, binds them to transaction clauses or narrow bank structures, and
+distinguishes actual outcomes from bounded conditional instructions. Separate
+events remain unsupported even when their amounts match; a connected payer debit
+and recipient credit can describe one outgoing transfer. Templates cannot bypass
+shared failure/request/OTP checks or authenticate a sender.
+
+This supersedes the preceding blanket multiple-amount rejection rule only where
+one event explicitly identifies its billed FX amount or fee-inclusive debit total.
+The parser selects a present validated token; it does not calculate conversions,
+fee totals, or net refunds. Ambiguous amounts, actual reversals/refunds, partial
+refunds, and separate attempts remain conservative skips. Receipt dates, public
+result/skip types, pattern keys, region selection, and the source-deduplication
+guarantees in ADR-007 remain unchanged.
+
+Strict transaction/amount decisions do not remove configured review guesses.
+The native parser may populate the existing optional payer identifier; JS still
+owns custom-category and saved-instrument resolution. When native fields are
+absent, a relevant unique saved nickname/network/identifier match may supply the
+configured instrument's type and suffix. This does not mean the network itself
+proves credit/debit type. Explicit conflicting evidence, recipient details,
+support prose, unrelated digits, and equally plausible instruments cannot select
+an arbitrary saved instrument. Native `Other` does not block a supported custom
+category guess. No UI, stored-data format, historical row rewrite, or new parsing
+dependency is required. Existing ML categorization is unchanged and outside this
+deterministic change.
+
+See [the corpus comparison and limits](../docs/sms-regex-parser.md). Development
+regression improvements are not independently measured real-inbox precision.
+
 ## Rejected alternatives (original decision)
 
 1. **SIM/network country auto-detection.**

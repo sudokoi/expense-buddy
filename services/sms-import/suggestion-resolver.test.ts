@@ -56,6 +56,58 @@ function createItem(overrides: Partial<SmsImportReviewItem> = {}): SmsImportRevi
 }
 
 describe("resolveSmsImportCategory", () => {
+  it("prefers merchant evidence over another category word in the description", () => {
+    const item = createItem({
+      categorySuggestion: "Other",
+      merchantName: "APOLLO PHARMACY",
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent at APOLLO PHARMACY opposite a cafe.",
+      },
+    })
+    expect(
+      resolveSmsImportCategory(item, [
+        createCategory("Food", 0),
+        createCategory("Health Care", 1),
+        createCategory("Other", 2),
+      ])
+    ).toBe("Health Care")
+  })
+  it("keeps a useful configured guess when native category is Other", () => {
+    const item = createItem({
+      categorySuggestion: "Other",
+      merchantName: undefined,
+      noteSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 paid for Work Meals using debit card 4321.",
+      },
+    })
+    expect(
+      resolveSmsImportCategory(item, [
+        createCategory("Work Meals", 0),
+        createCategory("Other", 1),
+      ])
+    ).toBe("Work Meals")
+  })
+
+  it("does not assign a category from an unrelated support instruction", () => {
+    const item = createItem({
+      categorySuggestion: undefined,
+      merchantName: "UNKNOWN STORE",
+      noteSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent at UNKNOWN STORE. For assistance contact Travel Support.",
+      },
+    })
+    expect(
+      resolveSmsImportCategory(item, [
+        createCategory("Travel", 0),
+        createCategory("Other", 1),
+      ])
+    ).toBe("Other")
+  })
   it.each([
     ["APOLLO PHARMACY", "Health Care", "Please contact your bank."],
     ["CHOCOLATE WORLD", "Other", ""],
@@ -112,6 +164,139 @@ describe("resolveSmsImportCategory", () => {
 })
 
 describe("resolveSmsImportPaymentSuggestion", () => {
+  it("does not treat a card limit as payer suffix evidence", () => {
+    const item = createItem({
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent using debit card. Card limit 4321.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+    })
+  })
+
+  it("matches explicit network suffix evidence without a nickname match", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent at Store using Visa ending 4321.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+      identifier: "4321",
+      instrumentId: "inst-1",
+    })
+  })
+  it("matches a configured Japanese debit card from payer suffix evidence", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      merchantName: "イオン",
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "デビットカード末尾４３２１ ご利用金額 250円 加盟店：イオン",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+      identifier: "4321",
+      instrumentId: "inst-1",
+    })
+  })
+  it("does not mistake the amount for a saved card suffix", () => {
+    const item = createItem({
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 4321 spent at Store using debit card.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+    })
+  })
+
+  it("does not select an instrument when payer identifiers conflict", () => {
+    const item = createItem({
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent using debit card 4321, card 9876.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+    })
+  })
+
+  it("does not fall back to a nickname that contradicts explicit payer digits", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent using Visa card 9876.",
+      },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [createInstrument({ nickname: "Visa" })])
+    ).toBeUndefined()
+  })
+
+  it("keeps unique configured matching for a generic payer card with digits", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 spent using Visa card 4321.",
+      },
+    })
+    expect(resolveSmsImportPaymentSuggestion(item, [createInstrument()])).toEqual({
+      type: "Debit Card",
+      identifier: "4321",
+      instrumentId: "inst-1",
+    })
+  })
+  it("does not infer a saved network instrument from support instructions", () => {
+    const item = createItem({
+      paymentMethodSuggestion: undefined,
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 paid to Alex. For assistance contact Visa support.",
+      },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument({ nickname: "Visa", method: "Credit Card" }),
+      ])
+    ).toBeUndefined()
+  })
+
+  it("does not enrich a payer method using recipient digits", () => {
+    const item = createItem({
+      paymentMethodSuggestion: { type: "UPI" },
+      sourceMessage: {
+        ...createItem().sourceMessage,
+        body: "INR 250 paid via UPI to account XX321.",
+      },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument({ method: "UPI", lastDigits: "321" }),
+      ])
+    ).toEqual({ type: "UPI" })
+  })
+
+  it("does not choose the first of two matching saved instruments", () => {
+    const item = createItem({
+      paymentMethodSuggestion: { type: "Debit Card", identifier: "4321" },
+    })
+    expect(
+      resolveSmsImportPaymentSuggestion(item, [
+        createInstrument(),
+        createInstrument({ id: "second", nickname: "Another Debit" }),
+      ])
+    ).toEqual(item.paymentMethodSuggestion)
+  })
   it("keeps an explicit bank-transfer rail when a saved card is mentioned as the recipient", () => {
     const item = createItem({
       paymentMethodSuggestion: { type: "Net Banking" },

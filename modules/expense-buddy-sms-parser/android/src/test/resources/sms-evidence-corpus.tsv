@@ -1,0 +1,25 @@
+# id	origin	region	amount	currency	merchant	category	method	skip	body
+in-equal-events	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	INR 250 paid to Alex. INR 250 paid to Bob.
+us-equal-events	generated	US	-	-	-	-	-	NEGATIVE_ALERT	USD 250 paid to Alex. USD 250 paid to Bob.
+gb-equal-events	generated	GB	-	-	-	-	-	NEGATIVE_ALERT	GBP 250 paid to Alex. GBP 250 paid to Bob.
+ca-equal-events	generated	CA	-	-	-	-	-	NEGATIVE_ALERT	CAD 250 paid to Alex. CAD 250 paid to Bob.
+au-equal-events	generated	AU	-	-	-	-	-	NEGATIVE_ALERT	AUD 250 paid to Alex. AUD 250 paid to Bob.
+jp-equal-events	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	JPY 250 paid to Alex. JPY 250 paid to Bob.
+in-offer	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	You can purchase INR 250 at STORE.
+us-offer	generated	US	-	-	-	-	-	NEGATIVE_ALERT	You can purchase USD 250 at STORE.
+gb-offer	generated	GB	-	-	-	-	-	NEGATIVE_ALERT	You can purchase GBP 250 at STORE.
+ca-offer	generated	CA	-	-	-	-	-	NEGATIVE_ALERT	You can purchase CAD 250 at STORE.
+au-offer	generated	AU	-	-	-	-	-	NEGATIVE_ALERT	You can purchase AUD 250 at STORE.
+jp-offer	generated	JP	-	-	-	-	-	NEGATIVE_ALERT	You can purchase JPY 250 at STORE.
+in-conditional	generated	IN	250	INR	CORNER CAFE	Food	Debit Card	-	INR 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+us-conditional	generated	US	250	USD	CORNER CAFE	Food	Debit Card	-	USD 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+gb-conditional	generated	GB	250	GBP	CORNER CAFE	Food	Debit Card	-	GBP 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+ca-conditional	generated	CA	250	CAD	CORNER CAFE	Food	Debit Card	-	CAD 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+au-conditional	generated	AU	250	AUD	CORNER CAFE	Food	Debit Card	-	AUD 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+jp-conditional	generated	JP	250	JPY	CORNER CAFE	Food	Debit Card	-	JPY 250 spent at CORNER CAFE using debit card. If your payment failed, contact support.
+in-unrelated-credit	generated	IN	-	-	-	-	-	NOT_DEBIT	Your account credited INR 500. You previously paid at Cafe.
+in-unrelated-prize	generated	IN	-	-	-	-	-	NOT_DEBIT	Your account was debited. Prize INR 250.
+in-fx-billed	generated	IN	840	INR	Store	Other	-	-	USD 10 spent at Store. Amount billed to your card INR 840.
+in-fee-total	generated	IN	505	INR	Alex	Other	-	-	INR 500 paid to Alex. Fee INR 5. Total debited INR 505.
+in-fx-estimate	generated	IN	-	-	-	-	-	AMOUNT_MISSING	USD 10 spent at Store. Estimated amount billed INR 840.
+in-refund	generated	IN	-	-	-	-	-	NEGATIVE_ALERT	Purchase INR 500 completed. Partial refund INR 100 processed.

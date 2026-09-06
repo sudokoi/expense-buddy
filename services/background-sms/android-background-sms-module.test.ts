@@ -27,6 +27,7 @@ import {
   setBackgroundSmsModuleForTesting,
   syncInboxAsync,
 } from "./android-background-sms-module"
+import { resolveSmsImportPaymentSuggestion } from "../sms-import/suggestion-resolver"
 
 function createModuleOverride(
   overrides: Partial<ExpenseBuddySmsNativeModule> = {}
@@ -193,6 +194,60 @@ describe("android-background-sms-module", () => {
 
     await expect(getPendingReviewQueueAsync()).resolves.toEqual([])
   })
+
+  it.each([true, false])(
+    "preserves structured and configuration-assisted instrument matching through the bridge (native=%s)",
+    async (structured) => {
+      const body = "INR 250 spent at Store via Visa."
+      setBackgroundSmsModuleForTesting(
+        createModuleOverride({
+          getPendingReviewQueueAsync: async () => [
+            {
+              fingerprint: "bridge-evidence",
+              sender: "BANK",
+              body,
+              amount: 250,
+              currency: "INR",
+              merchantName: "Store",
+              categorySuggestion: "Other",
+              paymentMethodType: structured ? "Debit Card" : null,
+              paymentMethodIdentifier: structured ? "4321" : null,
+              paymentMethodInstrumentId: null,
+              noteSuggestion: null,
+              transactionDate: "2026-09-06T10:15:30Z",
+              matchedLocale: "en-IN",
+              matchedPatternKey: "india.generic.transaction",
+              status: "PENDING",
+              acceptedExpenseId: null,
+              sourceMessageId: "bridge-message",
+              sourceReceivedAt: "2026-09-06T10:15:30Z",
+              createdAt: 0,
+              updatedAt: 0,
+            },
+          ],
+        })
+      )
+      const [item] = await getPendingReviewQueueAsync()
+      expect(item.sourceMessage.body).toBe(body)
+      expect(item.paymentMethodSuggestion).toEqual(
+        structured
+          ? { type: "Debit Card", identifier: "4321", instrumentId: undefined }
+          : undefined
+      )
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [
+          {
+            id: "visa",
+            method: "Debit Card",
+            nickname: "Visa",
+            lastDigits: "4321",
+            createdAt: "2026-09-06",
+            updatedAt: "2026-09-06",
+          },
+        ])
+      ).toEqual({ type: "Debit Card", identifier: "4321", instrumentId: "visa" })
+    }
+  )
 
   it("enables background SMS processing via native state", async () => {
     const setBackgroundSmsEnabledAsync = jest.fn().mockResolvedValue(undefined)

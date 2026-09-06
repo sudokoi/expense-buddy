@@ -3,7 +3,6 @@ import type { ExpenseCategory, PaymentMethod } from "../../types/expense"
 import type { PaymentInstrument } from "../../types/payment-instrument"
 import type { SmsImportReviewItem } from "../../types/sms-import"
 import {
-  findActiveInstrumentByMethodAndLastDigits,
   getActivePaymentInstruments,
   isPaymentInstrumentMethod,
   normalizeNickname,
@@ -14,47 +13,56 @@ import {
   hasDebitCardHint,
   hasUpiHint,
 } from "./payment-method-hints"
+import { getReviewEvidence } from "./review-evidence"
 
 type CategoryMatchingRule = {
+  nativeCategory: string
   contentPattern: RegExp
   categoryPattern: RegExp
 }
 
 const categoryMatchingRules: CategoryMatchingRule[] = [
   {
+    nativeCategory: "Food",
     contentPattern:
       /swiggy|zomato|restaurant|restro|cafe|coffee|pizza|burger|biryani|dining|eatery|bakery|food|snack|takeout/i,
     categoryPattern:
       /food|dining|restaurant|eat|meal|snack|cafe|coffee|takeout|lunch|dinner/i,
   },
   {
+    nativeCategory: "Transport",
     contentPattern:
       /uber|ola|rapido|metro|rail|train|irctc|bus|cab|taxi|petrol|diesel|fuel|parking|toll|travel/i,
     categoryPattern:
       /transport|travel|commute|cab|taxi|fuel|petrol|diesel|parking|toll|metro|rail/i,
   },
   {
+    nativeCategory: "Groceries",
     contentPattern:
       /grocery|groceries|supermarket|hypermarket|bigbasket|blinkit|zepto|instamart|fresh|dmart|reliance fresh/i,
     categoryPattern: /grocery|grocer|supermarket|market|mart|provision|essentials/i,
   },
   {
+    nativeCategory: "Rent",
     contentPattern: /\brent\b|landlord|lease|tenancy|apartment rent|house rent/i,
     categoryPattern: /rent|housing|house|home|lease|tenancy|apartment/i,
   },
   {
+    nativeCategory: "Utilities",
     contentPattern:
       /electricity|water bill|utility bill|gas bill|broadband|wifi|internet bill|mobile bill|recharge|airtel|jio|vi\b|bsnl/i,
     categoryPattern:
       /utilit|bill|electric|water|gas|internet|broadband|wifi|mobile|recharge|phone/i,
   },
   {
+    nativeCategory: "Entertainment",
     contentPattern:
       /netflix|spotify|prime video|hotstar|bookmyshow|movie|cinema|theatre|gaming|playstation|xbox/i,
     categoryPattern:
       /entertain|movie|cinema|theatre|music|game|gaming|stream|subscription/i,
   },
   {
+    nativeCategory: "Health",
     contentPattern:
       /hospital|clinic|pharmacy|medical|medicine|diagnostic|lab|apollo|practo|medplus|health/i,
     categoryPattern: /health|medical|medicine|pharmacy|clinic|doctor|hospital|wellness/i,
@@ -71,22 +79,10 @@ const boundedCategoryRules = categoryMatchingRules.map((rule) => ({
 }))
 
 const maskedDigitsPattern =
-  /(?:card|a\/c|acct|account)[^0-9]{0,12}(?:x+|\*+)?\s*(\d{3,4})\b/gi
+  /(?:\b(?:card|visa|mastercard|amex|rupay|maestro|discover|jcb|a\/c|acct|account)\b|カード|口座)\s*(?:(?:ending|ends)(?: with| in)?\s*|末尾\s*)?(?:x+|\*+)?\s*(\d{3,4})(?!\d)/gi
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
-function buildItemContent(item: SmsImportReviewItem): string {
-  return [
-    item.merchantName,
-    item.noteSuggestion,
-    item.sourceMessage.sender,
-    item.sourceMessage.body,
-  ]
-    .filter((value): value is string => !!value)
-    .join(" ")
-    .toLowerCase()
 }
 
 function tryDirectCategoryLabelMatch(
@@ -108,20 +104,20 @@ function tryDirectCategoryLabelMatch(
   return undefined
 }
 
-function extractIdentifierFromBody(
-  body: string,
-  expectedLength: 3 | 4
-): string | undefined {
+function extractIdentifiersFromBody(body: string, expectedLength: 3 | 4): string[] {
   const candidates = [...body.matchAll(maskedDigitsPattern)]
+  const identifiers = new Set<string>()
 
   for (const candidate of candidates) {
+    const isAccount = /^(?:a\/c|acct|account|口座)/i.test(candidate[0])
+    if ((expectedLength === 3) !== isAccount) continue
     const digits = candidate[1]?.replace(/\D/g, "")
     if (digits && digits.length >= expectedLength) {
-      return digits.slice(-expectedLength)
+      identifiers.add(digits.slice(-expectedLength))
     }
   }
 
-  return undefined
+  return [...identifiers]
 }
 
 function bodyHintsMethod(body: string, type: PaymentMethod["type"]): boolean {
@@ -156,43 +152,53 @@ function bodyContainsInstrumentNickname(body: string, nickname: string): boolean
   return nicknamePattern.test(body)
 }
 
-function bodyContainsInstrumentDigits(body: string, lastDigits: string): boolean {
-  const exactPattern = new RegExp(`(?:^|\\D)${escapeRegExp(lastDigits)}(?!\\d)`, "i")
-  const maskedPattern = new RegExp(
-    `(?:x|\\*)+\\s*${escapeRegExp(lastDigits)}(?!\\d)`,
-    "i"
-  )
-  return exactPattern.test(body) || maskedPattern.test(body)
-}
-
 export function resolveSmsImportCategory(
   item: SmsImportReviewItem,
   availableCategories: Category[]
 ): ExpenseCategory {
   const labels = new Set(availableCategories.map((category) => category.label))
 
-  if (item.categorySuggestion && labels.has(item.categorySuggestion)) {
+  if (
+    item.categorySuggestion &&
+    item.categorySuggestion !== "Other" &&
+    labels.has(item.categorySuggestion)
+  ) {
     return item.categorySuggestion
   }
 
-  const itemContent = buildItemContent(item)
-
-  const directMatch = tryDirectCategoryLabelMatch(itemContent, availableCategories)
-  if (directMatch) {
-    return directMatch
-  }
-
-  for (const rule of boundedCategoryRules) {
-    if (!rule.contentPattern.test(itemContent)) {
-      continue
-    }
-
-    const matchedCategory = availableCategories.find((category) =>
-      rule.categoryPattern.test(category.label)
+  const nativeRule = boundedCategoryRules.find(
+    (rule) => rule.nativeCategory === item.categorySuggestion
+  )
+  const semanticMatch =
+    nativeRule &&
+    availableCategories.find((category) =>
+      nativeRule.categoryPattern.test(category.label)
     )
+  if (semanticMatch) return semanticMatch.label
 
-    if (matchedCategory) {
-      return matchedCategory.label
+  for (const content of [item.merchantName, getReviewEvidence(item).description]) {
+    if (!content) continue
+    const directMatch = tryDirectCategoryLabelMatch(content, availableCategories)
+    if (directMatch) return directMatch
+    const ranked = boundedCategoryRules
+      .map((rule, order) => ({
+        rule,
+        order,
+        length: Math.max(
+          0,
+          ...Array.from(
+            content.matchAll(new RegExp(rule.contentPattern.source, "gi")),
+            (match) => match[0].length
+          )
+        ),
+      }))
+      .filter((match) => match.length > 0)
+      .sort((a, b) => b.length - a.length || a.order - b.order)
+    for (const { rule } of ranked) {
+      const category = availableCategories.find((entry) =>
+        rule.categoryPattern.test(entry.label)
+      )
+      if (category) return category.label
     }
   }
 
@@ -207,73 +213,29 @@ export function resolveSmsImportPaymentSuggestion(
   item: SmsImportReviewItem,
   paymentInstruments: PaymentInstrument[]
 ): PaymentMethod | undefined {
-  const body = item.sourceMessage.body
+  const body = getReviewEvidence(item).payer
   const baseSuggestion = item.paymentMethodSuggestion
+  if (baseSuggestion?.instrumentId) return baseSuggestion
   const activeInstruments = getActivePaymentInstruments(paymentInstruments)
-
-  if (baseSuggestion?.type && isPaymentInstrumentMethod(baseSuggestion.type)) {
-    const identifier =
-      baseSuggestion.identifier ??
-      extractIdentifierFromBody(body, baseSuggestion.type === "UPI" ? 3 : 4)
-
-    if (identifier) {
-      const matchedInstrument = findActiveInstrumentByMethodAndLastDigits(
-        activeInstruments,
-        baseSuggestion.type,
-        identifier
+  if (baseSuggestion && !isPaymentInstrumentMethod(baseSuggestion.type))
+    return baseSuggestion
+  const eligible = activeInstruments.filter((instrument) =>
+    baseSuggestion
+      ? instrument.method === baseSuggestion.type
+      : bodyHintsMethod(body, instrument.method)
+  )
+  const identifiers = baseSuggestion?.identifier
+    ? [baseSuggestion.identifier]
+    : baseSuggestion?.type === "UPI" || (!baseSuggestion && hasUpiHint(body))
+      ? extractIdentifiersFromBody(body, 3)
+      : extractIdentifiersFromBody(body, 4)
+  if (identifiers.length > 1) return baseSuggestion
+  const identifier = identifiers[0]
+  const matchingInstruments = identifier
+    ? eligible.filter((instrument) => instrument.lastDigits === identifier)
+    : eligible.filter((instrument) =>
+        bodyContainsInstrumentNickname(body, instrument.nickname)
       )
-
-      if (matchedInstrument) {
-        return {
-          type: baseSuggestion.type,
-          identifier: matchedInstrument.lastDigits,
-          instrumentId: matchedInstrument.id,
-        }
-      }
-
-      return {
-        ...baseSuggestion,
-        identifier,
-      }
-    }
-  }
-
-  const nicknameMatches = activeInstruments.filter((instrument) => {
-    if (baseSuggestion?.type && instrument.method !== baseSuggestion.type) {
-      return false
-    }
-
-    if (!baseSuggestion?.type && !bodyHintsMethod(body, instrument.method)) {
-      return false
-    }
-
-    return bodyContainsInstrumentNickname(body, instrument.nickname)
-  })
-
-  if (nicknameMatches.length === 1) {
-    const matchedInstrument = nicknameMatches[0]
-    return {
-      type: matchedInstrument.method,
-      identifier: matchedInstrument.lastDigits,
-      instrumentId: matchedInstrument.id,
-    }
-  }
-
-  const matchingInstruments = activeInstruments.filter((instrument) => {
-    if (baseSuggestion?.type && instrument.method !== baseSuggestion.type) {
-      return false
-    }
-    if (!bodyContainsInstrumentDigits(body, instrument.lastDigits)) {
-      return false
-    }
-
-    if (baseSuggestion?.type && instrument.method === baseSuggestion.type) {
-      return true
-    }
-
-    return bodyHintsMethod(body, instrument.method)
-  })
-
   if (matchingInstruments.length === 1) {
     const matchedInstrument = matchingInstruments[0]
     return {
@@ -283,5 +245,5 @@ export function resolveSmsImportPaymentSuggestion(
     }
   }
 
-  return baseSuggestion
+  return baseSuggestion && identifier ? { ...baseSuggestion, identifier } : baseSuggestion
 }
