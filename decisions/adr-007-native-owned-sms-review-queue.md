@@ -19,13 +19,15 @@
 > migration, cancellation, and validation contracts. Historical rollout steps
 > below describe the original SharedPreferences-to-Room transition, not schema 3.
 
-The SMS import review queue currently has split ownership across three layers:
+The following context describes the system before this decision was implemented. The current SMS review queue and scan journal are owned by Room; general app key-value persistence uses MMKV through `services/storage.ts`, with legacy AsyncStorage migration and fallback. See the current [persistence model](../ARCHITECTURE.md#persistence-model).
+
+Before this decision, the SMS import review queue had split ownership across three layers:
 
 1. **JS XState store** — authoritative for in-memory state during a session
 2. **AsyncStorage** (`sms_import_review_queue_state_v1`) — canonical on-disk queue snapshot written by JS
 3. **Native SharedPreferences** (`expense_buddy_background_sms`) — mirror snapshot written by JS and independently mutated by the `SMS_RECEIVED` BroadcastReceiver
 
-This split-brain architecture causes several production bugs:
+This split-brain architecture caused several production bugs:
 
 - **Duplicates**: A manual scan starts building an `existingFingerprints` Set from the JS store, then an `SMS_RECEIVED` broadcast adds an item to native storage during the async scan gap. The JS scan never sees it and creates a second queue entry for the same SMS (TOCTOU race, `bootstrap.ts:153`).
 

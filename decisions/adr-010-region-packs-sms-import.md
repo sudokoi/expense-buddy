@@ -46,7 +46,7 @@ A new optional `smsRegion` field joins `AppSettings` (`"IN"`, `"CA"`, `"AU"`, `"
 **Region plumbing (foreground vs background):**
 
 - _Foreground (manual inbox scan):_ the bridge signature remains single-arg (`syncInboxAsync(useMlOnly)`); region is resolved natively from the pushed pref inside `ExpenseBuddySmsModule.syncInboxAsync`, identically to the background path. Both paths therefore rely exclusively on pushed prefs — there is no live per-call region parameter anywhere.
-- _Background (headless receiver):_ region cannot be passed per-call because parsing does not flow through JS. Instead, JS **pushes** the region to native-persisted state on every change — mirroring the existing `setBackgroundSmsEnabledAsync` mechanism (`stores/settings-store.ts`, `initializeSettingsStore`). The native module holds pushed configuration only; it never queries AsyncStorage or device state at parse time. Unrecognized values resolve to the India pack natively, independent of JS correctness.
+- _Background (headless receiver):_ region cannot be passed per-call because parsing does not flow through JS. Instead, JS **pushes** the region to native-persisted state on every change — mirroring the existing `setBackgroundSmsEnabledAsync` mechanism (`stores/settings-store.ts`, `initializeSettingsStore`). The native module holds pushed configuration only; it never queries the JS settings storage (MMKV, with AsyncStorage migration and fallback) or device state at parse time. Unrecognized values resolve to the India pack natively, independent of JS correctness.
 
 ### 4. Non-breaking invariants
 

@@ -69,22 +69,25 @@ The SMS import review queue is not managed by an XState store. It is owned by a 
 Selection rules:
 
 - If the data should survive app restarts and sync across devices, it belongs in Expense Store or Settings Store.
-- If it should survive restarts but remain local to the device, it belongs in Filter Store, UI State Store, or SMS Import Review Store.
+- If it should survive restarts but remain local to the device, it belongs in Filter Store, UI State Store, or the native SMS review repository, depending on the data.
 - If it is purely transient UI feedback, it belongs in Notification Store.
 
 The sync state machine coordinates fetch, merge, push, conflict, and error states. It is intentionally separate from the data stores so sync orchestration does not leak into normal state updates.
 
 ## Persistence Model
 
-| Data               | Local storage          | Remote storage                     | Notes                                                                                                |
-| ------------------ | ---------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Expenses           | AsyncStorage snapshot  | Daily CSV files in GitHub          | Soft deletes are preserved with `deletedAt`                                                          |
-| Settings           | AsyncStorage           | Optional `settings.json` in GitHub | Credentials are excluded                                                                             |
-| GitHub credentials | Secure storage         | No                                 | Token and repo configuration stay on-device                                                          |
-| Filters            | AsyncStorage           | No                                 | Shared between History and Analytics locally                                                         |
-| SMS review queue   | Room database (native) | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-sms-module` |
-| Dirty-day metadata | AsyncStorage           | No                                 | Used to minimize sync work                                                                           |
-| Remote SHA cache   | AsyncStorage           | No                                 | Used to skip unchanged downloads                                                                     |
+| Data               | Local storage              | Remote storage                     | Notes                                                                                                |
+| ------------------ | -------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Expenses           | MMKV                       | Daily CSV files in GitHub          | ID index plus per-expense records; soft deletes are preserved with `deletedAt`                       |
+| Settings           | MMKV                       | Optional `settings.json` in GitHub | Credentials are excluded                                                                             |
+| GitHub credentials | Expo SecureStore (Android) | No                                 | Token and repo configuration stay on-device                                                          |
+| Filters            | MMKV                       | No                                 | Shared between History and Analytics locally                                                         |
+| UI preferences     | MMKV                       | No                                 | Device-local expansion and layout preferences                                                        |
+| SMS review queue   | Room database (native)     | No                                 | Raw SMS import data stays local, managed by `SmsReviewQueueRepository` in `expense-buddy-sms-module` |
+| Dirty-day metadata | MMKV                       | No                                 | Used to minimize sync work                                                                           |
+| Remote SHA cache   | MMKV                       | No                                 | Used to skip unchanged downloads                                                                     |
+
+`services/storage.ts` provides the shared key-value adapter backed by the `expense-buddy` MMKV instance. It migrates legacy AsyncStorage entries on asynchronous access and uses AsyncStorage as a fallback when MMKV cannot be initialized. AsyncStorage is not the primary Android store. `services/expense-storage.ts` maintains the expense ID index and individual records, including migration from the legacy single expense snapshot. Android credentials use `services/secure-storage.ts`, while the SMS review queue and scan journal are owned by native Room persistence.
 
 This split supports offline-first behavior while keeping the sync format small and inspectable.
 

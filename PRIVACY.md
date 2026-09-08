@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Expense Buddy**  
-**Last Updated:** May 22, 2026
+**Last Updated:** September 8, 2026
 
 ## Overview
 
@@ -15,10 +15,13 @@ Expense Buddy does not collect, store, transmit, or share any personal informati
 
 ## Data Storage
 
-All expense data you enter is stored locally on your device using:
+App data is stored locally on your device using:
 
-- **AsyncStorage** for expense records
-- **Expo SecureStore** for sensitive configuration (like GitHub tokens)
+- **MMKV** for expense records, settings, and device-local preferences and sync metadata
+- **Expo SecureStore** for sensitive configuration on Android (like GitHub tokens)
+- **Room**, an on-device Android database, for SMS review items and scan history
+
+Legacy AsyncStorage data is migrated to MMKV. AsyncStorage remains a local fallback if MMKV cannot be initialized.
 
 Your data never leaves your device unless you explicitly choose to sync it to GitHub (see below).
 
