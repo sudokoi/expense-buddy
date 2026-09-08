@@ -285,7 +285,9 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
               <Button variant="accent" onPress={() => onAccept(item)}>
                 {t("smsImport.sheet.actions.accept")}
               </Button>
-              <Button onPress={() => onEdit(item)}>{t("common.edit")}</Button>
+              <Button variant="outline" onPress={() => onEdit(item)}>
+                {t("common.edit")}
+              </Button>
               <Button
                 variant="destructive"
                 onPress={() => {
@@ -295,6 +297,7 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
                 {t("smsImport.sheet.actions.reject")}
               </Button>
               <Button
+                variant="outline"
                 onPress={() => {
                   void onDismiss(item.fingerprint)
                 }}
