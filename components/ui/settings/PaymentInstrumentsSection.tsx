@@ -95,6 +95,7 @@ export function PaymentInstrumentsSection() {
           )}
         </Pressable>
         <Button
+          variant="outline"
           icon={<Plus size={UI_ICON_SIZE.small} />}
           disabled={formOpen}
           onPress={() => {

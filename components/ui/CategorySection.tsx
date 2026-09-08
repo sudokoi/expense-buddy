@@ -62,6 +62,7 @@ export const CategorySection = memo(function CategorySection({
           )}
         </Pressable>
         <Button
+          variant="outline"
           icon={<Plus size={UI_ICON_SIZE.small} />}
           onPress={onAdd}
           accessibilityLabel={t("settings.categories.add")}
@@ -84,6 +85,7 @@ export const CategorySection = memo(function CategorySection({
               autoCorrect={false}
             />
             <Button
+              variant={reordering ? "accent" : "outline"}
               disabled={!!query.trim() || movable.length < 2}
               onPress={() => setReordering(!reordering)}
               accessibilityState={{ selected: reordering }}
@@ -92,7 +94,9 @@ export const CategorySection = memo(function CategorySection({
             </Button>
           </View>
           {query.trim() ? (
-            <Button onPress={() => setQuery("")}>{t("common.clearSearch")}</Button>
+            <Button variant="outline" onPress={() => setQuery("")}>
+              {t("common.clearSearch")}
+            </Button>
           ) : null}
           {visible.length === 0 ? (
             <Text className="text-sm text-muted-foreground">

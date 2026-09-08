@@ -338,12 +338,17 @@ export function GitHubConfigSection({
                   <Text className="text-lg font-bold text-foreground">
                     {auth.deviceCode.user_code}
                   </Text>
-                  <Button size="compact" onPress={() => void handleCopyDeviceCode()}>
+                  <Button
+                    size="compact"
+                    variant="outline"
+                    onPress={() => void handleCopyDeviceCode()}
+                  >
                     {t("settings.github.copyCode")}
                   </Button>
                 </View>
                 <Button
                   size="compact"
+                  variant="outline"
                   onPress={() => {
                     const url =
                       auth.deviceCode?.verification_uri_complete ||
@@ -378,7 +383,12 @@ export function GitHubConfigSection({
                 accessibilityLabel={t("settings.github.repoLabel")}
                 readOnly
               />
-              <Button size="compact" onPress={handleChooseRepo} disabled={!token}>
+              <Button
+                size="compact"
+                variant="outline"
+                onPress={handleChooseRepo}
+                disabled={!token}
+              >
                 {repo ? t("settings.github.editRepo") : t("settings.github.chooseRepo")}
               </Button>
             </View>

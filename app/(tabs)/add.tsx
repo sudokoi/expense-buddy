@@ -388,10 +388,11 @@ export default function AddExpenseScreen() {
 
           {/* Date Picker */}
           <View className="gap-2">
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row flex-wrap items-center justify-between gap-2">
               <Label className="opacity-80">{t("add.date")}</Label>
               <Button
                 size="control"
+                variant="outline"
                 icon={<Calendar size={UI_ICON_SIZE.small} />}
                 onPress={() => setShowDatePicker(true)}
                 accessibilityLabel={t("add.date")}

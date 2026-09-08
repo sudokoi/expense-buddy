@@ -454,7 +454,7 @@ export default function AnalyticsScreen() {
           icon={<Filter size={UI_ICON_SIZE.small} />}
           disabled={!filtersHydrated}
           onPress={openFilters}
-          variant={activeCount > 0 ? "accent" : undefined}
+          variant={activeCount > 0 ? "accent" : "outline"}
         >
           {!filtersHydrated
             ? t("analytics.filters.button")

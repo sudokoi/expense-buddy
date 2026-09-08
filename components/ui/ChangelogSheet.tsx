@@ -48,7 +48,7 @@ export function ChangelogSheet({
           <Button size="control" variant="accent" onPress={onViewFullReleaseNotes}>
             {t("changelog.viewFull")}
           </Button>
-          <Button size="control" onPress={onClose}>
+          <Button size="control" variant="outline" onPress={onClose}>
             {t("common.close")}
           </Button>
         </>

@@ -81,6 +81,7 @@ export function AppInfoSection({
         {/* Check for Updates Button */}
         <Button
           size="control"
+          variant="outline"
           className="max-w-full"
           icon={
             isCheckingUpdate ? (

@@ -297,6 +297,7 @@ export default function EditExpenseScreen() {
                 </Label>
                 <Button
                   size="control"
+                  variant="outline"
                   icon={<Calendar size={UI_ICON_SIZE.small} />}
                   onPress={() => setShowDatePicker(true)}
                   accessibilityLabel={t("history.editDialog.fields.date")}

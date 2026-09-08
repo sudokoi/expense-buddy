@@ -659,15 +659,20 @@ export function SmsImportReviewScreen({
     )
 
   const footer = editingItem ? (
-    <View className="flex-row justify-end gap-2">
-      <Button onPress={closeEditor}>{t("common.cancel")}</Button>
+    <View className="flex-row flex-wrap justify-end gap-2">
+      <Button variant="outline" onPress={closeEditor}>
+        {t("common.cancel")}
+      </Button>
       <Button variant="accent" onPress={handleAcceptEdited}>
         {t("smsImport.sheet.footer.saveAndImport")}
       </Button>
     </View>
   ) : pendingItems.length > 1 ? (
     <View className="flex-row flex-wrap justify-between gap-2">
-      <Button onPress={() => setShowResolvedItems((current) => !current)}>
+      <Button
+        variant="outline"
+        onPress={() => setShowResolvedItems((current) => !current)}
+      >
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
           : t("smsImport.sheet.footer.showResolved")}
@@ -680,19 +685,24 @@ export function SmsImportReviewScreen({
       </Button>
     </View>
   ) : resolvedItems.length > 0 ? (
-    <View className="flex-row justify-between gap-2">
-      <Button onPress={() => setShowResolvedItems((current) => !current)}>
+    <View className="flex-row flex-wrap justify-between gap-2">
+      <Button
+        variant="outline"
+        onPress={() => setShowResolvedItems((current) => !current)}
+      >
         {showResolvedItems
           ? t("smsImport.sheet.footer.hideResolved")
           : t("smsImport.sheet.footer.showResolved")}
       </Button>
-      <Button onPress={confirmClearResolved}>
+      <Button variant="outline" onPress={confirmClearResolved}>
         {t("smsImport.sheet.footer.clearResolved")}
       </Button>
     </View>
   ) : (
     <View className="flex-row justify-end">
-      <Button onPress={() => router.back()}>{t("common.done")}</Button>
+      <Button variant="outline" onPress={() => router.back()}>
+        {t("common.done")}
+      </Button>
     </View>
   )
 
@@ -733,7 +743,7 @@ export function SmsImportReviewScreen({
           }
           ListFooterComponent={
             showResolvedItems && resolvedItems.length > 0 ? (
-              <Button onPress={confirmClearResolved}>
+              <Button variant="outline" onPress={confirmClearResolved}>
                 {t("smsImport.sheet.footer.clearResolved")}
               </Button>
             ) : null

@@ -235,11 +235,12 @@ export function CategoryFormModal({
               {t("settings.categories.form.iconLabel")}
             </Label>
             <Pressable
+              className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
               onPress={handleOpenIconPicker}
               accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseIcon")}
             >
-              <View className="flex-row items-center gap-3 p-3 rounded-control border-2 bg-surface border-border">
+              <View className="flex-row items-center gap-3">
                 <View
                   style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
                 >
@@ -265,11 +266,12 @@ export function CategoryFormModal({
               {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable
+              className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
               onPress={handleOpenColorPicker}
               accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseColor")}
             >
-              <View className="flex-row justify-end gap-3 mt-2">
+              <View className="flex-row items-center gap-3">
                 <View
                   style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
                 />
@@ -284,8 +286,8 @@ export function CategoryFormModal({
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row justify-end gap-3 mt-2">
-            <Button size="control" variant="ghost" onPress={handleClose}>
+          <View className="flex-row flex-wrap justify-end gap-3 mt-2">
+            <Button size="control" variant="outline" onPress={handleClose}>
               {t("common.cancel")}
             </Button>
             <Button

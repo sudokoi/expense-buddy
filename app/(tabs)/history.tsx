@@ -561,7 +561,7 @@ export default function HistoryScreen() {
 
           <Button
             size="chip"
-            variant={activeCount > 0 ? "accent" : undefined}
+            variant={activeCount > 0 ? "accent" : "outline"}
             icon={<Filter size={UI_ICON_SIZE.small} />}
             onPress={handleOpenFilterSheet}
             accessibilityLabel={t("common.filters")}
@@ -584,6 +584,7 @@ export default function HistoryScreen() {
           </Text>
           <Button
             size="control"
+            variant="outline"
             onPress={handleResetFilters}
             className="mt-4"
             accessibilityLabel={t("common.clearFilters")}
@@ -619,7 +620,7 @@ export default function HistoryScreen() {
 
         <Button
           size="chip"
-          variant={activeCount > 0 ? "accent" : undefined}
+          variant={activeCount > 0 ? "accent" : "outline"}
           icon={<Filter size={UI_ICON_SIZE.small} />}
           onPress={handleOpenFilterSheet}
           accessibilityLabel={t("common.filters")}

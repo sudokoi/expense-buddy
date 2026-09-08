@@ -187,8 +187,8 @@ export function PaymentInstrumentForm({
         )}
       </View>
 
-      <View className="flex-row justify-end gap-3 mt-2">
-        <Button size="control" variant="ghost" onPress={onClose}>
+      <View className="flex-row flex-wrap justify-end gap-3 mt-2">
+        <Button size="control" variant="outline" onPress={onClose}>
           {t("common.cancel")}
         </Button>
         <Button

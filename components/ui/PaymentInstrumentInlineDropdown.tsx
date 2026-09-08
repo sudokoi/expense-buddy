@@ -237,7 +237,7 @@ function InstrumentEntryField({
             ) : null}
           </View>
           <View className="flex-row gap-2">
-            <Button className="flex-1" onPress={closeAdd}>
+            <Button className="flex-1" variant="outline" onPress={closeAdd}>
               {t("common.cancel")}
             </Button>
             <Button className="flex-1" variant="accent" onPress={saveNew}>

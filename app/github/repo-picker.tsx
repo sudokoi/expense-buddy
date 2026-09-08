@@ -235,7 +235,7 @@ export default function GitHubRepoPickerScreen() {
         {error ? (
           <View className="gap-2">
             <Text className="text-error">{error}</Text>
-            <Button size="chip" onPress={load}>
+            <Button size="chip" variant="outline" onPress={load}>
               {t("repoPicker.retry")}
             </Button>
           </View>
