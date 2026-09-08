@@ -1,6 +1,8 @@
 import { useMemo, useCallback, memo } from "react"
 import { useWindowDimensions, Pressable, Text, View } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
+import { Check } from "lucide-react-native"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentMethodChartDataItem } from "../../utils/analytics/aggregations"
 import { getChartColors } from "../../constants/palette"
@@ -31,12 +33,14 @@ const LegendItem = memo(function LegendItem({
   onPress: () => void
 }) {
   const { t } = useTranslation()
+  const theme = useThemeColors()
   const valueLabel = t("analytics.charts.common.amountWithPercentage", {
     amount: formatCurrency(item.value, currencyCode),
     percentage: formatPercentage(item.percentage),
   })
   return (
     <Pressable
+      className="rounded-control active:opacity-60"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${item.text}, ${valueLabel}`}
@@ -47,6 +51,9 @@ const LegendItem = memo(function LegendItem({
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
         <View className="min-w-legend flex-1 flex-row items-center gap-2">
+          {isSelected ? (
+            <Check size={UI_ICON_SIZE.small} color={theme.foreground} />
+          ) : null}
           <View
             className="h-3 w-3 rounded-control"
             style={{ backgroundColor: item.color }}

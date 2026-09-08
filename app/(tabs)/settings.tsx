@@ -594,12 +594,12 @@ export default function SettingsScreen() {
           gap="$gutter"
         >
           <Pressable
+            className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
             onPress={() => router.push("/settings/payment" as Href)}
             role="button"
             accessibilityLabel={t("settings.payment.manageTitle")}
-            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
           >
-            <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-card">
+            <View className="flex-row items-center justify-between gap-3">
               <View className="flex-1 gap-1" pointerEvents="none">
                 <Label className="opacity-80">{t("settings.payment.manageTitle")}</Label>
                 <Text className="text-body text-muted-foreground">

@@ -117,48 +117,50 @@ function InstrumentEntryField({
 
   return (
     <View className="gap-3">
-      <Label>{t("instruments.dropdown.saved")}</Label>
       {available.length > 0 || kind === "saved" ? (
-        <View className="flex-row flex-wrap gap-2">
-          {options.map((option) => (
-            <CompactControl
-              key={option.value}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: value === option.value }}
-              accessibilityLabel={`${option.label}, ${option.description}`}
-              surfaceStyle={{
-                flex: 1,
-                backgroundColor: value === option.value ? theme.muted : theme.surface,
-                borderColor: value === option.value ? theme.accent : theme.border,
-              }}
-              onPress={() => {
-                if (value === option.value) return
-                const next = resolveInstrumentChoice(option.value, available, {
-                  kind,
-                  selectedInstrumentId,
-                  manualDigits,
-                })
-                if (next) {
-                  onChange(next)
-                  closeAdd()
-                }
-              }}
-            >
-              <View className="shrink gap-1">
-                <Text className="text-sm font-medium text-foreground">
-                  {option.label}
-                </Text>
-                {option.value !== "none" ? (
-                  <Text className="text-xs text-muted-foreground">
-                    {option.description}
+        <View className="gap-2">
+          <Label>{t("instruments.dropdown.saved")}</Label>
+          <View className="flex-row flex-wrap gap-2">
+            {options.map((option) => (
+              <CompactControl
+                key={option.value}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: value === option.value }}
+                accessibilityLabel={`${option.label}, ${option.description}`}
+                surfaceStyle={{
+                  flex: 1,
+                  backgroundColor: value === option.value ? theme.muted : theme.surface,
+                  borderColor: value === option.value ? theme.accent : theme.border,
+                }}
+                onPress={() => {
+                  if (value === option.value) return
+                  const next = resolveInstrumentChoice(option.value, available, {
+                    kind,
+                    selectedInstrumentId,
+                    manualDigits,
+                  })
+                  if (next) {
+                    onChange(next)
+                    closeAdd()
+                  }
+                }}
+              >
+                <View className="shrink gap-1">
+                  <Text className="text-sm font-medium text-foreground">
+                    {option.label}
                   </Text>
+                  {option.value !== "none" ? (
+                    <Text className="text-xs text-muted-foreground">
+                      {option.description}
+                    </Text>
+                  ) : null}
+                </View>
+                {value === option.value ? (
+                  <Check size={UI_ICON_SIZE.mini} color={theme.accent} />
                 ) : null}
-              </View>
-              {value === option.value ? (
-                <Check size={UI_ICON_SIZE.mini} color={theme.accent} />
-              ) : null}
-            </CompactControl>
-          ))}
+              </CompactControl>
+            ))}
+          </View>
         </View>
       ) : null}
       {kind === "saved" && !selected ? (

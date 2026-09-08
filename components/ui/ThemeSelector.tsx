@@ -1,5 +1,5 @@
 import { View, Text } from "react-native"
-import { Sun, Moon, Smartphone } from "lucide-react-native"
+import { Check, Sun, Moon, Smartphone } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { ThemePreference } from "../../services/settings-manager"
 import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
@@ -58,6 +58,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
             >
               {label}
             </Text>
+            {isSelected ? <Check size={UI_ICON_SIZE.mini} color={theme.accent} /> : null}
           </CompactControl>
         )
       })}

@@ -54,15 +54,7 @@ export function UpdateBanner({
   const contentStyle: ViewStyle = {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: UI_SPACE.section - 2,
-  }
-
-  const leftContentStyle: ViewStyle = {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: UI_SPACE.section - 2,
-    flex: 1,
   }
 
   const iconContainerStyle: ViewStyle = {
@@ -73,8 +65,10 @@ export function UpdateBanner({
 
   const actionsStyle: ViewStyle = {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
     gap: UI_SPACE.control,
+    marginTop: UI_SPACE.control,
   }
 
   const textColor = infoStyles.textColor
@@ -82,58 +76,49 @@ export function UpdateBanner({
   return (
     <RNView style={containerStyle} testID="update-banner">
       <RNView style={contentStyle}>
-        <RNView style={leftContentStyle}>
-          <RNView style={iconContainerStyle}>
-            <Download size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
-          </RNView>
+        <RNView style={iconContainerStyle}>
+          <Download size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
+        </RNView>
+        <Text
+          className="text-sm"
+          style={{
+            fontWeight: UI_FONT_WEIGHT.medium,
+            color: textColor,
+            flex: 1,
+          }}
+          testID="update-banner-version"
+        >
+          {readyToInstall
+            ? t("updateChecker.readyToInstall")
+            : version
+              ? t("updateChecker.versionAvailable", { version })
+              : t("updateChecker.updateAvailable")}
+        </Text>
+        <Pressable
+          className="min-h-12 min-w-12 items-center justify-center rounded-control p-2 active:opacity-60"
+          onPress={onDismiss}
+          testID="update-banner-dismiss-button"
+          accessibilityLabel={t("common.close")}
+          accessibilityRole="button"
+        >
+          <X size={UI_ICON_SIZE.medium} color={textColor as `#${string}`} />
+        </Pressable>
+      </RNView>
+      <RNView style={actionsStyle}>
+        <Button
+          size="control"
+          className="max-w-full"
+          style={{ backgroundColor: infoStyles.actionBg }}
+          onPress={onUpdate}
+          testID="update-banner-update-button"
+        >
           <Text
-            className="text-xs"
-            style={{
-              fontWeight: UI_FONT_WEIGHT.medium,
-              color: textColor,
-              flex: 1,
-            }}
-            numberOfLines={2}
-            testID="update-banner-version"
+            className="shrink text-center text-sm"
+            style={{ fontWeight: UI_FONT_WEIGHT.semiBold, color: textColor }}
           >
-            {readyToInstall
-              ? t("updateChecker.readyToInstall")
-              : version
-                ? t("updateChecker.versionAvailable", { version })
-                : t("updateChecker.updateAvailable")}
+            {readyToInstall ? t("updateChecker.install") : t("updateChecker.update")}
           </Text>
-        </RNView>
-
-        <RNView style={actionsStyle}>
-          <Button
-            size="chip"
-            className="rounded-round"
-            style={{ backgroundColor: infoStyles.actionBg }}
-            onPress={onUpdate}
-            testID="update-banner-update-button"
-          >
-            <Text
-              className="text-micro"
-              style={{ fontWeight: UI_FONT_WEIGHT.semiBold, color: textColor }}
-            >
-              {readyToInstall ? t("updateChecker.install") : t("updateChecker.update")}
-            </Text>
-          </Button>
-
-          <Pressable
-            onPress={onDismiss}
-            hitSlop={UI_SPACE.control}
-            testID="update-banner-dismiss-button"
-            accessibilityLabel={t("common.close")}
-            accessibilityRole="button"
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.6 : 1,
-              padding: UI_SPACE.micro,
-            })}
-          >
-            <X size={UI_ICON_SIZE.regular} color={textColor as `#${string}`} />
-          </Pressable>
-        </RNView>
+        </Button>
       </RNView>
     </RNView>
   )

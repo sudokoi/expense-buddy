@@ -1,10 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { FlashList, useRecyclingState } from "@shopify/flash-list"
-import { Text, View } from "react-native"
+import { Keyboard, Text, View } from "react-native"
+import { Check } from "lucide-react-native"
 import { useAppDialog } from "../../providers/app-dialog-provider"
 import { Button } from "./Button"
 import { Card } from "./Card"
@@ -44,9 +48,8 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_FONT_WEIGHT } from "../../constants/ui-tokens"
-import { useThemeColors } from "../../hooks/use-theme-colors"
-import { formatCurrency } from "../../utils/currency"
+import { UI_SPACE, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
 
 type EditableSmsImportDraft = {
@@ -331,7 +334,6 @@ export function SmsImportReviewScreen({
   const insets = useSafeAreaInsets()
   const { t } = useTranslation()
   const { showDialog } = useAppDialog()
-  const theme = useThemeColors()
   const { categories } = useCategories()
   const { settings, updateSettings } = useSettings()
   const paymentInstruments = settings.paymentInstruments ?? EMPTY_INSTRUMENTS
@@ -353,7 +355,9 @@ export function SmsImportReviewScreen({
   const [editingDraft, setEditingDraft] = useState<EditableSmsImportDraft | null>(null)
   const [showResolvedItems, setShowResolvedItems] = useState(false)
   const [amountError, setAmountError] = useState<string | null>(null)
+  const [footerHeight, setFooterHeight] = useState(80)
   const scrollViewRef = useRef<React.ElementRef<typeof KeyboardAwareScrollView>>(null)
+  const amountInputRef = useRef<React.ElementRef<typeof Input>>(null)
   const visibleItems = useMemo(
     () => (showResolvedItems ? [...pendingItems, ...resolvedItems] : pendingItems),
     [pendingItems, resolvedItems, showResolvedItems]
@@ -366,6 +370,7 @@ export function SmsImportReviewScreen({
   )
 
   const closeEditor = useCallback(() => {
+    Keyboard.dismiss()
     setAmountError(null)
     setEditingItemId(null)
     setEditingDraft(null)
@@ -464,6 +469,7 @@ export function SmsImportReviewScreen({
 
     if (!parseNumericAmount(editingDraft.amount, { allowZero: false }).success) {
       setAmountError(t("smsImport.sheet.notifications.invalidAmount"))
+      amountInputRef.current?.focus()
       return
     }
     const accepted = acceptItem(editingItem, editingDraft)
@@ -659,11 +665,16 @@ export function SmsImportReviewScreen({
     )
 
   const footer = editingItem ? (
-    <View className="flex-row flex-wrap justify-end gap-2">
-      <Button variant="outline" onPress={closeEditor}>
+    <View className="max-w-content w-full self-center flex-row gap-3">
+      <Button className="flex-1" variant="outline" onPress={closeEditor}>
         {t("common.cancel")}
       </Button>
-      <Button variant="accent" onPress={handleAcceptEdited}>
+      <Button
+        className="flex-1"
+        variant="accent"
+        icon={<Check size={UI_ICON_SIZE.medium} />}
+        onPress={handleAcceptEdited}
+      >
         {t("smsImport.sheet.footer.saveAndImport")}
       </Button>
     </View>
@@ -763,15 +774,14 @@ export function SmsImportReviewScreen({
     <View className="flex-1 bg-background">
       <KeyboardAwareScrollView
         ref={scrollViewRef}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        bottomOffset={96}
-        contentContainerStyle={{ flexGrow: 1 }}
+        bottomOffset={footerHeight + UI_SPACE.control}
+        extraKeyboardSpace={footerHeight}
+        contentContainerStyle={{ padding: UI_SPACE.gutter }}
       >
-        <View
-          className="w-full gap-4 px-4 pt-4 pb-4"
-          style={{ maxWidth: UI_SPACE.empty * 18, alignSelf: "center" }}
-        >
+        <View className="max-w-content w-full self-center gap-4">
           <Card className="p-3">
             <View className="gap-2">
               <Text className="text-lg font-semibold text-foreground">
@@ -806,28 +816,37 @@ export function SmsImportReviewScreen({
                 </View>
               </Card>
 
-              <View className="gap-2">
+              <View className="gap-2 rounded-card bg-muted p-3">
                 <Label>{t("smsImport.sheet.fields.amount")}</Label>
-                <Input
-                  keyboardType="decimal-pad"
-                  accessibilityLabel={t("smsImport.sheet.fields.amount")}
-                  className={amountError ? "border-error" : undefined}
-                  value={editingDraft.amount}
-                  onChangeText={(amount) => {
-                    setAmountError(null)
-                    setEditingDraft((current) =>
-                      current
-                        ? {
-                            ...current,
-                            amount,
-                          }
-                        : current
-                    )
-                  }}
-                  placeholderTextColor={theme.foreground}
-                />
+                <View
+                  className={`flex-row items-center rounded-control border bg-surface px-3 ${amountError ? "border-error" : "border-border"}`}
+                >
+                  <Text className="text-2xl font-semibold text-accent">
+                    {getCurrencySymbol(
+                      editingItem.currency ?? (settings.defaultCurrency || "INR")
+                    )}
+                  </Text>
+                  <Input
+                    ref={amountInputRef}
+                    keyboardType="decimal-pad"
+                    accessibilityLabel={t("smsImport.sheet.fields.amount")}
+                    className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
+                    value={editingDraft.amount}
+                    onChangeText={(amount) => {
+                      setAmountError(null)
+                      setEditingDraft((current) =>
+                        current
+                          ? {
+                              ...current,
+                              amount,
+                            }
+                          : current
+                      )
+                    }}
+                  />
+                </View>
                 {amountError ? (
-                  <Text className="text-sm text-error" accessibilityRole="alert">
+                  <Text className="text-xs text-error" accessibilityRole="alert">
                     {amountError}
                   </Text>
                 ) : null}
@@ -874,12 +893,6 @@ export function SmsImportReviewScreen({
 
                 {selectedPaymentConfig?.hasIdentifier ? (
                   <View className="mt-2 gap-1">
-                    <Label className="text-xs text-muted-foreground">
-                      {editingDraft.paymentMethodType === "Other"
-                        ? t("history.editDialog.fields.identifier")
-                        : `${t("instruments.form.digitsLabel", { count: selectedPaymentConfig.maxLength })} ${t("common.optional")}`}
-                    </Label>
-
                     {editingDraft.paymentMethodType &&
                     isPaymentInstrumentMethod(editingDraft.paymentMethodType) ? (
                       <PaymentInstrumentInlineDropdown
@@ -914,25 +927,30 @@ export function SmsImportReviewScreen({
                         }}
                       />
                     ) : (
-                      <Input
-                        placeholder={
-                          editingDraft.paymentMethodType === "Other"
-                            ? t("history.editDialog.fields.otherPlaceholder")
-                            : t("history.editDialog.fields.identifierPlaceholder", {
-                                max: selectedPaymentConfig.maxLength,
-                              })
-                        }
-                        keyboardType={
-                          editingDraft.paymentMethodType === "Other"
-                            ? "default"
-                            : "numeric"
-                        }
-                        value={editingDraft.paymentMethodIdentifier ?? ""}
-                        accessibilityLabel={t("history.editDialog.fields.identifier")}
-                        onChangeText={handleIdentifierChange}
-                        maxLength={selectedPaymentConfig.maxLength}
-                        placeholderTextColor={theme.foreground}
-                      />
+                      <>
+                        <Label className="text-xs text-muted-foreground">
+                          {t("history.editDialog.fields.identifier")}{" "}
+                          {t("common.optional")}
+                        </Label>
+                        <Input
+                          placeholder={
+                            editingDraft.paymentMethodType === "Other"
+                              ? t("history.editDialog.fields.otherPlaceholder")
+                              : t("history.editDialog.fields.identifierPlaceholder", {
+                                  max: selectedPaymentConfig.maxLength,
+                                })
+                          }
+                          keyboardType={
+                            editingDraft.paymentMethodType === "Other"
+                              ? "default"
+                              : "numeric"
+                          }
+                          value={editingDraft.paymentMethodIdentifier ?? ""}
+                          accessibilityLabel={t("history.editDialog.fields.identifier")}
+                          onChangeText={handleIdentifierChange}
+                          maxLength={selectedPaymentConfig.maxLength}
+                        />
+                      </>
                     )}
                   </View>
                 ) : null}
@@ -954,20 +972,21 @@ export function SmsImportReviewScreen({
                     )
                   }}
                   selectTextOnFocus
-                  placeholderTextColor={theme.foreground}
                 />
-              </View>
-
-              <View
-                className="border-t border-border pt-3"
-                style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
-              >
-                {footer}
               </View>
             </View>
           ) : null}
         </View>
       </KeyboardAwareScrollView>
+      <KeyboardStickyView>
+        <View
+          className="border-t border-border bg-background px-5 pt-2"
+          style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.control) }}
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+        >
+          {footer}
+        </View>
+      </KeyboardStickyView>
     </View>
   )
 }
