@@ -10,19 +10,11 @@ import {
   useNotifications,
   useUIState,
 } from "../../stores/hooks"
-import { useSmsImportReview } from "../../providers/sms-import-review-provider"
 import { logAsync } from "../../services/logger"
 import { PAYMENT_METHODS, getPaymentMethodI18nKey } from "../../constants/payment-methods"
 import { ExpenseCategory, PaymentMethodType, PaymentMethod } from "../../types/expense"
-import {
-  Calendar,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Download,
-} from "lucide-react-native"
-import { Keyboard, Platform, Text, View } from "react-native"
+import { Calendar, Check, ChevronDown, ChevronUp, Plus } from "lucide-react-native"
+import { Keyboard, Text, View } from "react-native"
 import {
   KeyboardAwareScrollView,
   KeyboardStickyView,
@@ -53,7 +45,6 @@ import {
 import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
-import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
 import { UI_ICON_SIZE, UI_OPACITY } from "../../constants/ui-tokens"
 import { useDisplayDensity } from "../../hooks/use-display-density"
 
@@ -71,9 +62,7 @@ export default function AddExpenseScreen() {
     defaultPaymentMethod,
     isLoading: isSettingsLoading,
   } = useSettings()
-  const { pendingItems: pendingSmsImportItems } = useSmsImportReview()
   const { paymentMethodSectionExpanded, setPaymentMethodExpanded } = useUIState()
-  const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
   const { categories } = useCategories()
   const tabBarHeight = useTabBarHeight()
   const { space: UI_SPACE } = useDisplayDensity()
@@ -206,11 +195,6 @@ export default function AddExpenseScreen() {
     setPaymentMethodExpanded(!paymentMethodSectionExpanded)
   }
 
-  const handleOpenSmsImport = useCallback(async () => {
-    Keyboard.dismiss()
-    await startSmsImportFromAdd()
-  }, [startSmsImportFromAdd])
-
   const resetForm = useCallback(() => {
     setAmount("")
     setNote("")
@@ -317,27 +301,6 @@ export default function AddExpenseScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="max-w-content w-full self-center gap-ui-section">
-          {Platform.OS === "android" ? (
-            <Button
-              size="control"
-              variant="outline"
-              icon={<Download size={UI_ICON_SIZE.medium} />}
-              onPress={() => {
-                void handleOpenSmsImport()
-              }}
-              disabled={isScanningSmsImports}
-              accessibilityLabel={t("add.importSms")}
-            >
-              {isScanningSmsImports
-                ? t("settings.smsImport.actions.scanning")
-                : pendingSmsImportItems.length > 0
-                  ? t("add.importSmsWithPending", {
-                      count: pendingSmsImportItems.length,
-                    })
-                  : t("add.importSms")}
-            </Button>
-          ) : null}
-
           {/* Amount Input */}
           <View className="gap-ui-control rounded-card bg-muted p-ui-section">
             <Label>{t("add.amount")}</Label>

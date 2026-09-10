@@ -24,15 +24,11 @@ import {
   showPaymentInstrumentFilter as computeShowPaymentInstrumentFilter,
   prunePaymentInstrumentSelection,
 } from "../../utils/analytics/filter-summary"
-import { Filter, RefreshCw, Download } from "lucide-react-native"
+import { Filter } from "lucide-react-native"
 import { useFilters, useFilterPersistence } from "../../stores/filter-store"
-import { useSettings } from "../../stores/hooks"
 import { useTranslation } from "react-i18next"
 import { logAsync } from "../../services/logger"
 import { getCurrencySymbol, formatCurrency } from "../../utils/currency"
-import { useSyncAction } from "../../hooks/use-sync-action"
-import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { IconActionButton } from "../../components/ui/IconActionButton"
 import { Button } from "../../components/ui/Button"
 import { CompactControl } from "../../components/ui/CompactControl"
 import { UI_ICON_SIZE, UI_OPACITY } from "../../constants/ui-tokens"
@@ -60,47 +56,6 @@ const EmptyState = memo(function EmptyState({
       >
         {subtitle}
       </Text>
-    </View>
-  )
-})
-
-// Memoized header component
-const Header = memo(function Header() {
-  const { t } = useTranslation()
-  const { handleSync, isSyncing } = useSyncAction()
-  const { syncConfig } = useSettings()
-  const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
-
-  const handleImportPress = useCallback(() => {
-    void startSmsImportFromAdd()
-  }, [startSmsImportFromAdd])
-
-  return (
-    <View className="mb-ui-content flex-row items-center justify-between">
-      <Text className="text-default text-muted-foreground">
-        {t("analytics.subtitle")}
-      </Text>
-      <View className="flex-row items-center gap-ui-control px-1">
-        {syncConfig !== null ? (
-          <IconActionButton
-            icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
-            onPress={handleSync}
-            tooltip={t("settings.autoSync.syncNow")}
-            disabled={isSyncing}
-            spinning={isSyncing}
-            accessibilityLabel={t("settings.autoSync.syncNow")}
-            tooltipAlign="right"
-          />
-        ) : null}
-        <IconActionButton
-          icon={<Download size={UI_ICON_SIZE.medium} />}
-          onPress={handleImportPress}
-          tooltip={t("settings.smsImport.actions.review")}
-          disabled={isScanningSmsImports}
-          accessibilityLabel={t("settings.smsImport.actions.review")}
-          tooltipAlign="right"
-        />
-      </View>
     </View>
   )
 })
@@ -427,8 +382,6 @@ export default function AnalyticsScreen() {
 
   return (
     <ScreenContainer>
-      <Header />
-
       <View
         className="mb-ui-content flex-row items-center justify-between gap-ui-control"
         style={{ overflow: "visible" }}
