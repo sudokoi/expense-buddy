@@ -132,10 +132,10 @@ export function PaymentInstrumentForm({
   }, [method, nickname, lastDigits, existingInstruments, instrument, onSave, onClose])
 
   return (
-    <View className="gap-4">
-      <View className="gap-2">
+    <View className="gap-ui-content">
+      <View className="gap-ui-control">
         <Label className="opacity-80">{t("instruments.form.paymentMethod")}</Label>
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-ui-control">
           {PAYMENT_INSTRUMENT_METHODS.map((m) => {
             const config =
               selectedMethodConfig && selectedMethodConfig.value === m
@@ -154,7 +154,7 @@ export function PaymentInstrumentForm({
         </View>
       </View>
 
-      <View className="gap-2">
+      <View className="gap-ui-control">
         <Label className="opacity-80">{t("instruments.form.nickname")}</Label>
         <Input
           className={errors.nickname ? "border-error" : undefined}
@@ -167,7 +167,7 @@ export function PaymentInstrumentForm({
         {errors.nickname && <Text className="text-xs text-error">{errors.nickname}</Text>}
       </View>
 
-      <View className="gap-2">
+      <View className="gap-ui-control">
         <Label className="opacity-80">
           {t("instruments.form.digitsLabel", { count: getLastDigitsLength(method) })}
         </Label>
@@ -187,7 +187,7 @@ export function PaymentInstrumentForm({
         )}
       </View>
 
-      <View className="flex-row flex-wrap justify-end gap-3 mt-2">
+      <View className="flex-row flex-wrap justify-end gap-ui-section mt-ui-control">
         <Button size="control" variant="outline" onPress={onClose}>
           {t("common.cancel")}
         </Button>

@@ -3,6 +3,7 @@ import { Text, View as RNView, ViewStyle, TextStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native"
 import { useNotifications } from "../stores/hooks"
+import { useDisplayDensity } from "../hooks/use-display-density"
 import { NotificationType } from "../stores/notification-store"
 import {
   getNotificationColor,
@@ -10,11 +11,9 @@ import {
 } from "../constants/theme-colors"
 import {
   UI_RADIUS,
-  UI_SPACE,
   UI_Z_INDEX,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
   UI_FONT_SIZE,
 } from "../constants/ui-tokens"
 
@@ -23,6 +22,7 @@ const NotificationIcon = React.memo(function NotificationIcon({
 }: {
   type: NotificationType
 }) {
+  const { space: UI_SPACE, icon: UI_ICON_SIZE } = useDisplayDensity()
   const styles = NOTIFICATION_STYLE_TOKENS[type]
   const iconColor = styles.textColor as `#${string}`
   const iconProps = { size: UI_ICON_SIZE.regular, color: iconColor }
@@ -57,6 +57,7 @@ const notificationTextStyle: TextStyle = {
 }
 
 export const NotificationStack: React.FC = () => {
+  const { space: UI_SPACE } = useDisplayDensity()
   const { notifications } = useNotifications()
   const insets = useSafeAreaInsets()
 

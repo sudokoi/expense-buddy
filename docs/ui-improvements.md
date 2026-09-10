@@ -4,6 +4,13 @@ This document records successive passes; later sections supersede earlier layout
 descriptions. See [the final source audit](./ui-audit.md) for current sizing rules,
 theme/localization findings, documented exceptions, and validation boundaries.
 
+The historical 48/40dp sizing in this document now describes **Standard**.
+The confirmed app-only Compact preference uses 36dp ordinary controls, 32dp
+choices, a 44dp amount input, and tighter typography/spacing. It is immediate,
+device-local, and excluded from settings sync. Source SMS uses a collapsed
+accordion in review cards and the editor. See the
+[display-density implementation reference](./display-density.md).
+
 This pass preserves the warm light/dark palette and existing expense, filter, and
 sync workflows. It covers the full route/component tree, not only the screenshot
 viewports.

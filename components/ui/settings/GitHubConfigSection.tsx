@@ -261,10 +261,10 @@ export function GitHubConfigSection({
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         accessibilityLabel={t("settings.github.configTitle")}
-        className="min-h-12 bg-surface flex-row items-center justify-between py-2 rounded-control"
+        className="min-h-control-height bg-surface flex-row items-center justify-between py-ui-control rounded-control"
       >
-        <View className="flex-1 gap-1 pr-3">
-          <Text className="font-medium text-foreground">
+        <View className="flex-1 gap-1 pr-ui-section">
+          <Text className="text-default font-medium text-foreground">
             {t("settings.github.configTitle")}
           </Text>
           {isConfigured && (
@@ -307,9 +307,9 @@ export function GitHubConfigSection({
       </Pressable>
 
       {expanded && (
-        <View className="gap-3 p-2 pt-3">
+        <View className="gap-ui-section p-ui-control pt-ui-section">
           {/* Auth — Android only (device-flow) */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label>{t("settings.github.loginLabel")}</Label>
             <Button
               size="control"
@@ -327,12 +327,12 @@ export function GitHubConfigSection({
               <Text className="text-xs text-error">{githubOAuthStatus.error}</Text>
             )}
             {auth.deviceCode && (
-              <View className="gap-2" style={{ paddingTop: UI_SPACE.micro }}>
+              <View className="gap-ui-control" style={{ paddingTop: UI_SPACE.micro }}>
                 <Text className="text-xs text-muted-foreground">
                   {t("settings.github.deviceCode")}
                 </Text>
                 <View
-                  className="flex-row gap-2"
+                  className="flex-row gap-ui-control"
                   style={{ alignItems: "center", flexWrap: "wrap" }}
                 >
                   <Text className="text-lg font-bold text-foreground">
@@ -373,9 +373,9 @@ export function GitHubConfigSection({
           </View>
 
           {/* Repository */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label>{t("settings.github.repoLabel")}</Label>
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Input
                 className={configErrors.repo ? "border-error" : undefined}
                 placeholder={t("settings.github.repoPlaceholderNative")}
@@ -398,7 +398,7 @@ export function GitHubConfigSection({
           </View>
 
           {/* Branch */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label>{t("settings.github.branchLabel")}</Label>
             <Input
               className={configErrors.branch ? "border-error" : undefined}
@@ -415,7 +415,7 @@ export function GitHubConfigSection({
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row flex-wrap gap-3">
+          <View className="flex-row flex-wrap gap-ui-section">
             <Button
               className="flex-1"
               size="control"
@@ -471,7 +471,7 @@ export function GitHubConfigSection({
             <Button
               size="compact"
               variant="destructive"
-              className="mt-3"
+              className="mt-ui-section"
               icon={<X size={UI_ICON_SIZE.small} />}
               onPress={handleClearConfig}
             >

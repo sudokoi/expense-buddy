@@ -16,6 +16,7 @@ import { getChartColors } from "../../constants/palette"
 import { useThemeColors, useThemeScheme } from "../../hooks/use-theme-colors"
 import { formatCurrency } from "../../utils/currency"
 import { UI_ICON_SIZE, UI_FONT_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface LineChartSectionProps {
   data: SpendingTrend
@@ -24,7 +25,6 @@ interface LineChartSectionProps {
   autoScrollToEnd?: boolean
 }
 
-const CHART_HEIGHT = 160
 const Y_AXIS_WIDTH = 64
 const EDGE_SPACING = 24
 // Gifted Charts bottom-anchors a single-line X-axis label using an 18dp line box.
@@ -38,6 +38,7 @@ export const LineChartSection = memo(function LineChartSection({
   const { t, i18n } = useTranslation()
   const theme = useThemeColors()
   const { fontScale } = useWindowDimensions()
+  const { layout } = useDisplayDensity()
   const yAxisWidth = Y_AXIS_WIDTH * fontScale
   const chartColors = getChartColors(useThemeScheme())
   const { points, granularity } = data
@@ -118,13 +119,13 @@ export const LineChartSection = memo(function LineChartSection({
   return (
     <CollapsibleSection title={t("analytics.charts.trend.title")}>
       {!selectedPoint ? (
-        <View className="h-chart-empty items-center justify-center">
-          <Text className="text-muted-foreground">
+        <View className="min-h-layout-chartEmpty items-center justify-center">
+          <Text className="text-default text-muted-foreground">
             {t("analytics.charts.common.noData")}
           </Text>
         </View>
       ) : (
-        <View onLayout={handleLayout} className="gap-3">
+        <View onLayout={handleLayout} className="gap-ui-section">
           <View className="gap-1">
             <Text className="text-xs text-muted-foreground">
               {t(`analytics.charts.trend.${granularity}`)}
@@ -151,7 +152,7 @@ export const LineChartSection = memo(function LineChartSection({
                 showScrollIndicator
                 data={chartData}
                 width={chartWidth}
-                height={CHART_HEIGHT}
+                height={layout.trend}
                 spacing={spacing}
                 initialSpacing={EDGE_SPACING}
                 endSpacing={EDGE_SPACING}
@@ -202,9 +203,9 @@ export const LineChartSection = memo(function LineChartSection({
             </View>
           ) : null}
 
-          <View className="flex-row items-center gap-2 rounded-control bg-background p-2">
+          <View className="flex-row items-center gap-ui-control rounded-control bg-background p-ui-control">
             <Pressable
-              className="min-h-12 min-w-12 items-center justify-center rounded-control"
+              className="min-h-control-height min-w-control-height items-center justify-center rounded-control"
               accessibilityRole="button"
               accessibilityLabel={t("analytics.charts.trend.previous")}
               accessibilityState={{ disabled: selectedIndex <= 0 }}
@@ -230,7 +231,7 @@ export const LineChartSection = memo(function LineChartSection({
               </Text>
             </View>
             <Pressable
-              className="min-h-12 min-w-12 items-center justify-center rounded-control"
+              className="min-h-control-height min-w-control-height items-center justify-center rounded-control"
               accessibilityRole="button"
               accessibilityLabel={t("analytics.charts.trend.next")}
               accessibilityState={{ disabled: selectedIndex >= points.length - 1 }}

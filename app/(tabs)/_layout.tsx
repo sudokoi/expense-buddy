@@ -7,19 +7,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { useTabBarHeight } from "../../hooks/use-tab-bar-height"
-import {
-  UI_FONT_SIZE,
-  UI_ICON_SIZE,
-  UI_FONT_WEIGHT,
-  UI_SPACE,
-} from "../../constants/ui-tokens"
+import { UI_FONT_SIZE, UI_FONT_WEIGHT, UI_SPACE } from "../../constants/ui-tokens"
 import { logAsync } from "../../services/logger"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 export default function TabLayout() {
   const theme = useThemeColors()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const tabBarHeight = useTabBarHeight()
+  const { layout, icon, density, font } = useDisplayDensity()
   const pathname = usePathname()
 
   useEffect(() => {
@@ -49,7 +46,7 @@ export default function TabLayout() {
           fontWeight: UI_FONT_WEIGHT.semiBold,
         },
         // Navigator slot, not a touch target: leaves room for wide platform tab glyphs.
-        tabBarIconStyle: { width: 56, height: 32 },
+        tabBarIconStyle: { width: layout.tabSlotWidth, height: layout.tabSlotHeight },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
@@ -64,6 +61,7 @@ export default function TabLayout() {
           borderBottomColor: theme.border,
         },
         headerTintColor: theme.foreground,
+        headerTitleStyle: density === "compact" ? { fontSize: font.screen } : undefined,
       }}
     >
       <Tabs.Screen
@@ -72,10 +70,10 @@ export default function TabLayout() {
           title: t("navigation.analytics"),
           tabBarIcon: ({ color, focused }) => (
             <View
-              className="w-14 items-center rounded-full py-1"
+              className="w-layout-tabSlotWidth items-center rounded-full py-1"
               style={focused ? { backgroundColor: theme.muted } : undefined}
             >
-              <PieChart color={color} size={UI_ICON_SIZE.large} />
+              <PieChart color={color} size={icon.large} />
             </View>
           ),
         }}
@@ -87,10 +85,10 @@ export default function TabLayout() {
           tabBarLabel: t("navigation.addTab"),
           tabBarIcon: ({ color, focused }) => (
             <View
-              className="w-14 items-center rounded-full py-1"
+              className="w-layout-tabSlotWidth items-center rounded-full py-1"
               style={focused ? { backgroundColor: theme.muted } : undefined}
             >
-              <PlusCircle color={color} size={UI_ICON_SIZE.large} />
+              <PlusCircle color={color} size={icon.large} />
             </View>
           ),
         }}
@@ -101,10 +99,10 @@ export default function TabLayout() {
           title: t("navigation.history"),
           tabBarIcon: ({ color, focused }) => (
             <View
-              className="w-14 items-center rounded-full py-1"
+              className="w-layout-tabSlotWidth items-center rounded-full py-1"
               style={focused ? { backgroundColor: theme.muted } : undefined}
             >
-              <Clock color={color} size={UI_ICON_SIZE.large} />
+              <Clock color={color} size={icon.large} />
             </View>
           ),
         }}
@@ -115,10 +113,10 @@ export default function TabLayout() {
           title: t("navigation.settings"),
           tabBarIcon: ({ color, focused }) => (
             <View
-              className="w-14 items-center rounded-full py-1"
+              className="w-layout-tabSlotWidth items-center rounded-full py-1"
               style={focused ? { backgroundColor: theme.muted } : undefined}
             >
-              <Settings color={color} size={UI_ICON_SIZE.large} />
+              <Settings color={color} size={icon.large} />
             </View>
           ),
         }}

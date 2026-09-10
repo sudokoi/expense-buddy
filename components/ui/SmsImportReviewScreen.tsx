@@ -48,7 +48,9 @@ import {
   InstrumentEntryKind,
   PaymentInstrumentInlineDropdown,
 } from "./PaymentInstrumentInlineDropdown"
-import { UI_SPACE, UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
+import { SourceSmsAccordion } from "./SourceSmsAccordion"
 import { formatCurrency, getCurrencySymbol } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
 
@@ -240,10 +242,10 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
   )
   const debugText = __DEV__ && expanded ? formatSuggestionDebugText(item, t) : null
   return (
-    <Card className="mb-3 p-3">
-      <View className="gap-3">
+    <Card className="mb-ui-section p-ui-section">
+      <View className="gap-ui-section">
         <View className="gap-1">
-          <Text className="font-bold text-foreground">
+          <Text className="text-default font-bold text-foreground">
             {item.merchantName || item.sourceMessage.sender}
           </Text>
           <Text className="text-xs text-muted-foreground">
@@ -256,42 +258,43 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
               {debugText ? (
                 <Text className="text-micro text-muted-foreground">{debugText}</Text>
               ) : null}
-              <Text className="text-foreground">
+              <Text className="text-default text-foreground">
                 {t("smsImport.sheet.labels.amount")}:{" "}
                 {typeof item.amount === "number"
                   ? formatCurrency(item.amount, item.currency || currency)
                   : t("smsImport.sheet.values.needsReview")}
               </Text>
-              <Text className="text-foreground">
+              <Text className="text-default text-foreground">
                 {t("smsImport.sheet.labels.category")}:{" "}
                 {getLocalizedCategoryLabel(suggestion.category, t)}
               </Text>
-              <Text className="text-foreground">
+              <Text className="text-default text-foreground">
                 {t("smsImport.sheet.labels.payment")}:{" "}
                 {getLocalizedPaymentMethodLabel(suggestion.paymentMethod, instruments, t)}
               </Text>
-              <Button
-                size="compact"
-                variant="ghost"
-                onPress={() => setExpanded(!expanded)}
-                accessibilityState={{ expanded }}
-              >
-                {t("smsImport.sheet.sourceSms")}
-              </Button>
-              {expanded ? (
-                <Text className="text-sm text-muted-foreground">
-                  {item.sourceMessage.body}
-                </Text>
-              ) : null}
+              <SourceSmsAccordion
+                body={item.sourceMessage.body}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+              />
             </View>
-            <View className="flex-row flex-wrap gap-2">
-              <Button variant="accent" onPress={() => onAccept(item)}>
+            <View className="flex-row flex-wrap gap-ui-control">
+              <Button
+                className="min-w-20 flex-1"
+                variant="accent"
+                onPress={() => onAccept(item)}
+              >
                 {t("smsImport.sheet.actions.accept")}
               </Button>
-              <Button variant="outline" onPress={() => onEdit(item)}>
+              <Button
+                className="min-w-20 flex-1"
+                variant="outline"
+                onPress={() => onEdit(item)}
+              >
                 {t("common.edit")}
               </Button>
               <Button
+                className="min-w-20 flex-1"
                 variant="destructive"
                 onPress={() => {
                   void onReject(item.fingerprint)
@@ -300,6 +303,7 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
                 {t("smsImport.sheet.actions.reject")}
               </Button>
               <Button
+                className="min-w-20 flex-1"
                 variant="outline"
                 onPress={() => {
                   void onDismiss(item.fingerprint)
@@ -311,13 +315,15 @@ const SmsReviewRow = React.memo(function SmsReviewRow({
           </>
         ) : (
           <>
-            <Text className="text-foreground">
+            <Text className="text-default text-foreground">
               {t("smsImport.sheet.labels.status")}:{" "}
               {getLocalizedReviewStatus(item.status, t)}
             </Text>
-            <Text className="text-muted-foreground" numberOfLines={2}>
-              {item.sourceMessage.body}
-            </Text>
+            <SourceSmsAccordion
+              body={item.sourceMessage.body}
+              expanded={expanded}
+              onExpandedChange={setExpanded}
+            />
           </>
         )}
       </View>
@@ -332,6 +338,7 @@ export function SmsImportReviewScreen({
 }) {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const { t } = useTranslation()
   const { showDialog } = useAppDialog()
   const { categories } = useCategories()
@@ -665,7 +672,7 @@ export function SmsImportReviewScreen({
     )
 
   const footer = editingItem ? (
-    <View className="max-w-content w-full self-center flex-row gap-3">
+    <View className="max-w-content w-full self-center flex-row gap-ui-section">
       <Button className="flex-1" variant="outline" onPress={closeEditor}>
         {t("common.cancel")}
       </Button>
@@ -679,7 +686,7 @@ export function SmsImportReviewScreen({
       </Button>
     </View>
   ) : pendingItems.length > 1 ? (
-    <View className="flex-row flex-wrap justify-between gap-2">
+    <View className="flex-row flex-wrap justify-between gap-ui-control">
       <Button
         variant="outline"
         onPress={() => setShowResolvedItems((current) => !current)}
@@ -696,7 +703,7 @@ export function SmsImportReviewScreen({
       </Button>
     </View>
   ) : resolvedItems.length > 0 ? (
-    <View className="flex-row flex-wrap justify-between gap-2">
+    <View className="flex-row flex-wrap justify-between gap-ui-control">
       <Button
         variant="outline"
         onPress={() => setShowResolvedItems((current) => !current)}
@@ -727,8 +734,8 @@ export function SmsImportReviewScreen({
           getItemType={(item) => (item.status === "pending" ? "pending" : "resolved")}
           contentContainerStyle={{ padding: UI_SPACE.content }}
           ListHeaderComponent={
-            <Card className="mb-4 p-3">
-              <View className="gap-2">
+            <Card className="mb-ui-content p-ui-section">
+              <View className="gap-ui-control">
                 <Text className="text-lg font-semibold text-foreground">
                   {t("smsImport.sheet.title")}
                 </Text>
@@ -737,12 +744,12 @@ export function SmsImportReviewScreen({
             </Card>
           }
           ListEmptyComponent={
-            <Card className="p-4">
-              <View className="gap-2">
-                <Text className="font-bold text-foreground">
+            <Card className="p-ui-content">
+              <View className="gap-ui-control">
+                <Text className="text-default font-bold text-foreground">
                   {t("smsImport.sheet.emptyTitle")}
                 </Text>
-                <Text className="text-muted-foreground">
+                <Text className="text-default text-muted-foreground">
                   {t(
                     items.length === 0
                       ? "smsImport.sheet.emptyDescription"
@@ -761,7 +768,7 @@ export function SmsImportReviewScreen({
           }
         />
         <View
-          className="border-t border-border bg-background px-4 pt-3"
+          className="border-t border-border bg-background px-ui-content pt-ui-section"
           style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter) }}
         >
           {footer}
@@ -781,9 +788,9 @@ export function SmsImportReviewScreen({
         extraKeyboardSpace={footerHeight}
         contentContainerStyle={{ padding: UI_SPACE.gutter }}
       >
-        <View className="max-w-content w-full self-center gap-4">
-          <Card className="p-3">
-            <View className="gap-2">
+        <View className="max-w-content w-full self-center gap-ui-content">
+          <Card className="p-ui-section">
+            <View className="gap-ui-control">
               <Text className="text-lg font-semibold text-foreground">
                 {editingItem
                   ? t("smsImport.sheet.editTitle")
@@ -794,32 +801,27 @@ export function SmsImportReviewScreen({
           </Card>
 
           {editingItem && editingDraft ? (
-            <View className="gap-4 pb-2">
-              <Card className="p-3">
-                <View className="gap-2">
-                  <Text
-                    className="text-foreground"
-                    style={{ fontWeight: UI_FONT_WEIGHT.bold }}
-                  >
-                    {t("smsImport.sheet.sourceSms")}
-                  </Text>
-                  <Text className="text-body text-muted-foreground">
-                    {editingItem.sourceMessage.sender ||
-                      t("smsImport.sheet.unknownSender")}
-                  </Text>
-                  <Text className="text-xs text-muted-foreground">
-                    {formatTimestamp(editingItem.sourceMessage.receivedAt)}
-                  </Text>
-                  <Text className="text-foreground">
-                    {editingItem.sourceMessage.body}
-                  </Text>
-                </View>
-              </Card>
+            <View className="gap-ui-content pb-ui-control">
+              <SourceSmsAccordion
+                key={editingItem.id}
+                body={editingItem.sourceMessage.body}
+                metadata={
+                  <>
+                    <Text className="text-body text-muted-foreground">
+                      {editingItem.sourceMessage.sender ||
+                        t("smsImport.sheet.unknownSender")}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground">
+                      {formatTimestamp(editingItem.sourceMessage.receivedAt)}
+                    </Text>
+                  </>
+                }
+              />
 
-              <View className="gap-2 rounded-card bg-muted p-3">
+              <View className="gap-ui-control rounded-card bg-muted p-ui-section">
                 <Label>{t("smsImport.sheet.fields.amount")}</Label>
                 <View
-                  className={`flex-row items-center rounded-control border bg-surface px-3 ${amountError ? "border-error" : "border-border"}`}
+                  className={`flex-row items-center rounded-control border bg-surface px-ui-section ${amountError ? "border-error" : "border-border"}`}
                 >
                   <Text className="text-2xl font-semibold text-accent">
                     {getCurrencySymbol(
@@ -830,7 +832,7 @@ export function SmsImportReviewScreen({
                     ref={amountInputRef}
                     keyboardType="decimal-pad"
                     accessibilityLabel={t("smsImport.sheet.fields.amount")}
-                    className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
+                    className="min-h-control-amount flex-1 border-0 bg-transparent text-2xl font-semibold"
                     value={editingDraft.amount}
                     onChangeText={(amount) => {
                       setAmountError(null)
@@ -852,9 +854,9 @@ export function SmsImportReviewScreen({
                 ) : null}
               </View>
 
-              <View className="gap-2">
+              <View className="gap-ui-control">
                 <Label>{t("smsImport.sheet.fields.category")}</Label>
-                <View className="flex-row flex-wrap gap-2">
+                <View className="flex-row flex-wrap gap-ui-control">
                   {categories.map((category) => (
                     <CategoryCard
                       key={category.label}
@@ -878,9 +880,9 @@ export function SmsImportReviewScreen({
                 </View>
               </View>
 
-              <View className="gap-2">
+              <View className="gap-ui-control">
                 <Label>{t("smsImport.sheet.fields.paymentMethod")}</Label>
-                <View className="flex-row flex-wrap gap-2">
+                <View className="flex-row flex-wrap gap-ui-control">
                   {PAYMENT_METHODS.map((config) => (
                     <PaymentMethodCard
                       key={config.value}
@@ -892,7 +894,7 @@ export function SmsImportReviewScreen({
                 </View>
 
                 {selectedPaymentConfig?.hasIdentifier ? (
-                  <View className="mt-2 gap-1">
+                  <View className="mt-ui-control gap-1">
                     {editingDraft.paymentMethodType &&
                     isPaymentInstrumentMethod(editingDraft.paymentMethodType) ? (
                       <PaymentInstrumentInlineDropdown
@@ -956,7 +958,7 @@ export function SmsImportReviewScreen({
                 ) : null}
               </View>
 
-              <View className="gap-2">
+              <View className="gap-ui-control">
                 <Label>{t("smsImport.sheet.fields.note")}</Label>
                 <Input
                   value={editingDraft.note}
@@ -980,7 +982,7 @@ export function SmsImportReviewScreen({
       </KeyboardAwareScrollView>
       <KeyboardStickyView>
         <View
-          className="border-t border-border bg-background px-5 pt-2"
+          className="border-t border-border bg-background px-ui-gutter pt-ui-control"
           style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.control) }}
           onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
         >

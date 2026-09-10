@@ -31,7 +31,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
   const theme = useThemeColors()
 
   return (
-    <View className="max-w-full self-start flex-row flex-wrap gap-x-2">
+    <View className="max-w-full self-start flex-row flex-wrap gap-x-ui-control">
       {themeOptions.map(({ key, labelKey, Icon }) => {
         const isSelected = value === key
         const label = t(labelKey)

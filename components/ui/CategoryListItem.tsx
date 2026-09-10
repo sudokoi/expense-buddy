@@ -29,15 +29,15 @@ export const CategoryListItem = memo(function CategoryListItem({
     category.label === "Other" ? t("settings.categories.other") : category.label
   const { resolvedColor, iconColor } = resolveCategoryColor(category.color)
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center gap-ui-control">
       <Pressable
-        className="min-h-12 flex-1 flex-row items-center gap-3 py-2 active:opacity-60"
+        className="min-h-control-height flex-1 flex-row items-center gap-ui-section py-ui-control active:opacity-60"
         accessibilityRole="button"
         accessibilityLabel={t("common.editLabel", { label })}
         onPress={() => onEdit(category)}
       >
         <View
-          className="h-8 w-8 items-center justify-center rounded-control"
+          className="h-control-smallBadge w-control-smallBadge items-center justify-center rounded-control"
           style={{ backgroundColor: resolvedColor }}
         >
           <DynamicCategoryIcon

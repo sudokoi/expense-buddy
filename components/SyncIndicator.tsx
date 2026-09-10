@@ -6,9 +6,8 @@ import { useTranslation } from "react-i18next"
 import { useSyncMachine } from "../hooks/use-sync-machine"
 import { SEMANTIC_FOREGROUND_COLORS, getOverlayColors } from "../constants/theme-colors"
 import { useThemeColors, useThemeScheme } from "../hooks/use-theme-colors"
-import { UI_ICON_SIZE, UI_RADIUS, UI_SPACE, UI_Z_INDEX } from "../constants/ui-tokens"
-
-const INDICATOR_SIZE = UI_ICON_SIZE.large + UI_SPACE.control * 2
+import { UI_RADIUS, UI_Z_INDEX } from "../constants/ui-tokens"
+import { useDisplayDensity } from "../hooks/use-display-density"
 
 /**
  * Global sync status indicator
@@ -24,6 +23,7 @@ export const SyncIndicator: React.FC = () => {
   const { isSyncing, isSuccess, isError } = useSyncMachine()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { icon: UI_ICON_SIZE, space: UI_SPACE, layout } = useDisplayDensity()
   const colorScheme = useThemeScheme()
   const theme = useThemeColors()
   const overlayColors = getOverlayColors(colorScheme)
@@ -57,10 +57,10 @@ export const SyncIndicator: React.FC = () => {
 
   return (
     <View
-      className="absolute right-6 items-center justify-center shadow-sm"
+      className="absolute right-ui-block items-center justify-center shadow-sm"
       style={{
-        width: INDICATOR_SIZE,
-        height: INDICATOR_SIZE,
+        width: layout.indicator,
+        height: layout.indicator,
         borderRadius: UI_RADIUS.round,
         top: insets.top + UI_SPACE.gutter,
         zIndex: UI_Z_INDEX.floating,

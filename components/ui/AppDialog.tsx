@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useReducedMotion } from "react-native-reanimated"
 import { Button } from "./Button"
 import type { AppDialogAction } from "../../utils/app-dialog-queue"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { MODAL_BACKDROP_COLOR } from "../../constants/palette"
 
 interface AppDialogProps {
@@ -33,6 +33,7 @@ export function AppDialog({
 }: AppDialogProps) {
   const { height, width, fontScale } = useWindowDimensions()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE, layout } = useDisplayDensity()
   const reducedMotion = useReducedMotion()
   const heading = useRef<Text>(null)
   // Dialog-specific fit thresholds: avoid crowded actions on narrow/large-text screens.
@@ -50,7 +51,7 @@ export function AppDialog({
       }}
     >
       <View
-        className="flex-1 items-center justify-center px-6"
+        className="flex-1 items-center justify-center px-ui-block"
         style={{
           backgroundColor: MODAL_BACKDROP_COLOR,
           paddingTop: insets.top + UI_SPACE.content,
@@ -70,7 +71,10 @@ export function AppDialog({
         >
           <ScrollView
             bounces={false}
-            contentContainerStyle={{ padding: UI_SPACE.block, gap: UI_SPACE.content }}
+            contentContainerStyle={{
+              padding: layout.dialogPadding,
+              gap: UI_SPACE.content,
+            }}
           >
             <Text
               ref={heading}
@@ -81,7 +85,13 @@ export function AppDialog({
               {title}
             </Text>
             <Text className="text-sm text-muted-foreground">{message}</Text>
-            <View className={stacked ? "gap-3" : "flex-row flex-wrap justify-end gap-3"}>
+            <View
+              className={
+                stacked
+                  ? "gap-ui-section"
+                  : "flex-row flex-wrap justify-end gap-ui-section"
+              }
+            >
               {actions.map((action, index) => (
                 <Button
                   key={index}

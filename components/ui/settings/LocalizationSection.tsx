@@ -24,7 +24,7 @@ export function LocalizationSection({
 }: LocalizationSectionProps) {
   const { t } = useTranslation()
   return (
-    <View className="gap-3">
+    <View className="gap-ui-section">
       <LanguageSelector value={languagePreference} onChange={onLanguageChange} />
       <CurrencySelector value={defaultCurrency} onChange={onCurrencyChange} />
       {smsRegion !== undefined && onRegionChange ? (

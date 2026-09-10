@@ -54,7 +54,8 @@ import { useTranslation } from "react-i18next"
 import { getCurrencySymbol } from "../../utils/currency"
 import { formatDate } from "../../utils/date"
 import { useSmsImportActions } from "../../hooks/use-sms-import-actions"
-import { UI_ICON_SIZE, UI_SPACE, UI_OPACITY } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_OPACITY } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -75,6 +76,7 @@ export default function AddExpenseScreen() {
   const { isScanningSmsImports, startSmsImportFromAdd } = useSmsImportActions()
   const { categories } = useCategories()
   const tabBarHeight = useTabBarHeight()
+  const { space: UI_SPACE } = useDisplayDensity()
   const [footerHeight, setFooterHeight] = useState(72)
   const scrollRef = useRef<KeyboardAwareScrollViewRef>(null)
 
@@ -314,7 +316,7 @@ export default function AddExpenseScreen() {
         extraKeyboardSpace={footerHeight}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="max-w-content w-full self-center gap-3">
+        <View className="max-w-content w-full self-center gap-ui-section">
           {Platform.OS === "android" ? (
             <Button
               size="control"
@@ -337,16 +339,16 @@ export default function AddExpenseScreen() {
           ) : null}
 
           {/* Amount Input */}
-          <View className="gap-2 rounded-card bg-muted p-3">
+          <View className="gap-ui-control rounded-card bg-muted p-ui-section">
             <Label>{t("add.amount")}</Label>
             <View
-              className={`flex-row items-center rounded-control border bg-surface px-3 ${errors.amount ? "border-error" : "border-border"}`}
+              className={`flex-row items-center rounded-control border bg-surface px-ui-section ${errors.amount ? "border-error" : "border-border"}`}
             >
               <Text className="text-2xl font-semibold text-accent">
                 {getCurrencySymbol(settings.defaultCurrency)}
               </Text>
               <Input
-                className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
+                className="min-h-control-amount flex-1 border-0 bg-transparent text-2xl font-semibold"
                 placeholder={
                   settings.enableMathExpressions
                     ? t("add.amountPlaceholder")
@@ -381,14 +383,14 @@ export default function AddExpenseScreen() {
           </View>
 
           {/* Category Selection */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label className="opacity-80">{t("add.category")}</Label>
-            <View className="flex-row flex-wrap gap-2">{categoryCards}</View>
+            <View className="flex-row flex-wrap gap-ui-control">{categoryCards}</View>
           </View>
 
           {/* Date Picker */}
-          <View className="gap-2">
-            <View className="flex-row flex-wrap items-center justify-between gap-2">
+          <View className="gap-ui-control">
+            <View className="flex-row flex-wrap items-center justify-between gap-ui-control">
               <Label className="opacity-80">{t("add.date")}</Label>
               <Button
                 size="control"
@@ -412,7 +414,7 @@ export default function AddExpenseScreen() {
           </View>
 
           {/* Note Input */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label className="opacity-80">{t("add.note")}</Label>
             <Input
               placeholder={t("add.notePlaceholder")}
@@ -423,7 +425,7 @@ export default function AddExpenseScreen() {
           </View>
 
           {/* Payment Method Selection - Collapsible */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Button
               variant="ghost"
               onPress={togglePaymentMethodSection}
@@ -459,8 +461,8 @@ export default function AddExpenseScreen() {
             </Button>
 
             {paymentMethodSectionExpanded && (
-              <View className="gap-2">
-                <View className="flex-row flex-wrap gap-2">
+              <View className="gap-ui-control">
+                <View className="flex-row flex-wrap gap-ui-control">
                   {PAYMENT_METHODS.map((pm) => (
                     <PaymentMethodCard
                       key={pm.value}
@@ -527,10 +529,10 @@ export default function AddExpenseScreen() {
       </KeyboardAwareScrollView>
       <KeyboardStickyView offset={{ closed: 0, opened: tabBarHeight }}>
         <View
-          className="border-t border-border bg-background px-5 py-2"
+          className="border-t border-border bg-background px-ui-gutter py-ui-control"
           onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
         >
-          <View className="max-w-content w-full self-center flex-row gap-3">
+          <View className="max-w-content w-full self-center flex-row gap-ui-section">
             <Button
               className="flex-1"
               size="control"

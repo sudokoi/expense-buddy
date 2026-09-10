@@ -26,6 +26,7 @@ import { UpdateInfo } from "../../services/update-checker"
 import { APP_CONFIG } from "../../constants/app-config"
 import { ScreenContainer } from "../../components/ui/ScreenContainer"
 import { ThemeSelector } from "../../components/ui/ThemeSelector"
+import { DisplayDensitySelector } from "../../components/ui/DisplayDensitySelector"
 import { SettingsSection } from "../../components/ui/SettingsSection"
 import { GitHubConfigSection } from "../../components/ui/settings/GitHubConfigSection"
 import { AutoSyncSection } from "../../components/ui/settings/AutoSyncSection"
@@ -477,7 +478,7 @@ export default function SettingsScreen() {
 
   return (
     <ScreenContainer>
-      <View className="max-w-content w-full self-center gap-4">
+      <View className="max-w-content w-full self-center gap-ui-content">
         <SettingsSection
           title={t("settings.sections.sync")}
           icon={GitBranch}
@@ -496,7 +497,7 @@ export default function SettingsScreen() {
           />
 
           {isConfigured && (
-            <View className="gap-4 mt-2">
+            <View className="gap-ui-content mt-ui-control">
               {pendingCount > 0 ? (
                 <Text
                   className="text-sm text-muted-foreground"
@@ -535,7 +536,7 @@ export default function SettingsScreen() {
             description={t("settings.smsImport.description")}
             gap="$gutter"
           >
-            <View className="flex-row flex-wrap gap-2">
+            <View className="flex-row flex-wrap gap-ui-control">
               <Button
                 variant="outline"
                 onPress={handleScanSmsImports}
@@ -549,7 +550,7 @@ export default function SettingsScreen() {
             </View>
 
             {pendingSmsImportItems.length > 0 ? (
-              <View className="flex-row flex-wrap gap-2">
+              <View className="flex-row flex-wrap gap-ui-control">
                 <Button
                   variant="outline"
                   onPress={openSmsImportReview}
@@ -568,7 +569,7 @@ export default function SettingsScreen() {
               {t("settings.smsImport.helper")}
             </Text>
 
-            <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+            <View className="bg-surface px-ui-section py-ui-section flex-row items-center justify-between rounded-card">
               <View className="flex-1 gap-1">
                 <Label>{t("settings.smsImport.backgroundAlerts")}</Label>
                 <Text className="text-xs text-muted-foreground">
@@ -594,12 +595,12 @@ export default function SettingsScreen() {
           gap="$gutter"
         >
           <Pressable
-            className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
+            className="min-h-control-height rounded-control border border-border bg-surface p-ui-section active:opacity-60"
             onPress={() => router.push("/settings/payment" as Href)}
             role="button"
             accessibilityLabel={t("settings.payment.manageTitle")}
           >
-            <View className="flex-row items-center justify-between gap-3">
+            <View className="flex-row items-center justify-between gap-ui-section">
               <View className="flex-1 gap-1" pointerEvents="none">
                 <Label className="opacity-80">{t("settings.payment.manageTitle")}</Label>
                 <Text className="text-body text-muted-foreground">
@@ -628,7 +629,7 @@ export default function SettingsScreen() {
           description={t("settings.featureFlags.description")}
           gap="$gutter"
         >
-          <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+          <View className="bg-surface px-ui-section py-ui-section flex-row items-center justify-between rounded-card">
             <View className="flex-1 gap-1">
               <Label>{t("settings.general.mathEntry")}</Label>
               <Text className="text-xs text-muted-foreground">
@@ -643,7 +644,7 @@ export default function SettingsScreen() {
           </View>
 
           {Platform.OS === "android" ? (
-            <View className="bg-surface px-3 py-3 flex-row items-center justify-between rounded-card">
+            <View className="bg-surface px-ui-section py-ui-section flex-row items-center justify-between rounded-card">
               <View className="flex-1 gap-1">
                 <Label>{t("settings.featureFlags.mlOnlySmsImports")}</Label>
                 <Text className="text-xs text-muted-foreground">
@@ -668,12 +669,14 @@ export default function SettingsScreen() {
           description={t("settings.general.description")}
           gap="$gutter"
         >
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label>{t("settings.appearance.theme")}</Label>
             <ThemeSelector value={settings.theme} onChange={handleThemeChange} />
           </View>
 
-          <View className="gap-2">
+          <DisplayDensitySelector />
+
+          <View className="gap-ui-control">
             <Label>{t("settings.general.exportLabel")}</Label>
             <Button
               size="control"

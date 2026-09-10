@@ -6,12 +6,12 @@ import { Button } from "./Button"
 import { SEMANTIC_COLORS, NOTIFICATION_STYLE_TOKENS } from "../../constants/theme-colors"
 import {
   UI_RADIUS,
-  UI_SPACE,
   UI_Z_INDEX,
   UI_FONT_WEIGHT,
   UI_BORDER_WIDTH,
   UI_ICON_SIZE,
 } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface UpdateBannerProps {
   /** The version number to display */
@@ -35,6 +35,7 @@ export function UpdateBanner({
 }: UpdateBannerProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const infoStyles = NOTIFICATION_STYLE_TOKENS.info
 
   const containerStyle: ViewStyle = {
@@ -95,7 +96,7 @@ export function UpdateBanner({
               : t("updateChecker.updateAvailable")}
         </Text>
         <Pressable
-          className="min-h-12 min-w-12 items-center justify-center rounded-control p-2 active:opacity-60"
+          className="min-h-control-height min-w-control-height items-center justify-center rounded-control p-ui-control active:opacity-60"
           onPress={onDismiss}
           testID="update-banner-dismiss-button"
           accessibilityLabel={t("common.close")}

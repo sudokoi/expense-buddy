@@ -76,10 +76,10 @@ export function PaymentInstrumentsSection() {
   )
 
   return (
-    <View className="gap-3">
-      <View className="flex-row items-center gap-2">
+    <View className="gap-ui-section">
+      <View className="flex-row items-center gap-ui-control">
         <Pressable
-          className="min-h-12 flex-1 flex-row items-center gap-2 active:opacity-60"
+          className="min-h-control-height flex-1 flex-row items-center gap-ui-control active:opacity-60"
           accessibilityRole="button"
           accessibilityLabel={`${t("instruments.manage")}, ${active.length}`}
           accessibilityState={{ expanded }}
@@ -107,7 +107,7 @@ export function PaymentInstrumentsSection() {
         </Button>
       </View>
       {formOpen ? (
-        <View className="gap-3 border-y border-border py-3">
+        <View className="gap-ui-section border-y border-border py-ui-section">
           <Text
             className="text-base font-semibold text-foreground"
             accessibilityRole="header"
@@ -144,7 +144,7 @@ export function PaymentInstrumentsSection() {
                     className="flex-row items-center border-b border-border py-1"
                   >
                     <Pressable
-                      className="min-h-12 flex-1 justify-center gap-1 py-2 active:opacity-60"
+                      className="min-h-control-height flex-1 justify-center gap-1 py-ui-control active:opacity-60"
                       accessibilityRole="button"
                       accessibilityLabel={t("common.editLabel", {
                         label: `${instrument.nickname}, ${methodLabel}, ${instrument.lastDigits}`,

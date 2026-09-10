@@ -21,6 +21,9 @@ import { useChangelogOnUpdate } from "../hooks/use-changelog-on-update"
 import { usePlayStoreReview } from "../hooks/use-play-store-review"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { useSettings } from "../stores/hooks"
+import { useSelector } from "@xstate/store-react"
+import { useStoreContext } from "../stores/store-provider"
+import { useDisplayDensity } from "../hooks/use-display-density"
 import { useThemeColors, useThemeSplashGate } from "../hooks/use-theme-colors"
 import { palette } from "../constants/palette"
 
@@ -109,6 +112,16 @@ export default function RootLayout() {
 const THEME_SETTLE_TIMEOUT_MS = 2000
 
 function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
+  const { uiStateStore } = useStoreContext()
+  const densityHydrated = useSelector(
+    uiStateStore,
+    (state) => state.context.densityHydrated
+  )
+  const [densityTimeout, setDensityTimeout] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setDensityTimeout(true), THEME_SETTLE_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [])
   const { settled, settingsLoaded } = useThemeSplashGate()
   const [giveUpWaiting, setGiveUpWaiting] = useState(false)
 
@@ -123,9 +136,10 @@ function AppSplashGate({ fontsReady }: { fontsReady: boolean }) {
   // `useEffect` would run post-paint and could let one `light` frame leak.
   useLayoutEffect(() => {
     if (!fontsReady) return
+    if (!densityHydrated && !densityTimeout) return
     if (!settled && !giveUpWaiting) return
     void SplashScreen.hideAsync()
-  }, [fontsReady, settled, giveUpWaiting])
+  }, [fontsReady, settled, giveUpWaiting, densityHydrated, densityTimeout])
 
   return null
 }
@@ -190,6 +204,7 @@ function UpdateAndChangelogOverlays() {
 }
 
 function RootLayoutNav() {
+  const { density, font } = useDisplayDensity()
   const theme = useThemeColors()
   const { settings } = useSettings()
 
@@ -216,7 +231,12 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={navigationTheme}>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <Stack key={settings.language}>
+      <Stack
+        key={settings.language}
+        screenOptions={{
+          headerTitleStyle: density === "compact" ? { fontSize: font.screen } : undefined,
+        }}
+      >
         <Stack.Screen
           name="(tabs)"
           options={{

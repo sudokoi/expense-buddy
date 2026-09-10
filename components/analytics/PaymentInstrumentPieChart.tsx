@@ -3,6 +3,7 @@ import { useWindowDimensions, Pressable, Text, View } from "react-native"
 import { PieChart } from "react-native-gifted-charts"
 import { Check } from "lucide-react-native"
 import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { CollapsibleSection } from "./CollapsibleSection"
 import type { PaymentInstrumentChartDataItem } from "../../utils/analytics/aggregations"
 import type { PaymentInstrumentSelectionKey } from "../../utils/analytics/filters"
@@ -49,10 +50,10 @@ const LegendItem = memo(function LegendItem({
       accessibilityState={{ selected: isSelected }}
     >
       <View
-        className="min-h-12 flex-row flex-wrap items-center justify-between gap-2 rounded-control p-2"
+        className="min-h-control-height flex-row flex-wrap items-center justify-between gap-ui-control rounded-control p-ui-control"
         style={isSelected ? { backgroundColor: selectedBgColor } : undefined}
       >
-        <View className="min-w-legend flex-1 flex-row items-center gap-2">
+        <View className="min-w-legend flex-1 flex-row items-center gap-ui-control">
           {isSelected ? (
             <Check size={UI_ICON_SIZE.small} color={theme.foreground} />
           ) : null}
@@ -91,7 +92,8 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
   const { t } = useTranslation()
   const theme = useThemeColors()
   const { width: screenWidth } = useWindowDimensions()
-  const chartSize = Math.min(screenWidth - 80, 200)
+  const { layout } = useDisplayDensity()
+  const chartSize = Math.min(screenWidth - 80, layout.pie)
   const colorScheme = useThemeScheme()
   const chartColors = getChartColors(colorScheme)
 
@@ -167,23 +169,23 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
 
   const CenterLabel = useCallback(
     () => (
-      <View className="items-center">
+      <View className="items-center" style={{ maxWidth: (chartSize * 2) / 3 - 16 }}>
         <Text className="text-xs text-muted-foreground">
           {t("analytics.charts.common.total")}
         </Text>
-        <Text className="text-sm font-bold text-foreground">
+        <Text className="text-center text-sm font-bold text-foreground">
           {formatCurrency(total, currencyCode)}
         </Text>
       </View>
     ),
-    [total, t, currencyCode]
+    [total, t, currencyCode, chartSize]
   )
 
   if (data.length === 0) {
     return (
       <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
-        <View className="h-chart-empty items-center justify-center">
-          <Text className="text-muted-foreground">
+        <View className="min-h-layout-chartEmpty items-center justify-center">
+          <Text className="text-default text-muted-foreground">
             {t("analytics.charts.paymentInstrument.noData")}
           </Text>
         </View>
@@ -193,7 +195,7 @@ export const PaymentInstrumentPieChart = memo(function PaymentInstrumentPieChart
 
   return (
     <CollapsibleSection title={t("analytics.charts.paymentInstrument.title")}>
-      <View className="items-center gap-4">
+      <View className="items-center gap-ui-content">
         <View>
           <PieChart
             data={chartData}

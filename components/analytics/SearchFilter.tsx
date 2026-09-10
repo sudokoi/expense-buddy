@@ -14,7 +14,7 @@ export function SearchFilter({ value, onChange }: SearchFilterProps) {
   const { t } = useTranslation()
 
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center gap-ui-control">
       <Input
         className="flex-1 bg-background"
         value={value}

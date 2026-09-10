@@ -2,7 +2,7 @@ import { ScrollView } from "react-native"
 import { ReactNode, memo } from "react"
 import { StyleProp, StyleSheet, ViewStyle } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface ScreenContainerProps {
   children?: ReactNode
@@ -21,6 +21,7 @@ export const ScreenContainer = memo(function ScreenContainer({
   contentContainerStyle,
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const resolvedContentContainerStyle = StyleSheet.flatten([
     {
       padding: UI_SPACE.gutter,

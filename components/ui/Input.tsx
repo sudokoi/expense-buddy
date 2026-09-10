@@ -14,7 +14,7 @@ export const Input = forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
       <TextInput
         ref={ref}
         className={cn(
-          "min-h-12 rounded-control bg-surface border border-border px-3 py-2 text-base text-foreground focus:border-accent",
+          "min-h-control-height rounded-control bg-surface border border-border px-ui-section py-control-inputY text-base text-foreground focus:border-accent",
           className
         )}
         placeholderTextColor={theme.mutedForeground}

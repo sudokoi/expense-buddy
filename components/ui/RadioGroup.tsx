@@ -22,7 +22,7 @@ export function RadioGroup({
 }: RadioGroupProps) {
   return (
     <RadioGroupContext.Provider value={{ value, onValueChange }}>
-      <View className={cn("gap-2", className)} {...props} />
+      <View className={cn("gap-ui-control", className)} {...props} />
     </RadioGroupContext.Provider>
   )
 }
@@ -53,7 +53,7 @@ function RadioGroupItem({
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: selected }}
       className={cn(
-        "min-h-12 flex-row items-center gap-3 rounded-control py-2",
+        "min-h-control-height flex-row items-center gap-ui-section rounded-control py-ui-control",
         className
       )}
     >

@@ -15,6 +15,7 @@ import { Input } from "./Input"
 import { Label } from "./Label"
 import { useTranslation } from "react-i18next"
 import { UI_RADIUS, UI_SPACE, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 const layoutStyles = {
   iconPreview: {
@@ -60,6 +61,7 @@ export function CategoryFormModal({
 }: CategoryFormModalProps) {
   // Get safe area insets
   const insets = useSafeAreaInsets()
+  const { space, control } = useDisplayDensity()
   const { t } = useTranslation()
 
   // Determine if we're in edit mode
@@ -187,9 +189,10 @@ export function CategoryFormModal({
   const frameStyle = useMemo(
     () => ({
       ...layoutStyles.sheetFrame,
-      paddingBottom: Math.max(insets.bottom, UI_SPACE.gutter),
+      paddingHorizontal: space.gutter,
+      paddingBottom: Math.max(insets.bottom, space.gutter),
     }),
-    [insets.bottom]
+    [insets.bottom, space.gutter]
   )
 
   return (
@@ -206,9 +209,9 @@ export function CategoryFormModal({
         scroll
         frameStyle={frameStyle}
       >
-        <View className="gap-4">
+        <View className="gap-ui-content">
           {/* Label Input */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label className="opacity-80">
               {t("settings.categories.form.nameLabel")}
             </Label>
@@ -230,19 +233,26 @@ export function CategoryFormModal({
           </View>
 
           {/* Icon Picker Trigger */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label className="opacity-80">
               {t("settings.categories.form.iconLabel")}
             </Label>
             <Pressable
-              className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
+              className="min-h-control-height rounded-control border border-border bg-surface p-ui-section active:opacity-60"
               onPress={handleOpenIconPicker}
               accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseIcon")}
             >
-              <View className="flex-row items-center gap-3">
+              <View className="flex-row items-center gap-ui-section">
                 <View
-                  style={[layoutStyles.iconPreview, { backgroundColor: resolvedColor }]}
+                  style={[
+                    layoutStyles.iconPreview,
+                    {
+                      backgroundColor: resolvedColor,
+                      width: control.preview,
+                      height: control.preview,
+                    },
+                  ]}
                 >
                   <DynamicCategoryIcon
                     name={icon}
@@ -251,7 +261,7 @@ export function CategoryFormModal({
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-medium text-foreground">{icon}</Text>
+                  <Text className="text-default font-medium text-foreground">{icon}</Text>
                   <Text className="text-xs text-muted-foreground">
                     {t("settings.categories.form.iconHelp")}
                   </Text>
@@ -261,22 +271,31 @@ export function CategoryFormModal({
           </View>
 
           {/* Color Picker Trigger */}
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Label className="opacity-80">
               {t("settings.categories.form.colorLabel")}
             </Label>
             <Pressable
-              className="min-h-12 rounded-control border border-border bg-surface p-3 active:opacity-60"
+              className="min-h-control-height rounded-control border border-border bg-surface p-ui-section active:opacity-60"
               onPress={handleOpenColorPicker}
               accessibilityRole="button"
               accessibilityLabel={t("settings.categories.form.chooseColor")}
             >
-              <View className="flex-row items-center gap-3">
+              <View className="flex-row items-center gap-ui-section">
                 <View
-                  style={[layoutStyles.colorSwatch, { backgroundColor: resolvedColor }]}
+                  style={[
+                    layoutStyles.colorSwatch,
+                    {
+                      backgroundColor: resolvedColor,
+                      width: control.swatch,
+                      height: control.swatch,
+                    },
+                  ]}
                 />
                 <View className="flex-1">
-                  <Text className="font-medium text-foreground">{color}</Text>
+                  <Text className="text-default font-medium text-foreground">
+                    {color}
+                  </Text>
                   <Text className="text-xs text-muted-foreground">
                     {t("settings.categories.form.colorHelp")}
                   </Text>
@@ -286,7 +305,7 @@ export function CategoryFormModal({
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row flex-wrap justify-end gap-3 mt-2">
+          <View className="flex-row flex-wrap justify-end gap-ui-section mt-ui-control">
             <Button size="control" variant="outline" onPress={handleClose}>
               {t("common.cancel")}
             </Button>

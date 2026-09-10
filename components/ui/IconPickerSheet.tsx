@@ -12,8 +12,8 @@ import {
   UI_OPACITY,
   UI_ICON_SIZE,
   UI_BORDER_WIDTH,
-  UI_COMPACT_TOUCH_TARGET,
 } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 
 interface IconPickerSheetProps {
@@ -54,7 +54,7 @@ export function IconPickerSheet({
       unmountWhenClosed
       scroll
     >
-      <View className="gap-4 pb-10">
+      <View className="gap-ui-content pb-ui-empty">
         {CATEGORY_ICON_GROUPS.map((group) => (
           <IconGroup
             key={group.name}
@@ -86,14 +86,14 @@ const IconGroup = memo(function IconGroup({
   onSelect,
 }: IconGroupProps) {
   return (
-    <View className="mb-4 gap-2">
+    <View className="mb-ui-content gap-ui-control">
       <Text
         className="text-body font-semibold uppercase text-foreground"
         style={{ opacity: UI_OPACITY.medium }}
       >
         {name}
       </Text>
-      <View className="flex-row flex-wrap gap-2">
+      <View className="flex-row flex-wrap gap-ui-control">
         {icons.map((iconName) => (
           <IconButton
             key={iconName}
@@ -121,6 +121,7 @@ const IconButton = memo(function IconButton({
   isSelected,
   onSelect,
 }: IconButtonProps) {
+  const { control } = useDisplayDensity()
   const { t } = useTranslation()
   const theme = useThemeColors()
   const handlePress = useCallback(() => {
@@ -140,8 +141,8 @@ const IconButton = memo(function IconButton({
       <View
         className="items-center justify-center rounded-chip"
         style={{
-          width: UI_COMPACT_TOUCH_TARGET,
-          height: UI_COMPACT_TOUCH_TARGET,
+          width: control.choice,
+          height: control.choice,
           borderWidth: UI_BORDER_WIDTH.normal,
           backgroundColor: isSelected ? selectedBg : theme.surface,
           borderColor: isSelected ? selectedBg : theme.border,

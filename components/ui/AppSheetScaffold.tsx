@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { Text } from "react-native"
 import { X } from "lucide-react-native"
-import { UI_SPACE, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { MODAL_BACKDROP_COLOR } from "../../constants/palette"
 import { hapticLight } from "../../utils/haptics"
 import { IconActionButton } from "./IconActionButton"
@@ -59,6 +60,7 @@ export function AppSheetScaffold({
 }: AppSheetScaffoldProps) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const { height } = useWindowDimensions()
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export function AppSheetScaffold({
               <View className="h-1 w-10 rounded-full bg-border" />
             </View>
 
-            <View className="flex-1 gap-4">
+            <View className="flex-1 gap-ui-content">
               <View className="flex-row items-center justify-between">
                 <View className="flex-1">
                   <Text className="text-lg font-semibold text-foreground">{title}</Text>
