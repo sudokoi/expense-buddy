@@ -65,6 +65,17 @@ root rem sizing, or transform-scale screens to implement density.
 
 ## State and interaction contracts
 
+- Analytics, Add, and History share right-aligned Sync and SMS import actions in
+  the top navigation header, implemented by
+  [`TabHeaderActions`](../components/ui/TabHeaderActions.tsx). The
+  [tab layout](<../app/(tabs)/_layout.tsx>) owns one set of action hooks so SMS scan
+  busy state is shared across those headers. Sync appears only when configured.
+  The import icon shows an accent dot for pending items and announces the exact
+  count in its accessible label. Settings has a title-only header and retains its
+  section controls. Analytics starts with filters/summary; Add starts with Amount.
+  Import uses the existing review-first/scan-if-empty flow, including Add's
+  keyboard dismissal.
+
 - Density must not participate in navigator, list, or editor keys. Preserve
   drafts, selections, filters, expansion state, chart selection, and list context
   while remeasuring content.
@@ -82,6 +93,9 @@ root rem sizing, or transform-scale screens to implement density.
   confirmation/save behavior are independent of the density preference.
 
 ## Validation evidence
+
+The initial density measurements below predate moving the sync/import actions
+into tab headers and removing Add's standalone import button.
 
 Recorded September 10, 2026 on an isolated Pixel 8 API 36 emulator:
 1080×2400px, 2.625px/dp (about 411dp wide), font scale 1.0. The debug package
@@ -104,6 +118,13 @@ not fresh release-build results.
   persistence, hydration races, write ordering/recovery, tab math, and semantic
   class merging. Typecheck, lint, formatting, translations, theme/theme-flow,
   changeset validation, and whitespace checks also passed.
+
+The subsequent header cleanup was checked on the same isolated emulator in both
+densities: action bounds measured 48dp in Standard and about 36dp in Compact.
+All three working tabs showed the import action; Settings had no header actions.
+A temporary presentation-only fixture verified the configured Sync icon, accent
+dot, and exact pending-count accessibility label without running sync or SMS
+scans. The fixture was removed after capture.
 
 ### Outstanding validation
 

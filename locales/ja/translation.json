@@ -207,7 +207,6 @@
     "successAddAnother": "支出を追加しました。続けて追加します。"
   },
   "analytics": {
-    "subtitle": "支出パターンを追跡",
     "filters": {
       "apply": "フィルターを適用",
       "sharedHelp": "フィルターは分析と履歴の両方に適用されます。カテゴリーや支払方法は複数選択できます。",

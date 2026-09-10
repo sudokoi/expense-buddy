@@ -207,7 +207,6 @@
     "successAddAnother": "Expense added. Add another."
   },
   "analytics": {
-    "subtitle": "Track your spending patterns",
     "filters": {
       "apply": "Apply filters",
       "sharedHelp": "Filters apply to both Analytics and History. Select more than one category or payment method if needed.",
