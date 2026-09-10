@@ -1,5 +1,16 @@
 # expense-buddy
 
+## 4.3.0
+
+### Minor Changes
+
+- [#138](https://github.com/sudokoi/expense-buddy/pull/138) [`1257276`](https://github.com/sudokoi/expense-buddy/commit/12572761cc196af3ad15d04c9847809330f634c1) Thanks [@sudokoi](https://github.com/sudokoi)! - Display density and shared header actions
+
+  - Add an immediate, device-local Standard/Compact preference for text, spacing, and controls.
+  - Move Sync and SMS import into Analytics, Add, and History headers, with an accent dot for pending imports.
+  - Unify initially collapsed Source SMS accordions and remove redundant import controls and Analytics copy.
+  - Update Expo dependencies to satisfy SDK compatibility checks.
+
 ## 4.2.3
 
 ### Patch Changes
