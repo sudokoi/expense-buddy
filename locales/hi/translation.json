@@ -473,7 +473,6 @@
       "actions": {
         "scan": "हाल के संदेश स्कैन करें",
         "scanning": "स्कैन हो रहा है…",
-        "review": "आयातों की समीक्षा करें",
         "reviewWithPending": "आयातों की समीक्षा करें ({{count}} लंबित)"
       },
       "notifications": {
