@@ -473,7 +473,6 @@
       "actions": {
         "scan": "Scan recent messages",
         "scanning": "Scanning…",
-        "review": "Review imports",
         "reviewWithPending": "Review imports ({{count}} pending)"
       },
       "notifications": {

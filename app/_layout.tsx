@@ -1,6 +1,7 @@
 import "../global.css"
 
 import { useEffect, useLayoutEffect, useMemo, useState } from "react"
+import { Platform } from "react-native"
 import {
   useColorScheme as useNativeWindColorScheme,
   colorScheme as nativeWindColorScheme,
@@ -234,7 +235,11 @@ function RootLayoutNav() {
       <Stack
         key={settings.language}
         screenOptions={{
-          headerTitleStyle: density === "compact" ? { fontSize: font.screen } : undefined,
+          // Density's Android title size must not enlarge another platform's default.
+          headerTitleStyle:
+            Platform.OS === "android" && density === "compact"
+              ? { fontSize: font.screen }
+              : undefined,
         }}
       >
         <Stack.Screen

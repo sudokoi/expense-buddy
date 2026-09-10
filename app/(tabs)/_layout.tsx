@@ -1,7 +1,7 @@
 import { Tabs, usePathname } from "expo-router"
 import { PlatformPressable } from "expo-router/react-navigation"
 import { useCallback, useEffect } from "react"
-import { Keyboard, View } from "react-native"
+import { Keyboard, Platform, View } from "react-native"
 import { PlusCircle, PieChart, Clock, Settings } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -96,7 +96,11 @@ export default function TabLayout() {
           borderBottomColor: theme.border,
         },
         headerTintColor: theme.foreground,
-        headerTitleStyle: density === "compact" ? { fontSize: font.screen } : undefined,
+        // Density's Android title size must not enlarge another platform's default.
+        headerTitleStyle:
+          Platform.OS === "android" && density === "compact"
+            ? { fontSize: font.screen }
+            : undefined,
       }}
     >
       <Tabs.Screen

@@ -473,7 +473,6 @@
       "actions": {
         "scan": "最近のメッセージをスキャン",
         "scanning": "スキャン中…",
-        "review": "インポートを確認",
         "reviewWithPending": "インポートを確認 ({{count}} 件保留)"
       },
       "notifications": {
