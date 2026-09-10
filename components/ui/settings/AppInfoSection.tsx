@@ -59,8 +59,8 @@ export function AppInfoSection({
   const { t } = useTranslation()
 
   return (
-    <View className="gap-2">
-      <View className="flex-row flex-wrap items-center gap-2">
+    <View className="gap-ui-control">
+      <View className="flex-row flex-wrap items-center gap-ui-control">
         {/* Current Version */}
         <View className="min-w-metric flex-1 gap-1">
           <Text className="text-xs text-muted-foreground">
@@ -116,7 +116,7 @@ export function AppInfoSection({
       )}
 
       {/* Report an Issue */}
-      <View className="flex-row flex-wrap gap-2 border-t border-border pt-1">
+      <View className="flex-row flex-wrap gap-ui-control border-t border-border pt-1">
         <Button
           size="compact"
           className="min-w-action flex-1"

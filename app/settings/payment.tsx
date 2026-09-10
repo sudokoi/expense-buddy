@@ -17,12 +17,13 @@ import {
   useSettings,
 } from "../../stores/hooks"
 import type { Category } from "../../types/category"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 export default function PaymentSettingsScreen() {
   const { showDialog } = useAppDialog()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const { settings, setDefaultPaymentMethod } = useSettings()
   const { state, reassignExpensesToOther } = useExpenses()
   const { addNotification } = useNotifications()
@@ -130,8 +131,8 @@ export default function PaymentSettingsScreen() {
         bottomOffset={50}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="max-w-content w-full self-center gap-4">
-          <View className="gap-2">
+        <View className="max-w-content w-full self-center gap-ui-content">
+          <View className="gap-ui-control">
             <DefaultPaymentMethodSelector
               value={settings.defaultPaymentMethod}
               onChange={setDefaultPaymentMethod}
@@ -141,11 +142,11 @@ export default function PaymentSettingsScreen() {
             </Text>
           </View>
 
-          <Card className="p-3">
+          <Card className="p-ui-section">
             <PaymentInstrumentsSection />
           </Card>
 
-          <Card className="p-3">
+          <Card className="p-ui-section">
             <CategorySection
               categories={categories}
               onAdd={() => {

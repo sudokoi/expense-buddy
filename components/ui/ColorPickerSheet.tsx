@@ -5,11 +5,8 @@ import { Check } from "lucide-react-native"
 import { CATEGORY_COLOR_PALETTE } from "../../constants/category-colors"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
-import {
-  UI_ICON_SIZE,
-  UI_BORDER_WIDTH,
-  UI_COMPACT_TOUCH_TARGET,
-} from "../../constants/ui-tokens"
+import { UI_ICON_SIZE, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { getReadableTextColor } from "../../constants/palette"
 
@@ -52,7 +49,7 @@ export function ColorPickerSheet({
       unmountWhenClosed
       scroll
     >
-      <View className="flex-row flex-wrap justify-center gap-3">
+      <View className="flex-row flex-wrap justify-center gap-ui-section">
         {CATEGORY_COLOR_PALETTE.map((color) => (
           <ColorButton
             key={color}
@@ -80,6 +77,7 @@ const ColorButton = memo(function ColorButton({
   isSelected,
   onSelect,
 }: ColorButtonProps) {
+  const { control } = useDisplayDensity()
   const { t } = useTranslation()
   const theme = useThemeColors()
   const selectedBorderColor = theme.accent
@@ -99,8 +97,8 @@ const ColorButton = memo(function ColorButton({
       <View
         className="items-center justify-center rounded-chip"
         style={{
-          width: UI_COMPACT_TOUCH_TARGET,
-          height: UI_COMPACT_TOUCH_TARGET,
+          width: control.choice,
+          height: control.choice,
           borderWidth: UI_BORDER_WIDTH.thick,
           backgroundColor: color,
           borderColor: isSelected ? selectedBorderColor : "transparent",

@@ -28,8 +28,8 @@ export const StatisticsCards = memo(function StatisticsCards({
   const { t } = useTranslation()
   const colors = CARD_COLORS[useThemeScheme()]
   return (
-    <Card className="mb-4 overflow-hidden">
-      <View className="gap-1 bg-muted p-4">
+    <Card className="mb-ui-content overflow-hidden">
+      <View className="gap-1 bg-muted p-ui-content">
         <Text className="text-sm text-muted-foreground">
           {t("analytics.stats.totalSpent")} · {periodLabel}
         </Text>
@@ -44,9 +44,9 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
         ) : null}
       </View>
-      <View className="flex-row flex-wrap gap-3 p-3">
+      <View className="flex-row flex-wrap gap-ui-section p-ui-section">
         <View
-          className="min-w-metric flex-1 gap-1 rounded-control p-3"
+          className="min-w-metric flex-1 gap-1 rounded-control p-ui-section"
           style={{ backgroundColor: colors.green.bg }}
         >
           <Text className="text-xs" style={{ color: colors.green.text }}>
@@ -60,7 +60,7 @@ export const StatisticsCards = memo(function StatisticsCards({
           </Text>
         </View>
         <View
-          className="min-w-metric flex-1 gap-1 rounded-control p-3"
+          className="min-w-metric flex-1 gap-1 rounded-control p-ui-section"
           style={{ backgroundColor: colors.orange.bg }}
         >
           <Text className="text-xs" style={{ color: colors.orange.text }}>
@@ -80,7 +80,7 @@ export const StatisticsCards = memo(function StatisticsCards({
       </View>
       {statistics.highestDay ? (
         <View
-          className="mx-3 mb-3 flex-row flex-wrap justify-between gap-2 rounded-control p-3"
+          className="mx-ui-section mb-ui-section flex-row flex-wrap justify-between gap-ui-control rounded-control p-ui-section"
           style={{ backgroundColor: colors.purple.bg }}
         >
           <Text className="text-xs" style={{ color: colors.purple.text }}>

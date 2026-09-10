@@ -27,8 +27,8 @@ export function AmountRangeFilter({
   const inputProps = getAmountInputProps(allowMathExpressions)
   const symbol = getCurrencySymbol(currencyCode)
   return (
-    <View className="gap-2">
-      <View className="flex-row gap-3">
+    <View className="gap-ui-control">
+      <View className="flex-row gap-ui-section">
         <View className="flex-1 gap-1">
           <Text className="text-xs text-muted-foreground">
             {t("analytics.filters.minAmount")} ({symbol})

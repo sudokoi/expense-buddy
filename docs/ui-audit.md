@@ -18,6 +18,14 @@ checks, not a claim of complete device or accessibility certification.
 
 ## Styling policy and deliberate exceptions
 
+The 48/40dp rules below describe **Standard**, the default display density.
+The opt-in, device-local **Compact** profile uses 36dp action/input minimums,
+32dp choice targets (28dp minimum surfaces), a 44dp amount minimum, and a 52dp
+labeled tab base plus font-scale and safe-area allowances. Typography and spacing
+use shared density roles; content can grow with Android text scaling. See the
+[display-density reference](./display-density.md) for the current contract,
+implementation map, measured Android results, and outstanding validation.
+
 - **48dp minimum:** task-completion actions, paired Cancel actions, direct
   Edit/Delete controls, filter-opening buttons, and existing full-sized inputs.
 - **40dp minimum:** compact filters, preferences, category/payment choices,

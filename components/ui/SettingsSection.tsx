@@ -10,11 +10,11 @@ type SemanticSpaceToken =
 
 const gapClass: Record<SemanticSpaceToken, string> = {
   $micro: "gap-1",
-  $control: "gap-2",
-  $section: "gap-3",
-  $gutter: "gap-5",
-  $block: "gap-6",
-  $empty: "gap-10",
+  $control: "gap-ui-control",
+  $section: "gap-ui-section",
+  $gutter: "gap-ui-gutter",
+  $block: "gap-ui-block",
+  $empty: "gap-ui-empty",
 }
 
 interface SettingsSectionProps {
@@ -44,13 +44,13 @@ export function SettingsSection({
 }: SettingsSectionProps) {
   const colors = CARD_COLORS[useThemeScheme()][tone]
   return (
-    <Card className="p-3">
+    <Card className="p-ui-section">
       <View className={gapClass[gap]}>
-        <View className="gap-2 pb-1">
-          <View className="flex-row items-center gap-3">
+        <View className="gap-ui-control pb-1">
+          <View className="flex-row items-center gap-ui-section">
             {Icon ? (
               <View
-                className="h-10 w-10 items-center justify-center rounded-control"
+                className="h-control-badge w-control-badge items-center justify-center rounded-control"
                 style={{ backgroundColor: colors.bg }}
                 accessible={false}
                 importantForAccessibility="no-hide-descendants"

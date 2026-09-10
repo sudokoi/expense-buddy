@@ -116,11 +116,11 @@ function InstrumentEntryField({
   }
 
   return (
-    <View className="gap-3">
+    <View className="gap-ui-section">
       {available.length > 0 || kind === "saved" ? (
-        <View className="gap-2">
+        <View className="gap-ui-control">
           <Label>{t("instruments.dropdown.saved")}</Label>
-          <View className="flex-row flex-wrap gap-2">
+          <View className="flex-row flex-wrap gap-ui-control">
             {options.map((option) => (
               <CompactControl
                 key={option.value}
@@ -215,7 +215,7 @@ function InstrumentEntryField({
         </Button>
       ) : null}
       {showAdd && onCreateInstrument ? (
-        <View className="gap-3 rounded-control border border-border bg-surface p-3">
+        <View className="gap-ui-section rounded-control border border-border bg-surface p-ui-section">
           <Text className="text-sm font-semibold text-foreground">
             {t("instruments.dropdown.addSaved")}
           </Text>
@@ -238,7 +238,7 @@ function InstrumentEntryField({
               </Text>
             ) : null}
           </View>
-          <View className="flex-row gap-2">
+          <View className="flex-row gap-ui-control">
             <Button className="flex-1" variant="outline" onPress={closeAdd}>
               {t("common.cancel")}
             </Button>

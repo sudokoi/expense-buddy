@@ -25,7 +25,8 @@ import {
   PAYMENT_METHODS,
   getPaymentMethodI18nKey,
 } from "../../../constants/payment-methods"
-import { UI_ICON_SIZE, UI_SPACE } from "../../../constants/ui-tokens"
+import { UI_ICON_SIZE } from "../../../constants/ui-tokens"
+import { useDisplayDensity } from "../../../hooks/use-display-density"
 import { useThemeColors } from "../../../hooks/use-theme-colors"
 import { getCurrencySymbol, getFallbackCurrency } from "../../../utils/currency"
 import { formatDate } from "../../../utils/date"
@@ -57,6 +58,7 @@ export default function EditExpenseScreen() {
   const router = useRouter()
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const theme = useThemeColors()
   const [footerHeight, setFooterHeight] = useState(80)
   const scrollRef = useRef<KeyboardAwareScrollViewRef>(null)
@@ -235,17 +237,17 @@ export default function EditExpenseScreen() {
           extraKeyboardSpace={footerHeight}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="max-w-content w-full self-center gap-3">
-            <View className="gap-2 rounded-card bg-muted p-3">
+          <View className="max-w-content w-full self-center gap-ui-section">
+            <View className="gap-ui-control rounded-card bg-muted p-ui-section">
               <Label>{t("history.editDialog.fields.amount")}</Label>
               <View
-                className={`flex-row items-center rounded-control border bg-surface px-3 ${amountError ? "border-error" : "border-border"}`}
+                className={`flex-row items-center rounded-control border bg-surface px-ui-section ${amountError ? "border-error" : "border-border"}`}
               >
                 <Text className="text-2xl font-semibold text-accent">
                   {getCurrencySymbol(expense.currency || getFallbackCurrency())}
                 </Text>
                 <Input
-                  className="min-h-16 flex-1 border-0 bg-transparent text-2xl font-semibold"
+                  className="min-h-control-amount flex-1 border-0 bg-transparent text-2xl font-semibold"
                   value={amount}
                   onChangeText={(text) => {
                     setAmount(text)
@@ -273,9 +275,9 @@ export default function EditExpenseScreen() {
               ) : null}
             </View>
 
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Label>{t("history.editDialog.fields.category")}</Label>
-              <View className="flex-row flex-wrap gap-2">
+              <View className="flex-row flex-wrap gap-ui-control">
                 {categories.map((cat) => (
                   <CategoryCard
                     key={cat.label}
@@ -290,8 +292,8 @@ export default function EditExpenseScreen() {
               </View>
             </View>
 
-            <View className="gap-2">
-              <View className="flex-row flex-wrap items-center justify-between gap-2">
+            <View className="gap-ui-control">
+              <View className="flex-row flex-wrap items-center justify-between gap-ui-control">
                 <Label className="opacity-80">
                   {t("history.editDialog.fields.date")}
                 </Label>
@@ -340,7 +342,7 @@ export default function EditExpenseScreen() {
               )}
             </View>
 
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Label className="opacity-80">{t("history.editDialog.fields.note")}</Label>
               <Input
                 value={note}
@@ -351,7 +353,7 @@ export default function EditExpenseScreen() {
               />
             </View>
 
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Button
                 variant="ghost"
                 onPress={() => setPaymentExpanded(!paymentExpanded)}
@@ -359,7 +361,7 @@ export default function EditExpenseScreen() {
                 accessibilityLabel={t("history.editDialog.fields.paymentMethod")}
                 accessibilityState={{ expanded: paymentExpanded }}
               >
-                <View className="flex-1 flex-row items-center gap-2">
+                <View className="flex-1 flex-row items-center gap-ui-control">
                   <View className="flex-1 gap-1" pointerEvents="none">
                     <Label>{t("history.editDialog.fields.paymentMethod")}</Label>
                     {!paymentExpanded ? (
@@ -384,8 +386,8 @@ export default function EditExpenseScreen() {
                 </View>
               </Button>
               {paymentExpanded ? (
-                <View className="gap-2">
-                  <View className="flex-row flex-wrap gap-2">
+                <View className="gap-ui-control">
+                  <View className="flex-row flex-wrap gap-ui-control">
                     {PAYMENT_METHODS.map((pm) => (
                       <PaymentMethodCard
                         key={pm.value}
@@ -397,7 +399,7 @@ export default function EditExpenseScreen() {
                   </View>
 
                   {selectedPaymentConfig?.hasIdentifier && (
-                    <View className="gap-1 mt-2">
+                    <View className="gap-1 mt-ui-control">
                       {paymentMethodType &&
                       isPaymentInstrumentMethod(paymentMethodType) ? (
                         <PaymentInstrumentInlineDropdown
@@ -451,11 +453,11 @@ export default function EditExpenseScreen() {
         </KeyboardAwareScrollView>
         <KeyboardStickyView>
           <View
-            className="border-t border-border bg-background px-5 pt-2"
+            className="border-t border-border bg-background px-ui-gutter pt-ui-control"
             style={{ paddingBottom: Math.max(insets.bottom, UI_SPACE.control) }}
             onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
           >
-            <View className="max-w-content w-full self-center flex-row gap-3">
+            <View className="max-w-content w-full self-center flex-row gap-ui-section">
               <Button
                 className="flex-1"
                 size="control"

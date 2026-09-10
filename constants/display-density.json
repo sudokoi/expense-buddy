@@ -1,0 +1,152 @@
+{
+  "standard": {
+    "space": {
+      "micro": 4,
+      "control": 8,
+      "section": 12,
+      "content": 16,
+      "gutter": 20,
+      "block": 24,
+      "empty": 40
+    },
+    "font": {
+      "micro": 11,
+      "caption": 12,
+      "body": 13,
+      "label": 14,
+      "title": 16,
+      "section": 18,
+      "screen": 20,
+      "amount": 24,
+      "total": 30
+    },
+    "line": {
+      "caption": 16,
+      "label": 20,
+      "title": 24,
+      "section": 28,
+      "screen": 28,
+      "amount": 32,
+      "total": 36
+    },
+    "control": {
+      "height": 48,
+      "amount": 64,
+      "choice": 40,
+      "surface": 36,
+      "badge": 40,
+      "smallBadge": 32,
+      "preview": 48,
+      "swatch": 32,
+      "actionX": 16,
+      "actionY": 12,
+      "inputY": 8,
+      "choiceX": 8,
+      "choiceY": 4,
+      "choiceGap": 6
+    },
+    "icon": {
+      "micro": 12,
+      "mini": 14,
+      "small": 16,
+      "regular": 18,
+      "medium": 20,
+      "large": 24,
+      "xlarge": 32,
+      "xxlarge": 40,
+      "xxxlarge": 48,
+      "huge": 56
+    },
+    "layout": {
+      "tab": 64,
+      "tabSlotWidth": 56,
+      "tabSlotHeight": 32,
+      "trend": 160,
+      "pie": 200,
+      "chartEmpty": 150,
+      "legend": 100,
+      "metric": 120,
+      "action": 140,
+      "indicator": 40,
+      "historyX": 12,
+      "historyY": 8,
+      "dialogPadding": 24,
+      "markdownLine": 22
+    }
+  },
+  "compact": {
+    "space": {
+      "micro": 4,
+      "control": 6,
+      "section": 8,
+      "content": 12,
+      "gutter": 16,
+      "block": 16,
+      "empty": 28
+    },
+    "font": {
+      "micro": 11,
+      "caption": 12,
+      "body": 12,
+      "label": 13,
+      "title": 14,
+      "section": 16,
+      "screen": 18,
+      "amount": 20,
+      "total": 26
+    },
+    "line": {
+      "caption": 16,
+      "label": 18,
+      "title": 20,
+      "section": 24,
+      "screen": 24,
+      "amount": 28,
+      "total": 32
+    },
+    "control": {
+      "height": 36,
+      "amount": 44,
+      "choice": 32,
+      "surface": 28,
+      "badge": 32,
+      "smallBadge": 28,
+      "preview": 40,
+      "swatch": 28,
+      "actionX": 12,
+      "actionY": 6,
+      "inputY": 6,
+      "choiceX": 6,
+      "choiceY": 4,
+      "choiceGap": 4
+    },
+    "icon": {
+      "micro": 12,
+      "mini": 14,
+      "small": 16,
+      "regular": 16,
+      "medium": 18,
+      "large": 20,
+      "xlarge": 28,
+      "xxlarge": 32,
+      "xxxlarge": 40,
+      "huge": 48
+    },
+    "layout": {
+      "tab": 52,
+      "tabSlotWidth": 48,
+      "tabSlotHeight": 28,
+      "trend": 136,
+      "pie": 176,
+      "chartEmpty": 112,
+      "legend": 88,
+      "metric": 104,
+      "action": 120,
+      "indicator": 32,
+      "historyX": 10,
+      "historyY": 6,
+      "dialogPadding": 16,
+      "markdownLine": 20
+    }
+  }
+}

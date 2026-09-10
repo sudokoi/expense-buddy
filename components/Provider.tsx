@@ -6,6 +6,7 @@ import { useSettings } from "../stores/hooks"
 import { useWidgetAssist } from "../hooks/use-widget-assist"
 import { SmsImportReviewProvider } from "../providers/sms-import-review-provider"
 import { AppDialogProvider } from "../providers/app-dialog-provider"
+import { DisplayDensityProvider } from "../providers/display-density-provider"
 
 /**
  * Inner provider that drives NativeWind's color scheme from the user's theme
@@ -43,10 +44,12 @@ export function Provider({ children }: { children: React.ReactNode }) {
       <DerivedExpenseDataProvider>
         <SmsImportReviewProvider>
           <ThemedProvider>
-            <AppDialogProvider>
-              <WidgetAssistMount />
-              {children}
-            </AppDialogProvider>
+            <DisplayDensityProvider>
+              <AppDialogProvider>
+                <WidgetAssistMount />
+                {children}
+              </AppDialogProvider>
+            </DisplayDensityProvider>
           </ThemedProvider>
         </SmsImportReviewProvider>
       </DerivedExpenseDataProvider>

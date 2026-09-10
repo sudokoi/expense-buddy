@@ -123,7 +123,7 @@ export function IconActionButton({
           aria-label={accessibilityLabel ?? tooltip}
           accessibilityRole="button"
           accessibilityState={{ disabled: !!disabled }}
-          className="min-h-12 min-w-12 items-center justify-center rounded-control p-2 active:opacity-60"
+          className="min-h-control-height min-w-control-height items-center justify-center rounded-control p-ui-control active:opacity-60"
           style={{ opacity: disabled ? UI_OPACITY.ghost : 1 }}
         >
           <LucideProvider color={theme.foreground}>{icon}</LucideProvider>
@@ -136,7 +136,7 @@ export function IconActionButton({
           pointerEvents="none"
         >
           <View
-            className="min-w-legend px-2 py-1 rounded-control"
+            className="min-w-legend px-ui-control py-1 rounded-control"
             style={{ backgroundColor: theme.foreground }}
           >
             <Text className="text-body text-background">{tooltip}</Text>

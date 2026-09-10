@@ -1,3 +1,9 @@
+const density = require("./constants/display-density.json").standard
+const densityVar = (group, name) => `var(--${group}-${name})`
+const fontRole = (name) => [
+  densityVar("font", name),
+  ...(density.line[name] ? [{ lineHeight: densityVar("line", name) }] : []),
+]
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -15,12 +21,42 @@ module.exports = {
         bold: ["InterBold", "System", "sans-serif"],
       },
       fontSize: {
-        micro: "11px",
-        body: "13px",
+        default: [densityVar("font", "label")],
+        micro: fontRole("micro"),
+        body: fontRole("body"),
+        label: fontRole("label"),
+        xs: fontRole("caption"),
+        sm: fontRole("label"),
+        base: fontRole("title"),
+        lg: fontRole("section"),
+        xl: fontRole("screen"),
+        "2xl": fontRole("amount"),
+        "3xl": fontRole("total"),
+      },
+      spacing: {
+        ...Object.fromEntries(
+          Object.keys(density.space).map((key) => [`ui-${key}`, densityVar("space", key)])
+        ),
+        ...Object.fromEntries(
+          Object.keys(density.control).map((key) => [
+            `control-${key}`,
+            densityVar("control", key),
+          ])
+        ),
+        ...Object.fromEntries(
+          Object.keys(density.layout).map((key) => [
+            `layout-${key}`,
+            densityVar("layout", key),
+          ])
+        ),
       },
       maxWidth: { content: "600px" },
-      minWidth: { legend: "100px", metric: "120px", action: "140px" },
-      height: { "chart-empty": "150px" },
+      minWidth: {
+        legend: densityVar("layout", "legend"),
+        metric: densityVar("layout", "metric"),
+        action: densityVar("layout", "action"),
+      },
+      height: { "chart-empty": densityVar("layout", "chartEmpty") },
       colors: {
         background: "var(--background)",
         surface: "var(--surface)",
@@ -53,5 +89,19 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("tailwindcss/plugin")(({ addBase }) => {
+      addBase({
+        ":root": Object.fromEntries(
+          Object.entries(density).flatMap(([group, values]) =>
+            Object.entries(values).map(([key, value]) => [
+              `--${group}-${key}`,
+              `${value}px`,
+            ])
+          )
+        ),
+      })
+    }),
+  ],
 }

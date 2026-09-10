@@ -44,7 +44,7 @@ import type {
   PaymentMethodSelectionKey,
 } from "../types/analytics"
 import type { PaymentInstrument } from "../types/payment-instrument"
-import { UI_SPACE } from "../constants/ui-tokens"
+import { useDisplayDensity } from "../hooks/use-display-density"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -52,6 +52,8 @@ export default function FiltersScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
+  const [footerHeight, setFooterHeight] = useState(80)
 
   const { filters, isHydrated, applyFilters } = useFilters()
   const { save: saveFilters } = useFilterPersistence()
@@ -199,11 +201,13 @@ export default function FiltersScreen() {
       />
 
       <KeyboardAwareScrollView
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
-        bottomOffset={100}
-        contentContainerStyle={{ padding: UI_SPACE.gutter, paddingBottom: 120 }}
+        bottomOffset={footerHeight + UI_SPACE.control}
+        extraKeyboardSpace={footerHeight}
+        contentContainerStyle={{ padding: UI_SPACE.gutter }}
       >
-        <View className="w-full max-w-content self-center gap-6">
+        <View className="w-full max-w-content self-center gap-ui-block">
           {!isHydrated && (
             <Text className="text-body text-muted-foreground">
               {t("history.filterSheet.loading")}
@@ -214,14 +218,14 @@ export default function FiltersScreen() {
             {t("analytics.filters.sharedHelp")}
           </Text>
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.search")}
             </Text>
             <SearchFilter value={draftSearchQuery} onChange={setDraftSearchQuery} />
           </View>
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.time")}
             </Text>
@@ -231,7 +235,7 @@ export default function FiltersScreen() {
             />
           </View>
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.month")}
             </Text>
@@ -243,7 +247,7 @@ export default function FiltersScreen() {
           </View>
 
           {availableCurrencies.length > 1 && (
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Text className="font-semibold text-sm text-foreground">
                 {t("settings.localization.currency")}
               </Text>
@@ -256,7 +260,7 @@ export default function FiltersScreen() {
             </View>
           )}
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.amountRange")}
             </Text>
@@ -271,7 +275,7 @@ export default function FiltersScreen() {
             />
           </View>
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.category")}
             </Text>
@@ -281,7 +285,7 @@ export default function FiltersScreen() {
             />
           </View>
 
-          <View className="gap-2">
+          <View className="gap-ui-control">
             <Text className="font-semibold text-sm text-foreground">
               {t("history.filterSheet.paymentMethod")}
             </Text>
@@ -292,7 +296,7 @@ export default function FiltersScreen() {
           </View>
 
           {showPaymentInstrumentFilter && (
-            <View className="gap-2">
+            <View className="gap-ui-control">
               <Text className="font-semibold text-sm text-foreground">
                 {t("history.filterSheet.paymentInstrument")}
               </Text>
@@ -308,7 +312,8 @@ export default function FiltersScreen() {
       </KeyboardAwareScrollView>
       <KeyboardStickyView>
         <View
-          className="flex-row gap-2 border-t border-border bg-background px-5"
+          className="flex-row gap-ui-control border-t border-border bg-background px-ui-gutter"
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
           style={{
             justifyContent: "flex-end",
             paddingTop: UI_SPACE.control,

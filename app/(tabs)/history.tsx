@@ -41,6 +41,7 @@ import {
   UI_FONT_SIZE,
 } from "../../constants/ui-tokens"
 import { hapticWarning } from "../../utils/haptics"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 const EMPTY_INSTRUMENTS: PaymentInstrument[] = []
 
@@ -96,6 +97,7 @@ export default function HistoryScreen() {
   const { syncConfig, settings } = useSettings()
   const { categories } = useCategories()
   const insets = useSafeAreaInsets()
+  const { font, space } = useDisplayDensity()
 
   // Filter state from shared store (single source of truth for all tabs)
   const { filters, activeCount, hasActive, applyFilters, isHydrated } = useFilters()
@@ -420,7 +422,7 @@ export default function HistoryScreen() {
     }) => {
       if (item.type === "header") {
         return (
-          <View className="flex-row flex-wrap items-center justify-between gap-2 bg-background pb-2 pt-4">
+          <View className="flex-row flex-wrap items-center justify-between gap-ui-control bg-background pb-ui-control pt-ui-content">
             <Text className="text-sm font-semibold text-muted-foreground">
               {item.title}
             </Text>
@@ -436,7 +438,7 @@ export default function HistoryScreen() {
         getFallbackCategory(item.expense.category)
 
       return (
-        <View className="pb-2">
+        <View className="pb-ui-control">
           <ExpenseRow
             expense={item.expense}
             categoryInfo={categoryInfo}
@@ -461,19 +463,11 @@ export default function HistoryScreen() {
   // Get item type for FlashList to optimize recycling
   const getItemType = useCallback((item: { type: "header" | "expense" }) => item.type, [])
 
-  // Override item layout for different item types (headers are smaller than expenses)
-  const overrideItemLayout = useCallback(
-    (layout: { span?: number; size?: number }, item: { type: "header" | "expense" }) => {
-      layout.size = item.type === "header" ? 32 : 90
-    },
-    []
-  )
-
   // List footer component
   const ListFooterComponent = useMemo(
     () =>
       shouldShowLoadMore ? (
-        <View className="items-center p-4">
+        <View className="items-center p-ui-content">
           <Button
             size="control"
             variant="accent"
@@ -521,14 +515,23 @@ export default function HistoryScreen() {
   // Empty state
   if (state.activeExpenses.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-background p-6">
+      <View className="flex-1 items-center justify-center bg-background p-ui-block">
         <Text
-          style={[layoutStyles.emptyText, { opacity: UI_OPACITY.subtle }]}
+          style={[
+            layoutStyles.emptyText,
+            { opacity: UI_OPACITY.subtle, fontSize: font.section },
+          ]}
           className="text-foreground"
         >
           {t("history.emptyTitle")}
         </Text>
-        <Text style={[layoutStyles.emptySubtext]} className="text-muted-foreground">
+        <Text
+          style={[
+            layoutStyles.emptySubtext,
+            { fontSize: font.label, marginTop: space.control },
+          ]}
+          className="text-muted-foreground"
+        >
           {t("history.emptySubtitle")}
         </Text>
       </View>
@@ -538,13 +541,13 @@ export default function HistoryScreen() {
   // Filtered empty state
   if (filteredExpenses.length === 0 && hasActive) {
     return (
-      <View className="flex-1 bg-background px-5 pt-5">
+      <View className="flex-1 bg-background px-ui-gutter pt-ui-gutter">
         {/* Filter row: chips + filter button inline */}
-        <View className="mb-3 flex-row items-center gap-2">
+        <View className="mb-ui-section flex-row items-center gap-ui-control">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: UI_SPACE.control }}
+            contentContainerStyle={{ gap: space.control }}
             style={{ flex: 1 }}
           >
             {filterChips.map((chip) => (
@@ -572,21 +575,30 @@ export default function HistoryScreen() {
           </Button>
         </View>
 
-        <View className="flex-1 items-center justify-center p-6">
+        <View className="flex-1 items-center justify-center p-ui-block">
           <Text
-            style={[layoutStyles.emptyText, { opacity: UI_OPACITY.subtle }]}
+            style={[
+              layoutStyles.emptyText,
+              { opacity: UI_OPACITY.subtle, fontSize: font.section },
+            ]}
             className="text-foreground"
           >
             {t("history.noResultsTitle")}
           </Text>
-          <Text style={[layoutStyles.emptySubtext]} className="text-muted-foreground">
+          <Text
+            style={[
+              layoutStyles.emptySubtext,
+              { fontSize: font.label, marginTop: space.control },
+            ]}
+            className="text-muted-foreground"
+          >
             {t("history.noResultsSubtitle")}
           </Text>
           <Button
             size="control"
             variant="outline"
             onPress={handleResetFilters}
-            className="mt-4"
+            className="mt-ui-content"
             accessibilityLabel={t("common.clearFilters")}
           >
             {t("common.clearFilters")}
@@ -597,13 +609,13 @@ export default function HistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background px-5 pt-4">
+    <View className="flex-1 bg-background px-ui-gutter pt-ui-content">
       {/* Filter row: chips + filter button inline */}
-      <View className="mb-3 flex-row items-center gap-2">
+      <View className="mb-ui-section flex-row items-center gap-ui-control">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: UI_SPACE.control }}
+          contentContainerStyle={{ gap: space.control }}
           style={{ flex: 1 }}
         >
           {filterChips.map((chip) => (
@@ -633,7 +645,7 @@ export default function HistoryScreen() {
 
       {/* List - FlashList for optimal performance with large datasets */}
       <Text
-        className="mb-2 text-sm text-muted-foreground"
+        className="mb-ui-control text-sm text-muted-foreground"
         accessibilityLiveRegion="polite"
       >
         {t("history.resultsSummary", {
@@ -650,7 +662,6 @@ export default function HistoryScreen() {
           renderItem={renderFlashListItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
-          overrideItemLayout={overrideItemLayout}
           contentContainerStyle={contentContainerStyle}
           showsVerticalScrollIndicator={false}
           ListFooterComponent={ListFooterComponent}

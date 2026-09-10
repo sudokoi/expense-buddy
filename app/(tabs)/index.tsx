@@ -36,7 +36,7 @@ import { IconActionButton } from "../../components/ui/IconActionButton"
 import { Button } from "../../components/ui/Button"
 import { CompactControl } from "../../components/ui/CompactControl"
 import { UI_ICON_SIZE, UI_OPACITY } from "../../constants/ui-tokens"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 // Memoized empty state component
 const EmptyState = memo(function EmptyState({
@@ -47,7 +47,7 @@ const EmptyState = memo(function EmptyState({
   subtitle: string
 }) {
   return (
-    <View className="items-center justify-center p-6">
+    <View className="items-center justify-center p-ui-block">
       <Text
         className="text-center text-lg text-foreground"
         style={{ opacity: UI_OPACITY.subtle }}
@@ -55,7 +55,7 @@ const EmptyState = memo(function EmptyState({
         {title}
       </Text>
       <Text
-        className="text-center text-sm text-foreground mt-2"
+        className="text-center text-sm text-foreground mt-ui-control"
         style={{ opacity: UI_OPACITY.ghost }}
       >
         {subtitle}
@@ -76,9 +76,11 @@ const Header = memo(function Header() {
   }, [startSmsImportFromAdd])
 
   return (
-    <View className="mb-4 flex-row items-center justify-between">
-      <Text className="text-muted-foreground">{t("analytics.subtitle")}</Text>
-      <View className="flex-row items-center gap-2 px-1">
+    <View className="mb-ui-content flex-row items-center justify-between">
+      <Text className="text-default text-muted-foreground">
+        {t("analytics.subtitle")}
+      </Text>
+      <View className="flex-row items-center gap-ui-control px-1">
         {syncConfig !== null ? (
           <IconActionButton
             icon={<RefreshCw size={UI_ICON_SIZE.medium} />}
@@ -109,6 +111,7 @@ const Header = memo(function Header() {
  * Supports time window selection and category filtering
  */
 export default function AnalyticsScreen() {
+  const { space } = useDisplayDensity()
   const { t } = useTranslation()
 
   // Use shared filter store
@@ -427,13 +430,13 @@ export default function AnalyticsScreen() {
       <Header />
 
       <View
-        className="mb-4 flex-row items-center justify-between gap-2"
+        className="mb-ui-content flex-row items-center justify-between gap-ui-control"
         style={{ overflow: "visible" }}
       >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: UI_SPACE.control }}
+          contentContainerStyle={{ gap: space.control }}
           className="flex-1"
         >
           {appliedChips.map((chip) => (
@@ -493,7 +496,7 @@ export default function AnalyticsScreen() {
                 fullPeriodTotalSpending={statistics.fullPeriodTotalSpending}
                 hasActiveFilters={activeCount > 0}
               />
-              <View className="gap-4">
+              <View className="gap-ui-content">
                 <LineChartSection
                   data={spendingTrend}
                   currencyCode={effectiveCurrency}

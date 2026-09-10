@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "../../components/ui/Button"
 import { Input } from "../../components/ui/Input"
 import { Spinner } from "../../components/ui/Spinner"
-import { UI_SPACE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 type GitHubUser = { login: string }
 
@@ -38,6 +38,7 @@ function hasWriteAccess(repo: GitHubRepo): boolean {
 export default function GitHubRepoPickerScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { space: UI_SPACE } = useDisplayDensity()
   const { t } = useTranslation()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -190,11 +191,11 @@ export default function GitHubRepoPickerScreen() {
       <Button
         size="control"
         variant="outline"
-        className="mb-2 justify-between"
+        className="mb-ui-control justify-between"
         onPress={() => void handleSelect(item)}
         accessibilityLabel={`${item.full_name}, ${item.private ? t("repoPicker.private") : t("repoPicker.public")}`}
       >
-        <Text className="flex-1 text-foreground" numberOfLines={2}>
+        <Text className="text-default flex-1 text-foreground" numberOfLines={2}>
           {item.full_name}
         </Text>
         <Text className="text-xs text-muted-foreground">
@@ -207,7 +208,10 @@ export default function GitHubRepoPickerScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="px-4 pb-4 gap-4 bg-background" style={{ paddingTop: insets.top }}>
+      <View
+        className="px-ui-content pb-ui-content gap-ui-content bg-background"
+        style={{ paddingTop: insets.top }}
+      >
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-foreground">
             {t("repoPicker.title")}
@@ -217,24 +221,28 @@ export default function GitHubRepoPickerScreen() {
           </Button>
         </View>
 
-        <Text className="text-muted-foreground">{t("repoPicker.subtitle")}</Text>
+        <Text className="text-default text-muted-foreground">
+          {t("repoPicker.subtitle")}
+        </Text>
 
         {viewerLogin ? (
-          <Text className="text-muted-foreground">
+          <Text className="text-default text-muted-foreground">
             {t("repoPicker.signedInAs", { login: viewerLogin })}
           </Text>
         ) : null}
 
         {isLoading ? (
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-ui-section">
             <Spinner />
-            <Text className="text-foreground">{t("repoPicker.loading")}</Text>
+            <Text className="text-default text-foreground">
+              {t("repoPicker.loading")}
+            </Text>
           </View>
         ) : null}
 
         {error ? (
-          <View className="gap-2">
-            <Text className="text-error">{error}</Text>
+          <View className="gap-ui-control">
+            <Text className="text-default text-error">{error}</Text>
             <Button size="chip" variant="outline" onPress={load}>
               {t("repoPicker.retry")}
             </Button>
@@ -258,14 +266,16 @@ export default function GitHubRepoPickerScreen() {
         contentContainerStyle={{
           paddingBottom: insets.bottom,
           paddingHorizontal: UI_SPACE.gutter,
-          maxWidth: 17.5 * UI_SPACE.empty,
+          maxWidth: 700,
           alignSelf: "center",
           width: "100%",
         }}
         ItemSeparatorComponent={() => <View style={{ height: UI_SPACE.control }} />}
         ListEmptyComponent={
           !isLoading && !error ? (
-            <Text className="text-muted-foreground">{t("repoPicker.empty")}</Text>
+            <Text className="text-default text-muted-foreground">
+              {t("repoPicker.empty")}
+            </Text>
           ) : null
         }
       />

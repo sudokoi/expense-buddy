@@ -42,7 +42,7 @@ export function SelectionField({
   return (
     <>
       {layout === "inline" ? (
-        <View className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <View className="flex-row flex-wrap items-center justify-between gap-x-ui-section gap-y-1">
           <Text className="min-w-24 flex-1 text-sm text-muted-foreground">{label}</Text>
           <CompactControl
             onPress={() => setOpen(true)}
@@ -59,7 +59,7 @@ export function SelectionField({
           accessibilityRole="button"
           accessibilityLabel={`${label}, ${summary}`}
           accessibilityState={{ expanded: open }}
-          className="min-h-12 flex-row items-center gap-3 rounded-control border border-border bg-surface px-3 py-3 active:opacity-60"
+          className="min-h-control-height flex-row items-center gap-ui-section rounded-control border border-border bg-surface p-ui-section active:opacity-60"
         >
           <View className="flex-1 gap-1">
             <Text className="text-xs text-muted-foreground">{label}</Text>
@@ -77,7 +77,7 @@ export function SelectionField({
         scroll
         unmountWhenClosed
       >
-        <View className="gap-2">
+        <View className="gap-ui-control">
           {options.map((option) => (
             <Pressable
               key={option.value}
@@ -90,7 +90,7 @@ export function SelectionField({
                 setOpen(false)
                 if (option.value !== value) onChange(option.value)
               }}
-              className={`min-h-12 flex-row items-center gap-3 rounded-control border p-3 active:opacity-60 ${option.value === value ? "border-accent bg-muted" : "border-border bg-surface"}`}
+              className={`min-h-control-height flex-row items-center gap-ui-section rounded-control border p-ui-section active:opacity-60 ${option.value === value ? "border-accent bg-muted" : "border-border bg-surface"}`}
             >
               <View className="flex-1 gap-1">
                 <Text className="text-base font-medium text-foreground">

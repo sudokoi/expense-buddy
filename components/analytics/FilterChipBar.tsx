@@ -6,7 +6,8 @@ import { Check } from "lucide-react-native"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { getReadableTextColor } from "../../constants/palette"
 import { resolveCategoryVisual } from "../../utils/resolve-category-color"
-import { UI_FONT_WEIGHT, UI_ICON_SIZE, UI_SPACE } from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 /**
  * Shared filter chip layout and selection styling. Wrap choices so they remain
@@ -22,15 +23,17 @@ export const FilterChipBar = memo(function FilterChipBar({
   children,
   horizontal = false,
 }: FilterChipBarProps) {
-  if (!horizontal) return <View className="flex-row flex-wrap gap-x-2">{children}</View>
+  const { space } = useDisplayDensity()
+  if (!horizontal)
+    return <View className="flex-row flex-wrap gap-x-ui-control">{children}</View>
   return (
     <ScrollView
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator
-      contentContainerStyle={{ paddingBottom: UI_SPACE.control }}
+      contentContainerStyle={{ paddingBottom: space.control }}
     >
-      <View className="flex-row gap-2">{children}</View>
+      <View className="flex-row gap-ui-control">{children}</View>
     </ScrollView>
   )
 })

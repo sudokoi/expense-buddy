@@ -5,12 +5,8 @@ import { Button } from "./Button"
 import { AppSheetScaffold } from "./AppSheetScaffold"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import {
-  UI_FONT_SIZE,
-  UI_FONT_WEIGHT,
-  UI_SPACE,
-  UI_BORDER_WIDTH,
-} from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_BORDER_WIDTH } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface ChangelogSheetProps {
   open: boolean
@@ -29,6 +25,7 @@ export function ChangelogSheet({
 }: ChangelogSheetProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const { font: UI_FONT_SIZE, space: UI_SPACE, layout } = useDisplayDensity()
   const normalizedNotes = useMemo(
     () => releaseNotes.replace(/\r\n/g, "\n"),
     [releaseNotes]
@@ -54,14 +51,14 @@ export function ChangelogSheet({
         </>
       }
     >
-      <View className="pb-4">
+      <View className="pb-ui-content">
         <Markdown
           // Markdown-only geometry: 22dp line boxes, 6/3dp code corners and
           // 6/10dp rhythm keep dense release notes distinct from form controls.
           style={{
             body: {
               fontSize: UI_FONT_SIZE.label,
-              lineHeight: 22,
+              lineHeight: layout.markdownLine,
               color: theme.foreground,
             },
             heading1: {

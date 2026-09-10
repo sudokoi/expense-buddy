@@ -434,6 +434,12 @@
       "default": "default"
     },
     "appearance": {
+      "density": {
+        "title": "Display density",
+        "standard": "Standard",
+        "compact": "Compact",
+        "help": "Compact uses smaller text, controls and spacing to fit more on screen. Applies immediately on this device."
+      },
       "theme": "Theme",
       "options": {
         "system": "System",

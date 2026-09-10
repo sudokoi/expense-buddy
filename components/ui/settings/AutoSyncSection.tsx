@@ -51,13 +51,13 @@ export function AutoSyncSection({
   }
 
   return (
-    <View className="gap-3 border-t border-border pt-4">
+    <View className="gap-ui-section border-t border-border pt-ui-content">
       <Text className="text-body font-bold text-muted-foreground">
         {t("settings.autoSync.title")}
       </Text>
 
       {/* Enable Auto-Sync Toggle */}
-      <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
+      <View className="bg-surface flex-row items-center justify-between px-ui-section py-ui-section rounded-chip">
         <View className="flex-1">
           <Label>{t("settings.autoSync.enable")}</Label>
           <Text className="text-xs text-muted-foreground mt-1">
@@ -72,7 +72,7 @@ export function AutoSyncSection({
       </View>
 
       {/* Also sync settings toggle */}
-      <View className="bg-surface flex-row items-center justify-between px-3 py-3 rounded-chip">
+      <View className="bg-surface flex-row items-center justify-between px-ui-section py-ui-section rounded-chip">
         <View className="flex-1">
           <Label>{t("settings.autoSync.syncSettings")}</Label>
           <Text className="text-xs text-muted-foreground mt-1">
@@ -88,7 +88,7 @@ export function AutoSyncSection({
 
       {/* When to Sync - only shown when auto-sync is enabled */}
       {autoSyncEnabled && (
-        <View className="gap-2 mt-1 rounded-card bg-surface p-3">
+        <View className="gap-ui-control mt-1 rounded-card bg-surface p-ui-section">
           <Label>{t("settings.autoSync.whenToSync")}</Label>
           <RadioGroup value={autoSyncTiming} onValueChange={handleAutoSyncTimingChange}>
             <RadioGroup.Item

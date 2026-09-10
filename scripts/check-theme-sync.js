@@ -142,13 +142,20 @@ else ok("ui-tokens UI_RADIUS 12/14/20")
 
 const numeric = readTokens("constants/ui-tokens.ts")
 const config = require("../tailwind.config.js").theme.extend
+const densityProfiles = require("../constants/display-density.json")
 for (const key of ["body", "micro"]) {
-  if (config.fontSize[key] !== `${numeric.UI_FONT_SIZE[key]}px`)
+  if (
+    config.fontSize[key][0] !== `var(--font-${key})` ||
+    densityProfiles.standard.font[key] !== numeric.UI_FONT_SIZE[key]
+  )
     fail(`fontSize.${key} differs from UI_FONT_SIZE`)
 }
 if (config.maxWidth.content !== `${numeric.UI_LAYOUT.contentMaxWidth}px`)
   fail("content width differs from UI_LAYOUT")
-if (config.height["chart-empty"] !== `${numeric.UI_LAYOUT.chartEmptyHeight}px`)
+if (
+  config.height["chart-empty"] !== "var(--layout-chartEmpty)" ||
+  densityProfiles.standard.layout.chartEmpty !== numeric.UI_LAYOUT.chartEmptyHeight
+)
   fail("chart empty height differs from UI_LAYOUT")
 
 const nativeColors = read(

@@ -6,13 +6,9 @@ import { resolveCategoryVisual } from "../../utils/resolve-category-color"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"
 import { useThemeColors } from "../../hooks/use-theme-colors"
-import {
-  UI_FONT_SIZE,
-  UI_FONT_WEIGHT,
-  UI_BORDER_WIDTH,
-  UI_ICON_SIZE,
-} from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT, UI_BORDER_WIDTH, UI_ICON_SIZE } from "../../constants/ui-tokens"
 import { CompactControl } from "./CompactControl"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface CategoryCardProps {
   isSelected: boolean
@@ -40,6 +36,7 @@ export const CategoryCard = memo(function CategoryCard({
 }: CategoryCardProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const { font } = useDisplayDensity()
   const visual = resolveCategoryVisual(categoryColor, isSelected, theme)
 
   const displayLabel = label === "Other" ? t("settings.categories.other") : label
@@ -67,7 +64,7 @@ export const CategoryCard = memo(function CategoryCard({
         style={{
           fontWeight: isSelected ? UI_FONT_WEIGHT.bold : UI_FONT_WEIGHT.normal,
           color: visual.textColor,
-          fontSize: UI_FONT_SIZE.label,
+          fontSize: font.label,
         }}
       >
         {displayLabel}
@@ -95,7 +92,7 @@ export const CategoryCard = memo(function CategoryCard({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? displayLabel}
       accessibilityState={{ selected: isSelected }}
-      className="min-h-12 max-w-full flex-row items-center gap-2 rounded-chip p-3 active:opacity-60"
+      className="min-h-control-height max-w-full flex-row items-center gap-ui-control rounded-chip p-ui-section active:opacity-60"
       style={surfaceStyle}
     >
       {content}

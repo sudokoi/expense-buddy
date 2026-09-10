@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from "react-native"
 import { cn } from "../../utils/cn"
-import { UI_COMPACT_TOUCH_TARGET } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface CompactControlProps extends Omit<PressableProps, "children" | "style"> {
   children: ReactNode
@@ -17,7 +17,7 @@ interface CompactControlProps extends Omit<PressableProps, "children" | "style">
   style?: StyleProp<ViewStyle>
 }
 
-/** A 36dp visual control inside a 40dp target, without overlapping hit slop. */
+/** Standard 36/40dp surface/target; Compact 28/32dp, with content-driven growth. */
 export function CompactControl({
   children,
   className,
@@ -26,6 +26,7 @@ export function CompactControl({
   style,
   ...props
 }: CompactControlProps) {
+  const { control } = useDisplayDensity()
   return (
     <Pressable
       className={cn(
@@ -36,14 +37,11 @@ export function CompactControl({
       accessibilityRole="button"
       disabled={disabled}
       {...props}
-      style={[
-        { minHeight: UI_COMPACT_TOUCH_TARGET, minWidth: UI_COMPACT_TOUCH_TARGET },
-        style,
-      ]}
+      style={[{ minHeight: control.choice, minWidth: control.choice }, style]}
       accessibilityState={{ ...props.accessibilityState, disabled: !!disabled }}
     >
       <View
-        className="min-h-9 flex-row items-center justify-center gap-1.5 rounded-chip border border-border bg-surface px-2 py-1"
+        className="min-h-control-surface flex-row items-center justify-center gap-control-choiceGap rounded-chip border border-border bg-surface px-control-choiceX py-control-choiceY"
         style={surfaceStyle}
         pointerEvents="none"
         accessible={false}

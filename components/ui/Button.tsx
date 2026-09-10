@@ -5,6 +5,7 @@ import { LucideProvider } from "lucide-react-native"
 import { cn } from "../../utils/cn"
 import { NEUTRAL_COLORS, palette } from "../../constants/palette"
 import { useThemeColors } from "../../hooks/use-theme-colors"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 const buttonVariants = cva(
   "flex-row items-center justify-center rounded-control active:opacity-60",
@@ -18,10 +19,10 @@ const buttonVariants = cva(
         destructive: "bg-destructive",
       },
       size: {
-        icon: "min-h-12 min-w-12 p-2",
-        chip: "min-h-12 px-3 py-2",
-        compact: "min-h-12 px-3 py-2",
-        control: "min-h-12 px-4 py-3",
+        icon: "min-h-control-height min-w-control-height p-ui-control",
+        chip: "min-h-control-height px-ui-section py-control-inputY",
+        compact: "min-h-control-height px-ui-section py-control-inputY",
+        control: "min-h-control-height px-control-actionX py-control-actionY",
       },
     },
     defaultVariants: {
@@ -86,7 +87,11 @@ export const ButtonText = forwardRef<
   const ctx = useButtonContext()
   const colorClass = ctx ? ctx.textClass : buttonTextVariants({ variant: "default" })
   return (
-    <Text ref={ref} className={cn(colorClass, className)} {...props}>
+    <Text
+      ref={ref}
+      className={cn("text-default text-center", colorClass, className)}
+      {...props}
+    >
       {children}
     </Text>
   )
@@ -110,11 +115,13 @@ export function ButtonIcon({ as: Icon, color, size, ...rest }: ButtonIconProps) 
 const ButtonBase = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
   ({ className, variant, size, icon, children, disabled, ...props }, ref) => {
     const theme = useThemeColors()
+    const { density } = useDisplayDensity()
     const resolvedVariant: NonNullable<ButtonVariant> = variant ?? "default"
     const colorKey = VARIANT_TEXT_COLOR_KEY[resolvedVariant]
     const iconColor = colorKey === "white" ? NEUTRAL_COLORS.white : theme[colorKey]
     const textClass = buttonTextVariants({ variant: resolvedVariant })
-    const hitSlop = size === "chip" ? 8 : props.hitSlop
+    const hitSlop =
+      props.hitSlop ?? (size === "chip" && density === "standard" ? 8 : undefined)
 
     const content =
       typeof children === "string" || typeof children === "number" ? (
@@ -141,7 +148,7 @@ const ButtonBase = forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
           value={{ variant: resolvedVariant, iconColor, textClass }}
         >
           <LucideProvider color={iconColor}>
-            <View className="min-w-0 shrink flex-row items-center justify-center gap-2">
+            <View className="min-w-0 shrink flex-row items-center justify-center gap-ui-control">
               {icon}
               {content}
             </View>

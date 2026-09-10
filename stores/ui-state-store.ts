@@ -1,5 +1,14 @@
 import { createStore } from "@xstate/store"
 import { getItem, setItem } from "../services/storage"
+import {
+  loadDisplayDensity,
+  loadDisplayDensitySync,
+  saveDisplayDensity,
+} from "../services/display-density-storage"
+import {
+  normalizeDisplayDensity,
+  type DisplayDensity,
+} from "../constants/display-density"
 
 // keys for UI state persistence
 const PAYMENT_METHOD_EXPANDED_KEY = "payment_method_section_expanded"
@@ -18,13 +27,43 @@ export type UIStateStore = typeof uiStateStore
 
 export const uiStateStore = createStore({
   context: {
+    displayDensity: loadDisplayDensitySync(),
+    densityHydrated: false,
+    densityRevision: 0,
     paymentMethodSectionExpanded: false,
     paymentInstrumentsSectionExpanded: false,
   },
 
   on: {
+    loadDisplayDensity: (
+      context,
+      event: { density: DisplayDensity; revision: number }
+    ) => ({
+      ...context,
+      displayDensity:
+        context.densityRevision === event.revision
+          ? normalizeDisplayDensity(event.density)
+          : context.displayDensity,
+      densityHydrated: true,
+    }),
+    setDisplayDensity: (context, event: { density: DisplayDensity }, enqueue) => {
+      const density = normalizeDisplayDensity(event.density)
+      enqueue.effect(async () => {
+        try {
+          await saveDisplayDensity(density)
+        } catch (error) {
+          console.warn("Failed to persist display density:", error)
+        }
+      })
+      return {
+        ...context,
+        displayDensity: density,
+        densityRevision: context.densityRevision + 1,
+        densityHydrated: true,
+      }
+    },
     /**
-     * Load UI state from AsyncStorage
+     * Load UI state from the device-local storage adapter
      * Called during initialization
      */
     loadUIState: (
@@ -45,7 +84,7 @@ export const uiStateStore = createStore({
      * Toggle payment method section expanded state
      */
     setPaymentMethodExpanded: (context, event: { expanded: boolean }, enqueue) => {
-      // Persist to AsyncStorage
+      // Persist locally, outside settings sync.
       enqueue.effect(async () => {
         await setItem(PAYMENT_METHOD_EXPANDED_KEY, event.expanded ? "true" : "false")
       })
@@ -60,7 +99,7 @@ export const uiStateStore = createStore({
      * Toggle payment instruments section expanded state
      */
     setPaymentInstrumentsExpanded: (context, event: { expanded: boolean }, enqueue) => {
-      // Persist to AsyncStorage
+      // Persist locally, outside settings sync.
       enqueue.effect(async () => {
         await setItem(PAYMENT_INSTRUMENTS_EXPANDED_KEY, event.expanded ? "true" : "false")
       })
@@ -79,6 +118,15 @@ export const uiStateStore = createStore({
 export async function initializeUIStateStore(
   store: UIStateStore = uiStateStore
 ): Promise<void> {
+  const revision = store.getSnapshot().context.densityRevision
+  const densityLoad = loadDisplayDensity()
+    .then((density) => store.trigger.loadDisplayDensity({ density, revision }))
+    .catch(() =>
+      store.trigger.loadDisplayDensity({
+        density: store.getSnapshot().context.displayDensity,
+        revision,
+      })
+    )
   try {
     const [expandedValue, instrumentsExpanded] = await Promise.all([
       getItem(PAYMENT_METHOD_EXPANDED_KEY),
@@ -96,5 +144,7 @@ export async function initializeUIStateStore(
       paymentMethodSectionExpanded: false,
       paymentInstrumentsSectionExpanded: false,
     })
+  } finally {
+    await densityLoad
   }
 }

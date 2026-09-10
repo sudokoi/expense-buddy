@@ -11,7 +11,10 @@ type ExpenseCardProps = React.ComponentProps<typeof Card>
  */
 export const ExpenseCard = memo(function ExpenseCard(props: ExpenseCardProps) {
   return (
-    <Card className="flex-row items-center justify-between gap-2 px-3 py-2" {...props} />
+    <Card
+      className="flex-row items-center justify-between gap-ui-control px-layout-historyX py-layout-historyY"
+      {...props}
+    />
   )
 })
 

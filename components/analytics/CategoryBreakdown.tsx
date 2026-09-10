@@ -36,14 +36,14 @@ export const CategoryBreakdown = memo(function CategoryBreakdown({
   return (
     <CollapsibleSection title={t("analytics.charts.category.title")}>
       {data.length === 0 ? (
-        <View className="h-chart-empty items-center justify-center">
-          <Text className="text-muted-foreground">
+        <View className="min-h-layout-chartEmpty items-center justify-center">
+          <Text className="text-default text-muted-foreground">
             {t("analytics.charts.common.noData")}
           </Text>
         </View>
       ) : (
         <View className="gap-1">
-          <Text className="px-2 pb-2 text-xs text-muted-foreground">
+          <Text className="px-ui-control pb-ui-control text-xs text-muted-foreground">
             {t("analytics.charts.category.hint")}
           </Text>
           {data.map((item) => {
@@ -57,10 +57,10 @@ export const CategoryBreakdown = memo(function CategoryBreakdown({
                 accessibilityRole="button"
                 accessibilityLabel={`${item.text}, ${amount}, ${percentage}`}
                 accessibilityState={{ selected }}
-                className="min-h-12 gap-2 rounded-control p-2 active:opacity-60"
+                className="min-h-control-height gap-ui-control rounded-control p-ui-control active:opacity-60"
                 style={{ backgroundColor: selected ? theme.muted : theme.surface }}
               >
-                <View className="flex-row items-start justify-between gap-3">
+                <View className="flex-row items-start justify-between gap-ui-section">
                   <View className="flex-1 flex-row items-center gap-1">
                     {selected ? (
                       <Check size={UI_ICON_SIZE.small} color={theme.foreground} />

@@ -40,10 +40,10 @@ export const CategorySection = memo(function CategorySection({
   const movable = categories.filter((category) => category.label !== "Other")
 
   return (
-    <View className="gap-3">
-      <View className="flex-row items-center gap-2">
+    <View className="gap-ui-section">
+      <View className="flex-row items-center gap-ui-control">
         <Pressable
-          className="min-h-12 flex-1 flex-row items-center gap-2 active:opacity-60"
+          className="min-h-control-height flex-1 flex-row items-center gap-ui-control active:opacity-60"
           accessibilityRole="button"
           accessibilityLabel={`${t("settings.categories.manage")}, ${categories.length}`}
           accessibilityState={{ expanded }}
@@ -71,8 +71,8 @@ export const CategorySection = memo(function CategorySection({
         </Button>
       </View>
       {expanded ? (
-        <View className="gap-3">
-          <View className="flex-row items-center gap-2">
+        <View className="gap-ui-section">
+          <View className="flex-row items-center gap-ui-control">
             <Input
               className="flex-1"
               value={query}
@@ -106,7 +106,7 @@ export const CategorySection = memo(function CategorySection({
           {visible.map((category) => (
             <View key={category.label} className="border-b border-border py-1">
               {reordering ? (
-                <View className="min-h-12 flex-row items-center gap-2">
+                <View className="min-h-control-height flex-row items-center gap-ui-control">
                   <Text className="flex-1 text-base text-foreground">
                     {categoryLabel(category)}
                   </Text>

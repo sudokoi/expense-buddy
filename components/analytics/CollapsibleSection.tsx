@@ -4,6 +4,7 @@ import { Card } from "../ui/Card"
 import { ChevronDown, ChevronUp } from "lucide-react-native"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 
 interface CollapsibleSectionProps {
   title: string
@@ -23,6 +24,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const theme = useThemeColors()
+  const { density, space } = useDisplayDensity()
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((prev) => !prev)
@@ -37,7 +39,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
         accessibilityState={{ expanded: isExpanded }}
       >
         <View
-          className={`min-h-12 flex-row items-center justify-between gap-2 rounded-t-card bg-surface p-3 ${
+          className={`min-h-control-height flex-row items-center justify-between gap-ui-control rounded-t-card bg-surface p-ui-section ${
             isExpanded ? "rounded-b-none" : "rounded-b-card"
           }`}
         >
@@ -50,7 +52,18 @@ export const CollapsibleSection = memo(function CollapsibleSection({
         </View>
       </Pressable>
 
-      {isExpanded && <View className="p-2.5 pt-1.5">{children}</View>}
+      {isExpanded && (
+        <View
+          className="p-2.5 pt-1.5"
+          style={
+            density === "compact"
+              ? { padding: space.section, paddingTop: space.micro }
+              : undefined
+          }
+        >
+          {children}
+        </View>
+      )}
     </Card>
   )
 })

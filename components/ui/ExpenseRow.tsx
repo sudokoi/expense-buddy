@@ -12,7 +12,8 @@ import { DynamicCategoryIcon } from "./DynamicCategoryIcon"
 import { formatDate } from "../../utils/date"
 import { formatCurrency } from "../../utils/currency"
 import { useTranslation } from "react-i18next"
-import { UI_FONT_WEIGHT, UI_ICON_SIZE } from "../../constants/ui-tokens"
+import { UI_FONT_WEIGHT } from "../../constants/ui-tokens"
+import { useDisplayDensity } from "../../hooks/use-display-density"
 import { IconActionButton } from "./IconActionButton"
 import { useThemeColors } from "../../hooks/use-theme-colors"
 import { resolveCategoryColor } from "../../utils/resolve-category-color"
@@ -42,6 +43,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 }: ExpenseRowProps) {
   const { t } = useTranslation()
   const theme = useThemeColors()
+  const { icon: UI_ICON_SIZE } = useDisplayDensity()
   const { resolvedColor, iconColor } = resolveCategoryColor(categoryInfo.color)
 
   const expenseRef = useRef(expense)
@@ -66,14 +68,14 @@ export const ExpenseRow = memo(function ExpenseRow({
   return (
     <ExpenseCard>
       <Pressable
-        className="flex-1 flex-row items-center gap-3 py-1"
+        className="min-h-control-height flex-1 flex-row items-center gap-ui-section py-1"
         onPress={showActions ? handleEdit : undefined}
         accessibilityRole={showActions ? "button" : undefined}
         accessibilityHint={showActions ? t("common.edit") : undefined}
         style={({ pressed }) => ({ opacity: pressed && showActions ? 0.6 : 1 })}
       >
         <View
-          className="h-10 w-10 items-center justify-center rounded-control"
+          className="h-control-badge w-control-badge items-center justify-center rounded-control"
           style={{ backgroundColor: resolvedColor }}
           accessible={false}
           importantForAccessibility="no-hide-descendants"
@@ -85,7 +87,7 @@ export const ExpenseRow = memo(function ExpenseRow({
           />
         </View>
         <View className="min-w-0 flex-1">
-          <View className="flex-row flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <View className="flex-row flex-wrap items-start justify-between gap-x-ui-section gap-y-1">
             <Text
               className="min-w-legend flex-1 text-sm text-foreground"
               style={{ fontWeight: UI_FONT_WEIGHT.bold }}
