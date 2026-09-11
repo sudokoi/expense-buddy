@@ -9,7 +9,11 @@ internal object SmsPaymentMethodRules {
         )
     private val card =
         Regex("(?:\\bcard\\b|カード)\\s*(?:(?:ending|ends)(?: with| in)?\\s*|末尾\\s*)?[*xX]*(\\d{4})(?!\\d)", RegexOption.IGNORE_CASE)
-    private val account = Regex("(?:\\ba/c\\b|\\bacct\\b|\\baccount\\b|口座)\\s*[*xX]*(\\d{3,4})(?!\\d)", RegexOption.IGNORE_CASE)
+    private val account =
+        Regex(
+            "(?:\\ba/c\\b|\\bacct\\b|\\baccount\\b|口座)\\s*(?:(?:no\\.?|number)\\s*)?[:#-]?\\s*[*xX]*(\\d{3,4})(?!\\d)",
+            RegexOption.IGNORE_CASE,
+        )
 
     fun infer(
         pack: SmsRulePack,

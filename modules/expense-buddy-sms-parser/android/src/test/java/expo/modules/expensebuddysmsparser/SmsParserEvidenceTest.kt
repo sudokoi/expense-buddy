@@ -6,6 +6,58 @@ import org.junit.Test
 
 class SmsParserEvidenceTest {
     @Test
+    fun `extracts payer suffix and merchant from the reported Axis P2M format`() {
+        val body =
+            "INR 15.00 debited\nA/c no. XX1708\n10-09-26, 19:51:13\n" +
+                "UPI/P2M/123456789012/BMTC\nNot you? SMS BLOCKUPI Cust ID to 910000000000\nAxis Bank"
+        val result = parse(body)
+        assertNull(result.skipReason)
+        assertEquals(15.0, result.parsed?.amount)
+        assertEquals("INR", result.parsed?.currency)
+        assertEquals("UPI", result.parsed?.paymentMethodSuggestion?.type)
+        assertEquals("708", result.parsed?.paymentMethodSuggestion?.identifier)
+        assertEquals("BMTC", result.parsed?.merchantName)
+        assertEquals(body, result.parsed?.sourceMessage?.body)
+    }
+
+    @Test
+    fun `account number labels preserve payer and recipient distinction`() {
+        for (label in listOf("A/c no.", "ACCOUNT NUMBER:", "acct no", "a/c no.:", "A/c no.\n")) {
+            val result = parse("INR 15 debited from $label XX1708 via UPI to account no. XX1987.")
+            assertNull(label, result.skipReason)
+            assertEquals(label, "708", result.parsed?.paymentMethodSuggestion?.identifier)
+        }
+        val recipient = parse("INR 15 paid via UPI to account no. XX1708.")
+        assertNull(recipient.skipReason)
+        assertNull(recipient.parsed?.paymentMethodSuggestion?.identifier)
+        val conflicting = parse("INR 15 debited from a/c no. XX1708, account number XX1987 via UPI.")
+        assertNull(conflicting.skipReason)
+        assertNull(conflicting.parsed?.paymentMethodSuggestion?.identifier)
+    }
+
+    @Test
+    fun `P2M merchant evidence does not imply a completed payment`() {
+        for (body in listOf(
+            "INR 15 payment request UPI/P2M/123456789012/BMTC",
+            "INR 15 debited via UPI/P2M/123456789012/BMTC. Transaction failed.",
+        )) {
+            assertNull(body, parse(body).parsed)
+        }
+    }
+
+    @Test
+    fun `compact P2M merchants end at field boundaries without swallowing bank prose`() {
+        for (suffix in listOf("", "/AXIS")) {
+            val result = parse("INR 15 debited via UPI/P2M/123456789012/BMTC$suffix")
+            assertNull(result.skipReason)
+            assertEquals("BMTC", result.parsed?.merchantName)
+        }
+        val ambiguous = parse("INR 15 debited via UPI/P2M/123456789012/BMTC Axis Bank")
+        assertNull(ambiguous.skipReason)
+        assertNull(ambiguous.parsed?.merchantName)
+    }
+
+    @Test
     fun `rejects two equal-valued outgoing events`() {
         val result = parse("INR 250 paid to Alex. INR 250 paid to Bob.")
         assertNull(result.parsed)
