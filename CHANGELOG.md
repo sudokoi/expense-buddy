@@ -1,5 +1,15 @@
 # expense-buddy
 
+## 4.3.1
+
+### Patch Changes
+
+- [#140](https://github.com/sudokoi/expense-buddy/pull/140) [`5aab27f`](https://github.com/sudokoi/expense-buddy/commit/5aab27f2c3a982f89d3e013db2feadf28faa8720) Thanks [@sudokoi](https://github.com/sudokoi)! - Improve SMS payment-instrument suggestions and Axis UPI parsing.
+
+  - Recognize account-number labels such as `A/c no.` and extract compact UPI/P2M merchants.
+  - Match saved instruments using distinctive two- or three-word nickname phrases when payer digits are absent.
+  - Preserve identifier priority and leave conflicting or ambiguous matches unselected, excluding recipient and support text from payer hints.
+
 ## 4.3.0
 
 ### Minor Changes
