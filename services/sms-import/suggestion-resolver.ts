@@ -79,7 +79,38 @@ const boundedCategoryRules = categoryMatchingRules.map((rule) => ({
 }))
 
 const maskedDigitsPattern =
-  /(?:\b(?:card|visa|mastercard|amex|rupay|maestro|discover|jcb|a\/c|acct|account)\b|カード|口座)\s*(?:(?:ending|ends)(?: with| in)?\s*|末尾\s*)?(?:x+|\*+)?\s*(\d{3,4})(?!\d)/gi
+  /(?:\b(?:card|visa|mastercard|amex|rupay|maestro|discover|jcb|a\/c|acct|account)\b|カード|口座)\s*(?:(?:no\.?|number)\s*)?[:#-]?\s*(?:(?:ending|ends)(?: with| in)?\s*|末尾\s*)?(?:x+|\*+)?\s*(\d{3,4})(?!\d)/gi
+
+const genericInstrumentWords = new Set([
+  "bank",
+  "account",
+  "acct",
+  "card",
+  "credit",
+  "debit",
+  "upi",
+  "payment",
+  "payments",
+  "savings",
+  "saving",
+  "salary",
+  "current",
+  "personal",
+  "business",
+  "primary",
+  "secondary",
+  "main",
+  "my",
+  "the",
+])
+
+function instrumentWords(value: string): string[] {
+  return normalizeNickname(value.normalize("NFKC")).match(/[\p{L}\p{N}]+/gu) ?? []
+}
+
+function isDistinctiveInstrumentWord(word: string): boolean {
+  return word.length >= 3 && /\p{L}/u.test(word) && !genericInstrumentWords.has(word)
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -135,21 +166,44 @@ function bodyHintsMethod(body: string, type: PaymentMethod["type"]): boolean {
   }
 }
 
-function bodyContainsInstrumentNickname(body: string, nickname: string): boolean {
-  const normalizedNickname = normalizeNickname(nickname)
-  if (normalizedNickname.length < 4) {
-    return false
+function matchInstrumentNickname(
+  normalizedBody: string,
+  instrument: PaymentInstrument
+): "exact" | "phrase" | undefined {
+  const words = instrumentWords(instrument.nickname)
+  if (!words.some(isDistinctiveInstrumentWord)) return undefined
+  if (normalizedBody.includes(` ${words.join(" ")} `)) return "exact"
+
+  // The caller has already established method compatibility. Its words need
+  // not sit beside the bank name in the SMS, and are not distinctive evidence.
+  const methodWords = new Set(instrumentWords(instrument.method))
+  const nicknameWords = words.filter((word) => !methodWords.has(word))
+  for (const length of [3, 2]) {
+    for (let start = 0; start + length <= nicknameWords.length; start++) {
+      const phrase = nicknameWords.slice(start, start + length)
+      if (
+        phrase.some(isDistinctiveInstrumentWord) &&
+        normalizedBody.includes(` ${phrase.join(" ")} `)
+      )
+        return "phrase"
+    }
   }
+  return undefined
+}
 
-  const nicknamePattern = new RegExp(
-    `\\b${normalizedNickname
-      .split(/\s+/)
-      .map((part) => escapeRegExp(part))
-      .join("\\s+")}\\b`,
-    "i"
-  )
-
-  return nicknamePattern.test(body)
+function matchInstrumentsByNickname(
+  body: string,
+  instruments: PaymentInstrument[]
+): PaymentInstrument[] {
+  const normalizedBody = ` ${instrumentWords(body).join(" ")} `
+  const matches = instruments.map((instrument) => ({
+    instrument,
+    kind: matchInstrumentNickname(normalizedBody, instrument),
+  }))
+  const bestKind = matches.some((match) => match.kind === "exact") ? "exact" : "phrase"
+  return matches
+    .filter((match) => match.kind === bestKind)
+    .map((match) => match.instrument)
 }
 
 export function resolveSmsImportCategory(
@@ -224,18 +278,21 @@ export function resolveSmsImportPaymentSuggestion(
       ? instrument.method === baseSuggestion.type
       : bodyHintsMethod(body, instrument.method)
   )
-  const identifiers = baseSuggestion?.identifier
-    ? [baseSuggestion.identifier]
-    : baseSuggestion?.type === "UPI" || (!baseSuggestion && hasUpiHint(body))
+  const bodyIdentifiers =
+    baseSuggestion?.type === "UPI" || (!baseSuggestion && hasUpiHint(body))
       ? extractIdentifiersFromBody(body, 3)
       : extractIdentifiersFromBody(body, 4)
+  const identifiers = [
+    ...new Set([
+      ...bodyIdentifiers,
+      ...(baseSuggestion?.identifier ? [baseSuggestion.identifier] : []),
+    ]),
+  ]
   if (identifiers.length > 1) return baseSuggestion
   const identifier = identifiers[0]
   const matchingInstruments = identifier
     ? eligible.filter((instrument) => instrument.lastDigits === identifier)
-    : eligible.filter((instrument) =>
-        bodyContainsInstrumentNickname(body, instrument.nickname)
-      )
+    : matchInstrumentsByNickname(body, eligible)
   if (matchingInstruments.length === 1) {
     const matchedInstrument = matchingInstruments[0]
     return {

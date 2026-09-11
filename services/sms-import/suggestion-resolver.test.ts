@@ -164,6 +164,200 @@ describe("resolveSmsImportCategory", () => {
 })
 
 describe("resolveSmsImportPaymentSuggestion", () => {
+  describe("account labels and method-aware nickname phrases", () => {
+    const axis = createInstrument({
+      id: "axis-upi",
+      method: "UPI",
+      nickname: "Axis Bank UPI",
+      lastDigits: "708",
+    })
+    const axisBody =
+      "INR 15.00 debited\nA/c no. XX1708\n10-09-26, 19:51:13\n" +
+      "UPI/P2M/123456789012/BMTC\nNot you? SMS BLOCKUPI Cust ID to 910000000000\nAxis Bank"
+
+    function upiItem(body: string): SmsImportReviewItem {
+      return createItem({
+        sourceMessage: { ...createItem().sourceMessage, sender: "AXISBK", body },
+        merchantName: undefined,
+        paymentMethodSuggestion: { type: "UPI" },
+      })
+    }
+
+    it.each([undefined, "708"])(
+      "matches the Axis report with native identifier %s",
+      (identifier) => {
+        const item = upiItem(axisBody)
+        item.paymentMethodSuggestion = { type: "UPI", identifier }
+        expect(resolveSmsImportPaymentSuggestion(item, [axis])).toEqual({
+          type: "UPI",
+          identifier: "708",
+          instrumentId: "axis-upi",
+        })
+      }
+    )
+
+    it.each(["A/c no.", "ACCOUNT NUMBER:", "acct no", "a/c no.:", "A/c no.\n", "A/c\n"])(
+      "matches a payer suffix after %s without nickname evidence",
+      (label) => {
+        expect(
+          resolveSmsImportPaymentSuggestion(
+            upiItem(`INR 15 debited from ${label} XX1708 via UPI.`),
+            [axis]
+          )?.instrumentId
+        ).toBe(axis.id)
+      }
+    )
+
+    it.each([
+      ["Axis Bank UPI", "INR 15 debited via UPI. Axis Bank"],
+      ["UPI Axis Bank", "INR 15 debited via UPI. AXIS-BANK"],
+      ["Axis Bank Salary UPI", "INR 15 debited via UPI. Axis Bank"],
+      ["First National Bank UPI", "INR 15 debited via UPI. First National Bank"],
+      ["Axis Bank UPI", axisBody.replace("A/c no. XX1708\n", "")],
+    ])("matches a distinctive phrase in %s", (nickname, body) => {
+      expect(
+        resolveSmsImportPaymentSuggestion(upiItem(body), [{ ...axis, nickname }])
+      ).toEqual({ type: "UPI", identifier: "708", instrumentId: "axis-upi" })
+    })
+
+    it("matches a credit-card nickname with separate method evidence", () => {
+      const item = createItem({
+        merchantName: undefined,
+        paymentMethodSuggestion: { type: "Credit Card" },
+        sourceMessage: {
+          ...createItem().sourceMessage,
+          body: "INR 15 spent using credit card. First National Bank",
+        },
+      })
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [
+          createInstrument({
+            method: "Credit Card",
+            nickname: "First National Bank Credit Card",
+          }),
+        ])?.instrumentId
+      ).toBe("inst-1")
+    })
+
+    it("uses a phrase and payer rail when native method inference is absent", () => {
+      const item = upiItem("INR 15 debited via UPI. Axis Bank")
+      item.paymentMethodSuggestion = undefined
+      expect(resolveSmsImportPaymentSuggestion(item, [axis])).toEqual({
+        type: "UPI",
+        identifier: "708",
+        instrumentId: "axis-upi",
+      })
+    })
+
+    it("prefers an exact nickname over a partial phrase", () => {
+      const item = upiItem("INR 15 debited via UPI. Axis Bank Salary")
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [
+          { ...axis, nickname: "Axis Bank Salary" },
+          {
+            ...axis,
+            id: "savings",
+            nickname: "Axis Bank Savings UPI",
+            lastDigits: "987",
+          },
+        ])?.instrumentId
+      ).toBe(axis.id)
+    })
+
+    it.each([false, true])(
+      "leaves same-bank phrase matches ambiguous (reversed=%s)",
+      (reversed) => {
+        const instruments = [
+          { ...axis, nickname: "Axis Bank Salary UPI" },
+          {
+            ...axis,
+            id: "savings",
+            nickname: "Axis Bank Savings UPI",
+            lastDigits: "987",
+          },
+        ]
+        expect(
+          resolveSmsImportPaymentSuggestion(
+            upiItem("INR 15 debited via UPI. Axis Bank"),
+            reversed ? instruments.reverse() : instruments
+          )
+        ).toEqual({ type: "UPI" })
+      }
+    )
+
+    it("uses suffixes before nickname phrases", () => {
+      expect(
+        resolveSmsImportPaymentSuggestion(upiItem(axisBody), [
+          { ...axis, lastDigits: "987" },
+          { ...axis, id: "salary", nickname: "Salary Account" },
+        ])?.instrumentId
+      ).toBe("salary")
+    })
+
+    it("does not override conflicting payer digits with the bank phrase", () => {
+      expect(
+        resolveSmsImportPaymentSuggestion(upiItem(axisBody.replace("XX1708", "XX1987")), [
+          axis,
+        ])
+      ).toEqual({ type: "UPI", identifier: "987" })
+    })
+
+    it("does not hide a conflicting body suffix behind the native suggestion", () => {
+      const item = upiItem(
+        "INR 15 debited from a/c no. XX1708, account number XX1987 via UPI. Axis Bank"
+      )
+      item.paymentMethodSuggestion = { type: "UPI", identifier: "708" }
+      expect(resolveSmsImportPaymentSuggestion(item, [axis])).toEqual(
+        item.paymentMethodSuggestion
+      )
+    })
+
+    it.each([
+      "INR 15 paid via UPI. For assistance contact Axis Bank support.",
+      "INR 15 paid via UPI. Not you? SMS BLOCKUPI to Axis Bank.",
+      "INR 15 paid via UPI to Axis Bank.",
+      "INR 15 paid via UPI. Beneficiary:Axis Bank",
+      "INR 15 paid via UPI to account no. XX1708 at Axis Bank.",
+      "INR 15 paid via UPI at Axis Bank Store.",
+      "INR 15 debited via UPI/P2M/123456789012/Axis Bank.",
+      "INR 15 paid via UPI. Reference: Axis Bank.",
+      "INR 15 debited via UPI. Maxis Bank",
+      "INR 15 debited via UPI. Axis National Bank",
+    ])("excludes unrelated or partial bank evidence: %s", (body) => {
+      expect(resolveSmsImportPaymentSuggestion(upiItem(body), [axis])).toEqual({
+        type: "UPI",
+      })
+    })
+
+    it.each(["Bank Account UPI", "Credit Card", "Savings Account UPI"])(
+      "does not select from generic nickname words: %s",
+      (nickname) => {
+        expect(
+          resolveSmsImportPaymentSuggestion(
+            upiItem(`INR 15 debited via UPI. ${nickname}`),
+            [{ ...axis, nickname }]
+          )
+        ).toEqual({ type: "UPI" })
+      }
+    )
+
+    it("requires compatible method evidence and an active instrument", () => {
+      const item = upiItem("INR 15 debited. Axis Bank")
+      expect(
+        resolveSmsImportPaymentSuggestion(
+          { ...item, paymentMethodSuggestion: undefined },
+          [axis]
+        )
+      ).toBeUndefined()
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [{ ...axis, method: "Debit Card" }])
+      ).toEqual({ type: "UPI" })
+      expect(
+        resolveSmsImportPaymentSuggestion(item, [{ ...axis, deletedAt: axis.updatedAt }])
+      ).toEqual({ type: "UPI" })
+    })
+  })
+
   it("does not treat a card limit as payer suffix evidence", () => {
     const item = createItem({
       sourceMessage: {

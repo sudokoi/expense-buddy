@@ -38,6 +38,10 @@ The internal responsibilities are now separate:
   is introduced. Internal rule IDs do not change public pattern keys.
 - `SmsMerchantRules`: prefer structured UPI references, then bounded merchant
   fields; support punctuation, domains, longer names, and Japanese field labels.
+  Compact `UPI/P2M/reference/merchant` fields (including the Axis BMTC format)
+  are bounded by a field separator, sentence, end of text, or masked instruction;
+  ambiguous trailing prose is not folded into the merchant. A P2M reference alone
+  does not establish a completed payment.
 - `SmsCategoryRules`: merchant evidence before body evidence; longer matching
   phrases before shorter terms, with list order as the tie-breaker. Latin token
   boundaries prevent `lease` matching `please` and `ola` matching `chocolate`.
@@ -47,6 +51,8 @@ The internal responsibilities are now separate:
 - `SmsPaymentMethodRules`: distinguish payer instruments from recipient details
   and supply an optional payer suffix in the existing identifier field. Uncertain
   identifiers remain absent; they do not invalidate an otherwise clear debit.
+  Account labels such as `A/c no.`, `acct no`, and `account number:` are supported
+  in both native extraction and the JS fallback. UPI uses the last three digits.
 
 The JS suggestion resolver retains saved-instrument/custom-category ownership.
 Its fallback no longer treats account debits as proof of debit-card use or lets
@@ -61,6 +67,27 @@ does not block a supported custom-category guess. Existing explicit instrument
 links and the review/edit/save UI remain unchanged, including for old pending
 items. The existing independent native ML category stage is unchanged and is not
 part of these deterministic-parser measurements.
+
+### Saved-instrument hint matching
+
+The resolver filters to active instruments with a compatible payment method,
+then uses payer digits before nickname evidence. Conflicting native/body digits
+or multiple saved suffix matches leave the instrument unselected; a nickname
+cannot override them. Existing explicit instrument links retain priority.
+
+When digits are absent, a normalized exact nickname takes precedence over a
+distinctive two- or three-word phrase. Phrase matching removes the configured
+method's words from the nickname, so `Axis Bank UPI` can match a separate `UPI`
+rail and `Axis Bank` signature. Word boundaries, Unicode normalization, and
+punctuation folding apply. Generic terms such as `bank`, `card`, `account`, or
+`UPI` alone are insufficient. Multiple matches at the strongest tier remain
+ambiguous regardless of instrument order. This is deterministic phrase matching,
+not TF-IDF or unrestricted token overlap.
+
+Review evidence excludes named payees and UPI recipient fields as well as
+support/reference text. Line boundaries keep a bank signature separate from a
+preceding security instruction. These hints enrich review suggestions only;
+they do not establish transaction acceptance or bank authentication.
 
 Matching tolerates whitespace, fullwidth text, decimal Unicode digits, and
 zero-width separators. The original SMS is retained. This additional matching
