@@ -5,6 +5,8 @@ internal object SmsMerchantRules {
 
     // Compact P2M merchant field, bounded by another field, sentence, end of text,
     // or a masked security instruction. Do not consume trailing bank/support prose.
+    // The multi-space boundary depends on transactionText retaining masked spans
+    // as spaces after matching whitespace has already been collapsed.
     private val upiP2m =
         Regex(
             "\\bUPI/P2M/\\d+/([\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}&'’@_.#*()-]{0,99})(?=/|\\s{2,}|\\s*$|[.!?;](?:\\s|$))",

@@ -40,8 +40,12 @@ The internal responsibilities are now separate:
   fields; support punctuation, domains, longer names, and Japanese field labels.
   Compact `UPI/P2M/reference/merchant` fields (including the Axis BMTC format)
   are bounded by a field separator, sentence, end of text, or masked instruction;
-  ambiguous trailing prose is not folded into the merchant. A P2M reference alone
-  does not establish a completed payment.
+  ambiguous trailing prose is not folded into the merchant. The multi-space
+  boundary relies on `SmsTransactionRules.transactionText` preserving masked
+  instructions as spaces after whitespace normalization. P2M merchant extraction
+  still uses the shared transaction checks: requests and failed payments are
+  rejected, while the existing `via UPI ... ref/reference` completion hint can
+  accept a message without an explicit debit verb.
 - `SmsCategoryRules`: merchant evidence before body evidence; longer matching
   phrases before shorter terms, with list order as the tie-breaker. Latin token
   boundaries prevent `lease` matching `please` and `ola` matching `chocolate`.

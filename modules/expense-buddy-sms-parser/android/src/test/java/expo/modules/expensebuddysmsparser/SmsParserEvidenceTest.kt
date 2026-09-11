@@ -36,7 +36,7 @@ class SmsParserEvidenceTest {
     }
 
     @Test
-    fun `P2M merchant evidence does not imply a completed payment`() {
+    fun `P2M merchant evidence does not bypass request and failure checks`() {
         for (body in listOf(
             "INR 15 payment request UPI/P2M/123456789012/BMTC",
             "INR 15 debited via UPI/P2M/123456789012/BMTC. Transaction failed.",
