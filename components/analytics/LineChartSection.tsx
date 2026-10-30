@@ -8,7 +8,7 @@ import {
   type LayoutChangeEvent,
 } from "react-native"
 import { ChevronLeft, ChevronRight } from "lucide-react-native"
-import { LineChart } from "react-native-gifted-charts"
+import { CurveType, LineChart } from "react-native-gifted-charts"
 import { useTranslation } from "react-i18next"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { getTrendScale, type SpendingTrend } from "../../utils/analytics/spending-trend"
@@ -158,6 +158,9 @@ export const LineChartSection = memo(function LineChartSection({
                 endSpacing={EDGE_SPACING}
                 color={theme.accent}
                 thickness={2}
+                curved
+                // Quadratic segments stay between adjacent totals, including zero-spend days.
+                curveType={CurveType.QUADRATIC}
                 areaChart
                 startFillColor={theme.accent}
                 endFillColor={theme.accent}
