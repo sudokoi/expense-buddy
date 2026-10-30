@@ -1,5 +1,13 @@
 # expense-buddy
 
+## 4.3.2
+
+### Patch Changes
+
+- [#142](https://github.com/sudokoi/expense-buddy/pull/142) [`5475802`](https://github.com/sudokoi/expense-buddy/commit/5475802cf55632e47f2a0617947d368e2248247f) Thanks [@sudokoi](https://github.com/sudokoi)! - Detect HDFC card UPI transaction SMS, including masked payees.
+
+- [#142](https://github.com/sudokoi/expense-buddy/pull/142) [`00e638b`](https://github.com/sudokoi/expense-buddy/commit/00e638b060414971b80dfa7bd75ec822e3d3b40b) Thanks [@sudokoi](https://github.com/sudokoi)! - Smooth the spending trend chart without overshooting daily totals.
+
 ## 4.3.1
 
 ### Patch Changes
