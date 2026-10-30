@@ -30,12 +30,17 @@ The internal responsibilities are now separate:
   skip. No conversion, fee summation, or refund netting is performed; the output
   must be an explicitly present money token.
 - `SmsTransactionTemplates` / `IndiaSmsTransactionTemplates`: narrow body
-  structures for HDFC sent-from-account and NetBanking, ICICI card usage and
+  structures for HDFC sent-from-account, NetBanking and card UPI alerts, ICICI card usage and
   linked debit/recipient-credit, and SBI debit-card completion. They bind the
   amount and merchant, then pass through shared outcome/money checks. Multiple
   matching structures skip instead of choosing by registry order. Body signatures
   suffice for these initial templates; no sender allowlist or authentication claim
   is introduced. Internal rule IDs do not change public pattern keys.
+  HDFC `Txn Rs… On HDFC Bank Card… At… by UPI… On…` alerts require the
+  complete card/payee/reference/date structure and support masked payees such as
+  `*shop@ptys`. The payment suggestion is UPI; a `SMS BLOCK CC` footer does not
+  establish credit-card type. Anonymized user-reported examples and negative
+  variants are covered in `HdfcCardTemplateTest`.
 - `SmsMerchantRules`: prefer structured UPI references, then bounded merchant
   fields; support punctuation, domains, longer names, and Japanese field labels.
   Compact `UPI/P2M/reference/merchant` fields (including the Axis BMTC format)
