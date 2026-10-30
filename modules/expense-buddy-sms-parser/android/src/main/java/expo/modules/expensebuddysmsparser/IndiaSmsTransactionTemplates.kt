@@ -20,6 +20,16 @@ internal object IndiaSmsTransactionTemplates {
                 "Net Banking",
             ),
             Template(
+                "hdfc.card.upi",
+                Regex(
+                    "\\bTxn $MONEY On HDFC Bank Card [*Xx]*[0-9]{4} " +
+                        "At (?<merchant>[*]*[\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N} &'’@_./*()-]{0,100}?) " +
+                        "by UPI [0-9]{12} On [0-9]{2}-[0-9]{2}(?:-[0-9]{2,4})?\\b",
+                    RegexOption.IGNORE_CASE,
+                ),
+                "UPI",
+            ),
+            Template(
                 "icici.card",
                 Regex(
                     "$MONEY spent using ICICI Bank Card [*Xx0-9]+ on [0-9A-Za-z/-]{3,24} on $MERCHANT(?=\\. |\\s+Avl|$)",

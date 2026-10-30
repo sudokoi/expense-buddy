@@ -92,7 +92,11 @@ object SmsMessageParser {
         val merchantEvidence = template?.merchant ?: SmsMerchantRules.evidence(rulePack, normalizedBody)
         val stateText = SmsEvidence.without(normalizedBody, merchantEvidence?.range)
         SmsTransactionRules.skipReason(rulePack, stateText, moneyEvidence, template)?.let { return ParseResult(null, it) }
-        if (templates.size > 1) return ParseResult(null, SkipReason.NEGATIVE_ALERT)
+        // A security footer can mask a following alert in concatenated SMS text.
+        // Count complete structures before masking too, so we never import only the first.
+        if (templates.size > 1 || (template != null && SmsTransactionTemplates.matches(rulePack, matchingBody).size > 1)) {
+            return ParseResult(null, SkipReason.NEGATIVE_ALERT)
+        }
 
         val money = SmsAmountRules.extract(moneyEvidence)
         if (money == null) {
